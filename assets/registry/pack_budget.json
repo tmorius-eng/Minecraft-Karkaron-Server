@@ -5,8 +5,18 @@
   "hero_textures": [
     "suld:item/suld_ild_tenger"
   ],
-  "justified_large": {},
+  "justified_large": {
+    "resourcepack/assets/suld/textures/font/gui/main.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
+    "resourcepack/assets/suld/textures/font/gui/welcome.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen"
+  },
   "max_file_kb": 512,
   "total_budget_mb": 20,
-  "forbidden_extensions": [".glb", ".fbx", ".obj", ".blend", ".stl", ".usdz"]
+  "forbidden_extensions": [
+    ".glb",
+    ".fbx",
+    ".obj",
+    ".blend",
+    ".stl",
+    ".usdz"
+  ]
 }
