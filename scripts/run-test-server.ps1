@@ -69,7 +69,9 @@ $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $RunDir = Join-Path $Root "run"
 $PluginsDir = Join-Path $RunDir "plugins"
 $Api = "https://fill.papermc.io/v3/projects/paper"
-$UserAgent = "tmorius-eng/Minecraft-Karkaron-Server/1.0"
+# PaperMC / Hangar requests: a valid RFC "product/version (comment)" User-Agent (PowerShell 7 validates it).
+# Modrinth requests use the project User-Agent from scripts\lib\Modrinth.ps1.
+$UserAgent = "SULD-dev-test-server/1.0 (+https://github.com/tmorius-eng/Minecraft-Karkaron-Server)"
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 function Write-Step([string]$Message) {
