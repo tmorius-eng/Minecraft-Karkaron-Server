@@ -4,7 +4,7 @@
 > changes. Dates are UTC.
 
 **Last updated:** 2026-10-06
-**Build:** `./gradlew build` green (210 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
+**Build:** `./gradlew build` green (215 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
 **Current phase:** Vertical Slice 4 (world relic → discovery → global uniqueness → broadcast → ownership) implemented and live-tested with bots on PostgreSQL (docs/RELICS.md). Auth done (docs/AUTHENTICATION.md). Slices 1–4 await one manual Minecraft-client pass.
 
 **Since the slices (all live-tested with bots on Paper 1.21.11):** hardcore death (DeathService), the 18-chapter

@@ -16,7 +16,7 @@ layer (MythicMobs, MMOItems/MMOCore, Citizens, ItemsAdder, DeluxeMenus, TAB, …
 
 ## Status — playable
 
-Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (210 tests; PostgreSQL ITs opt-in):
+Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (215 tests; PostgreSQL ITs opt-in):
 
 - **Classes and combat:** five classes, 3D class weapons in four level tiers with effects, Wynncraft-style click
   combos (20 spells), class resources, a data-driven level curve.
@@ -27,8 +27,9 @@ Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (210 test
 - **Hardcore death:** loot and EXP loss, gear wear, soul state.
 - **UI:** Mongolian-themed resource pack, sidebar, TAB, chat badges, GUIs for every command (menu, help, tutorial,
   class, skills, quests, rank-up, level rewards, cosmetics, shop, credit store, daily reward, leaderboards).
-- **Retention and social:** daily streak reward, `/top` leaderboards, personal steppe horses, rank ladder,
-  cosmetics bought with coins or store credits (cosmetics only).
+- **Retention and social:** daily streak reward, daily hunting tasks, `/top` leaderboards, `/trade`, personal
+  steppe horses, blacksmith upgrades, level milestones, rank ladder, cosmetics bought with coins or store credits
+  (cosmetics only). Damage numbers and mob health bars.
 - **Operations:** verified Microsoft accounts only, chat guard, MOTD and icon, tips, plugin installer (Modrinth,
   hash-verified), production deploy/update/backup scripts. See [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
