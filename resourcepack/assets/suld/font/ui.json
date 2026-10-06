@@ -1,0 +1,385 @@
+{
+ "providers": [
+  {
+   "type": "space",
+   "advances": {
+    "": -1,
+    "": 1,
+    "": -2,
+    "": 2,
+    "": -4,
+    "": 4,
+    "": -8,
+    "": 8,
+    "": -16,
+    "": 16,
+    "": -32,
+    "": 32,
+    "": -64,
+    "": 64,
+    "": -128,
+    "": 128
+   }
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/logo.png",
+   "height": 24,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/heart.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/coin.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/star.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/exp.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/scroll.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/shield.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/flag.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/pin.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/person.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/sword.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/ulzii.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/skull.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/clock.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/signal.png",
+   "height": 8,
+   "ascent": 7,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_ard.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_tsereg.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_aravt.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_zuut.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_myangat.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_tumen.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_noyon.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/rank_khaan.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/staff_owner.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/staff_admin.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/staff_developer.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/staff_mod.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/staff_helper.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/staff_streamer.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/staff_sponsor.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/class_baatar.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/class_mergen.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/class_boo.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/class_darkhan.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/class_khulegchin.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/clan.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/safe.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/danger.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/main.png",
+   "height": 126,
+   "ascent": 13,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/welcome.png",
+   "height": 72,
+   "ascent": 13,
+   "chars": [
+    ""
+   ]
+  }
+ ]
+}

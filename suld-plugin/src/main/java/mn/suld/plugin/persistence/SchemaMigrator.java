@@ -35,7 +35,8 @@ public final class SchemaMigrator {
             new Migration(1, "init", "V1__init.sql"),
             new Migration(2, "profile_quest_currency", "V2__profile_quest_currency.sql"),
             new Migration(3, "clans", "V3__clans.sql"),
-            new Migration(4, "relics", "V4__relics.sql")
+            new Migration(4, "relics", "V4__relics.sql"),
+            new Migration(5, "style", "V5__style.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */

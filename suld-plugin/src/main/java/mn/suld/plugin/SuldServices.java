@@ -58,6 +58,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class SuldServices {
 
     private final SuldConfig config;
+    private final java.util.concurrent.ExecutorService styleExecutor;
+    private final mn.suld.plugin.style.StyleService styleService;
     private final ExecutorService ioExecutor;
     private final HikariDataSource dataSource; // null in MEMORY mode
     private final ProfileRepository repository;
@@ -173,6 +175,22 @@ public final class SuldServices {
         plugin.getLogger().info("SULD relics loaded: " + relicService.load());
         this.hudService.addStatusLine(relicService::hudLine);
         this.boosts = new ProgressionBoosts(this);
+
+        // Player style (ranks, cosmetics, credits): one ordered writer so saves of a player never reorder.
+        this.styleExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "suld-style-io");
+            thread.setDaemon(true);
+            return thread;
+        });
+        mn.suld.api.persistence.StyleRepository styleRepository = dataSource == null
+                ? new mn.suld.api.persistence.InMemoryStyleRepository()
+                : new mn.suld.plugin.persistence.JdbcStyleRepository(dataSource,
+                        SqlDialect.forStorage(config.database().type()), styleExecutor);
+        this.styleService = new mn.suld.plugin.style.StyleService(plugin, this, styleRepository);
+    }
+
+    public mn.suld.plugin.style.StyleService styles() {
+        return styleService;
     }
 
     public SuldConfig config() {
@@ -281,6 +299,13 @@ public final class SuldServices {
 
     /** Flush analytics, stop the IO pool, and close the connection pool. */
     public void close() {
+        styleService.stop();
+        styleExecutor.shutdown();
+        try {
+            styleExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
         worldEventService.shutdown();
         dungeonService.shutdown();
         clanService.shutdown();

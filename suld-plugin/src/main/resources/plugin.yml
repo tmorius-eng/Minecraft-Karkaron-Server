@@ -84,12 +84,68 @@ commands:
     description: Your active quest.
     usage: /quest
     aliases: [quests, erel]
+  menu:
+    description: The SULD main menu (also the clock in hotbar slot 9).
+    usage: /menu
+    aliases: [tses, цэс]
+  tutorial:
+    description: Step-by-step guide for new players.
+    usage: /tutorial
+    aliases: [zaavar2, guide]
+  cosmetics:
+    description: Tags, name colours, chat colours, join messages, emojis.
+    usage: /cosmetics
+    aliases: [goyol, cosmetic]
+  shop:
+    description: Supplies, sell loot, cosmetics.
+    usage: /shop
+    aliases: [zakh, delguur]
+  buy:
+    description: The credit store (SULD credits buy cosmetics only).
+    usage: /buy
+    aliases: [store]
+  rankup:
+    description: Climb the rank ladder (Ard to Khaan).
+    usage: /rankup
+    aliases: [rank, tsol]
+  lvlup:
+    description: Claim your level rewards.
+    usage: /lvlup
+    aliases: [levelrewards, shagnal]
+  credits:
+    description: Your SULD credits; admin/console give|take.
+    usage: /credits [give|take <player|uuid> <amount>]
+    aliases: [kredit]
   worldbuild:
     description: WorldBuilder (status, build, pause, resume, validate, dump, rollback, approve, lock, unlock, tp).
     usage: /worldbuild <status|build|pause|resume|validate|dump|rollback|approve|lock|unlock|tp>
     aliases: [wbuild]
     permission: suld.admin.world
 permissions:
+  suld.badge.owner:
+    description: Badge ЭЗЭН (server owner). Given automatically to the owners in config.yml.
+    default: false
+  suld.badge.admin:
+    description: Badge АДМИН.
+    default: false
+  suld.badge.developer:
+    description: Badge DEV.
+    default: false
+  suld.badge.mod:
+    description: Badge МОД (moderator).
+    default: false
+  suld.badge.helper:
+    description: Badge ТУСЛАГЧ (helper).
+    default: false
+  suld.badge.streamer:
+    description: Badge СТРИМЕР.
+    default: false
+  suld.badge.sponsor:
+    description: Badge ДЭМЖИГЧ (sponsor).
+    default: false
+  suld.admin.credits:
+    description: Give or take store credits (/credits); the store runs it from the console.
+    default: op
   suld.admin:
     description: Grants all SULD administrative commands.
     default: op
@@ -99,6 +155,7 @@ permissions:
       suld.admin.event: true
       suld.admin.relic: true
       suld.admin.world: true
+      suld.admin.credits: true
   suld.admin.world:
     description: Operate the WorldBuilder (build, rollback, approve, lock the city).
     default: op

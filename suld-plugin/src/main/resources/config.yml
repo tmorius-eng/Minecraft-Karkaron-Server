@@ -5,7 +5,7 @@
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
 # Schema version of this file (SULD migrates older files on start; do not edit).
-config-version: 2
+config-version: 3
 locale: mn
 
 # ---------------------------------------------------------------------------
@@ -67,7 +67,8 @@ resource-pack:
   enabled: true
   url: ''
   sha1: ''
-  required: false
+  # The SÜLD UI (badges, menu art, icons, weapon skins) lives in the pack, so it is required by default.
+  required: true
   prompt: 'SÜLD-ийн дүрс багцыг татаж авна уу (Download the SÜLD resource pack)'
   self-host:
     enabled: true
@@ -98,6 +99,29 @@ world-events:
 # If the server is not verifying accounts, SÜLD refuses every login (fail closed).
 # See docs/AUTHENTICATION.md.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Branding shown in the TAB list, sidebar and menus.
+#   store-url: your web store (e.g. Tebex). The store delivers purchases by running
+#   "credits give {uuid} <amount>" from the console. Credits buy cosmetics ONLY
+#   (Minecraft EULA: no gameplay advantage for money).
+# ---------------------------------------------------------------------------
+branding:
+  domain: suld.mn
+  discord: ''
+  store-url: ''
+
+store:
+  packages:
+    - {credits: 100, price: '₮5,000'}
+    - {credits: 250, price: '₮11,000'}
+    - {credits: 600, price: '₮25,000'}
+    - {credits: 1300, price: '₮50,000'}
+    - {credits: 2800, price: '₮100,000'}
+
+ui:
+  # Show the welcome screen (tutorial / menu / play) when a returning player joins.
+  welcome-screen: true
+
 # Server owners: always operator (OP re-granted on every join). Only on a VERIFIED login
 # (online-mode=true or Velocity modern forwarding); the account UUID is pinned in
 # plugins/SULD/owners.yml on the owner's first verified join, so a later holder of the

@@ -42,13 +42,20 @@ public final class CityCommands implements Listener {
 
     private static final Set<String> OWNED = Set.of("help", "?", "tuslamj", "zaavar", "rules", "juram",
             "spawn", "hot", "balance", "bal", "money", "zoos", "pay", "tuluh",
-            "class", "angi", "profile", "stats", "dur", "exp", "level", "lvl", "tuvshin", "quest", "quests", "erel");
+            "class", "angi", "profile", "stats", "dur", "exp", "level", "lvl", "tuvshin", "quest", "quests", "erel",
+            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits");
     private static final int SPAWN_WARMUP_SECONDS = 3;
 
     private final Plugin plugin;
     private final SuldServices services;
     private final WorldBuildService city;
     private final Map<UUID, BukkitTask> warmups = new ConcurrentHashMap<>();
+    private mn.suld.plugin.gui.Menus menus;
+
+    /** /help without a page opens the help GUI. */
+    public void menus(mn.suld.plugin.gui.Menus menus) {
+        this.menus = menus;
+    }
 
     public CityCommands(Plugin plugin, SuldServices services, WorldBuildService city) {
         this.plugin = plugin;
@@ -138,6 +145,10 @@ public final class CityCommands implements Listener {
     private final TabExecutor help = new TabExecutor() {
         @Override
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
+            if (a.length == 0 && menus != null && s instanceof Player p) {
+                menus.help(p);
+                return true;
+            }
             int index = 0;
             if (a.length > 0) {
                 String want = a[0].toLowerCase(Locale.ROOT);

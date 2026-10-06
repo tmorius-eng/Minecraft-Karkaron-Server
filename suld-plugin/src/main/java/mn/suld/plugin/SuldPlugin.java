@@ -60,7 +60,12 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand("suld", new SuldCommand(this, services));
         registerCommand("party", new mn.suld.plugin.command.PartyCommand(services.parties()));
         registerCommand("dungeon", new mn.suld.plugin.command.DungeonCommand(services));
-        getServer().getPluginManager().registerEvents(new mn.suld.plugin.clan.ChatListener(services.clans()), this);
+        getServer().getPluginManager().registerEvents(services.styles(), this);
+        services.styles().start();
+        getServer().getPluginManager().registerEvents(
+                new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks()), this);
+        services.hud().attach(this, services);
+        services.styles().onChange(p -> services.hud().refreshTeams());
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.clan.SocialListener(services.clans(), services.worldEvents()), this);
         mn.suld.plugin.command.ClanCommand clanCommand = new mn.suld.plugin.command.ClanCommand(services.clans());
@@ -99,6 +104,18 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("spawn", city.spawn());
         registerTab("balance", city.balance());
         registerTab("pay", city.pay());
+        mn.suld.plugin.gui.Menus menus = new mn.suld.plugin.gui.Menus(this, services);
+        city.menus(menus);
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.gui.MenuListener(this, services, menus), this);
+        mn.suld.plugin.command.MenuCommands mc = new mn.suld.plugin.command.MenuCommands(services, menus);
+        registerTab("menu", mc.menu());
+        registerTab("tutorial", mc.tutorial());
+        registerTab("cosmetics", mc.cosmetics());
+        registerTab("shop", mc.shop());
+        registerTab("buy", mc.buy());
+        registerTab("rankup", mc.rankup());
+        registerTab("lvlup", mc.lvlup());
+        registerTab("credits", mc.credits());
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
         registerTab("class", progress.clazz());
         registerTab("profile", progress.profile());
@@ -158,13 +175,27 @@ public final class SuldPlugin extends JavaPlugin {
      */
     private void migrateConfig() {
         int version = getConfig().getInt("config-version", 1);
-        if (version >= 2) return;
-        if (getConfig().getString("resource-pack.url", "").isBlank() && !getConfig().getBoolean("resource-pack.enabled", false)) {
+        if (version >= 3) return;
+        if (version < 2 && getConfig().getString("resource-pack.url", "").isBlank()
+                && !getConfig().getBoolean("resource-pack.enabled", false)) {
             getConfig().set("resource-pack.enabled", true);
             getLogger().info("config.yml migrated: resource-pack.enabled = true (the pack is now self-hosted by SULD)");
         }
-        getConfig().set("config-version", 2);
+        // v3: the UI (badges, menus, icons) is drawn by the pack -> required; new branding/store/ui sections
+        getConfig().set("resource-pack.required", true);
+        if (!getConfig().isSet("branding.domain")) getConfig().set("branding.domain", "suld.mn");
+        if (!getConfig().isSet("branding.store-url")) getConfig().set("branding.store-url", "");
+        if (!getConfig().isSet("ui.welcome-screen")) getConfig().set("ui.welcome-screen", true);
+        if (!getConfig().isSet("owners")) getConfig().set("owners", java.util.List.of("qeevr_"));
+        if (!getConfig().isSet("store.packages")) {
+            getConfig().set("store.packages", java.util.List.of(
+                    java.util.Map.of("credits", 100, "price", "₮5,000"), java.util.Map.of("credits", 250, "price", "₮11,000"),
+                    java.util.Map.of("credits", 600, "price", "₮25,000"), java.util.Map.of("credits", 1300, "price", "₮50,000"),
+                    java.util.Map.of("credits", 2800, "price", "₮100,000")));
+        }
+        getConfig().set("config-version", 3);
         saveConfig();
+        getLogger().info("config.yml migrated to v3: resource pack required, branding/store/ui/owners sections added");
     }
 
     private void autosave() {

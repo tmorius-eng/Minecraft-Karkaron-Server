@@ -71,15 +71,22 @@ public final class OwnerService implements Listener {
     public void start() {
         if (names.isEmpty() && uuids.isEmpty()) return;
         if (!mode.verified()) {
-            plugin.getLogger().warning("owners: logins are not verified (" + mode + "), so owners are NOT auto-opped.");
+            plugin.getLogger().warning("owners: logins are not verified (" + mode + "), so owners are NOT auto-opped "
+                    + "(they only get the cosmetic owner badge).");
             return;
         }
         Bukkit.getOnlinePlayers().forEach(this::apply);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent e) {
-        if (mode.verified()) apply(e.getPlayer());
+        Player p = e.getPlayer();
+        if (mode.verified()) {
+            apply(p);
+        } else if (names.contains(p.getName().toLowerCase(Locale.ROOT)) || uuids.contains(p.getUniqueId())) {
+            // Unverified (local dev) server: names can be spoofed, so no OP here — only the cosmetic owner badge.
+            p.addAttachment(plugin, "suld.badge.owner", true);
+        }
     }
 
     /** Whether this (verified) player is an owner; pins the UUID on the first match by name. */
@@ -102,6 +109,7 @@ public final class OwnerService implements Listener {
 
     private void apply(Player p) {
         if (!isOwner(p)) return;
+        p.addAttachment(plugin, "suld.badge.owner", true);
         if (!p.isOp()) {
             p.setOp(true);
             plugin.getLogger().info("owners: " + p.getName() + " is an owner, granted OP");

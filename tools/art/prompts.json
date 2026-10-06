@@ -1,0 +1,68 @@
+{
+  "model": "gemini-3-pro-image",
+  "style": "Style: a screenshot-like render from inside the game Minecraft: everything is made of cubes and voxel blocks with 16x16 pixel Minecraft block textures (grass blocks, oak planks, wool, stone, gold blocks), blocky Minecraft-style characters with square heads and pixel skins, chunky square clouds, Minecraft lighting, vibrant saturated colours, sharp pixelated look, no smooth shapes, no text, no letters, no watermark, no border, centred subject, full-bleed background.",
+  "images": [
+    {
+      "id": "card_profile",
+      "aspect": "5:4",
+      "prompt": "A blocky Minecraft-style Mongolian warrior character with a square head, wearing a blue deel robe skin with a gold sash and a fur hat, standing in front of a white wool ger (yurt) on a grass-block steppe under a bright blue sky."
+    },
+    {
+      "id": "card_class",
+      "aspect": "5:4",
+      "prompt": "Five blocky Minecraft-style Mongolian hero characters standing in a row on grass blocks at sunset: a warrior in iron armour with a curved sword, an archer with a bow, a Mongolian shaman (böö) in a dark robe with a fringe of black tassels hanging over the eyes from a round hat and a large round frame drum (no feathers), a blacksmith with a hammer next to an anvil, and a rider on a blocky Minecraft horse."
+    },
+    {
+      "id": "card_skills",
+      "aspect": "5:4",
+      "prompt": "A Minecraft-style enchanting scene: a blocky curved sword and a bow floating crossed above an enchanting table, glowing blue enchantment particles and pixel runes swirling, dark blue night sky with square stars."
+    },
+    {
+      "id": "card_quests",
+      "aspect": "5:4",
+      "prompt": "A Minecraft-style map item in a big item frame on an oak-plank wall, a lantern and a chest beside it, a compass item, red wolf paw marks on the map, warm torch light."
+    },
+    {
+      "id": "card_dungeons",
+      "aspect": "5:4",
+      "prompt": "A Minecraft-style dark cave entrance in a stone and deepslate mountain at night, two glowing yellow eyes of a blocky Minecraft wolf inside, wall torches on cobblestone at the entrance, square mist particles."
+    },
+    {
+      "id": "card_help",
+      "aspect": "5:4",
+      "prompt": "A friendly blocky Minecraft-style Mongolian elder villager with a white beard and a stick, next to an ovoo cairn built from cobblestone and mossy stone blocks wrapped in blue wool banners, grass-block hills, blue sky."
+    },
+    {
+      "id": "card_clan",
+      "aspect": "5:4",
+      "prompt": "A Minecraft-style camp: black and red banners on fence posts in a circle around a campfire block, white wool gers behind, blocky warrior characters gathered, dusk sky with square clouds."
+    },
+    {
+      "id": "card_travel",
+      "aspect": "5:4",
+      "prompt": "A blocky Minecraft-style rider galloping on a Minecraft horse along a dirt-path road towards a walled city of stone bricks with a wooden relay station and a red banner, blue sky with square clouds."
+    },
+    {
+      "id": "logo_suld",
+      "aspect": "21:9",
+      "model": "gemini-3-pro-image",
+      "style": false,
+      "prompt": "A video game title logo in the exact style of the Minecraft title screen logo: the word SÜLD in huge chunky 3D blocky letters built from pixelated gold-block and stone textures, bevelled cube edges, dark shading on the sides, viewed slightly from below, with a small pixelated Mongolian soyombo emblem made of blocks on top centre. Plain solid black background, nothing else, centred."
+    },
+    {
+      "id": "card_rank",
+      "aspect": "5:4",
+      "prompt": "A blocky Minecraft-style Mongolian khan character sitting on a golden throne inside a big white ger tent, black and white sulde banners on both sides, armoured guards, gold blocks and red carpet."
+    },
+    {
+      "id": "card_shop",
+      "aspect": "5:4",
+      "prompt": "A blocky Minecraft-style Mongolian market stall made of oak planks with a felt awning, piles of gold coins, colourful wool rolls, swords and bows on display, a friendly merchant character, warm daylight."
+    },
+    {
+      "id": "card_welcome",
+      "aspect": "5:4",
+      "prompt": "A wide blocky Minecraft-style view of a Mongolian walled capital city (Kharkhorum) on the green steppe at golden hour: white wool gers, a big palace with a blue roof, stone walls, banners, horses and riders arriving."
+    }
+  ]
+}
