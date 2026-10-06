@@ -61,6 +61,14 @@ public final class SuldConfigFactory {
                 view.getInt("analytics.flush-interval-seconds", ad.flushIntervalSeconds()),
                 sink);
 
-        return new SuldConfig(locale, progression, database, death, analytics);
+        ResourcePackSettings rpd = d.resourcePack();
+        ResourcePackSettings resourcePack = new ResourcePackSettings(
+                view.getBoolean("resource-pack.enabled", rpd.enabled()),
+                view.getString("resource-pack.url", rpd.url()),
+                view.getString("resource-pack.sha1", rpd.sha1()),
+                view.getBoolean("resource-pack.required", rpd.required()),
+                view.getString("resource-pack.prompt", rpd.prompt()));
+
+        return new SuldConfig(locale, progression, database, death, analytics, resourcePack);
     }
 }

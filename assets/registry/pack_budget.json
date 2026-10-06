@@ -1,0 +1,12 @@
+{
+  "_comment": "Production resource-pack budget + validation limits (SÜLD). Raw source meshes (GLB/FBX/OBJ) are FORBIDDEN in resourcepack/ — they live in assets/source/. Textures: 32/64/128 for ordinary items, 256 for hero items (listed), higher only with justification in `justified_large`.",
+  "max_texture_px_ordinary": 128,
+  "max_texture_px_hero": 256,
+  "hero_textures": [
+    "suld:item/suld_ild_tenger"
+  ],
+  "justified_large": {},
+  "max_file_kb": 512,
+  "total_budget_mb": 20,
+  "forbidden_extensions": [".glb", ".fbx", ".obj", ".blend", ".stl", ".usdz"]
+}

@@ -10,12 +10,19 @@ import mn.suld.api.progression.ProgressionEngine;
 import mn.suld.api.service.DefaultProgressionService;
 import mn.suld.api.service.ProgressionService;
 import mn.suld.plugin.analytics.LoggingAnalyticsSink;
+import mn.suld.plugin.combat.CombatListener;
 import mn.suld.plugin.event.BukkitEventDispatcher;
+import mn.suld.plugin.gui.ClassSelectionGui;
+import mn.suld.plugin.hud.HudService;
+import mn.suld.plugin.item.ItemFactory;
+import mn.suld.plugin.mob.MobService;
 import mn.suld.plugin.persistence.DataSourceFactory;
 import mn.suld.plugin.persistence.JdbcProfileRepository;
 import mn.suld.plugin.persistence.SchemaMigrator;
 import mn.suld.plugin.persistence.SqlDialect;
 import mn.suld.plugin.profile.DefaultProfileService;
+import mn.suld.plugin.quest.QuestService;
+import mn.suld.plugin.resourcepack.ResourcePackService;
 import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.ExecutorService;
@@ -39,6 +46,13 @@ public final class SuldServices {
     private final ProgressionService progressionService;
     private final AnalyticsSink analytics;
     private final EventDispatcher events;
+    private final ItemFactory itemFactory;
+    private final HudService hudService;
+    private final QuestService questService;
+    private final MobService mobService;
+    private final ResourcePackService resourcePackService;
+    private final ClassSelectionGui classSelectionGui;
+    private final CombatListener combatListener;
 
     public SuldServices(Plugin plugin, SuldConfig config) {
         this.config = config;
@@ -70,6 +84,15 @@ public final class SuldServices {
         }
 
         this.profileService = new DefaultProfileService(repository);
+
+        // Vertical Slice 1 services.
+        this.itemFactory = new ItemFactory(plugin);
+        this.hudService = new HudService(progressionService);
+        this.questService = new QuestService(progressionService);
+        this.mobService = new MobService(plugin);
+        this.resourcePackService = new ResourcePackService(plugin, config.resourcePack());
+        this.classSelectionGui = new ClassSelectionGui(plugin, this, hudService, questService, itemFactory);
+        this.combatListener = new CombatListener(this, mobService, questService, hudService, itemFactory);
     }
 
     public SuldConfig config() {
@@ -90,6 +113,34 @@ public final class SuldServices {
 
     public EventDispatcher events() {
         return events;
+    }
+
+    public ItemFactory items() {
+        return itemFactory;
+    }
+
+    public HudService hud() {
+        return hudService;
+    }
+
+    public QuestService quests() {
+        return questService;
+    }
+
+    public MobService mobs() {
+        return mobService;
+    }
+
+    public ResourcePackService resourcePacks() {
+        return resourcePackService;
+    }
+
+    public ClassSelectionGui classSelectionGui() {
+        return classSelectionGui;
+    }
+
+    public CombatListener combatListener() {
+        return combatListener;
     }
 
     /** Flush analytics, stop the IO pool, and close the connection pool. */

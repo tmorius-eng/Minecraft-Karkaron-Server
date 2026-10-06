@@ -2,6 +2,7 @@ package mn.suld.api.profile;
 
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.progression.Progression;
+import mn.suld.api.quest.QuestState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,10 +37,12 @@ public final class PlayerProfile {
     private Instant lastSeenAt;
     private long version;
     private boolean dirty;
+    private long currency;
+    private QuestState questState;
 
     private PlayerProfile(UUID playerId, String name, PlayerClass playerClass,
                           Progression progression, Instant createdAt, Instant lastSeenAt,
-                          long version) {
+                          long version, long currency, QuestState questState) {
         this.playerId = Objects.requireNonNull(playerId, "playerId");
         this.name = Objects.requireNonNull(name, "name");
         this.playerClass = playerClass;
@@ -47,19 +50,22 @@ public final class PlayerProfile {
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
         this.lastSeenAt = Objects.requireNonNull(lastSeenAt, "lastSeenAt");
         this.version = version;
+        this.currency = Math.max(0, currency);
+        this.questState = questState == null ? QuestState.NONE : questState;
     }
 
     /** Create a brand-new profile for a first-time player (no class yet). */
     public static PlayerProfile createNew(UUID playerId, String name, Instant now) {
         Objects.requireNonNull(now, "now");
-        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L);
+        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L, 0L, QuestState.NONE);
     }
 
     /** Rehydrate a profile loaded from storage. Used by persistence adapters. */
     public static PlayerProfile restore(UUID playerId, String name, @Nullable PlayerClass playerClass,
                                         Progression progression, Instant createdAt, Instant lastSeenAt,
-                                        long version) {
-        return new PlayerProfile(playerId, name, playerClass, progression, createdAt, lastSeenAt, version);
+                                        long version, long currency, QuestState questState) {
+        return new PlayerProfile(playerId, name, playerClass, progression, createdAt, lastSeenAt,
+                version, currency, questState);
     }
 
     public @NotNull UUID playerId() {
@@ -119,6 +125,31 @@ public final class PlayerProfile {
 
     public synchronized void progression(Progression progression) {
         this.progression = Objects.requireNonNull(progression, "progression");
+        touchInternal();
+    }
+
+    public synchronized long currency() {
+        return currency;
+    }
+
+    public synchronized void currency(long value) {
+        this.currency = Math.max(0, value);
+        touchInternal();
+    }
+
+    /** Add (or subtract, if negative) currency; never goes below zero. */
+    public synchronized long addCurrency(long delta) {
+        this.currency = Math.max(0, this.currency + delta);
+        touchInternal();
+        return this.currency;
+    }
+
+    public synchronized @NotNull QuestState questState() {
+        return questState;
+    }
+
+    public synchronized void questState(QuestState questState) {
+        this.questState = questState == null ? QuestState.NONE : questState;
         touchInternal();
     }
 

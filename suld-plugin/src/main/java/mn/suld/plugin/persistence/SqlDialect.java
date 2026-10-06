@@ -41,27 +41,37 @@ public enum SqlDialect {
         return switch (this) {
             case MYSQL -> """
                     INSERT INTO suld_profiles
-                        (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version,
+                         currency, active_quest_id, quest_progress, quest_completed)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE
                         name = VALUES(name),
                         class_id = VALUES(class_id),
                         level = VALUES(level),
                         exp_into_level = VALUES(exp_into_level),
                         last_seen_at = VALUES(last_seen_at),
-                        version = VALUES(version)
+                        version = VALUES(version),
+                        currency = VALUES(currency),
+                        active_quest_id = VALUES(active_quest_id),
+                        quest_progress = VALUES(quest_progress),
+                        quest_completed = VALUES(quest_completed)
                     """;
             case POSTGRESQL -> """
                     INSERT INTO suld_profiles
-                        (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version,
+                         currency, active_quest_id, quest_progress, quest_completed)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT (player_uuid) DO UPDATE SET
                         name = EXCLUDED.name,
                         class_id = EXCLUDED.class_id,
                         level = EXCLUDED.level,
                         exp_into_level = EXCLUDED.exp_into_level,
                         last_seen_at = EXCLUDED.last_seen_at,
-                        version = EXCLUDED.version
+                        version = EXCLUDED.version,
+                        currency = EXCLUDED.currency,
+                        active_quest_id = EXCLUDED.active_quest_id,
+                        quest_progress = EXCLUDED.quest_progress,
+                        quest_completed = EXCLUDED.quest_completed
                     """;
         };
     }

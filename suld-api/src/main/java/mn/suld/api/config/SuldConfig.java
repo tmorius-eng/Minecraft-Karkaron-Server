@@ -9,7 +9,8 @@ public record SuldConfig(
         ProgressionSettings progression,
         DatabaseSettings database,
         DeathSettings death,
-        AnalyticsSettings analytics) {
+        AnalyticsSettings analytics,
+        ResourcePackSettings resourcePack) {
 
     public static SuldConfig defaults() {
         return new SuldConfig(
@@ -17,6 +18,7 @@ public record SuldConfig(
                 ProgressionSettings.defaults(),
                 DatabaseSettings.defaults(),
                 DeathSettings.defaults(),
-                AnalyticsSettings.defaults());
+                AnalyticsSettings.defaults(),
+                ResourcePackSettings.defaults());
     }
 }

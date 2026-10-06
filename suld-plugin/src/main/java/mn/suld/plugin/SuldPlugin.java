@@ -43,8 +43,12 @@ public final class SuldPlugin extends JavaPlugin {
         }
 
         getServer().getPluginManager().registerEvents(new PlayerLifecycleListener(this, services), this);
+        getServer().getPluginManager().registerEvents(services.classSelectionGui(), this);
+        getServer().getPluginManager().registerEvents(services.combatListener(), this);
+        getServer().getPluginManager().registerEvents(services.resourcePacks(), this);
         registerCommand("suld", new SuldCommand(this, services));
         registerCommand("revive", new ReviveCommand(this, services));
+        registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
         getServer().getScheduler().runTaskTimerAsynchronously(this,

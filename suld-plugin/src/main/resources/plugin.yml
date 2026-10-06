@@ -13,18 +13,25 @@ libraries:
   - org.postgresql:postgresql:42.7.4
 commands:
   suld:
-    description: SULD player/admin command (info, profile).
-    usage: /suld <info|profile>
+    description: SULD player/admin command (info, profile, spawnmob).
+    usage: /suld <info|profile|spawnmob>
   revive:
     description: Revive a player from the hardcore death/soul state (admin).
     usage: /revive <player>
     permission: suld.admin.revive
+  suldpack:
+    description: SULD resource-pack control (status, reload, force).
+    usage: /suldpack <status|reload|force>
 permissions:
   suld.admin:
     description: Grants all SULD administrative commands.
     default: op
     children:
       suld.admin.revive: true
+      suld.admin.pack: true
   suld.admin.revive:
     description: Allows reviving players from the death/soul state.
+    default: op
+  suld.admin.pack:
+    description: Allows resource-pack admin actions.
     default: op

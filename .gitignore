@@ -24,7 +24,12 @@ bin/
 .tools/
 # Meshy task metadata cache (safe to regenerate; contains no secrets)
 assets/.meshy_cache/
-# Large raw source meshes downloaded from Meshy (keep repo lean; regenerate)
+# Large raw source meshes (Meshy/Blender) live here, NEVER in resourcepack/.
+# Kept out of git (regenerable, large). Canonical dir is assets/source/.
+assets/source/*.glb
+assets/source/*.fbx
+assets/source/*.obj
+assets/source/*.blend
 assets/sources/*.glb
 assets/sources/*.fbx
 assets/sources/*.obj

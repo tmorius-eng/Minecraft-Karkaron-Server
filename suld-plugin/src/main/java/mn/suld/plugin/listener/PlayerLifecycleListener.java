@@ -2,11 +2,8 @@ package mn.suld.plugin.listener;
 
 import mn.suld.api.analytics.AnalyticsEvent;
 import mn.suld.api.analytics.AnalyticsEventType;
-import mn.suld.api.clazz.PlayerClass;
 import mn.suld.plugin.SuldServices;
 import mn.suld.plugin.ui.Messages;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -49,8 +46,18 @@ public final class PlayerLifecycleListener implements Listener {
                         return;
                     }
                     recordLoginAnalytics(profile.createdAt(), id);
-                    greet(player, profile.hasSelectedClass() ? profile.playerClass().orElse(null) : null,
-                            profile.progression().level());
+                    services.resourcePacks().send(player);
+                    player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "! — SÜLD"));
+                    if (!profile.hasSelectedClass()) {
+                        player.sendMessage(Messages.info("Анхны алхам: ангиа сонгоно уу."));
+                        services.classSelectionGui().open(player);
+                    } else {
+                        services.quests().startFirstQuestIfNeeded(profile);
+                        player.sendMessage(Messages.info("Анги: "
+                                + profile.playerClass().map(c -> c.displayName()).orElse("—")
+                                + " · Түвшин " + profile.progression().level()));
+                        services.hud().update(player, profile);
+                    }
                 }));
     }
 
@@ -77,20 +84,5 @@ public final class PlayerLifecycleListener implements Listener {
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_LOGIN, id));
         }
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.SESSION_START, id));
-    }
-
-    private void greet(Player player, PlayerClass selectedClass, int level) {
-        player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "!"));
-        if (selectedClass == null) {
-            player.sendMessage(Messages.info("Анги сонгоогүй байна. Доорх ангиудаас сонгоно уу:"));
-            for (PlayerClass clazz : PlayerClass.values()) {
-                player.sendMessage(Component.text("  • ", NamedTextColor.DARK_GRAY)
-                        .append(Component.text(clazz.displayName(), Messages.BRAND))
-                        .append(Component.text(" — " + clazz.role(), NamedTextColor.GRAY)));
-            }
-            player.sendMessage(Messages.info("(Ангийн сонголтын цонх удахгүй нэмэгдэнэ.)"));
-        } else {
-            player.sendMessage(Messages.info("Анги: " + selectedClass.displayName() + " · Түвшин " + level));
-        }
     }
 }

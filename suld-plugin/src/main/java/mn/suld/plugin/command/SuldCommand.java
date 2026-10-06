@@ -36,9 +36,23 @@ public final class SuldCommand implements CommandExecutor {
         switch (sub) {
             case "info" -> info(sender);
             case "profile" -> profile(sender);
+            case "spawnmob" -> spawnMob(sender);
             default -> help(sender);
         }
         return true;
+    }
+
+    private void spawnMob(CommandSender sender) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Messages.error("Зөвхөн тоглогч ашиглана."));
+            return;
+        }
+        services.mobs().spawn(mn.suld.plugin.content.SuldContent.GOVIIN_CHONO, player.getLocation());
+        sender.sendMessage(Messages.success("Говийн Чоно дуудлаа."));
     }
 
     private void help(CommandSender sender) {

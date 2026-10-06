@@ -5,6 +5,7 @@ import mn.suld.api.persistence.ProfileRepository;
 import mn.suld.api.persistence.RepositoryException;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.api.progression.Progression;
+import mn.suld.api.quest.QuestState;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,7 +28,8 @@ import javax.sql.DataSource;
 public final class JdbcProfileRepository implements ProfileRepository {
 
     private static final String SELECT =
-            "SELECT name, class_id, level, exp_into_level, created_at, last_seen_at, version "
+            "SELECT name, class_id, level, exp_into_level, created_at, last_seen_at, version, "
+                    + "currency, active_quest_id, quest_progress, quest_completed "
                     + "FROM suld_profiles WHERE player_uuid = ?";
 
     private final DataSource dataSource;
@@ -52,6 +54,10 @@ public final class JdbcProfileRepository implements ProfileRepository {
                     }
                     PlayerClass clazz = PlayerClass.byId(rs.getString("class_id")).orElse(null);
                     Progression progression = new Progression(rs.getInt("level"), rs.getLong("exp_into_level"));
+                    String questId = rs.getString("active_quest_id");
+                    QuestState questState = (questId == null || questId.isEmpty())
+                            ? QuestState.NONE
+                            : new QuestState(questId, rs.getInt("quest_progress"), rs.getBoolean("quest_completed"));
                     PlayerProfile profile = PlayerProfile.restore(
                             playerId,
                             rs.getString("name"),
@@ -59,7 +65,9 @@ public final class JdbcProfileRepository implements ProfileRepository {
                             progression,
                             Instant.ofEpochMilli(rs.getLong("created_at")),
                             Instant.ofEpochMilli(rs.getLong("last_seen_at")),
-                            rs.getLong("version"));
+                            rs.getLong("version"),
+                            rs.getLong("currency"),
+                            questState);
                     return Optional.of(profile);
                 }
             } catch (SQLException ex) {
@@ -100,6 +108,11 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 ps.setLong(6, profile.createdAt().toEpochMilli());
                 ps.setLong(7, profile.lastSeenAt().toEpochMilli());
                 ps.setLong(8, version);
+                ps.setLong(9, profile.currency());
+                QuestState q = profile.questState();
+                ps.setString(10, q.questId().isEmpty() ? null : q.questId());
+                ps.setInt(11, q.progress());
+                ps.setBoolean(12, q.completed());
                 ps.executeUpdate();
                 profile.markPersisted(version);
                 return profile;

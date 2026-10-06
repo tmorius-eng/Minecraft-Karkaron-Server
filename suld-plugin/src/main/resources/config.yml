@@ -53,3 +53,15 @@ analytics:
   enabled: true
   flush-interval-seconds: 30
   sink: log
+
+# ---------------------------------------------------------------------------
+# Resource pack. Host the built SÜLD pack ZIP at `url` and put its hex SHA-1 in
+# `sha1`. When enabled, it is sent automatically on join. `required: true` makes
+# acceptance mandatory. Leave disabled until a pack is hosted.
+# ---------------------------------------------------------------------------
+resource-pack:
+  enabled: false
+  url: ''
+  sha1: ''
+  required: false
+  prompt: 'SÜLD-ийн дүрс багцыг татаж авна уу (Download the SÜLD resource pack)'

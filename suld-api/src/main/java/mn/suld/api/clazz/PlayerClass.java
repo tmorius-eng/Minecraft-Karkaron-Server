@@ -18,28 +18,64 @@ import java.util.Optional;
 public enum PlayerClass {
 
     /** Баатар — warrior / tank / berserker. High defense, melee bruiser. */
-    BAATAR("baatar", "Баатар", ClassRole.TANK),
+    BAATAR("baatar", "Баатар", ClassRole.TANK, "Хил / Rage", 3, 40.0, 7.0, 100),
 
     /** Мэргэн — archer / ranged / assassin. High single-target ranged damage. */
-    MERGEN("mergen", "Мэргэн", ClassRole.RANGED),
+    MERGEN("mergen", "Мэргэн", ClassRole.RANGED, "Төвлөрөл / Focus", 4, 26.0, 9.0, 100),
 
     /** Бөө — spirit mage / support. Area magic and party sustain. */
-    BOO("boo", "Бөө", ClassRole.SUPPORT),
+    BOO("boo", "Бөө", ClassRole.SUPPORT, "Сүнс / Spirit", 5, 24.0, 8.0, 140),
 
     /** Дархан — forge warrior / weapon crafter. Crafting-driven power. */
-    DARKHAN("darkhan", "Дархан", ClassRole.CRAFTER),
+    DARKHAN("darkhan", "Дархан", ClassRole.CRAFTER, "Дөл / Heat", 3, 34.0, 7.5, 100),
 
     /** Хүлэгчин — mounted mobility / charge warrior. Burst engage and kiting. */
-    KHULEGCHIN("khulegchin", "Хүлэгчин", ClassRole.MOBILITY);
+    KHULEGCHIN("khulegchin", "Хүлэгчин", ClassRole.MOBILITY, "Хурд / Momentum", 4, 30.0, 8.0, 100);
 
     private final String id;
     private final String displayName;
     private final ClassRole role;
+    private final String resourceName;
+    private final int difficulty;      // 1 (easy) .. 5 (hard)
+    private final double baseHealth;
+    private final double baseAttack;
+    private final int resourceMax;
 
-    PlayerClass(String id, String displayName, ClassRole role) {
+    PlayerClass(String id, String displayName, ClassRole role, String resourceName,
+                int difficulty, double baseHealth, double baseAttack, int resourceMax) {
         this.id = id;
         this.displayName = displayName;
         this.role = role;
+        this.resourceName = resourceName;
+        this.difficulty = difficulty;
+        this.baseHealth = baseHealth;
+        this.baseAttack = baseAttack;
+        this.resourceMax = resourceMax;
+    }
+
+    /** Name of this class's unique combat resource (e.g. Rage, Focus, Spirit). */
+    public @NotNull String resourceName() {
+        return resourceName;
+    }
+
+    /** Relative difficulty rating, 1 (easiest) to 5 (hardest). */
+    public int difficulty() {
+        return difficulty;
+    }
+
+    /** Base max health at level 1 (before per-level growth). */
+    public double baseHealth() {
+        return baseHealth;
+    }
+
+    /** Base attack power at level 1 (before per-level growth). */
+    public double baseAttack() {
+        return baseAttack;
+    }
+
+    /** Maximum of the class's unique resource. */
+    public int resourceMax() {
+        return resourceMax;
     }
 
     /** Stable lowercase identifier used in config keys and the database. */

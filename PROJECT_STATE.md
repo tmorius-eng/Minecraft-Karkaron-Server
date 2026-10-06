@@ -5,9 +5,20 @@
 
 **Last updated:** 2026-10-06
 **Build:** `./gradlew build` green (24 tests). Asset validations green.
-**Current phase:** Foundation + FULL asset pipeline proven (Meshy->Blender->Blockbench->resource pack, real textured model). Next: Vertical Slice 1 (gameplay).
+**Current phase:** Vertical Slice 1 implemented (real Paper code, green build, 30+ tests); live server boot + plugin-enable verified. DB-backed run + manual client steps in progress.
 
 ---
+
+## Vertical Slice 1 (join→class→HUD→quest→combat→mob→loot→tooltip→EXP→level→save→reconnect)
+- Domain (suld-api, unit-tested): combat calculator, loot tables/roller, item instance/definition/stats,
+  mob definitions+tiers, quest engine, profile currency+quest persistence.
+- Plugin (suld-plugin, compiles+links+enabled live): ItemFactory (PDC + rarity tooltip), ResourcePackService
+  + /suldpack, ClassSelectionGui (mandatory first-login), HudService (scoreboard), MobService (custom wolf),
+  CombatListener (damage/EXP/loot/quest/level-up), QuestService, V2 migration (currency+quest columns).
+- LIVE SMOKE: Paper 1.21.11 started (Done 25.3s), SULD remapped+loaded+ENABLED, plugin `libraries:` drivers
+  downloaded at runtime, config loaded (storage=MEMORY, maxLevel=60), no SULD errors.
+- REMAINING: (1) DB-backed live run (Postgres) to confirm migrations; (2) one manual Minecraft-client test
+  (join/GUI/combat/reconnect) — not headlessly automatable. All that logic is unit-tested.
 
 ## Repository audit (per master directive §49)
 
