@@ -1,0 +1,98 @@
+{
+ "id": "kharkhorum.reference",
+ "source": "owner-supplied concept image (2026-10-06), main aerial panel viewed from the south",
+ "normalised": "x 0 = west wall, 1 = east wall; z 0 = north wall, 1 = south wall (perspective-corrected estimates)",
+ "aspect_ew_to_ns": 1.22,
+ "axis": {
+  "type": "north-south ceremonial axis",
+  "x": 0.5
+ },
+ "features": [
+  {
+   "id": "south_gate",
+   "x": 0.5,
+   "z": 1.0,
+   "share_of_width": 0.13
+  },
+  {
+   "id": "canal_u_arc",
+   "x": [
+    0.07,
+    0.93
+   ],
+   "z": 0.8,
+   "bridges": 3
+  },
+  {
+   "id": "central_plaza",
+   "x": 0.5,
+   "z": 0.55,
+   "shape": "circle",
+   "share_of_width": 0.18,
+   "raised": true
+  },
+  {
+   "id": "equestrian_monument",
+   "x": 0.5,
+   "z": 0.55
+  },
+  {
+   "id": "grand_stair",
+   "x": 0.5,
+   "z": 0.36
+  },
+  {
+   "id": "imperial_palace",
+   "x": 0.5,
+   "z": 0.18,
+   "share_of_width": 0.24,
+   "terraced": true,
+   "tallest": true
+  },
+  {
+   "id": "spiritual_district",
+   "x": 0.2,
+   "z": 0.22,
+   "marker": "white stupa with gold spire, prayer flags, blossom trees"
+  },
+  {
+   "id": "military_district",
+   "x": 0.8,
+   "z": 0.25,
+   "marker": "fortified compound, towers"
+  },
+  {
+   "id": "residential_district",
+   "x": 0.2,
+   "z": 0.52,
+   "marker": "white yurts, fences, trees"
+  },
+  {
+   "id": "market_district",
+   "x": 0.73,
+   "z": 0.52,
+   "marker": "dense, coloured awnings"
+  },
+  {
+   "id": "gardens",
+   "x": [
+    0.15,
+    0.85
+   ],
+   "z": 0.88,
+   "marker": "blossom trees, ponds, pavilions"
+  },
+  {
+   "id": "corner_towers",
+   "marker": "tiered roofs, fire beacons"
+  }
+ ],
+ "elevation_profile": "rises from south (canal/gardens lowest) to north (palace terrace highest)",
+ "height_hierarchy": [
+  "palace",
+  "gate towers / stupa",
+  "military towers",
+  "market halls",
+  "yurts"
+ ]
+}

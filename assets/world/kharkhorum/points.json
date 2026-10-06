@@ -1,0 +1,343 @@
+{
+ "city": "kharkhorum",
+ "version": 1,
+ "coordinates": "city-local (see master-plan.json); y = height of the standing block above base ground",
+ "player_flow": [
+  "spawn",
+  "class_selection",
+  "tutorial",
+  "quest.first_hunt",
+  "merchant.general",
+  "blacksmith",
+  "fast_travel.gate_south",
+  "exit.first_adventure"
+ ],
+ "points": [
+  {
+   "id": "spawn",
+   "type": "spawn",
+   "district": "district.central_plaza",
+   "x": 0,
+   "y": 2,
+   "z": 18,
+   "yaw": 180,
+   "required": true,
+   "slice": "slice.1",
+   "note": "south side of the plaza, facing the monument and the palace"
+  },
+  {
+   "id": "class_selection",
+   "type": "service",
+   "district": "district.central_plaza",
+   "x": -14,
+   "y": 2,
+   "z": 8,
+   "yaw": 90,
+   "required": true,
+   "slice": "slice.1",
+   "note": "class stones; the GUI opens on first join"
+  },
+  {
+   "id": "tutorial",
+   "type": "npc",
+   "district": "district.central_plaza",
+   "x": 6,
+   "y": 2,
+   "z": 20,
+   "yaw": 180,
+   "required": true,
+   "slice": "slice.1"
+  },
+  {
+   "id": "quest.first_hunt",
+   "type": "quest_npc",
+   "district": "district.central_plaza",
+   "x": 16,
+   "y": 2,
+   "z": 6,
+   "yaw": 270,
+   "required": true,
+   "slice": "slice.1",
+   "note": "gives Анхны Ан; points players east"
+  },
+  {
+   "id": "event.plaza",
+   "type": "event",
+   "district": "district.central_plaza",
+   "x": 0,
+   "y": 2,
+   "z": -14,
+   "yaw": 0,
+   "required": true,
+   "slice": "slice.1"
+  },
+  {
+   "id": "fast_travel.plaza",
+   "type": "fast_travel",
+   "district": "district.central_plaza",
+   "x": -18,
+   "y": 2,
+   "z": -12,
+   "yaw": 90,
+   "required": true,
+   "slice": "slice.1",
+   "note": "Өртөө relay post"
+  },
+  {
+   "id": "merchant.general",
+   "type": "merchant",
+   "district": "district.market",
+   "x": 44,
+   "y": 1,
+   "z": -9,
+   "yaw": 180,
+   "required": true,
+   "slice": "slice.1"
+  },
+  {
+   "id": "merchant.food",
+   "type": "merchant",
+   "district": "district.market",
+   "x": 60,
+   "y": 1,
+   "z": 9,
+   "yaw": 0,
+   "required": false,
+   "slice": "slice.1"
+  },
+  {
+   "id": "merchant.cloth",
+   "type": "merchant",
+   "district": "district.market",
+   "x": 76,
+   "y": 1,
+   "z": -9,
+   "yaw": 180,
+   "required": false,
+   "slice": "slice.1"
+  },
+  {
+   "id": "merchant.weapons",
+   "type": "merchant",
+   "district": "district.market",
+   "x": 92,
+   "y": 1,
+   "z": 9,
+   "yaw": 0,
+   "required": false,
+   "slice": "slice.1"
+  },
+  {
+   "id": "merchant.horse_gear",
+   "type": "merchant",
+   "district": "district.stables",
+   "x": 140,
+   "y": 3,
+   "z": -120,
+   "yaw": 0,
+   "required": false
+  },
+  {
+   "id": "blacksmith",
+   "type": "service",
+   "district": "district.crafting",
+   "x": 44,
+   "y": 1,
+   "z": 64,
+   "yaw": 270,
+   "required": true,
+   "slice": "slice.1"
+  },
+  {
+   "id": "fast_travel.gate_south",
+   "type": "fast_travel",
+   "district": "district.outer_wall",
+   "x": 8,
+   "y": 1,
+   "z": 112,
+   "yaw": 0,
+   "required": true,
+   "slice": "slice.1"
+  },
+  {
+   "id": "exit.first_adventure",
+   "type": "exit",
+   "district": "district.outer_wall",
+   "x": 0,
+   "y": 1,
+   "z": 140,
+   "yaw": 0,
+   "required": true,
+   "slice": "slice.1",
+   "note": "outside the Imperial Gate: road to the Kherlen steppe"
+  },
+  {
+   "id": "shrine.sky",
+   "type": "service",
+   "district": "district.spiritual",
+   "x": -96,
+   "y": 5,
+   "z": -62,
+   "yaw": 0,
+   "required": true,
+   "slice": "slice.1",
+   "note": "Tenger shrine offering point"
+  },
+  {
+   "id": "yurt.home_demo",
+   "type": "home",
+   "district": "district.residential",
+   "x": -74,
+   "y": 2,
+   "z": 30,
+   "yaw": 0,
+   "required": false,
+   "slice": "slice.1"
+  },
+  {
+   "id": "dungeon.entrance.khasar",
+   "type": "dungeon",
+   "district": "district.military",
+   "x": 116,
+   "y": 3,
+   "z": -60,
+   "yaw": 90,
+   "required": true,
+   "note": "leads to Хасарын Агуй"
+  },
+  {
+   "id": "clan_hall",
+   "type": "service",
+   "district": "district.clan",
+   "x": -116,
+   "y": 2,
+   "z": -14,
+   "yaw": 0,
+   "required": true
+  },
+  {
+   "id": "relic_hall",
+   "type": "service",
+   "district": "district.relic",
+   "x": -38,
+   "y": 3,
+   "z": -36,
+   "yaw": 180,
+   "required": true
+  },
+  {
+   "id": "achievements",
+   "type": "service",
+   "district": "district.palace",
+   "x": -20,
+   "y": 9,
+   "z": -70,
+   "yaw": 90,
+   "required": true,
+   "note": "Hall of Heroes in the palace forecourt"
+  },
+  {
+   "id": "event.military_yard",
+   "type": "event",
+   "district": "district.military",
+   "x": 100,
+   "y": 3,
+   "z": -100,
+   "yaw": 0,
+   "required": false
+  },
+  {
+   "id": "fast_travel.gate_west",
+   "type": "fast_travel",
+   "district": "district.outer_wall",
+   "x": -166,
+   "y": 1,
+   "z": 8,
+   "yaw": 90,
+   "required": false
+  },
+  {
+   "id": "fast_travel.gate_east",
+   "type": "fast_travel",
+   "district": "district.outer_wall",
+   "x": 165,
+   "y": 1,
+   "z": 8,
+   "yaw": 270,
+   "required": false
+  },
+  {
+   "id": "fast_travel.gate_north",
+   "type": "fast_travel",
+   "district": "district.outer_wall",
+   "x": 112,
+   "y": 3,
+   "z": -150,
+   "yaw": 0,
+   "required": false
+  },
+  {
+   "id": "secret.abandoned_cellar",
+   "type": "secret",
+   "district": "district.crafting",
+   "x": 72,
+   "y": 1,
+   "z": 78,
+   "yaw": 0,
+   "required": false,
+   "note": "entrance to the undercity"
+  },
+  {
+   "id": "secret.undercity_npc",
+   "type": "secret",
+   "district": "district.undercity",
+   "x": 10,
+   "y": -11,
+   "z": 52,
+   "yaw": 0,
+   "required": false,
+   "note": "mysterious NPC"
+  },
+  {
+   "id": "secret.hidden_shrine",
+   "type": "secret",
+   "district": "district.spiritual",
+   "x": -150,
+   "y": 5,
+   "z": -140,
+   "yaw": 0,
+   "required": false
+  },
+  {
+   "id": "secret.palace_room",
+   "type": "secret",
+   "district": "district.palace",
+   "x": 48,
+   "y": 9,
+   "z": -140,
+   "yaw": 0,
+   "required": false
+  },
+  {
+   "id": "secret.hidden_treasure",
+   "type": "secret",
+   "district": "district.undercity",
+   "x": -30,
+   "y": -11,
+   "z": 80,
+   "yaw": 0,
+   "required": false
+  },
+  {
+   "id": "secret.shortcut",
+   "type": "secret",
+   "district": "district.undercity",
+   "x": -36,
+   "y": -11,
+   "z": 24,
+   "yaw": 0,
+   "required": false,
+   "note": "tunnel from the undercity to the yurt district"
+  }
+ ]
+}

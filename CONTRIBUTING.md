@@ -15,6 +15,19 @@ Third-party libraries are allowed **only** as infrastructure/utility
 (database, pooling, networking, serialization, testing, platform API) and never
 to replace a gameplay system. See [DEPENDENCIES.md](DEPENDENCIES.md).
 
+### World-authoring tools (amended 2026-10-06)
+
+**Axiom** and **WorldEdit** may be used **only as development / world-authoring tools** on a local or private
+build server: terrain sculpting, large-scale blockout, copy and paste, schematics. They are **never** runtime
+dependencies:
+
+- The production server must start and run with **neither installed**.
+- Authored work is committed as canonical SÜLD assets (Sponge `.schem` files and plan data under
+  `assets/world/`) and placed by the **SÜLD WorldBuilder** (our code).
+- No SÜLD gameplay system may call their APIs.
+- Axiom requires a separate **commercial licence for public or commercial servers**. Use it only on a private
+  build server, or obtain that licence.
+
 ## Dependency & repository governance
 
 1. Prefer **Maven Central**; prefer **PaperMC** for Paper artifacts.

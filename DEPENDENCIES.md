@@ -41,6 +41,15 @@ the Paper runtime and are used via the platform, never bundled.
 | `xyz.jpenilla.run-paper` | `2.3.1` | `runServer` task for a local Paper test server. |
 | Gradle wrapper | `8.14.3` | Reproducible build. |
 
+## Development-only world-authoring tools (not shipped, not runtime)
+
+| Tool | Where | Why | Licence note |
+|---|---|---|---|
+| Axiom (client mod + server plugin) | private build server only | terraforming, sculpting, large blockout | separate commercial licence required for public/commercial servers |
+| WorldEdit | private build server only | copy/paste, rotate/flip, `.schem` export | open source |
+
+The production server never installs them. Their output (`.schem`) is placed by the SÜLD WorldBuilder.
+
 ## Gameplay plugins
 
 **None, by rule.** Every gameplay system is implemented in this repository. See
