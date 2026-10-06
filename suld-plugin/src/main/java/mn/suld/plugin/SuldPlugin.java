@@ -28,6 +28,7 @@ public final class SuldPlugin extends JavaPlugin {
     private static final long AUTOSAVE_SECONDS = 300L;
 
     private SuldServices services;
+    private mn.suld.plugin.mount.HorseService horses;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
     private mn.suld.plugin.worldbuild.PregenService pregen;
 
@@ -143,6 +144,10 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("exp", progress.exp());
         registerTab("quest", progress.quest());
 
+        horses = new mn.suld.plugin.mount.HorseService(this, services);
+        getServer().getPluginManager().registerEvents(horses, this);
+        registerTab("mori", horses);
+
         mn.suld.plugin.reward.DailyService daily = new mn.suld.plugin.reward.DailyService(this, services);
         getServer().getPluginManager().registerEvents(daily, this);
         registerTab("daily", daily);
@@ -173,6 +178,9 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (horses != null) {
+            horses.shutdown();
+        }
         if (pregen != null) {
             pregen.stop();
         }

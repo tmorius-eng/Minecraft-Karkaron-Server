@@ -21,6 +21,7 @@ public final class TipsService {
             "<white><bold>Өдөр бүр <aqua><click:run_command:'/daily'>/daily</click></aqua> — 7 хоногийн дараалсан шагнал!</bold></white>",
             "<white><bold>«Сүлдний Зам» эрэл: <aqua><click:run_command:'/quest'>/quest</click></aqua> — 18 бүлэг, 4 агуй.</bold></white>",
             "<white><bold>Ангийн зэвсгээ барьж 3 товшилтоор ид шид: <aqua><click:run_command:'/skills'>/skills</click></aqua></bold></white>",
+            "<white><bold>5-р түвшнээс өөрийн Монгол морьтой: <aqua><click:run_command:'/mori'>/mori</click></aqua> — цол ахих тусам хурдан!</bold></white>",
             "<white><bold>Шинэ нутаг нээх бүрт EXP — Говь, Хангай, Алтайг судал!</bold></white>",
             "<white><bold>Үхвэл юмныхаа хагасыг алдана. Үнэт зүйлээ хотод хадгал!</bold></white>",
             "<white><bold>Бүлэг байгуулж агуйд яв: <aqua>/party invite</aqua> <gray>→</gray> <aqua>/dungeon list</aqua></bold></white>",
