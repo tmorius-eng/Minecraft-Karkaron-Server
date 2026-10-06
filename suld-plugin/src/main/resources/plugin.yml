@@ -120,6 +120,13 @@ commands:
     description: Your SULD credits; admin/console give|take.
     usage: /credits [give|take <player|uuid> <amount>]
     aliases: [kredit]
+  discord:
+    description: The server Discord link.
+  website:
+    description: The server website.
+    aliases: [site, web]
+  vote:
+    description: Vote for the server (link from branding.vote-url).
   trade:
     description: Trade items and coins with a nearby player (both confirm).
     aliases: [arilj, arilzhaa]

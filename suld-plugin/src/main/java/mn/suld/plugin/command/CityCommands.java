@@ -43,7 +43,7 @@ public final class CityCommands implements Listener {
     private static final Set<String> OWNED = Set.of("help", "?", "tuslamj", "zaavar", "rules", "juram",
             "spawn", "hot", "balance", "bal", "money", "zoos", "pay", "tuluh",
             "class", "angi", "profile", "stats", "dur", "exp", "level", "lvl", "tuvshin", "quest", "quests", "erel",
-            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits", "skills", "spells", "daily", "mori", "top", "baltop", "trade");
+            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits", "skills", "spells", "daily", "mori", "top", "baltop", "trade", "discord", "website", "vote");
     private static final int SPAWN_WARMUP_SECONDS = 3;
 
     private final Plugin plugin;

@@ -133,6 +133,8 @@ branding:
   server-icon: true
   discord: ''
   store-url: ''
+  # /vote link (a server-list page); /discord uses discord above, /website the domain.
+  vote-url: ''
 
 store:
   packages:

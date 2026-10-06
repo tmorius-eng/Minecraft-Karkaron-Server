@@ -167,6 +167,10 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.branding.ServerListService serverList = new mn.suld.plugin.branding.ServerListService(this);
         serverList.start();
         new mn.suld.plugin.branding.TipsService(this).start();
+        mn.suld.plugin.branding.LinkCommands links = new mn.suld.plugin.branding.LinkCommands(this);
+        registerTab("discord", links);
+        registerTab("website", links);
+        registerTab("vote", links);
         getServer().getPluginManager().registerEvents(serverList, this);
 
         mn.suld.plugin.auth.OwnerService owners = new mn.suld.plugin.auth.OwnerService(
