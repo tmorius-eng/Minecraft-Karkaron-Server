@@ -17,6 +17,41 @@
           "type": "minecraft:model",
           "model": "minecraft:item/iron_axe"
         }
+      },
+      {
+        "threshold": 871031,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/darkhan_1"
+        }
+      },
+      {
+        "threshold": 871032,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/darkhan_2"
+        }
+      },
+      {
+        "threshold": 871033,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/darkhan_3"
+        }
+      },
+      {
+        "threshold": 871034,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/darkhan_4"
+        }
+      },
+      {
+        "threshold": 871035,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/iron_axe"
+        }
       }
     ],
     "fallback": {

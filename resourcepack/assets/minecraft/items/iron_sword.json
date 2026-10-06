@@ -38,6 +38,76 @@
           "type": "minecraft:model",
           "model": "minecraft:item/iron_sword"
         }
+      },
+      {
+        "threshold": 871001,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/baatar_1"
+        }
+      },
+      {
+        "threshold": 871002,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/baatar_2"
+        }
+      },
+      {
+        "threshold": 871003,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/baatar_3"
+        }
+      },
+      {
+        "threshold": 871004,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/baatar_4"
+        }
+      },
+      {
+        "threshold": 871005,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/iron_sword"
+        }
+      },
+      {
+        "threshold": 871041,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/khulegchin_1"
+        }
+      },
+      {
+        "threshold": 871042,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/khulegchin_2"
+        }
+      },
+      {
+        "threshold": 871043,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/khulegchin_3"
+        }
+      },
+      {
+        "threshold": 871044,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/khulegchin_4"
+        }
+      },
+      {
+        "threshold": 871045,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/iron_sword"
+        }
       }
     ],
     "fallback": {

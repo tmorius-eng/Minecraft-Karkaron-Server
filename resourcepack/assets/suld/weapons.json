@@ -1,0 +1,122 @@
+{
+ "baatar_1": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871001,
+  "model": "suld:item/weapon/baatar_1",
+  "bow": false
+ },
+ "baatar_2": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871002,
+  "model": "suld:item/weapon/baatar_2",
+  "bow": false
+ },
+ "baatar_3": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871003,
+  "model": "suld:item/weapon/baatar_3",
+  "bow": false
+ },
+ "baatar_4": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871004,
+  "model": "suld:item/weapon/baatar_4",
+  "bow": false
+ },
+ "mergen_1": {
+  "base_item": "minecraft:bow",
+  "custom_model_data": 871011,
+  "model": "suld:item/weapon/mergen_1",
+  "bow": true
+ },
+ "mergen_2": {
+  "base_item": "minecraft:bow",
+  "custom_model_data": 871012,
+  "model": "suld:item/weapon/mergen_2",
+  "bow": true
+ },
+ "mergen_3": {
+  "base_item": "minecraft:bow",
+  "custom_model_data": 871013,
+  "model": "suld:item/weapon/mergen_3",
+  "bow": true
+ },
+ "mergen_4": {
+  "base_item": "minecraft:bow",
+  "custom_model_data": 871014,
+  "model": "suld:item/weapon/mergen_4",
+  "bow": true
+ },
+ "boo_1": {
+  "base_item": "minecraft:blaze_rod",
+  "custom_model_data": 871021,
+  "model": "suld:item/weapon/boo_1",
+  "bow": false
+ },
+ "boo_2": {
+  "base_item": "minecraft:blaze_rod",
+  "custom_model_data": 871022,
+  "model": "suld:item/weapon/boo_2",
+  "bow": false
+ },
+ "boo_3": {
+  "base_item": "minecraft:blaze_rod",
+  "custom_model_data": 871023,
+  "model": "suld:item/weapon/boo_3",
+  "bow": false
+ },
+ "boo_4": {
+  "base_item": "minecraft:blaze_rod",
+  "custom_model_data": 871024,
+  "model": "suld:item/weapon/boo_4",
+  "bow": false
+ },
+ "darkhan_1": {
+  "base_item": "minecraft:iron_axe",
+  "custom_model_data": 871031,
+  "model": "suld:item/weapon/darkhan_1",
+  "bow": false
+ },
+ "darkhan_2": {
+  "base_item": "minecraft:iron_axe",
+  "custom_model_data": 871032,
+  "model": "suld:item/weapon/darkhan_2",
+  "bow": false
+ },
+ "darkhan_3": {
+  "base_item": "minecraft:iron_axe",
+  "custom_model_data": 871033,
+  "model": "suld:item/weapon/darkhan_3",
+  "bow": false
+ },
+ "darkhan_4": {
+  "base_item": "minecraft:iron_axe",
+  "custom_model_data": 871034,
+  "model": "suld:item/weapon/darkhan_4",
+  "bow": false
+ },
+ "khulegchin_1": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871041,
+  "model": "suld:item/weapon/khulegchin_1",
+  "bow": false
+ },
+ "khulegchin_2": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871042,
+  "model": "suld:item/weapon/khulegchin_2",
+  "bow": false
+ },
+ "khulegchin_3": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871043,
+  "model": "suld:item/weapon/khulegchin_3",
+  "bow": false
+ },
+ "khulegchin_4": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871044,
+  "model": "suld:item/weapon/khulegchin_4",
+  "bow": false
+ }
+}

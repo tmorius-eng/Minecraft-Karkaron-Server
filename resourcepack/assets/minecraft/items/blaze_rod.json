@@ -1,0 +1,48 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "entries": [
+      {
+        "threshold": 871021,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/boo_1"
+        }
+      },
+      {
+        "threshold": 871022,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/boo_2"
+        }
+      },
+      {
+        "threshold": 871023,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/boo_3"
+        }
+      },
+      {
+        "threshold": 871024,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/boo_4"
+        }
+      },
+      {
+        "threshold": 871025,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/blaze_rod"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/blaze_rod"
+    }
+  }
+}

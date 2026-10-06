@@ -201,7 +201,8 @@ public final class SuldContent {
             case "weapon.khasar_soyo" -> KHASAR_FANG;
             case "item.khasar_zurkh" -> KHASAR_HEART;
             case "item.talyn_tuvshin" -> STEPPE_TALISMAN;
-            default -> WorldContent.ITEMS.stream().filter(d -> d.id().equals(id)).findFirst().orElse(null);
+            default -> id.startsWith("weapon.class.") ? mn.suld.plugin.item.ClassWeapons.byId(id)
+                    : WorldContent.ITEMS.stream().filter(d -> d.id().equals(id)).findFirst().orElse(null);
         };
     }
 

@@ -60,6 +60,7 @@ public final class SuldServices {
     private final SuldConfig config;
     private final java.util.concurrent.ExecutorService styleExecutor;
     private final mn.suld.plugin.style.StyleService styleService;
+    private final mn.suld.plugin.item.ClassWeapons classWeapons;
     private final ExecutorService ioExecutor;
     private final HikariDataSource dataSource; // null in MEMORY mode
     private final ProfileRepository repository;
@@ -187,6 +188,11 @@ public final class SuldServices {
                 : new mn.suld.plugin.persistence.JdbcStyleRepository(dataSource,
                         SqlDialect.forStorage(config.database().type()), styleExecutor);
         this.styleService = new mn.suld.plugin.style.StyleService(plugin, this, styleRepository);
+        this.classWeapons = new mn.suld.plugin.item.ClassWeapons(plugin, this);
+    }
+
+    public mn.suld.plugin.item.ClassWeapons classWeapons() {
+        return classWeapons;
     }
 
     public mn.suld.plugin.style.StyleService styles() {

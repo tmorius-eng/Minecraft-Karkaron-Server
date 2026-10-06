@@ -161,8 +161,8 @@ public final class ClassSelectionGui implements Listener {
         mustChoose.remove(player.getUniqueId());
 
         // Starter equipment.
-        ItemDefinition starter = SuldContent.starterWeapon(clazz);
-        player.getInventory().addItem(items.create(starter.roll(UUID.randomUUID(), 1, "starter"), starter));
+        // the class weapon (tier follows the level: upgraded in place at 10 / 25 / 45)
+        player.getInventory().addItem(services.classWeapons().starter(clazz, profile.progression().level()));
 
         services.events().dispatch(new ClassSelectedEvent(player.getUniqueId(), clazz));
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CLASS_SELECTED, player.getUniqueId(),

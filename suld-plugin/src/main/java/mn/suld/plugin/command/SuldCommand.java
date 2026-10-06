@@ -38,6 +38,7 @@ public final class SuldCommand implements CommandExecutor {
             case "profile" -> profile(sender);
             case "spawnmob" -> spawnMob(sender);
             case "auth" -> authStatus(sender);
+            case "exp" -> giveExp(sender, args);
             default -> help(sender);
         }
         return true;
@@ -54,6 +55,34 @@ public final class SuldCommand implements CommandExecutor {
         }
         services.mobs().spawn(mn.suld.plugin.content.SuldContent.GOVIIN_CHONO, player.getLocation());
         sender.sendMessage(Messages.success("Говийн Чоно дуудлаа."));
+    }
+
+    /** Admin/console: {@code /suld exp <player> <amount>} — grant EXP (levels up, upgrades class weapons). */
+    private void giveExp(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        if (args.length < 3) {
+            sender.sendMessage(Messages.info("/suld exp <тоглогч> <EXP>"));
+            return;
+        }
+        Player target = Bukkit.getPlayerExact(args[1]);
+        long amount;
+        try {
+            amount = Long.parseLong(args[2]);
+        } catch (NumberFormatException e) {
+            amount = -1;
+        }
+        PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
+        if (profile == null || amount <= 0 || amount > 100_000_000) {
+            sender.sendMessage(Messages.error("Онлайн тоглогч ба 1..100000000 EXP."));
+            return;
+        }
+        var result = services.progression().grantExp(profile, amount, mn.suld.api.progression.ExpSource.ADMIN);
+        services.hud().update(target, profile);
+        sender.sendMessage(Messages.success(target.getName() + ": +" + amount + " EXP → түвшин " + profile.progression().level()
+                + (result.leveledUp() ? " (+" + result.levelsGained() + ")" : "")));
     }
 
     /** Admin/console: authentication mode and per-player session/profile state. */

@@ -97,6 +97,8 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(protection, this);
         protection.start();
         new mn.suld.plugin.mob.RegionSpawner(this, services).start();
+        getServer().getPluginManager().registerEvents(services.classWeapons(), this);
+        services.classWeapons().start();
 
         mn.suld.plugin.command.CityCommands city = new mn.suld.plugin.command.CityCommands(this, services, worldBuild);
         getServer().getPluginManager().registerEvents(city, this);
