@@ -30,12 +30,12 @@ public final class WorldContent {
     public static final ItemDefinition SCORPION_VENOM = new ItemDefinition("item.khilentsiin_khor", "Хилэнцийн Хор",
             "minecraft:fermented_spider_eye", ItemRarity.COMMON, 0, Map.of(), Map.of(), false);
     public static final ItemDefinition GOBI_DAGGER = new ItemDefinition("weapon.govi_khutga", "Говийн Хутга",
-            "minecraft:iron_sword", ItemRarity.RARE, 0,
+            "minecraft:iron_sword", ItemRarity.RARE, 870013,
             Map.of(ItemStat.ATTACK, 10.0, ItemStat.CRIT_CHANCE, 0.08), Map.of(ItemStat.ATTACK, 1.5, ItemStat.CRIT_CHANCE, 0.005), false);
     public static final ItemDefinition BEAR_PELT = new ItemDefinition("item.baavgain_arisan", "Баавгайн Арьс",
-            "minecraft:rabbit_hide", ItemRarity.UNCOMMON, 0, Map.of(ItemStat.ARMOR, 2.0), Map.of(ItemStat.ARMOR, 0.5), false);
+            "minecraft:rabbit_hide", ItemRarity.UNCOMMON, 870041, Map.of(ItemStat.ARMOR, 2.0), Map.of(ItemStat.ARMOR, 0.5), false);
     public static final ItemDefinition KHANGAI_AXE = new ItemDefinition("weapon.khangai_sukh", "Хангайн Сүх",
-            "minecraft:iron_axe", ItemRarity.RARE, 0,
+            "minecraft:iron_axe", ItemRarity.RARE, 870030,
             Map.of(ItemStat.ATTACK, 13.0, ItemStat.CRIT_DAMAGE, 0.2), Map.of(ItemStat.ATTACK, 2.0), false);
     public static final ItemDefinition ICE_STONE = new ItemDefinition("item.mosun_chuluu", "Мөсөн Чулуу",
             "minecraft:prismarine_crystals", ItemRarity.RARE, 0, Map.of(ItemStat.RESOURCE, 10.0), Map.of(ItemStat.RESOURCE, 2.0), false);

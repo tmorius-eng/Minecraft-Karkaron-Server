@@ -39,3 +39,4 @@ assets/sources/*.obj
 
 # Real deployment config (contains the DB password) — only the .example is tracked
 deploy/*.env
+__pycache__/

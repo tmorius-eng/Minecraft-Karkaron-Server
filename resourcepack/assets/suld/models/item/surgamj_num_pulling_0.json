@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/bow",
+  "textures": {
+    "layer0": "suld:item/surgamj_num_pulling_0"
+  }
+}

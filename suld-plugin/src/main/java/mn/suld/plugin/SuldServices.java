@@ -199,6 +199,21 @@ public final class SuldServices {
         return itemFactory;
     }
 
+    private volatile mn.suld.api.zone.CityZone city = mn.suld.api.zone.CityZone.NONE;
+
+    /** Kharkhorum's extent (set once the WorldBuilder knows where the city stands). */
+    public mn.suld.api.zone.CityZone city() {
+        return city;
+    }
+
+    public void city(mn.suld.api.zone.CityZone zone) {
+        this.city = zone == null ? mn.suld.api.zone.CityZone.NONE : zone;
+    }
+
+    public boolean inCity(org.bukkit.Location l) {
+        return l != null && l.getWorld() != null && city.contains(l.getWorld().getName(), l.getBlockX(), l.getBlockZ());
+    }
+
     public HudService hud() {
         return hudService;
     }

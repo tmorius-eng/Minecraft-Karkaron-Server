@@ -1,0 +1,48 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "entries": [
+      {
+        "threshold": 870010,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/talyn_ild"
+        }
+      },
+      {
+        "threshold": 870011,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/surgamj_ild"
+        }
+      },
+      {
+        "threshold": 870012,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/khasar_soyo"
+        }
+      },
+      {
+        "threshold": 870013,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/govi_khutga"
+        }
+      },
+      {
+        "threshold": 870014,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/iron_sword"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/iron_sword"
+    }
+  }
+}

@@ -63,7 +63,16 @@ def cmd_map(definition: dict) -> dict:
     m = definition.get("model", {})
     if m.get("property") not in ("minecraft:custom_model_data", "custom_model_data"):
         return {}
-    return {e.get("threshold"): (e.get("model") or {}).get("model") for e in m.get("entries", [])}
+    out = {}
+    for e in m.get("entries", []):
+        node = e.get("model") or {}
+        if node.get("type") in ("minecraft:model", "model"):
+            out[e.get("threshold")] = node.get("model")
+        else:  # e.g. a bow's using_item condition: the idle (on_false) model names the skin
+            refs: list = []
+            walk_item_models(node.get("on_false", node), refs, [])
+            out[e.get("threshold")] = refs[0] if refs else None
+    return out
 
 
 def resolve(ref: str, kind: str) -> str:

@@ -98,6 +98,13 @@ world-events:
 # If the server is not verifying accounts, SÜLD refuses every login (fail closed).
 # See docs/AUTHENTICATION.md.
 # ---------------------------------------------------------------------------
+# Server owners: always operator (OP re-granted on every join). Only on a VERIFIED login
+# (online-mode=true or Velocity modern forwarding); the account UUID is pinned in
+# plugins/SULD/owners.yml on the owner's first verified join, so a later holder of the
+# same name never gets OP. Entries are Minecraft names or account UUIDs.
+owners:
+  - qeevr_
+
 auth:
   # LOCAL DEVELOPMENT ONLY — lets an offline-mode test server accept logins.
   # Anyone could join as anyone. NEVER enable on a public server.
@@ -132,3 +139,8 @@ world:
   build-blocks-per-tick: 4000
   region-spawning: true
   region-mobs-per-player: 4
+  # Pre-generate the overworld around Kharkhorum with Chunky (core plugin profile) once the city is
+  # built, so exploring never waits on chunk generation. Resumes after restarts. /chunky progress
+  pregenerate:
+    enabled: true
+    radius: 2000

@@ -46,6 +46,10 @@ public final class PlayerLifecycleListener implements Listener {
         }
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.SESSION_START, id));
         services.resourcePacks().send(player);
+        org.bukkit.inventory.ItemStack[] contents = player.getInventory().getContents();
+        if (services.items().refreshModels(contents) > 0) player.getInventory().setContents(contents);
+        org.bukkit.inventory.ItemStack[] ender = player.getEnderChest().getContents();
+        if (services.items().refreshModels(ender) > 0) player.getEnderChest().setContents(ender);
         services.relics().scheduleTease(player, profile);
         player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "! — SÜLD"));
         if (!profile.hasSelectedClass()) {

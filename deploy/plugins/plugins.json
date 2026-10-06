@@ -74,6 +74,20 @@
       "why": "Discord chat bridge (idle until a bot token is configured)"
     },
     {
+      "id": "skinsrestorer",
+      "name": "SkinsRestorer",
+      "profile": "core",
+      "modrinth": "skinsrestorer",
+      "why": "/skin <name|url>: player skins, also on the offline local test server (identity is still verified by SULD/Mojang, SkinsRestorer only changes the look)"
+    },
+    {
+      "id": "decentholograms",
+      "name": "DecentHolograms",
+      "profile": "core",
+      "modrinth": "decentholograms",
+      "why": "/dh: floating text and signposts in Kharkhorum (labels only; SULD owns NPCs, quests and UI)"
+    },
+    {
       "id": "grimac",
       "name": "GrimAC",
       "profile": "hardening",

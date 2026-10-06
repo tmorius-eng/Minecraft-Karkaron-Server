@@ -60,6 +60,7 @@ public final class ClassSelectionGui implements Listener {
     private final QuestService quests;
     private final ItemFactory items;
     private final java.util.Set<UUID> mustChoose = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final java.util.Set<UUID> reopening = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public ClassSelectionGui(Plugin plugin, SuldServices services, HudService hud,
                              QuestService quests, ItemFactory items) {
@@ -71,6 +72,9 @@ public final class ClassSelectionGui implements Listener {
     }
 
     public void open(Player player) {
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ClassSelectionHolder) {
+            return; // already showing: re-opening would close it and trigger another reopen (loop)
+        }
         ClassSelectionHolder holder = new ClassSelectionHolder();
         Inventory inv = org.bukkit.Bukkit.createInventory(holder, 27,
                 Component.text("Анги Сонгох — SÜLD", Messages.BRAND));
@@ -131,9 +135,12 @@ public final class ClassSelectionGui implements Listener {
         if (!(event.getPlayer() instanceof Player player)) {
             return;
         }
-        // First-time players must pick: reopen next tick if they closed without one.
-        if (mustChoose.contains(player.getUniqueId())) {
+        // First-time players must pick: reopen next tick if THEY closed it without choosing. A close caused
+        // by another inventory opening (or a plugin) is not reopened, and at most one reopen is pending.
+        if (mustChoose.contains(player.getUniqueId()) && event.getReason() == InventoryCloseEvent.Reason.PLAYER
+                && reopening.add(player.getUniqueId())) {
             plugin.getServer().getScheduler().runTask(plugin, () -> {
+                reopening.remove(player.getUniqueId());
                 if (player.isOnline() && mustChoose.contains(player.getUniqueId())) {
                     open(player);
                 }

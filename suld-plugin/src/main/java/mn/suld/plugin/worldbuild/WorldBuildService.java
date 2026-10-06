@@ -82,7 +82,7 @@ import java.util.zip.GZIPOutputStream;
  * </ol>
  * Approved/locked builds are never rebuilt or overwritten without an explicit unlock.
  */
-public final class WorldBuildService implements Listener {
+public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZone {
 
     private static final String SLICE = "slice-1";
     private static final long TICK_BUDGET_NANOS = 25_000_000L;
@@ -154,7 +154,12 @@ public final class WorldBuildService implements Listener {
             }
             switch (state.status) {
                 case BUILDING -> Bukkit.getScheduler().runTaskLater(plugin, () -> resume(null), 40L);
-                case BUILT, APPROVED, LOCKED -> Bukkit.getScheduler().runTask(plugin, this::applySpawn);
+                case BUILT, APPROVED, LOCKED -> {
+                    Bukkit.getScheduler().runTask(plugin, this::applySpawn);
+                    // Self-heal: anything that changed the city while unprotected (explosions, old builds)
+                    // is put back from the plan. Idempotent; only differing blocks are written.
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> repair(null), 60L);
+                }
                 default -> { }
             }
             return;
@@ -167,6 +172,13 @@ public final class WorldBuildService implements Listener {
     public void stop() {
         if (task != null) task.cancel();
         task = null;
+        if (state != null && repairReturn != null) { // an unfinished repair re-runs on the next start anyway
+            state.status = repairReturn;
+            state.blocksPlaced = repairStart[0];
+            state.blocksCleared = repairStart[1];
+            repairReturn = null;
+            saveState();
+        }
         if (state != null && state.status == BuildState.Status.BUILDING) saveState();
         closeRollback();
     }
@@ -398,6 +410,42 @@ public final class WorldBuildService implements Listener {
         compileAsync(say, false);
     }
 
+    /** Status to return to after a repair pass (null when no repair is running). */
+    private BuildState.Status repairReturn;
+
+    /**
+     * Put the built city back exactly as planned: replays the plan against the saved height map and
+     * rewrites only blocks that differ (creeper holes, fire, anything changed). The status (BUILT,
+     * APPROVED, LOCKED) is kept. Original terrain stays in the rollback log (only first writes are logged).
+     */
+    public void repair(Consumer<String> feedback) {
+        Consumer<String> say = msg(feedback);
+        if (!isBuilt()) {
+            say.accept("Засах хот алга (баригдаагүй).");
+            return;
+        }
+        if (task != null || repairReturn != null) {
+            say.accept("Барилга/засвар аль хэдийн явагдаж байна.");
+            return;
+        }
+        try {
+            readHeights();
+            loadRecorded();
+        } catch (IOException e) {
+            say.accept("Хадгалсан төлөв уншиж чадсангүй: " + e.getMessage());
+            return;
+        }
+        repairReturn = state.status;
+        long placedBefore = state.blocksPlaced, clearedBefore = state.blocksCleared;
+        state.status = BuildState.Status.BUILDING;
+        state.chunkIndex = 0;
+        repairStart = new long[]{placedBefore, clearedBefore};
+        say.accept("Хархорумыг төлөвлөгөөний дагуу засаж байна…");
+        compileAsync(say, false);
+    }
+
+    private long[] repairStart;
+
     public void pause(Consumer<String> feedback) {
         if (task == null) {
             msg(feedback).accept("Явагдаж буй барилга алга.");
@@ -524,6 +572,19 @@ public final class WorldBuildService implements Listener {
         task.cancel();
         task = null;
         closeRollback();
+        if (repairReturn != null) {
+            state.status = repairReturn;
+            repairReturn = null;
+            long fixed = state.blocksPlaced - repairStart[0], cleared = state.blocksCleared - repairStart[1];
+            // keep the original build's totals: a repair is not a build
+            state.blocksPlaced = repairStart[0];
+            state.blocksCleared = repairStart[1];
+            saveState();
+            String m = "Хархорум засагдлаа: " + fixed + " блок сэргээж, " + cleared + " илүү блок цэвэрлэв.";
+            plugin.getLogger().info("[worldbuild] repair: " + fixed + " blocks restored, " + cleared + " cleared");
+            say.accept(m);
+            return;
+        }
         state.status = BuildState.Status.BUILT;
         state.finishedAt = System.currentTimeMillis();
         state.buildMillis = state.finishedAt - state.startedAt;
@@ -700,6 +761,53 @@ public final class WorldBuildService implements Listener {
         state.status = s;
         saveState();
         say.accept("Төлөв: " + s);
+    }
+
+    // ------------------------------------------------------------------ city zone
+
+    private final Set<java.util.UUID> editors = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /** True once a city stands in the world (built, approved or locked). */
+    public boolean isBuilt() {
+        return state != null && (state.status == BuildState.Status.BUILT || state.status == BuildState.Status.APPROVED
+                || state.status == BuildState.Status.LOCKED);
+    }
+
+    @Override
+    public boolean contains(String world, int x, int z) {
+        return near(world, x, z, 0);
+    }
+
+    @Override
+    public boolean near(String world, int x, int z, int margin) {
+        BuildState s = state;
+        if (s == null || spec == null || !isBuilt() || !s.world.equals(world)) return false;
+        Footprint b = spec.bounds();
+        int lx = x - s.anchorX, lz = z - s.anchorZ;
+        return lx >= b.minX() - margin && lx <= b.maxX() + margin && lz >= b.minZ() - margin && lz <= b.maxZ() + margin;
+    }
+
+    /** Staff build mode: lets a {@code suld.admin.world} player change the protected city. */
+    public boolean toggleEditor(java.util.UUID player) {
+        if (!editors.remove(player)) {
+            editors.add(player);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isEditor(java.util.UUID player) {
+        return editors.contains(player);
+    }
+
+    /** World location of a gameplay point of the built slice (null if unknown or not built). */
+    public Location pointLocation(String id) {
+        return isBuilt() ? point(id) : null;
+    }
+
+    /** All gameplay points of the built slice. */
+    public List<WorldPoint> slicePoints() {
+        return spec == null ? List.of() : spec.points().stream().filter(p -> "slice.1".equals(p.slice())).toList();
     }
 
     // ------------------------------------------------------------------ spawn

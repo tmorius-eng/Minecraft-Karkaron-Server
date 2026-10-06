@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/handheld",
   "textures": {
-    "layer0": "suld:item/suld_ild_tenger"
+    "layer0": "suld:item/surgamj_ild"
   }
 }

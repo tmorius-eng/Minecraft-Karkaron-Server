@@ -8,7 +8,7 @@ website: https://github.com/tmorius-eng/Minecraft-Karkaron-Server
 # SULD owns the RPG commands (/help, /rules, /spawn, /class, /skills, ...): load before the utility
 # plugins so their same-named commands defer to SULD.
 loadbefore: [Essentials, EssentialsSpawn, CMI]
-softdepend: [LuckPerms, PlaceholderAPI]
+softdepend: [LuckPerms, PlaceholderAPI, Chunky]
 # Infrastructure-only runtime libraries, fetched by Paper from Maven Central on
 # first load. Pinned. HikariCP is shaded into the jar, not listed here. Only the
 # driver matching the configured database is actually used at runtime.
@@ -48,6 +48,42 @@ commands:
     description: World-unique relics (list, info, hint, history; admin setshrine/return/give/recover/tp).
     usage: /relic <list|info|hint|history>
     aliases: [suld-unique, suldee]
+  help:
+    description: SULD player guide (pages start, class, city, dungeon, clan, relic, commands, rules).
+    usage: /help [page]
+    aliases: ['?', tuslamj, zaavar]
+  rules:
+    description: Server rules.
+    usage: /rules
+    aliases: [juram]
+  spawn:
+    description: Return to Kharkhorum (3 s warm-up outside the city).
+    usage: /spawn
+    aliases: [hot]
+  balance:
+    description: Your SULD coins.
+    usage: /balance
+    aliases: [bal, money, zoos]
+  pay:
+    description: Send SULD coins to an online player.
+    usage: /pay <player> <amount>
+    aliases: [tuluh]
+  class:
+    description: Choose your class (first time) or view it.
+    usage: /class
+    aliases: [angi]
+  profile:
+    description: Your character sheet.
+    usage: /profile
+    aliases: [stats, dur]
+  exp:
+    description: Level and EXP progress.
+    usage: /exp
+    aliases: [level, lvl, tuvshin]
+  quest:
+    description: Your active quest.
+    usage: /quest
+    aliases: [quests, erel]
   worldbuild:
     description: WorldBuilder (status, build, pause, resume, validate, dump, rollback, approve, lock, unlock, tp).
     usage: /worldbuild <status|build|pause|resume|validate|dump|rollback|approve|lock|unlock|tp>

@@ -17,8 +17,8 @@ import java.util.function.Consumer;
  */
 public final class WorldBuildCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("status", "build", "pause", "resume", "validate", "dump",
-            "rollback", "approve", "lock", "unlock", "tp");
+    private static final List<String> SUBS = List.of("status", "build", "pause", "resume", "validate", "repair", "dump",
+            "rollback", "approve", "lock", "unlock", "tp", "edit");
     private final WorldBuildService service;
 
     public WorldBuildCommand(WorldBuildService service) {
@@ -39,6 +39,7 @@ public final class WorldBuildCommand implements TabExecutor {
             case "pause" -> service.pause(say);
             case "resume" -> service.resume(say);
             case "validate" -> service.validateInWorld(say);
+            case "repair" -> service.repair(say);
             case "dump" -> service.dump(say);
             case "rollback" -> {
                 if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
@@ -50,6 +51,15 @@ public final class WorldBuildCommand implements TabExecutor {
             case "approve" -> service.setStatus(BuildState.Status.APPROVED, say);
             case "lock" -> service.setStatus(BuildState.Status.LOCKED, say);
             case "unlock" -> service.setStatus(BuildState.Status.BUILT, say);
+            case "edit" -> {
+                if (!(sender instanceof Player p)) {
+                    sender.sendMessage(Messages.error("Зөвхөн тоглогч."));
+                } else {
+                    boolean on = service.toggleEditor(p.getUniqueId());
+                    sender.sendMessage(on ? Messages.success("Барилгын горим: Хархорумыг засварлах боломжтой (дахин бичвэл унтарна).")
+                            : Messages.info("Барилгын горим унтарлаа: хот дахин хамгаалагдсан."));
+                }
+            }
             case "tp" -> {
                 if (!(sender instanceof Player p)) {
                     sender.sendMessage(Messages.error("Зөвхөн тоглогч."));

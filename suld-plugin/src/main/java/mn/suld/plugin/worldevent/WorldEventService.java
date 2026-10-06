@@ -182,6 +182,10 @@ public final class WorldEventService {
         List<String> ids = new ArrayList<>(active.definition().targetMobIds());
         ids.sort(String::compareTo);
         for (Player p : players) {
+            // Kharkhorum is a safe zone: the raiders come for players out on the steppe
+            if (services.city().near(p.getWorld().getName(), p.getLocation().getBlockX(), p.getLocation().getBlockZ(), 16)) {
+                continue;
+            }
             for (int i = 0; i < SPAWN_PER_PLAYER && eventMobs.size() < cap; i++) {
                 MobDefinition def = SuldContent.mobFor(ids.get(ThreadLocalRandom.current().nextInt(ids.size())));
                 Location loc = surfaceNear(p.getLocation());

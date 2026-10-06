@@ -29,6 +29,7 @@ public final class SuldPlugin extends JavaPlugin {
 
     private SuldServices services;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
+    private mn.suld.plugin.worldbuild.PregenService pregen;
 
     @Override
     public void onEnable() {
@@ -85,6 +86,32 @@ public final class SuldPlugin extends JavaPlugin {
             wb.setTabCompleter(wbc);
         }
         worldBuild.start();
+        services.city(worldBuild);
+        mn.suld.plugin.worldbuild.CityProtectionListener protection =
+                new mn.suld.plugin.worldbuild.CityProtectionListener(this, services, worldBuild);
+        getServer().getPluginManager().registerEvents(protection, this);
+        protection.start();
+
+        mn.suld.plugin.command.CityCommands city = new mn.suld.plugin.command.CityCommands(this, services, worldBuild);
+        getServer().getPluginManager().registerEvents(city, this);
+        registerTab("help", city.help());
+        registerTab("rules", city.rules());
+        registerTab("spawn", city.spawn());
+        registerTab("balance", city.balance());
+        registerTab("pay", city.pay());
+        mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
+        registerTab("class", progress.clazz());
+        registerTab("profile", progress.profile());
+        registerTab("exp", progress.exp());
+        registerTab("quest", progress.quest());
+
+        mn.suld.plugin.auth.OwnerService owners = new mn.suld.plugin.auth.OwnerService(
+                this, services.auth().policy().mode(), getConfig().getStringList("owners"));
+        getServer().getPluginManager().registerEvents(owners, this);
+        owners.start();
+
+        pregen = new mn.suld.plugin.worldbuild.PregenService(this, worldBuild);
+        pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
         getServer().getScheduler().runTaskTimerAsynchronously(this,
@@ -99,6 +126,9 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (pregen != null) {
+            pregen.stop();
+        }
         if (worldBuild != null) {
             worldBuild.stop();
         }
@@ -158,6 +188,12 @@ public final class SuldPlugin extends JavaPlugin {
         } else {
             getLogger().warning("Command '" + name + "' is missing from plugin.yml");
         }
+    }
+
+    private void registerTab(String name, org.bukkit.command.TabExecutor executor) {
+        registerCommand(name, executor);
+        PluginCommand command = getCommand(name);
+        if (command != null) command.setTabCompleter(executor);
     }
 
     /** Exposed for tests / sibling modules that need the live service container. */

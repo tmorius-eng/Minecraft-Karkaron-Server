@@ -31,7 +31,7 @@ public final class SuldContent {
 
     // --- Items ---
     public static final ItemDefinition WOLF_PELT = new ItemDefinition(
-            "item.chonon_arisan", "Чонын арьс", "minecraft:leather", ItemRarity.COMMON, 0,
+            "item.chonon_arisan", "Чонын арьс", "minecraft:leather", ItemRarity.COMMON, 870040,
             Map.of(), Map.of(), false);
 
     public static final ItemDefinition STEPPE_SABER = new ItemDefinition(
@@ -60,7 +60,7 @@ public final class SuldContent {
 
     // --- Dungeon reward items ---
     public static final ItemDefinition KHASAR_FANG = new ItemDefinition(
-            "weapon.khasar_soyo", "Хасарын Соёо", "minecraft:iron_sword", ItemRarity.EPIC, 0,
+            "weapon.khasar_soyo", "Хасарын Соёо", "minecraft:iron_sword", ItemRarity.EPIC, 870012,
             Map.of(ItemStat.ATTACK, 12.0, ItemStat.CRIT_CHANCE, 0.08, ItemStat.CRIT_DAMAGE, 0.25),
             Map.of(ItemStat.ATTACK, 2.0, ItemStat.CRIT_CHANCE, 0.005), false);
 
@@ -207,10 +207,10 @@ public final class SuldContent {
 
     // --- Starter equipment granted on class selection ---
     private static final ItemDefinition STARTER_SABER = new ItemDefinition(
-            "weapon.surgamj_ild", "Сургамжийн Илд", "minecraft:iron_sword", ItemRarity.COMMON, 0,
+            "weapon.surgamj_ild", "Сургамжийн Илд", "minecraft:iron_sword", ItemRarity.COMMON, 870011,
             Map.of(ItemStat.ATTACK, 4.0), Map.of(), false);
     private static final ItemDefinition STARTER_BOW = new ItemDefinition(
-            "weapon.surgamj_num", "Сургамжийн Нум", "minecraft:bow", ItemRarity.COMMON, 0,
+            "weapon.surgamj_num", "Сургамжийн Нум", "minecraft:bow", ItemRarity.COMMON, 870020,
             Map.of(ItemStat.ATTACK, 4.0), Map.of(), false);
 
     /** Starter weapon granted when a class is chosen (ranged classes get a bow). */

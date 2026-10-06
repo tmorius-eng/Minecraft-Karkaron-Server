@@ -131,6 +131,11 @@ public final class DungeonService {
             members.add(id);
         }
 
+        // the run's arena is where the party stands: never inside Kharkhorum (a safe zone) or right at its walls
+        org.bukkit.Location here = leader.getLocation();
+        if (services.city().near(here.getWorld().getName(), here.getBlockX(), here.getBlockZ(), 24)) {
+            return Messages.error("Хархорумд агуйн аян эхлэхгүй. Хотын хаалгаар гараад тал нутагт /dungeon enter.");
+        }
         ActiveRun ar = new ActiveRun(new DungeonRun(def.id(), party.id(), def.totalWaves()),
                 def, party, leader.getLocation().clone());
         ar.participants.addAll(members);

@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "entries": [
+      {
+        "threshold": 870041,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/baavgain_arisan"
+        }
+      },
+      {
+        "threshold": 870042,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/rabbit_hide"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/rabbit_hide"
+    }
+  }
+}

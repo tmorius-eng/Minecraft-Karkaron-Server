@@ -113,6 +113,27 @@ public final class ItemFactory {
         return Optional.of(new ItemInstance(id, UUID.fromString(uuid), rarity, level, stats, soulbound, 0, "stack"));
     }
 
+    /**
+     * Bring SÜLD items made before their skin existed up to date: set the definition's current
+     * custom model data (the resource-pack skin). Returns how many stacks changed.
+     */
+    public int refreshModels(ItemStack[] stacks) {
+        int changed = 0;
+        for (ItemStack stack : stacks) {
+            if (stack == null || !stack.hasItemMeta()) continue;
+            ItemMeta meta = stack.getItemMeta();
+            String id = meta.getPersistentDataContainer().get(keyId, PersistentDataType.STRING);
+            if (id == null) continue;
+            ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(id);
+            if (def == null || def.customModelData() <= 0) continue;
+            if (meta.hasCustomModelData() && meta.getCustomModelData() == def.customModelData()) continue;
+            meta.setCustomModelData(def.customModelData());
+            stack.setItemMeta(meta);
+            changed++;
+        }
+        return changed;
+    }
+
     public boolean isSuldItem(ItemStack stack) {
         return read(stack).isPresent();
     }
