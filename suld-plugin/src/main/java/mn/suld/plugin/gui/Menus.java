@@ -195,6 +195,18 @@ public final class Menus {
             pl.closeInventory();
             pl.performCommand("clan info");
         });
+        m.set(34, Menu.item(Material.CHEST, Menu.title("Өдрийн шагнал · /daily", GOLD), Menu.lore(GOLD,
+                List.of(b("7 хоногийн дараалсан шагнал: зоос, EXP.")), List.of(), "Дарж нээх")), (pl, c) -> {
+            pl.closeInventory();
+            pl.performCommand("daily");
+        });
+        boolean horse = prog.level() >= mn.suld.plugin.mount.HorseService.MIN_LEVEL;
+        m.set(22, Menu.item(horse ? Material.SADDLE : Material.LEAD, Menu.title("Монгол морь · /mori", horse ? GREEN : NamedTextColor.GRAY), Menu.lore(horse ? GREEN : NamedTextColor.GRAY,
+                List.of(b("Цол ахих тусам хурдан, гоё морь.")), List.of(Menu.kv("Нээгдэх:", "Түвшин " + mn.suld.plugin.mount.HorseService.MIN_LEVEL, horse ? GREEN : RED)),
+                horse ? "Дарж дуудах" : "Түвшин ахиул")), horse ? (pl, c) -> {
+            pl.closeInventory();
+            pl.performCommand("mori");
+        } : null);
         m.set(36, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
         m.open(p);
     }
