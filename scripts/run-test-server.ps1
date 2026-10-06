@@ -218,7 +218,9 @@ function ConvertTo-List($json) {
     return ,$list
 }
 
-function Get-PluginBuild($entry, [string]$Mc) {
+function Get-PluginBuilds($entry, [string]$Mc) {
+    # Candidate builds for this Minecraft version, best first (releases newest first, then the rest).
+    $out = New-Object System.Collections.Generic.List[object]
     $slug = Get-Prop $entry "modrinth"
     if ($slug) {
         $loaders = [uri]::EscapeDataString('["paper","purpur","spigot","bukkit"]')
@@ -227,17 +229,17 @@ function Get-PluginBuild($entry, [string]$Mc) {
         try {
             $versions = ConvertTo-List (Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$slug/version?loaders=$loaders&game_versions=$games" -UserAgent $UserAgent)
         } catch { $versions = $null }
-        if ($versions -and $versions.Count -gt 0) {
-            $v = $null
-            foreach ($candidate in $versions) { if ((Get-Prop $candidate "version_type") -eq "release") { $v = $candidate; break } }
-            if (-not $v) { $v = $versions[0] }
-            $files = ConvertTo-List (Get-Prop $v "files")
-            $f = $null
-            foreach ($candidate in $files) { if (Get-Prop $candidate "primary") { $f = $candidate; break } }
-            if (-not $f -and $files.Count -gt 0) { $f = $files[0] }
-            if ($f) {
-                return [pscustomobject]@{ Version = [string](Get-Prop $v "version_number"); File = [string](Get-Prop $f "filename");
-                    Url = [string](Get-Prop $f "url"); Algo = "SHA512"; Hash = [string](Get-Prop (Get-Prop $f "hashes") "sha512"); Source = "modrinth" }
+        if ($versions) {
+            $ordered = @($versions | Where-Object { (Get-Prop $_ "version_type") -eq "release" }) + @($versions | Where-Object { (Get-Prop $_ "version_type") -ne "release" })
+            foreach ($v in $ordered) {
+                $f = $null
+                foreach ($candidate in (ConvertTo-List (Get-Prop $v "files"))) { if (Get-Prop $candidate "primary") { $f = $candidate; break } }
+                if (-not $f) { $f = (ConvertTo-List (Get-Prop $v "files")) | Select-Object -First 1 }
+                if ($f) {
+                    $out.Add([pscustomobject]@{ Version = [string](Get-Prop $v "version_number"); File = [string](Get-Prop $f "filename");
+                        Url = [string](Get-Prop $f "url"); Algo = "SHA512"; Hash = [string](Get-Prop (Get-Prop $f "hashes") "sha512"); Source = "modrinth" })
+                }
+                if ($out.Count -ge 6) { break }
             }
         }
     }
@@ -255,12 +257,59 @@ function Get-PluginBuild($entry, [string]$Mc) {
                 $info = Get-Prop $d "fileInfo"
                 $name = Get-Prop $info "name"
                 if (-not $name) { $name = "$($parts[1])-$(Get-Prop $v 'name').jar" }
-                return [pscustomobject]@{ Version = [string](Get-Prop $v "name"); File = [string]$name; Url = [string]$url;
-                    Algo = "SHA256"; Hash = [string](Get-Prop $info "sha256Hash"); Source = "hangar" }
+                $out.Add([pscustomobject]@{ Version = [string](Get-Prop $v "name"); File = [string]$name; Url = [string]$url;
+                    Algo = "SHA256"; Hash = [string](Get-Prop $info "sha256Hash"); Source = "hangar" })
             }
         } catch { }
     }
-    return $null
+    return ,$out
+}
+
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function Get-JarInfo([string]$Path) {
+    # plugin name and the Java class-file version of its main class (65 = Java 21)
+    $zip = [IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $yml = $zip.GetEntry("plugin.yml")
+        if (-not $yml) { $yml = $zip.GetEntry("paper-plugin.yml") }
+        if (-not $yml) { return $null }
+        $r = New-Object IO.StreamReader($yml.Open())
+        try { $text = $r.ReadToEnd() } finally { $r.Dispose() }
+        $name = if ($text -match '(?m)^name:\s*["'']?([^"''\r\n]+)') { $Matches[1].Trim() } else { $null }
+        $main = if ($text -match '(?m)^main:\s*["'']?([^"''\r\n]+)') { $Matches[1].Trim() } else { $null }
+        $major = 0
+        if ($main) {
+            $cls = $zip.GetEntry(($main -replace '\.', '/') + ".class")
+            if ($cls) {
+                $s = $cls.Open()
+                try { $buf = New-Object byte[] 8; [void]$s.Read($buf, 0, 8); $major = $buf[6] * 256 + $buf[7] } finally { $s.Dispose() }
+            }
+        }
+        return [pscustomobject]@{ Name = $name; Major = $major }
+    } finally {
+        $zip.Dispose()
+    }
+}
+
+$JavaClassMax = 65   # Paper 1.21.11 runs on Java 21
+
+function Remove-StrayPlugins([string]$Dir, $Lock, $Managed) {
+    # remove duplicates of managed plugins (e.g. jars left by an older installer) and jars built for a newer Java
+    $keep = @{}
+    foreach ($k in $Lock.Keys) { $keep[[string](Get-Prop $Lock[$k] "file")] = $true }
+    foreach ($jar in Get-ChildItem $Dir -Filter "*.jar") {
+        if ($keep.ContainsKey($jar.Name) -or $jar.Name -like "suld-plugin-*") { continue }
+        $info = $null
+        try { $info = Get-JarInfo $jar.FullName } catch { }
+        $pluginName = if ($info) { $info.Name } else { $null }
+        $aliases = @{ "Essentials" = "EssentialsX"; "Vault" = "VaultUnlocked" }
+        $managedName = if ($pluginName -and $aliases.ContainsKey($pluginName)) { $aliases[$pluginName] } else { $pluginName }
+        if (($managedName -and $Managed.ContainsKey($managedName)) -or ($info -and $info.Major -gt $JavaClassMax)) {
+            Write-Host "    xx removing stray $($jar.Name) ($pluginName)" -ForegroundColor Yellow
+            Remove-Item $jar.FullName -Force
+        }
+    }
 }
 
 if ($Plugins -ne "none") {
@@ -272,46 +321,56 @@ if ($Plugins -ne "none") {
     $lock = @{}
     if (Test-Path $lockFile) {
         (Get-Content $lockFile -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $lock[$_.Name] = $_.Value }
-        # an older installer stored every version number in one string: forget those entries (the jar is re-checked)
-        foreach ($k in @($lock.Keys)) { if ([string](Get-Prop $lock[$k] "version") -match "\s") { $lock.Remove($k) } }
     }
+    $managed = @{}
     $skipped = @()
     foreach ($p in (ConvertTo-List $manifest.plugins)) {
         if ($profiles -notcontains $p.profile) { continue }
-        $build = Get-PluginBuild $p $MinecraftVersion
-        if (-not $build) { $skipped += $p.name; Write-Host "    -- $($p.name): no release for $MinecraftVersion (skipped)"; continue }
-        $dest = Join-Path $PluginsDir $build.File
+        $managed[$p.name] = $true
         $prev = $lock[$p.id]
         $prevFile = [string](Get-Prop $prev "file")
-        if ((Test-Path $dest) -and ($prevFile -eq $build.File -or -not $prev)) {
-            # already on disk (also after the old installer): just record it
-            $lock[$p.id] = [pscustomobject]@{ name = $p.name; version = $build.Version; file = $build.File; source = $build.Source }
-            Write-Host "    ok $($p.name) $($build.Version)"
-            continue
+        $installed = $null
+        foreach ($build in (Get-PluginBuilds $p $MinecraftVersion)) {
+            $dest = Join-Path $PluginsDir $build.File
+            if (Test-Path $dest) {
+                $info = Get-JarInfo $dest
+                if ($info -and $info.Major -le $JavaClassMax) { $installed = $build; break }
+                Remove-Item $dest -Force   # present but built for a newer Java: not usable here
+                continue
+            }
+            $tmp = "$dest.part"
+            try {
+                Invoke-WebRequest -Uri $build.Url -OutFile $tmp -UserAgent $UserAgent -UseBasicParsing
+            } catch {
+                if (Test-Path $tmp) { Remove-Item $tmp -Force }
+                continue
+            }
+            if ($build.Hash -and ((Get-FileHash -Algorithm $build.Algo -Path $tmp).Hash -ine $build.Hash)) {
+                Remove-Item $tmp -Force
+                Write-Host "    !! $($p.name) $($build.Version): $($build.Algo) mismatch" -ForegroundColor Yellow
+                continue
+            }
+            $info = Get-JarInfo $tmp
+            if (-not $info -or $info.Major -gt $JavaClassMax) {
+                Remove-Item $tmp -Force
+                Write-Host "    .. $($p.name) $($build.Version) needs a newer Java; trying an older build"
+                continue
+            }
+            Move-Item $tmp $dest -Force
+            $installed = $build
+            break
         }
-        $tmp = "$dest.part"
-        try {
-            Invoke-WebRequest -Uri $build.Url -OutFile $tmp -UserAgent $UserAgent -UseBasicParsing
-        } catch {
-            if (Test-Path $tmp) { Remove-Item $tmp -Force }
-            Write-Host "    !! $($p.name): download failed ($($_.Exception.Message))" -ForegroundColor Yellow
-            continue
-        }
-        if ($build.Hash -and ((Get-FileHash -Algorithm $build.Algo -Path $tmp).Hash -ine $build.Hash)) {
-            Remove-Item $tmp -Force
-            Write-Host "    !! $($p.name): $($build.Algo) mismatch, not installed" -ForegroundColor Yellow
-            continue
-        }
-        if ($prevFile -and $prevFile -ne $build.File) {
+        if (-not $installed) { $skipped += $p.name; Write-Host "    -- $($p.name): no Java 21 build for $MinecraftVersion (skipped)"; continue }
+        if ($prevFile -and $prevFile -ne $installed.File) {
             $old = Join-Path $PluginsDir $prevFile
             if (Test-Path $old) { Remove-Item $old -Force }
         }
-        Move-Item $tmp $dest -Force
-        $lock[$p.id] = [pscustomobject]@{ name = $p.name; version = $build.Version; file = $build.File; source = $build.Source }
-        Write-Host "    ++ $($p.name) $($build.Version) ($($build.Source))"
+        $lock[$p.id] = [pscustomobject]@{ name = $p.name; version = $installed.Version; file = $installed.File; source = $installed.Source }
+        Write-Host "    ok $($p.name) $($installed.Version) ($($installed.Source))"
     }
+    Remove-StrayPlugins $PluginsDir $lock $managed
     [IO.File]::WriteAllText($lockFile, ($lock | ConvertTo-Json -Depth 4), $Utf8NoBom)
-    if ($skipped.Count -gt 0) { Write-Host "    No $MinecraftVersion build yet: $($skipped -join ', ')" -ForegroundColor Yellow }
+    if ($skipped.Count -gt 0) { Write-Host "    Not installed: $($skipped -join ', ')" -ForegroundColor Yellow }
 }
 
 # --- 4. run directory ---------------------------------------------------------------------------
