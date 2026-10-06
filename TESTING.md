@@ -68,6 +68,21 @@ Point a client at the running server (offline mode) and:
 5. Kill boss → banner, +EXP/+coins, reward items in inventory; mobs gone, party returns to FORMING.
 6. Repeat and let everyone die / `/dungeon abort` → "Агуй бүтэлгүйтлээ", all mobs removed.
 
+## Vertical Slice 3 — verification matrix
+
+| Step | How verified | Status |
+|---|---|---|
+| Clan rules (names/tags, invites, ranks, leader transfer, capacity, contribution) | `ClanRegistryTest`, `ClanProgressionTest` | automated ✅ |
+| World event (progress, expiry, podium rewards, threshold) | `WorldEventRunTest` | automated ✅ |
+| V3 migration + JDBC clans on real PostgreSQL (moves, cascade, DB rejects dup tag / double membership) | `JdbcClanRepositoryIT` (opt-in: `SULD_TEST_PG_URL`) | automated ✅ (run locally) |
+| plugin.yml well-formed + all commands declared | `PluginDescriptorTest` | automated ✅ |
+| Migrations V1–V3 on boot, clan loaded from DB on restart, event start/stop | live Paper + PostgreSQL | automated ✅ |
+| `/clan create` → invite/accept → chat tags → `/cc` | in-world | **manual client (2 players)** |
+| `/suldevent start` → raiders spawn & attack → 30 kills → podium rewards + clan EXP | in-world | **manual client** |
+
+Run the DB integration test: `SULD_TEST_PG_URL=jdbc:postgresql://127.0.0.1:5432/<throwaway> SULD_TEST_PG_USER=… SULD_TEST_PG_PASS=… ./gradlew :suld-plugin:test`
+(it **drops all suld_ tables** in that database first).
+
 ## Latest live run (2026-10-06, automated)
 - Paper 1.21.11 (build 132) started headless; SULD remapped → loaded → ENABLED → disabled cleanly.
 - `libraries:` JDBC drivers (mysql-connector-j, postgresql, protobuf, checker-qual) downloaded + loaded at runtime.

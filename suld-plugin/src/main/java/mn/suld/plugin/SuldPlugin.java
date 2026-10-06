@@ -52,6 +52,16 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand("suld", new SuldCommand(this, services));
         registerCommand("party", new mn.suld.plugin.command.PartyCommand(services.parties()));
         registerCommand("dungeon", new mn.suld.plugin.command.DungeonCommand(services));
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.clan.ChatListener(services.clans()), this);
+        getServer().getPluginManager().registerEvents(
+                new mn.suld.plugin.clan.SocialListener(services.clans(), services.worldEvents()), this);
+        mn.suld.plugin.command.ClanCommand clanCommand = new mn.suld.plugin.command.ClanCommand(services.clans());
+        registerCommand("clan", clanCommand);
+        registerCommand("cc", clanCommand);
+        registerCommand("suldevent", new mn.suld.plugin.command.SuldEventCommand(services.worldEvents()));
+        services.worldEvents().startTicker();
+        long clanFlushTicks = TICKS_PER_SECOND * 60;
+        getServer().getScheduler().runTaskTimer(this, () -> services.clans().flushDirty(), clanFlushTicks, clanFlushTicks);
         registerCommand("revive", new ReviveCommand(this, services));
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 

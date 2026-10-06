@@ -33,7 +33,8 @@ public final class SchemaMigrator {
 
     private static final List<Migration> MIGRATIONS = List.of(
             new Migration(1, "init", "V1__init.sql"),
-            new Migration(2, "profile_quest_currency", "V2__profile_quest_currency.sql")
+            new Migration(2, "profile_quest_currency", "V2__profile_quest_currency.sql"),
+            new Migration(3, "clans", "V3__clans.sql")
     );
 
     private final DataSource dataSource;

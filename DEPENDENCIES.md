@@ -23,6 +23,7 @@ No JitPack. No other third-party repositories.
 | `com.zaxxer:HikariCP` | `5.1.0` | implementation (shaded) | Infrastructure (DB pool) | Relocated to `mn.suld.lib.hikari` to avoid clashes. |
 | `com.mysql:mysql-connector-j` | `9.1.0` | `plugin.yml` `libraries:` | Infrastructure (JDBC driver) | Fetched by Paper from Central at runtime; only used if MySQL is configured. |
 | `org.postgresql:postgresql` | `42.7.4` | `plugin.yml` `libraries:` | Infrastructure (JDBC driver) | As above, for PostgreSQL. |
+| `org.postgresql:postgresql` | `42.7.4` | `suld-plugin` `testImplementation` | Test-only | Opt-in JDBC integration tests (`*IT`) against a real PostgreSQL. Not shipped. |
 | `org.jetbrains:annotations` | `24.1.0` | compileOnly | Utility (nullability annotations) | Compile-time only. |
 | `org.junit:junit-bom` / `junit-jupiter` | `5.11.3` | testImplementation | Testing | — |
 | `org.junit.platform:junit-platform-launcher` | (BOM-managed) | testRuntimeOnly | Testing | — |

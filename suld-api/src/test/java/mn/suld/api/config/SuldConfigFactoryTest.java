@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SuldConfigFactoryTest {
 
@@ -58,5 +60,20 @@ class SuldConfigFactoryTest {
         SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(raw));
         assertEquals(StorageType.MEMORY, cfg.database().type());
         assertEquals(AnalyticsSettings.Sink.LOG, cfg.analytics().sink());
+    }
+
+    @Test
+    void socialSettingsLoadAndClamp() {
+        SuldConfig defaults = SuldConfigFactory.load(new MapConfigView(Map.of()));
+        assertEquals(500, defaults.social().clanCreateCost());
+        assertTrue(defaults.social().worldEventsEnabled());
+
+        SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(Map.of(
+                "clans", Map.of("create-cost", 1200),
+                "world-events", Map.of("enabled", false, "interval-minutes", 1, "min-players", 0))));
+        assertEquals(1200, cfg.social().clanCreateCost());
+        assertFalse(cfg.social().worldEventsEnabled());
+        assertEquals(5, cfg.social().worldEventIntervalMin(), "clamped to >= 5 minutes");
+        assertEquals(1, cfg.social().worldEventMinPlayers(), "clamped to >= 1");
     }
 }

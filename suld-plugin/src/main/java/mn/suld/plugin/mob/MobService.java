@@ -67,6 +67,44 @@ public final class MobService {
         return mobId(entity).isPresent();
     }
 
+    /**
+     * Keep a SÜLD mob aggressive: vanilla wolves are neutral and calm down after a while,
+     * which would make wolf waves/raids trivial. Re-targets the nearest valid player within
+     * {@code radius} when the mob has no live target.
+     */
+    @SuppressWarnings("deprecation") // Wolf#setAngry is the simplest stable anger switch across 1.21.x
+    public static void keepHostile(LivingEntity entity, java.util.Collection<? extends org.bukkit.entity.Player> candidates,
+                                   double radius) {
+        if (!(entity instanceof org.bukkit.entity.Mob mob) || !mob.isValid()) {
+            return;
+        }
+        LivingEntity target = mob.getTarget();
+        boolean targetOk = target instanceof org.bukkit.entity.Player p && p.isValid() && !p.isDead()
+                && p.getGameMode() != org.bukkit.GameMode.SPECTATOR && p.getGameMode() != org.bukkit.GameMode.CREATIVE
+                && p.getWorld().equals(mob.getWorld());
+        if (!targetOk) {
+            org.bukkit.entity.Player best = null;
+            double bestDist = radius * radius;
+            for (org.bukkit.entity.Player p : candidates) {
+                if (!p.isValid() || p.isDead() || !p.getWorld().equals(mob.getWorld())
+                        || p.getGameMode() == org.bukkit.GameMode.SPECTATOR || p.getGameMode() == org.bukkit.GameMode.CREATIVE) {
+                    continue;
+                }
+                double d = p.getLocation().distanceSquared(mob.getLocation());
+                if (d <= bestDist) {
+                    bestDist = d;
+                    best = p;
+                }
+            }
+            if (best != null) {
+                mob.setTarget(best);
+            }
+        }
+        if (mob instanceof org.bukkit.entity.Wolf wolf && mob.getTarget() != null) {
+            wolf.setAngry(true);
+        }
+    }
+
     /** Current max health of a living entity (0 if the attribute is unavailable). */
     public static double maxHealth(LivingEntity entity) {
         AttributeInstance attr = entity.getAttribute(maxHealthAttribute());

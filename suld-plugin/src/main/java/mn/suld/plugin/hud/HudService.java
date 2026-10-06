@@ -32,15 +32,18 @@ public final class HudService {
 
     private final ProgressionService progression;
     private final Map<UUID, String> lastSignature = new ConcurrentHashMap<>();
-    private volatile Function<UUID, Optional<String>> dungeonStatus = id -> Optional.empty();
+    private final List<Function<UUID, Optional<String>>> statusLines = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     public HudService(ProgressionService progression) {
         this.progression = progression;
     }
 
-    /** Plugged in by the dungeon layer so the HUD can show run status without a hard dependency. */
-    public void setDungeonStatus(Function<UUID, Optional<String>> provider) {
-        this.dungeonStatus = provider;
+    /**
+     * Register a contextual HUD line (clan, dungeon, world event, ...). Each provider returns a
+     * fully formatted line, or empty to hide it; they render in registration order.
+     */
+    public void addStatusLine(Function<UUID, Optional<String>> provider) {
+        statusLines.add(provider);
     }
 
     public void update(Player player, PlayerProfile profile) {
@@ -87,7 +90,9 @@ public final class HudService {
         lines.add("§7HP: §c" + (int) Math.ceil(player.getHealth()) + "§7/§c" + (int) player.getMaxHealth());
         lines.add("§7" + resourceName + ": §e" + resourceMax + "§7/§e" + resourceMax);
         lines.add("§7Эрэл: §f" + quest);
-        dungeonStatus.apply(player.getUniqueId()).ifPresent(status -> lines.add("§7Агуй: §c" + status));
+        for (Function<UUID, Optional<String>> provider : statusLines) {
+            provider.apply(player.getUniqueId()).ifPresent(lines::add);
+        }
         lines.add("§7Зоос: §6" + profile.currency());
         lines.add("§8suld.mn");
         return lines;

@@ -65,3 +65,18 @@ resource-pack:
   sha1: ''
   required: false
   prompt: 'SÜLD-ийн дүрс багцыг татаж авна уу (Download the SÜLD resource pack)'
+
+# ---------------------------------------------------------------------------
+# Clans (овог). Founding costs in-game coins (a currency sink, never real money).
+# ---------------------------------------------------------------------------
+clans:
+  create-cost: 500
+
+# ---------------------------------------------------------------------------
+# World events: server-wide timed objectives (e.g. Чонын Довтолгоо, the wolf
+# raid). Admins can always force one with /suldevent start.
+# ---------------------------------------------------------------------------
+world-events:
+  enabled: true
+  interval-minutes: 45
+  min-players: 1

@@ -309,13 +309,14 @@ public final class DungeonService {
                 continue;
             }
             int from = profile.progression().level();
-            ExpGainResult exp = services.progression().grantExp(profile,
-                    SuldContent.KHASAR_DEN_COMPLETION_EXP, ExpSource.DUNGEON);
+            long completionExp = services.clans().boostedExp(id, SuldContent.KHASAR_DEN_COMPLETION_EXP);
+            ExpGainResult exp = services.progression().grantExp(profile, completionExp, ExpSource.DUNGEON);
+            services.clans().contribute(id, SuldContent.CLAN_EXP_PER_DUNGEON_CLEAR);
             profile.addCurrency(SuldContent.KHASAR_DEN_COMPLETION_CURRENCY);
             Presentation.banner(p, "АГУЙ ДУУСЛАА", ar.def.displayName() + " · " + formatTime(seconds),
                     NamedTextColor.GREEN);
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-            p.sendMessage(Messages.success("+" + SuldContent.KHASAR_DEN_COMPLETION_EXP + " EXP, +"
+            p.sendMessage(Messages.success("+" + completionExp + " EXP, +"
                     + SuldContent.KHASAR_DEN_COMPLETION_CURRENCY + " зоос"));
             if (exp.leveledUp()) {
                 Presentation.levelUp(p, from, exp.after().level());
@@ -423,6 +424,13 @@ public final class DungeonService {
         }
         if (ar.bossId != null && Bukkit.getEntity(ar.bossId) instanceof LivingEntity boss) {
             bosses.tick(boss);
+            MobService.keepHostile(boss, onlineParticipants(ar), 48);
+        }
+        List<Player> fighters = onlineParticipants(ar);
+        for (UUID id : ar.waveMobs) {
+            if (Bukkit.getEntity(id) instanceof LivingEntity mob) {
+                MobService.keepHostile(mob, fighters, 32); // vanilla wolves are neutral otherwise
+            }
         }
         updateBar(ar);
         for (UUID id : ar.participants) {
@@ -493,6 +501,17 @@ public final class DungeonService {
     }
 
     // --------------------------------------------------------------- helpers
+
+    private static List<Player> onlineParticipants(ActiveRun ar) {
+        List<Player> out = new java.util.ArrayList<>();
+        for (UUID id : ar.participants) {
+            Player p = Bukkit.getPlayer(id);
+            if (p != null && !ar.downed.contains(id)) {
+                out.add(p);
+            }
+        }
+        return out;
+    }
 
     private void broadcast(ActiveRun ar, Component message) {
         for (UUID id : ar.participants) {

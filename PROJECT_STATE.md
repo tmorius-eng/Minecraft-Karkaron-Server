@@ -4,8 +4,8 @@
 > changes. Dates are UTC.
 
 **Last updated:** 2026-10-06
-**Build:** `./gradlew build` green (72 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
-**Current phase:** Vertical Slice 2 (party → dungeon → boss → loot → progression) implemented; Slice 1 live-verified. Both await one manual Minecraft-client pass.
+**Build:** `./gradlew build` green (98 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
+**Current phase:** Vertical Slice 3 (clan → world event → social progression) implemented and live-smoke-tested on PostgreSQL. Next: authentication/identity hardening (docs/AUTHENTICATION.md). Slices 1–3 await one manual Minecraft-client pass.
 
 ---
 
@@ -22,6 +22,27 @@
   Also verified graceful fail-fast + self-disable on a bad DB config.
 - REMAINING: ONE manual Minecraft-client test (join→pack→class GUI→in-world combat/loot→reconnect).
   Not headlessly automatable (no MC client); all that logic is unit-tested (combat/loot/quest/persistence).
+
+## Vertical Slice 3 (clan → world event → social progression)
+- Domain (suld-api, unit-tested): `Clan`/`ClanMember`/`ClanRank` (Ноён/Түшмэл/Цэрэг), `ClanRegistry` (unique
+  case-insensitive names + upper-cased tags incl. Cyrillic, invites w/ expiry, rank permissions, leader must transfer
+  before leaving, capacity by level), `ClanProgression` (10 levels; capacity 10→28; member EXP bonus +2%/level),
+  `WorldEventRun` (shared goal, per-player contribution, expiry, podium rewards 1.5/1.3/1.2x, min contribution).
+- Persistence: **V3 migration** (`suld_clans`, `suld_clan_members`) — DB enforces one clan per player (PK), unique
+  name/tag, cascade delete. `JdbcClanRepository` on a single ordered writer thread; structural changes save
+  immediately, contribution EXP flushes every 60s + on shutdown. Opt-in real-PostgreSQL integration test
+  (`JdbcClanRepositoryIT`, needs `SULD_TEST_PG_URL`) — passed against PostgreSQL 16.
+- Plugin: `ClanService`, `/clan …` + `/cc`, async-safe chat tags `[TAG] Name » msg`, HUD clan/event lines,
+  `WorldEventService` (**Чонын Довтолгоо**: 30 wolves in 10 min, raiders spawn on the surface around eligible
+  players, server boss bar, auto-start every `world-events.interval-minutes`), `/suldevent` (admin start/stop).
+- Social progression hooks: +2 clan EXP per SÜLD kill, +150 per dungeon clear, +5 per event kill, +200 per clan on
+  event success; clan EXP bonus applied to mob, dungeon and event EXP. Founding a clan costs 500 coins (config).
+- Fixed along the way: vanilla wolves are neutral, so Slice 2 dungeon waves never attacked — `MobService.keepHostile`
+  now keeps wave/event wolves targeting players. A malformed `plugin.yml` (caught by the live boot) is now guarded
+  by `PluginDescriptorTest`.
+- LIVE (automated, verified): Paper 1.21.11 + PostgreSQL 16 — migrations V1–V3 applied, a seeded Cyrillic clan
+  loaded on the next boot, world event start/stop + analytics, clean disable.
+- NOT verified: in-world clan/raid play (needs clients).
 
 ## Vertical Slice 2 (party → dungeon → boss → loot → progression)
 - Domain (suld-api, unit-tested): `Party`, `PartyRegistry` (invites w/ expiry via injected Clock, leader rules,
@@ -123,7 +144,7 @@ Benchmarks come with the combat/mob slices.
    reconnect. Build the HUD/Scoreboard/TAB/Rank/Tag/ResourcePack/Gui services as
    custom code.
 2. ~~Dungeon → party → boss → loot → progression.~~ **Done (Slice 2).**
-3. Clan → event → social progression.
+3. ~~Clan → event → social progression.~~ **Done (Slice 3).**
 4. World relic → discovery → global uniqueness → broadcast → ownership.
 5. World regions + spawn + content expansion.
 

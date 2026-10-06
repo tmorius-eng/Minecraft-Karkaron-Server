@@ -92,7 +92,7 @@ Planned tables, added by future migrations as each system lands:
 - `suld_skill_trees`, `suld_player_skills` — class skill trees and unlocks.
 - `suld_quests`, `suld_player_quests`, `suld_achievements`,
   `suld_player_achievements`.
-- `suld_clans`, `suld_clan_members`, `suld_parties` (parties may be
+- (shipped in V3, see below) `suld_clans`, `suld_clan_members`; `suld_parties` (parties may be
   memory-only).
 - `suld_dungeon_runs`, `suld_boss_participation`, `suld_world_events`.
 - `suld_deaths` — hardcore death ledger (soul state, losses, recovery).
@@ -101,3 +101,30 @@ Planned tables, added by future migrations as each system lands:
 
 Each ships with both MySQL and PostgreSQL DDL under
 `suld-plugin/src/main/resources/db/migration/<dialect>/`.
+
+
+## V3 schema (shipped: `V3__clans.sql`)
+
+### `suld_clans`
+| column | type | notes |
+|---|---|---|
+| `clan_id` | UUID / CHAR(36) | PK |
+| `name` | VARCHAR(24) | display name (Cyrillic allowed) |
+| `name_key` | VARCHAR(24) | `lower(name)`, **UNIQUE** → case-insensitive uniqueness |
+| `tag` | VARCHAR(5) | upper-cased, **UNIQUE** |
+| `created_at` | BIGINT | epoch millis |
+| `exp` | BIGINT | total clan EXP (level derived by `ClanProgression`) |
+| `version` | BIGINT | bumped on every change |
+
+### `suld_clan_members`
+| column | type | notes |
+|---|---|---|
+| `player_uuid` | UUID / CHAR(36) | **PK** → a player can be in at most one clan, enforced by the DB |
+| `clan_id` | UUID / CHAR(36) | FK → `suld_clans` **ON DELETE CASCADE** |
+| `last_name` | VARCHAR(16) | display only — identity is always the UUID |
+| `clan_rank` | VARCHAR(16) | `LEADER` / `OFFICER` / `MEMBER` |
+| `contribution` | BIGINT | lifetime clan EXP earned by this member |
+| `joined_at` | BIGINT | epoch millis |
+
+MySQL uses `utf8mb4_bin` on `suld_clans` so uniqueness is exact (no accent folding). Writes go through one
+ordered writer thread; each save is a transaction (upsert clan, replace member rows).

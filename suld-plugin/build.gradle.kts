@@ -44,6 +44,9 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.11.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // Test-only: JDBC integration tests against a real PostgreSQL (skipped unless
+    // SULD_TEST_PG_URL is set). Same pinned version plugin.yml loads at runtime.
+    testImplementation("org.postgresql:postgresql:42.7.4")
 }
 
 tasks {
@@ -59,6 +62,13 @@ tasks {
 
     build {
         dependsOn(shadowJar)
+    }
+
+    test {
+        // Forward the opt-in DB integration-test settings (never required for a normal build).
+        listOf("SULD_TEST_PG_URL", "SULD_TEST_PG_USER", "SULD_TEST_PG_PASS").forEach { key ->
+            System.getenv(key)?.let { environment(key, it) }
+        }
     }
 
     runServer {

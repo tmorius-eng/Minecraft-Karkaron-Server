@@ -69,6 +69,13 @@ public final class SuldConfigFactory {
                 view.getBoolean("resource-pack.required", rpd.required()),
                 view.getString("resource-pack.prompt", rpd.prompt()));
 
-        return new SuldConfig(locale, progression, database, death, analytics, resourcePack);
+        SocialSettings sd = d.social();
+        SocialSettings social = new SocialSettings(
+                view.getLong("clans.create-cost", sd.clanCreateCost()),
+                view.getBoolean("world-events.enabled", sd.worldEventsEnabled()),
+                view.getInt("world-events.interval-minutes", sd.worldEventIntervalMin()),
+                view.getInt("world-events.min-players", sd.worldEventMinPlayers()));
+
+        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social);
     }
 }

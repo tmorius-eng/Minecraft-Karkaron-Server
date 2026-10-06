@@ -39,4 +39,17 @@ class SchemaMigratorTest {
         List<String> statements = SchemaMigrator.splitStatements(script);
         assertEquals(5, statements.size(), "V1 should define 5 tables");
     }
+
+    @Test
+    void bundledV3ClanMigrationsParseForBothDialects() {
+        assertEquals(2, SchemaMigrator.splitStatements(resource("db/migration/mysql/V3__clans.sql")).size(),
+                "MySQL V3: clans + members (index inline)");
+        assertEquals(3, SchemaMigrator.splitStatements(resource("db/migration/postgresql/V3__clans.sql")).size(),
+                "PostgreSQL V3: clans + members + index");
+    }
+
+    private static String resource(String path) {
+        return new java.util.Scanner(SchemaMigratorTest.class.getClassLoader().getResourceAsStream(path), "UTF-8")
+                .useDelimiter("\\A").next();
+    }
 }

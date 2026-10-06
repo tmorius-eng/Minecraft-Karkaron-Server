@@ -30,6 +30,16 @@ commands:
     description: SULD dungeons (list, enter, status, leave, abort).
     usage: /dungeon <list|enter|status|leave|abort>
     aliases: [agui]
+  clan:
+    description: SULD clans (create, invite, accept, leave, kick, promote, demote, transfer, disband, info, top, chat).
+    usage: /clan <create|invite|accept|leave|kick|promote|demote|transfer|disband|info|top|chat>
+    aliases: [ovog, clans]
+  cc:
+    description: Clan chat.
+    usage: /cc <message>
+  suldevent:
+    description: SULD world events (status; admin start/stop).
+    usage: /suldevent <status|start|stop>
 permissions:
   suld.admin:
     description: Grants all SULD administrative commands.
@@ -37,9 +47,13 @@ permissions:
     children:
       suld.admin.revive: true
       suld.admin.pack: true
+      suld.admin.event: true
   suld.admin.revive:
     description: Allows reviving players from the death/soul state.
     default: op
   suld.admin.pack:
     description: Allows resource-pack admin actions.
+    default: op
+  suld.admin.event:
+    description: Allows starting/stopping world events.
     default: op

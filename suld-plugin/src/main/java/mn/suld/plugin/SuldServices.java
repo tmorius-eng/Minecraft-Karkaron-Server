@@ -10,6 +10,7 @@ import mn.suld.api.progression.ProgressionEngine;
 import mn.suld.api.service.DefaultProgressionService;
 import mn.suld.api.service.ProgressionService;
 import mn.suld.plugin.analytics.LoggingAnalyticsSink;
+import mn.suld.plugin.clan.ClanService;
 import mn.suld.plugin.combat.CombatListener;
 import mn.suld.plugin.dungeon.BossService;
 import mn.suld.plugin.dungeon.DungeonService;
@@ -20,12 +21,16 @@ import mn.suld.plugin.hud.HudService;
 import mn.suld.plugin.item.ItemFactory;
 import mn.suld.plugin.mob.MobService;
 import mn.suld.plugin.persistence.DataSourceFactory;
+import mn.suld.plugin.persistence.JdbcClanRepository;
 import mn.suld.plugin.persistence.JdbcProfileRepository;
 import mn.suld.plugin.persistence.SchemaMigrator;
 import mn.suld.plugin.persistence.SqlDialect;
 import mn.suld.plugin.profile.DefaultProfileService;
 import mn.suld.plugin.quest.QuestService;
 import mn.suld.plugin.resourcepack.ResourcePackService;
+import mn.suld.plugin.worldevent.WorldEventService;
+import mn.suld.api.persistence.ClanRepository;
+import mn.suld.api.persistence.InMemoryClanRepository;
 import org.bukkit.plugin.Plugin;
 
 import java.util.concurrent.ExecutorService;
@@ -59,6 +64,9 @@ public final class SuldServices {
     private final PartyService partyService;
     private final BossService bossService;
     private final DungeonService dungeonService;
+    private final ExecutorService clanExecutor;
+    private final ClanService clanService;
+    private final WorldEventService worldEventService;
 
     public SuldServices(Plugin plugin, SuldConfig config) {
         this.config = config;
@@ -91,6 +99,17 @@ public final class SuldServices {
 
         this.profileService = new DefaultProfileService(repository);
 
+        // Clan writes must be applied in order -> one dedicated single-threaded writer.
+        this.clanExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "suld-clan-io");
+            thread.setDaemon(true);
+            return thread;
+        });
+        ClanRepository clanRepository = dataSource == null
+                ? new InMemoryClanRepository()
+                : new JdbcClanRepository(dataSource, SqlDialect.forStorage(config.database().type()),
+                        clanExecutor, plugin.getLogger());
+
         // Vertical Slice 1 services.
         this.itemFactory = new ItemFactory(plugin);
         this.hudService = new HudService(progressionService);
@@ -104,7 +123,15 @@ public final class SuldServices {
         this.partyService = new PartyService();
         this.bossService = new BossService();
         this.dungeonService = new DungeonService(plugin, this, mobService, partyService, bossService);
-        this.hudService.setDungeonStatus(dungeonService::statusLine);
+        this.hudService.addStatusLine(id -> dungeonService.statusLine(id).map(s -> "§7Агуй: §c" + s));
+
+        // Vertical Slice 3 services.
+        this.clanService = new ClanService(plugin, this, clanRepository, config.social());
+        int clans = clanService.load();
+        plugin.getLogger().info("SULD clans loaded: " + clans);
+        this.worldEventService = new WorldEventService(plugin, this, mobService, config.social());
+        this.hudService.addStatusLine(clanService::hudLine);
+        this.hudService.addStatusLine(worldEventService::hudLine);
     }
 
     public SuldConfig config() {
@@ -167,9 +194,25 @@ public final class SuldServices {
         return dungeonService;
     }
 
+    public ClanService clans() {
+        return clanService;
+    }
+
+    public WorldEventService worldEvents() {
+        return worldEventService;
+    }
+
     /** Flush analytics, stop the IO pool, and close the connection pool. */
     public void close() {
+        worldEventService.shutdown();
         dungeonService.shutdown();
+        clanService.shutdown();
+        clanExecutor.shutdown();
+        try {
+            clanExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
         try {
             analytics.flush().get(5, TimeUnit.SECONDS);
         } catch (Exception ignored) {

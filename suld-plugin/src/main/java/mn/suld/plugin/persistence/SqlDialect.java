@@ -75,4 +75,24 @@ public enum SqlDialect {
                     """;
         };
     }
+
+    /** Upsert for a clan row, keyed on clan_id. Params: id, name, name_key, tag, created_at, exp, version. */
+    public String clanUpsert() {
+        return switch (this) {
+            case MYSQL -> """
+                    INSERT INTO suld_clans (clan_id, name, name_key, tag, created_at, exp, version)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                        name = VALUES(name), name_key = VALUES(name_key), tag = VALUES(tag),
+                        exp = VALUES(exp), version = VALUES(version)
+                    """;
+            case POSTGRESQL -> """
+                    INSERT INTO suld_clans (clan_id, name, name_key, tag, created_at, exp, version)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (clan_id) DO UPDATE SET
+                        name = EXCLUDED.name, name_key = EXCLUDED.name_key, tag = EXCLUDED.tag,
+                        exp = EXCLUDED.exp, version = EXCLUDED.version
+                    """;
+        };
+    }
 }

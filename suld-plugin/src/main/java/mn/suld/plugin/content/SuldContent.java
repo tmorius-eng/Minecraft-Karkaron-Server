@@ -13,6 +13,7 @@ import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.mob.MobTier;
 import mn.suld.api.quest.QuestDefinition;
 import mn.suld.api.quest.QuestType;
+import mn.suld.api.worldevent.WorldEventDefinition;
 
 import java.util.List;
 import java.util.Map;
@@ -114,6 +115,23 @@ public final class SuldContent {
     /** Extra EXP / currency granted to every participant on dungeon completion. */
     public static final long KHASAR_DEN_COMPLETION_EXP = 400;
     public static final long KHASAR_DEN_COMPLETION_CURRENCY = 75;
+
+    // ===== Vertical Slice 3: clans + world events (social progression) =====
+
+    /** Clan EXP per SÜLD mob kill, per dungeon clear (per participant). */
+    public static final long CLAN_EXP_PER_MOB_KILL = 2;
+    public static final long CLAN_EXP_PER_DUNGEON_CLEAR = 150;
+
+    /** Чонын Довтолгоо — wolves raid the steppe; the whole server has 10 minutes to repel 30. */
+    public static final WorldEventDefinition WOLF_RAID = new WorldEventDefinition(
+            "event.chonyn_dovtolgoo", "Чонын Довтолгоо",
+            "Тал нутгийг чоно дайрлаа! Бүгдээрээ 10 минутад 30 чоно устгаарай.",
+            java.util.Set.of(GOVIIN_CHONO.id(), ORKHON_CHONO.id()),
+            30, 600, 300, 60, 3, 5, 200);
+
+    public static WorldEventDefinition worldEventFor(String id) {
+        return WOLF_RAID.id().equals(id) || "wolf_raid".equals(id) ? WOLF_RAID : null;
+    }
 
     public static DungeonDefinition dungeonFor(String id) {
         return KHASAR_DEN.id().equals(id) ? KHASAR_DEN : null;
