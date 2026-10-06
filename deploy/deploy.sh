@@ -70,6 +70,8 @@ preflight() {
     warn "Tested on Ubuntu 24.04; this is ${PRETTY_NAME:-unknown}. Continuing, but expect surprises."
   fi
   [[ "$ACCEPT_EULA" == "true" ]] || die "Set ACCEPT_EULA=true in $SULD_ENV after reading https://aka.ms/MinecraftEULA"
+  # Production identity = Minecraft/Microsoft authentication. Never deploy an offline-mode server.
+  [[ "$ONLINE_MODE" == "true" ]] || die "ONLINE_MODE must be true in production (see docs/AUTHENTICATION.md)"
   [[ -n "$DB_PASS" ]] || die "DB_PASS is empty in $SULD_ENV"
   [[ -n "${PUBLIC_HOST:-}" ]] || die "PUBLIC_HOST is empty in $SULD_ENV (public IP or DNS name players use)"
   local mem_mb need_mb disk_mb
@@ -180,6 +182,11 @@ configure_server() {
   fi
   # Credentials in the env file are authoritative; keep the plugin in sync on every deploy.
   [[ "$DRY_RUN" == "1" ]] || sync_db_config
+  # Authentication hardening is enforced on every deploy, whatever was edited by hand.
+  [[ "$DRY_RUN" == "1" ]] || set_config "auth.allow-insecure-offline-dev-mode=r:false"
+  if [[ "$DRY_RUN" != "1" && -f "$SERVER_DIR/server.properties" ]]; then
+    sed -i 's/^online-mode=.*/online-mode=true/' "$SERVER_DIR/server.properties"
+  fi
   [[ "$DRY_RUN" == "1" ]] && echo "  [dry-run] set database.* in $PLUGIN_CONFIG from the env file"
   chmod 600 "$PLUGIN_CONFIG" 2>/dev/null || true
 }

@@ -4,8 +4,8 @@
 > changes. Dates are UTC.
 
 **Last updated:** 2026-10-06
-**Build:** `./gradlew build` green (98 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
-**Current phase:** Vertical Slice 3 (clan → world event → social progression) implemented and live-smoke-tested on PostgreSQL. Next: authentication/identity hardening (docs/AUTHENTICATION.md). Slices 1–3 await one manual Minecraft-client pass.
+**Build:** `./gradlew build` green (127 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
+**Current phase:** Vertical Slice 3 (clan → world event → social progression) implemented and live-smoke-tested on PostgreSQL. Authentication/identity system done (docs/AUTHENTICATION.md). Slices 1–3 await one manual Minecraft-client pass.
 
 ---
 
@@ -22,6 +22,19 @@
   Also verified graceful fail-fast + self-disable on a bad DB config.
 - REMAINING: ONE manual Minecraft-client test (join→pack→class GUI→in-world combat/loot→reconnect).
   Not headlessly automatable (no MC client); all that logic is unit-tested (combat/loot/quest/persistence).
+
+## Authentication & identity (docs/AUTHENTICATION.md)
+- Identity = Minecraft/Microsoft-authenticated UUID (online-mode). No /register, /login or passwords. Name is
+  display-only; renames keep the same character (audited). Fail closed when accounts aren't verified.
+- Pure (suld-api): `PlayerIdentity`, `AuthPolicy` (+v4-UUID anti-spoof rule), `SessionRegistry`,
+  `KeyedSequencer`, `AuditEvent`. Plugin: `AuthenticationService` (pre-login profile acquisition, session
+  binding, session-aware release, pending-session sweeper), `JdbcAuditLog` → `suld_audit_log`, `/suld auth`.
+- Fixed two real pre-existing bugs: quit→instant-rejoin stale read (progress rollback) and duplicate-login
+  orphaned profile (new session lost its profile). Mutation-tested: removing sequencing fails the race test.
+- LIVE (Paper 1.21.11 + PostgreSQL 16, mineflayer bots): fail-closed refusal, first join w/o any login prompt,
+  reconnect, simulated rename (same UUID), duplicate-session handoff, 15x rapid reconnect — all as specified.
+- NOT verified: a genuine Microsoft-authenticated join (needs a real account; sandbox blocks Mojang auth hosts).
+- deploy.sh refuses ONLINE_MODE!=true and forces the dev flag off; health-check fails on either.
 
 ## Vertical Slice 3 (clan → world event → social progression)
 - Domain (suld-api, unit-tested): `Clan`/`ClanMember`/`ClanRank` (Ноён/Түшмэл/Цэрэг), `ClanRegistry` (unique

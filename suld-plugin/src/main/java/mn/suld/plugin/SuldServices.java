@@ -11,6 +11,11 @@ import mn.suld.api.service.DefaultProgressionService;
 import mn.suld.api.service.ProgressionService;
 import mn.suld.plugin.analytics.LoggingAnalyticsSink;
 import mn.suld.plugin.clan.ClanService;
+import mn.suld.plugin.auth.AuthenticationService;
+import mn.suld.plugin.audit.JdbcAuditLog;
+import mn.suld.plugin.audit.LoggingAuditLog;
+import mn.suld.api.audit.AuditLog;
+import mn.suld.api.identity.AuthPolicy;
 import mn.suld.plugin.combat.CombatListener;
 import mn.suld.plugin.dungeon.BossService;
 import mn.suld.plugin.dungeon.DungeonService;
@@ -65,6 +70,8 @@ public final class SuldServices {
     private final BossService bossService;
     private final DungeonService dungeonService;
     private final ExecutorService clanExecutor;
+    private final AuditLog auditLog;
+    private final AuthenticationService authService;
     private final ClanService clanService;
     private final WorldEventService worldEventService;
 
@@ -98,6 +105,16 @@ public final class SuldServices {
         }
 
         this.profileService = new DefaultProfileService(repository);
+
+        // Authentication + audit (identity = authenticated UUID; fail closed when unverified).
+        this.auditLog = dataSource == null
+                ? new LoggingAuditLog(plugin.getLogger())
+                : new JdbcAuditLog(dataSource, ioExecutor, plugin.getLogger());
+        java.io.File serverRoot = plugin.getDataFolder().getAbsoluteFile().getParentFile().getParentFile();
+        AuthPolicy policy = new AuthPolicy(
+                AuthenticationService.detectMode(plugin.getServer(), serverRoot),
+                config.auth().allowInsecureOfflineDevMode());
+        this.authService = new AuthenticationService(plugin, this, policy, config.auth(), auditLog);
 
         // Clan writes must be applied in order -> one dedicated single-threaded writer.
         this.clanExecutor = Executors.newSingleThreadExecutor(runnable -> {
@@ -192,6 +209,14 @@ public final class SuldServices {
 
     public DungeonService dungeons() {
         return dungeonService;
+    }
+
+    public AuthenticationService auth() {
+        return authService;
+    }
+
+    public AuditLog audit() {
+        return auditLog;
     }
 
     public ClanService clans() {

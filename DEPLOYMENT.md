@@ -250,7 +250,9 @@ The database restore path (a dump from an online backup into a fresh database) w
   `sudo -u suld ssh-keygen -t ed25519 -f /opt/suld/.ssh/id_ed25519 -N ''`.
   Add the `.pub` key to GitHub → Settings → Deploy keys, then set
   `REPO_URL=git@github.com:tmorius-eng/Minecraft-Karkaron-Server.git`.
-- **`online-mode=true`** is the production default (real Mojang accounts). Never run a public server offline.
+- **`online-mode=true` is mandatory.** Identity is the Minecraft/Microsoft-authenticated UUID, and there is no /login
+  (see [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)). `deploy.sh` refuses `ONLINE_MODE=false` and forces
+  `auth.allow-insecure-offline-dev-mode: false`. `health-check.sh` fails on either. In offline mode SÜLD refuses all logins.
 
 ---
 

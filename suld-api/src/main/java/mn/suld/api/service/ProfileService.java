@@ -1,5 +1,7 @@
 package mn.suld.api.service;
 
+import mn.suld.api.identity.PlayerIdentity;
+
 import mn.suld.api.profile.PlayerProfile;
 
 import java.util.Optional;
@@ -16,8 +18,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface ProfileService {
 
-    /** Load the player's profile, creating a fresh one if none exists. */
-    CompletableFuture<PlayerProfile> loadOrCreate(UUID playerId, String name);
+    /**
+     * Acquire the profile for an <b>authenticated</b> identity: the cached instance if the
+     * player is already online (duplicate session), else load it from storage, else create it.
+     * Keyed strictly by UUID. A storage failure fails the future — it never creates a blank
+     * profile that could overwrite real progress.
+     */
+    CompletableFuture<ProfileLoad> acquire(PlayerIdentity identity);
 
     /** The cached profile for an online player, if present. */
     Optional<PlayerProfile> cached(UUID playerId);
@@ -25,6 +32,9 @@ public interface ProfileService {
     /** Persist the profile asynchronously. */
     CompletableFuture<PlayerProfile> save(PlayerProfile profile);
 
-    /** Persist and remove the profile from the cache (used on quit). */
+    /**
+     * Persist and remove the profile from the cache. Only call when the <i>last</i> live
+     * session for the UUID has ended (see {@code SessionRegistry}).
+     */
     CompletableFuture<Void> saveAndUnload(UUID playerId);
 }

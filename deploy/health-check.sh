@@ -39,6 +39,14 @@ else
   bad "server log missing: $log"
 fi
 
+# 3b. Authentication hardening (identity must come from Minecraft/Microsoft)
+if grep -q '^online-mode=true' "$SERVER_DIR/server.properties" 2>/dev/null; then pass "online-mode=true (accounts verified by Minecraft/Microsoft)"
+else bad "online-mode is not true — identities are NOT verified (docs/AUTHENTICATION.md)"; fi
+if [[ -f "$PLUGIN_CONFIG" ]] && grep -Eq '^\s+allow-insecure-offline-dev-mode:\s*true' "$PLUGIN_CONFIG"; then
+  bad "auth.allow-insecure-offline-dev-mode is TRUE — anyone could join as anyone"
+fi
+if [[ -f "$log" ]] && grep -q 'REFUSING ALL LOGINS' "$log"; then bad "SULD is refusing all logins (server not verifying accounts)"; fi
+
 # 4. Database
 if [[ -n "$DB_PASS" ]]; then
   if out="$(PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc 'select max(version) from suld_schema_version' 2>&1)"; then

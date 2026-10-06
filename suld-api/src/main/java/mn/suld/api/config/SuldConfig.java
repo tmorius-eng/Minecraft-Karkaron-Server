@@ -11,7 +11,8 @@ public record SuldConfig(
         DeathSettings death,
         AnalyticsSettings analytics,
         ResourcePackSettings resourcePack,
-        SocialSettings social) {
+        SocialSettings social,
+        AuthSettings auth) {
 
     public static SuldConfig defaults() {
         return new SuldConfig(
@@ -21,6 +22,7 @@ public record SuldConfig(
                 DeathSettings.defaults(),
                 AnalyticsSettings.defaults(),
                 ResourcePackSettings.defaults(),
-                SocialSettings.defaults());
+                SocialSettings.defaults(),
+                AuthSettings.defaults());
     }
 }

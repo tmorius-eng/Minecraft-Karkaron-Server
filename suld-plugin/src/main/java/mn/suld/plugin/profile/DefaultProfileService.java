@@ -1,7 +1,10 @@
 package mn.suld.plugin.profile;
 
+import mn.suld.api.identity.KeyedSequencer;
+import mn.suld.api.identity.PlayerIdentity;
 import mn.suld.api.persistence.ProfileRepository;
 import mn.suld.api.profile.PlayerProfile;
+import mn.suld.api.service.ProfileLoad;
 import mn.suld.api.service.ProfileService;
 
 import java.time.Instant;
@@ -12,46 +15,56 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Cache-backed {@link ProfileService}. It is the single writer per player: a
- * profile is loaded (or created) once on join, served from the cache while the
- * player is online, and saved-and-evicted on quit. Persistence I/O is delegated
- * to the asynchronous {@link ProfileRepository}; cache operations are cheap and
- * thread-safe.
+ * Cache-backed {@link ProfileService} and the single writer per player.
+ *
+ * <p>Every storage operation for a UUID (acquire, save, save-and-unload) runs through a
+ * {@link KeyedSequencer}, so they execute strictly in order: a quick reconnect can never read
+ * the database before the previous session's save has landed (stale read → rollback), and two
+ * concurrent logins can never both create a profile.
  */
 public final class DefaultProfileService implements ProfileService {
 
     private final ProfileRepository repository;
     private final ConcurrentHashMap<UUID, PlayerProfile> cache = new ConcurrentHashMap<>();
+    private final KeyedSequencer<UUID> sequencer = new KeyedSequencer<>();
 
     public DefaultProfileService(ProfileRepository repository) {
         this.repository = repository;
     }
 
     @Override
-    public CompletableFuture<PlayerProfile> loadOrCreate(UUID playerId, String name) {
-        PlayerProfile cached = cache.get(playerId);
-        if (cached != null) {
-            cached.name(name);
-            cached.touch(Instant.now());
-            return CompletableFuture.completedFuture(cached);
-        }
-        return repository.find(playerId).thenCompose(found -> {
+    public CompletableFuture<ProfileLoad> acquire(PlayerIdentity identity) {
+        UUID id = identity.uuid();
+        return sequencer.submit(id, () -> {
             Instant now = Instant.now();
-            if (found.isPresent()) {
-                PlayerProfile profile = found.get();
-                profile.name(name);
-                profile.touch(now);
-                PlayerProfile existing = cache.putIfAbsent(playerId, profile);
-                return CompletableFuture.completedFuture(existing != null ? existing : profile);
+            PlayerProfile cached = cache.get(id);
+            if (cached != null) {
+                // Already online in another session (duplicate login): share the live instance.
+                return CompletableFuture.completedFuture(adopt(cached, identity, now, false));
             }
-            PlayerProfile fresh = PlayerProfile.createNew(playerId, name, now);
-            PlayerProfile existing = cache.putIfAbsent(playerId, fresh);
-            if (existing != null) {
-                return CompletableFuture.completedFuture(existing);
-            }
-            // Brand-new character: persist the initial row before returning.
-            return repository.save(fresh).thenApply(saved -> fresh);
+            return repository.find(id).thenCompose(found -> {
+                if (found.isPresent()) {
+                    PlayerProfile profile = found.get();
+                    PlayerProfile winner = cache.putIfAbsent(id, profile);
+                    return CompletableFuture.completedFuture(
+                            adopt(winner != null ? winner : profile, identity, now, false));
+                }
+                // Storage positively said "unknown UUID": first join. Persist before admitting.
+                PlayerProfile fresh = PlayerProfile.createNew(id, identity.name(), now);
+                return repository.save(fresh).thenApply(saved -> {
+                    PlayerProfile winner = cache.putIfAbsent(id, fresh);
+                    return new ProfileLoad(winner != null ? winner : fresh, winner == null, null);
+                });
+            });
         });
+    }
+
+    /** Apply the authenticated name (renames update display only) and mark the session seen. */
+    private static ProfileLoad adopt(PlayerProfile profile, PlayerIdentity identity, Instant now, boolean created) {
+        String previous = identity.isRenameOf(profile.name()) ? profile.name() : null;
+        profile.name(identity.name());
+        profile.touch(now);
+        return new ProfileLoad(profile, created, previous);
     }
 
     @Override
@@ -66,15 +79,26 @@ public final class DefaultProfileService implements ProfileService {
 
     @Override
     public CompletableFuture<PlayerProfile> save(PlayerProfile profile) {
-        return repository.save(profile);
+        return sequencer.submit(profile.playerId(), () -> repository.save(profile));
     }
 
     @Override
     public CompletableFuture<Void> saveAndUnload(UUID playerId) {
-        PlayerProfile profile = cache.remove(playerId);
-        if (profile == null) {
-            return CompletableFuture.completedFuture(null);
-        }
-        return repository.save(profile).thenApply(saved -> null);
+        return sequencer.submit(playerId, () -> {
+            PlayerProfile profile = cache.get(playerId);
+            if (profile == null) {
+                return CompletableFuture.completedFuture(null);
+            }
+            // Evict only after the save succeeded: a failed save keeps the live copy for retry.
+            return repository.save(profile).thenApply(saved -> {
+                cache.remove(playerId, profile);
+                return null;
+            });
+        });
+    }
+
+    /** Operations currently queued or running (diagnostics). */
+    public int inFlight() {
+        return sequencer.inFlight();
     }
 }

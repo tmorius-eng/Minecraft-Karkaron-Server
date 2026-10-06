@@ -42,6 +42,10 @@ public final class SuldPlugin extends JavaPlugin {
             return;
         }
 
+        // Authentication first: it gates pre-login and binds sessions before any gameplay listener.
+        getServer().getPluginManager().registerEvents(services.auth(), this);
+        services.auth().announceMode();
+        services.auth().startSweeper();
         getServer().getPluginManager().registerEvents(new PlayerLifecycleListener(this, services), this);
         getServer().getPluginManager().registerEvents(services.classSelectionGui(), this);
         getServer().getPluginManager().registerEvents(services.combatListener(), this);

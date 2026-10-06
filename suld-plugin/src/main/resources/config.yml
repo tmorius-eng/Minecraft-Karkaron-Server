@@ -80,3 +80,17 @@ world-events:
   enabled: true
   interval-minutes: 45
   min-players: 1
+
+# ---------------------------------------------------------------------------
+# Authentication. SÜLD has NO /register or /login and never sees a password:
+# identity comes only from Minecraft/Microsoft authentication (online-mode=true,
+# or a Velocity proxy with modern forwarding). Players are identified by UUID.
+# If the server is not verifying accounts, SÜLD refuses every login (fail closed).
+# See docs/AUTHENTICATION.md.
+# ---------------------------------------------------------------------------
+auth:
+  # LOCAL DEVELOPMENT ONLY — lets an offline-mode test server accept logins.
+  # Anyone could join as anyone. NEVER enable on a public server.
+  allow-insecure-offline-dev-mode: false
+  profile-load-timeout-seconds: 10
+  pending-session-ttl-seconds: 60

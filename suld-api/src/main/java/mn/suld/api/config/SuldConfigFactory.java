@@ -76,6 +76,12 @@ public final class SuldConfigFactory {
                 view.getInt("world-events.interval-minutes", sd.worldEventIntervalMin()),
                 view.getInt("world-events.min-players", sd.worldEventMinPlayers()));
 
-        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social);
+        AuthSettings authd = d.auth();
+        AuthSettings auth = new AuthSettings(
+                view.getBoolean("auth.allow-insecure-offline-dev-mode", authd.allowInsecureOfflineDevMode()),
+                view.getInt("auth.profile-load-timeout-seconds", authd.profileLoadTimeoutSeconds()),
+                view.getInt("auth.pending-session-ttl-seconds", authd.pendingSessionTtlSeconds()));
+
+        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth);
     }
 }

@@ -68,6 +68,19 @@ Point a client at the running server (offline mode) and:
 5. Kill boss → banner, +EXP/+coins, reward items in inventory; mobs gone, party returns to FORMING.
 6. Repeat and let everyone die / `/dungeon abort` → "Агуй бүтэлгүйтлээ", all mobs removed.
 
+## Authentication & identity — verification matrix
+Full details and live transcript summary: [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) §7.
+
+| Invariant | How verified | Status |
+|---|---|---|
+| UUID-only identity, rename = same character, same name ≠ same player | `PlayerIdentityTest`, `DefaultProfileServiceTest` | automated ✅ |
+| Fail closed when unverified; v3 UUID rejected on verified servers | `AuthPolicyTest` + live test A | automated ✅ + live ✅ |
+| Quit → instant rejoin never reads stale data | `DefaultProfileServiceTest` (mutation-tested) | automated ✅ |
+| Storage failure never creates a blank profile | `DefaultProfileServiceTest` | automated ✅ |
+| Duplicate / concurrent logins | `SessionRegistryTest`, `DefaultProfileServiceTest` + live test 4 | automated ✅ + live ✅ |
+| First join (no /login), reconnect, rename, 15x reconnect | live Paper + PostgreSQL + mineflayer bots | live ✅ |
+| Genuine Microsoft-authenticated join | needs a real account/client | **manual, on first real deploy** |
+
 ## Vertical Slice 3 — verification matrix
 
 | Step | How verified | Status |

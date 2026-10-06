@@ -37,6 +37,7 @@ public final class SuldCommand implements CommandExecutor {
             case "info" -> info(sender);
             case "profile" -> profile(sender);
             case "spawnmob" -> spawnMob(sender);
+            case "auth" -> authStatus(sender);
             default -> help(sender);
         }
         return true;
@@ -53,6 +54,15 @@ public final class SuldCommand implements CommandExecutor {
         }
         services.mobs().spawn(mn.suld.plugin.content.SuldContent.GOVIIN_CHONO, player.getLocation());
         sender.sendMessage(Messages.success("Говийн Чоно дуудлаа."));
+    }
+
+    /** Admin/console: authentication mode and per-player session/profile state. */
+    private void authStatus(CommandSender sender) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        services.auth().statusLines().forEach(line -> sender.sendMessage(Messages.info(line)));
     }
 
     private void help(CommandSender sender) {
