@@ -46,15 +46,15 @@ public final class JdbcStyleRepository implements StyleRepository {
                     }
                 }
                 try (PreparedStatement ps = conn.prepareStatement("SELECT rank_id, tag_id, name_color_id, chat_color_id, "
-                        + "join_message_id, claimed_levels, credits FROM suld_player_style WHERE player_uuid = ?")) {
+                        + "join_message_id, claimed_levels, credits, discovered_regions FROM suld_player_style WHERE player_uuid = ?")) {
                     bindUuid(ps, 1, player);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) {
                             return owned.isEmpty() ? Optional.<PlayerStyle.Snapshot>empty()
-                                    : Optional.of(new PlayerStyle.Snapshot(player, Rank.ARD, owned, null, null, null, null, 0, 0));
+                                    : Optional.of(new PlayerStyle.Snapshot(player, Rank.ARD, owned, null, null, null, null, 0, 0, 0));
                         }
                         return Optional.of(new PlayerStyle.Snapshot(player, Rank.byId(rs.getString(1)), owned, rs.getString(2),
-                                rs.getString(3), rs.getString(4), rs.getString(5), rs.getLong(6), rs.getLong(7)));
+                                rs.getString(3), rs.getString(4), rs.getString(5), rs.getLong(6), rs.getLong(7), rs.getLong(8)));
                     }
                 }
             } catch (SQLException e) {
@@ -78,7 +78,8 @@ public final class JdbcStyleRepository implements StyleRepository {
                         ps.setString(5, s.chatColor());
                         ps.setString(6, s.joinMessage());
                         ps.setLong(7, s.claimedLevels());
-                        ps.setLong(8, now);
+                        ps.setLong(8, s.discovered());
+                        ps.setLong(9, now);
                         ps.executeUpdate();
                     }
                     try (PreparedStatement ps = conn.prepareStatement(insertOwned())) {
@@ -146,15 +147,15 @@ public final class JdbcStyleRepository implements StyleRepository {
     }
 
     private String upsert() {
-        String cols = "(player_uuid, rank_id, tag_id, name_color_id, chat_color_id, join_message_id, claimed_levels, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ";
+        String cols = "(player_uuid, rank_id, tag_id, name_color_id, chat_color_id, join_message_id, claimed_levels, discovered_regions, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ";
         return switch (dialect) {
             case MYSQL -> "INSERT INTO suld_player_style " + cols + "ON DUPLICATE KEY UPDATE rank_id = VALUES(rank_id), "
                     + "tag_id = VALUES(tag_id), name_color_id = VALUES(name_color_id), chat_color_id = VALUES(chat_color_id), "
-                    + "join_message_id = VALUES(join_message_id), claimed_levels = VALUES(claimed_levels), updated_at = VALUES(updated_at)";
+                    + "join_message_id = VALUES(join_message_id), claimed_levels = VALUES(claimed_levels), discovered_regions = VALUES(discovered_regions), updated_at = VALUES(updated_at)";
             case POSTGRESQL -> "INSERT INTO suld_player_style " + cols + "ON CONFLICT (player_uuid) DO UPDATE SET rank_id = EXCLUDED.rank_id, "
                     + "tag_id = EXCLUDED.tag_id, name_color_id = EXCLUDED.name_color_id, chat_color_id = EXCLUDED.chat_color_id, "
-                    + "join_message_id = EXCLUDED.join_message_id, claimed_levels = EXCLUDED.claimed_levels, updated_at = EXCLUDED.updated_at";
+                    + "join_message_id = EXCLUDED.join_message_id, claimed_levels = EXCLUDED.claimed_levels, discovered_regions = EXCLUDED.discovered_regions, updated_at = EXCLUDED.updated_at";
         };
     }
 

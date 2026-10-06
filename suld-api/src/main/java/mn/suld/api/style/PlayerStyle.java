@@ -14,7 +14,7 @@ public final class PlayerStyle {
 
     /** Immutable copy for persistence. */
     public record Snapshot(UUID player, Rank rank, Set<String> owned, String tag, String nameColor, String chatColor,
-                           String joinMessage, long claimedLevels, long credits) {
+                           String joinMessage, long claimedLevels, long credits, long discovered) {
     }
 
     private final UUID player;
@@ -25,6 +25,7 @@ public final class PlayerStyle {
     private String chatColor;
     private String joinMessage;
     private long claimedLevels;
+    private long discovered;
     private long credits;
     private boolean dirty;
 
@@ -42,6 +43,7 @@ public final class PlayerStyle {
         p.chatColor = p.ownedOrNull(s.chatColor());
         p.joinMessage = p.ownedOrNull(s.joinMessage());
         p.claimedLevels = s.claimedLevels();
+        p.discovered = s.discovered();
         p.credits = Math.max(0, s.credits());
         return p;
     }
@@ -114,6 +116,19 @@ public final class PlayerStyle {
         return true;
     }
 
+    /** Bit N set = region N (in world-content order) has been discovered; its EXP is paid exactly once. */
+    public synchronized long discovered() { return discovered; }
+
+    /** Mark region {@code index} (0..63) discovered; false if it already was. */
+    public synchronized boolean discover(int index) {
+        if (index < 0 || index > 63) return false;
+        long bit = 1L << index;
+        if ((discovered & bit) != 0) return false;
+        discovered |= bit;
+        dirty = true;
+        return true;
+    }
+
     /**
      * Store credits (Сүлд Кредит) as last read from storage. Display only: credits change exclusively through
      * {@link mn.suld.api.persistence.StyleRepository#addCredits} (an atomic database update), never by saving
@@ -127,7 +142,7 @@ public final class PlayerStyle {
 
     public synchronized Snapshot snapshotAndClean() {
         dirty = false;
-        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits);
+        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered);
     }
 
     public synchronized void markDirty() { dirty = true; }

@@ -123,7 +123,12 @@ public final class RegionSpawner {
         String id = r == null ? "" : r.id();
         String before = lastRegion.put(p.getUniqueId(), id);
         if (r != null && !r.safeZone() && !id.equals(before)) {
-            services.profiles().cached(p.getUniqueId()).ifPresent(pr -> services.quests().onRegion(p, pr, id));
+            var pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+            if (pr != null) {
+                boolean fresh = discover(p, pr, r);
+                services.quests().onRegion(p, pr, id);
+                if (fresh) return; // the discovery title replaces the region banner
+            }
         }
         if (r == null || r.safeZone() || id.equals(before) || before == null) return;
         p.showTitle(net.kyori.adventure.title.Title.title(
@@ -133,6 +138,27 @@ public final class RegionSpawner {
                         net.kyori.adventure.text.format.NamedTextColor.WHITE),
                 net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
                         java.time.Duration.ofMillis(700))));
+    }
+
+    /** First visit ever to a wild region: its discovery EXP, once per player (persisted with the style row). */
+    private boolean discover(Player p, mn.suld.api.profile.PlayerProfile pr, RegionDefinition r) {
+        int index = WorldContent.REGIONS.indexOf(r);
+        var style = services.styles().cached(p.getUniqueId()).orElse(null);
+        if (index < 0 || style == null || r.discoveryExp() <= 0 || !style.discover(index)) return false;
+        int from = pr.progression().level();
+        var exp = services.progression().grantExp(pr, r.discoveryExp(), mn.suld.api.progression.ExpSource.DISCOVERY);
+        p.showTitle(net.kyori.adventure.title.Title.title(
+                net.kyori.adventure.text.Component.text("ШИНЭ НУТАГ", net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),
+                        net.kyori.adventure.text.format.TextDecoration.BOLD),
+                net.kyori.adventure.text.Component.text(r.displayName() + " · +" + r.discoveryExp() + " EXP",
+                        net.kyori.adventure.text.format.NamedTextColor.WHITE, net.kyori.adventure.text.format.TextDecoration.BOLD),
+                net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
+                        java.time.Duration.ofMillis(700))));
+        p.sendMessage(mn.suld.plugin.ui.Messages.success("Шинэ нутаг нээлээ: " + r.displayName() + " (+" + r.discoveryExp() + " EXP)"));
+        p.playSound(p.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
+        if (exp.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(p, from, exp.after().level());
+        services.hud().update(p, pr);
+        return true;
     }
 
     /** Keep region mobs hostile; remove them in/near the city or when no player is within 80 blocks. */

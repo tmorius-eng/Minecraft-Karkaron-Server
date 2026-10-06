@@ -1,0 +1,65 @@
+package mn.suld.plugin.persistence;
+
+import mn.suld.api.style.PlayerStyle;
+import mn.suld.api.style.Rank;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.postgresql.ds.PGSimpleDataSource;
+
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Real-database test of the style row (V5) and discovered regions (V6). Opt-in like the other ITs:
+ * SULD_TEST_PG_URL / _USER / _PASS pointing at a THROWAWAY database (its public schema is dropped).
+ */
+@EnabledIfEnvironmentVariable(named = "SULD_TEST_PG_URL", matches = "jdbc:postgresql:.+")
+class JdbcStyleRepositoryIT {
+
+    private JdbcStyleRepository repo;
+    private final ExecutorService single = Executors.newSingleThreadExecutor();
+
+    @BeforeEach
+    void freshSchema() throws Exception {
+        PGSimpleDataSource ds = new PGSimpleDataSource();
+        ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
+        ds.setUser(System.getenv("SULD_TEST_PG_USER"));
+        ds.setPassword(System.getenv("SULD_TEST_PG_PASS"));
+        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
+            st.execute("DROP SCHEMA public CASCADE");
+            st.execute("CREATE SCHEMA public");
+        }
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate());
+        repo = new JdbcStyleRepository(ds, SqlDialect.POSTGRESQL, single);
+    }
+
+    @Test
+    void styleAndDiscoveriesRoundTrip() {
+        UUID id = UUID.randomUUID();
+        PlayerStyle s = new PlayerStyle(id);
+        s.rank(Rank.ARAVT);
+        assertTrue(s.claimLevel(5));
+        assertTrue(s.discover(1));
+        assertTrue(s.discover(3));
+        assertFalse(s.discover(3), "a region is discovered once");
+        repo.save(s.snapshotAndClean()).join();
+
+        PlayerStyle back = PlayerStyle.restore(repo.load(id).join().orElseThrow());
+        assertEquals(Rank.ARAVT, back.rank());
+        assertEquals(0b1010, back.discovered());
+        assertFalse(back.discover(1));
+        assertTrue(back.discover(0));
+        repo.save(back.snapshotAndClean()).join();
+        assertEquals(0b1011, repo.load(id).join().orElseThrow().discovered());
+
+        assertEquals(40, repo.addCredits(id, 40).join());
+        assertEquals(-1, repo.addCredits(id, -41).join(), "credits never go negative");
+        assertEquals(0b1011, repo.load(id).join().orElseThrow().discovered(), "credit updates leave discoveries alone");
+    }
+}
