@@ -52,4 +52,10 @@ class SchemaMigratorTest {
         return new java.util.Scanner(SchemaMigratorTest.class.getClassLoader().getResourceAsStream(path), "UTF-8")
                 .useDelimiter("\\A").next();
     }
+
+    @Test
+    void bundledV4RelicMigrationsParseForBothDialects() {
+        assertEquals(2, SchemaMigrator.splitStatements(resource("db/migration/mysql/V4__relics.sql")).size());
+        assertEquals(4, SchemaMigrator.splitStatements(resource("db/migration/postgresql/V4__relics.sql")).size());
+    }
 }

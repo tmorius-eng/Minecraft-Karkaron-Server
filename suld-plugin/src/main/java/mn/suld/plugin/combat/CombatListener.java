@@ -104,7 +104,7 @@ public final class CombatListener implements Listener {
                 mn.suld.api.analytics.AnalyticsEventType.FIRST_MOB_KILL, killer.getUniqueId()));
 
         int fromLevel = profile.progression().level();
-        long expAmount = services.clans().boostedExp(killer.getUniqueId(), def.scaledExp());
+        long expAmount = services.boosts().apply(killer.getUniqueId(), def.scaledExp());
         ExpGainResult exp = services.progression().grantExp(profile, expAmount, ExpSource.MOB_KILL);
         killer.sendMessage(Messages.info("+" + expAmount + " EXP (" + def.displayName() + ")"));
         services.clans().contribute(killer.getUniqueId(), SuldContent.CLAN_EXP_PER_MOB_KILL);

@@ -40,6 +40,10 @@ commands:
   suldevent:
     description: SULD world events (status; admin start/stop).
     usage: /suldevent <status|start|stop>
+  relic:
+    description: World-unique relics (list, info, hint, history; admin setshrine/return/give/recover/tp).
+    usage: /relic <list|info|hint|history>
+    aliases: [suld-unique, suldee]
 permissions:
   suld.admin:
     description: Grants all SULD administrative commands.
@@ -48,6 +52,7 @@ permissions:
       suld.admin.revive: true
       suld.admin.pack: true
       suld.admin.event: true
+      suld.admin.relic: true
   suld.admin.revive:
     description: Allows reviving players from the death/soul state.
     default: op
@@ -56,4 +61,7 @@ permissions:
     default: op
   suld.admin.event:
     description: Allows starting/stopping world events.
+    default: op
+  suld.admin.relic:
+    description: Relic administration (setshrine, return, give, recover, tp) and shrine block edits.
     default: op

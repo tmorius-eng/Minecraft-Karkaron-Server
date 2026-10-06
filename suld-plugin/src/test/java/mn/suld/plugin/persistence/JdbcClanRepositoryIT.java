@@ -44,7 +44,7 @@ class JdbcClanRepositoryIT {
             st.execute("DROP TABLE IF EXISTS suld_clan_members, suld_clans, suld_profiles, suld_world_unique_items, "
                     + "suld_world_unique_history, suld_analytics_events, suld_audit_log, suld_schema_version CASCADE");
         }
-        assertEquals(3, new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate(), "V1+V2+V3 applied");
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate(), "all migrations applied to a fresh schema");
         assertEquals(0, new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate(), "idempotent");
         repo = new JdbcClanRepository(ds, SqlDialect.POSTGRESQL, single, Logger.getLogger("it"));
     }

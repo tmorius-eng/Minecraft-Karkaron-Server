@@ -11,6 +11,12 @@ import mn.suld.api.service.DefaultProgressionService;
 import mn.suld.api.service.ProgressionService;
 import mn.suld.plugin.analytics.LoggingAnalyticsSink;
 import mn.suld.plugin.clan.ClanService;
+import mn.suld.plugin.relic.RelicItems;
+import mn.suld.plugin.relic.RelicService;
+import mn.suld.plugin.progression.ProgressionBoosts;
+import mn.suld.plugin.persistence.JdbcRelicRepository;
+import mn.suld.api.persistence.InMemoryRelicRepository;
+import mn.suld.api.persistence.RelicRepository;
 import mn.suld.plugin.auth.AuthenticationService;
 import mn.suld.plugin.audit.JdbcAuditLog;
 import mn.suld.plugin.audit.LoggingAuditLog;
@@ -70,6 +76,9 @@ public final class SuldServices {
     private final BossService bossService;
     private final DungeonService dungeonService;
     private final ExecutorService clanExecutor;
+    private final ExecutorService relicExecutor;
+    private final RelicService relicService;
+    private final ProgressionBoosts boosts;
     private final AuditLog auditLog;
     private final AuthenticationService authService;
     private final ClanService clanService;
@@ -149,6 +158,21 @@ public final class SuldServices {
         this.worldEventService = new WorldEventService(plugin, this, mobService, config.social());
         this.hudService.addStatusLine(clanService::hudLine);
         this.hudService.addStatusLine(worldEventService::hudLine);
+
+        // Vertical Slice 4: world-unique relics. Ordered writer; the DB CAS is the real guarantee.
+        this.relicExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "suld-relic-io");
+            thread.setDaemon(true);
+            return thread;
+        });
+        RelicRepository relicRepository = dataSource == null
+                ? new InMemoryRelicRepository()
+                : new JdbcRelicRepository(dataSource, SqlDialect.forStorage(config.database().type()), relicExecutor);
+        this.relicService = new RelicService(plugin, this, relicRepository, config.relics(),
+                new RelicItems(plugin, itemFactory));
+        plugin.getLogger().info("SULD relics loaded: " + relicService.load());
+        this.hudService.addStatusLine(relicService::hudLine);
+        this.boosts = new ProgressionBoosts(this);
     }
 
     public SuldConfig config() {
@@ -211,6 +235,19 @@ public final class SuldServices {
         return dungeonService;
     }
 
+    public RelicService relics() {
+        return relicService;
+    }
+
+    public ProgressionBoosts boosts() {
+        return boosts;
+    }
+
+    /** Direct storage access for offline lookups (e.g. a relic bearer's last-seen time). */
+    public ProfileRepository profileRepository() {
+        return repository;
+    }
+
     public AuthenticationService auth() {
         return authService;
     }
@@ -233,6 +270,12 @@ public final class SuldServices {
         dungeonService.shutdown();
         clanService.shutdown();
         clanExecutor.shutdown();
+        relicExecutor.shutdown();
+        try {
+            relicExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
         try {
             clanExecutor.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException ex) {

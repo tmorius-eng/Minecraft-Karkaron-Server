@@ -53,6 +53,11 @@ ownership history, server-wide broadcast on acquisition, audit log, and an admin
 recovery command. Because uniqueness is enforced by DB constraints, a restart or
 crash can never create a duplicate. See [DATABASE.md](DATABASE.md).
 
+**Implemented (Slice 4, [docs/RELICS.md](docs/RELICS.md)):** relics wait at auto-built shrines; a 10-second
+ritual claims one (level-gated, one per bearer); the bearer glows and gains EXP; a player who kills the
+bearer seizes it, any other death returns it to its shrine; the physical item can never be dropped, stored
+or duplicated — any non-genuine copy is destroyed on sight.
+
 ## Hardcore death system
 
 Configurable (see `death:` in `config.yml`). A death may place the character in

@@ -94,3 +94,17 @@ auth:
   allow-insecure-offline-dev-mode: false
   profile-load-timeout-seconds: 10
   pending-session-ttl-seconds: 60
+
+# ---------------------------------------------------------------------------
+# World-unique relics (Хөх Сүлд, ...). Each exists ONCE on the whole server;
+# the database is the only truth about who bears it. Shrines without a set
+# location are built automatically on the surface at a random distance from
+# spawn (admins can move them: /relic setshrine <key>).
+# ---------------------------------------------------------------------------
+relics:
+  enabled: true
+  auto-place-min-radius: 600
+  auto-place-max-radius: 1200
+  offline-return-hours: 72
+  ritual-seconds: 10
+  hint-cooldown-seconds: 300

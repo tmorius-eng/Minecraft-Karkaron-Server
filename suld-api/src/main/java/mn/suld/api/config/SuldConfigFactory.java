@@ -82,6 +82,15 @@ public final class SuldConfigFactory {
                 view.getInt("auth.profile-load-timeout-seconds", authd.profileLoadTimeoutSeconds()),
                 view.getInt("auth.pending-session-ttl-seconds", authd.pendingSessionTtlSeconds()));
 
-        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth);
+        RelicSettings rd = d.relics();
+        RelicSettings relics = new RelicSettings(
+                view.getBoolean("relics.enabled", rd.enabled()),
+                view.getInt("relics.auto-place-min-radius", rd.autoPlaceMinRadius()),
+                view.getInt("relics.auto-place-max-radius", rd.autoPlaceMaxRadius()),
+                view.getInt("relics.offline-return-hours", rd.offlineReturnHours()),
+                view.getInt("relics.ritual-seconds", rd.ritualSeconds()),
+                view.getInt("relics.hint-cooldown-seconds", rd.hintCooldownSeconds()));
+
+        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics);
     }
 }

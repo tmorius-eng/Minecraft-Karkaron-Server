@@ -34,8 +34,14 @@ public final class SchemaMigrator {
     private static final List<Migration> MIGRATIONS = List.of(
             new Migration(1, "init", "V1__init.sql"),
             new Migration(2, "profile_quest_currency", "V2__profile_quest_currency.sql"),
-            new Migration(3, "clans", "V3__clans.sql")
+            new Migration(3, "clans", "V3__clans.sql"),
+            new Migration(4, "relics", "V4__relics.sql")
     );
+
+    /** Highest schema version this build knows (tests and diagnostics). */
+    public static int latestVersion() {
+        return MIGRATIONS.get(MIGRATIONS.size() - 1).version();
+    }
 
     private final DataSource dataSource;
     private final SqlDialect dialect;

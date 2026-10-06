@@ -75,6 +75,15 @@ proven (render in `assets/previews/`). Its **Blockbench geometry is an interim
 placeholder**; it will be replaced by the Meshy-refined textured model once
 `assets.meshy.ai` is reachable (registry `status: needs_review`).
 
+## Resource pack format (Minecraft 1.21.11)
+- `pack.mcmeta` uses `min_format`/`max_format` = **75** (1.21.11's `pack_version.resource_major`, read from the
+  vanilla jar's `version.json`). The original `pack_format: 34` targeted 1.21–1.21.1 and would be flagged
+  incompatible.
+- Custom models are selected by **item model definitions** in `assets/minecraft/items/<item>.json`
+  (`range_dispatch` on `minecraft:custom_model_data`, index 0, plus a sentinel above the highest id).
+  The legacy `overrides` list in `models/item/*.json` was removed in 1.21.4 and is rejected by the validator.
+- `validate_resourcepack.py` cross-checks every registry asset's `custom_model_data` → `minecraft_model`.
+
 ## Tool-selection matrix (art direction)
 
 Target look: **clear voxel/pixel-art silhouettes** — sharp, readable, cheap. Do

@@ -128,3 +128,10 @@ Each ships with both MySQL and PostgreSQL DDL under
 
 MySQL uses `utf8mb4_bin` on `suld_clans` so uniqueness is exact (no accent folding). Writes go through one
 ordered writer thread; each save is a transaction (upsert clan, replace member rows).
+
+## V4 schema (shipped: `V4__relics.sql`) — world-unique relics
+Adds to `suld_world_unique_items`: `owner_name`, `shrine_world`, `shrine_x`, `shrine_y`, `shrine_z`, plus
+**CHECK** `state IN ('UNCLAIMED','OWNED')`, **CHECK** `(state = 'OWNED') = (owner_uuid IS NOT NULL)` and
+**UNIQUE** `owner_uuid` (a player bears at most one relic; NULLs allowed). Adds `actor`, `detail` to
+`suld_world_unique_history`. Ownership changes are `UPDATE … WHERE item_key = ? AND version = ?` with the
+history row in the same transaction. Full design: [docs/RELICS.md](docs/RELICS.md).

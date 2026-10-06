@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "entries": [
+      {
+        "threshold": 870001,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/suld_ild_tenger"
+        }
+      },
+      {
+        "threshold": 870002,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/netherite_sword"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/netherite_sword"
+    }
+  }
+}

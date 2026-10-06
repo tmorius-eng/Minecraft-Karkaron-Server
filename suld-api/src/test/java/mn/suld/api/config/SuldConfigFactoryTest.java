@@ -76,4 +76,16 @@ class SuldConfigFactoryTest {
         assertEquals(5, cfg.social().worldEventIntervalMin(), "clamped to >= 5 minutes");
         assertEquals(1, cfg.social().worldEventMinPlayers(), "clamped to >= 1");
     }
+
+    @Test
+    void relicSettingsLoadAndClamp() {
+        SuldConfig d = SuldConfigFactory.load(new MapConfigView(Map.of()));
+        assertTrue(d.relics().enabled());
+        assertEquals(72, d.relics().offlineReturnHours());
+        SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(Map.of("relics", Map.of(
+                "auto-place-min-radius", 10, "auto-place-max-radius", 20, "ritual-seconds", 999))));
+        assertEquals(64, cfg.relics().autoPlaceMinRadius(), "never right at spawn");
+        assertEquals(96, cfg.relics().autoPlaceMaxRadius(), "max > min");
+        assertEquals(60, cfg.relics().ritualSeconds());
+    }
 }

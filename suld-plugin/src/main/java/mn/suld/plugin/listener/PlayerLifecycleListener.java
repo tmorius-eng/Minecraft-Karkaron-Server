@@ -46,6 +46,7 @@ public final class PlayerLifecycleListener implements Listener {
         }
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.SESSION_START, id));
         services.resourcePacks().send(player);
+        services.relics().scheduleTease(player, profile);
         player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "! — SÜLD"));
         if (!profile.hasSelectedClass()) {
             player.sendMessage(Messages.info("Анхны алхам: ангиа сонгоно уу."));

@@ -4,8 +4,8 @@
 > changes. Dates are UTC.
 
 **Last updated:** 2026-10-06
-**Build:** `./gradlew build` green (127 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
-**Current phase:** Vertical Slice 3 (clan → world event → social progression) implemented and live-smoke-tested on PostgreSQL. Authentication/identity system done (docs/AUTHENTICATION.md). Slices 1–3 await one manual Minecraft-client pass.
+**Build:** `./gradlew build` green (152 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
+**Current phase:** Vertical Slice 4 (world relic → discovery → global uniqueness → broadcast → ownership) implemented and live-tested with bots on PostgreSQL (docs/RELICS.md). Auth done (docs/AUTHENTICATION.md). Slices 1–4 await one manual Minecraft-client pass.
 
 ---
 
@@ -22,6 +22,21 @@
   Also verified graceful fail-fast + self-disable on a bad DB config.
 - REMAINING: ONE manual Minecraft-client test (join→pack→class GUI→in-world combat/loot→reconnect).
   Not headlessly automatable (no MC client); all that logic is unit-tested (combat/loot/quest/persistence).
+
+## Vertical Slice 4 (world relic → discovery → global uniqueness → broadcast → ownership) — docs/RELICS.md
+- Relics **Хөх Сүлд** (lvl 10, +25% EXP) and **Алтан Гэрэгэ** (lvl 6, +15%): exist once; DB row is the only truth.
+- V4 migration: shrine columns, owner name, history actor/detail; DB CHECK (OWNED ⇔ owner) + UNIQUE(owner) (one
+  relic per bearer). Every ownership change = version compare-and-set + history in one transaction.
+- Pure: `RelicValidator` (forged/stale/extra/foreign/container copies removed, bearer re-issued), `RelicRules`,
+  `RelicHints`. Plugin: `RelicService` (auto-built shrines, 10s ritual, validator loop, death→seize/return,
+  72h offline expiry, admin return/give/recover/setshrine/tp), `RelicListener` (drop/container/bundle/frame/
+  stand/allay/hopper/item-entity/explosion guards), `/relic`, central `ProgressionBoosts` (clan + relic EXP).
+- Live (Paper + PostgreSQL + bots): ritual claim, forged + exact-duplicate copies removed, container stash purged,
+  death return, admin grant, **PvP seize** — all as specified. Real-PostgreSQL IT: 24 concurrent claims → 1 winner.
+- Bugs found & fixed: `ItemInstance` crashed on statless items (EnumMap copy of an empty Map) — caught live.
+  **Resource pack was incompatible with 1.21.11** (pack_format 34 + legacy `overrides`, removed in 1.21.4):
+  migrated to format 75 (`min_format`/`max_format`) + `assets/minecraft/items/*.json` model definitions;
+  validator now enforces both and cross-checks registry CMD → model mappings.
 
 ## Authentication & identity (docs/AUTHENTICATION.md)
 - Identity = Minecraft/Microsoft-authenticated UUID (online-mode). No /register, /login or passwords. Name is
@@ -158,7 +173,7 @@ Benchmarks come with the combat/mob slices.
    custom code.
 2. ~~Dungeon → party → boss → loot → progression.~~ **Done (Slice 2).**
 3. ~~Clan → event → social progression.~~ **Done (Slice 3).**
-4. World relic → discovery → global uniqueness → broadcast → ownership.
+4. ~~World relic → discovery → global uniqueness → broadcast → ownership.~~ **Done (Slice 4).**
 5. World regions + spawn + content expansion.
 
 ---

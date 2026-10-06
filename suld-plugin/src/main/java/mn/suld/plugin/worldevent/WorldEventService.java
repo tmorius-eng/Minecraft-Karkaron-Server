@@ -212,7 +212,7 @@ public final class WorldEventService {
                 continue; // offline at payout: hardcore rule, no mail-in rewards
             }
             int from = profile.progression().level();
-            long exp = services.clans().boostedExp(r.playerId(), r.exp());
+            long exp = services.boosts().apply(r.playerId(), r.exp());
             ExpGainResult gain = services.progression().grantExp(profile, exp, ExpSource.WORLD_EVENT);
             profile.addCurrency(r.currency());
             p.sendMessage(Messages.success("#" + r.rank() + " (" + r.contribution() + " чоно): +" + exp + " EXP, +"

@@ -59,7 +59,7 @@ class PluginDescriptorTest {
                 declared.add(line.trim().replace(":", ""));
             }
         }
-        for (String cmd : List.of("suld", "revive", "suldpack", "party", "dungeon", "clan", "cc", "suldevent")) {
+        for (String cmd : List.of("suld", "revive", "suldpack", "party", "dungeon", "clan", "cc", "suldevent", "relic")) {
             assertTrue(declared.contains(cmd), "plugin.yml must declare /" + cmd + " (SuldPlugin registers it)");
         }
     }

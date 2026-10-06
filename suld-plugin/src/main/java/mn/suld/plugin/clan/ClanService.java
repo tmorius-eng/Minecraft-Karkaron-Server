@@ -84,10 +84,9 @@ public final class ClanService {
         return Optional.ofNullable(tagCache.get(player));
     }
 
-    /** Personal EXP after the clan-level bonus (+2%/level above 1). */
-    public long boostedExp(UUID player, long base) {
-        double bonus = registry.clanOf(player).map(c -> ClanProgression.expBonus(c.level())).orElse(0.0);
-        return Math.round(base * (1.0 + bonus));
+    /** Clan-level EXP bonus (+2%/level above 1); combined with others in ProgressionBoosts. */
+    public double expBonus(UUID player) {
+        return registry.clanOf(player).map(c -> ClanProgression.expBonus(c.level())).orElse(0.0);
     }
 
     /** Credit clan EXP earned by a member; announces level-ups. */

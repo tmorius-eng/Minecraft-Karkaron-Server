@@ -13,6 +13,7 @@ import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.mob.MobTier;
 import mn.suld.api.quest.QuestDefinition;
 import mn.suld.api.quest.QuestType;
+import mn.suld.api.relic.RelicDefinition;
 import mn.suld.api.worldevent.WorldEventDefinition;
 
 import java.util.List;
@@ -131,6 +132,31 @@ public final class SuldContent {
 
     public static WorldEventDefinition worldEventFor(String id) {
         return WOLF_RAID.id().equals(id) || "wolf_raid".equals(id) ? WOLF_RAID : null;
+    }
+
+    // ===== Vertical Slice 4: world-unique relics =====
+
+    /** Хөх Сүлд — the Blue Standard, the spirit banner of the steppe. The flagship relic. */
+    public static final RelicDefinition KHUKH_SULD = new RelicDefinition(
+            "relic.khukh_suld", "Хөх Сүлд",
+            "Мөнх тэнгэрийн хүчээр мандсан хөх сүлд — түүнийг барьсан нэгэн л тал нутгийг удирдана.",
+            "minecraft:nether_star", 870100, 10, 0.25);
+
+    /** Алтан Гэрэгэ — the Golden Paiza, the khan's seal of safe passage. */
+    public static final RelicDefinition ALTAN_GEREGE = new RelicDefinition(
+            "relic.altan_gerege", "Алтан Гэрэгэ",
+            "Хааны тамгатай алтан гэрэгэ — эзэн нь хаана ч хүндлэгдэнэ.",
+            "minecraft:nether_star", 870101, 6, 0.15);
+
+    public static final java.util.List<RelicDefinition> RELICS = java.util.List.of(KHUKH_SULD, ALTAN_GEREGE);
+
+    public static RelicDefinition relicFor(String key) {
+        for (RelicDefinition r : RELICS) {
+            if (r.key().equals(key) || r.key().equals("relic." + key)) {
+                return r;
+            }
+        }
+        return null;
     }
 
     public static DungeonDefinition dungeonFor(String id) {

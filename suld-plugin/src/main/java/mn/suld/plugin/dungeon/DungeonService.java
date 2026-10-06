@@ -309,7 +309,7 @@ public final class DungeonService {
                 continue;
             }
             int from = profile.progression().level();
-            long completionExp = services.clans().boostedExp(id, SuldContent.KHASAR_DEN_COMPLETION_EXP);
+            long completionExp = services.boosts().apply(id, SuldContent.KHASAR_DEN_COMPLETION_EXP);
             ExpGainResult exp = services.progression().grantExp(profile, completionExp, ExpSource.DUNGEON);
             services.clans().contribute(id, SuldContent.CLAN_EXP_PER_DUNGEON_CLEAR);
             profile.addCurrency(SuldContent.KHASAR_DEN_COMPLETION_CURRENCY);

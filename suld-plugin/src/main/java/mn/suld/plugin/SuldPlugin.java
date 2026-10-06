@@ -64,6 +64,10 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand("cc", clanCommand);
         registerCommand("suldevent", new mn.suld.plugin.command.SuldEventCommand(services.worldEvents()));
         services.worldEvents().startTicker();
+        getServer().getPluginManager().registerEvents(
+                new mn.suld.plugin.relic.RelicListener(this, services.relics()), this);
+        registerCommand("relic", new mn.suld.plugin.command.RelicCommand(services.relics()));
+        services.relics().start();
         long clanFlushTicks = TICKS_PER_SECOND * 60;
         getServer().getScheduler().runTaskTimer(this, () -> services.clans().flushDirty(), clanFlushTicks, clanFlushTicks);
         registerCommand("revive", new ReviveCommand(this, services));

@@ -1,7 +1,0 @@
-{
-  "parent": "item/handheld",
-  "textures": { "layer0": "minecraft:item/netherite_sword" },
-  "overrides": [
-    { "predicate": { "custom_model_data": 870001 }, "model": "suld:item/suld_ild_tenger" }
-  ]
-}

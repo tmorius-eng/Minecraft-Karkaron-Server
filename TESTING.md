@@ -68,6 +68,19 @@ Point a client at the running server (offline mode) and:
 5. Kill boss → banner, +EXP/+coins, reward items in inventory; mobs gone, party returns to FORMING.
 6. Repeat and let everyone die / `/dungeon abort` → "Агуй бүтэлгүйтлээ", all mobs removed.
 
+## Vertical Slice 4 (relics) — verification matrix
+Details: [docs/RELICS.md](docs/RELICS.md) §5.
+
+| Invariant / flow | How verified | Status |
+|---|---|---|
+| Validator: forged / stale / extra / foreign / container copies removed; bearer re-issued | `RelicValidatorTest` | automated ✅ |
+| Claim rules, death outcomes, hints | `RelicRulesAndHintsTest` | automated ✅ |
+| One winner under concurrent claims | `InMemoryRelicRepositoryTest` (64 threads) + `JdbcRelicRepositoryIT` (24 real connections) | automated ✅ |
+| DB rejects 2 relics per bearer, duplicate item UUID | `JdbcRelicRepositoryIT` (opt-in PostgreSQL) | automated ✅ |
+| Pack: format 75, item definitions resolve, registry CMD mappings | `tools/validation/validate_resourcepack.py` | automated ✅ |
+| Ritual claim, forged/duplicate/container copies, death return, admin grant, PvP seize | live Paper + PostgreSQL + bots | live ✅ |
+| Relic visuals on a real client; 72h offline expiry | needs a client / time | **manual** |
+
 ## Authentication & identity — verification matrix
 Full details and live transcript summary: [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) §7.
 

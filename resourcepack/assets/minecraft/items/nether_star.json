@@ -1,0 +1,34 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "entries": [
+      {
+        "threshold": 870100,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/khukh_suld"
+        }
+      },
+      {
+        "threshold": 870101,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/altan_gerege"
+        }
+      },
+      {
+        "threshold": 870102,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/nether_star"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/nether_star"
+    }
+  }
+}

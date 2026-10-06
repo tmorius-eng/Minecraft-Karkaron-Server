@@ -38,7 +38,11 @@ public final class ItemInstance {
             throw new IllegalArgumentException("itemLevel must be >= 1: " + itemLevel);
         }
         this.itemLevel = itemLevel;
-        this.stats = stats == null ? new EnumMap<>(ItemStat.class) : new EnumMap<>(stats);
+        // new EnumMap<>(map) throws for an empty non-EnumMap (e.g. Map.of()), so copy explicitly.
+        this.stats = new EnumMap<>(ItemStat.class);
+        if (stats != null) {
+            this.stats.putAll(stats);
+        }
         this.soulbound = soulbound;
         this.upgradeLevel = Math.max(0, upgradeLevel);
         this.provenance = provenance == null ? "unknown" : provenance;

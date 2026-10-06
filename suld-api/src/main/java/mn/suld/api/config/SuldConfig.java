@@ -12,7 +12,8 @@ public record SuldConfig(
         AnalyticsSettings analytics,
         ResourcePackSettings resourcePack,
         SocialSettings social,
-        AuthSettings auth) {
+        AuthSettings auth,
+        RelicSettings relics) {
 
     public static SuldConfig defaults() {
         return new SuldConfig(
@@ -23,6 +24,7 @@ public record SuldConfig(
                 AnalyticsSettings.defaults(),
                 ResourcePackSettings.defaults(),
                 SocialSettings.defaults(),
-                AuthSettings.defaults());
+                AuthSettings.defaults(),
+                RelicSettings.defaults());
     }
 }
