@@ -18,8 +18,10 @@ import org.bukkit.scoreboard.Scoreboard;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * Custom SÜLD HUD rendered as a per-player scoreboard sidebar. Fully hand-built
@@ -30,9 +32,15 @@ public final class HudService {
 
     private final ProgressionService progression;
     private final Map<UUID, String> lastSignature = new ConcurrentHashMap<>();
+    private volatile Function<UUID, Optional<String>> dungeonStatus = id -> Optional.empty();
 
     public HudService(ProgressionService progression) {
         this.progression = progression;
+    }
+
+    /** Plugged in by the dungeon layer so the HUD can show run status without a hard dependency. */
+    public void setDungeonStatus(Function<UUID, Optional<String>> provider) {
+        this.dungeonStatus = provider;
     }
 
     public void update(Player player, PlayerProfile profile) {
@@ -79,6 +87,7 @@ public final class HudService {
         lines.add("§7HP: §c" + (int) Math.ceil(player.getHealth()) + "§7/§c" + (int) player.getMaxHealth());
         lines.add("§7" + resourceName + ": §e" + resourceMax + "§7/§e" + resourceMax);
         lines.add("§7Эрэл: §f" + quest);
+        dungeonStatus.apply(player.getUniqueId()).ifPresent(status -> lines.add("§7Агуй: §c" + status));
         lines.add("§7Зоос: §6" + profile.currency());
         lines.add("§8suld.mn");
         return lines;

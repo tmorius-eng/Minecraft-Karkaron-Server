@@ -18,9 +18,7 @@ import mn.suld.plugin.item.ItemFactory;
 import mn.suld.plugin.mob.MobService;
 import mn.suld.plugin.quest.QuestService;
 import mn.suld.plugin.ui.Messages;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.Title;
+import mn.suld.plugin.ui.Presentation;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -29,7 +27,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 
-import java.time.Duration;
 import java.util.Random;
 
 /**
@@ -110,7 +107,7 @@ public final class CombatListener implements Listener {
         ExpGainResult exp = services.progression().grantExp(profile, def.scaledExp(), ExpSource.MOB_KILL);
         killer.sendMessage(Messages.info("+" + def.scaledExp() + " EXP (" + def.displayName() + ")"));
         if (exp.leveledUp()) {
-            presentLevelUp(killer, fromLevel, exp.after().level());
+            Presentation.levelUp(killer, fromLevel, exp.after().level());
         }
 
         quests.onMobKilled(killer, profile, mobId);
@@ -132,15 +129,6 @@ public final class CombatListener implements Listener {
 
         services.profiles().save(profile);
         hud.update(killer, profile);
-    }
-
-    private void presentLevelUp(Player player, int from, int to) {
-        player.showTitle(Title.title(
-                Component.text("ТҮВШИН ДЭЭШЛЭВ", Messages.BRAND),
-                Component.text("Түвшин " + from + " → " + to, NamedTextColor.GRAY),
-                Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(600))));
-        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
-        player.sendMessage(Messages.success("Түвшин " + to + "-д хүрлээ!"));
     }
 
     private static double ThreadLocalRandomRoll() {

@@ -22,6 +22,14 @@ commands:
   suldpack:
     description: SULD resource-pack control (status, reload, force).
     usage: /suldpack <status|reload|force>
+  party:
+    description: SULD party control (invite, accept, leave, kick, promote, disband, info).
+    usage: /party <invite|accept|leave|kick|promote|disband|info>
+    aliases: [p]
+  dungeon:
+    description: SULD dungeons (list, enter, status, leave, abort).
+    usage: /dungeon <list|enter|status|leave|abort>
+    aliases: [agui]
 permissions:
   suld.admin:
     description: Grants all SULD administrative commands.

@@ -47,6 +47,27 @@ Point a client at the running server (offline mode) and:
 5. Disconnect, reconnect → class, level, EXP, currency, quest, inventory restored.
 6. (With a hosted pack + `resource-pack.enabled: true`) → pack prompt on join.
 
+## Vertical Slice 2 — verification matrix
+
+| Step | How verified | Status |
+|---|---|---|
+| Party rules (invite/accept/expiry/leader/kick/promote/capacity/busy) | `PartyTest`, `PartyRegistryTest` | automated ✅ |
+| Dungeon state machine (waves→boss→complete/fail, illegal transitions) | `DungeonRunTest` | automated ✅ |
+| Boss phase selection / config validation | `DungeonRunTest` | automated ✅ |
+| Build + 72 tests | `./gradlew build` | automated ✅ |
+| Plugin loads, listeners + `/party` `/dungeon` register | live Paper 1.21.11 headless | automated ✅ |
+| `/party invite|accept` between two real players | in-world | **manual client (2 players)** |
+| `/dungeon enter khasar_den` → waves → boss phases → rewards | in-world | **manual client** |
+| Party wipe / leave mid-run / abort cleanup | in-world | **manual client** |
+
+### Manual Slice 2 script (needs a lvl 2+ character; give EXP with a few wolf kills first)
+1. A: `/party invite B`; B: `/party accept` → both see "багт нэгдлээ".
+2. A: `/dungeon enter khasar_den` → both teleported, boss bar "бэлдэж байна", HUD shows `Агуй:` line.
+3. After ~3s wave 1 (3 wolves) spawns; kill all → "Давалгаа цэвэрлэгдлээ" → wave 2 (4 wolves).
+4. Boss Хасар spawns; at 60% and 30% HP expect roar + phase message; do nothing for 180s to see enrage.
+5. Kill boss → banner, +EXP/+coins, reward items in inventory; mobs gone, party returns to FORMING.
+6. Repeat and let everyone die / `/dungeon abort` → "Агуй бүтэлгүйтлээ", all mobs removed.
+
 ## Latest live run (2026-10-06, automated)
 - Paper 1.21.11 (build 132) started headless; SULD remapped → loaded → ENABLED → disabled cleanly.
 - `libraries:` JDBC drivers (mysql-connector-j, postgresql, protobuf, checker-qual) downloaded + loaded at runtime.

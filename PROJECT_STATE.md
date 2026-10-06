@@ -4,8 +4,8 @@
 > changes. Dates are UTC.
 
 **Last updated:** 2026-10-06
-**Build:** `./gradlew build` green (30 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
-**Current phase:** Vertical Slice 1 implemented (real Paper code, green build, 30+ tests); live server boot + plugin-enable verified. DB-backed run + manual client steps in progress.
+**Build:** `./gradlew build` green (72 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
+**Current phase:** Vertical Slice 2 (party → dungeon → boss → loot → progression) implemented; Slice 1 live-verified. Both await one manual Minecraft-client pass.
 
 ---
 
@@ -22,6 +22,22 @@
   Also verified graceful fail-fast + self-disable on a bad DB config.
 - REMAINING: ONE manual Minecraft-client test (join→pack→class GUI→in-world combat/loot→reconnect).
   Not headlessly automatable (no MC client); all that logic is unit-tested (combat/loot/quest/persistence).
+
+## Vertical Slice 2 (party → dungeon → boss → loot → progression)
+- Domain (suld-api, unit-tested): `Party`, `PartyRegistry` (invites w/ expiry via injected Clock, leader rules,
+  capacity, busy-in-dungeon), `DungeonDefinition`, `DungeonRun` state machine (ENTERING→WAVE→BOSS→COMPLETE/FAILED),
+  `BossDefinition`/`BossPhase` (HP-threshold phases, descending order, phases only escalate).
+- Plugin: `PartyService` (messaging adapter), `DungeonService` (entry validation, wave spawning, boss encounter,
+  per-participant rewards, wipe/timeout/abort/cleanup, boss bar, HUD status line), `BossService` (phase
+  escalation, per-phase damage scaling, enrage timer), `DungeonListener`, commands `/party` and `/dungeon`.
+- Content (`SuldContent`): dungeon **Хасарын Агуй** (`dungeon.khasar_den`, lvl 2+, 1-4 players, 2 waves + boss
+  Хасар, RAVAGER, 3 phases, 180s enrage); new items (Хасарын Соёо epic, Хасарын Зүрх legendary, Талын Түшиг).
+- Rules: reward only to participants still online and not downed (hardcore); run ends on boss kill, party
+  wipe, all leave, abort, or 20-minute cap; all spawned mobs are removed on any end.
+- LIVE SMOKE (automated, verified): plugin loads on Paper 1.21.11 with new listeners; `/party`, `/dungeon` registered.
+- NOT verified: the in-world run (needs a client). Logic is unit-tested; instancing is *logical* (per-party tracked
+  mobs at the leader's location), not a separate world — world-level instancing comes with WorldBuilder.
+- No V3 migration: parties/runs are transient by design; persistence only when needed (run history/leaderboards).
 
 ## Repository audit (per master directive §49)
 
@@ -106,7 +122,7 @@ Benchmarks come with the combat/mob slices.
    first quest → combat → mob death → loot → tooltip → EXP → level-up → save →
    reconnect. Build the HUD/Scoreboard/TAB/Rank/Tag/ResourcePack/Gui services as
    custom code.
-2. Dungeon → party → boss → loot → progression.
+2. ~~Dungeon → party → boss → loot → progression.~~ **Done (Slice 2).**
 3. Clan → event → social progression.
 4. World relic → discovery → global uniqueness → broadcast → ownership.
 5. World regions + spawn + content expansion.

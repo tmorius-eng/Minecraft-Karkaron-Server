@@ -67,6 +67,12 @@ public final class MobService {
         return mobId(entity).isPresent();
     }
 
+    /** Current max health of a living entity (0 if the attribute is unavailable). */
+    public static double maxHealth(LivingEntity entity) {
+        AttributeInstance attr = entity.getAttribute(maxHealthAttribute());
+        return attr == null ? 0.0 : attr.getValue();
+    }
+
     /** Resolve the max-health attribute via the registry (stable across 1.21.x renames). */
     private static Attribute maxHealthAttribute() {
         Attribute attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("max_health"));

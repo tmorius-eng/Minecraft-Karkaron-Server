@@ -11,6 +11,9 @@ import mn.suld.api.service.DefaultProgressionService;
 import mn.suld.api.service.ProgressionService;
 import mn.suld.plugin.analytics.LoggingAnalyticsSink;
 import mn.suld.plugin.combat.CombatListener;
+import mn.suld.plugin.dungeon.BossService;
+import mn.suld.plugin.dungeon.DungeonService;
+import mn.suld.plugin.party.PartyService;
 import mn.suld.plugin.event.BukkitEventDispatcher;
 import mn.suld.plugin.gui.ClassSelectionGui;
 import mn.suld.plugin.hud.HudService;
@@ -53,6 +56,9 @@ public final class SuldServices {
     private final ResourcePackService resourcePackService;
     private final ClassSelectionGui classSelectionGui;
     private final CombatListener combatListener;
+    private final PartyService partyService;
+    private final BossService bossService;
+    private final DungeonService dungeonService;
 
     public SuldServices(Plugin plugin, SuldConfig config) {
         this.config = config;
@@ -93,6 +99,12 @@ public final class SuldServices {
         this.resourcePackService = new ResourcePackService(plugin, config.resourcePack());
         this.classSelectionGui = new ClassSelectionGui(plugin, this, hudService, questService, itemFactory);
         this.combatListener = new CombatListener(this, mobService, questService, hudService, itemFactory);
+
+        // Vertical Slice 2 services.
+        this.partyService = new PartyService();
+        this.bossService = new BossService();
+        this.dungeonService = new DungeonService(plugin, this, mobService, partyService, bossService);
+        this.hudService.setDungeonStatus(dungeonService::statusLine);
     }
 
     public SuldConfig config() {
@@ -143,8 +155,21 @@ public final class SuldServices {
         return combatListener;
     }
 
+    public PartyService parties() {
+        return partyService;
+    }
+
+    public BossService bosses() {
+        return bossService;
+    }
+
+    public DungeonService dungeons() {
+        return dungeonService;
+    }
+
     /** Flush analytics, stop the IO pool, and close the connection pool. */
     public void close() {
+        dungeonService.shutdown();
         try {
             analytics.flush().get(5, TimeUnit.SECONDS);
         } catch (Exception ignored) {
