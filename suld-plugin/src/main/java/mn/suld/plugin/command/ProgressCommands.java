@@ -38,6 +38,13 @@ public final class ProgressCommands {
         this.services = services;
     }
 
+    private mn.suld.plugin.quest.QuestTracker tracker;
+
+    /** {@code /quest track} toggles this tracker. */
+    public void tracker(mn.suld.plugin.quest.QuestTracker tracker) {
+        this.tracker = tracker;
+    }
+
     /** With menus set, a plain {@code /quest} opens the storyline board ({@code /quest info} = text). */
     public void menus(mn.suld.plugin.gui.Menus menus) {
         this.menus = menus;
@@ -188,6 +195,10 @@ public final class ProgressCommands {
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
             if (menus != null && s instanceof Player p && a.length == 0) {
                 menus.quests(p);
+                return true;
+            }
+            if (tracker != null && s instanceof Player tp && a.length == 1 && a[0].equalsIgnoreCase("track")) {
+                tp.sendMessage(tracker.toggle(tp) ? Messages.success("Эрлийн заагч асаалаа.") : Messages.info("Эрлийн заагч унтраалаа (/quest track)."));
                 return true;
             }
             if (a.length > 0 && a[0].equalsIgnoreCase("info")) a = new String[0];

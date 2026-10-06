@@ -107,7 +107,7 @@ discover a region (crossing into it), clear a dungeon (without being downed).
 | 18 | Алтайн Аварга | 3 giants (elite) | Алтай |
 
 `/quest` opens the chapter board (done / active / locked), `/quest info` prints the active chapter; the sidebar
-tracks progress. Admins: `/suld quest <player> <1..18|reset>`.
+tracks progress and a boss-bar tracker points (arrow, compass word, distance) at the objective's region (`/quest track`). Admins: `/suld quest <player> <1..18|reset>`.
 
 ## Dungeons
 

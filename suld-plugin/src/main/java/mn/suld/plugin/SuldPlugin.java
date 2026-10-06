@@ -134,6 +134,10 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
         progress.menus(menus);
+        mn.suld.plugin.quest.QuestTracker tracker = new mn.suld.plugin.quest.QuestTracker(this, services);
+        getServer().getPluginManager().registerEvents(tracker, this);
+        tracker.start();
+        progress.tracker(tracker);
         registerTab("class", progress.clazz());
         registerTab("profile", progress.profile());
         registerTab("exp", progress.exp());

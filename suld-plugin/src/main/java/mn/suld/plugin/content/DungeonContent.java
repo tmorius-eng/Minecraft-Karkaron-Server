@@ -97,6 +97,16 @@ public final class DungeonContent {
         return COMPLETION.getOrDefault(dungeonId, new Completion(SuldContent.KHASAR_DEN_COMPLETION_EXP, SuldContent.KHASAR_DEN_COMPLETION_CURRENCY));
     }
 
+    /** The wild region a dungeon belongs to (where its quest tracker points). */
+    public static String regionOf(String dungeonId) {
+        return switch (dungeonId) {
+            case "dungeon.govi_bulsh" -> WorldContent.GOBI.id();
+            case "dungeon.baavgain_uur" -> WorldContent.KHANGAI.id();
+            case "dungeon.mosun_orgil" -> WorldContent.ALTAI.id();
+            default -> WorldContent.KHERLEN.id();
+        };
+    }
+
     /** Where to run it (shown in /dungeon list). */
     public static String where(String dungeonId) {
         return switch (dungeonId) {
