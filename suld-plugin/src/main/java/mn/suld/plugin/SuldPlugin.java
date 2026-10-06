@@ -57,6 +57,8 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(services.resourcePacks(), this);
         services.resourcePacks().start();
         getServer().getPluginManager().registerEvents(services.bosses(), this);
+        getServer().getPluginManager().registerEvents(services.mobs(), this);
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.combat.CombatFeedback(this, services.mobs()), this);
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.dungeon.DungeonListener(services.dungeons(), services.parties()), this);
         registerCommand("suld", new SuldCommand(this, services));

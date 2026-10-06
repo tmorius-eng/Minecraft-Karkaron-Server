@@ -73,6 +73,9 @@ public final class CombatListener implements Listener {
         return 0.05 + (weapon == null ? 0 : weapon.stat(ItemStat.CRIT_CHANCE));
     }
 
+    /** Victims of a critical SÜLD hit this tick (read and cleared by the damage-number display). */
+    public static final java.util.Set<java.util.UUID> CRIT_HITS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     /** Arrow damage multiplier set by spells (Чонын Нүд) — consumed per arrow. */
     public static final java.util.Map<java.util.UUID, Integer> EMPOWERED_ARROWS = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -105,6 +108,7 @@ public final class CombatListener implements Listener {
         DamageResult result = calculator.compute(attackOf(services, player) * scale, critOf(player), 1.5, 0.0, ThreadLocalRandomRoll());
         event.setDamage(result.finalDamage());
         if (result.critical()) {
+            CRIT_HITS.add(event.getEntity().getUniqueId());
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1f, 1.2f);
         }
     }

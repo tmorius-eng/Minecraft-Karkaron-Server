@@ -22,12 +22,15 @@ import java.util.Optional;
  * SÜLD stats/identity are applied and stored in the entity's PDC. Hand-written —
  * no MythicMobs or any mob plugin.
  */
-public final class MobService {
+public final class MobService implements org.bukkit.event.Listener {
 
     private final NamespacedKey keyMobId;
     private final NamespacedKey keyMobLevel;
 
+    private final Plugin plugin;
+
     public MobService(Plugin plugin) {
+        this.plugin = plugin;
         this.keyMobId = new NamespacedKey(plugin, "mob_id");
         this.keyMobLevel = new NamespacedKey(plugin, "mob_level");
     }
@@ -44,11 +47,11 @@ public final class MobService {
         living.setCustomNameVisible(true);
         living.setRemoveWhenFarAway(true);
 
-        AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
-        if (maxHealth != null) {
-            maxHealth.setBaseValue(def.scaledHealth());
-            living.setHealth(def.scaledHealth());
-        }
+        applyHealth(living, def.scaledHealth());
+        // Some entities (wolves) reset their max health to the vanilla value right after spawning: apply it again.
+        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+            if (living.isValid() && maxHealth(living) != def.scaledHealth()) applyHealth(living, def.scaledHealth());
+        });
 
         living.getPersistentDataContainer().set(keyMobId, PersistentDataType.STRING, def.id());
         living.getPersistentDataContainer().set(keyMobLevel, PersistentDataType.INTEGER, def.level());
@@ -102,6 +105,34 @@ public final class MobService {
         }
         if (mob instanceof org.bukkit.entity.Wolf wolf && mob.getTarget() != null) {
             wolf.setAngry(true);
+        }
+    }
+
+    /**
+     * Saved SÜLD mobs come back from disk with vanilla stats (a wolf's load logic resets its max health): restore the
+     * SÜLD max health, keeping the current health.
+     */
+    @org.bukkit.event.EventHandler
+    public void onEntitiesLoad(org.bukkit.event.world.EntitiesLoadEvent e) {
+        for (Entity entity : e.getEntities()) {
+            if (!(entity instanceof LivingEntity living)) continue;
+            String id = living.getPersistentDataContainer().get(keyMobId, PersistentDataType.STRING);
+            MobDefinition def = id == null ? null : mn.suld.plugin.content.SuldContent.mobFor(id);
+            if (def == null) continue;
+            AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
+            if (maxHealth != null && maxHealth.getBaseValue() != def.scaledHealth()) {
+                double hp = living.getHealth();
+                maxHealth.setBaseValue(def.scaledHealth());
+                living.setHealth(Math.min(def.scaledHealth(), Math.max(1, hp)));
+            }
+        }
+    }
+
+    private static void applyHealth(LivingEntity living, double health) {
+        AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
+        if (maxHealth != null) {
+            maxHealth.setBaseValue(health);
+            living.setHealth(health);
         }
     }
 
