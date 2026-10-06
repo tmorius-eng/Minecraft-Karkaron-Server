@@ -149,27 +149,27 @@ public final class CityCommands implements Listener {
                 }
             }
             Page page = PAGES.get(index);
-            s.sendMessage(Component.text("━━━━ ", NamedTextColor.DARK_GRAY)
+            s.sendMessage(Component.text("━━━━ ", NamedTextColor.GRAY, TextDecoration.BOLD)
                     .append(Component.text("ᠰ SÜLD ", Messages.BRAND, TextDecoration.BOLD))
-                    .append(Component.text(page.title(), NamedTextColor.GOLD))
-                    .append(Component.text("  " + (index + 1) + "/" + PAGES.size(), NamedTextColor.GRAY)));
+                    .append(Component.text(page.title(), NamedTextColor.GOLD, TextDecoration.BOLD))
+                    .append(Component.text("  " + (index + 1) + "/" + PAGES.size(), NamedTextColor.WHITE, TextDecoration.BOLD)));
             for (String[] line : page.lines()) {
-                Component t = Component.text(line[0], NamedTextColor.WHITE);
+                Component t = Component.text(line[0], NamedTextColor.WHITE, TextDecoration.BOLD);
                 if (line[1] != null) {
                     t = t.clickEvent(ClickEvent.runCommand(line[1]))
-                            .hoverEvent(HoverEvent.showText(Component.text("Дарж ажиллуулах: " + line[1], NamedTextColor.GRAY)));
+                            .hoverEvent(HoverEvent.showText(Component.text("Дарж ажиллуулах: " + line[1], NamedTextColor.WHITE, TextDecoration.BOLD)));
                 }
                 s.sendMessage(t);
             }
             Component nav = Component.empty();
             for (int i = 0; i < PAGES.size(); i++) {
                 Page p = PAGES.get(i);
-                nav = nav.append(Component.text("[" + (i + 1) + "]", i == index ? NamedTextColor.GOLD : NamedTextColor.AQUA)
+                nav = nav.append(Component.text("[" + (i + 1) + "]", i == index ? NamedTextColor.GOLD : NamedTextColor.AQUA, TextDecoration.BOLD)
                                 .clickEvent(ClickEvent.runCommand("/help " + p.key()))
                                 .hoverEvent(HoverEvent.showText(Component.text(p.title()))))
                         .append(Component.text(" "));
             }
-            s.sendMessage(Component.text("Хуудас: ", NamedTextColor.GRAY).append(nav));
+            s.sendMessage(Component.text("Хуудас: ", NamedTextColor.WHITE, TextDecoration.BOLD).append(nav));
             return true;
         }
 
@@ -182,8 +182,8 @@ public final class CityCommands implements Listener {
     private final TabExecutor rules = new TabExecutor() {
         @Override
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
-            s.sendMessage(Component.text("━━━━ ", NamedTextColor.DARK_GRAY).append(Component.text("Дүрэм · Rules", NamedTextColor.GOLD)));
-            RULES.forEach(r -> s.sendMessage(Component.text(r, NamedTextColor.WHITE)));
+            s.sendMessage(Component.text("━━━━ ", NamedTextColor.GRAY, TextDecoration.BOLD).append(Component.text("Дүрэм · Rules", NamedTextColor.GOLD, TextDecoration.BOLD)));
+            RULES.forEach(r -> s.sendMessage(Component.text(r, NamedTextColor.WHITE, TextDecoration.BOLD)));
             return true;
         }
 
@@ -268,7 +268,7 @@ public final class CityCommands implements Listener {
                 return true;
             }
             s.sendMessage(Messages.info((who == s ? "Таны" : who.getName() + "-ийн") + " зоос: ")
-                    .append(Component.text(profile.currency() + " ₮", NamedTextColor.GOLD)));
+                    .append(Component.text(profile.currency() + " ₮", NamedTextColor.GOLD, TextDecoration.BOLD)));
             return true;
         }
 

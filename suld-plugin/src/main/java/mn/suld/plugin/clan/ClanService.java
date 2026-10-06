@@ -255,7 +255,7 @@ public final class ClanService {
                         .thenComparing(Comparator.comparingLong(ClanMember::contribution).reversed()))
                 .forEach(m -> viewer.sendMessage(Component.text("  " + m.rank().displayName() + " · " + m.name()
                         + " · " + m.contribution() + " EXP" + (Bukkit.getPlayer(m.playerId()) != null ? " ●" : ""),
-                        NamedTextColor.GRAY)));
+                        NamedTextColor.WHITE)));
     }
 
     public void top(Player viewer) {
@@ -273,7 +273,7 @@ public final class ClanService {
         }
         Component line = Component.text("[" + clan.tag() + "] ", NamedTextColor.GOLD)
                 .append(Component.text(sender.getName(), NamedTextColor.AQUA))
-                .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
+                .append(Component.text(" » ", NamedTextColor.GRAY))
                 .append(Component.text(message, NamedTextColor.WHITE));
         forEachOnline(clan, p -> p.sendMessage(line));
         plugin.getLogger().info("[clan-chat][" + clan.tag() + "] " + sender.getName() + ": " + message);

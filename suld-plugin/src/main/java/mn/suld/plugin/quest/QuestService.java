@@ -66,7 +66,7 @@ public final class QuestService {
             profile.addCurrency(def.currencyReward());
             player.showTitle(Title.title(
                     Component.text("Эрэл Дууслаа", Messages.BRAND),
-                    Component.text(def.title(), NamedTextColor.GRAY),
+                    Component.text(def.title(), NamedTextColor.WHITE),
                     Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(600))));
             player.sendMessage(Messages.success("Эрэл дууслаа: " + def.title()
                     + "  (+" + def.expReward() + " EXP, +" + def.currencyReward() + " зоос)"));

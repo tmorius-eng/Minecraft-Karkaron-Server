@@ -37,8 +37,14 @@
 .PARAMETER Plugins
     Which trusted third-party plugin profiles from deploy\plugins\plugins.json to install into run\plugins
     (default "core": LuckPerms, EssentialsX, VaultUnlocked, PlaceholderAPI, CoreProtect, WorldEdit,
-    WorldGuard, spark, Chunky, DiscordSRV). "core,hardening" adds GrimAC, Plan, LibertyBans, ViaVersion.
+    WorldGuard, Chunky, DiscordSRV, SkinsRestorer, DecentHolograms). "core,hardening" adds GrimAC, Plan, LibertyBans, ViaVersion.
     "none" installs no third-party plugins. Only builds made for this Minecraft version are installed.
+
+.PARAMETER Owner
+    Minecraft name made operator on this LOCAL test server (default "qeevr_"). Written to run\ops.json
+    with the offline-mode UUID, and only when the server listens on 127.0.0.1 (not with -Lan, where
+    anyone on the network could join under that name). Production OP comes from SULD's "owners:" list,
+    which only trusts verified (online-mode) logins.
 
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-test-server.ps1
@@ -49,7 +55,8 @@ param(
     [int]$Port = 25565,
     [switch]$Lan,
     [switch]$SkipBuild,
-    [string]$Plugins = "core"
+    [string]$Plugins = "core",
+    [string]$Owner = "qeevr_"
 )
 
 Set-StrictMode -Version Latest
@@ -62,7 +69,7 @@ $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $RunDir = Join-Path $Root "run"
 $PluginsDir = Join-Path $RunDir "plugins"
 $Api = "https://fill.papermc.io/v3/projects/paper"
-$UserAgent = "SULD-dev-test-server/1.0 (local development script)"
+$UserAgent = "tmorius-eng/Minecraft-Karkaron-Server/1.0"
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 function Write-Step([string]$Message) {
@@ -218,33 +225,28 @@ function ConvertTo-List($json) {
     return ,$list
 }
 
+. (Join-Path (Join-Path $PSScriptRoot "lib") "Modrinth.ps1")   # official Modrinth API v2 client
+
 function Get-PluginBuilds($entry, [string]$Mc) {
-    # Candidate builds for this Minecraft version, best first (releases newest first, then the rest).
+    # Candidate builds for this Minecraft version, best first. Modrinth: listed releases only, Paper loader
+    # first (GET /v2/project/{slug}/version). Hangar is the fallback for plugins not on Modrinth.
     $out = New-Object System.Collections.Generic.List[object]
     $slug = Get-Prop $entry "modrinth"
     if ($slug) {
-        $loaders = [uri]::EscapeDataString('["paper","purpur","spigot","bukkit"]')
-        $games = [uri]::EscapeDataString("[`"$Mc`"]")
-        $versions = $null
-        try {
-            $versions = ConvertTo-List (Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$slug/version?loaders=$loaders&game_versions=$games" -UserAgent $UserAgent)
-        } catch { $versions = $null }
-        if ($versions) {
-            $ordered = @($versions | Where-Object { (Get-Prop $_ "version_type") -eq "release" }) + @($versions | Where-Object { (Get-Prop $_ "version_type") -ne "release" })
-            foreach ($v in $ordered) {
-                $f = $null
-                foreach ($candidate in (ConvertTo-List (Get-Prop $v "files"))) { if (Get-Prop $candidate "primary") { $f = $candidate; break } }
-                if (-not $f) { $f = (ConvertTo-List (Get-Prop $v "files")) | Select-Object -First 1 }
-                if ($f) {
-                    $out.Add([pscustomobject]@{ Version = [string](Get-Prop $v "version_number"); File = [string](Get-Prop $f "filename");
-                        Url = [string](Get-Prop $f "url"); Algo = "SHA512"; Hash = [string](Get-Prop (Get-Prop $f "hashes") "sha512"); Source = "modrinth" })
-                }
+        $releases = $null
+        try { $releases = Get-MrPluginReleases $slug $Mc } catch {
+            Write-Host "    !! Modrinth API request for '$slug' failed: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+        if ($releases) {
+            foreach ($r in $releases) {
+                $out.Add([pscustomobject]@{ Version = $r.Version; VersionId = $r.VersionId; File = $r.File; Url = $r.Url;
+                    Algo = "SHA512"; Hash = $r.Sha512; Source = "modrinth"; Endpoint = $r.Endpoint; Release = $r })
                 if ($out.Count -ge 6) { break }
             }
         }
     }
     $hangar = Get-Prop $entry "hangar"
-    if ($hangar) {
+    if ($hangar -and $out.Count -eq 0) {
         $parts = $hangar.Split("/")
         try {
             $data = Invoke-RestMethod -Uri "https://hangar.papermc.io/api/v1/projects/$($parts[0])/$($parts[1])/versions?platform=PAPER&platformVersion=$Mc&limit=5" -UserAgent $UserAgent
@@ -257,8 +259,8 @@ function Get-PluginBuilds($entry, [string]$Mc) {
                 $info = Get-Prop $d "fileInfo"
                 $name = Get-Prop $info "name"
                 if (-not $name) { $name = "$($parts[1])-$(Get-Prop $v 'name').jar" }
-                $out.Add([pscustomobject]@{ Version = [string](Get-Prop $v "name"); File = [string]$name; Url = [string]$url;
-                    Algo = "SHA256"; Hash = [string](Get-Prop $info "sha256Hash"); Source = "hangar" })
+                $out.Add([pscustomobject]@{ Version = [string](Get-Prop $v "name"); VersionId = ""; File = [string]$name; Url = [string]$url;
+                    Algo = "SHA256"; Hash = [string](Get-Prop $info "sha256Hash"); Source = "hangar"; Endpoint = "hangar:$hangar"; Release = $null })
             }
         } catch { }
     }
@@ -322,6 +324,12 @@ if ($Plugins -ne "none") {
     if (Test-Path $lockFile) {
         (Get-Content $lockFile -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $lock[$_.Name] = $_.Value }
     }
+    # SHA-512 of releases already found to need a newer Java (not downloaded again on the next run)
+    $rejectFile = Join-Path $PluginsDir ".suld-plugins.java-rejected.json"
+    $rejected = @{}
+    if (Test-Path $rejectFile) {
+        foreach ($h in (ConvertTo-List (Get-Content $rejectFile -Raw | ConvertFrom-Json))) { if ($h -is [string]) { $rejected[$h] = $true } }
+    }
     $managed = @{}
     $skipped = @()
     foreach ($p in (ConvertTo-List $manifest.plugins)) {
@@ -330,34 +338,47 @@ if ($Plugins -ne "none") {
         $prev = $lock[$p.id]
         $prevFile = [string](Get-Prop $prev "file")
         $installed = $null
+        $fresh = $false
         foreach ($build in (Get-PluginBuilds $p $MinecraftVersion)) {
             $dest = Join-Path $PluginsDir $build.File
-            if (Test-Path $dest) {
+            # Same file name across plugins (e.g. "SkinsRestorer.jar" for every version): trust it only if the hash matches.
+            if ((Test-Path $dest) -and $build.Hash -and ((Get-FileHash -Algorithm $build.Algo -Path $dest).Hash -ieq $build.Hash)) {
                 $info = Get-JarInfo $dest
                 if ($info -and $info.Major -le $JavaClassMax) { $installed = $build; break }
-                Remove-Item $dest -Force   # present but built for a newer Java: not usable here
+                Remove-Item $dest -Force   # built for a newer Java: not usable here
                 continue
             }
-            $tmp = "$dest.part"
-            try {
-                Invoke-WebRequest -Uri $build.Url -OutFile $tmp -UserAgent $UserAgent -UseBasicParsing
-            } catch {
-                if (Test-Path $tmp) { Remove-Item $tmp -Force }
+            if ($build.Hash -and $rejected.ContainsKey($build.Hash.ToLowerInvariant())) {
+                Write-Host "    .. $($p.name) $($build.Version) needs a newer Java (known); trying an older release"
                 continue
             }
-            if ($build.Hash -and ((Get-FileHash -Algorithm $build.Algo -Path $tmp).Hash -ine $build.Hash)) {
-                Remove-Item $tmp -Force
-                Write-Host "    !! $($p.name) $($build.Version): $($build.Algo) mismatch" -ForegroundColor Yellow
-                continue
+            if ($build.Source -eq "modrinth") {
+                $tmp = "$dest.new"
+                if (-not (Save-MrFile $build.Release $tmp)) { continue }   # size + SHA-512 verified
+            } else {
+                $tmp = "$dest.new"
+                try {
+                    Invoke-WebRequest -Uri $build.Url -OutFile $tmp -UserAgent $UserAgent -UseBasicParsing
+                } catch {
+                    if (Test-Path $tmp) { Remove-Item $tmp -Force }
+                    continue
+                }
+                if ($build.Hash -and ((Get-FileHash -Algorithm $build.Algo -Path $tmp).Hash -ine $build.Hash)) {
+                    Remove-Item $tmp -Force
+                    Write-Host "    !! $($p.name) $($build.Version): $($build.Algo) mismatch" -ForegroundColor Yellow
+                    continue
+                }
             }
             $info = Get-JarInfo $tmp
             if (-not $info -or $info.Major -gt $JavaClassMax) {
                 Remove-Item $tmp -Force
-                Write-Host "    .. $($p.name) $($build.Version) needs a newer Java; trying an older build"
+                if ($info -and $build.Hash) { $rejected[$build.Hash.ToLowerInvariant()] = $true }
+                Write-Host "    .. $($p.name) $($build.Version) needs a newer Java (class version $(if ($info) { $info.Major } else { '?' })); trying an older release"
                 continue
             }
             Move-Item $tmp $dest -Force
             $installed = $build
+            $fresh = $true
             break
         }
         if (-not $installed) { $skipped += $p.name; Write-Host "    -- $($p.name): no Java 21 build for $MinecraftVersion (skipped)"; continue }
@@ -365,9 +386,14 @@ if ($Plugins -ne "none") {
             $old = Join-Path $PluginsDir $prevFile
             if (Test-Path $old) { Remove-Item $old -Force }
         }
-        $lock[$p.id] = [pscustomobject]@{ name = $p.name; version = $installed.Version; file = $installed.File; source = $installed.Source }
-        Write-Host "    ok $($p.name) $($installed.Version) ($($installed.Source))"
+        $lock[$p.id] = [pscustomobject]@{ name = $p.name; version = $installed.Version; version_id = $installed.VersionId;
+            file = $installed.File; source = $installed.Source; sha = $installed.Hash.ToLowerInvariant(); endpoint = $installed.Endpoint }
+        $state = if ($fresh) { "downloaded, $($installed.Algo) verified" } else { "already installed, $($installed.Algo) verified" }
+        Write-Host "    ok $($p.name) $($installed.Version) [$($installed.VersionId)] $($installed.File) ($state)"
+        Write-Host "       $($installed.Endpoint)" -ForegroundColor DarkGray
     }
+    $rejectJson = if ($rejected.Count -eq 0) { "[]" } elseif ($rejected.Count -eq 1) { "[" + (ConvertTo-Json -InputObject @($rejected.Keys)[0]) + "]" } else { ConvertTo-Json -InputObject @($rejected.Keys) }
+    [IO.File]::WriteAllText($rejectFile, $rejectJson, $Utf8NoBom)
     Remove-StrayPlugins $PluginsDir $lock $managed
     [IO.File]::WriteAllText($lockFile, ($lock | ConvertTo-Json -Depth 4), $Utf8NoBom)
     if ($skipped.Count -gt 0) { Write-Host "    Not installed: $($skipped -join ', ')" -ForegroundColor Yellow }
@@ -431,6 +457,36 @@ $flagPattern = '(?m)^(\s*allow-insecure-offline-dev-mode:\s*)\S+'
 if ($yaml -notmatch $flagPattern) { Fail "auth.allow-insecure-offline-dev-mode not found in SULD config.yml." }
 $yaml = [regex]::Replace($yaml, $flagPattern, '${1}true')
 [IO.File]::WriteAllText($suldConfig, $yaml, $Utf8NoBom)
+
+# Owner OP for THIS local server only. Offline mode identifies players by the offline UUID
+# (UUID v3 of "OfflinePlayer:<name>"), so that is what goes into ops.json. Skipped with -Lan.
+function Get-OfflineUuid([string]$Name) {
+    $md5 = [Security.Cryptography.MD5]::Create()
+    try { $b = $md5.ComputeHash([Text.Encoding]::UTF8.GetBytes("OfflinePlayer:$Name")) } finally { $md5.Dispose() }
+    $b[6] = ($b[6] -band 0x0f) -bor 0x30
+    $b[8] = ($b[8] -band 0x3f) -bor 0x80
+    $h = -join ($b | ForEach-Object { $_.ToString("x2") })
+    return "$($h.Substring(0,8))-$($h.Substring(8,4))-$($h.Substring(12,4))-$($h.Substring(16,4))-$($h.Substring(20,12))"
+}
+if ($Owner -and -not $Lan) {
+    if ($Owner -notmatch '^[A-Za-z0-9_]{3,16}$') { Fail "-Owner '$Owner' is not a valid Minecraft name." }
+    $opsFile = Join-Path $RunDir "ops.json"
+    $ops = New-Object System.Collections.Generic.List[object]
+    if (Test-Path $opsFile) {
+        $raw = [IO.File]::ReadAllText($opsFile, [Text.Encoding]::UTF8)
+        if ($raw.Trim()) {
+            foreach ($o in (ConvertTo-List ($raw | ConvertFrom-Json))) {
+                if ((Get-Prop $o "name") -ne $Owner) { $ops.Add($o) }
+            }
+        }
+    }
+    $ops.Add([ordered]@{ uuid = (Get-OfflineUuid $Owner); name = $Owner; level = 4; bypassesPlayerLimit = $true })
+    $json = if ($ops.Count -eq 1) { "[" + ($ops[0] | ConvertTo-Json -Depth 3) + "]" } else { ConvertTo-Json -InputObject $ops.ToArray() -Depth 3 }
+    [IO.File]::WriteAllText($opsFile, $json + "`n", $Utf8NoBom)
+    Write-Host "    $Owner is operator on this local server (offline UUID)." -ForegroundColor Gray
+} elseif ($Owner) {
+    Write-Host "    -Lan: not writing ops.json (anyone on the network could join as $Owner). Use 'op $Owner' in the console." -ForegroundColor Yellow
+}
 
 # --- 5. start -----------------------------------------------------------------------------------
 $address = if ($Lan) { "<this PC's LAN IP>:$Port" } else { "localhost:$Port" }

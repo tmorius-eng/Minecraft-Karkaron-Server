@@ -105,8 +105,8 @@ public final class SuldCommand implements CommandExecutor {
         int total = 20;
         int filled = (int) Math.round(fraction * total);
         Component filledPart = Component.text("█".repeat(Math.max(0, filled)), Messages.BRAND);
-        Component emptyPart = Component.text("█".repeat(Math.max(0, total - filled)), NamedTextColor.DARK_GRAY);
+        Component emptyPart = Component.text("█".repeat(Math.max(0, total - filled)), NamedTextColor.GRAY);
         return filledPart.append(emptyPart)
-                .append(Component.text(" " + Math.round(fraction * 100) + "%", NamedTextColor.GRAY));
+                .append(Component.text(" " + Math.round(fraction * 100) + "%", NamedTextColor.WHITE));
     }
 }

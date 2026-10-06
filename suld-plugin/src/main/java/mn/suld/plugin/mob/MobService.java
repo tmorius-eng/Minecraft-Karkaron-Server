@@ -40,7 +40,7 @@ public final class MobService {
             throw new IllegalArgumentException("Backing entity is not living: " + def.backingEntity());
         }
         living.customName(Component.text(def.displayName(), Messages.BRAND)
-                .append(Component.text(" [Lvl " + def.level() + "]", NamedTextColor.GRAY)));
+                .append(Component.text(" [Lvl " + def.level() + "]", NamedTextColor.WHITE)));
         living.setCustomNameVisible(true);
         living.setRemoveWhenFarAway(true);
 

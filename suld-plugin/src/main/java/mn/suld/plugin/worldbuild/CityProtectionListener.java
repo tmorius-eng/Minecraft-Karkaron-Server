@@ -366,10 +366,10 @@ public final class CityProtectionListener implements Listener {
         Title.Times times = Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(1600), Duration.ofMillis(500));
         if (inside) {
             p.showTitle(Title.title(Component.text("ХАРХОРУМ", Messages.BRAND),
-                    Component.text("Аюулгүй бүс · Safe zone", NamedTextColor.GRAY), times));
+                    Component.text("Аюулгүй бүс · Safe zone", NamedTextColor.WHITE), times));
         } else {
             p.showTitle(Title.title(Component.text("Тал нутаг", NamedTextColor.RED),
-                    Component.text("Аюултай бүс · Danger", NamedTextColor.GRAY), times));
+                    Component.text("Аюултай бүс · Danger", NamedTextColor.WHITE), times));
         }
     }
 }

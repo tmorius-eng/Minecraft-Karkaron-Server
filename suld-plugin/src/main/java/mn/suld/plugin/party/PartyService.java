@@ -154,7 +154,7 @@ public final class PartyService {
         player.sendMessage(Messages.accent("Баг (" + party.size() + "/" + party.capacity() + ")"));
         for (UUID member : party.members()) {
             player.sendMessage(Component.text("  " + (party.isLeader(member) ? "★ " : "• ") + nameOf(member),
-                    party.isLeader(member) ? Messages.BRAND : net.kyori.adventure.text.format.NamedTextColor.GRAY));
+                    party.isLeader(member) ? Messages.BRAND : net.kyori.adventure.text.format.NamedTextColor.WHITE));
         }
     }
 

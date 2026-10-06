@@ -25,7 +25,7 @@ public final class ChatListener implements Listener {
         Component prefix = tag == null ? Component.empty() : Component.text("[" + tag + "] ", NamedTextColor.GOLD);
         event.renderer((source, displayName, message, viewer) -> prefix
                 .append(displayName.colorIfAbsent(NamedTextColor.WHITE))
-                .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
-                .append(message.colorIfAbsent(NamedTextColor.GRAY)));
+                .append(Component.text(" » ", NamedTextColor.GRAY))
+                .append(message.colorIfAbsent(NamedTextColor.WHITE)));
     }
 }

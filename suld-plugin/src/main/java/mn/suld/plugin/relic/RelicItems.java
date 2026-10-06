@@ -51,12 +51,12 @@ public final class RelicItems {
         List<Component> lore = new ArrayList<>(Optional.ofNullable(meta.lore()).orElse(List.of()));
         int insertAt = Math.max(0, lore.size() - 2);
         List<Component> extra = List.of(
-                line(def.lore(), NamedTextColor.GRAY, true),
+                line(def.lore(), NamedTextColor.WHITE, true),
                 Component.empty(),
                 line("✦ Эзэмшигч: +" + Math.round(def.expBonus() * 100) + "% EXP", NamedTextColor.AQUA, false),
                 line("✦ Эзэмшигч гэрэлтэнэ — бүх хүн таныг харна", NamedTextColor.LIGHT_PURPLE, false),
                 line("✦ Тоглогч таныг албал сүлдийг булаана", NamedTextColor.RED, false),
-                line("✦ Хаяж, хадгалж, шилжүүлэх боломжгүй", NamedTextColor.DARK_GRAY, false));
+                line("✦ Хаяж, хадгалж, шилжүүлэх боломжгүй", NamedTextColor.GRAY, false));
         lore.addAll(insertAt, extra);
         meta.lore(lore);
         meta.setEnchantmentGlintOverride(true);

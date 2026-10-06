@@ -66,7 +66,7 @@ public final class ItemFactory {
             String val = e.getKey().percent()
                     ? "+" + Math.round(e.getValue() * 100) + "%"
                     : "+" + trim(e.getValue());
-            lore.add(line("  " + val + " " + e.getKey().label(), NamedTextColor.GRAY));
+            lore.add(line("  " + val + " " + e.getKey().label(), NamedTextColor.WHITE));
         }
         if (instance.soulbound()) {
             lore.add(line("✦ Сүнсэнд холбоотой (Soulbound)", NamedTextColor.GOLD));
@@ -75,7 +75,7 @@ public final class ItemFactory {
             lore.add(line("✦ ДЭЛХИЙД ГАНЦ · 1 / 1", NamedTextColor.AQUA));
         }
         lore.add(Component.empty());
-        lore.add(line("SÜLD", NamedTextColor.DARK_GRAY));
+        lore.add(line("SÜLD", NamedTextColor.GRAY));
         meta.lore(lore);
 
         if (def.customModelData() > 0) {

@@ -11,6 +11,7 @@ import mn.suld.plugin.ui.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
@@ -49,22 +50,22 @@ public final class ProgressCommands {
     }
 
     private static Component header(String title) {
-        return Component.text("━━━━ ", NamedTextColor.DARK_GRAY)
-                .append(Component.text("ᠰ SÜLD ", Messages.BRAND))
-                .append(Component.text(title, NamedTextColor.GOLD));
+        return Component.text("━━━━ ", NamedTextColor.GRAY, TextDecoration.BOLD)
+                .append(Component.text("ᠰ SÜLD ", Messages.BRAND, TextDecoration.BOLD))
+                .append(Component.text(title, NamedTextColor.GOLD, TextDecoration.BOLD));
     }
 
     private static Component row(String key, String value, TextColor color) {
-        return Component.text(key + ": ", NamedTextColor.GRAY).append(Component.text(value, color));
+        return Component.text(key + ": ", NamedTextColor.WHITE, TextDecoration.BOLD).append(Component.text(value, color, TextDecoration.BOLD));
     }
 
     /** A 20-segment bar: ▰ filled, ▱ empty. */
     static Component bar(double fraction, TextColor color) {
         double f = Math.max(0, Math.min(1, fraction));
         int filled = (int) Math.round(f * 20);
-        return Component.text("▰".repeat(filled), color)
-                .append(Component.text("▱".repeat(20 - filled), NamedTextColor.DARK_GRAY))
-                .append(Component.text(" " + Math.round(f * 100) + "%", NamedTextColor.GRAY));
+        return Component.text("▰".repeat(filled), color, TextDecoration.BOLD)
+                .append(Component.text("▱".repeat(20 - filled), NamedTextColor.GRAY, TextDecoration.BOLD))
+                .append(Component.text(" " + Math.round(f * 100) + "%", NamedTextColor.WHITE, TextDecoration.BOLD));
     }
 
     private static String roleName(PlayerClass c) {
@@ -105,7 +106,7 @@ public final class ProgressCommands {
             s.sendMessage(row("Нөөц", pc.resourceName() + " (" + pc.resourceMax() + ")", NamedTextColor.AQUA));
             s.sendMessage(row("Хүндрэл", "★".repeat(pc.difficulty()) + "☆".repeat(Math.max(0, 5 - pc.difficulty())), NamedTextColor.YELLOW));
             s.sendMessage(row("Суурь", "HP " + (int) pc.baseHealth() + " · ATK " + pc.baseAttack(), NamedTextColor.WHITE));
-            s.sendMessage(Component.text("Анги нэг удаа сонгогдоно — hardcore сервер.", NamedTextColor.DARK_GRAY));
+            s.sendMessage(Component.text("Анги нэг удаа сонгогдоно — hardcore сервер.", NamedTextColor.GRAY, TextDecoration.BOLD));
             return true;
         }
     };
@@ -123,13 +124,13 @@ public final class ProgressCommands {
             s.sendMessage(header("Дүр · " + profile.name()));
             s.sendMessage(row("Анги", profile.playerClass().map(PlayerClass::displayName).orElse("сонгоогүй — /class"), NamedTextColor.WHITE));
             s.sendMessage(row("Түвшин", prog.level() + " / " + services.config().progression().maxLevel(), NamedTextColor.GOLD));
-            s.sendMessage(Component.text("EXP ", NamedTextColor.GRAY).append(bar(engine.progressFraction(prog), Messages.BRAND)));
+            s.sendMessage(Component.text("EXP ", NamedTextColor.WHITE, TextDecoration.BOLD).append(bar(engine.progressFraction(prog), Messages.BRAND)));
             if (online != null) {
                 AttributeInstance max = online.getAttribute(Attribute.MAX_HEALTH);
                 double maxHp = max != null ? max.getValue() : 20;
-                s.sendMessage(Component.text("HP  ", NamedTextColor.GRAY)
+                s.sendMessage(Component.text("HP  ", NamedTextColor.WHITE, TextDecoration.BOLD)
                         .append(bar(online.getHealth() / maxHp, NamedTextColor.RED))
-                        .append(Component.text("  " + Math.round(online.getHealth()) + "/" + Math.round(maxHp), NamedTextColor.WHITE)));
+                        .append(Component.text("  " + Math.round(online.getHealth()) + "/" + Math.round(maxHp), NamedTextColor.WHITE, TextDecoration.BOLD)));
                 AttributeInstance armor = online.getAttribute(Attribute.ARMOR);
                 s.sendMessage(row("Хуяг", armor != null ? String.valueOf(Math.round(armor.getValue())) : "0", NamedTextColor.WHITE));
             }
@@ -153,14 +154,14 @@ public final class ProgressCommands {
             Progression prog = profile.progression();
             int maxLevel = services.config().progression().maxLevel();
             s.sendMessage(header("Түвшин " + prog.level()));
-            s.sendMessage(Component.text("EXP ", NamedTextColor.GRAY).append(bar(engine.progressFraction(prog), Messages.BRAND)));
+            s.sendMessage(Component.text("EXP ", NamedTextColor.WHITE, TextDecoration.BOLD).append(bar(engine.progressFraction(prog), Messages.BRAND)));
             if (prog.level() >= maxLevel) {
                 s.sendMessage(Messages.success("Дээд түвшинд хүрсэн."));
             } else {
                 s.sendMessage(row("Энэ түвшинд", prog.expIntoLevel() + " EXP", NamedTextColor.WHITE));
                 s.sendMessage(row("Дараагийн түвшин хүртэл", engine.expToNextLevel(prog) + " EXP", NamedTextColor.GOLD));
             }
-            s.sendMessage(Component.text("EXP: мангас ан, эрэл, агуй, дэлхийн үйл явдал. Овог нэмэгдэл өгнө.", NamedTextColor.DARK_GRAY));
+            s.sendMessage(Component.text("EXP: мангас ан, эрэл, агуй, дэлхийн үйл явдал. Овог нэмэгдэл өгнө.", NamedTextColor.GRAY, TextDecoration.BOLD));
             return true;
         }
     };
@@ -184,8 +185,8 @@ public final class ProgressCommands {
             s.sendMessage(header("Эрэл · Quests"));
             if (q.questId().isEmpty()) {
                 if (profile.playerClass().isEmpty()) {
-                    s.sendMessage(Component.text("Эхлээд ангиа сонго — дараа нь «Анхны Ан» эрэл өгөгдөнө. ", NamedTextColor.WHITE)
-                            .append(Component.text("[/class]", NamedTextColor.AQUA).clickEvent(ClickEvent.runCommand("/class"))));
+                    s.sendMessage(Component.text("Эхлээд ангиа сонго — дараа нь «Анхны Ан» эрэл өгөгдөнө. ", NamedTextColor.WHITE, TextDecoration.BOLD)
+                            .append(Component.text("[/class]", NamedTextColor.AQUA, TextDecoration.BOLD).clickEvent(ClickEvent.runCommand("/class"))));
                 } else {
                     s.sendMessage(Messages.info("Идэвхтэй эрэл алга."));
                 }
@@ -197,13 +198,13 @@ public final class ProgressCommands {
                 return true;
             }
             s.sendMessage(row(def.title(), q.completed() ? "дууссан ✔" : "идэвхтэй", q.completed() ? NamedTextColor.GREEN : NamedTextColor.GOLD));
-            s.sendMessage(Component.text(def.description(), NamedTextColor.WHITE));
-            s.sendMessage(Component.text("Явц ", NamedTextColor.GRAY)
+            s.sendMessage(Component.text(def.description(), NamedTextColor.WHITE, TextDecoration.BOLD));
+            s.sendMessage(Component.text("Явц ", NamedTextColor.WHITE, TextDecoration.BOLD)
                     .append(bar((double) q.progress() / def.requiredCount(), NamedTextColor.GOLD))
-                    .append(Component.text("  " + q.progress() + "/" + def.requiredCount(), NamedTextColor.WHITE)));
+                    .append(Component.text("  " + q.progress() + "/" + def.requiredCount(), NamedTextColor.WHITE, TextDecoration.BOLD)));
             s.sendMessage(row("Шагнал", def.expReward() + " EXP, " + def.currencyReward() + " ₮", NamedTextColor.GREEN));
             if (!q.completed()) {
-                s.sendMessage(Component.text("Говийн чононууд хотын хэрмийн гадна, тал нутагт тэнүүчилнэ.", NamedTextColor.DARK_GRAY));
+                s.sendMessage(Component.text("Говийн чононууд хотын хэрмийн гадна, тал нутагт тэнүүчилнэ.", NamedTextColor.GRAY, TextDecoration.BOLD));
             }
             return true;
         }

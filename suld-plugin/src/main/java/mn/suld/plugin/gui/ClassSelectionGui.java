@@ -93,14 +93,14 @@ public final class ClassSelectionGui implements Listener {
         meta.displayName(Component.text(clazz.displayName(), Messages.BRAND, TextDecoration.BOLD)
                 .decoration(TextDecoration.ITALIC, false));
         List<Component> lore = new ArrayList<>();
-        lore.add(line("Үүрэг: " + role(clazz), NamedTextColor.GRAY));
+        lore.add(line("Үүрэг: " + role(clazz), NamedTextColor.WHITE));
         lore.add(line("Хүндрэл: " + "★".repeat(clazz.difficulty()) + "☆".repeat(Math.max(0, 5 - clazz.difficulty())),
                 NamedTextColor.YELLOW));
         lore.add(line("Нөөц: " + clazz.resourceName(), NamedTextColor.AQUA));
-        lore.add(line("HP " + (int) clazz.baseHealth() + "  ·  ATK " + (int) clazz.baseAttack(), NamedTextColor.GRAY));
+        lore.add(line("HP " + (int) clazz.baseHealth() + "  ·  ATK " + (int) clazz.baseAttack(), NamedTextColor.WHITE));
         lore.add(line("Эхлэл ур: " + STARTER_SKILL.getOrDefault(clazz, "—"), NamedTextColor.GREEN));
         lore.add(Component.empty());
-        lore.add(line(lore(clazz), NamedTextColor.DARK_GRAY));
+        lore.add(line(lore(clazz), NamedTextColor.GRAY));
         lore.add(Component.empty());
         lore.add(line("» Сонгохын тулд дар «", NamedTextColor.GOLD));
         meta.lore(lore);
