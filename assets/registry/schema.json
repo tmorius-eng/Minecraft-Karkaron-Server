@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SÜLD asset registry",
+  "type": "object",
+  "required": ["version", "assets"],
+  "properties": {
+    "version": { "type": "string" },
+    "updated": { "type": "string" },
+    "custom_model_data_base": { "type": "integer" },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "status", "version"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+\\.[a-z0-9_]+$",
+            "description": "Stable namespaced asset ID, e.g. weapon.suld_ild_tenger. Never anonymous."
+          },
+          "type": {
+            "enum": ["weapon", "armor", "item", "mob", "boss", "npc", "mount", "prop", "ui", "relic", "class"]
+          },
+          "rarity": {
+            "enum": ["common", "uncommon", "rare", "epic", "legendary", "ancient", "mythic", "unique"]
+          },
+          "source": {
+            "enum": ["meshy", "blender_authored", "blockbench_authored", "procedural", "concept"]
+          },
+          "status": {
+            "enum": ["concept", "generated", "processed", "needs_review", "approved", "integrated"],
+            "description": "Human-approval lifecycle; approved assets must not be silently overwritten."
+          },
+          "custom_model_data": { "type": "integer" },
+          "polycount": { "type": "integer", "minimum": 0 },
+          "bbmodel": { "type": "string" },
+          "minecraft_model": { "type": "string" },
+          "texture_file": { "type": "string" },
+          "preview_render": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      }
+    }
+  }
+}

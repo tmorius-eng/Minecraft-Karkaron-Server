@@ -1,0 +1,50 @@
+{
+  "$schema": "./schema.json",
+  "version": "1.0.0",
+  "updated": "2026-10-06",
+  "custom_model_data_base": 870000,
+  "assets": [
+    {
+      "id": "weapon.suld_ild_tenger",
+      "name": "Ild Tenger",
+      "name_mn": "Тэнгэрийн Илд",
+      "type": "weapon",
+      "subtype": "saber",
+      "rarity": "legendary",
+      "item_level": 60,
+      "class": "legendary_relic",
+      "class_compat": ["baatar", "khulegchin"],
+      "source": "blockbench_authored",
+      "source_note": "INTERIM PLACEHOLDER, not the Meshy deliverable. The real asset is Meshy preview->refine (meshy-7.1, 4K, PBR), but the Meshy model CDN assets.meshy.ai is egress-DENIED (403), so the textured GLB cannot be downloaded this session. Replace this Blockbench placeholder with the Meshy-textured model once assets.meshy.ai is allowed.",
+      "meshy_preview_task_id": "01a110c4-130e-70d5-be0a-5edd28a6c70c",
+      "meshy_status": "preview_SUCCEEDED; refine+download blocked on assets.meshy.ai",
+      "bbmodel": "assets/models/blockbench/suld_ild_tenger.bbmodel",
+      "minecraft_model": "resourcepack/assets/suld/models/item/suld_ild_tenger.json",
+      "texture_file": "resourcepack/assets/suld/textures/item/suld_ild_tenger.png",
+      "preview_render": "assets/previews/suld_ild_tenger.png",
+      "base_item": "minecraft:netherite_sword",
+      "custom_model_data": 870001,
+      "polycount": 30,
+      "texture_resolution": "16x16",
+      "validated": { "bbmodel_validate": "passed", "errors": 0, "warnings": 0 },
+      "status": "needs_review",
+      "version": "1.0.0",
+      "lore_mn": "Тэнгэрийн илд — хойд зүгийн тэнгэрийн дор давтагдсан домогт ир.",
+      "lore_en": "A blade forged under the eternal sky; its edge remembers the horizon."
+    },
+    {
+      "id": "item.suld_relic_token",
+      "name": "Relic Token",
+      "name_mn": "Сүлдний Тэмдэг",
+      "type": "item",
+      "subtype": "token",
+      "rarity": "epic",
+      "item_level": 1,
+      "source": "procedural",
+      "texture_file": "resourcepack/assets/suld/textures/item/suld_relic_token.png",
+      "texture_resolution": "16x16",
+      "status": "concept",
+      "version": "1.0.0"
+    }
+  ]
+}

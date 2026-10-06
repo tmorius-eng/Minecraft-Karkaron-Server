@@ -1,0 +1,25 @@
+{
+  "_comment": "SÜLD asset-pipeline MCP servers. Both run FULLY HEADLESS in the cloud (no laptop, no localhost-to-laptop). Run scripts/setup-cloud-tools.sh once per fresh session FIRST (installs Blender + both servers into .tools/); MCP tools are then registered on the NEXT session start. See ASSET_PIPELINE.md.",
+  "mcpServers": {
+    "blockbench-headless": {
+      "command": "bun",
+      "args": [
+        "run",
+        ".tools/blockbench-mcp/headless/index.ts",
+        "--root",
+        "./assets/models",
+        "--root",
+        "./resourcepack"
+      ],
+      "_note": "Upstream recommends `npx -y github:jasonjgardner/blockbench-mcp-plugin`, but codeload.github.com is egress-blocked here, so we run the git-cloned checkout with Bun instead (identical server, 23 tools)."
+    },
+    "blender-headless": {
+      "command": ".tools/blender-mcp/.venv/bin/blender-mcp-server",
+      "env": {
+        "BLENDER_BIN": "blender",
+        "BLENDER_MCP_HEADLESS": "1"
+      },
+      "_note": "djeada/blender-mcp-server. Use blender_python_exec / render / export tools with transport=\"headless\" so each call spawns `blender -b` (27 tools). Do NOT use the localhost:9876 addon bridge."
+    }
+  }
+}
