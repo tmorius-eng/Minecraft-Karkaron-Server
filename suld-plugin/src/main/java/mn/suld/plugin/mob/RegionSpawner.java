@@ -134,10 +134,19 @@ public final class RegionSpawner {
         p.showTitle(net.kyori.adventure.title.Title.title(
                 net.kyori.adventure.text.Component.text(r.displayName(), net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),
                         net.kyori.adventure.text.format.TextDecoration.BOLD),
-                net.kyori.adventure.text.Component.text(r.description() + " · Түвшин " + r.levelBand(),
-                        net.kyori.adventure.text.format.NamedTextColor.WHITE),
+                danger(p, r)
+                        ? net.kyori.adventure.text.Component.text("⚠ Аюултай нутаг — Түвшин " + r.levelBand() + " зөвлөнө",
+                                net.kyori.adventure.text.format.NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)
+                        : net.kyori.adventure.text.Component.text(r.description() + " · Түвшин " + r.levelBand(),
+                                net.kyori.adventure.text.format.NamedTextColor.WHITE, net.kyori.adventure.text.format.TextDecoration.BOLD),
                 net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
                         java.time.Duration.ofMillis(700))));
+    }
+
+    /** The player is well below the region's level band (2+ levels under its minimum). */
+    private boolean danger(Player p, RegionDefinition r) {
+        int level = services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
+        return level + 2 <= r.minLevel();
     }
 
     /** First visit ever to a wild region: its discovery EXP, once per player (persisted with the style row). */
@@ -155,6 +164,7 @@ public final class RegionSpawner {
                 net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
                         java.time.Duration.ofMillis(700))));
         p.sendMessage(mn.suld.plugin.ui.Messages.success("Шинэ нутаг нээлээ: " + r.displayName() + " (+" + r.discoveryExp() + " EXP)"));
+        if (danger(p, r)) p.sendMessage(mn.suld.plugin.ui.Messages.error("⚠ Аюултай нутаг — Түвшин " + r.levelBand() + " зөвлөнө."));
         p.playSound(p.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
         if (exp.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(p, from, exp.after().level());
         services.hud().update(p, pr);

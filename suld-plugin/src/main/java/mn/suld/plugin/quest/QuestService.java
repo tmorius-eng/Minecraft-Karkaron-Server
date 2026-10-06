@@ -158,7 +158,9 @@ public final class QuestService {
         player.sendMessage(Messages.success("Эрэл дууслаа: " + def.title()
                 + "  (+" + def.expReward() + " EXP, +" + def.currencyReward() + " ₮)"));
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
-        progression.grantExp(profile, def.expReward(), ExpSource.QUEST);
+        int from = profile.progression().level();
+        var gained = progression.grantExp(profile, def.expReward(), ExpSource.QUEST);
+        if (gained.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(player, from, gained.after().level());
         if (next.isPresent()) {
             announceStart(player, next.get());
             recheck(player, profile);

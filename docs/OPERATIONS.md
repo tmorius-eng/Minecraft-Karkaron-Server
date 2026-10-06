@@ -15,6 +15,7 @@ the README (local test server).
 | `/rankup`, `/lvlup` | Rank ladder (Ард → Хаан, costs ₮) · level rewards |
 | `/shop`, `/cosmetics`, `/buy` | Supplies and selling loot · tags/colours/join messages/emojis · credit store |
 | `/party`, `/dungeon`, `/clan`, `/cc` | Groups, Khasar's Den, clans and clan chat |
+| `/daily` | Daily login reward: 7-day streak of coins and EXP (time zone: `daily.timezone`) |
 | `/spawn`, `/balance`, `/pay`, `/rules`, `/relic` | Back to Kharkhorum · coins · send coins · rules · world relics |
 
 ## Admin commands (permission `suld.admin`, default: op)

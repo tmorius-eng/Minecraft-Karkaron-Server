@@ -45,6 +45,7 @@ class JdbcStyleRepositoryIT {
         PlayerStyle s = new PlayerStyle(id);
         s.rank(Rank.ARAVT);
         assertTrue(s.claimLevel(5));
+        assertTrue(s.claimDaily(20_000, 3));
         assertTrue(s.discover(1));
         assertTrue(s.discover(3));
         assertFalse(s.discover(3), "a region is discovered once");
@@ -53,6 +54,9 @@ class JdbcStyleRepositoryIT {
         PlayerStyle back = PlayerStyle.restore(repo.load(id).join().orElseThrow());
         assertEquals(Rank.ARAVT, back.rank());
         assertEquals(0b1010, back.discovered());
+        assertEquals(20_000, back.dailyDay());
+        assertEquals(3, back.dailyStreak());
+        assertFalse(back.claimDaily(20_000, 4), "one claim per day");
         assertFalse(back.discover(1));
         assertTrue(back.discover(0));
         repo.save(back.snapshotAndClean()).join();

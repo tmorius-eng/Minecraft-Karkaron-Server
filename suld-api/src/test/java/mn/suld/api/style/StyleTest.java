@@ -80,7 +80,7 @@ class StyleTest {
 
         Set<String> owned = new HashSet<>(snap.owned());
         owned.add("tag.removed_from_catalog");
-        PlayerStyle tampered = PlayerStyle.restore(new PlayerStyle.Snapshot(id, Rank.ARD, owned, "tag.chono", null, null, null, 0, 0, 0));
+        PlayerStyle tampered = PlayerStyle.restore(new PlayerStyle.Snapshot(id, Rank.ARD, owned, "tag.chono", null, null, null, 0, 0, 0, 0, 0));
         assertFalse(tampered.owns("tag.removed_from_catalog"));
         assertTrue(tampered.equipped(Cosmetic.Category.TAG).isEmpty()); // not owned -> not equipped
     }

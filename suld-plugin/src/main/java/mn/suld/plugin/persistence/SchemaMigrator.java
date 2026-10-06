@@ -37,7 +37,8 @@ public final class SchemaMigrator {
             new Migration(3, "clans", "V3__clans.sql"),
             new Migration(4, "relics", "V4__relics.sql"),
             new Migration(5, "style", "V5__style.sql"),
-            new Migration(6, "discoveries", "V6__discoveries.sql")
+            new Migration(6, "discoveries", "V6__discoveries.sql"),
+            new Migration(7, "daily", "V7__daily.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */

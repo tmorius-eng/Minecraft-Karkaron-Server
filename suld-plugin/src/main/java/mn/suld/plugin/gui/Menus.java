@@ -101,9 +101,9 @@ public final class Menus {
     private static final List<Step> STEPS = List.of(
             new Step(Material.COMPASS, "1. Хархорум", SKY, List.of("Та Монголын нийслэлд байна.", "Хот бол аюулгүй бүс: PvP, мангас,", "барих/нураах байхгүй."), "/spawn"),
             new Step(Material.IRON_SWORD, "2. Ангиа сонго", RED, List.of("Баатар, Мэргэн, Бөө, Дархан, Хүлэгчин.", "Анги нэг л удаа сонгогдоно!"), "/class"),
-            new Step(Material.WRITABLE_BOOK, "3. Анхны эрэл", GOLD, List.of("«Анхны Ан»: Говийн 3 чоныг ан.", "Хотын хаалгаар гараад тал руу."), "/quest"),
+            new Step(Material.WRITABLE_BOOK, "3. Анхны эрэл", GOLD, List.of("«Сүлдний Зам»: 15 бүлэг эрэл.", "«Анхны Ан»: Говийн 3 чоныг ан.", "Хотын хаалгаар гараад тал руу."), "/quest"),
             new Step(Material.LEATHER, "4. Олз ба зоос", GREEN, List.of("Чонын арьс, баавгайн арьсаа", "дэлгүүрт зарж зоос ол."), "/shop"),
-            new Step(Material.EXPERIENCE_BOTTLE, "5. Түвшин ба шагнал", GREEN, List.of("EXP цуглуулж түвшин ахи.", "Түвшин бүрийн шагналаа /lvlup-аар ав."), "/lvlup"),
+            new Step(Material.EXPERIENCE_BOTTLE, "5. Түвшин ба шагнал", GREEN, List.of("EXP цуглуулж түвшин ахи.", "Түвшин бүрийн шагналаа /lvlup-аар ав.", "Өдөр бүр /daily — өдрийн шагнал."), "/lvlup"),
             new Step(Material.GOLDEN_HELMET, "6. Цол ахиулах", PURPLE, List.of("Ард → Цэрэг → Аравт → ... → Хаан.", "Түвшин + зоос шаардлагатай."), "/rankup"),
             new Step(Material.MOSSY_COBBLESTONE, "7. Агуй ба бүлэг", NamedTextColor.GRAY, List.of("Бүлэг байгуулж агуйн аянд яв.", "/party invite <нэр>, /dungeon list"), "/dungeon list"),
             new Step(Material.WHITE_BANNER, "8. Овог", NamedTextColor.AQUA, List.of("Овог байгуулж эсвэл нэгдэж", "EXP нэмэгдэл ав."), "/clan top"),

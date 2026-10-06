@@ -105,6 +105,10 @@ world-events:
 #   "credits give {uuid} <amount>" from the console. Credits buy cosmetics ONLY
 #   (Minecraft EULA: no gameplay advantage for money).
 # ---------------------------------------------------------------------------
+# Daily login reward (/daily): one claim per calendar day in this time zone.
+daily:
+  timezone: Asia/Ulaanbaatar
+
 branding:
   domain: suld.mn
   # Server-list MOTD: two MiniMessage lines (empty = the built-in SÜLD lines).
