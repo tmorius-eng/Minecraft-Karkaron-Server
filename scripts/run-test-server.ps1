@@ -202,32 +202,61 @@ if (-not (Test-Path $paperJar)) {
 Get-ChildItem $RunDir -Filter "paper-*.jar" | Where-Object { $_.Name -ne $jarName } | Remove-Item -Force
 
 # --- 3b. trusted third-party plugins ------------------------------------------------------------
+function Get-Prop($obj, [string]$name) {
+    # StrictMode-safe property read (returns $null when absent)
+    if ($null -eq $obj) { return $null }
+    $p = $obj.PSObject.Properties[$name]
+    if ($p) { return $p.Value }
+    return $null
+}
+
+function ConvertTo-List($json) {
+    # Windows PowerShell 5.1 returns a JSON array from Invoke-RestMethod as ONE object;
+    # piping it through ForEach-Object enumerates the elements on 5.1 and 7 alike.
+    $list = New-Object System.Collections.Generic.List[object]
+    if ($null -ne $json) { $json | ForEach-Object { $list.Add($_) } }
+    return ,$list
+}
+
 function Get-PluginBuild($entry, [string]$Mc) {
-    if ($entry.PSObject.Properties["modrinth"]) {
+    $slug = Get-Prop $entry "modrinth"
+    if ($slug) {
         $loaders = [uri]::EscapeDataString('["paper","purpur","spigot","bukkit"]')
         $games = [uri]::EscapeDataString("[`"$Mc`"]")
+        $versions = $null
         try {
-            $versions = @(Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($entry.modrinth)/version?loaders=$loaders&game_versions=$games" -UserAgent $UserAgent)
-        } catch { $versions = @() }
-        if ($versions.Count -gt 0) {
-            $release = @($versions | Where-Object { $_.version_type -eq "release" })
-            $v = if ($release.Count -gt 0) { $release[0] } else { $versions[0] }
-            $f = @($v.files | Where-Object { $_.primary }) + @($v.files) | Select-Object -First 1
-            return [pscustomobject]@{ Version = $v.version_number; File = $f.filename; Url = $f.url; Algo = "SHA512"; Hash = $f.hashes.sha512; Source = "modrinth" }
+            $versions = ConvertTo-List (Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$slug/version?loaders=$loaders&game_versions=$games" -UserAgent $UserAgent)
+        } catch { $versions = $null }
+        if ($versions -and $versions.Count -gt 0) {
+            $v = $null
+            foreach ($candidate in $versions) { if ((Get-Prop $candidate "version_type") -eq "release") { $v = $candidate; break } }
+            if (-not $v) { $v = $versions[0] }
+            $files = ConvertTo-List (Get-Prop $v "files")
+            $f = $null
+            foreach ($candidate in $files) { if (Get-Prop $candidate "primary") { $f = $candidate; break } }
+            if (-not $f -and $files.Count -gt 0) { $f = $files[0] }
+            if ($f) {
+                return [pscustomobject]@{ Version = [string](Get-Prop $v "version_number"); File = [string](Get-Prop $f "filename");
+                    Url = [string](Get-Prop $f "url"); Algo = "SHA512"; Hash = [string](Get-Prop (Get-Prop $f "hashes") "sha512"); Source = "modrinth" }
+            }
         }
     }
-    if ($entry.PSObject.Properties["hangar"]) {
-        $parts = $entry.hangar.Split("/")
+    $hangar = Get-Prop $entry "hangar"
+    if ($hangar) {
+        $parts = $hangar.Split("/")
         try {
             $data = Invoke-RestMethod -Uri "https://hangar.papermc.io/api/v1/projects/$($parts[0])/$($parts[1])/versions?platform=PAPER&platformVersion=$Mc&limit=5" -UserAgent $UserAgent
-            foreach ($v in $data.result) {
-                $d = $v.downloads.PAPER
+            foreach ($v in (ConvertTo-List (Get-Prop $data "result"))) {
+                $d = Get-Prop (Get-Prop $v "downloads") "PAPER"
                 if (-not $d) { continue }
-                $url = if ($d.downloadUrl) { $d.downloadUrl } else { $d.externalUrl }
+                $url = Get-Prop $d "downloadUrl"
+                if (-not $url) { $url = Get-Prop $d "externalUrl" }
                 if (-not $url) { continue }
-                $name = if ($d.fileInfo -and $d.fileInfo.name) { $d.fileInfo.name } else { "$($parts[1])-$($v.name).jar" }
-                $hash = if ($d.fileInfo) { $d.fileInfo.sha256Hash } else { $null }
-                return [pscustomobject]@{ Version = $v.name; File = $name; Url = $url; Algo = "SHA256"; Hash = $hash; Source = "hangar" }
+                $info = Get-Prop $d "fileInfo"
+                $name = Get-Prop $info "name"
+                if (-not $name) { $name = "$($parts[1])-$(Get-Prop $v 'name').jar" }
+                return [pscustomobject]@{ Version = [string](Get-Prop $v "name"); File = [string]$name; Url = [string]$url;
+                    Algo = "SHA256"; Hash = [string](Get-Prop $info "sha256Hash"); Source = "hangar" }
             }
         } catch { }
     }
@@ -243,14 +272,23 @@ if ($Plugins -ne "none") {
     $lock = @{}
     if (Test-Path $lockFile) {
         (Get-Content $lockFile -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $lock[$_.Name] = $_.Value }
+        # an older installer stored every version number in one string: forget those entries (the jar is re-checked)
+        foreach ($k in @($lock.Keys)) { if ([string](Get-Prop $lock[$k] "version") -match "\s") { $lock.Remove($k) } }
     }
     $skipped = @()
-    foreach ($p in $manifest.plugins | Where-Object { $profiles -contains $_.profile }) {
+    foreach ($p in (ConvertTo-List $manifest.plugins)) {
+        if ($profiles -notcontains $p.profile) { continue }
         $build = Get-PluginBuild $p $MinecraftVersion
         if (-not $build) { $skipped += $p.name; Write-Host "    -- $($p.name): no release for $MinecraftVersion (skipped)"; continue }
         $dest = Join-Path $PluginsDir $build.File
         $prev = $lock[$p.id]
-        if ($prev -and $prev.file -eq $build.File -and (Test-Path $dest)) { Write-Host "    ok $($p.name) $($build.Version)"; continue }
+        $prevFile = [string](Get-Prop $prev "file")
+        if ((Test-Path $dest) -and ($prevFile -eq $build.File -or -not $prev)) {
+            # already on disk (also after the old installer): just record it
+            $lock[$p.id] = [pscustomobject]@{ name = $p.name; version = $build.Version; file = $build.File; source = $build.Source }
+            Write-Host "    ok $($p.name) $($build.Version)"
+            continue
+        }
         $tmp = "$dest.part"
         try {
             Invoke-WebRequest -Uri $build.Url -OutFile $tmp -UserAgent $UserAgent -UseBasicParsing
@@ -264,8 +302,8 @@ if ($Plugins -ne "none") {
             Write-Host "    !! $($p.name): $($build.Algo) mismatch, not installed" -ForegroundColor Yellow
             continue
         }
-        if ($prev -and $prev.file -and $prev.file -ne $build.File) {
-            $old = Join-Path $PluginsDir $prev.file
+        if ($prevFile -and $prevFile -ne $build.File) {
+            $old = Join-Path $PluginsDir $prevFile
             if (Test-Path $old) { Remove-Item $old -Force }
         }
         Move-Item $tmp $dest -Force
