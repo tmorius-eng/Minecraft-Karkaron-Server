@@ -61,6 +61,7 @@ load_env() {
   : "${JVM_MAX:=4G}"
   : "${SERVER_PORT:=25565}"
   : "${PACK_PORT:=8080}"
+  : "${BEDROCK_PORT:=19132}"
   : "${DB_HOST:=127.0.0.1}"
   : "${DB_PORT:=5432}"
   : "${DB_NAME:=suld}"

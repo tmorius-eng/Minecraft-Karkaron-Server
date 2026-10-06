@@ -17,7 +17,7 @@ libraries:
   - org.postgresql:postgresql:42.7.4
 commands:
   suld:
-    description: SULD player/admin command (info, profile, spawnmob).
+    description: SULD player/admin command (info, profile; admin spawnmob, exp, quest, auth).
     usage: /suld <info|profile|spawnmob>
   revive:
     description: Revive a player from the hardcore death/soul state (admin).
@@ -81,7 +81,7 @@ commands:
     usage: /exp
     aliases: [level, lvl, tuvshin]
   quest:
-    description: Your active quest.
+    description: The storyline board «Сүлдний Зам» (/quest info prints the active chapter).
     usage: /quest
     aliases: [quests, erel]
   menu:

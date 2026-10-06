@@ -72,5 +72,6 @@ Both need outbound access to Paper's download CDN (`fill.papermc.io`,
 - [ROADMAP.md](ROADMAP.md) — phased implementation plan.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — conventions and the "build it yourself" rule.
 - [DEPENDENCIES.md](DEPENDENCIES.md) — auditable dependency & repository list.
+- [docs/OPERATIONS.md](docs/OPERATIONS.md) — running the server: commands, staff badges (LuckPerms), credit store, death rules, Bedrock, MOTD.
 - [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) — identity = Minecraft/Microsoft-authenticated UUID; no /login; join pipeline, races, audit.
 - [DEPLOYMENT.md](DEPLOYMENT.md) — production runbook for a fresh Ubuntu 24.04 (Vultr) VPS: deploy, update/rollback, backup/restore.
