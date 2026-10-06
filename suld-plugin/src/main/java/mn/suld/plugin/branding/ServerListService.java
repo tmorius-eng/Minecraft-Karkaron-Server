@@ -23,7 +23,7 @@ public final class ServerListService implements Listener {
 
     private static final List<String> DEFAULT_MOTD = List.of(
             "<bold><gradient:#FFD24A:#FF9E2C>ᠰ SÜLD</gradient></bold> <white><bold>· Монгол Hardcore MMORPG</bold></white>",
-            "<white><bold>Хархорум</bold></white> <#FFD24A>·</#FFD24A> <white><bold>5 анги</bold></white> <#FFD24A>·</#FFD24A> <white><bold>15 бүлэг эрэл</bold></white> <#FFD24A>·</#FFD24A> <white><bold>агуй, реликс</bold></white>");
+            "<white><bold>Хархорум</bold></white> <#FFD24A>·</#FFD24A> <white><bold>5 анги</bold></white> <#FFD24A>·</#FFD24A> <white><bold>18 бүлэг эрэл</bold></white> <#FFD24A>·</#FFD24A> <white><bold>4 агуй</bold></white>");
 
     private final Plugin plugin;
     private Component motd;

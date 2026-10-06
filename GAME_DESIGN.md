@@ -81,7 +81,7 @@ Implemented (`DeathRules` in suld-api, `DeathService` in the plugin):
 
 ## Storyline — «Сүлдний Зам»
 
-Fifteen chapters (`QuestContent.STORY`), one active at a time; finishing a chapter pays its EXP/₮ and starts the
+Eighteen chapters (`QuestContent.STORY`), one active at a time; finishing a chapter pays its EXP/₮ and starts the
 next at once. Objective kinds: kill (`KILL_MOB`), reach a level, collect (items are handed in on completion),
 discover a region (crossing into it), clear a dungeon (without being downed).
 
@@ -95,16 +95,32 @@ discover a region (crossing into it), clear a dungeon (without being downed).
 | 6 | Говийн Зам | reach the Gobi | Говь |
 | 7 | Хилэнцийн Хор | 6 scorpions | Говь |
 | 8 | Элсний Сүнснүүд | 5 sand spirits | Говь |
-| 9 | Мянгатын Сорил | level 12 | — |
-| 10 | Хангайн Ой | reach the Khangai | Хангай |
-| 11 | Саарал Чонын Сүрэг | 8 grey wolves | Хангай |
-| 12 | Хангайн Эзэн | 2 bears (elite) | Хангай |
-| 13 | Алтайн Оргил | reach the Altai | Алтай |
-| 14 | Мөсөн Сүнс | 8 ice spirits | Алтай |
-| 15 | Алтайн Аварга | 3 giants (elite) | Алтай |
+| 9 | Говийн Булш | clear the Gobi Tomb | dungeon |
+| 10 | Мянгатын Сорил | level 12 | — |
+| 11 | Хангайн Ой | reach the Khangai | Хангай |
+| 12 | Саарал Чонын Сүрэг | 8 grey wolves | Хангай |
+| 13 | Хангайн Эзэн | 2 bears (elite) | Хангай |
+| 14 | Баавгайн Үүр | clear the Bear Lair | dungeon |
+| 15 | Алтайн Оргил | reach the Altai | Алтай |
+| 16 | Мөсөн Сүнс | 8 ice spirits | Алтай |
+| 17 | Мөсөн Оргил | clear the Ice Peak | dungeon |
+| 18 | Алтайн Аварга | 3 giants (elite) | Алтай |
 
 `/quest` opens the chapter board (done / active / locked), `/quest info` prints the active chapter; the sidebar
-tracks progress. Admins: `/suld quest <player> <1..15|reset>`.
+tracks progress. Admins: `/suld quest <player> <1..18|reset>`.
+
+## Dungeons
+
+Wave arenas that open where the party stands (never in Kharkhorum): waves of the region's mobs, then a three-phase
+boss (enrages after a timer). Every participant who was not downed gets the completion bonus and a reward roll.
+`/dungeon list`, `/dungeon enter <name>`.
+
+| Dungeon | Region | Level | Boss | Bonus |
+|---|---|---|---|---|
+| Хасарын Агуй `khasar_den` | Хэрлэн | 2+ | Хасар (ravager) | 400 EXP · 75 ₮ |
+| Говийн Булш `govi_bulsh` | Говь | 8+ | Элсний Хаан (husk) | 1200 EXP · 160 ₮ |
+| Баавгайн Үүр `baavgain_uur` | Хангай | 14+ | Ойн Эзэн (bear) | 2600 EXP · 260 ₮ |
+| Мөсөн Оргил `mosun_orgil` | Алтай | 22+ | Мөсөн Хаан (stray archer) | 4800 EXP · 420 ₮ |
 
 ## First five minutes (designed beat sheet)
 

@@ -54,10 +54,12 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
 
     private void list(Player player) {
         player.sendMessage(Messages.accent("Агуйнууд"));
-        DungeonDefinition d = SuldContent.KHASAR_DEN;
-        player.sendMessage(Messages.info("khasar_den — " + d.displayName() + " (түвшин " + d.minLevel() + "+, "
-                + d.minPartySize() + "–" + d.maxPartySize() + " тоглогч, " + d.totalWaves() + " давалгаа + босс)"));
-        player.sendMessage(Messages.info("Эхлүүлэх: /dungeon enter khasar_den"));
+        for (DungeonDefinition d : mn.suld.plugin.content.DungeonContent.ALL) {
+            player.sendMessage(Messages.info(shortId(d) + " — " + d.displayName() + " · " + mn.suld.plugin.content.DungeonContent.where(d.id())
+                    + " (түвшин " + d.minLevel() + "+, " + d.minPartySize() + "–" + d.maxPartySize() + " тоглогч, "
+                    + d.totalWaves() + " давалгаа + босс)"));
+        }
+        player.sendMessage(Messages.info("Эхлүүлэх: тал нутагт /dungeon enter <нэр>"));
     }
 
     private void enter(Player player, String rawId) {
@@ -71,6 +73,10 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
         if (error != null) {
             player.sendMessage(error);
         }
+    }
+
+    private static String shortId(DungeonDefinition d) {
+        return d.id().startsWith("dungeon.") ? d.id().substring("dungeon.".length()) : d.id();
     }
 
     private void status(Player player) {
@@ -92,7 +98,8 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
             return SUBS.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("enter")) {
-            return List.of("khasar_den");
+            return mn.suld.plugin.content.DungeonContent.ALL.stream().map(DungeonCommand::shortId)
+                    .filter(s -> s.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         }
         return List.of();
     }

@@ -8,8 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The main storyline «Сүлдний Зам» (Path of the Sülde): fifteen chapters that walk a new player from the gates of
- * Kharkhorum through the Kherlen steppe, Khasar's Den, the Gobi, the Khangai forests and up to the Altai peaks —
+ * The main storyline «Сүлдний Зам» (Path of the Sülde): eighteen chapters that walk a new player from the gates of
+ * Kharkhorum through the Kherlen steppe, Khasar's Den, the Gobi, the Khangai forests and up to the Altai peaks, with
+ * a dungeon in every region —
  * one region (and level band) at a time, Wynncraft-style. Each chapter starts as soon as the previous one ends.
  */
 public final class QuestContent {
@@ -41,6 +42,8 @@ public final class QuestContent {
                     QuestType.KILL_MOB, WorldContent.SCORPION.id(), 6, 700, 90),
             q("quest.sand_spirits", "Элсний Сүнснүүд", "Элсэн шуурганаас гарсан 5 элсний сүнсийг тайвшруул.",
                     QuestType.KILL_MOB, WorldContent.SAND_SPIRIT.id(), 5, 900, 110),
+            q("quest.gobi_tomb", "Говийн Булш", "Элсний Хааны булшийг бүлгээрээ цэвэрлэ.",
+                    QuestType.COMPLETE_DUNGEON, DungeonContent.GOBI_TOMB.id(), 1, 1400, 160),
             q("quest.oath_12", "Мянгатын Сорил", "Мянгатын ноёны сорилд орохын тулд 12-р түвшинд хүр.",
                     QuestType.REACH_LEVEL, "", 12, 800, 150),
             q("quest.khangai_forest", "Хангайн Ой", "Хойд зүгийн Хангайн ойд хүр.",
@@ -49,10 +52,14 @@ public final class QuestContent {
                     QuestType.KILL_MOB, WorldContent.GREY_WOLF.id(), 8, 1600, 180),
             q("quest.khangai_bear", "Хангайн Эзэн", "Ойн эзэн 2 баавгайг ялж хүчээ батал.",
                     QuestType.KILL_MOB, WorldContent.BEAR.id(), 2, 2000, 220),
+            q("quest.bear_lair", "Баавгайн Үүр", "Ойн Эзэн хар баавгайн үүрийг цэвэрлэ.",
+                    QuestType.COMPLETE_DUNGEON, DungeonContent.BEAR_LAIR.id(), 1, 2800, 260),
             q("quest.altai_peaks", "Алтайн Оргил", "Баруун зүгийн мөсөн Алтайд хүр.",
                     QuestType.DISCOVER_LOCATION, WorldContent.ALTAI.id(), 1, 600, 80),
             q("quest.ice_spirits", "Мөсөн Сүнс", "Оргилын замыг хамгаалдаг 8 мөсөн сүнсийг устга.",
                     QuestType.KILL_MOB, WorldContent.ICE_SPIRIT.id(), 8, 3000, 300),
+            q("quest.ice_peak", "Мөсөн Оргил", "Оргилын сахиул Мөсөн Хааныг ялж замаа нээ.",
+                    QuestType.COMPLETE_DUNGEON, DungeonContent.ICE_PEAK.id(), 1, 4500, 420),
             q("quest.altai_giant", "Алтайн Аварга", "Тэнгэрийн шүтээнийг эзэлсэн 3 аваргыг ялж Сүлдийг сэргээ.",
                     QuestType.KILL_MOB, WorldContent.GIANT.id(), 3, 5000, 600)));
 
@@ -65,12 +72,15 @@ public final class QuestContent {
             Map.entry("quest.gobi_road", new Lore("Морьтон", "Хотын өмнөд хаалгаар (Z+) гар — хэрмийн цаана Говь эхэлнэ.")),
             Map.entry("quest.gobi_scorpions", new Lore("Жингийн Тэргүүн", "Хилэнцүүд Говьд (өмнө зүг) нуугдана.")),
             Map.entry("quest.sand_spirits", new Lore("Бөө", "Элсний сүнснүүд Говийн гүнд тэнүүчилнэ.")),
+            Map.entry("quest.gobi_tomb", new Lore("Бөө", "Говьд (өмнө зүг) бүлгээ цуглуулаад /dungeon enter govi_bulsh.")),
             Map.entry("quest.oath_12", new Lore("Мянгатын Ноён", "Говь, Хэрлэнд ан хийж хүчээ нэм.")),
             Map.entry("quest.khangai_forest", new Lore("Морьтон", "Хотын хойд хаалгаар (Z−) гар — хэрмийн цаана Хангай эхэлнэ.")),
             Map.entry("quest.grey_wolves", new Lore("Малчин", "Саарал чононууд Хангайн ойд (хойд зүг) сүрэглэнэ.")),
             Map.entry("quest.khangai_bear", new Lore("Малчин", "Баавгай бол элит мангас — бүлгээрээ яв.")),
+            Map.entry("quest.bear_lair", new Lore("Малчин", "Хангайд (хойд зүг) /dungeon enter baavgain_uur.")),
             Map.entry("quest.altai_peaks", new Lore("Бөө", "Хотын баруун хаалгаар (X−) гар — хэрмийн цаана Алтай эхэлнэ.")),
             Map.entry("quest.ice_spirits", new Lore("Бөө", "Мөсөн сүнснүүд Алтайн оргилд байна.")),
+            Map.entry("quest.ice_peak", new Lore("Их Бөө", "Алтайд (баруун зүг) /dungeon enter mosun_orgil.")),
             Map.entry("quest.altai_giant", new Lore("Их Бөө", "Аваргууд бол элит — бүлэг, сайн зэвсэг хэрэгтэй.")));
 
     public static Lore lore(String questId) {

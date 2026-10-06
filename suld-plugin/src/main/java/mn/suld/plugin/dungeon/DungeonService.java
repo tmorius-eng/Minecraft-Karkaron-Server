@@ -314,15 +314,16 @@ public final class DungeonService {
                 continue;
             }
             int from = profile.progression().level();
-            long completionExp = services.boosts().apply(id, SuldContent.KHASAR_DEN_COMPLETION_EXP);
+            var bonus = mn.suld.plugin.content.DungeonContent.completion(ar.def.id());
+            long completionExp = services.boosts().apply(id, bonus.exp());
             ExpGainResult exp = services.progression().grantExp(profile, completionExp, ExpSource.DUNGEON);
             services.clans().contribute(id, SuldContent.CLAN_EXP_PER_DUNGEON_CLEAR);
-            profile.addCurrency(SuldContent.KHASAR_DEN_COMPLETION_CURRENCY);
+            profile.addCurrency(bonus.coins());
             Presentation.banner(p, "АГУЙ ДУУСЛАА", ar.def.displayName() + " · " + formatTime(seconds),
                     NamedTextColor.GREEN);
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
             p.sendMessage(Messages.success("+" + completionExp + " EXP, +"
-                    + SuldContent.KHASAR_DEN_COMPLETION_CURRENCY + " зоос"));
+                    + bonus.coins() + " зоос"));
             if (exp.leveledUp()) {
                 Presentation.levelUp(p, from, exp.after().level());
             }

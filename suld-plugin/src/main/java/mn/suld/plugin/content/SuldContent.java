@@ -160,13 +160,28 @@ public final class SuldContent {
     }
 
     public static DungeonDefinition dungeonFor(String id) {
-        return KHASAR_DEN.id().equals(id) ? KHASAR_DEN : null;
+        for (DungeonDefinition d : DungeonContent.ALL) {
+            if (d.id().equals(id)) {
+                return d;
+            }
+        }
+        return null;
     }
 
     public static LootTable lootTableFor(String id) {
         for (LootTable t : List.of(GOVIIN_CHONO_LOOT, ORKHON_CHONO_LOOT, KHASAR_LOOT, KHASAR_DEN_REWARDS)) {
             if (t.id().equals(id)) {
                 return t;
+            }
+        }
+        for (LootTable t : DungeonContent.BOSS_LOOT) {
+            if (t.id().equals(id)) {
+                return t;
+            }
+        }
+        for (DungeonDefinition d : DungeonContent.ALL) {
+            if (d.rewardTable().id().equals(id)) {
+                return d.rewardTable();
             }
         }
         for (LootTable t : WorldContent.LOOT) {
@@ -184,6 +199,11 @@ public final class SuldContent {
             }
         }
         for (MobDefinition m : WorldContent.MOBS) {
+            if (m.id().equals(id)) {
+                return m;
+            }
+        }
+        for (MobDefinition m : DungeonContent.BOSSES) {
             if (m.id().equals(id)) {
                 return m;
             }

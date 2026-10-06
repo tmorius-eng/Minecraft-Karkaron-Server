@@ -11,10 +11,10 @@ the README (local test server).
 | `/menu` (or the clock in hotbar slot 9) | Main menu: character, class, quests, rank, shop, tutorial |
 | `/help`, `/tutorial` | Guide GUI · step-by-step guide for new players |
 | `/class`, `/profile`, `/exp`, `/skills` | Class GUI · character sheet · level/EXP · spells and click combos |
-| `/quest` | Storyline board (15 chapters); `/quest info` prints the active chapter |
+| `/quest` | Storyline board (18 chapters); `/quest info` prints the active chapter |
 | `/rankup`, `/lvlup` | Rank ladder (Ард → Хаан, costs ₮) · level rewards |
 | `/shop`, `/cosmetics`, `/buy` | Supplies and selling loot · tags/colours/join messages/emojis · credit store |
-| `/party`, `/dungeon`, `/clan`, `/cc` | Groups, Khasar's Den, clans and clan chat |
+| `/party`, `/dungeon`, `/clan`, `/cc` | Groups, the four dungeons (`/dungeon list`), clans and clan chat |
 | `/daily` | Daily login reward: 7-day streak of coins and EXP (time zone: `daily.timezone`) |
 | `/spawn`, `/balance`, `/pay`, `/rules`, `/relic` | Back to Kharkhorum · coins · send coins · rules · world relics |
 
@@ -23,7 +23,7 @@ the README (local test server).
 | Command | What it does |
 |---|---|
 | `/suld exp <player> <amount>` | Grant EXP (levels up and upgrades the class weapon) |
-| `/suld quest <player> <1..15\|reset>` | Move a player in the storyline (support tickets, testing) |
+| `/suld quest <player> <1..18\|reset>` | Move a player in the storyline (support tickets, testing) |
 | `/revive <player>` | End a player's soul state early and heal them (audited) |
 | `/credits give\|take <player\|uuid> <amount>` | Store credits; also what the web store runs from the console |
 | `/suldevent`, `/suldpack`, `/worldbuild`, `/relic …` | World events · resource pack · city builder · relic admin |
