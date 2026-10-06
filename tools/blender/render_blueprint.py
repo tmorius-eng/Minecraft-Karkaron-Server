@@ -50,6 +50,8 @@ C = {
     "polished_deepslate": (72, 72, 73), "deepslate_tiles": (54, 54, 55), "deepslate_bricks": (70, 70, 71),
     "cobbled_deepslate": (77, 77, 80), "chiseled_deepslate": (54, 54, 54), "deepslate": (80, 80, 82),
     "gold_block": (246, 208, 61), "raw_gold_block": (221, 169, 46),
+    "oxidized_copper": (82, 162, 132), "oxidized_cut_copper": (80, 154, 126), "weathered_copper": (108, 153, 110),
+    "weathered_cut_copper": (109, 145, 107), "exposed_copper": (161, 125, 103),
     "cut_copper": (191, 106, 80), "waxed_cut_copper": (191, 106, 80), "copper_block": (192, 107, 79),
     "waxed_copper_block": (192, 107, 79),
     "stripped_mangrove_log": (119, 54, 47), "mangrove_planks": (117, 54, 48), "mangrove_log": (84, 66, 41),
@@ -341,7 +343,7 @@ for key in mat_list:
     lin = tuple((c / 255.0) ** 2.2 for c in rgb)
     bsdf.inputs["Base Color"].default_value = (*lin, 1.0)
     bsdf.inputs["Roughness"].default_value = 0.85
-    if key in ("gold_block", "iron_block", "bell") or "copper" in key:
+    if key in ("gold_block", "iron_block", "bell") or (key in ("copper_block", "cut_copper", "waxed_cut_copper")):
         bsdf.inputs["Metallic"].default_value = 0.8
         bsdf.inputs["Roughness"].default_value = 0.35
     if key == "water":

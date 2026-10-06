@@ -110,70 +110,84 @@ final class Plaza {
 
     /**
      * monument.equestrian — Хааны Морьт Хөшөө: the Khan on a rearing horse, raising the SÜLD spear,
-     * on a three-tier stepped pedestal. Original SÜLD design (dark bronze with gold details),
-     * facing +z (south, toward the Imperial Gate). y 0 = plaza surface.
+     * on a three-tier stepped pedestal. Original SÜLD design in patinated bronze with gold details,
+     * facing +z (south, toward the Imperial Gate). y 0 = plaza surface. The figure is modelled in
+     * horse units and voxelised at {@code scale} (default 2.4).
      */
     static final Module MONUMENT = Kit.module("monument.equestrian", Layer.LANDMARK, (c, ctx) -> {
-        SplittableRandom r = ctx.random();
         c.pass(Pass.LANDMARKS);
-        // pedestal: three stepped tiers and a plinth
-        for (int x = -6; x <= 6; x++)
-            for (int z = -6; z <= 6; z++) {
-                int m = Math.max(Math.abs(x), Math.abs(z));
-                c.set(x, 1, z, m == 6 ? Kit.stairs("@stone_stairs", Facing.toward(x, z, 0, 0), false) : "@trim");
-                if (m <= 5) c.set(x, 2, z, m == 5 ? Kit.stairs("@stone_stairs", Facing.toward(x, z, 0, 0), false) : "@stone");
-                if (m <= 4) for (int y = 3; y <= 5; y++) c.set(x, y, z, m == 4 ? (y == 4 ? "@statue_gold" : "@statue") : "@statue_dark");
-                if (m <= 3) c.set(x, 6, z, m == 3 ? "minecraft:polished_blackstone_slab[type=bottom]" : "@statue");
+        // pedestal: three stepped tiers (longer front-to-back, like the horse) and a dark plinth
+        for (int x = -7; x <= 7; x++)
+            for (int z = -10; z <= 10; z++) {
+                int ax = Math.abs(x), az = Math.abs(z);
+                boolean t1 = ax <= 7 && az <= 10, t2 = ax <= 6 && az <= 9, t3 = ax <= 5 && az <= 8, t4 = ax <= 4 && az <= 7;
+                if (t1) c.set(x, 1, z, t2 ? "@trim" : Kit.stairs("@stone_stairs", Facing.toward(x * 1.4, z, 0, 0), false));
+                if (t2) c.set(x, 2, z, t3 ? "@stone" : Kit.stairs("@stone_stairs", Facing.toward(x * 1.4, z, 0, 0), false));
+                if (t3) for (int y = 3; y <= 5; y++) c.set(x, y, z, !t4 ? (y == 4 ? "@statue_gold" : "@statue") : "@statue_dark");
+                if (t4) c.set(x, 6, z, ax == 4 || az == 7 ? "minecraft:polished_blackstone_slab[type=bottom]" : "@statue");
             }
-        // plaques on the four faces
         for (int k = -1; k <= 1; k++) {
-            c.set(k, 4, 5, "@ridge");
-            c.set(k, 4, -5, "@ridge");
+            c.set(k, 4, 9, "@ridge");
+            c.set(k, 4, -9, "@ridge");
         }
-        // the horse (scale ~2), facing +z; hooves on the plinth top (y 7)
-        String bronze = "@statue";
-        String dark = "@statue_dark";
-        Kit.ellipsoid(c, 0.5, 12.0, 0.5, 1.9, 2.1, 4.4, bronze);                 // barrel
-        Kit.capsule(c, -0.6, 7.0, -2.4, -0.6, 11.0, -2.4, 0.65, bronze);        // hind legs
-        Kit.capsule(c, 1.6, 7.0, -2.6, 1.6, 11.0, -2.4, 0.65, bronze);
-        Kit.capsule(c, 1.6, 7.0, 3.0, 1.6, 11.0, 3.0, 0.65, bronze);            // planted foreleg
-        Kit.capsule(c, -0.6, 11.0, 3.2, -0.6, 10.0, 5.0, 0.6, bronze);          // raised foreleg: forearm
-        Kit.capsule(c, -0.6, 10.0, 5.0, -0.6, 8.6, 4.6, 0.55, bronze);          //                 cannon
-        Kit.capsule(c, 0.5, 13.2, 3.6, 0.5, 16.4, 5.4, 1.15, bronze);           // neck
-        Kit.capsule(c, 0.5, 16.6, 5.6, 0.5, 15.0, 7.8, 0.8, bronze);            // head
-        c.set(0, 17, 5, dark);
-        c.set(1, 17, 5, dark);                                                   // ears
-        Kit.capsule(c, 0.5, 13.0, 3.6, 0.5, 17.0, 4.6, 0.5, dark);               // mane
-        Kit.capsule(c, 0.5, 12.6, -4.3, 0.5, 9.0, -5.9, 0.55, dark);             // tail
-        // saddle cloth
-        for (int x = -1; x <= 2; x++) for (int z = -1; z <= 1; z++) c.set(x, 14, z, z == -1 || z == 1 ? "@statue_gold" : bronze);
-        // the rider
-        Kit.capsule(c, 0.5, 14.5, -0.2, 0.5, 17.6, 0.4, 1.05, bronze);          // torso in a deel
-        Kit.capsule(c, -1.0, 14.6, 0.0, -1.3, 12.4, 1.1, 0.55, bronze);         // legs astride
-        Kit.capsule(c, 2.0, 14.6, 0.0, 2.3, 12.4, 1.1, 0.55, bronze);
-        Kit.ellipsoid(c, 0.5, 18.9, 0.4, 0.85, 0.95, 0.85, bronze);             // head
-        c.set(0, 20, 0, "@statue_gold");                                         // helmet crest
-        Kit.capsule(c, 0.5, 16.5, -0.8, 0.5, 13.8, -2.6, 0.85, dark);            // cloak behind
-        Kit.capsule(c, -0.6, 17.2, 0.2, -1.4, 15.4, 2.0, 0.45, bronze);         // left arm → reins
-        Kit.capsule(c, 1.8, 17.4, 0.2, 2.9, 19.6, 0.9, 0.45, bronze);           // right arm raised
-        c.set(1, 15, 0, "@statue_gold");                                         // belt
-        // the SÜLD spear: shaft, gold ring, white horse-hair tassel, silver tip
-        int sx = 3, sz = 1;
-        for (int y = 13; y <= 23; y++) c.set(sx, y, sz, "minecraft:dark_oak_fence");
-        c.set(sx, 24, sz, "minecraft:gold_block");
-        c.set(sx, 25, sz, "minecraft:end_rod[facing=up]");
+        double s = ctx.number("scale", 2.4);
+        double oz = -1.0, base = 6.6;
+        Sculpt f = new Sculpt(c, s, 0.5, base, oz);
+        String hide = "@bronze", mane = "@bronze_dark", gold = "minecraft:gold_block";
+        // horse
+        f.ell(0, 3.40, 0.0, 0.85, 0.95, 2.05, hide);      // barrel
+        f.ell(0, 3.55, 1.55, 0.86, 1.02, 0.95, hide);     // chest
+        f.ell(0, 3.65, -1.65, 0.92, 1.0, 0.95, hide);     // rump
+        for (int side = -1; side <= 1; side += 2) {
+            f.cap(0.48 * side, 3.4, -1.8, 0.55 * side, 1.9, -2.25, 0.45, hide);   // hind thigh
+            f.cap(0.55 * side, 1.9, -2.25, 0.55 * side, 0.1, -2.0, 0.27, hide);   // hind cannon
+        }
+        f.cap(0.5, 3.0, 1.7, 0.5, 1.5, 1.9, 0.38, hide);           // planted foreleg
+        f.cap(0.5, 1.5, 1.9, 0.5, 0.1, 1.9, 0.27, hide);
+        f.cap(-0.5, 3.0, 1.8, -0.5, 2.35, 2.65, 0.36, hide);       // raised foreleg
+        f.cap(-0.5, 2.35, 2.65, -0.5, 1.45, 2.35, 0.26, hide);
+        f.cap(0, 3.9, 1.9, 0, 5.45, 2.45, 0.6, hide);              // neck, arched upright
+        f.cap(0, 5.6, 2.55, 0, 4.95, 3.45, 0.38, hide);            // head, nose down
+        f.cap(0, 4.2, 1.65, 0, 5.85, 2.25, 0.24, mane);            // mane crest
+        f.cap(0, 3.95, -2.5, 0, 2.35, -3.1, 0.25, mane);           // tail
+        f.cap(0, 4.25, -0.35, 0, 4.25, 0.55, 0.62, "@cloth");       // saddle cloth
+        // rider
+        f.cap(0, 4.55, -0.1, 0, 6.15, 0.1, 0.5, hide);             // torso in a deel
+        f.cap(0, 4.7, 0.0, 0, 4.7, 0.0, 0.55, gold);                // belt
+        for (int side = -1; side <= 1; side += 2) f.cap(0.72 * side, 4.5, 0.0, 0.85 * side, 3.45, 0.6, 0.27, hide); // legs astride
+        f.ell(0, 6.75, 0.15, 0.36, 0.38, 0.36, hide);              // head
+        f.cap(0, 7.05, 0.15, 0, 7.45, 0.15, 0.12, gold);           // helmet crest
+        f.cap(0, 6.0, -0.4, 0, 4.6, -1.25, 0.42, mane);            // cloak
+        f.cap(0.55, 5.9, 0.0, 1.0, 7.0, 0.3, 0.2, hide);           // right arm raised
+        f.cap(-0.55, 5.8, 0.1, -0.75, 4.9, 0.95, 0.2, hide);       // left arm, reins
+        // the SÜLD spear held aloft: shaft, gold ring, white horse-hair tassel, silver tip
+        int sx = (int) Math.floor(0.5 + 1.1 * s), sz = (int) Math.floor(oz + 0.35 * s);
+        int shaft0 = (int) Math.floor(base + 3.6 * s), top = (int) Math.floor(base + 8.6 * s);
+        for (int y = shaft0; y <= top; y++) c.set(sx, y, sz, "minecraft:dark_oak_fence");
+        c.set(sx, top + 1, sz, gold);
+        c.set(sx, top + 2, sz, "minecraft:end_rod[facing=up]");
         for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
             if (dx == 0 && dz == 0) continue;
-            c.set(sx + dx, 23, sz + dz, "@felt");
-            if (dx == 0 || dz == 0) c.set(sx + dx, 22, sz + dz, "@felt");
+            c.set(sx + dx, top, sz + dz, "@felt");
+            if (dx == 0 || dz == 0) c.set(sx + dx, top - 1, sz + dz, "@felt");
         }
-        // lights at the pedestal corners
         c.pass(Pass.LIGHTING);
-        for (int sxx : new int[]{-5, 5}) for (int szz : new int[]{-5, 5}) {
+        for (int sxx : new int[]{-6, 6}) for (int szz : new int[]{-9, 9}) {
             c.set(sxx, 3, szz, "@statue");
             c.set(sxx, 4, szz, "@fire[lit=true]");
         }
     });
+
+    /** Sculpting in model units: x, y, z scaled by s and offset (origin x, base y, origin z). */
+    private record Sculpt(ModuleCanvas c, double s, double ox, double oy, double oz) {
+        void ell(double x, double y, double z, double rx, double ry, double rz, String t) {
+            Kit.ellipsoid(c, ox + x * s, oy + y * s, oz + z * s, rx * s, ry * s, rz * s, t);
+        }
+
+        void cap(double ax, double ay, double az, double bx, double by, double bz, double r, String t) {
+            Kit.capsule(c, ox + ax * s, oy + ay * s, oz + az * s, ox + bx * s, oy + by * s, oz + bz * s, Math.max(0.55, r * s), t);
+        }
+    }
 
     /** prop.class_stones — four standing stones around the class-selection point (origin left clear). */
     static final Module CLASS_STONES = Kit.module("prop.class_stones", Layer.PROP, (c, ctx) -> {

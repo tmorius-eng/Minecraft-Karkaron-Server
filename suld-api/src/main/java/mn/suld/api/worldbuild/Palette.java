@@ -83,5 +83,11 @@ public final class Palette {
             Map.entry("fire", "minecraft:campfire"),
             Map.entry("statue", "minecraft:polished_blackstone"),
             Map.entry("statue_dark", "minecraft:blackstone"),
-            Map.entry("statue_gold", "minecraft:gilded_blackstone")));
+            Map.entry("statue_gold", "minecraft:gilded_blackstone"),
+            Map.entry("bronze", "minecraft:waxed_oxidized_copper"),
+            Map.entry("bronze_cut", "minecraft:waxed_oxidized_cut_copper"),
+            Map.entry("bronze_dark", "minecraft:waxed_weathered_copper"),
+            Map.entry("plaster", "minecraft:white_terracotta"),
+            Map.entry("paint", "minecraft:cyan_terracotta"),
+            Map.entry("paint_alt", "minecraft:light_blue_terracotta")));
 }

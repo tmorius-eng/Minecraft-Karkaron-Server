@@ -21,6 +21,17 @@ public final class Kharkhorum {
                 .register(Plaza.PLAZA)
                 .register(Plaza.MONUMENT)
                 .register(Plaza.CLASS_STONES)
-                .register(Plaza.RELAY_POST);
+                .register(Plaza.RELAY_POST)
+                .register(Palace.GATE)
+                .register(Market.STALL)
+                .register(Market.SHOP)
+                .register(Market.STREET)
+                .register(Residential.YURT)
+                .register(Residential.YARD)
+                .register(Residential.CAMP)
+                .register(Craft.FORGE)
+                .register(Spiritual.SHRINE)
+                .register(Spiritual.CAIRN)
+                .register(Landscape.GROVE);
     }
 }
