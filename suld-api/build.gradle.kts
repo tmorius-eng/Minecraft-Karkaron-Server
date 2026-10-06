@@ -18,3 +18,13 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+
+// Offline world tooling: dump modules/slices for rendering and validate slices (no server needed).
+//   ./gradlew -q :suld-api:worldTool --args="module gate.imperial /tmp/gate.txt"
+tasks.register<JavaExec>("worldTool") {
+    group = "world"
+    description = "Kharkhorum module/slice dump and validation"
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("mn.suld.api.worldbuild.kharkhorum.KharkhorumTool")
+    workingDir = rootProject.projectDir
+}

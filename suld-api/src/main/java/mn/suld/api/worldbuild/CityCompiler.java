@@ -84,7 +84,12 @@ public final class CityCompiler {
                 palette = palette.with(spec.districtPalettes().get(pl.district()));
             }
             if (!pl.palette().isEmpty()) palette = palette.with(pl.palette());
-            ModuleContext ctx = new ModuleContext(pl.params(), palette, mix(spec.seed(), pl.seed()));
+            Transform tf = pl.transform();
+            TerrainPlan terrain = spec.terrain();
+            ModuleContext ctx = new ModuleContext(pl.params(), palette, mix(spec.seed(), pl.seed()), (lx, lz) -> {
+                int[] c = tf.apply(lx, lz);
+                return terrain.elevation(pl.x() + c[0], pl.z() + c[1]) - pl.y();
+            });
             ModuleCanvas canvas = new ModuleCanvas(palette, m.layer());
             try {
                 m.build(canvas, ctx);
