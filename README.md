@@ -4,33 +4,33 @@ A production-grade **PaperMC** MMORPG server for Mongolian players, focused on
 hardcore PvE: exploration, progression, loot, class builds, dungeons, bosses,
 clans, hardcore death, and extremely rare world-first items.
 
-Every gameplay system is **custom-built in this repository**. SULD does **not**
-use ready-made gameplay plugins (no MythicMobs, MMOItems/MMOCore, EssentialsX,
-Citizens, ItemsAdder, DeluxeMenus, quest/skill/crate plugins, …). Third-party
-libraries are infrastructure only (database pool, JDBC drivers, serialization,
-testing) — see [DEPENDENCIES.md](DEPENDENCIES.md).
+Every gameplay system is **custom-built in this repository** — classes, combat, spells, items, quests, dungeons,
+relics, death, HUD, menus, NPCs and the city. Third-party server plugins provide generic plumbing only
+(permissions, moderation, anti-cheat, world tools, Bedrock/version bridging); plugins that would own an RPG or UI
+layer (MythicMobs, MMOItems/MMOCore, Citizens, ItemsAdder, DeluxeMenus, TAB, …) are never used — see
+[DEPENDENCIES.md](DEPENDENCIES.md) and `deploy/plugins/plugins.json`.
 
 > Naming note: the class names (Баатар, Мэргэн, Бөө, Дархан, Хүлэгчин) are
 > Mongolian-*inspired* fantasy archetypes. SULD keeps fantasy lore separate from
 > real history and makes no historical claims — see [GAME_DESIGN.md](GAME_DESIGN.md).
 
-## Status — Phase 1 (foundation)
+## Status — playable
 
-Implemented and building green:
+Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (210 tests; PostgreSQL ITs opt-in):
 
-- Multi-module Gradle project (`suld-api` pure domain + `suld-plugin` Paper plugin).
-- Player profiles, character level/EXP with a **data-driven** curve.
-- Five classes scaffolded (identity, role, selection).
-- Configuration system (data-driven, Bukkit YAML ↔ dependency-free model).
-- Async persistence (HikariCP + MySQL/PostgreSQL) with a forward-only migrator,
-  plus an in-memory backend for dev/tests.
-- Extensible analytics interface + a logging sink (retention-funnel event keys).
-- `/suld` (info/profile) and `/revive <player>` (admin) commands; join/quit
-  lifecycle with analytics.
-- Item-rarity tiers and the world-unique-item storage constraints (schema).
-- 24 unit tests; plugin verified to compile **and link** against Paper API 1.21.11.
-
-See [ROADMAP.md](ROADMAP.md) for what each later phase adds.
+- **Classes and combat:** five classes, 3D class weapons in four level tiers with effects, Wynncraft-style click
+  combos (20 spells), class resources, a data-driven level curve.
+- **World:** Kharkhorum (safe city with glowing NPCs: class, tutorial, quests, shop, smith, travel, blessing) and
+  four wild regions (Хэрлэн, Говь, Хангай, Алтай) with their own mobs, level bands, discovery EXP and danger warnings.
+- **Content:** the 18-chapter storyline «Сүлдний Зам» with a quest tracker; four dungeons with three-phase
+  bosses; world events; two world-unique relics; clans and parties.
+- **Hardcore death:** loot and EXP loss, gear wear, soul state.
+- **UI:** Mongolian-themed resource pack, sidebar, TAB, chat badges, GUIs for every command (menu, help, tutorial,
+  class, skills, quests, rank-up, level rewards, cosmetics, shop, credit store, daily reward, leaderboards).
+- **Retention and social:** daily streak reward, `/top` leaderboards, personal steppe horses, rank ladder,
+  cosmetics bought with coins or store credits (cosmetics only).
+- **Operations:** verified Microsoft accounts only, chat guard, MOTD and icon, tips, plugin installer (Modrinth,
+  hash-verified), production deploy/update/backup scripts. See [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Target stack
 
