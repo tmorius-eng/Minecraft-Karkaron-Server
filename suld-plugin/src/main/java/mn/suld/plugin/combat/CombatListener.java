@@ -54,29 +54,64 @@ public final class CombatListener implements Listener {
         this.items = items;
     }
 
+    /** True while SÜLD itself applies spell damage (its amount must not be replaced by the hit formula). */
+    public static boolean spellDamage;
+
+    /** The SÜLD attack of a player: class base + level growth + weapon ATK (the shared hit/spell/arrow formula). */
+    public static double attackOf(SuldServices services, Player player) {
+        PlayerProfile profile = services.profiles().cached(player.getUniqueId()).orElse(null);
+        if (profile == null) return 1;
+        PlayerClass clazz = profile.playerClass().orElse(PlayerClass.BAATAR);
+        double attack = clazz.baseAttack() + (profile.progression().level() - 1) * 0.75;
+        ItemInstance weapon = services.items().read(player.getInventory().getItemInMainHand()).orElse(null);
+        if (weapon != null) attack += weapon.stat(ItemStat.ATTACK);
+        return attack;
+    }
+
+    private double critOf(Player player) {
+        ItemInstance weapon = items.read(player.getInventory().getItemInMainHand()).orElse(null);
+        return 0.05 + (weapon == null ? 0 : weapon.stat(ItemStat.CRIT_CHANCE));
+    }
+
+    /** Arrow damage multiplier set by spells (Чонын Нүд) — consumed per arrow. */
+    public static final java.util.Map<java.util.UUID, Integer> EMPOWERED_ARROWS = new java.util.concurrent.ConcurrentHashMap<>();
+
     @EventHandler(ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player) || !mobs.isSuldMob(event.getEntity())) {
+        if (spellDamage || !isTarget(event.getEntity())) {
             return;
         }
-        PlayerProfile profile = services.profiles().cached(player.getUniqueId()).orElse(null);
-        if (profile == null) {
+        Player player;
+        double scale = 1.0;
+        if (event.getDamager() instanceof Player p) {
+            player = p;
+        } else if (event.getDamager() instanceof org.bukkit.entity.AbstractArrow arrow && arrow.getShooter() instanceof Player p) {
+            // a fully drawn arrow does ~6 vanilla damage: scale the SÜLD attack by how hard it was drawn
+            player = p;
+            scale = Math.max(0.25, Math.min(1.4, event.getDamage() / 6.0));
+            if (arrow.getScoreboardTags().contains("suld_volley")) scale *= 0.9;
+            Integer left = EMPOWERED_ARROWS.get(p.getUniqueId());
+            if (left != null && left > 0) {
+                scale *= 1.5;
+                if (left <= 1) EMPOWERED_ARROWS.remove(p.getUniqueId());
+                else EMPOWERED_ARROWS.put(p.getUniqueId(), left - 1);
+            }
+        } else {
             return;
         }
-        PlayerClass clazz = profile.playerClass().orElse(PlayerClass.BAATAR);
-        int level = profile.progression().level();
-        double attack = clazz.baseAttack() + (level - 1) * 0.75;
-        double critChance = 0.05;
-        ItemInstance weapon = items.read(player.getInventory().getItemInMainHand()).orElse(null);
-        if (weapon != null) {
-            attack += weapon.stat(ItemStat.ATTACK);
-            critChance += weapon.stat(ItemStat.CRIT_CHANCE);
+        if (services.profiles().cached(player.getUniqueId()).isEmpty()) {
+            return;
         }
-        DamageResult result = calculator.compute(attack, critChance, 1.5, 0.0, ThreadLocalRandomRoll());
+        DamageResult result = calculator.compute(attackOf(services, player) * scale, critOf(player), 1.5, 0.0, ThreadLocalRandomRoll());
         event.setDamage(result.finalDamage());
         if (result.critical()) {
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1f, 1.2f);
         }
+    }
+
+    /** SÜLD hit formula applies to SÜLD mobs (vanilla monsters keep vanilla damage). */
+    private boolean isTarget(org.bukkit.entity.Entity e) {
+        return mobs.isSuldMob(e);
     }
 
     @EventHandler

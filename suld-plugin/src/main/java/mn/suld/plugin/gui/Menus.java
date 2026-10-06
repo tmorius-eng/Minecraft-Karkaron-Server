@@ -189,6 +189,8 @@ public final class Menus {
         m.set(31, Menu.item(Material.ARMOR_STAND, Menu.title("Гоёл · /cosmetics", GOLD), Menu.lore(GOLD,
                 List.of(b("Цол, нэрийн өнгө, чатын өнгө, мэндчилгээ, эможи.")), List.of(), "Дарж нээх")), (pl, c) -> cosmetics(pl));
         m.set(32, Menu.item(Material.WRITABLE_BOOK, Menu.title("Эрэл · /quest", GOLD), List.of()), (pl, c) -> quests(pl));
+        m.set(28, Menu.item(Material.BLAZE_POWDER, Menu.title("Ур чадвар · /skills", RED), Menu.lore(RED,
+                List.of(b("Ангийн 4 шившлэг, хослол, нөөц.")), List.of(), "Дарж нээх")), (pl, c) -> skills(pl));
         m.set(33, Menu.item(Material.WHITE_BANNER, Menu.title("Овог · /clan info", NamedTextColor.AQUA), List.of()), (pl, c) -> {
             pl.closeInventory();
             pl.performCommand("clan info");
@@ -215,6 +217,47 @@ public final class Menus {
                     pl.performCommand("party info");
                 });
         m.set(18, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
+        m.open(p);
+    }
+
+    // ================================================================== skills
+
+    private static final Material[] SPELL_ICON = {Material.BLAZE_POWDER, Material.FIRE_CHARGE, Material.FEATHER, Material.NETHER_STAR};
+
+    public void skills(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        var clazz = pr.playerClass().orElse(null);
+        Menu m = new Menu(3, "Ур чадвар · Skills", null);
+        if (clazz == null) {
+            m.set(13, Menu.item(Material.BARRIER, Menu.title("Анги сонгоогүй", RED), List.of(b("Эхлээд ангиа сонго: /class"))),
+                    (pl, c) -> pl.performCommand("class"));
+            m.open(p);
+            return;
+        }
+        int level = pr.progression().level();
+        m.set(4, Menu.item(Material.BOOK, Menu.title(clazz.displayName() + " · " + clazz.resourceName(), GOLD), List.of(
+                b("Ангийн зэвсгээ барьж гурван товшилт:"),
+                b(mn.suld.api.skill.Spell.firstClick(clazz) == 'R' ? "Баруун-Зүүн-Баруун гэх мэт (R-L-R)." : "Зүүн-Баруун-Зүүн гэх мэт (L-R-L)."),
+                b("Нөөц цаг ба тулаанаар нөхөгдөнө."))), null);
+        int slot = 10;
+        for (mn.suld.api.skill.Spell sp : mn.suld.api.skill.Spell.of(clazz)) {
+            boolean open = level >= sp.unlockLevel();
+            TextColor c = open ? GREEN : RED;
+            String combo = String.join("-", sp.combo().split(""));
+            List<Component> info = new ArrayList<>();
+            info.add(Menu.kv("Хослол:", combo, GOLD));
+            info.add(Menu.kv("Нөөц:", String.valueOf(sp.cost()), SKY));
+            if (sp.damageMultiplier() > 0) info.add(Menu.kv("Хүч:", "x" + sp.damageMultiplier() + " ATK", RED));
+            info.add(Menu.kv("Түвшин:", String.valueOf(sp.unlockLevel()), c));
+            ItemStack it = Menu.item(open ? SPELL_ICON[sp.slot() - 1] : Material.GRAY_DYE,
+                    Component.text(sp.slot() + ". " + sp.displayName(), open ? GOLD : NamedTextColor.GRAY, TextDecoration.BOLD),
+                    Menu.lore(c, List.of(b(sp.description())), info, open ? "Хослолоор хэрэглэ" : "Түвшин " + sp.unlockLevel() + " хүрэх"));
+            if (open) Menu.glow(it);
+            m.set(slot, it, null);
+            slot += 2;
+        }
+        m.set(18, Menu.item(Material.ARROW, Menu.title("« Дүр", GOLD), List.of()), (pl, c) -> profile(pl));
         m.open(p);
     }
 

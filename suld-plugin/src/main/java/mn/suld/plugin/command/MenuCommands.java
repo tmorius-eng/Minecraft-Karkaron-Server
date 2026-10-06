@@ -53,6 +53,7 @@ public final class MenuCommands {
     public TabExecutor buy() { return gui(Menus::buy); }
     public TabExecutor rankup() { return gui(Menus::rankup); }
     public TabExecutor lvlup() { return gui(Menus::lvlup); }
+    public TabExecutor skills() { return gui(Menus::skills); }
 
     public TabExecutor credits() {
         return new TabExecutor() {

@@ -123,6 +123,10 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("rankup", mc.rankup());
         registerTab("lvlup", mc.lvlup());
         registerTab("credits", mc.credits());
+        registerTab("skills", mc.skills());
+        mn.suld.plugin.skill.SkillService skills = new mn.suld.plugin.skill.SkillService(this, services);
+        getServer().getPluginManager().registerEvents(skills, this);
+        skills.start();
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
         registerTab("class", progress.clazz());
         registerTab("profile", progress.profile());

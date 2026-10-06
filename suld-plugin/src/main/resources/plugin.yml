@@ -112,6 +112,10 @@ commands:
     description: Claim your level rewards.
     usage: /lvlup
     aliases: [levelrewards, shagnal]
+  skills:
+    description: Your class spells (click combos while holding the class weapon).
+    usage: /skills
+    aliases: [spells, ur, chadvar]
   credits:
     description: Your SULD credits; admin/console give|take.
     usage: /credits [give|take <player|uuid> <amount>]

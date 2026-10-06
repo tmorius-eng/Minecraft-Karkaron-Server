@@ -43,7 +43,7 @@ public final class CityCommands implements Listener {
     private static final Set<String> OWNED = Set.of("help", "?", "tuslamj", "zaavar", "rules", "juram",
             "spawn", "hot", "balance", "bal", "money", "zoos", "pay", "tuluh",
             "class", "angi", "profile", "stats", "dur", "exp", "level", "lvl", "tuvshin", "quest", "quests", "erel",
-            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits");
+            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits", "skills", "spells");
     private static final int SPAWN_WARMUP_SECONDS = 3;
 
     private final Plugin plugin;
@@ -126,7 +126,8 @@ public final class CityCommands implements Listener {
             new Page("commands", "Командууд · Commands", List.of(
                     l("/help [хуудас] — энэ гарын авлага   /rules — дүрэм", "/rules"),
                     l("/spawn — Хархорум руу   /balance — зоос   /pay <нэр> <тоо>", "/balance"),
-                    l("/class /profile /exp /quest — дүр ба ахиц", "/profile"),
+                    l("/class /profile /exp /quest /skills — дүр ба ахиц", "/profile"),
+                    l("/menu /shop /cosmetics /rankup /lvlup /buy /tutorial", "/menu"),
                     l("/party /dungeon /clan /cc /relic — тоглоом", null),
                     l("/home /sethome /delhome /tpa /tpaccept /tpdeny /msg /r /back /warp — серверийн", null),
                     l("/suldpack — дүрс багцыг дахин ачаалах", "/suldpack"))),
