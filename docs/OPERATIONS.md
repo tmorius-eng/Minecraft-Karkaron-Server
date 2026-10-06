@@ -82,6 +82,11 @@ loses 25 % durability. They respawn as a **Сүнс** for 30 s: they cannot deal
 `branding.motd` takes two MiniMessage lines (empty = the built-in SÜLD lines). The bundled 64×64 icon is used
 unless the server folder has its own `server-icon.png` or `branding.server-icon: false`.
 
+## Chat tips
+
+`tips.interval-minutes` (default 6, `0` = off) broadcasts the next line of `tips.messages` (MiniMessage; empty = the
+built-in tips about /daily, /quest, skills, dungeons, death and the shop).
+
 ## World pre-generation
 
 With Chunky installed, `world.pregenerate` pre-generates the playable area on first start (resumes after restarts)
