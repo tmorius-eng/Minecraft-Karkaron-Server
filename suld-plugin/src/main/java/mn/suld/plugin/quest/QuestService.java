@@ -166,6 +166,7 @@ public final class QuestService {
             recheck(player, profile);
         } else {
             player.sendMessage(Component.text("✦ Сүлдний Зам төгсөв! Та Монголын бүх нутгийг хамгааллаа.", Messages.BRAND, TextDecoration.BOLD));
+            org.bukkit.Bukkit.broadcast(Component.text("✦ " + player.getName() + " «Сүлдний Зам»-ыг бүрэн дуусгалаа!", Messages.BRAND, TextDecoration.BOLD));
         }
     }
 

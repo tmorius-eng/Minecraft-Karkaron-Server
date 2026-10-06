@@ -30,6 +30,12 @@ public final class QuestListener implements Listener {
         Player p = Bukkit.getPlayer(lu.player());
         if (p == null) return;
         services.profiles().cached(p.getUniqueId()).ifPresent(pr -> services.quests().onLevel(p, pr, lu.toLevel()));
+        // milestone: every tenth level is announced to the whole server
+        int milestone = lu.toLevel() / 10 * 10;
+        if (milestone >= 10 && milestone > lu.fromLevel()) {
+            Bukkit.broadcast(net.kyori.adventure.text.Component.text("✦ " + p.getName() + " " + milestone + "-р түвшинд хүрлээ!",
+                    net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"), net.kyori.adventure.text.format.TextDecoration.BOLD));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
