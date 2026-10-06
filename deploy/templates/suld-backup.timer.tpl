@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily SULD backup
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

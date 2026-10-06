@@ -72,3 +72,4 @@ Both need outbound access to Paper's download CDN (`fill.papermc.io`,
 - [ROADMAP.md](ROADMAP.md) — phased implementation plan.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — conventions and the "build it yourself" rule.
 - [DEPENDENCIES.md](DEPENDENCIES.md) — auditable dependency & repository list.
+- [DEPLOYMENT.md](DEPLOYMENT.md) — production runbook for a fresh Ubuntu 24.04 (Vultr) VPS: deploy, update/rollback, backup/restore.

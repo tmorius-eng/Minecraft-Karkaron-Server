@@ -133,6 +133,14 @@ Benchmarks come with the combat/mob slices.
 See ASSET_PIPELINE.md. One complete asset proven (`weapon.suld_ild_tenger`).
 No mass generation yet (per directive). Registry: `assets/registry/assets.json`.
 
+## Deployment toolkit (ready, NOT deployed — no VPS exists yet)
+`deploy/` + DEPLOYMENT.md: deploy.sh (idempotent, two-run, --dry-run), update.sh (build while running,
+auto-rollback), backup.sh (online-consistent, rotated, checksummed), start/stop/restart/console/op.sh,
+health-check.sh, firewall.sh (ufw), build-pack.sh (reproducible, hash-named), systemd unit + daily backup
+timer, nginx pack hosting. `ADMIN_PLAYERS="qeevr_"` is opped on first boot. Verified in the sandbox against a
+real Paper server + PostgreSQL 16 (see DEPLOYMENT.md "What has been verified"); apt/nginx/ufw/systemd lifecycle
+are verified only on the first real deploy.
+
 ## Known good commands
 - `./gradlew build` — compile + test.
 - `python3 tools/validation/run_all.py` — asset/resource-pack validation.
