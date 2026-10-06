@@ -13,7 +13,8 @@ public record SuldConfig(
         ResourcePackSettings resourcePack,
         SocialSettings social,
         AuthSettings auth,
-        RelicSettings relics) {
+        RelicSettings relics,
+        WorldSettings world) {
 
     public static SuldConfig defaults() {
         return new SuldConfig(
@@ -25,6 +26,7 @@ public record SuldConfig(
                 ResourcePackSettings.defaults(),
                 SocialSettings.defaults(),
                 AuthSettings.defaults(),
-                RelicSettings.defaults());
+                RelicSettings.defaults(),
+                WorldSettings.defaults());
     }
 }

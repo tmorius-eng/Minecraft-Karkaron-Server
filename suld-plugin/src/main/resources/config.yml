@@ -108,3 +108,15 @@ relics:
   offline-return-hours: 72
   ritual-seconds: 10
   hint-cooldown-seconds: 300
+
+# ---------------------------------------------------------------------------
+# World: Kharkhorum (spawn city) + regions — IN DEVELOPMENT, NOT WIRED YET.
+# These keys are parsed but nothing reads them in this build. Kharkhorum is built
+# slice by slice by the WorldBuilder v2 (docs/world/KHARKHORUM_MASTER_PLAN.md);
+# the old one-shot auto-build was retired, so auto-build stays off.
+# ---------------------------------------------------------------------------
+world:
+  kharkhorum-auto-build: false
+  build-blocks-per-tick: 4000
+  region-spawning: true
+  region-mobs-per-player: 4

@@ -91,6 +91,13 @@ public final class SuldConfigFactory {
                 view.getInt("relics.ritual-seconds", rd.ritualSeconds()),
                 view.getInt("relics.hint-cooldown-seconds", rd.hintCooldownSeconds()));
 
-        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics);
+        WorldSettings wd = d.world();
+        WorldSettings world = new WorldSettings(
+                view.getBoolean("world.kharkhorum-auto-build", wd.autoBuildKharkhorum()),
+                view.getInt("world.build-blocks-per-tick", wd.buildBlocksPerTick()),
+                view.getBoolean("world.region-spawning", wd.regionSpawning()),
+                view.getInt("world.region-mobs-per-player", wd.regionMobsPerPlayer()));
+
+        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world);
     }
 }

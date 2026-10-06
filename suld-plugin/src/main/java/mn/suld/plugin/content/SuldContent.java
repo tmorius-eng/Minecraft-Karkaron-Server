@@ -169,11 +169,21 @@ public final class SuldContent {
                 return t;
             }
         }
+        for (LootTable t : WorldContent.LOOT) {
+            if (t.id().equals(id)) {
+                return t;
+            }
+        }
         return null;
     }
 
     public static MobDefinition mobFor(String id) {
         for (MobDefinition m : List.of(GOVIIN_CHONO, ORKHON_CHONO, KHASAR)) {
+            if (m.id().equals(id)) {
+                return m;
+            }
+        }
+        for (MobDefinition m : WorldContent.MOBS) {
             if (m.id().equals(id)) {
                 return m;
             }
@@ -191,7 +201,7 @@ public final class SuldContent {
             case "weapon.khasar_soyo" -> KHASAR_FANG;
             case "item.khasar_zurkh" -> KHASAR_HEART;
             case "item.talyn_tuvshin" -> STEPPE_TALISMAN;
-            default -> null;
+            default -> WorldContent.ITEMS.stream().filter(d -> d.id().equals(id)).findFirst().orElse(null);
         };
     }
 
