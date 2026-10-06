@@ -46,6 +46,7 @@ class JdbcStyleRepositoryIT {
         s.rank(Rank.ARAVT);
         assertTrue(s.claimLevel(5));
         assertTrue(s.claimDaily(20_000, 3));
+        s.taskProgress(20_000, "4,0,9");
         assertTrue(s.discover(1));
         assertTrue(s.discover(3));
         assertFalse(s.discover(3), "a region is discovered once");
@@ -56,6 +57,8 @@ class JdbcStyleRepositoryIT {
         assertEquals(0b1010, back.discovered());
         assertEquals(20_000, back.dailyDay());
         assertEquals(3, back.dailyStreak());
+        assertEquals("4,0,9", back.taskProgress(20_000));
+        assertEquals("", back.taskProgress(20_001), "progress belongs to its day");
         assertFalse(back.claimDaily(20_000, 4), "one claim per day");
         assertFalse(back.discover(1));
         assertTrue(back.discover(0));

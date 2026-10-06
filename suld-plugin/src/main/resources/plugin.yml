@@ -136,6 +136,9 @@ commands:
   mori:
     description: Summon (or send away) your personal steppe horse — from level 5, faster with rank.
     aliases: [horse, mount]
+  tasks:
+    description: Three daily hunting tasks (coins and EXP).
+    aliases: [daalgavar, bounty, bounties]
   daily:
     description: The daily login reward (7-day streak; coins and EXP).
     aliases: [odor, bonus]

@@ -14,7 +14,7 @@ public final class PlayerStyle {
 
     /** Immutable copy for persistence. */
     public record Snapshot(UUID player, Rank rank, Set<String> owned, String tag, String nameColor, String chatColor,
-                           String joinMessage, long claimedLevels, long credits, long discovered, long dailyDay, int dailyStreak) {
+                           String joinMessage, long claimedLevels, long credits, long discovered, long dailyDay, int dailyStreak, long taskDay, String taskProgress) {
     }
 
     private final UUID player;
@@ -28,6 +28,8 @@ public final class PlayerStyle {
     private long discovered;
     private long dailyDay;
     private int dailyStreak;
+    private long taskDay;
+    private String taskProgress = "";
     private long credits;
     private boolean dirty;
 
@@ -48,6 +50,8 @@ public final class PlayerStyle {
         p.discovered = s.discovered();
         p.dailyDay = s.dailyDay();
         p.dailyStreak = Math.max(0, s.dailyStreak());
+        p.taskDay = s.taskDay();
+        p.taskProgress = s.taskProgress() == null ? "" : s.taskProgress();
         p.credits = Math.max(0, s.credits());
         return p;
     }
@@ -147,6 +151,15 @@ public final class PlayerStyle {
         return true;
     }
 
+    /** Daily-task progress ("3,0,12") for {@code day}; empty for any other day. */
+    public synchronized String taskProgress(long day) { return taskDay == day ? taskProgress : ""; }
+
+    public synchronized void taskProgress(long day, String progress) {
+        taskDay = day;
+        taskProgress = progress == null ? "" : progress;
+        dirty = true;
+    }
+
     /**
      * Store credits (Сүлд Кредит) as last read from storage. Display only: credits change exclusively through
      * {@link mn.suld.api.persistence.StyleRepository#addCredits} (an atomic database update), never by saving
@@ -160,7 +173,7 @@ public final class PlayerStyle {
 
     public synchronized Snapshot snapshotAndClean() {
         dirty = false;
-        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered, dailyDay, dailyStreak);
+        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered, dailyDay, dailyStreak, taskDay, taskProgress);
     }
 
     public synchronized void markDirty() { dirty = true; }

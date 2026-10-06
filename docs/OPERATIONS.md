@@ -19,6 +19,7 @@ the README (local test server).
 | `/trade <player>` | Safe trade window with a player within 24 blocks: items and coins, both confirm (relics and the menu clock cannot be traded; audited in the log) |
 | `/discord`, `/website`, `/vote` | Clickable links from `branding.discord`, `branding.domain`, `branding.vote-url` |
 | `/top [level\|coins]` | Leaderboards (podium GUI; also works from the console) |
+| `/tasks` | Three daily hunting tasks from the regions your level can handle (coins and EXP, paid on completion) |
 | `/daily` | Daily login reward: 7-day streak of coins and EXP (time zone: `daily.timezone`) |
 | `/spawn`, `/balance`, `/pay`, `/rules`, `/relic` | Back to Kharkhorum · coins · send coins · rules · world relics |
 
