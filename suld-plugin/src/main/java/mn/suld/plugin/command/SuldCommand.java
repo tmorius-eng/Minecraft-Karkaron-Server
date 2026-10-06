@@ -40,6 +40,7 @@ public final class SuldCommand implements CommandExecutor {
             case "auth" -> authStatus(sender);
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
+            case "coins" -> giveCoins(sender, args);
             default -> help(sender);
         }
         return true;
@@ -84,6 +85,31 @@ public final class SuldCommand implements CommandExecutor {
         services.hud().update(target, profile);
         sender.sendMessage(Messages.success(target.getName() + ": +" + amount + " EXP → түвшин " + profile.progression().level()
                 + (result.leveledUp() ? " (+" + result.levelsGained() + ")" : "")));
+    }
+
+    /** Admin/console: {@code /suld coins <player> <±amount>} — add or remove SÜLD coins (audited). */
+    private void giveCoins(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player target = args.length < 3 ? null : Bukkit.getPlayerExact(args[1]);
+        PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
+        long amount;
+        try {
+            amount = args.length < 3 ? 0 : Long.parseLong(args[2]);
+        } catch (NumberFormatException e) {
+            amount = 0;
+        }
+        if (profile == null || amount == 0 || Math.abs(amount) > 100_000_000) {
+            sender.sendMessage(Messages.info("/suld coins <онлайн тоглогч> <±1..100000000>"));
+            return;
+        }
+        long now = profile.addCurrency(amount);
+        services.profiles().save(profile);
+        services.hud().update(target, profile);
+        plugin.getLogger().info("[audit] coins " + (amount > 0 ? "+" : "") + amount + " target=" + target.getName() + " by=" + sender.getName());
+        sender.sendMessage(Messages.success(target.getName() + ": " + (amount > 0 ? "+" : "") + amount + " ₮ → " + now + " ₮"));
     }
 
     /** Admin/console: {@code /suld quest <player> <chapter 1..N | reset>} — move a player in the storyline. */

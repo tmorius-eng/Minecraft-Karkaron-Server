@@ -28,6 +28,7 @@ the README (local test server).
 | Command | What it does |
 |---|---|
 | `/suld exp <player> <amount>` | Grant EXP (levels up and upgrades the class weapon) |
+| `/suld coins <player> <±amount>` | Add or remove SÜLD coins (audited in the log) |
 | `/suld quest <player> <1..18\|reset>` | Move a player in the storyline (support tickets, testing) |
 | `/revive <player>` | End a player's soul state early and heal them (audited) |
 | `/credits give\|take <player\|uuid> <amount>` | Store credits; also what the web store runs from the console |

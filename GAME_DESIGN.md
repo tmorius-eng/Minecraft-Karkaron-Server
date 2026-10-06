@@ -109,6 +109,13 @@ discover a region (crossing into it), clear a dungeon (without being downed).
 `/quest` opens the chapter board (done / active / locked), `/quest info` prints the active chapter; the sidebar
 tracks progress and a boss-bar tracker points (arrow, compass word, distance) at the objective's region (`/quest track`). Admins: `/suld quest <player> <1..18|reset>`.
 
+## Blacksmith upgrades
+
+The city blacksmith (Дархан) repairs gear for coins and upgrades SÜLD items one item level at a time (never above
+the player's level, cap 60) for coins plus two pieces of the material of the item's band: wolf pelts (< 8),
+scorpion venom (< 15), bear pelts (< 22), ice stones. The item keeps its identity and shows "+N". Class weapons
+grow with the player's level instead.
+
 ## Dungeons
 
 Wave arenas that open where the party stands (never in Kharkhorum): waves of the region's mobs, then a three-phase

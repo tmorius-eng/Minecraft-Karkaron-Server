@@ -62,7 +62,7 @@ public final class NpcService implements Listener {
         if (id.equals("tutorial")) return new Role("guide", "Хөтөч", "Заавар · Тусламж", NamedTextColor.AQUA);
         if (id.equals("quest.first_hunt")) return new Role("hunter", "Анчдын Ахлагч", "Эрэл: Анхны Ан", NamedTextColor.GOLD);
         if (id.startsWith("merchant.")) return new Role("merchant", "Худалдаачин", "Хангамж · Олз зарах", NamedTextColor.GREEN);
-        if (id.equals("blacksmith")) return new Role("blacksmith", "Дархан", "Зэвсэг, хуяг засах", NamedTextColor.RED);
+        if (id.equals("blacksmith")) return new Role("blacksmith", "Дархан", "Засвар · Сайжруулалт", NamedTextColor.RED);
         if (id.startsWith("fast_travel.")) return new Role("rider", "Өртөөчин", "Хурдан аялал", NamedTextColor.YELLOW);
         if (id.equals("shrine.sky")) return new Role("lama", "Тэнгэрийн Тахилч", "Тэнгэрийн ивээл", NamedTextColor.WHITE);
         return null;
@@ -231,40 +231,109 @@ public final class NpcService implements Listener {
 
     // ------------------------------------------------------------------ blacksmith
 
+    /** The smith: repair worn gear (coins) and upgrade SÜLD items one level (coins + region materials). */
     private void repair(Player p) {
         ItemStack it = p.getInventory().getItemInMainHand();
-        Menu m = new Menu(3, "Дархан · Засвар", null);
-        if (it.getType().isAir() || !(it.getItemMeta() instanceof Damageable d) || !d.hasDamage()) {
-            m.set(13, Menu.item(Material.ANVIL, Menu.title("Засах зүйл алга", NamedTextColor.RED),
-                    List.of(Menu.line("Гэмтсэн зэвсэг/хуягаа гартаа барь."))), null);
+        Menu m = new Menu(3, "Дархан · Засвар ба сайжруулалт", null);
+        boolean damaged = !it.getType().isAir() && it.getItemMeta() instanceof Damageable d && d.hasDamage();
+        mn.suld.api.item.ItemInstance inst = it.getType().isAir() ? null : services.items().read(it).orElse(null);
+        boolean upgradable = inst != null && !inst.definitionId().startsWith("weapon.class.") && !services.relics().items().isRelic(it)
+                && mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId()) != null;
+        if (!damaged && !upgradable) {
+            m.set(13, Menu.item(Material.ANVIL, Menu.title("Засах, сайжруулах зүйл алга", NamedTextColor.RED),
+                    List.of(Menu.line("Гэмтсэн зэвсэг/хуяг эсвэл SÜLD зэвсгээ гартаа барь."),
+                            Menu.line("Ангийн зэвсэг түвшинтэйгээ хамт өөрөө өсдөг."))), null);
             m.open(p);
             return;
         }
-        int damage = d.getDamage();
-        long cost = 5 + (long) Math.ceil(damage / 8.0);
         m.set(11, it.clone(), null);
-        m.set(15, Menu.item(Material.ANVIL, Menu.title("Засах · " + cost + " ₮", NamedTextColor.GREEN),
-                List.of(Menu.kv("Гэмтэл:", String.valueOf(damage), NamedTextColor.RED), Menu.line("Бүрэн шинэ болгоно."))), (pl, c) -> {
-            PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
-            ItemStack hand = pl.getInventory().getItemInMainHand();
-            if (pr == null || hand.getType() != it.getType()) {
+        if (damaged) {
+            int damage = ((Damageable) it.getItemMeta()).getDamage();
+            long cost = 5 + (long) Math.ceil(damage / 8.0);
+            m.set(upgradable ? 14 : 15, Menu.item(Material.ANVIL, Menu.title("Засах · " + cost + " ₮", NamedTextColor.GREEN),
+                    List.of(Menu.kv("Гэмтэл:", String.valueOf(damage), NamedTextColor.RED), Menu.line("Бүрэн шинэ болгоно."))), (pl, c) -> {
+                PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
+                ItemStack hand = pl.getInventory().getItemInMainHand();
+                if (pr == null || !hand.isSimilar(it)) {
+                    pl.closeInventory();
+                    return;
+                }
+                if (pr.currency() < cost) {
+                    pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost + " ₮)."));
+                    return;
+                }
+                if (hand.getItemMeta() instanceof Damageable hd) {
+                    pr.addCurrency(-cost);
+                    hd.setDamage(0);
+                    hand.setItemMeta(hd);
+                    pl.playSound(pl.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
+                    pl.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " ₮)."));
+                }
                 pl.closeInventory();
-                return;
-            }
-            if (pr.currency() < cost) {
-                pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost + " ₮)."));
-                return;
-            }
-            if (hand.getItemMeta() instanceof Damageable hd) {
-                pr.addCurrency(-cost);
-                hd.setDamage(0);
-                hand.setItemMeta(hd);
-                pl.playSound(pl.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
-                pl.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " ₮)."));
-            }
-            pl.closeInventory();
-        });
+            });
+        }
+        if (upgradable) {
+            PlayerProfile pr0 = services.profiles().cached(p.getUniqueId()).orElse(null);
+            int playerLevel = pr0 == null ? 1 : pr0.progression().level();
+            String why = mn.suld.api.item.Reforge.blocked(inst.itemLevel(), playerLevel);
+            mn.suld.api.item.Reforge.Cost cost = mn.suld.api.item.Reforge.cost(inst.itemLevel());
+            mn.suld.api.item.ItemDefinition matDef = mn.suld.plugin.content.SuldContent.definitionFor(cost.materialId());
+            String matName = matDef == null ? cost.materialId() : matDef.displayName();
+            m.set(damaged ? 16 : 15, Menu.item(why == null ? Material.SMITHING_TABLE : Material.BARRIER,
+                    Menu.title("Сайжруулах → Зэрэг " + (inst.itemLevel() + 1), why == null ? NamedTextColor.GOLD : NamedTextColor.RED), List.of(
+                            Menu.kv("Үнэ:", cost.coins() + " ₮", NamedTextColor.GOLD),
+                            Menu.kv("Материал:", matName + " ×" + cost.materialCount(), NamedTextColor.AQUA),
+                            Menu.line(why == null ? "Зэвсгийн хүч нэмэгдэнэ." : why))), why != null ? null : (pl, c) -> {
+                PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
+                ItemStack hand = pl.getInventory().getItemInMainHand();
+                mn.suld.api.item.ItemInstance now = services.items().read(hand).orElse(null);
+                if (pr == null || now == null || !now.uuid().equals(inst.uuid()) || now.itemLevel() != inst.itemLevel()) {
+                    pl.closeInventory();
+                    return;
+                }
+                if (pr.currency() < cost.coins()) {
+                    pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost.coins() + " ₮)."));
+                    return;
+                }
+                if (countItem(pl, cost.materialId()) < cost.materialCount()) {
+                    pl.sendMessage(Messages.error(matName + " ×" + cost.materialCount() + " хэрэгтэй."));
+                    return;
+                }
+                mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(now.definitionId());
+                mn.suld.api.item.ItemInstance rolled = def.roll(now.uuid(), now.itemLevel() + 1, "reforge");
+                mn.suld.api.item.ItemInstance up = new mn.suld.api.item.ItemInstance(rolled.definitionId(), rolled.uuid(), rolled.rarity(),
+                        rolled.itemLevel(), rolled.stats(), rolled.soulbound(), now.upgradeLevel() + 1, "reforge");
+                takeItem(pl, cost.materialId(), cost.materialCount());
+                pr.addCurrency(-cost.coins());
+                pl.getInventory().setItemInMainHand(services.items().create(up, def));
+                pl.playSound(pl.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1f, 1f);
+                pl.getWorld().spawnParticle(org.bukkit.Particle.ENCHANT, pl.getLocation().add(0, 1.2, 0), 40, 0.4, 0.6, 0.4, 0.4);
+                pl.sendMessage(Messages.success(def.displayName() + " → Зэрэг " + up.itemLevel() + " (+" + up.upgradeLevel() + ")"));
+                services.profiles().save(pr);
+                pl.closeInventory();
+            });
+        }
         m.open(p);
+    }
+
+    private int countItem(Player p, String definitionId) {
+        int n = 0;
+        for (ItemStack it : p.getInventory().getStorageContents()) {
+            if (it != null && services.items().read(it).map(i -> i.definitionId().equals(definitionId)).orElse(false)) n += it.getAmount();
+        }
+        return n;
+    }
+
+    private void takeItem(Player p, String definitionId, int amount) {
+        ItemStack[] inv = p.getInventory().getStorageContents();
+        for (int i = 0; i < inv.length && amount > 0; i++) {
+            if (inv[i] == null || !services.items().read(inv[i]).map(x -> x.definitionId().equals(definitionId)).orElse(false)) continue;
+            int use = Math.min(amount, inv[i].getAmount());
+            amount -= use;
+            if (use == inv[i].getAmount()) inv[i] = null;
+            else inv[i].setAmount(inv[i].getAmount() - use);
+        }
+        p.getInventory().setStorageContents(inv);
     }
 
     // ------------------------------------------------------------------ relays

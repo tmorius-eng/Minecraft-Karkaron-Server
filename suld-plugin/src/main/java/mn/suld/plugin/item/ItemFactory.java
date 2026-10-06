@@ -37,6 +37,7 @@ public final class ItemFactory {
     private final NamespacedKey keyLevel;
     private final NamespacedKey keyStats;
     private final NamespacedKey keySoulbound;
+    private final NamespacedKey keyUpgrade;
 
     public ItemFactory(Plugin plugin) {
         this.keyId = new NamespacedKey(plugin, "item_id");
@@ -45,6 +46,7 @@ public final class ItemFactory {
         this.keyLevel = new NamespacedKey(plugin, "item_level");
         this.keyStats = new NamespacedKey(plugin, "stats");
         this.keySoulbound = new NamespacedKey(plugin, "soulbound");
+        this.keyUpgrade = new NamespacedKey(plugin, "upgrade");
     }
 
     public ItemStack create(ItemInstance instance, ItemDefinition def) {
@@ -55,7 +57,7 @@ public final class ItemFactory {
         ItemMeta meta = stack.getItemMeta();
 
         TextColor color = rarityColor(instance.rarity());
-        meta.displayName(Component.text(def.displayName(), color)
+        meta.displayName(Component.text(def.displayName() + (instance.upgradeLevel() > 0 ? " +" + instance.upgradeLevel() : ""), color)
                 .decoration(TextDecoration.ITALIC, false)
                 .decoration(TextDecoration.BOLD, instance.rarity().ordinal() >= ItemRarity.LEGENDARY.ordinal()));
 
@@ -88,6 +90,7 @@ public final class ItemFactory {
         pdc.set(keyRarity, PersistentDataType.STRING, instance.rarity().id());
         pdc.set(keyLevel, PersistentDataType.INTEGER, instance.itemLevel());
         pdc.set(keySoulbound, PersistentDataType.INTEGER, instance.soulbound() ? 1 : 0);
+        if (instance.upgradeLevel() > 0) pdc.set(keyUpgrade, PersistentDataType.INTEGER, instance.upgradeLevel());
         pdc.set(keyStats, PersistentDataType.STRING, encodeStats(instance.stats()));
 
         stack.setItemMeta(meta);
@@ -110,7 +113,8 @@ public final class ItemFactory {
         int level = pdc.getOrDefault(keyLevel, PersistentDataType.INTEGER, 1);
         boolean soulbound = pdc.getOrDefault(keySoulbound, PersistentDataType.INTEGER, 0) == 1;
         Map<ItemStat, Double> stats = decodeStats(pdc.getOrDefault(keyStats, PersistentDataType.STRING, ""));
-        return Optional.of(new ItemInstance(id, UUID.fromString(uuid), rarity, level, stats, soulbound, 0, "stack"));
+        int upgrade = pdc.getOrDefault(keyUpgrade, PersistentDataType.INTEGER, 0);
+        return Optional.of(new ItemInstance(id, UUID.fromString(uuid), rarity, level, stats, soulbound, upgrade, "stack"));
     }
 
     /**
