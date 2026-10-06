@@ -47,6 +47,9 @@ Point a client at the running server (offline mode) and:
 5. Disconnect, reconnect → class, level, EXP, currency, quest, inventory restored.
 6. (With a hosted pack + `resource-pack.enabled: true`) → pack prompt on join.
 
-## Latest live run
-See PROJECT_STATE.md → "Live smoke test" for the most recent result and console
-excerpt.
+## Latest live run (2026-10-06, automated)
+- Paper 1.21.11 (build 132) started headless; SULD remapped → loaded → ENABLED → disabled cleanly.
+- `libraries:` JDBC drivers (mysql-connector-j, postgresql, protobuf, checker-qual) downloaded + loaded at runtime.
+- PostgreSQL 16 run: HikariCP connected, `migrations applied: 2` (V1+V2), 6 tables created, suld_profiles has
+  currency+quest columns, clean pool shutdown. Bad-port config → graceful self-disable with a clear error.
+- Not run (needs a MC client): the in-world join/GUI/combat/reconnect flow — unit-tested instead.

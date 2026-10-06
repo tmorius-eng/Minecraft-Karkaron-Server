@@ -75,6 +75,44 @@ proven (render in `assets/previews/`). Its **Blockbench geometry is an interim
 placeholder**; it will be replaced by the Meshy-refined textured model once
 `assets.meshy.ai` is reachable (registry `status: needs_review`).
 
+## Tool-selection matrix (art direction)
+
+Target look: **clear voxel/pixel-art silhouettes** — sharp, readable, cheap. Do
+not over-render ordinary gameplay items. Use the heaviest tool only where it pays.
+
+| Asset | Tool(s) |
+|---|---|
+| Ordinary sword / potion bottle / shields (e.g. 20 variants) | **Blockbench** (pixel-art) |
+| Yurt decoration / small props | Blockbench (+ Blender if needed) |
+| Epic armor | Meshy + Blender |
+| **Legendary** weapon (hero) | Meshy + Blender + Blockbench |
+| Huge boss | Meshy + Blender |
+| Khan statue / cinematic / promo | Meshy + Blender |
+| Spawn buildings / structures | **Minecraft blocks + SÜLD WorldBuilder** (never a giant imported mesh) |
+
+## Meshy cost & quality policy
+
+- **Default 2K** texture for ordinary/important items; `meshy-7.1` for important.
+- **4K ONLY** for hero legendaries, major bosses, statues, cinematic/promo.
+- **8K ONLY** for exceptional non-gameplay assets.
+- Final **Minecraft** textures: **64×64 or 128×128**; 256 only when justified
+  (enforced by `tools/validation/validate_pack_budget.py`). Raw Meshy source may
+  keep higher detail; the shipped pack carries optimized game-ready assets only.
+- Never spend 4K/8K credits without a justified visual benefit.
+
+Every produced asset reports: **Meshy credits used · source tris · final tris ·
+final texture resolution · final pack file size**.
+
+### Asset report — `weapon.suld_ild_tenger` (legendary hero, 4K justified)
+| Metric | Value |
+|---|---|
+| Meshy credits used | 30 (preview + 4K PBR refine; balance 1100 → 1070) |
+| Source model triangles | 30,147 (Meshy refined GLB) |
+| In-game model triangles | ~60 (Blockbench 5-cuboid item model) |
+| In-game texture resolution | 16×16 (pixel-art) |
+| Resource-pack size impact | ~6 KB uncompressed (model JSON + 16×16 PNG) |
+| 4K asset | promo/NPC/reference only — NOT shipped in the pack |
+
 ## No mass generation
 Only the pipeline is proven. Batch generation (queue in
 `assets/generation_queue/`, human-approval lifecycle in the registry `status`)
