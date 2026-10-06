@@ -105,6 +105,17 @@ world-events:
 #   "credits give {uuid} <amount>" from the console. Credits buy cosmetics ONLY
 #   (Minecraft EULA: no gameplay advantage for money).
 # ---------------------------------------------------------------------------
+# Chat protection: rate limit, repeated messages, other servers' addresses/IPs (allowed-domains pass; empty =
+# branding.domain) and SHOUTING (lowered). Staff with suld.chat.bypass are not limited.
+chat-guard:
+  enabled: true
+  max-messages: 4
+  window-seconds: 5
+  repeat-seconds: 30
+  block-links: true
+  allowed-domains: []
+  caps-limit: 0.7
+
 # Rotating chat tips: one line every interval-minutes (0 = off). messages: MiniMessage lines, empty = built-in tips.
 tips:
   interval-minutes: 6

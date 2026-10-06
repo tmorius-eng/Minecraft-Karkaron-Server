@@ -63,6 +63,7 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand("dungeon", new mn.suld.plugin.command.DungeonCommand(services));
         getServer().getPluginManager().registerEvents(services.styles(), this);
         services.styles().start();
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.clan.ChatGuardListener(this), this);
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks()), this);
         services.hud().attach(this, services);

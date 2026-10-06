@@ -156,6 +156,9 @@ permissions:
   suld.badge.sponsor:
     description: Badge ДЭМЖИГЧ (sponsor).
     default: false
+  suld.chat.bypass:
+    description: Not limited by the chat guard (rate limit, repeats, links, caps).
+    default: op
   suld.admin.credits:
     description: Give or take store credits (/credits); the store runs it from the console.
     default: op

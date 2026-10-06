@@ -84,6 +84,12 @@ loses 25 % durability. They respawn as a **Сүнс** for 30 s: they cannot deal
 `branding.motd` takes two MiniMessage lines (empty = the built-in SÜLD lines). The bundled 64×64 icon is used
 unless the server folder has its own `server-icon.png` or `branding.server-icon: false`.
 
+## Chat guard
+
+`chat-guard:` limits each player to 4 messages per 5 s, blocks the same message twice within 30 s and other
+servers' addresses or IPs (the domains in `allowed-domains`, default `branding.domain`, pass), and lowers SHOUTED
+messages. Staff with `suld.chat.bypass` (default: op) are not limited.
+
 ## Chat tips
 
 `tips.interval-minutes` (default 6, `0` = off) broadcasts the next line of `tips.messages` (MiniMessage; empty = the
