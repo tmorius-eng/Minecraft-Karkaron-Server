@@ -16,6 +16,7 @@ the README (local test server).
 | `/shop`, `/cosmetics`, `/buy` | Supplies and selling loot · tags/colours/join messages/emojis · credit store |
 | `/party`, `/dungeon`, `/clan`, `/cc` | Groups, the four dungeons (`/dungeon list`), clans and clan chat |
 | `/mori` | Personal steppe horse from level 5 (faster, finer coat with rank); disappears when you get off |
+| `/trade <player>` | Safe trade window with a player within 24 blocks: items and coins, both confirm (relics and the menu clock cannot be traded; audited in the log) |
 | `/top [level\|coins]` | Leaderboards (podium GUI; also works from the console) |
 | `/daily` | Daily login reward: 7-day streak of coins and EXP (time zone: `daily.timezone`) |
 | `/spawn`, `/balance`, `/pay`, `/rules`, `/relic` | Back to Kharkhorum · coins · send coins · rules · world relics |

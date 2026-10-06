@@ -120,6 +120,9 @@ commands:
     description: Your SULD credits; admin/console give|take.
     usage: /credits [give|take <player|uuid> <amount>]
     aliases: [kredit]
+  trade:
+    description: Trade items and coins with a nearby player (both confirm).
+    aliases: [arilj, arilzhaa]
   top:
     description: Server leaderboards (level, coins).
     aliases: [shildeg, leaderboard, baltop]

@@ -29,6 +29,7 @@ public final class SuldPlugin extends JavaPlugin {
 
     private SuldServices services;
     private mn.suld.plugin.mount.HorseService horses;
+    private mn.suld.plugin.trade.TradeService trades;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
     private mn.suld.plugin.worldbuild.PregenService pregen;
 
@@ -149,6 +150,10 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(horses, this);
         registerTab("mori", horses);
 
+        trades = new mn.suld.plugin.trade.TradeService(this, services);
+        getServer().getPluginManager().registerEvents(trades, this);
+        registerTab("trade", trades);
+
         mn.suld.plugin.gui.LeaderboardService top = new mn.suld.plugin.gui.LeaderboardService(this, services);
         registerTab("top", top);
         top.start();
@@ -183,6 +188,9 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (trades != null) {
+            trades.shutdown();
+        }
         if (horses != null) {
             horses.shutdown();
         }
