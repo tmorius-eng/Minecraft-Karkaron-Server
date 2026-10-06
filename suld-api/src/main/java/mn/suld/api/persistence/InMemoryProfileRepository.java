@@ -28,6 +28,18 @@ public final class InMemoryProfileRepository implements ProfileRepository {
     }
 
     @Override
+    public CompletableFuture<java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry>> top(
+            mn.suld.api.leaderboard.Leaderboard board, int limit) {
+        java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry> rows = new java.util.ArrayList<>();
+        for (PlayerProfile p : store.values()) {
+            if (p.playerClass().isEmpty()) continue;
+            rows.add(new mn.suld.api.leaderboard.Leaderboard.Entry(p.playerId(), p.name(), p.progression().level(),
+                    p.progression().expIntoLevel(), p.currency()));
+        }
+        return CompletableFuture.completedFuture(board.rank(rows, limit));
+    }
+
+    @Override
     public CompletableFuture<Boolean> exists(UUID playerId) {
         return CompletableFuture.completedFuture(store.containsKey(playerId));
     }

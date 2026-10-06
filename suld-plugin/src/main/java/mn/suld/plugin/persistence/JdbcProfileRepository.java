@@ -77,6 +77,33 @@ public final class JdbcProfileRepository implements ProfileRepository {
     }
 
     @Override
+    public CompletableFuture<java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry>> top(
+            mn.suld.api.leaderboard.Leaderboard board, int limit) {
+        String order = switch (board) {
+            case LEVEL -> "level DESC, exp_into_level DESC";
+            case COINS -> "currency DESC";
+        };
+        String sql = "SELECT player_uuid, name, level, exp_into_level, currency FROM suld_profiles "
+                + "WHERE class_id IS NOT NULL ORDER BY " + order + " LIMIT ?";
+        return CompletableFuture.supplyAsync(() -> {
+            java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry> rows = new java.util.ArrayList<>();
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, Math.max(1, Math.min(100, limit)));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        rows.add(new mn.suld.api.leaderboard.Leaderboard.Entry(readUuid(rs, 1), rs.getString(2), rs.getInt(3),
+                                rs.getLong(4), rs.getLong(5)));
+                    }
+                }
+            } catch (SQLException ex) {
+                throw new RepositoryException("Failed to read leaderboard " + board, ex);
+            }
+            return rows;
+        }, executor);
+    }
+
+    @Override
     public CompletableFuture<Boolean> exists(UUID playerId) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection();
@@ -134,6 +161,11 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 throw new RepositoryException("Failed to delete profile " + playerId, ex);
             }
         }, executor);
+    }
+
+    private static UUID readUuid(ResultSet rs, int column) throws SQLException {
+        Object v = rs.getObject(column);
+        return v instanceof UUID u ? u : UUID.fromString(String.valueOf(v));
     }
 
     private void bindUuid(PreparedStatement ps, int index, UUID uuid) throws SQLException {

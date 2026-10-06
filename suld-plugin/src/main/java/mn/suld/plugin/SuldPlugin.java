@@ -148,6 +148,10 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(horses, this);
         registerTab("mori", horses);
 
+        mn.suld.plugin.gui.LeaderboardService top = new mn.suld.plugin.gui.LeaderboardService(this, services);
+        registerTab("top", top);
+        top.start();
+
         mn.suld.plugin.reward.DailyService daily = new mn.suld.plugin.reward.DailyService(this, services);
         getServer().getPluginManager().registerEvents(daily, this);
         registerTab("daily", daily);

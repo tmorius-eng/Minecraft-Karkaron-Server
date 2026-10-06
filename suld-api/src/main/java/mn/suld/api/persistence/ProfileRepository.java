@@ -33,4 +33,10 @@ public interface ProfileRepository {
     CompletableFuture<PlayerProfile> save(PlayerProfile profile);
 
     CompletableFuture<Void> delete(UUID playerId);
+
+    /** The stored top {@code limit} rows of a leaderboard (players who have picked a class). */
+    default CompletableFuture<java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry>> top(
+            mn.suld.api.leaderboard.Leaderboard board, int limit) {
+        return CompletableFuture.completedFuture(java.util.List.of());
+    }
 }
