@@ -48,6 +48,7 @@ public final class KharkhorumTool {
                 System.out.print(rep.summary());
                 if (!rep.passed()) System.exit(1);
             }
+            case "schem" -> dumpSchematic(Path.of(args[1]), Path.of(args[2]));
             default -> throw new IllegalArgumentException(args[0]);
         }
     }
@@ -74,6 +75,21 @@ public final class KharkhorumTool {
             }
         }
         System.out.println(id + ": " + c.cells().size() + " blocks, bounds " + fp);
+    }
+
+    static void dumpSchematic(Path file, Path out) throws IOException {
+        mn.suld.api.worldbuild.schematic.Schematic s;
+        try (var in = Files.newInputStream(file)) {
+            s = mn.suld.api.worldbuild.schematic.Schematic.read(in);
+        }
+        try (PrintWriter w = new PrintWriter(Files.newBufferedWriter(out, StandardCharsets.UTF_8))) {
+            w.println("# schematic " + file.getFileName() + " " + s.format() + " " + s.width() + "x" + s.height() + "x" + s.length()
+                    + " dataVersion " + s.dataVersion());
+            s.blocks().forEach((k, b) -> w.println(mn.suld.api.worldbuild.schematic.Schematic.kx(k) + " "
+                    + mn.suld.api.worldbuild.schematic.Schematic.ky(k) + " " + mn.suld.api.worldbuild.schematic.Schematic.kz(k) + " " + b));
+        }
+        System.out.println(file.getFileName() + ": " + s.format() + " " + s.width() + "x" + s.height() + "x" + s.length()
+                + ", " + s.blocks().size() + " blocks, dataVersion " + s.dataVersion());
     }
 
     static ValidationReport dumpSlice(Path slice, Path points, Path out) throws IOException {

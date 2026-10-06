@@ -67,6 +67,8 @@ final class Kit {
     static int hipRoof(ModuleCanvas c, int x1, int z1, int x2, int z2, int y, String ridge, boolean upturn) {
         Pass prev = c.pass();
         c.pass(Pass.ROOFS_DETAIL);
+        for (int x = x1 + 1; x <= x2 - 1; x++)
+            for (int z = z1 + 1; z <= z2 - 1; z++) c.set(x, y, z, "@roof");
         int k = 0;
         while (true) {
             int ax = x1 + k, bx = x2 - k, az = z1 + k, bz = z2 - k;
@@ -372,7 +374,11 @@ final class Kit {
             case "cherry" -> {
                 int h = 4 + r.nextInt(2);
                 int bx = r.nextInt(3) - 1, bz = r.nextInt(3) - 1;
-                for (int i = 1; i <= h; i++) c.set(x + (i > h - 2 ? bx : 0), y + i, z + (i > h - 2 ? bz : 0), "minecraft:cherry_log");
+                for (int i = 1; i <= h - 1; i++) c.set(x, y + i, z, "minecraft:cherry_log");
+                // the bend: horizontal links keep the trunk face-connected
+                c.set(x + bx, y + h - 1, z, "minecraft:cherry_log");
+                c.set(x + bx, y + h - 1, z + bz, "minecraft:cherry_log");
+                c.set(x + bx, y + h, z + bz, "minecraft:cherry_log");
                 int tx = x + bx, tz = z + bz, ty = y + h;
                 blob(c, tx, ty + 1, tz, 3.2, 1.9, "minecraft:cherry_leaves[persistent=true]", r);
                 for (int i = 0; i < 6; i++) {
@@ -407,8 +413,37 @@ final class Kit {
                 blob(c, x, y + h + 1, z, 3.0, 2.2, "minecraft:oak_leaves[persistent=true]", r);
             }
         }
+        prune(c, x, y, z);
         c.layer(prevLayer);
         c.pass(prev);
+    }
+
+    /** Removes leaves of the tree at (x, y, z) that are not face-connected to its wood. */
+    private static void prune(ModuleCanvas c, int x, int y, int z) {
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        java.util.ArrayDeque<int[]> q = new java.util.ArrayDeque<>();
+        q.add(new int[]{x, y + 1, z});
+        seen.add(mn.suld.api.worldbuild.BlockPos.pack(x, y + 1, z));
+        int[][] n = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
+        java.util.List<int[]> leaves = new java.util.ArrayList<>();
+        while (!q.isEmpty()) {
+            int[] p = q.poll();
+            for (int[] d : n) {
+                int px = p[0] + d[0], py = p[1] + d[1], pz = p[2] + d[2];
+                if (Math.abs(px - x) > 6 || Math.abs(pz - z) > 6 || py <= y || py > y + 16) continue;
+                String b = c.get(px, py, pz);
+                if (b == null || !(b.contains("_log") || b.contains("_leaves"))) continue;
+                if (seen.add(mn.suld.api.worldbuild.BlockPos.pack(px, py, pz))) q.add(new int[]{px, py, pz});
+            }
+        }
+        for (int dx = -6; dx <= 6; dx++)
+            for (int dy = 1; dy <= 16; dy++)
+                for (int dz = -6; dz <= 6; dz++) {
+                    String b = c.get(x + dx, y + dy, z + dz);
+                    if (b != null && b.contains("_leaves") && !seen.contains(mn.suld.api.worldbuild.BlockPos.pack(x + dx, y + dy, z + dz)))
+                        leaves.add(new int[]{x + dx, y + dy, z + dz});
+                }
+        for (int[] l : leaves) c.remove(l[0], l[1], l[2]);
     }
 
     /** Leaf blob: ellipsoid with a ragged outer shell; never overwrites logs. */

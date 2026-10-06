@@ -82,5 +82,11 @@ tasks {
         filesMatching("plugin.yml") {
             expand(props)
         }
+        // World assets (slices, points, schematics) ship inside the jar: the server needs no
+        // world-editing plugin and no external files to build Kharkhorum.
+        from(rootProject.file("assets/world")) {
+            into("world")
+            exclude("**/*.png", "**/*.md")
+        }
     }
 }

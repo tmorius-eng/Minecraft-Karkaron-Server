@@ -1,0 +1,4 @@
+{
+  "note": "Authored or third-party schematics used as WorldBuilder modules (schem:<id>). Every entry must credit author, source and licence. See docs/world/AUTHORING_WORKFLOW.md.",
+  "schematics": []
+}

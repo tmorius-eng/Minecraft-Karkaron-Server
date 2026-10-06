@@ -44,6 +44,11 @@ commands:
     description: World-unique relics (list, info, hint, history; admin setshrine/return/give/recover/tp).
     usage: /relic <list|info|hint|history>
     aliases: [suld-unique, suldee]
+  worldbuild:
+    description: WorldBuilder (status, build, pause, resume, validate, dump, rollback, approve, lock, unlock, tp).
+    usage: /worldbuild <status|build|pause|resume|validate|dump|rollback|approve|lock|unlock|tp>
+    aliases: [wbuild]
+    permission: suld.admin.world
 permissions:
   suld.admin:
     description: Grants all SULD administrative commands.
@@ -53,6 +58,10 @@ permissions:
       suld.admin.pack: true
       suld.admin.event: true
       suld.admin.relic: true
+      suld.admin.world: true
+  suld.admin.world:
+    description: Operate the WorldBuilder (build, rollback, approve, lock the city).
+    default: op
   suld.admin.revive:
     description: Allows reviving players from the death/soul state.
     default: op

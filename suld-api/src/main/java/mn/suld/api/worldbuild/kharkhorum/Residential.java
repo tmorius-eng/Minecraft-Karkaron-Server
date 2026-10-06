@@ -68,7 +68,8 @@ final class Residential {
                 for (int x = -span - 1; x <= span + 1; x++)
                     for (int z = -span - 1; z <= span + 1; z++) {
                         double d = Math.sqrt(x * x + z * z);
-                        if (d <= rings[k] && d > rings[k + 1]) {
+                        // each course overlaps the one above by a block, so the roof is one connected shell
+                        if (d <= rings[k] && d > rings[k + 1] - 1.0) {
                             c.set(x, y, z, "@felt");
                             if (d > (rings[k] + rings[k + 1]) / 2 + 0.3 && !c.has(x, y + 1, z)) c.set(x, y + 1, z, "minecraft:white_carpet");
                         }

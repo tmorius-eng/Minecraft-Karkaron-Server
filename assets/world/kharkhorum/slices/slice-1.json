@@ -1,0 +1,1234 @@
+{
+ "city": "kharkhorum",
+ "slice": "slice.1",
+ "seed": 1220,
+ "title": "Slice 1 — ceremonial axis",
+ "bounds": {
+  "x1": -112,
+  "z1": -92,
+  "x2": 104,
+  "z2": 136
+ },
+ "terrain": {
+  "feather": 12,
+  "clearance": 32,
+  "surface": "minecraft:grass_block",
+  "zones": [
+   {
+    "id": "zone.plaza",
+    "circle": [
+     0,
+     0,
+     28
+    ],
+    "elevation": 1,
+    "falloff": 0
+   },
+   {
+    "id": "zone.palace_terrace",
+    "rect": [
+     -72,
+     -92,
+     71,
+     -57
+    ],
+    "elevation": 8,
+    "falloff": 0
+   },
+   {
+    "id": "zone.residential",
+    "rect": [
+     -92,
+     14,
+     -32,
+     60
+    ],
+    "elevation": 1,
+    "falloff": 2
+   },
+   {
+    "id": "zone.west_street",
+    "rect": [
+     -100,
+     -3,
+     -30,
+     3
+    ],
+    "elevation": 1,
+    "falloff": 2
+   },
+   {
+    "id": "zone.spiritual_hill",
+    "circle": [
+     -96,
+     -72,
+     14
+    ],
+    "elevation": 4,
+    "falloff": 14
+   }
+  ]
+ },
+ "placements": [
+  {
+   "id": "road.avenue_south_gate",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "points": [
+     [
+      0,
+      118
+     ],
+     [
+      0,
+      102
+     ]
+    ],
+    "width": 9,
+    "class": "main",
+    "lanterns": 8
+   }
+  },
+  {
+   "id": "road.avenue_south",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.central_plaza",
+   "params": {
+    "points": [
+     [
+      0,
+      86
+     ],
+     [
+      0,
+      29
+     ]
+    ],
+    "width": 9,
+    "class": "main",
+    "lanterns": 8
+   }
+  },
+  {
+   "id": "road.gate_outside",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "points": [
+     [
+      0,
+      133
+     ],
+     [
+      0,
+      136
+     ]
+    ],
+    "width": 9,
+    "class": "main"
+   }
+  },
+  {
+   "id": "road.avenue_north",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.central_plaza",
+   "params": {
+    "points": [
+     [
+      0,
+      -29
+     ],
+     [
+      0,
+      -40
+     ]
+    ],
+    "width": 9,
+    "class": "main",
+    "lanterns": 8
+   }
+  },
+  {
+   "id": "road.market_street",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.market",
+   "params": {
+    "points": [
+     [
+      29,
+      0
+     ],
+     [
+      104,
+      0
+     ]
+    ],
+    "width": 7,
+    "class": "cross"
+   }
+  },
+  {
+   "id": "road.cross_west",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.residential",
+   "params": {
+    "points": [
+     [
+      -30,
+      0
+     ],
+     [
+      -100,
+      0
+     ]
+    ],
+    "width": 7,
+    "class": "cross",
+    "lanterns": 10
+   }
+  },
+  {
+   "id": "road.yurt_lane",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.residential",
+   "params": {
+    "points": [
+     [
+      -60,
+      4
+     ],
+     [
+      -60,
+      52
+     ],
+     [
+      -96,
+      52
+     ]
+    ],
+    "width": 3,
+    "class": "lane"
+   }
+  },
+  {
+   "id": "road.shrine_way",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.spiritual",
+   "params": {
+    "points": [
+     [
+      -96,
+      -4
+     ],
+     [
+      -96,
+      -62
+     ]
+    ],
+    "width": 3,
+    "class": "lane"
+   }
+  },
+  {
+   "id": "road.craft_lane",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.crafting",
+   "params": {
+    "points": [
+     [
+      5,
+      60
+     ],
+     [
+      39,
+      60
+     ]
+    ],
+    "width": 3,
+    "class": "lane"
+   }
+  },
+  {
+   "id": "road.palace_axis",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.palace",
+   "params": {
+    "points": [
+     [
+      0,
+      -69
+     ],
+     [
+      0,
+      -92
+     ]
+    ],
+    "width": 9,
+    "class": "main",
+    "lanterns": 8
+   }
+  },
+  {
+   "id": "canal.south",
+   "module": "canal.segment",
+   "at": [
+    -100,
+    0,
+    94
+   ],
+   "district": "district.gardens",
+   "params": {
+    "length": 201,
+    "cap_start": true,
+    "cap_end": true,
+    "rail_gaps": [
+     [
+      94,
+      106
+     ]
+    ]
+   }
+  },
+  {
+   "id": "bridge.grand",
+   "module": "bridge.arched",
+   "at": [
+    0,
+    0,
+    94
+   ],
+   "district": "district.gardens",
+   "landmark": true
+  },
+  {
+   "id": "gate.south",
+   "module": "gate.imperial",
+   "at": [
+    0,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "landmark": true
+  },
+  {
+   "id": "wall.south_east",
+   "module": "wall.straight",
+   "at": [
+    18,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 35,
+    "end_bastion": true
+   }
+  },
+  {
+   "id": "wall.south_west",
+   "module": "wall.straight",
+   "at": [
+    -18,
+    0,
+    127
+   ],
+   "mirror": true,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 35
+   }
+  },
+  {
+   "id": "tower.watch_west",
+   "module": "tower.watch",
+   "at": [
+    -57,
+    0,
+    127
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "plaza.central",
+   "module": "plaza.ceremonial",
+   "at": [
+    0,
+    1,
+    0
+   ],
+   "district": "district.central_plaza",
+   "params": {
+    "radius": 28,
+    "avoid": [
+     [
+      0,
+      18
+     ],
+     [
+      -14,
+      8
+     ],
+     [
+      6,
+      20
+     ],
+     [
+      16,
+      6
+     ],
+     [
+      0,
+      -14
+     ],
+     [
+      -18,
+      -12
+     ]
+    ]
+   }
+  },
+  {
+   "id": "monument.khan",
+   "module": "monument.equestrian",
+   "at": [
+    0,
+    1,
+    0
+   ],
+   "district": "district.central_plaza",
+   "landmark": true
+  },
+  {
+   "id": "prop.class_stones",
+   "module": "prop.class_stones",
+   "at": [
+    -14,
+    1,
+    8
+   ],
+   "district": "district.central_plaza"
+  },
+  {
+   "id": "prop.relay_plaza",
+   "module": "prop.relay_post",
+   "at": [
+    -18,
+    1,
+    -12
+   ],
+   "district": "district.central_plaza"
+  },
+  {
+   "id": "prop.relay_gate",
+   "module": "prop.relay_post",
+   "at": [
+    10,
+    0,
+    112
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "stair.grand",
+   "module": "stair.grand",
+   "at": [
+    0,
+    0,
+    -40
+   ],
+   "district": "district.palace",
+   "params": {
+    "rise": 8
+   }
+  },
+  {
+   "id": "terrace.front",
+   "module": "wall.retaining",
+   "at": [
+    -72,
+    0,
+    -57
+   ],
+   "district": "district.palace",
+   "params": {
+    "length": 144,
+    "height": 8,
+    "gaps": [
+     [
+      66,
+      78
+     ]
+    ]
+   }
+  },
+  {
+   "id": "terrace.west",
+   "module": "wall.retaining",
+   "at": [
+    -72,
+    0,
+    -92
+   ],
+   "rotate": 90,
+   "district": "district.palace",
+   "params": {
+    "length": 35,
+    "height": 8
+   }
+  },
+  {
+   "id": "terrace.east",
+   "module": "wall.retaining",
+   "at": [
+    71,
+    0,
+    -58
+   ],
+   "rotate": 270,
+   "district": "district.palace",
+   "params": {
+    "length": 35,
+    "height": 8
+   }
+  },
+  {
+   "id": "palace.gate",
+   "module": "palace.gate",
+   "at": [
+    0,
+    8,
+    -62
+   ],
+   "district": "district.palace",
+   "params": {
+    "wall_length": 24
+   },
+   "landmark": true
+  },
+  {
+   "id": "market.street_east",
+   "module": "market.street",
+   "at": [
+    28,
+    0,
+    0
+   ],
+   "district": "district.market",
+   "params": {
+    "length": 72
+   }
+  },
+  {
+   "id": "ger.a",
+   "module": "yurt",
+   "at": [
+    -74,
+    1,
+    25
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "ger.b",
+   "module": "yurt",
+   "at": [
+    -83,
+    1,
+    22
+   ],
+   "rotate": 270,
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "ger.c",
+   "module": "yurt",
+   "at": [
+    -44,
+    1,
+    25
+   ],
+   "rotate": 90,
+   "district": "district.residential",
+   "params": {
+    "size": "large"
+   }
+  },
+  {
+   "id": "ger.d",
+   "module": "yurt",
+   "at": [
+    -40,
+    1,
+    35
+   ],
+   "rotate": 90,
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "ger.e",
+   "module": "yurt",
+   "at": [
+    -86,
+    1,
+    43
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "ger.f",
+   "module": "yurt",
+   "at": [
+    -74,
+    1,
+    44
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "ger.g",
+   "module": "yurt",
+   "at": [
+    -46,
+    1,
+    50
+   ],
+   "rotate": 90,
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "yard.1",
+   "module": "yard.fence",
+   "at": [
+    -76,
+    1,
+    24
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -11,
+    "z1": -9,
+    "x2": 10,
+    "z2": 9,
+    "gates": [
+     [
+      10,
+      0
+     ],
+     [
+      0,
+      9
+     ]
+    ]
+   }
+  },
+  {
+   "id": "yard.2",
+   "module": "yard.fence",
+   "at": [
+    -43,
+    1,
+    28
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -10,
+    "z1": -14,
+    "x2": 10,
+    "z2": 14,
+    "gates": [
+     [
+      -10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "yard.3",
+   "module": "yard.fence",
+   "at": [
+    -80,
+    1,
+    43
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -13,
+    "z1": -6,
+    "x2": 13,
+    "z2": 7,
+    "gates": [
+     [
+      0,
+      7
+     ]
+    ]
+   }
+  },
+  {
+   "id": "camp.fire_1",
+   "module": "prop.camp",
+   "at": [
+    -70,
+    1,
+    18
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "firepit"
+   }
+  },
+  {
+   "id": "camp.cart_1",
+   "module": "prop.camp",
+   "at": [
+    -82,
+    1,
+    29
+   ],
+   "rotate": 90,
+   "district": "district.residential",
+   "params": {
+    "kind": "cart"
+   }
+  },
+  {
+   "id": "camp.hay_1",
+   "module": "prop.camp",
+   "at": [
+    -68,
+    1,
+    31
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "camp.wood_1",
+   "module": "prop.camp",
+   "at": [
+    -84,
+    1,
+    31
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "woodpile"
+   }
+  },
+  {
+   "id": "camp.fire_2",
+   "module": "prop.camp",
+   "at": [
+    -37,
+    1,
+    17
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "firepit"
+   }
+  },
+  {
+   "id": "camp.hitch_2",
+   "module": "prop.camp",
+   "at": [
+    -48,
+    1,
+    39
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "camp.dry_2",
+   "module": "prop.camp",
+   "at": [
+    -37,
+    1,
+    40
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "drying"
+   }
+  },
+  {
+   "id": "camp.fire_3",
+   "module": "prop.camp",
+   "at": [
+    -80,
+    1,
+    40
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "firepit"
+   }
+  },
+  {
+   "id": "camp.cart_4",
+   "module": "prop.camp",
+   "at": [
+    -38,
+    1,
+    52
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "cart"
+   }
+  },
+  {
+   "id": "camp.hay_4",
+   "module": "prop.camp",
+   "at": [
+    -38,
+    1,
+    46
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "camp.hitch_4",
+   "module": "prop.camp",
+   "at": [
+    -52,
+    1,
+    57
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "blacksmith.forge",
+   "module": "blacksmith.forge",
+   "at": [
+    44,
+    0,
+    64
+   ],
+   "rotate": 90,
+   "district": "district.crafting"
+  },
+  {
+   "id": "shrine.sky",
+   "module": "shrine.sky",
+   "at": [
+    -96,
+    4,
+    -72
+   ],
+   "district": "district.spiritual",
+   "landmark": true
+  },
+  {
+   "id": "cairn.1",
+   "module": "prop.cairn",
+   "at": [
+    -93,
+    0,
+    -20
+   ],
+   "district": "district.spiritual"
+  },
+  {
+   "id": "cairn.2",
+   "module": "prop.cairn",
+   "at": [
+    -99,
+    0,
+    -40
+   ],
+   "district": "district.spiritual"
+  },
+  {
+   "id": "grove.garden_east",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.gardens",
+   "params": {
+    "rect": [
+     10,
+     103,
+     62,
+     120
+    ],
+    "count": 9,
+    "spacing": 6,
+    "species": [
+     "cherry",
+     "cherry",
+     "elm"
+    ],
+    "flowers": 5,
+    "avoid": [
+     [
+      6,
+      108,
+      14,
+      116
+     ],
+     [
+      -6,
+      100,
+      6,
+      124
+     ]
+    ]
+   }
+  },
+  {
+   "id": "grove.garden_west",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.gardens",
+   "params": {
+    "rect": [
+     -62,
+     103,
+     -10,
+     120
+    ],
+    "count": 9,
+    "spacing": 6,
+    "species": [
+     "cherry",
+     "cherry",
+     "elm"
+    ],
+    "flowers": 5,
+    "avoid": [
+     [
+      -6,
+      100,
+      6,
+      124
+     ]
+    ]
+   }
+  },
+  {
+   "id": "grove.avenue_east",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.central_plaza",
+   "params": {
+    "rect": [
+     9,
+     33,
+     10,
+     86
+    ],
+    "count": 7,
+    "spacing": 7,
+    "species": [
+     "elm",
+     "cherry"
+    ],
+    "flowers": 2,
+    "avoid": [
+     [
+      5,
+      58,
+      40,
+      62
+     ]
+    ]
+   }
+  },
+  {
+   "id": "grove.avenue_west",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.central_plaza",
+   "params": {
+    "rect": [
+     -10,
+     33,
+     -9,
+     86
+    ],
+    "count": 7,
+    "spacing": 7,
+    "species": [
+     "elm",
+     "cherry"
+    ],
+    "flowers": 2
+   }
+  },
+  {
+   "id": "grove.residential",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.residential",
+   "params": {
+    "rect": [
+     -92,
+     57,
+     -34,
+     62
+    ],
+    "count": 6,
+    "spacing": 8,
+    "species": [
+     "birch",
+     "elm"
+    ],
+    "flowers": 3,
+    "avoid": [
+     [
+      -96,
+      51,
+      -60,
+      53
+     ],
+     [
+      -51,
+      45,
+      -41,
+      55
+     ],
+     [
+      -55,
+      54,
+      -49,
+      60
+     ]
+    ]
+   }
+  },
+  {
+   "id": "grove.crafting",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.crafting",
+   "params": {
+    "rect": [
+     14,
+     66,
+     34,
+     80
+    ],
+    "count": 4,
+    "spacing": 8,
+    "species": [
+     "elm"
+    ],
+    "flowers": 2,
+    "avoid": [
+     [
+      5,
+      58,
+      40,
+      62
+     ],
+     [
+      38,
+      56,
+      50,
+      72
+     ]
+    ]
+   }
+  },
+  {
+   "id": "grove.spiritual",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.spiritual",
+   "params": {
+    "rect": [
+     -107,
+     -90,
+     -82,
+     -46
+    ],
+    "count": 8,
+    "spacing": 7,
+    "species": [
+     "larch",
+     "larch",
+     "birch"
+    ],
+    "flowers": 2,
+    "avoid": [
+     [
+      -107,
+      -83,
+      -85,
+      -61
+     ],
+     [
+      -98,
+      -64,
+      -94,
+      -4
+     ],
+     [
+      -100,
+      -42,
+      -90,
+      -18
+     ]
+    ]
+   }
+  },
+  {
+   "id": "grove.palace_east",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.palace",
+   "params": {
+    "rect": [
+     12,
+     -90,
+     13,
+     -72
+    ],
+    "count": 3,
+    "spacing": 8,
+    "species": [
+     "elm"
+    ],
+    "flowers": 0
+   }
+  },
+  {
+   "id": "grove.palace_west",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.palace",
+   "params": {
+    "rect": [
+     -13,
+     -90,
+     -12,
+     -72
+    ],
+    "count": 3,
+    "spacing": 8,
+    "species": [
+     "elm"
+    ],
+    "flowers": 0
+   }
+  }
+ ]
+}

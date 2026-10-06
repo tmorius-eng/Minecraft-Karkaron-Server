@@ -1,880 +1,881 @@
 {
- "id": "kharkhorum",
- "version": 1,
- "seed": 870220,
- "title": "Хархорум — SÜLD imperial capital (spawn)",
- "coordinates": {
-  "system": "city-local blocks; origin (0,0,0) = centre of the Central Plaza at base ground level",
-  "axes": {
-   "x": "east (+) / west (-)",
-   "z": "south (+) / north (-)",
-   "y": "up"
+  "id": "kharkhorum",
+  "version": 1,
+  "seed": 870220,
+  "title": "Хархорум — SÜLD imperial capital (spawn)",
+  "coordinates": {
+    "system": "city-local blocks; origin (0,0,0) = centre of the Central Plaza at base ground level",
+    "axes": {
+      "x": "east (+) / west (-)",
+      "z": "south (+) / north (-)",
+      "y": "up"
+    },
+    "grid": 16,
+    "grid_note": "origin sits on a chunk corner in the world, so every 16-block grid cell is one chunk",
+    "world_anchor": "set when the city is placed (stored in suld_world_builds); world = anchor + local"
   },
-  "grid": 16,
-  "grid_note": "origin sits on a chunk corner in the world, so every 16-block grid cell is one chunk",
-  "world_anchor": "set when the city is placed (stored in suld_world_builds); world = anchor + local"
- },
- "bounds": {
-  "x1": -176,
-  "z1": -160,
-  "x2": 175,
-  "z2": 127
- },
- "scale": {
-  "player_height": 1.8,
-  "door": [
-   1,
-   2
-  ],
-  "door_imperial": [
-   3,
-   4
-  ],
-  "palace_gate_passage": [
-   5,
-   7
-  ],
-  "street_main": 9,
-  "street_cross": 7,
-  "street_secondary": 5,
-  "lane": 3,
-  "house_small": [
-   7,
-   7
-  ],
-  "house_medium": [
-   9,
-   11
-  ],
-  "house_large": [
-   13,
-   15
-  ],
-  "yurt_diameter": {
-   "small": 7,
-   "medium": 9,
-   "large": 13
+  "bounds": {
+    "x1": -176,
+    "z1": -160,
+    "x2": 175,
+    "z2": 127
   },
-  "palace_throne_hall": [
-   33,
-   41,
-   14
-  ],
-  "palace_room": [
-   11,
-   11,
-   7
-  ],
-  "wall_thickness": 5,
-  "wall_height": 12,
-  "tower_wall": [
-   9,
-   9,
-   20
-  ],
-  "tower_corner": [
-   13,
-   13,
-   26
-  ],
-  "plaza_radius": 28,
-  "bridge_width": {
-   "main": 9,
-   "side": 5
+  "scale": {
+    "player_height": 1.8,
+    "door": [
+      1,
+      2
+    ],
+    "door_imperial": [
+      3,
+      4
+    ],
+    "palace_gate_passage": [
+      5,
+      7
+    ],
+    "street_main": 9,
+    "street_cross": 7,
+    "street_secondary": 5,
+    "lane": 3,
+    "house_small": [
+      7,
+      7
+    ],
+    "house_medium": [
+      9,
+      11
+    ],
+    "house_large": [
+      13,
+      15
+    ],
+    "yurt_diameter": {
+      "small": 7,
+      "medium": 9,
+      "large": 13
+    },
+    "palace_throne_hall": [
+      33,
+      41,
+      14
+    ],
+    "palace_room": [
+      11,
+      11,
+      7
+    ],
+    "wall_thickness": 5,
+    "wall_height": 12,
+    "tower_wall": [
+      9,
+      9,
+      20
+    ],
+    "tower_corner": [
+      13,
+      13,
+      26
+    ],
+    "plaza_radius": 28,
+    "bridge_width": {
+      "main": 9,
+      "side": 5
+    },
+    "market_stall": [
+      5,
+      4,
+      4
+    ],
+    "stairs": "1 rise per 1 run (vanilla stairs); grand stairs 11 wide with a landing every 4 steps"
   },
-  "market_stall": [
-   5,
-   4,
-   4
-  ],
-  "stairs": "1 rise per 1 run (vanilla stairs); grand stairs 11 wide with a landing every 4 steps"
- },
- "elevation": {
-  "base": 0,
-  "central_plaza": 1,
-  "gardens_south": 0,
-  "canal_water_surface": -1,
-  "residential": 1,
-  "market": 0,
-  "crafting": 0,
-  "clan": 1,
-  "relic": 2,
-  "spiritual": 4,
-  "military": 2,
-  "stables": 2,
-  "palace_terrace": 8,
-  "undercity": -12,
-  "rule": "the city rises gently from the south (gate, gardens, canal) to the palace terrace in the north"
- },
- "walls": {
-  "outline": [
-   [
-    -176,
-    -160
-   ],
-   [
-    175,
-    -160
-   ],
-   [
-    175,
-    127
-   ],
-   [
-    -176,
-    127
-   ]
-  ],
-  "thickness": 5,
-  "height": 12,
-  "walkway": true,
-  "crenellation": "every other block",
-  "materials": "stone-brick + tuff upper courses on a packed-mud base course",
-  "corner_towers": [
-   [
-    -170,
-    -154
-   ],
-   [
-    169,
-    -154
-   ],
-   [
-    169,
-    121
-   ],
-   [
-    -170,
-    121
-   ]
-  ],
-  "tower_spacing": 48
- },
- "gates": [
-  {
-   "id": "gate.south",
-   "name_mn": "Их Хаалга",
-   "name_en": "Imperial Gate",
-   "x": 0,
-   "z": 127,
-   "passage": [
-    7,
-    9
-   ],
-   "width_total": 35,
-   "historical_market": "cattle and wagons",
-   "notes": "main entrance; tiered twin towers, braziers; slice 1"
+  "elevation": {
+    "base": 0,
+    "central_plaza": 1,
+    "gardens_south": 0,
+    "canal_water_surface": -1,
+    "residential": 1,
+    "market": 0,
+    "crafting": 0,
+    "clan": 1,
+    "relic": 2,
+    "spiritual": 4,
+    "military": 2,
+    "stables": 2,
+    "palace_terrace": 8,
+    "undercity": -12,
+    "rule": "the city rises gently from the south (gate, gardens, canal) to the palace terrace in the north"
   },
-  {
-   "id": "gate.west",
-   "name_mn": "Хонин Хаалга",
-   "name_en": "Sheep Gate",
-   "x": -176,
-   "z": 0,
-   "passage": [
-    5,
-    7
-   ],
-   "width_total": 25,
-   "historical_market": "sheep and goats"
+  "walls": {
+    "outline": [
+      [
+        -176,
+        -160
+      ],
+      [
+        175,
+        -160
+      ],
+      [
+        175,
+        127
+      ],
+      [
+        -176,
+        127
+      ]
+    ],
+    "thickness": 5,
+    "height": 12,
+    "walkway": true,
+    "crenellation": "every other block",
+    "materials": "stone-brick + tuff upper courses on a packed-mud base course",
+    "corner_towers": [
+      [
+        -170,
+        -154
+      ],
+      [
+        169,
+        -154
+      ],
+      [
+        169,
+        121
+      ],
+      [
+        -170,
+        121
+      ]
+    ],
+    "tower_spacing": 48
   },
-  {
-   "id": "gate.east",
-   "name_mn": "Тарианы Хаалга",
-   "name_en": "Grain Gate",
-   "x": 175,
-   "z": 0,
-   "passage": [
-    5,
-    7
-   ],
-   "width_total": 25,
-   "historical_market": "millet and grain"
-  },
-  {
-   "id": "gate.north",
-   "name_mn": "Морин Хаалга",
-   "name_en": "Horse Gate",
-   "x": 104,
-   "z": -160,
-   "passage": [
-    5,
-    7
-   ],
-   "width_total": 25,
-   "historical_market": "horses",
-   "notes": "off-axis so the palace terrace stays closed at the back"
-  }
- ],
- "roads": [
-  {
-   "id": "road.imperial_avenue_south",
-   "class": "main",
-   "width": 9,
-   "points": [
-    [
-     0,
-     118
-    ],
-    [
-     0,
-     28
-    ]
-   ],
-   "notes": "gate -> plaza; Grand Bridge at the canal"
-  },
-  {
-   "id": "road.imperial_avenue_north",
-   "class": "main",
-   "width": 9,
-   "points": [
-    [
-     0,
-     -28
-    ],
-    [
-     0,
-     -40
-    ]
-   ],
-   "notes": "plaza -> grand stair"
-  },
-  {
-   "id": "road.cross_west",
-   "class": "cross",
-   "width": 7,
-   "points": [
-    [
-     -28,
-     0
-    ],
-    [
-     -171,
-     0
-    ]
-   ]
-  },
-  {
-   "id": "road.cross_east",
-   "class": "cross",
-   "width": 7,
-   "points": [
-    [
-     28,
-     0
-    ],
-    [
-     170,
-     0
-    ]
-   ]
-  },
-  {
-   "id": "road.nw_diagonal",
-   "class": "secondary",
-   "width": 5,
-   "points": [
-    [
-     -20,
-     -20
-    ],
-    [
-     -60,
-     -44
-    ],
-    [
-     -96,
-     -44
-    ],
-    [
-     -96,
-     -64
-    ]
-   ],
-   "notes": "to the spiritual hill"
-  },
-  {
-   "id": "road.ne_diagonal",
-   "class": "secondary",
-   "width": 5,
-   "points": [
-    [
-     20,
-     -20
-    ],
-    [
-     60,
-     -44
-    ],
-    [
-     104,
-     -44
-    ],
-    [
-     104,
-     -155
-    ]
-   ],
-   "notes": "to military, stables, Horse Gate"
-  },
-  {
-   "id": "road.craft_lane",
-   "class": "lane",
-   "width": 3,
-   "points": [
-    [
-     5,
-     60
-    ],
-    [
-     36,
-     60
-    ]
-   ]
-  },
-  {
-   "id": "road.yurt_lane",
-   "class": "lane",
-   "width": 3,
-   "points": [
-    [
-     -60,
-     4
-    ],
-    [
-     -60,
-     52
-    ],
-    [
-     -96,
-     52
-    ]
-   ]
-  },
-  {
-   "id": "road.shrine_way",
-   "class": "lane",
-   "width": 3,
-   "points": [
-    [
-     -96,
-     -4
-    ],
-    [
-     -96,
-     -60
-    ]
-   ]
-  }
- ],
- "water": {
-  "canal": {
-   "id": "water.inner_canal",
-   "width": 9,
-   "water_width": 7,
-   "depth": 2,
-   "surface_y": -1,
-   "points": [
-    [
-     -152,
-     -36
-    ],
-    [
-     -152,
-     94
-    ],
-    [
-     151,
-     94
-    ],
-    [
-     151,
-     -36
-    ]
-   ],
-   "ends": [
+  "gates": [
     {
-     "id": "water.west_pond",
-     "x": -152,
-     "z": -48,
-     "radius": 12
+      "id": "gate.south",
+      "name_mn": "Их Хаалга",
+      "name_en": "Imperial Gate",
+      "x": 0,
+      "z": 127,
+      "passage": [
+        7,
+        9
+      ],
+      "width_total": 35,
+      "historical_market": "cattle and wagons",
+      "notes": "main entrance; tiered twin towers, braziers; slice 1"
     },
     {
-     "id": "water.east_pond",
-     "x": 151,
-     "z": -48,
-     "radius": 12
+      "id": "gate.west",
+      "name_mn": "Хонин Хаалга",
+      "name_en": "Sheep Gate",
+      "x": -176,
+      "z": 0,
+      "passage": [
+        5,
+        7
+      ],
+      "width_total": 25,
+      "historical_market": "sheep and goats"
+    },
+    {
+      "id": "gate.east",
+      "name_mn": "Тарианы Хаалга",
+      "name_en": "Grain Gate",
+      "x": 175,
+      "z": 0,
+      "passage": [
+        5,
+        7
+      ],
+      "width_total": 25,
+      "historical_market": "millet and grain"
+    },
+    {
+      "id": "gate.north",
+      "name_mn": "Морин Хаалга",
+      "name_en": "Horse Gate",
+      "x": 104,
+      "z": -160,
+      "passage": [
+        5,
+        7
+      ],
+      "width_total": 25,
+      "historical_market": "horses",
+      "notes": "off-axis so the palace terrace stays closed at the back"
     }
-   ],
-   "notes": "SÜLD addition (no historical canal); mirrors the reference's U-shaped inner water"
+  ],
+  "roads": [
+    {
+      "id": "road.imperial_avenue_south",
+      "class": "main",
+      "width": 9,
+      "points": [
+        [
+          0,
+          118
+        ],
+        [
+          0,
+          28
+        ]
+      ],
+      "notes": "gate -> plaza; Grand Bridge at the canal"
+    },
+    {
+      "id": "road.imperial_avenue_north",
+      "class": "main",
+      "width": 9,
+      "points": [
+        [
+          0,
+          -28
+        ],
+        [
+          0,
+          -40
+        ]
+      ],
+      "notes": "plaza -> grand stair"
+    },
+    {
+      "id": "road.cross_west",
+      "class": "cross",
+      "width": 7,
+      "points": [
+        [
+          -28,
+          0
+        ],
+        [
+          -171,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "road.cross_east",
+      "class": "cross",
+      "width": 7,
+      "points": [
+        [
+          28,
+          0
+        ],
+        [
+          170,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "road.nw_diagonal",
+      "class": "secondary",
+      "width": 5,
+      "points": [
+        [
+          -20,
+          -20
+        ],
+        [
+          -60,
+          -44
+        ],
+        [
+          -96,
+          -44
+        ],
+        [
+          -96,
+          -64
+        ]
+      ],
+      "notes": "to the spiritual hill"
+    },
+    {
+      "id": "road.ne_diagonal",
+      "class": "secondary",
+      "width": 5,
+      "points": [
+        [
+          20,
+          -20
+        ],
+        [
+          60,
+          -44
+        ],
+        [
+          104,
+          -44
+        ],
+        [
+          104,
+          -155
+        ]
+      ],
+      "notes": "to military, stables, Horse Gate"
+    },
+    {
+      "id": "road.craft_lane",
+      "class": "lane",
+      "width": 3,
+      "points": [
+        [
+          5,
+          60
+        ],
+        [
+          36,
+          60
+        ]
+      ]
+    },
+    {
+      "id": "road.yurt_lane",
+      "class": "lane",
+      "width": 3,
+      "points": [
+        [
+          -60,
+          4
+        ],
+        [
+          -60,
+          52
+        ],
+        [
+          -96,
+          52
+        ]
+      ]
+    },
+    {
+      "id": "road.shrine_way",
+      "class": "lane",
+      "width": 3,
+      "points": [
+        [
+          -96,
+          -4
+        ],
+        [
+          -96,
+          -60
+        ]
+      ]
+    }
+  ],
+  "water": {
+    "canal": {
+      "id": "water.inner_canal",
+      "width": 9,
+      "water_width": 7,
+      "depth": 2,
+      "surface_y": -1,
+      "points": [
+        [
+          -152,
+          -36
+        ],
+        [
+          -152,
+          94
+        ],
+        [
+          151,
+          94
+        ],
+        [
+          151,
+          -36
+        ]
+      ],
+      "ends": [
+        {
+          "id": "water.west_pond",
+          "x": -152,
+          "z": -48,
+          "radius": 12
+        },
+        {
+          "id": "water.east_pond",
+          "x": 151,
+          "z": -48,
+          "radius": 12
+        }
+      ],
+      "notes": "SÜLD addition (no historical canal); mirrors the reference's U-shaped inner water"
+    },
+    "bridges": [
+      {
+        "id": "bridge.grand",
+        "x": 0,
+        "z": 94,
+        "width": 9,
+        "span": 13,
+        "class": "large",
+        "slice": 1
+      },
+      {
+        "id": "bridge.west",
+        "x": -152,
+        "z": 0,
+        "width": 7,
+        "span": 11,
+        "class": "large"
+      },
+      {
+        "id": "bridge.east",
+        "x": 151,
+        "z": 0,
+        "width": 7,
+        "span": 11,
+        "class": "large"
+      },
+      {
+        "id": "bridge.garden_w",
+        "x": -80,
+        "z": 94,
+        "width": 5,
+        "span": 11,
+        "class": "small"
+      },
+      {
+        "id": "bridge.garden_e",
+        "x": 80,
+        "z": 94,
+        "width": 5,
+        "span": 11,
+        "class": "small"
+      }
+    ]
   },
-  "bridges": [
-   {
-    "id": "bridge.grand",
-    "x": 0,
-    "z": 94,
-    "width": 9,
-    "span": 13,
-    "class": "large",
-    "slice": 1
-   },
-   {
-    "id": "bridge.west",
-    "x": -152,
-    "z": 0,
-    "width": 7,
-    "span": 11,
-    "class": "large"
-   },
-   {
-    "id": "bridge.east",
-    "x": 151,
-    "z": 0,
-    "width": 7,
-    "span": 11,
-    "class": "large"
-   },
-   {
-    "id": "bridge.garden_w",
-    "x": -80,
-    "z": 94,
-    "width": 5,
-    "span": 11,
-    "class": "small"
-   },
-   {
-    "id": "bridge.garden_e",
-    "x": 80,
-    "z": 94,
-    "width": 5,
-    "span": 11,
-    "class": "small"
-   }
+  "districts": [
+    {
+      "id": "district.central_plaza",
+      "name_mn": "Төв Талбай",
+      "name_en": "Central Plaza",
+      "shape": {
+        "circle": {
+          "x": 0,
+          "z": 0,
+          "r": 28
+        }
+      },
+      "elevation": 1,
+      "purpose": "spawn, orientation, gatherings, events; the heart of the city",
+      "identity": "concentric ceremonial paving, red banner poles, lantern ring, raised on stairs",
+      "landmarks": [
+        "landmark.khan_monument"
+      ],
+      "connects": [
+        "road.imperial_avenue_south",
+        "road.imperial_avenue_north",
+        "road.cross_west",
+        "road.cross_east",
+        "road.nw_diagonal",
+        "road.ne_diagonal"
+      ]
+    },
+    {
+      "id": "district.palace",
+      "name_mn": "Хааны Ордон",
+      "name_en": "Imperial Palace",
+      "parts": [
+        {
+          "x1": -72,
+          "z1": -156,
+          "x2": 71,
+          "z2": -56
+        }
+      ],
+      "elevation": 8,
+      "purpose": "seat of power: courtyard, throne hall (8x8 columns), council, treasury, guard rooms, gardens, hidden chamber",
+      "identity": "largest silhouette; red columns on stone plinths, deep tiled roofs with gold ridges, grand stair",
+      "landmarks": [
+        "landmark.great_palace",
+        "landmark.silver_tree"
+      ],
+      "connects": [
+        "road.imperial_avenue_north"
+      ]
+    },
+    {
+      "id": "district.spiritual",
+      "name_mn": "Тэнгэрийн Хороо",
+      "name_en": "Spiritual District",
+      "parts": [
+        {
+          "x1": -172,
+          "z1": -156,
+          "x2": -84,
+          "z2": -48
+        }
+      ],
+      "elevation": 4,
+      "purpose": "Tenger Sky Shrine, temple street of many faiths (respectful architecture only), sacred garden",
+      "identity": "white suburgan, prayer-flag strings, spirit stones (ovoo), blossom trees, quiet",
+      "landmarks": [
+        "landmark.spirit_shrine",
+        "landmark.eagle_monument"
+      ],
+      "connects": [
+        "road.nw_diagonal",
+        "road.shrine_way"
+      ]
+    },
+    {
+      "id": "district.military",
+      "name_mn": "Цэргийн Хороо",
+      "name_en": "Military District",
+      "parts": [
+        {
+          "x1": 84,
+          "z1": -156,
+          "x2": 124,
+          "z2": -48
+        },
+        {
+          "x1": 128,
+          "z1": -96,
+          "x2": 171,
+          "z2": -48
+        }
+      ],
+      "elevation": 2,
+      "purpose": "barracks, training yard, armory, command ger, watchtowers",
+      "identity": "severe: dark stone, palisades, black-and-red banners, weapon racks, practice dummies",
+      "landmarks": [
+        "landmark.wolf_monument"
+      ],
+      "connects": [
+        "road.ne_diagonal"
+      ]
+    },
+    {
+      "id": "district.stables",
+      "name_mn": "Морин Хороо",
+      "name_en": "Horse & Stable District",
+      "parts": [
+        {
+          "x1": 128,
+          "z1": -156,
+          "x2": 171,
+          "z2": -100
+        }
+      ],
+      "elevation": 2,
+      "purpose": "horse market (historical north-gate market), stables, tack makers",
+      "identity": "paddocks, hay, long timber stables",
+      "landmarks": [
+        "landmark.horse_monument"
+      ],
+      "connects": [
+        "road.ne_diagonal",
+        "gate.north"
+      ]
+    },
+    {
+      "id": "district.residential",
+      "name_mn": "Гэр Хороолол",
+      "name_en": "Yurt Residential District",
+      "parts": [
+        {
+          "x1": -144,
+          "z1": 16,
+          "x2": -32,
+          "z2": 84
+        },
+        {
+          "x1": -84,
+          "z1": -28,
+          "x2": -32,
+          "z2": 12
+        }
+      ],
+      "elevation": 1,
+      "purpose": "homes: yurts of several sizes, fenced yards, fire pits, carts, small workshops",
+      "identity": "organic clusters, narrow paths, density varies; never a grid",
+      "landmarks": [],
+      "connects": [
+        "road.cross_west",
+        "road.yurt_lane"
+      ]
+    },
+    {
+      "id": "district.clan",
+      "name_mn": "Овгийн Хороо",
+      "name_en": "Clan District",
+      "parts": [
+        {
+          "x1": -144,
+          "z1": -40,
+          "x2": -88,
+          "z2": 12
+        }
+      ],
+      "elevation": 1,
+      "purpose": "clan halls as walled compounds (historical cordon of compounds)",
+      "identity": "compounds of varying size, gate arches with clan banners",
+      "landmarks": [],
+      "connects": [
+        "road.cross_west",
+        "road.shrine_way"
+      ]
+    },
+    {
+      "id": "district.relic",
+      "name_mn": "Сүлдний Хороо",
+      "name_en": "Relic District",
+      "parts": [
+        {
+          "x1": -60,
+          "z1": -52,
+          "x2": -16,
+          "z2": -32
+        }
+      ],
+      "elevation": 2,
+      "purpose": "Relic Hall: world-unique relic lore, bearer hall of fame",
+      "identity": "dark stone hall with blue-gold banners",
+      "landmarks": [
+        "landmark.relic_hall"
+      ],
+      "connects": [
+        "road.imperial_avenue_north"
+      ]
+    },
+    {
+      "id": "district.market",
+      "name_mn": "Их Зах",
+      "name_en": "Great Market",
+      "parts": [
+        {
+          "x1": 32,
+          "z1": -40,
+          "x2": 144,
+          "z2": 48
+        }
+      ],
+      "elevation": 0,
+      "purpose": "merchants' quarter: food, cloth, weapons, horse gear, caravans, inns, storage (historical Saracen merchants' quarter)",
+      "identity": "densest district; awning stalls in several colours, two-storey shop houses, alleys, crates and carts",
+      "landmarks": [
+        "landmark.market_gate"
+      ],
+      "connects": [
+        "road.cross_east"
+      ]
+    },
+    {
+      "id": "district.crafting",
+      "name_mn": "Дархны Хороо",
+      "name_en": "Crafting District",
+      "parts": [
+        {
+          "x1": 32,
+          "z1": 52,
+          "x2": 144,
+          "z2": 84
+        }
+      ],
+      "elevation": 0,
+      "purpose": "blacksmiths, smelters, jewellers, glass and stone (historical artisans' quarter near the crossroads)",
+      "identity": "soot-dark timber, chimneys, forges glowing at night",
+      "landmarks": [],
+      "connects": [
+        "road.craft_lane"
+      ]
+    },
+    {
+      "id": "district.gardens",
+      "name_mn": "Цэцэрлэг",
+      "name_en": "Gardens",
+      "parts": [
+        {
+          "x1": -140,
+          "z1": 102,
+          "x2": -12,
+          "z2": 120
+        },
+        {
+          "x1": 12,
+          "z1": 102,
+          "x2": 139,
+          "z2": 120
+        }
+      ],
+      "elevation": 0,
+      "purpose": "rest, beauty, ponds, blossom groves between canal and south wall",
+      "identity": "open, green, water",
+      "landmarks": [],
+      "connects": [
+        "road.imperial_avenue_south"
+      ]
+    },
+    {
+      "id": "district.outer_wall",
+      "name_mn": "Хэрэм",
+      "name_en": "Outer Wall",
+      "shape": {
+        "ring": {
+          "outline": "walls.outline",
+          "thickness": 5
+        }
+      },
+      "elevation": 0,
+      "purpose": "defence, skyline, gates",
+      "identity": "crenellated, banners, tower beacons",
+      "landmarks": [
+        "landmark.imperial_gate"
+      ],
+      "connects": [
+        "gate.south",
+        "gate.west",
+        "gate.east",
+        "gate.north"
+      ]
+    },
+    {
+      "id": "district.undercity",
+      "name_mn": "Газар доорх Хот",
+      "name_en": "Hidden Undercity",
+      "parts": [
+        {
+          "x1": -40,
+          "z1": 20,
+          "x2": 60,
+          "z2": 84
+        }
+      ],
+      "elevation": -12,
+      "purpose": "secret tunnels, old kilns and cellars (fiction inspired by the deep craft deposits)",
+      "identity": "dark, narrow, torch-lit; entrances hidden",
+      "landmarks": [],
+      "connects": [
+        "secret.abandoned_cellar"
+      ],
+      "hidden": true
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "landmark.imperial_gate",
+      "name_mn": "Их Хаалга",
+      "x": 0,
+      "z": 127,
+      "height": 24,
+      "slice": 1
+    },
+    {
+      "id": "landmark.khan_monument",
+      "name_mn": "Хааны Морьт Хөшөө",
+      "x": 0,
+      "z": 0,
+      "height": 18,
+      "slice": 1,
+      "note": "original SÜLD rider monument"
+    },
+    {
+      "id": "landmark.great_palace",
+      "name_mn": "Түмэн Амгалан Ордон",
+      "x": 0,
+      "z": -110,
+      "height": 34,
+      "note": "throne hall with 8x8 columns"
+    },
+    {
+      "id": "landmark.silver_tree",
+      "name_mn": "Мөнгөн Мод",
+      "x": 0,
+      "z": -80,
+      "height": 9,
+      "note": "historical: Guillaume Boucher's silver tree fountain"
+    },
+    {
+      "id": "landmark.market_gate",
+      "name_mn": "Захын Хаалга",
+      "x": 32,
+      "z": 0,
+      "height": 12
+    },
+    {
+      "id": "landmark.relic_hall",
+      "name_mn": "Сүлдний Өргөө",
+      "x": -38,
+      "z": -42,
+      "height": 16
+    },
+    {
+      "id": "landmark.spirit_shrine",
+      "name_mn": "Тэнгэрийн Шүтээн",
+      "x": -96,
+      "z": -72,
+      "height": 16,
+      "slice": 1
+    },
+    {
+      "id": "landmark.eagle_monument",
+      "name_mn": "Бүргэдийн Хөшөө",
+      "x": -128,
+      "z": -120,
+      "height": 14
+    },
+    {
+      "id": "landmark.wolf_monument",
+      "name_mn": "Чонын Хөшөө",
+      "x": 104,
+      "z": -80,
+      "height": 12
+    },
+    {
+      "id": "landmark.horse_monument",
+      "name_mn": "Морины Хөшөө",
+      "x": 150,
+      "z": -128,
+      "height": 10
+    }
+  ],
+  "passes": [
+    "1.terrain",
+    "2.walls_gates_roads",
+    "3.district_footprints",
+    "4.landmarks",
+    "5.shells",
+    "6.roofs_windows_detail",
+    "7.decoration",
+    "8.landscaping",
+    "9.interiors",
+    "10.lighting",
+    "11.gameplay",
+    "12.secrets"
+  ],
+  "slices": [
+    {
+      "id": "slice.1",
+      "name": "First slice — ceremonial axis",
+      "status": "built",
+      "bounds": {
+        "x1": -112,
+        "z1": -92,
+        "x2": 104,
+        "z2": 136
+      },
+      "contents": [
+        "gate.south (+ wall stubs)",
+        "watchtower west of the gate",
+        "road.imperial_avenue_south",
+        "bridge.grand + canal stub",
+        "district.central_plaza + landmark.khan_monument",
+        "road.imperial_avenue_north + grand stair + palace entrance",
+        "one market street (cross_east x 28..100)",
+        "one yurt block (residential, around road.yurt_lane)",
+        "one blacksmith (crafting, end of road.craft_lane)",
+        "one shrine (spiritual hill, end of road.shrine_way)"
+      ],
+      "review": "built and validated in a real Paper 1.21.11 world on 2026-10-06 (0 world mismatches, 15/15 points); awaiting human review → approve → lock"
+    }
   ]
- },
- "districts": [
-  {
-   "id": "district.central_plaza",
-   "name_mn": "Төв Талбай",
-   "name_en": "Central Plaza",
-   "shape": {
-    "circle": {
-     "x": 0,
-     "z": 0,
-     "r": 28
-    }
-   },
-   "elevation": 1,
-   "purpose": "spawn, orientation, gatherings, events; the heart of the city",
-   "identity": "concentric ceremonial paving, red banner poles, lantern ring, raised on stairs",
-   "landmarks": [
-    "landmark.khan_monument"
-   ],
-   "connects": [
-    "road.imperial_avenue_south",
-    "road.imperial_avenue_north",
-    "road.cross_west",
-    "road.cross_east",
-    "road.nw_diagonal",
-    "road.ne_diagonal"
-   ]
-  },
-  {
-   "id": "district.palace",
-   "name_mn": "Хааны Ордон",
-   "name_en": "Imperial Palace",
-   "parts": [
-    {
-     "x1": -72,
-     "z1": -156,
-     "x2": 71,
-     "z2": -56
-    }
-   ],
-   "elevation": 8,
-   "purpose": "seat of power: courtyard, throne hall (8x8 columns), council, treasury, guard rooms, gardens, hidden chamber",
-   "identity": "largest silhouette; red columns on stone plinths, deep tiled roofs with gold ridges, grand stair",
-   "landmarks": [
-    "landmark.great_palace",
-    "landmark.silver_tree"
-   ],
-   "connects": [
-    "road.imperial_avenue_north"
-   ]
-  },
-  {
-   "id": "district.spiritual",
-   "name_mn": "Тэнгэрийн Хороо",
-   "name_en": "Spiritual District",
-   "parts": [
-    {
-     "x1": -172,
-     "z1": -156,
-     "x2": -84,
-     "z2": -48
-    }
-   ],
-   "elevation": 4,
-   "purpose": "Tenger Sky Shrine, temple street of many faiths (respectful architecture only), sacred garden",
-   "identity": "white suburgan, prayer-flag strings, spirit stones (ovoo), blossom trees, quiet",
-   "landmarks": [
-    "landmark.spirit_shrine",
-    "landmark.eagle_monument"
-   ],
-   "connects": [
-    "road.nw_diagonal",
-    "road.shrine_way"
-   ]
-  },
-  {
-   "id": "district.military",
-   "name_mn": "Цэргийн Хороо",
-   "name_en": "Military District",
-   "parts": [
-    {
-     "x1": 84,
-     "z1": -156,
-     "x2": 124,
-     "z2": -48
-    },
-    {
-     "x1": 128,
-     "z1": -96,
-     "x2": 171,
-     "z2": -48
-    }
-   ],
-   "elevation": 2,
-   "purpose": "barracks, training yard, armory, command ger, watchtowers",
-   "identity": "severe: dark stone, palisades, black-and-red banners, weapon racks, practice dummies",
-   "landmarks": [
-    "landmark.wolf_monument"
-   ],
-   "connects": [
-    "road.ne_diagonal"
-   ]
-  },
-  {
-   "id": "district.stables",
-   "name_mn": "Морин Хороо",
-   "name_en": "Horse & Stable District",
-   "parts": [
-    {
-     "x1": 128,
-     "z1": -156,
-     "x2": 171,
-     "z2": -100
-    }
-   ],
-   "elevation": 2,
-   "purpose": "horse market (historical north-gate market), stables, tack makers",
-   "identity": "paddocks, hay, long timber stables",
-   "landmarks": [
-    "landmark.horse_monument"
-   ],
-   "connects": [
-    "road.ne_diagonal",
-    "gate.north"
-   ]
-  },
-  {
-   "id": "district.residential",
-   "name_mn": "Гэр Хороолол",
-   "name_en": "Yurt Residential District",
-   "parts": [
-    {
-     "x1": -144,
-     "z1": 16,
-     "x2": -32,
-     "z2": 84
-    },
-    {
-     "x1": -84,
-     "z1": -28,
-     "x2": -32,
-     "z2": 12
-    }
-   ],
-   "elevation": 1,
-   "purpose": "homes: yurts of several sizes, fenced yards, fire pits, carts, small workshops",
-   "identity": "organic clusters, narrow paths, density varies; never a grid",
-   "landmarks": [],
-   "connects": [
-    "road.cross_west",
-    "road.yurt_lane"
-   ]
-  },
-  {
-   "id": "district.clan",
-   "name_mn": "Овгийн Хороо",
-   "name_en": "Clan District",
-   "parts": [
-    {
-     "x1": -144,
-     "z1": -40,
-     "x2": -88,
-     "z2": 12
-    }
-   ],
-   "elevation": 1,
-   "purpose": "clan halls as walled compounds (historical cordon of compounds)",
-   "identity": "compounds of varying size, gate arches with clan banners",
-   "landmarks": [],
-   "connects": [
-    "road.cross_west",
-    "road.shrine_way"
-   ]
-  },
-  {
-   "id": "district.relic",
-   "name_mn": "Сүлдний Хороо",
-   "name_en": "Relic District",
-   "parts": [
-    {
-     "x1": -60,
-     "z1": -52,
-     "x2": -16,
-     "z2": -32
-    }
-   ],
-   "elevation": 2,
-   "purpose": "Relic Hall: world-unique relic lore, bearer hall of fame",
-   "identity": "dark stone hall with blue-gold banners",
-   "landmarks": [
-    "landmark.relic_hall"
-   ],
-   "connects": [
-    "road.imperial_avenue_north"
-   ]
-  },
-  {
-   "id": "district.market",
-   "name_mn": "Их Зах",
-   "name_en": "Great Market",
-   "parts": [
-    {
-     "x1": 32,
-     "z1": -40,
-     "x2": 144,
-     "z2": 48
-    }
-   ],
-   "elevation": 0,
-   "purpose": "merchants' quarter: food, cloth, weapons, horse gear, caravans, inns, storage (historical Saracen merchants' quarter)",
-   "identity": "densest district; awning stalls in several colours, two-storey shop houses, alleys, crates and carts",
-   "landmarks": [
-    "landmark.market_gate"
-   ],
-   "connects": [
-    "road.cross_east"
-   ]
-  },
-  {
-   "id": "district.crafting",
-   "name_mn": "Дархны Хороо",
-   "name_en": "Crafting District",
-   "parts": [
-    {
-     "x1": 32,
-     "z1": 52,
-     "x2": 144,
-     "z2": 84
-    }
-   ],
-   "elevation": 0,
-   "purpose": "blacksmiths, smelters, jewellers, glass and stone (historical artisans' quarter near the crossroads)",
-   "identity": "soot-dark timber, chimneys, forges glowing at night",
-   "landmarks": [],
-   "connects": [
-    "road.craft_lane"
-   ]
-  },
-  {
-   "id": "district.gardens",
-   "name_mn": "Цэцэрлэг",
-   "name_en": "Gardens",
-   "parts": [
-    {
-     "x1": -140,
-     "z1": 102,
-     "x2": -12,
-     "z2": 120
-    },
-    {
-     "x1": 12,
-     "z1": 102,
-     "x2": 139,
-     "z2": 120
-    }
-   ],
-   "elevation": 0,
-   "purpose": "rest, beauty, ponds, blossom groves between canal and south wall",
-   "identity": "open, green, water",
-   "landmarks": [],
-   "connects": [
-    "road.imperial_avenue_south"
-   ]
-  },
-  {
-   "id": "district.outer_wall",
-   "name_mn": "Хэрэм",
-   "name_en": "Outer Wall",
-   "shape": {
-    "ring": {
-     "outline": "walls.outline",
-     "thickness": 5
-    }
-   },
-   "elevation": 0,
-   "purpose": "defence, skyline, gates",
-   "identity": "crenellated, banners, tower beacons",
-   "landmarks": [
-    "landmark.imperial_gate"
-   ],
-   "connects": [
-    "gate.south",
-    "gate.west",
-    "gate.east",
-    "gate.north"
-   ]
-  },
-  {
-   "id": "district.undercity",
-   "name_mn": "Газар доорх Хот",
-   "name_en": "Hidden Undercity",
-   "parts": [
-    {
-     "x1": -40,
-     "z1": 20,
-     "x2": 60,
-     "z2": 84
-    }
-   ],
-   "elevation": -12,
-   "purpose": "secret tunnels, old kilns and cellars (fiction inspired by the deep craft deposits)",
-   "identity": "dark, narrow, torch-lit; entrances hidden",
-   "landmarks": [],
-   "connects": [
-    "secret.abandoned_cellar"
-   ],
-   "hidden": true
-  }
- ],
- "landmarks": [
-  {
-   "id": "landmark.imperial_gate",
-   "name_mn": "Их Хаалга",
-   "x": 0,
-   "z": 127,
-   "height": 24,
-   "slice": 1
-  },
-  {
-   "id": "landmark.khan_monument",
-   "name_mn": "Хааны Морьт Хөшөө",
-   "x": 0,
-   "z": 0,
-   "height": 18,
-   "slice": 1,
-   "note": "original SÜLD rider monument"
-  },
-  {
-   "id": "landmark.great_palace",
-   "name_mn": "Түмэн Амгалан Ордон",
-   "x": 0,
-   "z": -110,
-   "height": 34,
-   "note": "throne hall with 8x8 columns"
-  },
-  {
-   "id": "landmark.silver_tree",
-   "name_mn": "Мөнгөн Мод",
-   "x": 0,
-   "z": -80,
-   "height": 9,
-   "note": "historical: Guillaume Boucher's silver tree fountain"
-  },
-  {
-   "id": "landmark.market_gate",
-   "name_mn": "Захын Хаалга",
-   "x": 32,
-   "z": 0,
-   "height": 12
-  },
-  {
-   "id": "landmark.relic_hall",
-   "name_mn": "Сүлдний Өргөө",
-   "x": -38,
-   "z": -42,
-   "height": 16
-  },
-  {
-   "id": "landmark.spirit_shrine",
-   "name_mn": "Тэнгэрийн Шүтээн",
-   "x": -96,
-   "z": -72,
-   "height": 16,
-   "slice": 1
-  },
-  {
-   "id": "landmark.eagle_monument",
-   "name_mn": "Бүргэдийн Хөшөө",
-   "x": -128,
-   "z": -120,
-   "height": 14
-  },
-  {
-   "id": "landmark.wolf_monument",
-   "name_mn": "Чонын Хөшөө",
-   "x": 104,
-   "z": -80,
-   "height": 12
-  },
-  {
-   "id": "landmark.horse_monument",
-   "name_mn": "Морины Хөшөө",
-   "x": 150,
-   "z": -128,
-   "height": 10
-  }
- ],
- "passes": [
-  "1.terrain",
-  "2.walls_gates_roads",
-  "3.district_footprints",
-  "4.landmarks",
-  "5.shells",
-  "6.roofs_windows_detail",
-  "7.decoration",
-  "8.landscaping",
-  "9.interiors",
-  "10.lighting",
-  "11.gameplay",
-  "12.secrets"
- ],
- "slices": [
-  {
-   "id": "slice.1",
-   "name": "First slice — ceremonial axis",
-   "status": "planned",
-   "bounds": {
-    "x1": -112,
-    "z1": -92,
-    "x2": 104,
-    "z2": 136
-   },
-   "contents": [
-    "gate.south (+ wall stubs)",
-    "watchtower west of the gate",
-    "road.imperial_avenue_south",
-    "bridge.grand + canal stub",
-    "district.central_plaza + landmark.khan_monument",
-    "road.imperial_avenue_north + grand stair + palace entrance",
-    "one market street (cross_east x 28..100)",
-    "one yurt block (residential, around road.yurt_lane)",
-    "one blacksmith (crafting, end of road.craft_lane)",
-    "one shrine (spiritual hill, end of road.shrine_way)"
-   ]
-  }
- ]
 }

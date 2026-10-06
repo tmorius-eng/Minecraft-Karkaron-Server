@@ -185,7 +185,7 @@ final class Plaza {
         }
 
         void cap(double ax, double ay, double az, double bx, double by, double bz, double r, String t) {
-            Kit.capsule(c, ox + ax * s, oy + ay * s, oz + az * s, ox + bx * s, oy + by * s, oz + bz * s, Math.max(0.55, r * s), t);
+            Kit.capsule(c, ox + ax * s, oy + ay * s, oz + az * s, ox + bx * s, oy + by * s, oz + bz * s, Math.max(0.72, r * s), t);
         }
     }
 

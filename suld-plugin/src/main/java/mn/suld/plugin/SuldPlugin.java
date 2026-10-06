@@ -28,6 +28,7 @@ public final class SuldPlugin extends JavaPlugin {
     private static final long AUTOSAVE_SECONDS = 300L;
 
     private SuldServices services;
+    private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
 
     @Override
     public void onEnable() {
@@ -73,6 +74,16 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand("revive", new ReviveCommand(this, services));
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 
+        worldBuild = new mn.suld.plugin.worldbuild.WorldBuildService(this, config.world());
+        getServer().getPluginManager().registerEvents(worldBuild, this);
+        PluginCommand wb = getCommand("worldbuild");
+        if (wb != null) {
+            mn.suld.plugin.worldbuild.WorldBuildCommand wbc = new mn.suld.plugin.worldbuild.WorldBuildCommand(worldBuild);
+            wb.setExecutor(wbc);
+            wb.setTabCompleter(wbc);
+        }
+        worldBuild.start();
+
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
         getServer().getScheduler().runTaskTimerAsynchronously(this,
                 () -> services.analytics().flush(), flushTicks, flushTicks);
@@ -86,6 +97,9 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (worldBuild != null) {
+            worldBuild.stop();
+        }
         if (services == null) {
             return;
         }

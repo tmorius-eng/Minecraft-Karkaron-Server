@@ -110,13 +110,15 @@ relics:
   hint-cooldown-seconds: 300
 
 # ---------------------------------------------------------------------------
-# World: Kharkhorum (spawn city) + regions — IN DEVELOPMENT, NOT WIRED YET.
-# These keys are parsed but nothing reads them in this build. Kharkhorum is built
-# slice by slice by the WorldBuilder v2 (docs/world/KHARKHORUM_MASTER_PLAN.md);
-# the old one-shot auto-build was retired, so auto-build stays off.
+# World: Kharkhorum spawn city. With kharkhorum-auto-build the WorldBuilder builds
+# slice 1 once on first boot at the world spawn (resumable across restarts; state,
+# height map and rollback log in plugins/SULD/worldbuild/) and moves the spawn onto
+# the plaza. Operate it with /worldbuild (status, validate, rollback confirm, ...).
+# build-blocks-per-tick caps writes per tick (a 25 ms time budget applies too).
+# region-spawning / region-mobs-per-player: reserved, not wired yet.
 # ---------------------------------------------------------------------------
 world:
-  kharkhorum-auto-build: false
+  kharkhorum-auto-build: true
   build-blocks-per-tick: 4000
   region-spawning: true
   region-mobs-per-player: 4
