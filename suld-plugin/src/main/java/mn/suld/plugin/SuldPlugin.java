@@ -110,6 +110,10 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.gui.Menus menus = new mn.suld.plugin.gui.Menus(this, services);
         city.menus(menus);
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.gui.MenuListener(this, services, menus), this);
+        mn.suld.plugin.npc.NpcService npcs = new mn.suld.plugin.npc.NpcService(this, services, worldBuild, menus);
+        getServer().getPluginManager().registerEvents(npcs, this);
+        npcs.start();
+        services.hud().glowSource(npcs::glowEntries);
         mn.suld.plugin.command.MenuCommands mc = new mn.suld.plugin.command.MenuCommands(services, menus);
         registerTab("menu", mc.menu());
         registerTab("tutorial", mc.tutorial());

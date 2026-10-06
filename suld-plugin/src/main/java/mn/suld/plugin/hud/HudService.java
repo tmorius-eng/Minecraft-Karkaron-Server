@@ -59,6 +59,12 @@ public final class HudService {
     private final List<Function<UUID, Optional<String>>> statusLines = new java.util.concurrent.CopyOnWriteArrayList<>();
     private SuldServices services;
     private Plugin plugin;
+    private java.util.function.Supplier<Map<String, NamedTextColor>> glow = Map::of;
+
+    /** Entities (UUID strings) whose glowing outline gets a colour (city NPCs). */
+    public void glowSource(java.util.function.Supplier<Map<String, NamedTextColor>> source) {
+        this.glow = source;
+    }
 
     public HudService(ProgressionService progression) {
         this.progression = progression;
@@ -234,6 +240,16 @@ public final class HudService {
                 if (!prefix.equals(team.prefix())) team.prefix(prefix);
                 if (!suffix.equals(team.suffix())) team.suffix(suffix);
                 if (!team.hasEntry(target.getName())) team.addEntry(target.getName());
+            }
+            for (Map.Entry<String, NamedTextColor> g : glow.get().entrySet()) {
+                String name = "glow_" + g.getValue().toString();
+                Team team = board.getTeam(name);
+                if (team == null) {
+                    team = board.registerNewTeam(name);
+                    team.color(g.getValue());
+                    team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+                }
+                if (!team.hasEntry(g.getKey())) team.addEntry(g.getKey());
             }
             for (Team t : new ArrayList<>(board.getTeams())) {
                 if (t.getName().startsWith("s") && t.getName().length() == 15 && !wanted.contains(t.getName())) t.unregister();
