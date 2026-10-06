@@ -79,6 +79,33 @@ Implemented (`DeathRules` in suld-api, `DeathService` in the plugin):
   deal or take damage and mobs ignore you; a boss bar counts down. With `allow-free-revive: false` the soul waits for
   `/revive`. Relogging does not reset the timer. A chat line summarises what the death cost.
 
+## Storyline — «Сүлдний Зам»
+
+Fifteen chapters (`QuestContent.STORY`), one active at a time; finishing a chapter pays its EXP/₮ and starts the
+next at once. Objective kinds: kill (`KILL_MOB`), reach a level, collect (items are handed in on completion),
+discover a region (crossing into it), clear a dungeon (without being downed).
+
+| # | Chapter | Objective | Region |
+|---|---|---|---|
+| 1 | Анхны Ан | 3 Говийн Чоно | Хэрлэн |
+| 2 | Чонын Арьс | collect 3 wolf pelts | Хэрлэн |
+| 3 | Хэрлэнгийн Дээрэмчид | 5 bandits | Хэрлэн |
+| 4 | Цэргийн Тангараг | level 5 | — |
+| 5 | Хасарын Агуй | clear Khasar's Den | dungeon |
+| 6 | Говийн Зам | reach the Gobi | Говь |
+| 7 | Хилэнцийн Хор | 6 scorpions | Говь |
+| 8 | Элсний Сүнснүүд | 5 sand spirits | Говь |
+| 9 | Мянгатын Сорил | level 12 | — |
+| 10 | Хангайн Ой | reach the Khangai | Хангай |
+| 11 | Саарал Чонын Сүрэг | 8 grey wolves | Хангай |
+| 12 | Хангайн Эзэн | 2 bears (elite) | Хангай |
+| 13 | Алтайн Оргил | reach the Altai | Алтай |
+| 14 | Мөсөн Сүнс | 8 ice spirits | Алтай |
+| 15 | Алтайн Аварга | 3 giants (elite) | Алтай |
+
+`/quest` opens the chapter board (done / active / locked), `/quest info` prints the active chapter; the sidebar
+tracks progress. Admins: `/suld quest <player> <1..15|reset>`.
+
 ## First five minutes (designed beat sheet)
 
 | Time | Beat |

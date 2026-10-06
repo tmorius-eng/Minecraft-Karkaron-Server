@@ -6,7 +6,6 @@ import mn.suld.api.progression.Progression;
 import mn.suld.api.progression.ProgressionEngine;
 import mn.suld.api.quest.QuestState;
 import mn.suld.plugin.SuldServices;
-import mn.suld.plugin.content.SuldContent;
 import mn.suld.plugin.ui.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -33,8 +32,15 @@ public final class ProgressCommands {
 
     private final SuldServices services;
 
+    private mn.suld.plugin.gui.Menus menus;
+
     public ProgressCommands(SuldServices services) {
         this.services = services;
+    }
+
+    /** With menus set, a plain {@code /quest} opens the storyline board ({@code /quest info} = text). */
+    public void menus(mn.suld.plugin.gui.Menus menus) {
+        this.menus = menus;
     }
 
     private PlayerProfile profileOf(CommandSender s, String[] a) {
@@ -170,42 +176,52 @@ public final class ProgressCommands {
 
     private String questLine(QuestState q) {
         if (q.questId().isEmpty()) return "алга";
-        String title = SuldContent.FIRST_HUNT.id().equals(q.questId()) ? SuldContent.FIRST_HUNT.title() : q.questId();
-        if (q.completed()) return title + " — дууссан";
-        int need = SuldContent.FIRST_HUNT.id().equals(q.questId()) ? SuldContent.FIRST_HUNT.requiredCount() : 0;
-        return title + " — " + q.progress() + (need > 0 ? "/" + need : "");
+        var def = services.quests().definition(q.questId()).orElse(null);
+        if (def == null) return q.questId();
+        int chapter = services.quests().chain().indexOf(def.id()) + 1;
+        if (q.completed()) return def.title() + " — дууссан";
+        return chapter + "/" + services.quests().chain().size() + " " + def.title() + " — " + q.progress() + "/" + def.requiredCount();
     }
 
     private final TabExecutor quest = new Simple() {
         @Override
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
+            if (menus != null && s instanceof Player p && a.length == 0) {
+                menus.quests(p);
+                return true;
+            }
+            if (a.length > 0 && a[0].equalsIgnoreCase("info")) a = new String[0];
             PlayerProfile profile = profileOf(s, a);
             if (profile == null) return true;
             QuestState q = profile.questState();
-            s.sendMessage(header("Эрэл · Quests"));
-            if (q.questId().isEmpty()) {
+            var chain = services.quests().chain();
+            s.sendMessage(header("Эрэл · Сүлдний Зам"));
+            var def = services.quests().definition(q.questId()).orElse(null);
+            if (def == null) {
                 if (profile.playerClass().isEmpty()) {
                     s.sendMessage(Component.text("Эхлээд ангиа сонго — дараа нь «Анхны Ан» эрэл өгөгдөнө. ", NamedTextColor.WHITE, TextDecoration.BOLD)
                             .append(Component.text("[/class]", NamedTextColor.AQUA, TextDecoration.BOLD).clickEvent(ClickEvent.runCommand("/class"))));
                 } else {
-                    s.sendMessage(Messages.info("Идэвхтэй эрэл алга."));
+                    s.sendMessage(Messages.info(q.questId().isEmpty() ? "Идэвхтэй эрэл алга." : questLine(q)));
                 }
                 return true;
             }
-            var def = SuldContent.FIRST_HUNT;
-            if (!def.id().equals(q.questId())) {
-                s.sendMessage(Messages.info(questLine(q)));
+            int done = chain.completedCount(q);
+            s.sendMessage(Component.text("Үйл явдал ", NamedTextColor.WHITE, TextDecoration.BOLD)
+                    .append(bar((double) done / chain.size(), Messages.BRAND))
+                    .append(Component.text("  " + done + "/" + chain.size() + " бүлэг", NamedTextColor.WHITE, TextDecoration.BOLD)));
+            if (q.completed()) {
+                s.sendMessage(Messages.success("Сүлдний Зам төгсөв! Бүх " + chain.size() + " бүлгийг дуусгасан ✔"));
                 return true;
             }
-            s.sendMessage(row(def.title(), q.completed() ? "дууссан ✔" : "идэвхтэй", q.completed() ? NamedTextColor.GREEN : NamedTextColor.GOLD));
-            s.sendMessage(Component.text(def.description(), NamedTextColor.WHITE, TextDecoration.BOLD));
+            var lore = mn.suld.plugin.content.QuestContent.lore(def.id());
+            s.sendMessage(row((chain.indexOf(def.id()) + 1) + ". " + def.title(), "идэвхтэй", NamedTextColor.GOLD));
+            s.sendMessage(Component.text(lore.giver() + ": «" + def.description() + "»", NamedTextColor.WHITE, TextDecoration.BOLD));
             s.sendMessage(Component.text("Явц ", NamedTextColor.WHITE, TextDecoration.BOLD)
                     .append(bar((double) q.progress() / def.requiredCount(), NamedTextColor.GOLD))
                     .append(Component.text("  " + q.progress() + "/" + def.requiredCount(), NamedTextColor.WHITE, TextDecoration.BOLD)));
             s.sendMessage(row("Шагнал", def.expReward() + " EXP, " + def.currencyReward() + " ₮", NamedTextColor.GREEN));
-            if (!q.completed()) {
-                s.sendMessage(Component.text("Говийн чононууд хотын хэрмийн гадна, тал нутагт тэнүүчилнэ.", NamedTextColor.GRAY, TextDecoration.BOLD));
-            }
+            if (!lore.hint().isEmpty()) s.sendMessage(Component.text("➜ " + lore.hint(), NamedTextColor.GRAY, TextDecoration.BOLD));
             return true;
         }
     };

@@ -5,5 +5,7 @@ public enum QuestType {
     KILL_MOB,
     REACH_LEVEL,
     COLLECT_ITEM,
-    DISCOVER_LOCATION
+    DISCOVER_LOCATION,
+    /** Clear a dungeon ({@code targetId} = dungeon id) without being downed. */
+    COMPLETE_DUNGEON
 }

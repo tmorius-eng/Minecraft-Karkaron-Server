@@ -216,8 +216,8 @@ public final class NpcService implements Listener {
                 p.sendMessage(Messages.info("Анчин: «Эхлээд ангиа сонго — Бөө чамайг хүлээж байна.»"));
                 return;
             }
-            if (services.quests().startFirstQuestIfNeeded(pr)) p.sendMessage(Messages.accent("Анчин: «Говийн гурван чоныг ан. Хотын хаалгаар гар!»"));
-            p.performCommand("quest");
+            services.quests().ensure(p, pr);
+            menus.quests(p);
         } else if (id.startsWith("merchant.")) {
             menus.shop(p);
         } else if (id.equals("blacksmith")) {

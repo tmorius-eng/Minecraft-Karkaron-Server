@@ -7,7 +7,6 @@ import mn.suld.api.service.ProgressionService;
 import mn.suld.api.style.PlayerStyle;
 import mn.suld.api.style.StaffBadge;
 import mn.suld.plugin.SuldServices;
-import mn.suld.plugin.content.SuldContent;
 import mn.suld.plugin.ui.Glyphs;
 import mn.suld.plugin.ui.StyleFormat;
 import net.kyori.adventure.text.Component;
@@ -167,9 +166,10 @@ public final class HudService {
         if (style != null) lines.add(row("Кредит", Component.text(num(style.credits()) + " ✦", TextColor.fromHexString("#9FF3FF"))));
         lines.add(Component.empty());
         lines.add(section(Glyphs.ICON_SCROLL, "Эрэл"));
-        String quest = profile.questState().active()
-                ? SuldContent.FIRST_HUNT.title() + " " + profile.questState().progress() + "/" + SuldContent.FIRST_HUNT.requiredCount()
-                : (profile.questState().completed() ? "Дууссан ✔" : "—");
+        var qs = profile.questState();
+        var qd = services == null ? null : services.quests().definition(qs.questId()).orElse(null);
+        String quest = qd != null && qs.active() ? qd.title() + " " + qs.progress() + "/" + qd.requiredCount()
+                : (qs.completed() ? "Дууссан ✔" : "—");
         lines.add(Component.text("  " + quest, NamedTextColor.WHITE));
         for (Function<UUID, Optional<String>> provider : statusLines) {
             if (lines.size() >= 13) break;

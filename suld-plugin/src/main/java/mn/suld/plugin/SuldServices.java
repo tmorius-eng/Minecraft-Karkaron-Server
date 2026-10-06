@@ -143,6 +143,7 @@ public final class SuldServices {
         this.itemFactory = new ItemFactory(plugin);
         this.hudService = new HudService(progressionService);
         this.questService = new QuestService(progressionService);
+        this.questService.items(itemFactory);
         this.mobService = new MobService(plugin);
         this.resourcePackService = new ResourcePackService(plugin, config.resourcePack());
         this.classSelectionGui = new ClassSelectionGui(plugin, this, hudService, questService, itemFactory);

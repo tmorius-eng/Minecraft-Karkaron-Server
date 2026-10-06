@@ -130,7 +130,10 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.skill.SkillService skills = new mn.suld.plugin.skill.SkillService(this, services);
         getServer().getPluginManager().registerEvents(skills, this);
         skills.start();
+        services.quests().onChange((p, pr) -> services.hud().update(p, pr));
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
+        progress.menus(menus);
         registerTab("class", progress.clazz());
         registerTab("profile", progress.profile());
         registerTab("exp", progress.exp());

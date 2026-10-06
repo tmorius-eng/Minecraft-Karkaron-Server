@@ -39,6 +39,7 @@ public final class SuldCommand implements CommandExecutor {
             case "spawnmob" -> spawnMob(sender);
             case "auth" -> authStatus(sender);
             case "exp" -> giveExp(sender, args);
+            case "quest" -> setQuest(sender, args);
             default -> help(sender);
         }
         return true;
@@ -83,6 +84,39 @@ public final class SuldCommand implements CommandExecutor {
         services.hud().update(target, profile);
         sender.sendMessage(Messages.success(target.getName() + ": +" + amount + " EXP → түвшин " + profile.progression().level()
                 + (result.leveledUp() ? " (+" + result.levelsGained() + ")" : "")));
+    }
+
+    /** Admin/console: {@code /suld quest <player> <chapter 1..N | reset>} — move a player in the storyline. */
+    private void setQuest(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        var chain = services.quests().chain();
+        Player target = args.length < 3 ? null : Bukkit.getPlayerExact(args[1]);
+        PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
+        if (profile == null) {
+            sender.sendMessage(Messages.info("/suld quest <онлайн тоглогч> <1.." + chain.size() + " | reset>"));
+            return;
+        }
+        if (args[2].equalsIgnoreCase("reset")) {
+            profile.questState(mn.suld.api.quest.QuestState.NONE);
+        } else {
+            int n;
+            try {
+                n = Integer.parseInt(args[2]);
+            } catch (NumberFormatException e) {
+                n = -1;
+            }
+            if (n < 1 || n > chain.size()) {
+                sender.sendMessage(Messages.error("Бүлэг 1.." + chain.size()));
+                return;
+            }
+            profile.questState(chain.chapters().get(n - 1).initialState());
+        }
+        services.quests().ensure(target, profile);
+        services.profiles().save(profile);
+        sender.sendMessage(Messages.success(target.getName() + ": эрэл → " + profile.questState().questId()));
     }
 
     /** Admin/console: authentication mode and per-player session/profile state. */

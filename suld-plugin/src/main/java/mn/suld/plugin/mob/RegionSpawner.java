@@ -122,6 +122,9 @@ public final class RegionSpawner {
         RegionDefinition r = regionAt(p.getLocation()).orElse(null);
         String id = r == null ? "" : r.id();
         String before = lastRegion.put(p.getUniqueId(), id);
+        if (r != null && !r.safeZone() && !id.equals(before)) {
+            services.profiles().cached(p.getUniqueId()).ifPresent(pr -> services.quests().onRegion(p, pr, id));
+        }
         if (r == null || r.safeZone() || id.equals(before) || before == null) return;
         p.showTitle(net.kyori.adventure.title.Title.title(
                 net.kyori.adventure.text.Component.text(r.displayName(), net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),

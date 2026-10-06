@@ -56,7 +56,7 @@ public final class PlayerLifecycleListener implements Listener {
             player.sendMessage(Messages.info("Анхны алхам: ангиа сонгоно уу."));
             services.classSelectionGui().open(player);
         } else {
-            services.quests().startFirstQuestIfNeeded(profile);
+            services.quests().ensure(player, profile);
             player.sendMessage(Messages.info("Анги: "
                     + profile.playerClass().map(c -> c.displayName()).orElse("—")
                     + " · Түвшин " + profile.progression().level()));
