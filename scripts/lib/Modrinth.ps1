@@ -106,7 +106,7 @@ function Test-MrFileShape($f) {
         -and ($name -notmatch '[\\/]') -and ($sha512 -is [string]) -and ($sha512 -match '^[0-9a-fA-F]{128}$')
 }
 
-function Get-MrReleases([string]$Project, [string]$GameVersion, [string[]]$Loaders) {
+function Get-MrReleases([string]$Project, [string]$GameVersion, [string[]]$Loaders, [string[]]$Types = @("release")) {
     # Listed release versions of a project for this game version and loaders, newest first.
     # Each result: Endpoint, Project, VersionId, Version, File, Url, Sha512, Size, Loaders.
     $games = [uri]::EscapeDataString((ConvertTo-Json -InputObject @($GameVersion) -Compress))
@@ -117,7 +117,7 @@ function Get-MrReleases([string]$Project, [string]$GameVersion, [string[]]$Loade
     if ($null -eq $json -or $json -is [string]) { return ,$out }
     foreach ($v in (ConvertTo-MrList $json)) {
         if (-not (Test-MrVersionShape $v)) { continue }
-        if ((Get-MrProp $v "version_type") -ne "release") { continue }
+        if ($Types -notcontains (Get-MrProp $v "version_type")) { continue }
         if ((Get-MrProp $v "status") -ne "listed") { continue }
         $gv = ConvertTo-MrList (Get-MrProp $v "game_versions")
         if (-not ($gv -contains $GameVersion)) { continue }
@@ -145,11 +145,13 @@ function Get-MrReleases([string]$Project, [string]$GameVersion, [string[]]$Loade
     return ,$result
 }
 
-function Get-MrPluginReleases([string]$Project, [string]$GameVersion) {
+function Get-MrPluginReleases([string]$Project, [string]$GameVersion, [bool]$AllowBeta = $false) {
     # Paper builds first; a plugin that only publishes Bukkit/Spigot builds (they run on Paper) as the fallback.
-    $r = Get-MrReleases $Project $GameVersion @("paper")
+    # Listed releases only, unless the manifest allows beta for a project that publishes no releases (Geyser).
+    $types = if ($AllowBeta) { @("release", "beta") } else { @("release") }
+    $r = Get-MrReleases $Project $GameVersion @("paper") $types
     if ($r.Count -gt 0) { return ,$r }
-    return ,(Get-MrReleases $Project $GameVersion @("spigot", "bukkit"))
+    return ,(Get-MrReleases $Project $GameVersion @("spigot", "bukkit") $types)
 }
 
 function Save-MrFile($Release, [string]$Destination) {

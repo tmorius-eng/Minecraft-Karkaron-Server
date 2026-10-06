@@ -236,7 +236,7 @@ function Get-PluginBuilds($entry, [string]$Mc) {
     $slug = Get-Prop $entry "modrinth"
     if ($slug) {
         $releases = $null
-        try { $releases = Get-MrPluginReleases $slug $Mc } catch {
+        try { $releases = Get-MrPluginReleases $slug $Mc ([bool](Get-Prop $entry "allow_beta")) } catch {
             Write-Host "    !! Modrinth API request for '$slug' failed: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         if ($releases) {
@@ -245,6 +245,27 @@ function Get-PluginBuilds($entry, [string]$Mc) {
                     Algo = "SHA512"; Hash = $r.Sha512; Source = "modrinth"; Endpoint = $r.Endpoint; Release = $r })
                 if ($out.Count -ge 6) { break }
             }
+        }
+    }
+    $geyser = Get-Prop $entry "geysermc"
+    if ($geyser -and $out.Count -eq 0) {
+        # GeyserMC's official download API (Floodgate for Paper is only published there); SHA-256 verified.
+        $base = "https://download.geysermc.org/v2/projects/$geyser"
+        try {
+            $meta = Invoke-RestMethod -Uri "$base/versions/latest/builds/latest" -UserAgent $UserAgent
+            $ver = Get-Prop $meta "version"
+            $bld = Get-Prop $meta "build"
+            $dl = Get-Prop (Get-Prop $meta "downloads") "spigot"
+            $sha = Get-Prop $dl "sha256"
+            $name = Get-Prop $dl "name"
+            if (($ver -is [string]) -and ($null -ne $bld) -and ($sha -is [string]) -and ($sha -match '^[0-9a-fA-F]{64}$')) {
+                if (-not (($name -is [string]) -and $name.EndsWith(".jar") -and ($name -notmatch '[\\/]'))) { $name = "$geyser-spigot.jar" }
+                $out.Add([pscustomobject]@{ Version = "$ver-b$bld"; VersionId = [string]$bld; File = $name;
+                    Url = "$base/versions/$ver/builds/$bld/downloads/spigot"; Algo = "SHA256"; Hash = $sha.ToLowerInvariant();
+                    Source = "geysermc"; Endpoint = "$base/versions/latest/builds/latest"; Release = $null })
+            }
+        } catch {
+            Write-Host "    !! GeyserMC API request for '$geyser' failed: $($_.Exception.Message)" -ForegroundColor Yellow
         }
     }
     $hangar = Get-Prop $entry "hangar"
@@ -334,6 +355,8 @@ if ($Plugins -ne "none") {
     }
     $managed = @{}
     $skipped = @()
+    $optionalSkipped = @()
+    $installedIds = @{}
     foreach ($p in (ConvertTo-List $manifest.plugins)) {
         if ($profiles -notcontains $p.profile) { continue }
         $managed[$p.name] = $true
@@ -383,7 +406,17 @@ if ($Plugins -ne "none") {
             $fresh = $true
             break
         }
-        if (-not $installed) { $skipped += $p.name; Write-Host "    -- $($p.name): no Java 21 build for $MinecraftVersion (skipped)"; continue }
+        if (-not $installed) {
+            if (Get-Prop $p "optional") {
+                $optionalSkipped += $p.name
+                Write-Host "    WARNING: optional $($p.name): no build for $MinecraftVersion from an allowed source (skipped)" -ForegroundColor Yellow
+            } else {
+                $skipped += $p.name
+                Write-Host "    -- $($p.name): no Java 21 build for $MinecraftVersion could be fetched and verified (skipped)"
+            }
+            continue
+        }
+        $installedIds[$p.id] = $true
         if ($prevFile -and $prevFile -ne $installed.File) {
             $old = Join-Path $PluginsDir $prevFile
             if (Test-Path $old) { Remove-Item $old -Force }
@@ -396,9 +429,49 @@ if ($Plugins -ne "none") {
     }
     $rejectJson = if ($rejected.Count -eq 0) { "[]" } elseif ($rejected.Count -eq 1) { "[" + (ConvertTo-Json -InputObject @($rejected.Keys)[0]) + "]" } else { ConvertTo-Json -InputObject @($rejected.Keys) }
     [IO.File]::WriteAllText($rejectFile, $rejectJson, $Utf8NoBom)
+    # A plugin whose required companions are missing is removed again (Geyser needs ViaVersion, Floodgate needs Geyser).
+    foreach ($p in (ConvertTo-List $manifest.plugins)) {
+        if (-not $installedIds.ContainsKey($p.id)) { continue }
+        $need = @()
+        foreach ($r in (ConvertTo-List (Get-Prop $p "requires"))) { if (-not $installedIds.ContainsKey([string]$r)) { $need += [string]$r } }
+        if ($need.Count -eq 0) { continue }
+        $f = [string](Get-Prop $lock[$p.id] "file")
+        if ($f -and (Test-Path (Join-Path $PluginsDir $f))) { Remove-Item (Join-Path $PluginsDir $f) -Force }
+        $lock.Remove($p.id)
+        $installedIds.Remove($p.id)
+        if (Get-Prop $p "optional") { $optionalSkipped += $p.name } else { $skipped += $p.name }
+        Write-Host "    WARNING: $($p.name) needs $($need -join ', '); removed" -ForegroundColor Yellow
+    }
+    $states = @()
+    foreach ($p in (ConvertTo-List $manifest.plugins)) {
+        if (@("geyser", "floodgate") -notcontains $p.id -or $profiles -notcontains $p.profile) { continue }
+        $states += "$($p.name) " + $(if ($installedIds.ContainsKey($p.id)) { "installed" } else { "SKIPPED" })
+    }
+    if ($states.Count -gt 0) { Write-Host "    Bedrock support: $($states -join ', ')" -ForegroundColor Cyan }
     Remove-StrayPlugins $PluginsDir $lock $managed
     [IO.File]::WriteAllText($lockFile, ($lock | ConvertTo-Json -Depth 4), $Utf8NoBom)
     if ($skipped.Count -gt 0) { Write-Host "    Not installed: $($skipped -join ', ')" -ForegroundColor Yellow }
+    if ($optionalSkipped.Count -gt 0) { Write-Host "    Optional, skipped: $($optionalSkipped -join ', ') (the server runs without them)" -ForegroundColor Yellow }
+
+    # Geyser (Bedrock players) on this LOCAL server: listen on 127.0.0.1 unless -Lan, and never "offline" auth:
+    # Floodgate (Xbox/Microsoft login) when installed, otherwise "online" (a Microsoft Java account).
+    if ($installedIds.ContainsKey("geyser")) {
+        $gDir = Join-Path $PluginsDir "Geyser-Spigot"
+        $gCfg = Join-Path $gDir "config.yml"
+        $bind = if ($Lan) { "0.0.0.0" } else { "127.0.0.1" }
+        $auth = if ($installedIds.ContainsKey("floodgate")) { "floodgate" } else { "online" }
+        New-Item -ItemType Directory -Force -Path $gDir | Out-Null
+        if (Test-Path $gCfg) {
+            $g = [IO.File]::ReadAllText($gCfg, [Text.Encoding]::UTF8)
+            $g = [regex]::Replace($g, '(?m)^(bedrock:(?:\r?\n(?:[ \t].*|\s*))*?\r?\n[ \t]+address:[ \t]*)\S+', "`${1}$bind")
+            $g = [regex]::Replace($g, '(?m)^([ \t]+auth-type:[ \t]*)\S+', "`${1}$auth")
+        } else {
+            # Geyser fills in every other setting with its defaults on first start.
+            $g = "bedrock:`n  address: $bind`njava:`n  auth-type: $auth`n"
+        }
+        [IO.File]::WriteAllText($gCfg, $g, $Utf8NoBom)
+        Write-Host "    Geyser: Bedrock on ${bind}:19132 (UDP), auth-type $auth" -ForegroundColor Gray
+    }
 }
 
 # --- 4. run directory ---------------------------------------------------------------------------

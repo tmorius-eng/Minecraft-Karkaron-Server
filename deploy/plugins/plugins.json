@@ -1,6 +1,6 @@
 {
   "minecraft": "1.21.11",
-  "note": "Trusted third-party server plugins around SÜLD. SÜLD owns gameplay (classes, EXP, skills, combat, items, quests, dungeons, relics, HUD, Kharkhorum, /help, /spawn); these provide generic server plumbing. Never add plugins that own RPG/UI layers (MythicMobs, MMOCore, MMOItems, mcMMO, Jobs, Citizens, ItemsAdder, Oraxen, DeluxeMenus, TAB, BetterHud). Profiles: core = always (test + production), hardening = production, optional = on request, dev = admin/build tools only. Exactly one of each conflicting pair is installed. spark is not listed: Paper 1.21.11 bundles it (/spark). Only builds whose main class targets Java 21 (class version <= 65) are installed.",
+  "note": "Trusted third-party server plugins around SÜLD. SÜLD owns gameplay (classes, EXP, skills, combat, items, quests, dungeons, relics, HUD, Kharkhorum, /help, /spawn); these provide generic server plumbing. Never add plugins that own RPG/UI layers (MythicMobs, MMOCore, MMOItems, mcMMO, Jobs, Citizens, ItemsAdder, Oraxen, DeluxeMenus, TAB, BetterHud). Profiles: core = always (test + production), hardening = production, optional = on request, dev = admin/build tools only. Exactly one of each conflicting pair is installed. spark is not listed: Paper 1.21.11 bundles it (/spark). Modrinth: listed releases only (allow_beta for projects that publish no releases, e.g. Geyser). Only builds whose main class targets Java 21 (class version <= 65) are installed. optional = skipped with a warning when no allowed source has a build (Bedrock support: Geyser, Floodgate); requires = installed only together with those plugins.",
   "plugins": [
     {
       "id": "luckperms",
@@ -111,10 +111,47 @@
     {
       "id": "viaversion",
       "name": "ViaVersion",
-      "profile": "hardening",
+      "profile": "core",
       "modrinth": "viaversion",
       "hangar": "ViaVersion/ViaVersion",
-      "why": "let newer clients join 1.21.11"
+      "why": "lets newer Minecraft Java clients join the 1.21.11 server"
+    },
+    {
+      "id": "viabackwards",
+      "name": "ViaBackwards",
+      "profile": "core",
+      "modrinth": "viabackwards",
+      "why": "lets older Minecraft Java clients join (needs ViaVersion)"
+    },
+    {
+      "id": "gsit",
+      "name": "GSit",
+      "profile": "core",
+      "modrinth": "gsit",
+      "why": "/sit /lay /crawl and sitting on stairs/slabs (SULD lets it work inside Kharkhorum)"
+    },
+    {
+      "id": "geyser",
+      "name": "Geyser-Spigot",
+      "profile": "core",
+      "modrinth": "geyser",
+      "allow_beta": true,
+      "why": "Bedrock Edition (mobile, console, Windows) players can join; UDP port 19132. GeyserMC publishes every build on Modrinth as 'beta'",
+      "optional": true,
+      "requires": [
+        "viaversion"
+      ]
+    },
+    {
+      "id": "floodgate",
+      "name": "floodgate",
+      "profile": "core",
+      "geysermc": "floodgate",
+      "why": "Bedrock players join with their Xbox (Microsoft) account, no Java account needed; official GeyserMC download API",
+      "optional": true,
+      "requires": [
+        "geyser"
+      ]
     },
     {
       "id": "bluemap",

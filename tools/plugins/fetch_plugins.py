@@ -112,14 +112,14 @@ def _file_ok(f):
             and isinstance(h, dict) and isinstance(h.get("sha512"), str) and re.fullmatch(r"[0-9a-fA-F]{128}", h["sha512"]) is not None)
 
 
-def modrinth_releases(slug, mc, loaders):
-    """Listed releases for this game version and loaders, newest first (GET /project/{slug}/version)."""
+def modrinth_releases(slug, mc, loaders, types=("release",)):
+    """Listed versions of the given types for this game version and loaders, newest first (GET /project/{slug}/version)."""
     q = urllib.parse.urlencode({"game_versions": json.dumps([mc]), "loaders": json.dumps(loaders), "include_changelog": "false"})
     endpoint = f"{MODRINTH}/project/{urllib.parse.quote(slug)}/version?{q}"
     data = get_json(endpoint)
     out = []
     for v in data if isinstance(data, list) else []:
-        if not _version_ok(v) or v["version_type"] != "release" or v["status"] != "listed":
+        if not _version_ok(v) or v["version_type"] not in types or v["status"] != "listed":
             continue
         if mc not in v["game_versions"] or not set(loaders) & set(v["loaders"]):
             continue
@@ -134,9 +134,28 @@ def modrinth_releases(slug, mc, loaders):
     return out
 
 
-def from_modrinth(slug, mc):
+def from_modrinth(slug, mc, allow_beta=False):
     """Paper builds first; Bukkit/Spigot builds (they run on Paper) only when a plugin publishes no Paper build."""
-    return modrinth_releases(slug, mc, ["paper"]) or modrinth_releases(slug, mc, ["spigot", "bukkit"])
+    types = ("release", "beta") if allow_beta else ("release",)
+    return modrinth_releases(slug, mc, ["paper"], types) or modrinth_releases(slug, mc, ["spigot", "bukkit"], types)
+
+
+GEYSERMC = "https://download.geysermc.org/v2/projects"
+
+
+def from_geysermc(project):
+    """Latest build from GeyserMC's official download API (Geyser/Floodgate for Paper: the 'spigot' platform)."""
+    meta = get_json(f"{GEYSERMC}/{urllib.parse.quote(project)}/versions/latest/builds/latest")
+    if not isinstance(meta, dict) or not isinstance(meta.get("version"), str) or not isinstance(meta.get("build"), int):
+        raise RuntimeError("unexpected GeyserMC API response")
+    dl = (meta.get("downloads") or {}).get("spigot")
+    if not isinstance(dl, dict) or not isinstance(dl.get("name"), str) or not re.fullmatch(r"[0-9a-fA-F]{64}", str(dl.get("sha256", ""))):
+        raise RuntimeError("GeyserMC API: no verified spigot download")
+    name = dl["name"] if dl["name"].endswith(".jar") and "/" not in dl["name"] else f"{project}-spigot.jar"
+    url = f"{GEYSERMC}/{project}/versions/{meta['version']}/builds/{meta['build']}/downloads/spigot"
+    return [{"source": "geysermc", "version": f"{meta['version']}-b{meta['build']}", "version_id": str(meta["build"]),
+             "file": name, "url": url, "size": -1, "hash": ("sha256", dl["sha256"].lower()),
+             "endpoint": f"{GEYSERMC}/{project}/versions/latest/builds/latest"}]
 
 
 def from_hangar(project, mc):
@@ -184,7 +203,8 @@ def main():
         rejected = {h for h in json.load(open(reject_path)) if isinstance(h, str)}
     except (OSError, ValueError, TypeError):
         rejected = set()
-    ok, missing, failed = [], [], []
+    ok, missing, failed, optional_skipped = [], [], [], []
+    installed_ids = set()
     managed = set()
     for p in chosen:
         managed.add(p["name"])
@@ -192,10 +212,12 @@ def main():
             candidates = []
             if p.get("modrinth"):
                 try:
-                    candidates += from_modrinth(p["modrinth"], mc)
+                    candidates += from_modrinth(p["modrinth"], mc, bool(p.get("allow_beta")))
                 except urllib.error.HTTPError as e:
                     if e.code != 404:
                         raise
+            if p.get("geysermc") and not candidates:
+                candidates += from_geysermc(p["geysermc"])
             if p.get("hangar") and not candidates:
                 try:
                     candidates += from_hangar(p["hangar"], mc)
@@ -238,8 +260,12 @@ def main():
                 fresh = True
                 break
             if chosen_build is None:
-                missing.append(p["name"])
-                print(f"  -- {p['name']}: no Java 21 build for Minecraft {mc}; skipped")
+                if p.get("optional"):
+                    optional_skipped.append(p["name"])
+                    print(f"  WARNING: optional {p['name']}: no build for Minecraft {mc} from an allowed source; skipped")
+                else:
+                    missing.append(p["name"])
+                    print(f"  -- {p['name']}: no Java 21 build for Minecraft {mc} could be fetched and verified; skipped")
                 continue
             if prev.get("file") and prev["file"] != chosen_build["file"]:
                 old = os.path.join(args.dest, prev["file"])
@@ -251,12 +277,32 @@ def main():
                              "endpoint": chosen_build.get("endpoint", "")}
             state = "downloaded" if fresh else "already installed"
             print(f"  ok {p['name']} {chosen_build['version']} [{chosen_build.get('version_id', '')}] {chosen_build['file']} ({state}, hash verified)")
+            installed_ids.add(p["id"])
             if chosen_build.get("endpoint"):
                 print(f"     {chosen_build['endpoint']}")
             ok.append(p["name"])
         except Exception as e:  # report and continue with the others
-            failed.append(f"{p['name']}: {e}")
-            print(f"  !! {p['name']}: {e}")
+            if p.get("optional"):
+                optional_skipped.append(p["name"])
+                print(f"  WARNING: optional {p['name']} skipped: {e}")
+            else:
+                failed.append(f"{p['name']}: {e}")
+                print(f"  !! {p['name']}: {e}")
+    # a plugin whose required companions are missing is removed again (e.g. Geyser without ViaVersion)
+    for p in chosen:
+        need = [r for r in p.get("requires", []) if r not in lock or r not in installed_ids]
+        if p["id"] in installed_ids and need:
+            f = lock.pop(p["id"], {}).get("file")
+            if f and os.path.exists(os.path.join(args.dest, f)):
+                os.remove(os.path.join(args.dest, f))
+            installed_ids.discard(p["id"])
+            (optional_skipped if p.get("optional") else missing).append(p["name"])
+            if p["name"] in ok:
+                ok.remove(p["name"])
+            print(f"  WARNING: {p['name']} needs {', '.join(need)}; removed")
+    bedrock = [p for p in chosen if p["id"] in ("geyser", "floodgate")]
+    if bedrock:
+        print("  Bedrock support: " + ", ".join(f"{p['name']} {'installed' if p['id'] in installed_ids else 'SKIPPED'}" for p in bedrock))
     keep = {v.get("file") for v in lock.values()}
     for jar in sorted(os.listdir(args.dest)):
         if not jar.endswith(".jar") or jar in keep or jar.startswith("suld-plugin") or jar == "SULD.jar":
@@ -272,7 +318,8 @@ def main():
         json.dump(lock, fh, indent=2)
     with open(reject_path, "w", encoding="utf-8") as fh:
         json.dump(sorted(rejected), fh, indent=2)
-    print(f"plugins: {len(ok)} installed, {len(missing)} without a {mc} build, {len(failed)} failed")
+    print(f"plugins: {len(ok)} installed, {len(missing)} without a {mc} build, {len(failed)} failed"
+          + (f", optional skipped: {', '.join(optional_skipped)}" if optional_skipped else ""))
     if failed:
         sys.exit(1)
 
