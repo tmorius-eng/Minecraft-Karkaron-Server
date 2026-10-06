@@ -79,7 +79,10 @@ public final class SuldPlugin extends JavaPlugin {
         services.relics().start();
         long clanFlushTicks = TICKS_PER_SECOND * 60;
         getServer().getScheduler().runTaskTimer(this, () -> services.clans().flushDirty(), clanFlushTicks, clanFlushTicks);
-        registerCommand("revive", new ReviveCommand(this, services));
+        mn.suld.plugin.death.DeathService deaths = new mn.suld.plugin.death.DeathService(this, services);
+        getServer().getPluginManager().registerEvents(deaths, this);
+        deaths.start();
+        registerCommand("revive", new ReviveCommand(this, services, deaths));
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 
         worldBuild = new mn.suld.plugin.worldbuild.WorldBuildService(this, config.world());

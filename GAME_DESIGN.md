@@ -69,9 +69,15 @@ soul-shard hooks — later phases) or an **admin action**.
 - **No real-money resurrection** is part of the core architecture.
 - Admin recovery: `/revive <player>` (permission `suld.admin.revive`), audited.
 
-Phase 1 ships the config model, the admin `/revive`, and the analytics/audit
-hooks; the full soul-state state machine, loot/durability application, and
-free recovery quests are a dedicated later phase.
+Implemented (`DeathRules` in suld-api, `DeathService` in the plugin):
+
+- **Soulbound, always kept:** class weapons, armour/shield/elytra and the menu item. Relics follow the relic rules.
+- **Loot:** `loot-loss-fraction` of the other stacks (rounded down, chosen at random) drops where you died; the rest stays in its slot.
+- **EXP:** `exp-loss-fraction` of the progress into the current level is lost — never a level. No vanilla EXP orbs.
+- **Durability:** kept damageable gear takes `durability-damage-fraction` of its max durability (never breaks).
+- **Soul state (Сүнс):** after respawning you are a soul for `soul-state-seconds` — slowed and weakened; you cannot
+  deal or take damage and mobs ignore you; a boss bar counts down. With `allow-free-revive: false` the soul waits for
+  `/revive`. Relogging does not reset the timer. A chat line summarises what the death cost.
 
 ## First five minutes (designed beat sheet)
 

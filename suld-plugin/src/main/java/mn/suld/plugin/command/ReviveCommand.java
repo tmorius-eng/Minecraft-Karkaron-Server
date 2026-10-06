@@ -26,10 +26,12 @@ public final class ReviveCommand implements CommandExecutor {
 
     private final Plugin plugin;
     private final SuldServices services;
+    private final mn.suld.plugin.death.DeathService deaths;
 
-    public ReviveCommand(Plugin plugin, SuldServices services) {
+    public ReviveCommand(Plugin plugin, SuldServices services, mn.suld.plugin.death.DeathService deaths) {
         this.plugin = plugin;
         this.services = services;
+        this.deaths = deaths;
     }
 
     @Override
@@ -63,6 +65,7 @@ public final class ReviveCommand implements CommandExecutor {
 
     @SuppressWarnings("deprecation") // getMaxHealth() is version-stable; attribute API churns across 1.21.x
     private void revive(Player player) {
+        deaths.revive(player, true);
         player.setGameMode(GameMode.SURVIVAL);
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
