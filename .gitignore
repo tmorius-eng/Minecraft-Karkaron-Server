@@ -1,0 +1,24 @@
+# Build output
+build/
+.gradle/
+out/
+
+# Gradle
+!gradle/wrapper/gradle-wrapper.jar
+
+# Paper test server (run-paper default dir and our script's dir)
+run/
+server/
+*.jar.tmp
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+
+# OS
+.DS_Store

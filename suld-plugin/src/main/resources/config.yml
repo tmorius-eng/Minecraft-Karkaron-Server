@@ -1,0 +1,55 @@
+# ============================================================================
+#  SULD — Mongolian Hardcore MMORPG  |  core configuration
+#  Every gameplay value is data-driven. Edit here, then /suld reload (or restart)
+# ============================================================================
+
+# UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
+locale: mn
+
+# ---------------------------------------------------------------------------
+# Character progression (level / EXP curve).
+# EXP to go from level L to L+1 = round(base * L^exponent).
+# ---------------------------------------------------------------------------
+progression:
+  max-level: 60
+  curve:
+    base: 100.0
+    exponent: 1.75
+
+# ---------------------------------------------------------------------------
+# Persistence. type: memory | mysql | postgresql
+#   memory       -> no database, data is volatile (local dev / testing only)
+#   mysql        -> requires a reachable MySQL/MariaDB server
+#   postgresql   -> requires a reachable PostgreSQL server
+# ---------------------------------------------------------------------------
+database:
+  type: memory
+  host: 127.0.0.1
+  port: 3306
+  database: suld
+  username: suld
+  password: ''
+  pool-size: 10
+  connection-timeout-ms: 10000
+  use-ssl: false
+
+# ---------------------------------------------------------------------------
+# Hardcore PvE death system. No real-money mechanics; recovery is free in-game
+# or an admin action (/revive). All harshness levers are here.
+# ---------------------------------------------------------------------------
+death:
+  enabled: true
+  soul-state-seconds: 30
+  exp-loss-fraction: 0.10
+  durability-damage-fraction: 0.25
+  drop-loot: true
+  loot-loss-fraction: 0.5
+  allow-free-revive: true
+
+# ---------------------------------------------------------------------------
+# Analytics. sink: log | database  (database requires a configured DB above)
+# ---------------------------------------------------------------------------
+analytics:
+  enabled: true
+  flush-interval-seconds: 30
+  sink: log

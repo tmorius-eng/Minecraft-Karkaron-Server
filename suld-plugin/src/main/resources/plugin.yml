@@ -1,0 +1,30 @@
+name: SULD
+version: '${version}'
+main: mn.suld.plugin.SuldPlugin
+api-version: '${apiVersion}'
+description: SULD — Mongolian Hardcore MMORPG core.
+authors: [SULD Team]
+website: https://github.com/tmorius-eng/Minecraft-Karkaron-Server
+# Infrastructure-only runtime libraries, fetched by Paper from Maven Central on
+# first load. Pinned. HikariCP is shaded into the jar, not listed here. Only the
+# driver matching the configured database is actually used at runtime.
+libraries:
+  - com.mysql:mysql-connector-j:9.1.0
+  - org.postgresql:postgresql:42.7.4
+commands:
+  suld:
+    description: SULD player/admin command (info, profile).
+    usage: /suld <info|profile>
+  revive:
+    description: Revive a player from the hardcore death/soul state (admin).
+    usage: /revive <player>
+    permission: suld.admin.revive
+permissions:
+  suld.admin:
+    description: Grants all SULD administrative commands.
+    default: op
+    children:
+      suld.admin.revive: true
+  suld.admin.revive:
+    description: Allows reviving players from the death/soul state.
+    default: op
