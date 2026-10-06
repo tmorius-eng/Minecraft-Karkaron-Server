@@ -5,7 +5,7 @@
 
 **Last updated:** 2026-10-06
 **Build:** `./gradlew build` green (24 tests). Asset validations green.
-**Current phase:** Foundation + asset-pipeline proven. Starting Vertical Slice 1.
+**Current phase:** Foundation + FULL asset pipeline proven (Meshy->Blender->Blockbench->resource pack, real textured model). Next: Vertical Slice 1 (gameplay).
 
 ---
 
@@ -26,9 +26,10 @@
   (MySQL/PostgreSQL), forward-only schema migrator, world-unique-item storage
   constraints, join/quit lifecycle with analytics, `/suld` and admin `/revive`.
 - **Asset pipeline (verified end-to-end this session):**
-  - **Meshy** — `api.meshy.ai` reachable; credential injected by the cloud egress
-    proxy (no key in env/repo); balance 1100; text-to-3D task created and
-    **SUCCEEDED**.
+  - **Meshy** — FULLY PROVEN. `api.meshy.ai` + `assets.meshy.ai` allowed;
+    credential proxy-injected (no key in env/repo). Preview -> refine
+    (meshy-7.1, 4K, PBR) SUCCEEDED; real textured GLB (28.6MB, 30147 tris,
+    baseColor+metalRough+normal) downloaded and rendered in Blender.
   - **Blender 4.0.2** headless — Cycles CPU render + glTF/OBJ export working
     (numpy installed, OIDN denoiser disabled). djeada **Blender MCP** (27 tools)
     verified; `blender_python_exec` headless transport runs `blender -b`.
@@ -40,9 +41,10 @@
   - Validation scripts (`tools/validation/`) green.
 
 ### 2. What is broken / blocked (not faked)
-- **Meshy asset download**: model files are served from `assets.meshy.ai`, which
-  the egress policy **denies (403)**. Generation works; retrieval does not.
-  → Allow `assets.meshy.ai` to complete Meshy→Blender ingestion.
+- **Meshy** download now works (`assets.meshy.ai` allowed). RESOLVED.
+  Remaining nuance (not a bug): vanilla Minecraft Java item models are box-only,
+  so a high-poly Meshy mesh is the promo/NPC/reference asset; the in-game item
+  model is a Blockbench low-poly box model guided by the Meshy silhouette.
 - **Blockbench built-in renderer** needs a GPU (WebGPU/Dawn) — none in the
   container. Workaround in use: render exported geometry via Blender (CPU). Not
   a blocker.
