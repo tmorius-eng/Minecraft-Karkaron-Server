@@ -4,6 +4,8 @@
 # ============================================================================
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
+# Schema version of this file (SULD migrates older files on start; do not edit).
+config-version: 2
 locale: mn
 
 # ---------------------------------------------------------------------------
@@ -55,16 +57,24 @@ analytics:
   sink: log
 
 # ---------------------------------------------------------------------------
-# Resource pack. Host the built SÜLD pack ZIP at `url` and put its hex SHA-1 in
-# `sha1`. When enabled, it is sent automatically on join. `required: true` makes
-# acceptance mandatory. Leave disabled until a pack is hosted.
+# Resource pack (custom HUD, item skins). Sent automatically on join.
+#   url empty  -> SÜLD serves the pack bundled in its own jar (self-host below);
+#                 players download it from http://<the host they joined with>:<port>/
+#   url set    -> that externally hosted ZIP is sent instead (deploy/build-pack.sh prints url + sha1)
+# The self-host port must be reachable by players (deploy/firewall.sh opens PACK_PORT).
 # ---------------------------------------------------------------------------
 resource-pack:
-  enabled: false
+  enabled: true
   url: ''
   sha1: ''
   required: false
   prompt: 'SÜLD-ийн дүрс багцыг татаж авна уу (Download the SÜLD resource pack)'
+  self-host:
+    enabled: true
+    bind: 0.0.0.0
+    port: 8164
+    # e.g. http://play.example.mn:8164 when players join through a proxy or a different hostname
+    public-url: ''
 
 # ---------------------------------------------------------------------------
 # Clans (овог). Founding costs in-game coins (a currency sink, never real money).

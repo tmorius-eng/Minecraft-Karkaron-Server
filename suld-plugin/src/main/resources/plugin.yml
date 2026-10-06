@@ -5,6 +5,10 @@ api-version: '${apiVersion}'
 description: SULD — Mongolian Hardcore MMORPG core.
 authors: [SULD Team]
 website: https://github.com/tmorius-eng/Minecraft-Karkaron-Server
+# SULD owns the RPG commands (/help, /rules, /spawn, /class, /skills, ...): load before the utility
+# plugins so their same-named commands defer to SULD.
+loadbefore: [Essentials, EssentialsSpawn, CMI]
+softdepend: [LuckPerms, PlaceholderAPI]
 # Infrastructure-only runtime libraries, fetched by Paper from Maven Central on
 # first load. Pinned. HikariCP is shaded into the jar, not listed here. Only the
 # driver matching the configured database is actually used at runtime.

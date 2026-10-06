@@ -13,7 +13,10 @@ sparingly, red mangrove columns, white felt with sky-blue and orange trim, patin
 | `wall.retaining` | STRUCTURE | length, height, gaps, hangings | terrace face, balustrade, pilasters, SÜLD hangings |
 | `gate.imperial` | LANDMARK | — | 35 wide, 7×9 arched passage, twin towers, gate hall, braziers, tug |
 | `wall.straight` | STRUCTURE | length, height, end_bastion | 5 thick, 12 high, crenels, walkway, pilasters |
-| `tower.watch` | STRUCTURE | — | 9×9, ladder, floors, crenellated deck, pavilion roof, brazier |
+| `tower.watch` | STRUCTURE | half (4 / 6), height, door_x | 9×9 watch/wall tower or 13×13 buttressed corner tower: ladder, floors, crenellated deck, pavilion roof, brazier |
+| `gate.side` | STRUCTURE | — | the lesser city gates (Sheep, Grain, Horse): 25 wide, 5×7 passage, twin towers |
+| `palace.hall` | LANDMARK | — | Түмэн Амгалан throne hall: 64 columns (8×8), double-eaved roof, throne dais |
+| `fountain.silver_tree` | LANDMARK | — | Мөнгөн Мод, the Silver Tree fountain (Guillaume Boucher, per Rubruck) |
 | `plaza.ceremonial` | INFRA | radius, avoid | Ø57 raised plaza, rings/spokes, 9 white tug, lanterns, benches, planters |
 | `monument.equestrian` | LANDMARK | scale | Khan on a rearing horse with the SÜLD spear, stepped pedestal |
 | `palace.gate` | LANDMARK | wall_length | podium, red colonnade, painted frieze, broad hip roof, wall stubs |

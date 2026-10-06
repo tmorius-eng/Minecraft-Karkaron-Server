@@ -1,12 +1,13 @@
 {
  "city": "kharkhorum",
  "slice": "slice.1",
+ "version": 2,
  "seed": 1220,
- "title": "Slice 1 — ceremonial axis",
+ "title": "Slice 1 — ceremonial axis and the complete outer wall",
  "bounds": {
-  "x1": -112,
-  "z1": -92,
-  "x2": 104,
+  "x1": -190,
+  "z1": -174,
+  "x2": 189,
   "z2": 136
  },
  "terrain": {
@@ -28,7 +29,7 @@
     "id": "zone.palace_terrace",
     "rect": [
      -72,
-     -92,
+     -150,
      71,
      -57
     ],
@@ -49,7 +50,7 @@
    {
     "id": "zone.west_street",
     "rect": [
-     -100,
+     -147,
      -3,
      -30,
      3
@@ -70,6 +71,658 @@
   ]
  },
  "placements": [
+  {
+   "id": "tower.south_-128",
+   "module": "tower.watch",
+   "at": [
+    -128,
+    0,
+    127
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.south_-80",
+   "module": "tower.watch",
+   "at": [
+    -80,
+    0,
+    127
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.south_-32",
+   "module": "tower.watch",
+   "at": [
+    -32,
+    0,
+    127
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.south_64",
+   "module": "tower.watch",
+   "at": [
+    64,
+    0,
+    127
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.south_112",
+   "module": "tower.watch",
+   "at": [
+    112,
+    0,
+    127
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "wall.south_-168",
+   "module": "wall.straight",
+   "at": [
+    -168,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 36
+   }
+  },
+  {
+   "id": "wall.south_-123",
+   "module": "wall.straight",
+   "at": [
+    -123,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.south_-75",
+   "module": "wall.straight",
+   "at": [
+    -75,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.south_-27",
+   "module": "wall.straight",
+   "at": [
+    -27,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 10
+   }
+  },
+  {
+   "id": "wall.south_18",
+   "module": "wall.straight",
+   "at": [
+    18,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 42
+   }
+  },
+  {
+   "id": "wall.south_69",
+   "module": "wall.straight",
+   "at": [
+    69,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.south_117",
+   "module": "wall.straight",
+   "at": [
+    117,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "length": 51
+   }
+  },
+  {
+   "id": "gate.south",
+   "module": "gate.imperial",
+   "at": [
+    0,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "landmark": true
+  },
+  {
+   "id": "tower.north_-128",
+   "module": "tower.watch",
+   "at": [
+    -128,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.north_-80",
+   "module": "tower.watch",
+   "at": [
+    -80,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.north_-32",
+   "module": "tower.watch",
+   "at": [
+    -32,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.north_16",
+   "module": "tower.watch",
+   "at": [
+    16,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.north_64",
+   "module": "tower.watch",
+   "at": [
+    64,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "wall.north_-168",
+   "module": "wall.straight",
+   "at": [
+    -133,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 36
+   }
+  },
+  {
+   "id": "wall.north_-123",
+   "module": "wall.straight",
+   "at": [
+    -85,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.north_-75",
+   "module": "wall.straight",
+   "at": [
+    -37,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.north_-27",
+   "module": "wall.straight",
+   "at": [
+    11,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.north_21",
+   "module": "wall.straight",
+   "at": [
+    59,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.north_69",
+   "module": "wall.straight",
+   "at": [
+    91,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 23
+   }
+  },
+  {
+   "id": "wall.north_117",
+   "module": "wall.straight",
+   "at": [
+    167,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 51
+   }
+  },
+  {
+   "id": "gate.north",
+   "module": "gate.side",
+   "at": [
+    104,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.west_-112",
+   "module": "tower.watch",
+   "at": [
+    -176,
+    0,
+    -112
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.west_-64",
+   "module": "tower.watch",
+   "at": [
+    -176,
+    0,
+    -64
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.west_32",
+   "module": "tower.watch",
+   "at": [
+    -176,
+    0,
+    32
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.west_80",
+   "module": "tower.watch",
+   "at": [
+    -176,
+    0,
+    80
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "wall.west_-152",
+   "module": "wall.straight",
+   "at": [
+    -176,
+    0,
+    -152
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 36
+   }
+  },
+  {
+   "id": "wall.west_-107",
+   "module": "wall.straight",
+   "at": [
+    -176,
+    0,
+    -107
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.west_-59",
+   "module": "wall.straight",
+   "at": [
+    -176,
+    0,
+    -59
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 47
+   }
+  },
+  {
+   "id": "wall.west_13",
+   "module": "wall.straight",
+   "at": [
+    -176,
+    0,
+    13
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 15
+   }
+  },
+  {
+   "id": "wall.west_37",
+   "module": "wall.straight",
+   "at": [
+    -176,
+    0,
+    37
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.west_85",
+   "module": "wall.straight",
+   "at": [
+    -176,
+    0,
+    85
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 35
+   }
+  },
+  {
+   "id": "gate.west",
+   "module": "gate.side",
+   "at": [
+    -176,
+    0,
+    0
+   ],
+   "rotate": 90,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.east_-112",
+   "module": "tower.watch",
+   "at": [
+    175,
+    0,
+    -112
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.east_-64",
+   "module": "tower.watch",
+   "at": [
+    175,
+    0,
+    -64
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.east_32",
+   "module": "tower.watch",
+   "at": [
+    175,
+    0,
+    32
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.east_80",
+   "module": "tower.watch",
+   "at": [
+    175,
+    0,
+    80
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "wall.east_-152",
+   "module": "wall.straight",
+   "at": [
+    175,
+    0,
+    -117
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 36
+   }
+  },
+  {
+   "id": "wall.east_-107",
+   "module": "wall.straight",
+   "at": [
+    175,
+    0,
+    -69
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.east_-59",
+   "module": "wall.straight",
+   "at": [
+    175,
+    0,
+    -13
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 47
+   }
+  },
+  {
+   "id": "wall.east_13",
+   "module": "wall.straight",
+   "at": [
+    175,
+    0,
+    27
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 15
+   }
+  },
+  {
+   "id": "wall.east_37",
+   "module": "wall.straight",
+   "at": [
+    175,
+    0,
+    75
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 39
+   }
+  },
+  {
+   "id": "wall.east_85",
+   "module": "wall.straight",
+   "at": [
+    175,
+    0,
+    119
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall",
+   "params": {
+    "length": 35
+   }
+  },
+  {
+   "id": "gate.east",
+   "module": "gate.side",
+   "at": [
+    175,
+    0,
+    0
+   ],
+   "rotate": 270,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "tower.corner_sw",
+   "module": "tower.watch",
+   "at": [
+    -176,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "half": 6,
+    "door_x": 4
+   }
+  },
+  {
+   "id": "tower.corner_se",
+   "module": "tower.watch",
+   "at": [
+    175,
+    0,
+    127
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "half": 6,
+    "door_x": -4
+   }
+  },
+  {
+   "id": "tower.corner_nw",
+   "module": "tower.watch",
+   "at": [
+    -176,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "half": 6,
+    "door_x": -4
+   }
+  },
+  {
+   "id": "tower.corner_ne",
+   "module": "tower.watch",
+   "at": [
+    175,
+    0,
+    -160
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall",
+   "params": {
+    "half": 6,
+    "door_x": 4
+   }
+  },
   {
    "id": "road.avenue_south_gate",
    "module": "road.paved",
@@ -121,7 +774,7 @@
    }
   },
   {
-   "id": "road.gate_outside",
+   "id": "road.gate_south_out",
    "module": "road.paved",
    "at": [
     0,
@@ -194,6 +847,102 @@
    }
   },
   {
+   "id": "road.cross_east",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.market",
+   "params": {
+    "points": [
+     [
+      105,
+      0
+     ],
+     [
+      146,
+      0
+     ]
+    ],
+    "width": 7,
+    "class": "cross"
+   }
+  },
+  {
+   "id": "road.craft_lane_2",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.crafting",
+   "params": {
+    "points": [
+     [
+      5,
+      76
+     ],
+     [
+      140,
+      76
+     ]
+    ],
+    "width": 3,
+    "class": "lane"
+   }
+  },
+  {
+   "id": "road.cross_east_gate",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "points": [
+     [
+      156,
+      0
+     ],
+     [
+      170,
+      0
+     ]
+    ],
+    "width": 7,
+    "class": "cross"
+   }
+  },
+  {
+   "id": "road.gate_east_out",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "points": [
+     [
+      181,
+      0
+     ],
+     [
+      188,
+      0
+     ]
+    ],
+    "width": 7,
+    "class": "cross"
+   }
+  },
+  {
    "id": "road.cross_west",
    "module": "road.paved",
    "at": [
@@ -209,13 +958,118 @@
       0
      ],
      [
-      -100,
+      -147,
       0
      ]
     ],
     "width": 7,
     "class": "cross",
     "lanterns": 10
+   }
+  },
+  {
+   "id": "road.cross_west_gate",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "points": [
+     [
+      -157,
+      0
+     ],
+     [
+      -171,
+      0
+     ]
+    ],
+    "width": 7,
+    "class": "cross"
+   }
+  },
+  {
+   "id": "road.gate_west_out",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "points": [
+     [
+      -182,
+      0
+     ],
+     [
+      -189,
+      0
+     ]
+    ],
+    "width": 7,
+    "class": "cross"
+   }
+  },
+  {
+   "id": "road.ne_diagonal",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.military",
+   "params": {
+    "points": [
+     [
+      20,
+      -24
+     ],
+     [
+      60,
+      -44
+     ],
+     [
+      104,
+      -44
+     ],
+     [
+      104,
+      -155
+     ]
+    ],
+    "width": 5,
+    "class": "secondary",
+    "lanterns": 12
+   }
+  },
+  {
+   "id": "road.gate_north_out",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.outer_wall",
+   "params": {
+    "points": [
+     [
+      104,
+      -166
+     ],
+     [
+      104,
+      -173
+     ]
+    ],
+    "width": 5,
+    "class": "secondary"
    }
   },
   {
@@ -311,34 +1165,133 @@
      ],
      [
       0,
-      -92
+      -72
      ]
     ],
     "width": 9,
-    "class": "main",
-    "lanterns": 8
+    "class": "main"
+   }
+  },
+  {
+   "id": "road.fountain_w",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.palace",
+   "params": {
+    "points": [
+     [
+      -8,
+      -69
+     ],
+     [
+      -8,
+      -86
+     ]
+    ],
+    "width": 3,
+    "class": "secondary"
+   }
+  },
+  {
+   "id": "road.fountain_e",
+   "module": "road.paved",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.palace",
+   "params": {
+    "points": [
+     [
+      8,
+      -69
+     ],
+     [
+      8,
+      -86
+     ]
+    ],
+    "width": 3,
+    "class": "secondary"
    }
   },
   {
    "id": "canal.south",
    "module": "canal.segment",
    "at": [
-    -100,
+    -152,
     0,
     94
    ],
    "district": "district.gardens",
    "params": {
-    "length": 201,
+    "length": 304,
     "cap_start": true,
     "cap_end": true,
     "rail_gaps": [
      [
-      94,
-      106
+      146,
+      158
+     ],
+     [
+      65,
+      79
+     ],
+     [
+      225,
+      239
      ]
     ]
    }
+  },
+  {
+   "id": "canal.west",
+   "module": "canal.segment",
+   "at": [
+    -152,
+    0,
+    -36
+   ],
+   "rotate": 90,
+   "district": "district.gardens",
+   "params": {
+    "length": 126,
+    "cap_start": true,
+    "rail_gaps": [
+     [
+      30,
+      42
+     ]
+    ]
+   },
+   "allow_overlap": true
+  },
+  {
+   "id": "canal.east",
+   "module": "canal.segment",
+   "at": [
+    151,
+    0,
+    -36
+   ],
+   "rotate": 90,
+   "district": "district.gardens",
+   "params": {
+    "length": 126,
+    "cap_start": true,
+    "rail_gaps": [
+     [
+      30,
+      42
+     ]
+    ]
+   },
+   "allow_overlap": true
   },
   {
    "id": "bridge.grand",
@@ -352,53 +1305,58 @@
    "landmark": true
   },
   {
-   "id": "gate.south",
-   "module": "gate.imperial",
+   "id": "bridge.garden_w",
+   "module": "bridge.arched",
    "at": [
+    -80,
     0,
-    0,
-    127
+    94
    ],
-   "district": "district.outer_wall",
-   "landmark": true
-  },
-  {
-   "id": "wall.south_east",
-   "module": "wall.straight",
-   "at": [
-    18,
-    0,
-    127
-   ],
-   "district": "district.outer_wall",
+   "district": "district.gardens",
    "params": {
-    "length": 35,
-    "end_bastion": true
+    "half_width": 2
    }
   },
   {
-   "id": "wall.south_west",
-   "module": "wall.straight",
+   "id": "bridge.garden_e",
+   "module": "bridge.arched",
    "at": [
-    -18,
+    80,
     0,
-    127
+    94
    ],
-   "mirror": true,
-   "district": "district.outer_wall",
+   "district": "district.gardens",
    "params": {
-    "length": 35
+    "half_width": 2
    }
   },
   {
-   "id": "tower.watch_west",
-   "module": "tower.watch",
+   "id": "bridge.west",
+   "module": "bridge.arched",
    "at": [
-    -57,
+    -152,
     0,
-    127
+    0
    ],
-   "district": "district.outer_wall"
+   "rotate": 90,
+   "district": "district.residential",
+   "params": {
+    "half_width": 3
+   }
+  },
+  {
+   "id": "bridge.east",
+   "module": "bridge.arched",
+   "at": [
+    151,
+    0,
+    0
+   ],
+   "rotate": 90,
+   "district": "district.market",
+   "params": {
+    "half_width": 3
+   }
   },
   {
    "id": "plaza.central",
@@ -481,6 +1439,37 @@
    "district": "district.outer_wall"
   },
   {
+   "id": "prop.relay_west",
+   "module": "prop.relay_post",
+   "at": [
+    -163,
+    0,
+    8
+   ],
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "prop.relay_east",
+   "module": "prop.relay_post",
+   "at": [
+    162,
+    0,
+    8
+   ],
+   "rotate": 180,
+   "district": "district.outer_wall"
+  },
+  {
+   "id": "prop.relay_north",
+   "module": "prop.relay_post",
+   "at": [
+    112,
+    0,
+    -149
+   ],
+   "district": "district.outer_wall"
+  },
+  {
    "id": "stair.grand",
    "module": "stair.grand",
    "at": [
@@ -519,12 +1508,12 @@
    "at": [
     -72,
     0,
-    -92
+    -149
    ],
    "rotate": 90,
    "district": "district.palace",
    "params": {
-    "length": 35,
+    "length": 92,
     "height": 8
    }
   },
@@ -539,7 +1528,22 @@
    "rotate": 270,
    "district": "district.palace",
    "params": {
-    "length": 35,
+    "length": 92,
+    "height": 8
+   }
+  },
+  {
+   "id": "terrace.north",
+   "module": "wall.retaining",
+   "at": [
+    71,
+    0,
+    -150
+   ],
+   "rotate": 180,
+   "district": "district.palace",
+   "params": {
+    "length": 144,
     "height": 8
    }
   },
@@ -558,6 +1562,28 @@
    "landmark": true
   },
   {
+   "id": "palace.hall",
+   "module": "palace.hall",
+   "at": [
+    0,
+    8,
+    -112
+   ],
+   "district": "district.palace",
+   "landmark": true
+  },
+  {
+   "id": "fountain.silver_tree",
+   "module": "fountain.silver_tree",
+   "at": [
+    0,
+    8,
+    -77
+   ],
+   "district": "district.palace",
+   "landmark": true
+  },
+  {
    "id": "market.street_east",
    "module": "market.street",
    "at": [
@@ -568,6 +1594,1158 @@
    "district": "district.market",
    "params": {
     "length": 72
+   }
+  },
+  {
+   "id": "market.street_grain",
+   "module": "market.street",
+   "at": [
+    105,
+    0,
+    0
+   ],
+   "district": "district.market",
+   "params": {
+    "length": 40
+   }
+  },
+  {
+   "id": "workshop.n56",
+   "module": "shop.house",
+   "at": [
+    56,
+    0,
+    73
+   ],
+   "district": "district.crafting",
+   "params": {
+    "roof": "flat"
+   }
+  },
+  {
+   "id": "workshop.s56",
+   "module": "shop.house",
+   "at": [
+    56,
+    0,
+    79
+   ],
+   "rotate": 180,
+   "district": "district.crafting",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "workshop.n70",
+   "module": "shop.house",
+   "at": [
+    70,
+    0,
+    73
+   ],
+   "district": "district.crafting",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "workshop.s70",
+   "module": "shop.house",
+   "at": [
+    70,
+    0,
+    79
+   ],
+   "rotate": 180,
+   "district": "district.crafting",
+   "params": {
+    "roof": "flat"
+   }
+  },
+  {
+   "id": "workshop.n84",
+   "module": "shop.house",
+   "at": [
+    84,
+    0,
+    73
+   ],
+   "district": "district.crafting",
+   "params": {
+    "roof": "flat"
+   }
+  },
+  {
+   "id": "workshop.n98",
+   "module": "shop.house",
+   "at": [
+    98,
+    0,
+    73
+   ],
+   "district": "district.crafting",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "workshop.s98",
+   "module": "shop.house",
+   "at": [
+    98,
+    0,
+    79
+   ],
+   "rotate": 180,
+   "district": "district.crafting",
+   "params": {
+    "roof": "flat"
+   }
+  },
+  {
+   "id": "workshop.n112",
+   "module": "shop.house",
+   "at": [
+    112,
+    0,
+    73
+   ],
+   "district": "district.crafting",
+   "params": {
+    "roof": "flat"
+   }
+  },
+  {
+   "id": "workshop.s112",
+   "module": "shop.house",
+   "at": [
+    112,
+    0,
+    79
+   ],
+   "rotate": 180,
+   "district": "district.crafting",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "workshop.n126",
+   "module": "shop.house",
+   "at": [
+    126,
+    0,
+    73
+   ],
+   "district": "district.crafting",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "workshop.s126",
+   "module": "shop.house",
+   "at": [
+    126,
+    0,
+    79
+   ],
+   "rotate": 180,
+   "district": "district.crafting",
+   "params": {
+    "roof": "flat"
+   }
+  },
+  {
+   "id": "khashaa.-136_24",
+   "module": "yard.fence",
+   "at": [
+    -136,
+    0,
+    24
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-136_24",
+   "module": "yurt",
+   "at": [
+    -137,
+    0,
+    23
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-136_24",
+   "module": "prop.camp",
+   "at": [
+    -132,
+    0,
+    27
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "khashaa.-136_40",
+   "module": "yard.fence",
+   "at": [
+    -136,
+    0,
+    40
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-136_40",
+   "module": "yurt",
+   "at": [
+    -137,
+    0,
+    39
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-136_40",
+   "module": "prop.camp",
+   "at": [
+    -132,
+    0,
+    43
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "khashaa.-136_56",
+   "module": "yard.fence",
+   "at": [
+    -136,
+    0,
+    56
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-136_56",
+   "module": "yurt",
+   "at": [
+    -137,
+    0,
+    55
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-136_56",
+   "module": "prop.camp",
+   "at": [
+    -132,
+    0,
+    59
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "khashaa.-136_72",
+   "module": "yard.fence",
+   "at": [
+    -136,
+    0,
+    72
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-136_72",
+   "module": "yurt",
+   "at": [
+    -137,
+    0,
+    71
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "camp.k-136_72",
+   "module": "prop.camp",
+   "at": [
+    -132,
+    0,
+    75
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "khashaa.-120_24",
+   "module": "yard.fence",
+   "at": [
+    -120,
+    0,
+    24
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-120_24",
+   "module": "yurt",
+   "at": [
+    -121,
+    0,
+    23
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-120_24",
+   "module": "prop.camp",
+   "at": [
+    -116,
+    0,
+    27
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "khashaa.-120_40",
+   "module": "yard.fence",
+   "at": [
+    -120,
+    0,
+    40
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-120_40",
+   "module": "yurt",
+   "at": [
+    -121,
+    0,
+    39
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "camp.k-120_40",
+   "module": "prop.camp",
+   "at": [
+    -116,
+    0,
+    43
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "drying"
+   }
+  },
+  {
+   "id": "khashaa.-120_56",
+   "module": "yard.fence",
+   "at": [
+    -120,
+    0,
+    56
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-120_56",
+   "module": "yurt",
+   "at": [
+    -121,
+    0,
+    55
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "camp.k-120_56",
+   "module": "prop.camp",
+   "at": [
+    -116,
+    0,
+    59
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "drying"
+   }
+  },
+  {
+   "id": "khashaa.-120_72",
+   "module": "yard.fence",
+   "at": [
+    -120,
+    0,
+    72
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-120_72",
+   "module": "yurt",
+   "at": [
+    -121,
+    0,
+    71
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-120_72",
+   "module": "prop.camp",
+   "at": [
+    -116,
+    0,
+    75
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "drying"
+   }
+  },
+  {
+   "id": "khashaa.-104_24",
+   "module": "yard.fence",
+   "at": [
+    -104,
+    0,
+    24
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-104_24",
+   "module": "yurt",
+   "at": [
+    -105,
+    0,
+    23
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-104_24",
+   "module": "prop.camp",
+   "at": [
+    -100,
+    0,
+    27
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "khashaa.-104_40",
+   "module": "yard.fence",
+   "at": [
+    -104,
+    0,
+    40
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-104_40",
+   "module": "yurt",
+   "at": [
+    -105,
+    0,
+    39
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "camp.k-104_40",
+   "module": "prop.camp",
+   "at": [
+    -100,
+    0,
+    43
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "drying"
+   }
+  },
+  {
+   "id": "khashaa.-104_56",
+   "module": "yard.fence",
+   "at": [
+    -104,
+    0,
+    56
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-104_56",
+   "module": "yurt",
+   "at": [
+    -105,
+    0,
+    55
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "camp.k-104_56",
+   "module": "prop.camp",
+   "at": [
+    -100,
+    0,
+    59
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "khashaa.-104_72",
+   "module": "yard.fence",
+   "at": [
+    -104,
+    0,
+    72
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -6,
+    "z1": -6,
+    "x2": 6,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-104_72",
+   "module": "yurt",
+   "at": [
+    -105,
+    0,
+    71
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-104_72",
+   "module": "prop.camp",
+   "at": [
+    -100,
+    0,
+    75
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "woodpile"
+   }
+  },
+  {
+   "id": "khashaa.-80_72",
+   "module": "yard.fence",
+   "at": [
+    -80,
+    0,
+    72
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -7,
+    "z1": -6,
+    "x2": 7,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-80_72",
+   "module": "yurt",
+   "at": [
+    -82,
+    0,
+    71
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-80_72",
+   "module": "prop.camp",
+   "at": [
+    -76,
+    0,
+    75
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "woodpile"
+   }
+  },
+  {
+   "id": "khashaa.-42_72",
+   "module": "yard.fence",
+   "at": [
+    -42,
+    0,
+    72
+   ],
+   "district": "district.residential",
+   "params": {
+    "x1": -7,
+    "z1": -6,
+    "x2": 7,
+    "z2": 6,
+    "gates": [
+     [
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ger.k-42_72",
+   "module": "yurt",
+   "at": [
+    -44,
+    0,
+    71
+   ],
+   "district": "district.residential",
+   "params": {
+    "size": "medium"
+   }
+  },
+  {
+   "id": "camp.k-42_72",
+   "module": "prop.camp",
+   "at": [
+    -38,
+    0,
+    75
+   ],
+   "district": "district.residential",
+   "params": {
+    "kind": "woodpile"
+   }
+  },
+  {
+   "id": "clan.compound",
+   "module": "yard.fence",
+   "at": [
+    -116,
+    0,
+    -24
+   ],
+   "district": "district.clan",
+   "params": {
+    "x1": -13,
+    "z1": -13,
+    "x2": 13,
+    "z2": 15,
+    "gates": [
+     [
+      0,
+      15
+     ]
+    ]
+   }
+  },
+  {
+   "id": "clan.hall",
+   "module": "yurt",
+   "at": [
+    -116,
+    0,
+    -26
+   ],
+   "district": "district.clan",
+   "params": {
+    "size": "large"
+   }
+  },
+  {
+   "id": "clan.ger_w",
+   "module": "yurt",
+   "at": [
+    -124,
+    0,
+    -14
+   ],
+   "rotate": 270,
+   "district": "district.clan",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "clan.ger_e",
+   "module": "yurt",
+   "at": [
+    -108,
+    0,
+    -14
+   ],
+   "rotate": 90,
+   "district": "district.clan",
+   "params": {
+    "size": "small"
+   }
+  },
+  {
+   "id": "clan.cairn",
+   "module": "prop.cairn",
+   "at": [
+    -127,
+    0,
+    -34
+   ],
+   "district": "district.clan"
+  },
+  {
+   "id": "barracks.w-66",
+   "module": "shop.house",
+   "at": [
+    96,
+    0,
+    -66
+   ],
+   "rotate": 270,
+   "district": "district.military",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "barracks.w-88",
+   "module": "shop.house",
+   "at": [
+    96,
+    0,
+    -88
+   ],
+   "rotate": 270,
+   "district": "district.military",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "barracks.w-110",
+   "module": "shop.house",
+   "at": [
+    96,
+    0,
+    -110
+   ],
+   "rotate": 270,
+   "district": "district.military",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "barracks.w-132",
+   "module": "shop.house",
+   "at": [
+    96,
+    0,
+    -132
+   ],
+   "rotate": 270,
+   "district": "district.military",
+   "params": {
+    "roof": "hip"
+   }
+  },
+  {
+   "id": "military.command",
+   "module": "yurt",
+   "at": [
+    118,
+    0,
+    -78
+   ],
+   "rotate": 90,
+   "district": "district.military",
+   "params": {
+    "size": "large"
+   }
+  },
+  {
+   "id": "military.yard",
+   "module": "yard.fence",
+   "at": [
+    118,
+    0,
+    -112
+   ],
+   "district": "district.military",
+   "params": {
+    "x1": -9,
+    "z1": -14,
+    "x2": 9,
+    "z2": 14,
+    "gates": [
+     [
+      -9,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "military.hitch_1",
+   "module": "prop.camp",
+   "at": [
+    118,
+    0,
+    -118
+   ],
+   "district": "district.military",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "military.hitch_2",
+   "module": "prop.camp",
+   "at": [
+    118,
+    0,
+    -104
+   ],
+   "district": "district.military",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "military.tower",
+   "module": "tower.watch",
+   "at": [
+    118,
+    0,
+    -138
+   ],
+   "rotate": 180,
+   "district": "district.military"
+  },
+  {
+   "id": "stables.yard",
+   "module": "yard.fence",
+   "at": [
+    148,
+    0,
+    -128
+   ],
+   "district": "district.stables",
+   "params": {
+    "x1": -16,
+    "z1": -18,
+    "x2": 16,
+    "z2": 18,
+    "gates": [
+     [
+      -16,
+      0
+     ],
+     [
+      0,
+      -18
+     ]
+    ]
+   }
+  },
+  {
+   "id": "stables.hitch_0",
+   "module": "prop.camp",
+   "at": [
+    140,
+    0,
+    -140
+   ],
+   "district": "district.stables",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "stables.hitch_1",
+   "module": "prop.camp",
+   "at": [
+    156,
+    0,
+    -140
+   ],
+   "district": "district.stables",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "stables.hitch_2",
+   "module": "prop.camp",
+   "at": [
+    140,
+    0,
+    -116
+   ],
+   "district": "district.stables",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "stables.hitch_3",
+   "module": "prop.camp",
+   "at": [
+    156,
+    0,
+    -116
+   ],
+   "district": "district.stables",
+   "params": {
+    "kind": "hitching"
+   }
+  },
+  {
+   "id": "stables.hay_1",
+   "module": "prop.camp",
+   "at": [
+    148,
+    0,
+    -128
+   ],
+   "district": "district.stables",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "stables.hay_2",
+   "module": "prop.camp",
+   "at": [
+    136,
+    0,
+    -128
+   ],
+   "district": "district.stables",
+   "params": {
+    "kind": "hay"
+   }
+  },
+  {
+   "id": "stables.cart",
+   "module": "prop.camp",
+   "at": [
+    160,
+    0,
+    -128
+   ],
+   "district": "district.stables",
+   "params": {
+    "kind": "cart"
    }
   },
   {
@@ -934,10 +3112,10 @@
     "rect": [
      10,
      103,
-     62,
+     140,
      120
     ],
-    "count": 9,
+    "count": 20,
     "spacing": 6,
     "species": [
      "cherry",
@@ -957,6 +3135,12 @@
       100,
       6,
       124
+     ],
+     [
+      74,
+      100,
+      86,
+      124
      ]
     ]
    }
@@ -972,12 +3156,12 @@
    "district": "district.gardens",
    "params": {
     "rect": [
-     -62,
+     -140,
      103,
      -10,
      120
     ],
-    "count": 9,
+    "count": 20,
     "spacing": 6,
     "species": [
      "cherry",
@@ -990,6 +3174,18 @@
       -6,
       100,
       6,
+      124
+     ],
+     [
+      -86,
+      100,
+      -74,
+      124
+     ],
+     [
+      -63,
+      118,
+      -51,
       124
      ]
     ]
@@ -1069,7 +3265,7 @@
      -34,
      62
     ],
-    "count": 6,
+    "count": 5,
     "spacing": 8,
     "species": [
      "birch",
@@ -1094,6 +3290,18 @@
       54,
       -49,
       60
+     ],
+     [
+      -88,
+      65,
+      -34,
+      80
+     ],
+     [
+      -111,
+      49,
+      -97,
+      63
      ]
     ]
    }
@@ -1110,11 +3318,11 @@
    "params": {
     "rect": [
      14,
-     66,
+     64,
      34,
-     80
+     72
     ],
-    "count": 4,
+    "count": 3,
     "spacing": 8,
     "species": [
      "elm"
@@ -1147,13 +3355,13 @@
    "district": "district.spiritual",
    "params": {
     "rect": [
-     -107,
-     -90,
+     -150,
+     -150,
      -82,
      -46
     ],
-    "count": 8,
-    "spacing": 7,
+    "count": 18,
+    "spacing": 8,
     "species": [
      "larch",
      "larch",
@@ -1178,6 +3386,12 @@
       -42,
       -90,
       -18
+     ],
+     [
+      -160,
+      -41,
+      -144,
+      -30
      ]
     ]
    }
@@ -1193,17 +3407,18 @@
    "district": "district.palace",
    "params": {
     "rect": [
-     12,
-     -90,
-     13,
-     -72
+     30,
+     -145,
+     62,
+     -70
     ],
-    "count": 3,
+    "count": 10,
     "spacing": 8,
     "species": [
-     "elm"
+     "elm",
+     "cherry"
     ],
-    "flowers": 0
+    "flowers": 3
    }
   },
   {
@@ -1217,17 +3432,57 @@
    "district": "district.palace",
    "params": {
     "rect": [
-     -13,
-     -90,
-     -12,
-     -72
+     -62,
+     -145,
+     -30,
+     -70
     ],
-    "count": 3,
+    "count": 10,
     "spacing": 8,
     "species": [
-     "elm"
+     "elm",
+     "cherry"
     ],
-    "flowers": 0
+    "flowers": 3
+   }
+  },
+  {
+   "id": "grove.east_wilds",
+   "module": "landscape.grove",
+   "at": [
+    0,
+    0,
+    0
+   ],
+   "district": "district.military",
+   "params": {
+    "rect": [
+     126,
+     -100,
+     165,
+     -50
+    ],
+    "count": 6,
+    "spacing": 10,
+    "species": [
+     "larch",
+     "birch"
+    ],
+    "flowers": 2,
+    "avoid": [
+     [
+      100,
+      -160,
+      108,
+      -40
+     ],
+     [
+      146,
+      -41,
+      156,
+      -30
+     ]
+    ]
    }
   }
  ]

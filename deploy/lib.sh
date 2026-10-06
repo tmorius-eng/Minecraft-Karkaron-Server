@@ -260,3 +260,17 @@ record_release() {  # $1 = plugin jar, $2 = pack file, $3 = pack sha1
   printf 'COMMIT=%s\nJAR=%s\nPACK_FILE=%s\nPACK_SHA1=%s\nPAPER_BUILD=%s\n' "$commit" "$staged" "$2" "$3" "$paper" \
     | install_text "$RELEASES_DIR/current.state" 644 "root:root"
 }
+
+# Trusted third-party plugins (deploy/plugins/plugins.json) for the profiles in PLUGIN_PROFILES
+# (default core,hardening; "none" skips). Only builds for the server's Minecraft version are installed.
+install_plugins() {
+  local profiles="${PLUGIN_PROFILES:-core,hardening}"
+  [[ "$profiles" == "none" ]] && { ok "Third-party plugins: skipped (PLUGIN_PROFILES=none)"; return 0; }
+  log "Third-party plugins ($profiles)"
+  if [[ "${DRY_RUN:-0}" == "1" ]]; then
+    echo "  [dry-run] python3 tools/plugins/fetch_plugins.py --dest $SERVER_DIR/plugins --profiles $profiles"
+    return 0
+  fi
+  as_suld python3 "$REPO_DIR/tools/plugins/fetch_plugins.py" --dest "$SERVER_DIR/plugins" --profiles "$profiles" \
+    || die "Plugin install failed (see above). Fix the network or set PLUGIN_PROFILES."
+}

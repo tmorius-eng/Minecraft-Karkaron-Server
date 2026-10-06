@@ -33,6 +33,7 @@ public final class SuldPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        migrateConfig();
         SuldConfig config = SuldConfigFactory.load(new BukkitConfigView(getConfig()));
 
         try {
@@ -51,6 +52,7 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(services.classSelectionGui(), this);
         getServer().getPluginManager().registerEvents(services.combatListener(), this);
         getServer().getPluginManager().registerEvents(services.resourcePacks(), this);
+        services.resourcePacks().start();
         getServer().getPluginManager().registerEvents(services.bosses(), this);
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.dungeon.DungeonListener(services.dungeons(), services.parties()), this);
@@ -100,6 +102,9 @@ public final class SuldPlugin extends JavaPlugin {
         if (worldBuild != null) {
             worldBuild.stop();
         }
+        if (services != null) {
+            services.resourcePacks().stop();
+        }
         if (services == null) {
             return;
         }
@@ -115,6 +120,21 @@ public final class SuldPlugin extends JavaPlugin {
         }
         services.close();
         getLogger().info("SULD disabled.");
+    }
+
+    /**
+     * One-time upgrades of an existing config.yml (a new jar never rewrites the admin's file):
+     * v2 — the resource pack is now self-hosted, so the old "enabled: false, no url" default is switched on.
+     */
+    private void migrateConfig() {
+        int version = getConfig().getInt("config-version", 1);
+        if (version >= 2) return;
+        if (getConfig().getString("resource-pack.url", "").isBlank() && !getConfig().getBoolean("resource-pack.enabled", false)) {
+            getConfig().set("resource-pack.enabled", true);
+            getLogger().info("config.yml migrated: resource-pack.enabled = true (the pack is now self-hosted by SULD)");
+        }
+        getConfig().set("config-version", 2);
+        saveConfig();
     }
 
     private void autosave() {

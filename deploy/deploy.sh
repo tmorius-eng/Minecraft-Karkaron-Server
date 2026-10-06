@@ -172,6 +172,7 @@ configure_server() {
     ok "server.properties exists — left untouched"
   fi
   run install -o "$SULD_USER" -g "$SULD_USER" -m 644 "$PLUGIN_JAR_BUILT" "$SERVER_DIR/plugins/SULD.jar"
+  install_plugins
   if [[ ! -f "$PLUGIN_CONFIG" ]]; then
     log "Creating plugin config from the jar's bundled default"
     if [[ "$DRY_RUN" == "1" ]]; then

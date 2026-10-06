@@ -67,7 +67,11 @@ public final class SuldConfigFactory {
                 view.getString("resource-pack.url", rpd.url()),
                 view.getString("resource-pack.sha1", rpd.sha1()),
                 view.getBoolean("resource-pack.required", rpd.required()),
-                view.getString("resource-pack.prompt", rpd.prompt()));
+                view.getString("resource-pack.prompt", rpd.prompt()),
+                view.getBoolean("resource-pack.self-host.enabled", rpd.selfHost()),
+                view.getString("resource-pack.self-host.bind", rpd.hostBind()),
+                view.getInt("resource-pack.self-host.port", rpd.hostPort()),
+                view.getString("resource-pack.self-host.public-url", rpd.publicUrl()));
 
         SocialSettings sd = d.social();
         SocialSettings social = new SocialSettings(

@@ -34,6 +34,12 @@
 .PARAMETER SkipBuild
     Reuse the last built plugin jar instead of running Gradle.
 
+.PARAMETER Plugins
+    Which trusted third-party plugin profiles from deploy\plugins\plugins.json to install into run\plugins
+    (default "core": LuckPerms, EssentialsX, VaultUnlocked, PlaceholderAPI, CoreProtect, WorldEdit,
+    WorldGuard, spark, Chunky, DiscordSRV). "core,hardening" adds GrimAC, Plan, LibertyBans, ViaVersion.
+    "none" installs no third-party plugins. Only builds made for this Minecraft version are installed.
+
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-test-server.ps1
 #>
@@ -42,7 +48,8 @@ param(
     [string]$MinecraftVersion = "1.21.11",
     [int]$Port = 25565,
     [switch]$Lan,
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [string]$Plugins = "core"
 )
 
 Set-StrictMode -Version Latest
@@ -193,6 +200,81 @@ if (-not (Test-Path $paperJar)) {
 }
 # Keep only the current Paper jar.
 Get-ChildItem $RunDir -Filter "paper-*.jar" | Where-Object { $_.Name -ne $jarName } | Remove-Item -Force
+
+# --- 3b. trusted third-party plugins ------------------------------------------------------------
+function Get-PluginBuild($entry, [string]$Mc) {
+    if ($entry.PSObject.Properties["modrinth"]) {
+        $loaders = [uri]::EscapeDataString('["paper","purpur","spigot","bukkit"]')
+        $games = [uri]::EscapeDataString("[`"$Mc`"]")
+        try {
+            $versions = @(Invoke-RestMethod -Uri "https://api.modrinth.com/v2/project/$($entry.modrinth)/version?loaders=$loaders&game_versions=$games" -UserAgent $UserAgent)
+        } catch { $versions = @() }
+        if ($versions.Count -gt 0) {
+            $release = @($versions | Where-Object { $_.version_type -eq "release" })
+            $v = if ($release.Count -gt 0) { $release[0] } else { $versions[0] }
+            $f = @($v.files | Where-Object { $_.primary }) + @($v.files) | Select-Object -First 1
+            return [pscustomobject]@{ Version = $v.version_number; File = $f.filename; Url = $f.url; Algo = "SHA512"; Hash = $f.hashes.sha512; Source = "modrinth" }
+        }
+    }
+    if ($entry.PSObject.Properties["hangar"]) {
+        $parts = $entry.hangar.Split("/")
+        try {
+            $data = Invoke-RestMethod -Uri "https://hangar.papermc.io/api/v1/projects/$($parts[0])/$($parts[1])/versions?platform=PAPER&platformVersion=$Mc&limit=5" -UserAgent $UserAgent
+            foreach ($v in $data.result) {
+                $d = $v.downloads.PAPER
+                if (-not $d) { continue }
+                $url = if ($d.downloadUrl) { $d.downloadUrl } else { $d.externalUrl }
+                if (-not $url) { continue }
+                $name = if ($d.fileInfo -and $d.fileInfo.name) { $d.fileInfo.name } else { "$($parts[1])-$($v.name).jar" }
+                $hash = if ($d.fileInfo) { $d.fileInfo.sha256Hash } else { $null }
+                return [pscustomobject]@{ Version = $v.name; File = $name; Url = $url; Algo = "SHA256"; Hash = $hash; Source = "hangar" }
+            }
+        } catch { }
+    }
+    return $null
+}
+
+if ($Plugins -ne "none") {
+    Write-Step "Installing trusted plugins ($Plugins) for Minecraft $MinecraftVersion"
+    $manifest = Get-Content (Join-Path $Root "deploy\plugins\plugins.json") -Raw | ConvertFrom-Json
+    $profiles = $Plugins.Split(",") | ForEach-Object { $_.Trim() }
+    New-Item -ItemType Directory -Force -Path $PluginsDir | Out-Null
+    $lockFile = Join-Path $PluginsDir ".suld-plugins.lock.json"
+    $lock = @{}
+    if (Test-Path $lockFile) {
+        (Get-Content $lockFile -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $lock[$_.Name] = $_.Value }
+    }
+    $skipped = @()
+    foreach ($p in $manifest.plugins | Where-Object { $profiles -contains $_.profile }) {
+        $build = Get-PluginBuild $p $MinecraftVersion
+        if (-not $build) { $skipped += $p.name; Write-Host "    -- $($p.name): no release for $MinecraftVersion (skipped)"; continue }
+        $dest = Join-Path $PluginsDir $build.File
+        $prev = $lock[$p.id]
+        if ($prev -and $prev.file -eq $build.File -and (Test-Path $dest)) { Write-Host "    ok $($p.name) $($build.Version)"; continue }
+        $tmp = "$dest.part"
+        try {
+            Invoke-WebRequest -Uri $build.Url -OutFile $tmp -UserAgent $UserAgent -UseBasicParsing
+        } catch {
+            if (Test-Path $tmp) { Remove-Item $tmp -Force }
+            Write-Host "    !! $($p.name): download failed ($($_.Exception.Message))" -ForegroundColor Yellow
+            continue
+        }
+        if ($build.Hash -and ((Get-FileHash -Algorithm $build.Algo -Path $tmp).Hash -ine $build.Hash)) {
+            Remove-Item $tmp -Force
+            Write-Host "    !! $($p.name): $($build.Algo) mismatch, not installed" -ForegroundColor Yellow
+            continue
+        }
+        if ($prev -and $prev.file -and $prev.file -ne $build.File) {
+            $old = Join-Path $PluginsDir $prev.file
+            if (Test-Path $old) { Remove-Item $old -Force }
+        }
+        Move-Item $tmp $dest -Force
+        $lock[$p.id] = [pscustomobject]@{ name = $p.name; version = $build.Version; file = $build.File; source = $build.Source }
+        Write-Host "    ++ $($p.name) $($build.Version) ($($build.Source))"
+    }
+    [IO.File]::WriteAllText($lockFile, ($lock | ConvertTo-Json -Depth 4), $Utf8NoBom)
+    if ($skipped.Count -gt 0) { Write-Host "    No $MinecraftVersion build yet: $($skipped -join ', ')" -ForegroundColor Yellow }
+}
 
 # --- 4. run directory ---------------------------------------------------------------------------
 Write-Step "Installing plugin, accepting EULA, writing test server.properties"

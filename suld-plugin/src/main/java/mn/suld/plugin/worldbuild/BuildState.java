@@ -34,7 +34,8 @@ final class BuildState {
     double worstMspt, mstpSum;
     long msptSamples;
     String note = "";
-    int[] originalSpawn;    // world spawn before the build (restored by rollback)
+    int[] originalSpawn;
+    int sliceVersion = 1;   // version of the slice plan this build was made from    // world spawn before the build (restored by rollback)
 
     Map<String, Object> toMap() {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -55,6 +56,7 @@ final class BuildState {
         m.put("worst_mspt", worstMspt);
         m.put("avg_mspt", msptSamples == 0 ? 0 : mstpSum / msptSamples);
         m.put("note", note);
+        m.put("slice_version", sliceVersion);
         if (originalSpawn != null) m.put("original_spawn", new long[]{originalSpawn[0], originalSpawn[1], originalSpawn[2]});
         return m;
     }
@@ -81,6 +83,7 @@ final class BuildState {
         s.buildMillis = ((Number) m.getOrDefault("build_millis", 0L)).longValue();
         s.worstMspt = ((Number) m.getOrDefault("worst_mspt", 0L)).doubleValue();
         s.note = (String) m.getOrDefault("note", "");
+        s.sliceVersion = Json.integer(m.getOrDefault("slice_version", 1L));
         if (m.get("original_spawn") != null) {
             var o = Json.array(m.get("original_spawn"));
             s.originalSpawn = new int[]{Json.integer(o.get(0)), Json.integer(o.get(1)), Json.integer(o.get(2))};

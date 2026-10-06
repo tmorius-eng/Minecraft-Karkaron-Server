@@ -94,6 +94,7 @@ public final class WorldBuildService implements Listener {
     private final NamespacedKey visitedKey;
 
     private CitySpec spec;
+    private int specVersion = 1;
     private ModuleLibrary library;
     private CompiledCity city;
     private BuildState state;
@@ -138,6 +139,19 @@ public final class WorldBuildService implements Listener {
                 plugin.getLogger().severe("[worldbuild] unreadable state " + stateFile + ": " + e.getMessage());
                 return;
             }
+            boolean outdated = state.sliceVersion != specVersion;
+            if (outdated && state.status != BuildState.Status.APPROVED && state.status != BuildState.Status.LOCKED
+                    && state.status != BuildState.Status.ROLLED_BACK) {
+                plugin.getLogger().info("[worldbuild] slice plan v" + state.sliceVersion + " → v" + specVersion
+                        + ": rolling back the old build and rebuilding the new plan at the same anchor");
+                int[] anchor = {state.anchorX, state.anchorY, state.anchorZ};
+                Bukkit.getScheduler().runTaskLater(plugin, () -> rollback(null, () -> plan(null, anchor)), 40L);
+                return;
+            }
+            if (outdated) {
+                plugin.getLogger().warning("[worldbuild] slice plan changed (v" + state.sliceVersion + " → v" + specVersion
+                        + ") but the build is " + state.status + "; not rebuilding automatically (/worldbuild unlock, rollback, build)");
+            }
             switch (state.status) {
                 case BUILDING -> Bukkit.getScheduler().runTaskLater(plugin, () -> resume(null), 40L);
                 case BUILT, APPROVED, LOCKED -> Bukkit.getScheduler().runTask(plugin, this::applySpawn);
@@ -159,6 +173,8 @@ public final class WorldBuildService implements Listener {
 
     private void loadSpec() throws IOException {
         String slice = resource("world/kharkhorum/slices/" + SLICE + ".json");
+        Object v = mn.suld.api.json.Json.object(mn.suld.api.json.Json.parse(slice)).get("version");
+        specVersion = v instanceof Number n ? n.intValue() : 1;
         String points = resource("world/kharkhorum/points.json");
         spec = SliceLoader.load(slice, points, Palette.KHARKHORUM);
         library = Kharkhorum.library();
@@ -185,6 +201,11 @@ public final class WorldBuildService implements Listener {
 
     /** Plan and start a fresh build at the world spawn. */
     public void plan(Consumer<String> feedback) {
+        plan(feedback, null);
+    }
+
+    /** @param anchor reuse this anchor {x, y, z} (rebuilding an upgraded plan in place), or null */
+    public void plan(Consumer<String> feedback, int[] anchor) {
         Consumer<String> say = msg(feedback);
         if (state != null && (state.status == BuildState.Status.APPROVED || state.status == BuildState.Status.LOCKED)) {
             say.accept("Барилга баталгаажсан/түгжигдсэн тул дахин барихгүй (/worldbuild unlock).");
@@ -196,14 +217,15 @@ public final class WorldBuildService implements Listener {
         }
         World world = Bukkit.getWorlds().get(0);
         Location sp = world.getSpawnLocation();
-        int ax = Math.floorDiv(sp.getBlockX(), 16) * 16, az = Math.floorDiv(sp.getBlockZ(), 16) * 16;
+        int ax = anchor != null ? anchor[0] : Math.floorDiv(sp.getBlockX(), 16) * 16;
+        int az = anchor != null ? anchor[2] : Math.floorDiv(sp.getBlockZ(), 16) * 16;
         Footprint b = spec.bounds();
         int f = spec.terrain().feather() + 1;
         area = new Footprint(b.minX() - f, 0, b.minZ() - f, b.maxX() + f, 0, b.maxZ() + f);
         say.accept("Газрын өндрийг хэмжиж байна (" + ((area.maxX() - area.minX()) / 16 + 1) * ((area.maxZ() - area.minZ()) / 16 + 1) + " chunk)…");
         loadChunks(world, ax, az).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
             int[] raw = sampleHeights(world, ax, az);
-            int anchorY = medianPlaza(raw);
+            int anchorY = anchor != null ? anchor[1] : medianPlaza(raw);
             heights = new int[raw.length];
             for (int i = 0; i < raw.length; i++) heights[i] = raw[i] - anchorY;
             state = new BuildState();
@@ -213,6 +235,7 @@ public final class WorldBuildService implements Listener {
             state.anchorY = anchorY;
             state.anchorZ = az;
             state.originalSpawn = new int[]{sp.getBlockX(), sp.getBlockY(), sp.getBlockZ()};
+            state.sliceVersion = specVersion;
             try {
                 Files.createDirectories(dir);
                 writeHeights();
@@ -415,12 +438,10 @@ public final class WorldBuildService implements Listener {
                 world.getChunkAt(wcx, wcz); // loads synchronously if needed
                 if (touched.add(u.chunk())) state.chunksTouched = Math.max(state.chunksTouched, touched.size());
                 placed += place(world, u);
+                flushRollback(); // the log must be ahead of the world: flush every unit
                 state.chunkIndex++;
                 state.passIndex = u.pass().number;
-                if (state.chunkIndex % 16 == 0) {
-                    flushRollback();
-                    saveState();
-                }
+                if (state.chunkIndex % 4 == 0) saveState();
             }
             if (System.currentTimeMillis() - lastReport[0] > 10_000) {
                 lastReport[0] = System.currentTimeMillis();
@@ -516,15 +537,49 @@ public final class WorldBuildService implements Listener {
 
     // ------------------------------------------------------------------ rollback log
 
+    /** Rollback log parts: one gzip file per build run, so a crash can only tear the tail of its own part. */
+    private List<Path> rollbackParts() {
+        List<Path> parts = new ArrayList<>();
+        if (Files.exists(rollbackFile)) parts.add(rollbackFile); // legacy single-file log
+        try (var s = Files.list(dir)) {
+            s.filter(p -> p.getFileName().toString().matches(java.util.regex.Pattern.quote(SLICE) + "\\.rollback\\.\\d+\\.gz"))
+                    .sorted().forEach(parts::add);
+        } catch (IOException ignored) {
+            // no directory yet
+        }
+        return parts;
+    }
+
     private void openRollback() {
         try {
             Files.createDirectories(dir);
+            Path part = dir.resolve(String.format("%s.rollback.%04d.gz", SLICE, rollbackParts().size() + 1));
             rollback = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-                    new GZIPOutputStream(Files.newOutputStream(rollbackFile, StandardOpenOption.CREATE, StandardOpenOption.APPEND), true),
+                    new GZIPOutputStream(Files.newOutputStream(part, StandardOpenOption.CREATE_NEW), true),
                     StandardCharsets.UTF_8)));
         } catch (IOException e) {
             plugin.getLogger().severe("[worldbuild] cannot open rollback log: " + e.getMessage());
         }
+    }
+
+    /** Every recorded original block, oldest first; a torn part keeps everything before the tear. */
+    private List<String[]> readRollback() {
+        List<String[]> lines = new ArrayList<>();
+        for (Path part : rollbackParts()) {
+            int before = lines.size();
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(part)), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = r.readLine()) != null) {
+                    String[] p = line.split(" ", 4);
+                    if (p.length == 4) lines.add(p);
+                }
+            } catch (IOException e) {
+                plugin.getLogger().warning("[worldbuild] rollback part " + part.getFileName() + " is torn after "
+                        + (lines.size() - before) + " entries (" + e.getMessage() + "); using what was recovered");
+                if (!lines.isEmpty() && lines.get(lines.size() - 1).length < 4) lines.remove(lines.size() - 1);
+            }
+        }
+        return lines;
     }
 
     private void record(Block b) {
@@ -546,24 +601,37 @@ public final class WorldBuildService implements Listener {
 
     private void loadRecorded() throws IOException {
         recorded.clear();
-        if (!Files.exists(rollbackFile)) return;
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(rollbackFile)), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = r.readLine()) != null) {
-                String[] p = line.split(" ", 4);
-                if (p.length < 4) continue;
+        for (String[] p : readRollback()) {
+            try {
                 recorded.add(BlockPos.pack(Integer.parseInt(p[0]) - state.anchorX, Integer.parseInt(p[1]) - state.anchorY,
                         Integer.parseInt(p[2]) - state.anchorZ));
+            } catch (NumberFormatException ignored) {
+                // torn line
             }
-        } catch (java.io.EOFException truncated) {
-            // a crash can cut the last gzip member short; everything before it was recovered
         }
     }
 
     /** Restore every recorded original block (reverse order). Refused for approved/locked builds. */
     public void rollback(Consumer<String> feedback) {
+        rollback(feedback, null);
+    }
+
+    /** Restore every recorded original block; then run {@code after} (e.g. rebuild an upgraded plan). */
+    public void rollback(Consumer<String> feedback, Runnable after) {
         Consumer<String> say = msg(feedback);
-        if (state == null || !Files.exists(rollbackFile)) {
+        if (state != null && rollbackParts().isEmpty() && after != null
+                && state.status != BuildState.Status.APPROVED && state.status != BuildState.Status.LOCKED) {
+            // nothing was placed (e.g. a refused plan): just forget the old state and continue
+            try {
+                Files.deleteIfExists(stateFile);
+            } catch (IOException e) {
+                plugin.getLogger().warning("[worldbuild] " + e.getMessage());
+            }
+            state = null;
+            after.run();
+            return;
+        }
+        if (state == null || rollbackParts().isEmpty()) {
             say.accept("Буцаах барилга алга.");
             return;
         }
@@ -573,27 +641,19 @@ public final class WorldBuildService implements Listener {
         }
         if (task != null) pause(feedback);
         closeRollback();
-        List<String[]> lines = new ArrayList<>();
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(rollbackFile)), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = r.readLine()) != null) {
-                String[] p = line.split(" ", 4);
-                if (p.length == 4) lines.add(p);
-            }
-        } catch (java.io.EOFException truncated) {
-            // use what was recovered
-        } catch (IOException e) {
-            say.accept("Rollback log уншиж чадсангүй: " + e.getMessage());
-            return;
-        }
+        List<String[]> lines = readRollback();
         World world = Bukkit.getWorld(state.world);
         int[] i = {lines.size() - 1};
         task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             long t0 = System.nanoTime();
             while (i[0] >= 0 && System.nanoTime() - t0 < TICK_BUDGET_NANOS) {
                 String[] p = lines.get(i[0]--);
-                world.getBlockAt(Integer.parseInt(p[0]), Integer.parseInt(p[1]), Integer.parseInt(p[2]))
-                        .setBlockData(Bukkit.createBlockData(p[3]), false);
+                try {
+                    world.getBlockAt(Integer.parseInt(p[0]), Integer.parseInt(p[1]), Integer.parseInt(p[2]))
+                            .setBlockData(Bukkit.createBlockData(p[3]), false);
+                } catch (IllegalArgumentException torn) {
+                    // a line cut by a crash: skip it
+                }
             }
             if (i[0] < 0) {
                 task.cancel();
@@ -604,7 +664,9 @@ public final class WorldBuildService implements Listener {
                 }
                 saveState();
                 try {
-                    Files.move(rollbackFile, rollbackFile.resolveSibling(SLICE + ".rollback.applied-" + System.currentTimeMillis() + ".gz"));
+                    Path applied = dir.resolve("applied-" + System.currentTimeMillis());
+                    Files.createDirectories(applied);
+                    for (Path part : rollbackParts()) Files.move(part, applied.resolve(part.getFileName()));
                     Files.deleteIfExists(stateFile);
                 } catch (IOException e) {
                     plugin.getLogger().warning("[worldbuild] " + e.getMessage());
@@ -612,6 +674,7 @@ public final class WorldBuildService implements Listener {
                 recorded.clear();
                 state = null;
                 say.accept("Буцаалт дууслаа: " + lines.size() + " блок сэргээв.");
+                if (after != null) after.run();
             }
         }, 1L, 1L);
     }

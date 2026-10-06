@@ -367,6 +367,7 @@ final class Kit {
 
     /** Trees: cherry (blossom), larch (spruce), birch, elm (oak). Leaves are persistent. */
     static void tree(ModuleCanvas c, int x, int y, int z, String species, SplittableRandom r) {
+        java.util.Set<Long> before = new java.util.HashSet<>(c.cells().keySet());
         Pass prev = c.pass();
         c.pass(Pass.LANDSCAPING);
         Layer prevLayer = c.layer();
@@ -413,37 +414,39 @@ final class Kit {
                 blob(c, x, y + h + 1, z, 3.0, 2.2, "minecraft:oak_leaves[persistent=true]", r);
             }
         }
-        prune(c, x, y, z);
+        java.util.Set<Long> mine = new java.util.HashSet<>(c.cells().keySet());
+        mine.removeAll(before);
+        prune(c, x, y, z, mine);
         c.layer(prevLayer);
         c.pass(prev);
     }
 
-    /** Removes leaves of the tree at (x, y, z) that are not face-connected to its wood. */
-    private static void prune(ModuleCanvas c, int x, int y, int z) {
+    /** Removes leaves this tree wrote ({@code mine}) that are not face-connected to its own wood. */
+    private static void prune(ModuleCanvas c, int x, int y, int z, java.util.Set<Long> mine) {
         java.util.Set<Long> seen = new java.util.HashSet<>();
-        java.util.ArrayDeque<int[]> q = new java.util.ArrayDeque<>();
-        q.add(new int[]{x, y + 1, z});
-        seen.add(mn.suld.api.worldbuild.BlockPos.pack(x, y + 1, z));
+        java.util.ArrayDeque<Long> q = new java.util.ArrayDeque<>();
+        long start = mn.suld.api.worldbuild.BlockPos.pack(x, y + 1, z);
+        if (mine.contains(start)) {
+            seen.add(start);
+            q.add(start);
+        }
         int[][] n = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
-        java.util.List<int[]> leaves = new java.util.ArrayList<>();
         while (!q.isEmpty()) {
-            int[] p = q.poll();
+            long p = q.poll();
+            int px = mn.suld.api.worldbuild.BlockPos.x(p), py = mn.suld.api.worldbuild.BlockPos.y(p), pz = mn.suld.api.worldbuild.BlockPos.z(p);
             for (int[] d : n) {
-                int px = p[0] + d[0], py = p[1] + d[1], pz = p[2] + d[2];
-                if (Math.abs(px - x) > 6 || Math.abs(pz - z) > 6 || py <= y || py > y + 16) continue;
-                String b = c.get(px, py, pz);
+                long k = mn.suld.api.worldbuild.BlockPos.pack(px + d[0], py + d[1], pz + d[2]);
+                if (!mine.contains(k) || !seen.add(k)) continue;
+                String b = c.get(px + d[0], py + d[1], pz + d[2]);
                 if (b == null || !(b.contains("_log") || b.contains("_leaves"))) continue;
-                if (seen.add(mn.suld.api.worldbuild.BlockPos.pack(px, py, pz))) q.add(new int[]{px, py, pz});
+                q.add(k);
             }
         }
-        for (int dx = -6; dx <= 6; dx++)
-            for (int dy = 1; dy <= 16; dy++)
-                for (int dz = -6; dz <= 6; dz++) {
-                    String b = c.get(x + dx, y + dy, z + dz);
-                    if (b != null && b.contains("_leaves") && !seen.contains(mn.suld.api.worldbuild.BlockPos.pack(x + dx, y + dy, z + dz)))
-                        leaves.add(new int[]{x + dx, y + dy, z + dz});
-                }
-        for (int[] l : leaves) c.remove(l[0], l[1], l[2]);
+        for (long k : mine) {
+            int kx = mn.suld.api.worldbuild.BlockPos.x(k), ky = mn.suld.api.worldbuild.BlockPos.y(k), kz = mn.suld.api.worldbuild.BlockPos.z(k);
+            String b = c.get(kx, ky, kz);
+            if (b != null && b.contains("_leaves") && !seen.contains(k)) c.remove(kx, ky, kz);
+        }
     }
 
     /** Leaf blob: ellipsoid with a ragged outer shell; never overwrites logs. */

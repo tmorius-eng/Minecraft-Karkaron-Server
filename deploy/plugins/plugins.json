@@ -1,0 +1,24 @@
+{
+  "minecraft": "1.21.11",
+  "note": "Trusted third-party server plugins around SÜLD. SÜLD owns gameplay (classes, EXP, skills, combat, items, quests, dungeons, relics, HUD, Kharkhorum, /help, /spawn); these provide generic server plumbing. Never add plugins that own RPG/UI layers (MythicMobs, MMOCore, MMOItems, mcMMO, Jobs, Citizens, ItemsAdder, Oraxen, DeluxeMenus, TAB, BetterHud). Profiles: core = always (test + production), hardening = production, optional = on request, dev = admin/build tools only. Exactly one of each conflicting pair is installed.",
+  "plugins": [
+    {"id": "luckperms",       "name": "LuckPerms",        "profile": "core",      "modrinth": "luckperms",          "why": "permissions and staff groups"},
+    {"id": "essentialsx",     "name": "EssentialsX",      "profile": "core",      "modrinth": "essentialsx",        "why": "/home /sethome /delhome /warp /tpa /tpaccept /tpdeny /msg /r /back /ping"},
+    {"id": "vaultunlocked",   "name": "VaultUnlocked",    "profile": "core",      "modrinth": "vaultunlocked",      "why": "economy/permission/chat API bridge between plugins"},
+    {"id": "placeholderapi",  "name": "PlaceholderAPI",   "profile": "core",      "hangar": "HelpChat/PlaceholderAPI", "modrinth": "placeholderapi", "why": "placeholders for other plugins (SÜLD can expose %suld_*%)"},
+    {"id": "coreprotect",     "name": "CoreProtect",      "profile": "core",      "modrinth": "coreprotect",        "hangar": "CORE/CoreProtect", "why": "block/container logging and rollback of griefing"},
+    {"id": "worldedit",       "name": "WorldEdit",        "profile": "core",      "modrinth": "worldedit",          "hangar": "EngineHub/WorldEdit", "why": "required by WorldGuard; admin editing (never a SÜLD dependency)", "conflicts": ["fastasyncworldedit"]},
+    {"id": "worldguard",      "name": "WorldGuard",       "profile": "core",      "modrinth": "worldguard",         "hangar": "EngineHub/WorldGuard", "why": "region protection outside Kharkhorum (SÜLD protects the city itself)"},
+    {"id": "spark",           "name": "spark",            "profile": "core",      "modrinth": "spark",              "why": "performance profiler"},
+    {"id": "chunky",          "name": "Chunky",           "profile": "core",      "modrinth": "chunky",             "hangar": "pop4959/Chunky", "why": "pre-generate the world around Kharkhorum"},
+    {"id": "discordsrv",      "name": "DiscordSRV",       "profile": "core",      "modrinth": "discordsrv",         "why": "Discord chat bridge (idle until a bot token is configured)"},
+    {"id": "grimac",          "name": "GrimAC",           "profile": "hardening", "modrinth": "grimac",             "why": "anticheat (SÜLD skills that move players must be exempted)"},
+    {"id": "plan",            "name": "Plan",             "profile": "hardening", "modrinth": "plan",               "why": "player analytics web panel"},
+    {"id": "libertybans",     "name": "LibertyBans",      "profile": "hardening", "modrinth": "libertybans",        "why": "bans, mutes, warnings (only one punishment plugin)"},
+    {"id": "viaversion",      "name": "ViaVersion",       "profile": "hardening", "modrinth": "viaversion",         "hangar": "ViaVersion/ViaVersion", "why": "let newer clients join 1.21.11"},
+    {"id": "bluemap",         "name": "BlueMap",          "profile": "optional",  "modrinth": "bluemap",            "hangar": "Blue/BlueMap", "why": "3D web map of Kharkhorum"},
+    {"id": "inventoryrollbackplus", "name": "InventoryRollbackPlus", "profile": "optional", "modrinth": "inventoryrollbackplus", "why": "restore player inventories"},
+    {"id": "fastasyncworldedit", "name": "FastAsyncWorldEdit", "profile": "dev",   "modrinth": "fastasyncworldedit", "why": "large edits (replaces WorldEdit; never both)", "conflicts": ["worldedit"]},
+    {"id": "axiom",           "name": "Axiom Paper Plugin", "profile": "dev",     "modrinth": "axiom-paper-plugin", "why": "Axiom building tool server side (commercial licence for public servers)"}
+  ]
+}

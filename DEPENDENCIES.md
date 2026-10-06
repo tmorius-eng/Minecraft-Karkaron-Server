@@ -46,11 +46,32 @@ the Paper runtime and are used via the platform, never bundled.
 | Tool | Where | Why | Licence note |
 |---|---|---|---|
 | Axiom (client mod + server plugin) | private build server only | terraforming, sculpting, large blockout | separate commercial licence required for public/commercial servers |
-| WorldEdit | private build server only | copy/paste, rotate/flip, `.schem` export | open source |
+| FastAsyncWorldEdit | private build server only | large edits (instead of WorldEdit, never both) | open source |
 
-The production server never installs them. Their output (`.schem`) is placed by the SÜLD WorldBuilder.
+SÜLD never depends on them: their output (`.schem`) is placed by the SÜLD WorldBuilder. (WorldEdit is
+also installed on servers as WorldGuard's required library, see below — still not a SÜLD dependency.)
+
+## Trusted server plugins (installed next to SÜLD, not part of it)
+
+Generic server plumbing comes from long-established, widely trusted plugins, listed in
+[`deploy/plugins/plugins.json`](deploy/plugins/plugins.json) and installed by
+`tools/plugins/fetch_plugins.py` (VPS deploy/update, `PLUGIN_PROFILES`) and `scripts/run-test-server.ps1 -Plugins`.
+Only builds published for the server's Minecraft version (1.21.11) are installed, hash-verified, from
+Modrinth (or Hangar).
+
+| Profile | Plugins |
+|---|---|
+| core | LuckPerms, EssentialsX, VaultUnlocked, PlaceholderAPI, CoreProtect, WorldEdit (WorldGuard's library), WorldGuard, spark, Chunky, DiscordSRV |
+| hardening (production) | GrimAC, Plan, LibertyBans, ViaVersion |
+| optional | BlueMap, InventoryRollbackPlus |
+| dev (build server) | FastAsyncWorldEdit, Axiom Paper Plugin |
+
+SÜLD loads before EssentialsX (`loadbefore`), so SÜLD's own `/help`, `/rules`, `/spawn` and RPG commands win.
+Plugins that would own a SÜLD layer are never installed: MythicMobs, MMOCore, MMOItems, mcMMO, Jobs,
+Citizens, ItemsAdder, Oraxen, DeluxeMenus, TAB, BetterHud.
 
 ## Gameplay plugins
 
-**None, by rule.** Every gameplay system is implemented in this repository. See
+**None, by rule.** Every gameplay system (classes, EXP, skills, combat, mobs, items, quests, dungeons,
+bosses, relics, HUD, Kharkhorum) is implemented in this repository. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the blocklist and rationale.

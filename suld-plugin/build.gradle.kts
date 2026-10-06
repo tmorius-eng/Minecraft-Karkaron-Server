@@ -49,6 +49,18 @@ dependencies {
     testImplementation("org.postgresql:postgresql:42.7.4")
 }
 
+// The SÜLD resource pack, zipped reproducibly (fixed timestamps, stable order) and bundled into the
+// plugin jar, so the server can self-host it with a stable SHA-1.
+val resourcePackZip = tasks.register<Zip>("resourcePackZip") {
+    from(rootProject.file("resourcepack")) {
+        exclude("**/*.md", "**/.gitkeep")
+    }
+    archiveFileName.set("suld-resourcepack.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("pack"))
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
+
 tasks {
     shadowJar {
         archiveClassifier.set("")
@@ -84,6 +96,7 @@ tasks {
         }
         // World assets (slices, points, schematics) ship inside the jar: the server needs no
         // world-editing plugin and no external files to build Kharkhorum.
+        from(resourcePackZip)
         from(rootProject.file("assets/world")) {
             into("world")
             exclude("**/*.png", "**/*.md")

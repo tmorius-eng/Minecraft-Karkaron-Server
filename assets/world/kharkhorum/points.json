@@ -252,31 +252,34 @@
       "id": "fast_travel.gate_west",
       "type": "fast_travel",
       "district": "district.outer_wall",
-      "x": -166,
+      "x": -163,
       "y": 1,
-      "z": 8,
+      "z": 10,
       "yaw": 90,
-      "required": false
+      "required": false,
+      "slice": "slice.1"
     },
     {
       "id": "fast_travel.gate_east",
       "type": "fast_travel",
       "district": "district.outer_wall",
-      "x": 165,
+      "x": 162,
       "y": 1,
-      "z": 8,
+      "z": 10,
       "yaw": 270,
-      "required": false
+      "required": false,
+      "slice": "slice.1"
     },
     {
       "id": "fast_travel.gate_north",
       "type": "fast_travel",
       "district": "district.outer_wall",
       "x": 112,
-      "y": 3,
-      "z": -150,
+      "y": 1,
+      "z": -147,
       "yaw": 0,
-      "required": false
+      "required": false,
+      "slice": "slice.1"
     },
     {
       "id": "secret.abandoned_cellar",

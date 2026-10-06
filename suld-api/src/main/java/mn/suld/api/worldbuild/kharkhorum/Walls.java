@@ -193,71 +193,152 @@ final class Walls {
     });
 
     /**
-     * tower.watch — 9 × 9 watchtower, about 22 tall: hollow masonry shaft with timber floors and a
-     * ladder, door on the inner (north) side, crenellated deck, open pavilion with a hip roof, a
-     * brazier and a SÜLD hanging on the outer face.
+     * tower.watch — square tower with a hollow masonry shaft, timber floors and a ladder, a door on
+     * the inner side (-z), a crenellated deck, an open pavilion with a hip roof, a brazier and a SÜLD
+     * hanging on the outer face (+z). Params: half (4 → 9 × 9 watch/wall tower; 6 → 13 × 13 corner
+     * tower), height (deck level, 17 default; 22 for corner towers).
      */
     static final Module WATCHTOWER = new Module() {
         public String id() { return "tower.watch"; }
         public Layer layer() { return Layer.STRUCTURE; }
 
         public List<Connector> connectors(ModuleContext ctx) {
-            return List.of(new Connector("door", 0, 1, -5, Facing.NORTH, true),
-                    new Connector("deck", 2, 18, 2, null, true));
+            int h = ctx.integer("half", 4);
+            // big towers have a buttress step in front of the door: the walkable spot is one further out
+            return List.of(new Connector("door", ctx.integer("door_x", 0), 1, h >= 6 ? -h - 2 : -h - 1, Facing.NORTH, true));
         }
 
         public void build(ModuleCanvas c, ModuleContext ctx) {
             SplittableRandom r = ctx.random();
+            int H = ctx.integer("half", 4);
+            int top = ctx.integer("height", H >= 6 ? 22 : 17);
             c.pass(Pass.SHELLS);
-            int top = 17;
-            for (int x = -4; x <= 4; x++)
-                for (int z = -4; z <= 4; z++) {
-                    boolean shell = Math.abs(x) == 4 || Math.abs(z) == 4;
+            for (int x = -H; x <= H; x++)
+                for (int z = -H; z <= H; z++) {
+                    boolean shell = Math.abs(x) == H || Math.abs(z) == H;
                     for (int y = 1; y <= top; y++) {
-                        if (shell || y == top) c.set(x, y, z, y <= 3 ? Kit.earth(r) : y == 9 || y == 14 ? "@stone_alt" : Kit.masonry(r));
-                        else if (y == 6 || y == 12) c.set(x, y, z, "@plank");
+                        if (shell || y == top) c.set(x, y, z, y <= 3 ? Kit.earth(r) : y % 5 == 4 ? "@stone_alt" : Kit.masonry(r));
+                        else if (y % 6 == 0) c.set(x, y, z, "@plank");
                         else c.air(x, y, z);
                     }
                     c.set(x, 0, z, "@plank");
                 }
-            // corner quoins of trim stone
             for (int y = 4; y < top; y += 2)
-                for (int sx : new int[]{-4, 4}) for (int sz : new int[]{-4, 4}) c.set(sx, y, sz, "@trim");
-            // door (north face), ladder against the north wall
-            c.air(0, 1, -4);
-            c.air(0, 2, -4);
-            c.pass(Pass.INTERIORS);
-            c.set(0, 1, -4, "minecraft:spruce_door[facing=south,half=lower,hinge=left,open=false]");
-            c.set(0, 2, -4, "minecraft:spruce_door[facing=south,half=upper,hinge=left,open=false]");
-            for (int y = 1; y <= top; y++) c.set(2, y, -3, "minecraft:ladder[facing=south]");
-            // slits
-            c.pass(Pass.SHELLS);
-            for (int y : new int[]{8, 13}) {
-                c.set(0, y, 4, "@metal");
-                c.set(-4, y, 0, "@metal");
-                c.set(4, y, 0, "@metal");
+                for (int sx : new int[]{-H, H}) for (int sz : new int[]{-H, H}) c.set(sx, y, sz, "@trim");
+            if (H >= 6) { // corner towers: buttressed base
+                for (int i = -H; i <= H; i++)
+                    for (int[] d : new int[][]{{i, H + 1}, {i, -H - 1}, {H + 1, i}, {-H - 1, i}}) {
+                        c.set(d[0], 1, d[1], Kit.earth(r));
+                        c.set(d[0], 2, d[1], Kit.stairs("@base_stairs", Facing.toward(d[0], d[1], 0, 0), false));
+                    }
             }
-            c.set(0, 13, -4, "@metal");
-            // deck parapet
-            for (int x = -4; x <= 4; x++)
-                for (int z = -4; z <= 4; z++) {
-                    if (Math.abs(x) != 4 && Math.abs(z) != 4) continue;
+            // door (inner face; door_x moves it clear of abutting walls), ladder against the inner wall
+            int dx = ctx.integer("door_x", 0);
+            c.air(dx, 1, -H);
+            c.air(dx, 2, -H);
+            if (H >= 6) { // the buttress in front of the door becomes a step
+                c.set(dx, 1, -H - 1, Kit.stairs("@base_stairs", Facing.SOUTH, false));
+                c.remove(dx, 2, -H - 1);
+            }
+            c.pass(Pass.INTERIORS);
+            c.set(dx, 1, -H, "minecraft:spruce_door[facing=south,half=lower,hinge=left,open=false]");
+            c.set(dx, 2, -H, "minecraft:spruce_door[facing=south,half=upper,hinge=left,open=false]");
+            int lx = dx >= 0 ? dx - 2 : dx + 2;
+            for (int y = 1; y <= top; y++) c.set(lx, y, -H + 1, "minecraft:ladder[facing=south]");
+            c.pass(Pass.SHELLS);
+            for (int y = 8; y < top - 2; y += 5) {
+                c.set(0, y, H, "@metal");
+                c.set(-H, y, 0, "@metal");
+                c.set(H, y, 0, "@metal");
+                c.set(0, y + 2, -H, "@metal");
+            }
+            for (int x = -H; x <= H; x++)
+                for (int z = -H; z <= H; z++) {
+                    if (Math.abs(x) != H && Math.abs(z) != H) continue;
                     c.set(x, top + 1, z, ((x + z) & 1) == 0 ? Kit.masonry(r) : Kit.slab("@stone_slab", false));
                 }
-            // pavilion and roof
-            for (int sx : new int[]{-3, 3}) for (int sz : new int[]{-3, 3})
+            int p = H - 1;
+            for (int sx : new int[]{-p, p}) for (int sz : new int[]{-p, p})
                 for (int y = top + 1; y <= top + 3; y++) c.set(sx, y, sz, "@pillar");
-            for (int x = -3; x <= 3; x++) {
-                c.set(x, top + 4, -3, "@beam[axis=x]");
-                c.set(x, top + 4, 3, "@beam[axis=x]");
+            for (int x = -p; x <= p; x++) {
+                c.set(x, top + 4, -p, "@beam[axis=x]");
+                c.set(x, top + 4, p, "@beam[axis=x]");
             }
-            for (int z = -2; z <= 2; z++) {
-                c.set(-3, top + 4, z, "@beam[axis=z]");
-                c.set(3, top + 4, z, "@beam[axis=z]");
+            for (int z = -p + 1; z <= p - 1; z++) {
+                c.set(-p, top + 4, z, "@beam[axis=z]");
+                c.set(p, top + 4, z, "@beam[axis=z]");
             }
-            Kit.hipRoof(c, -5, -5, 5, 5, top + 5, null, true);
+            Kit.hipRoof(c, -H - 1, -H - 1, H + 1, H + 1, top + 5, H >= 6 ? "@ridge" : null, true);
             Kit.brazier(c, 0, top, 0, 2);
-            Kit.hanging(c, -2, 15, 5, Facing.SOUTH, Kit.SULDE_5);
+            if (H >= 6) {
+                Kit.hanging(c, -3, top - 4, H + 1, Facing.SOUTH, Kit.SULDE_7);
+            } else {
+                Kit.hanging(c, -2, top - 2, H + 1, Facing.SOUTH, Kit.SULDE_5);
+            }
+        }
+    };
+
+    /**
+     * gate.side — the three lesser city gates (Sheep, Grain, Horse): 25 wide, a 5 × 7 arched
+     * passage through a crenellated gatehouse between two 7 × 7 towers with skirt roofs and small
+     * pavilions, SÜLD hangings and braziers. Front (+z) faces out of the city.
+     */
+    static final Module SIDE_GATE = new Module() {
+        public String id() { return "gate.side"; }
+        public Layer layer() { return Layer.LANDMARK; }
+
+        public List<Connector> connectors(ModuleContext ctx) {
+            return List.of(new Connector("inside", 0, 1, -5, Facing.NORTH, true),
+                    new Connector("outside", 0, 1, 5, Facing.SOUTH, true));
+        }
+
+        public void build(ModuleCanvas c, ModuleContext ctx) {
+            SplittableRandom r = ctx.random();
+            c.pass(Pass.WALLS_GATES_ROADS);
+            for (int x = -2; x <= 2; x++) for (int z = -4; z <= 4; z++) c.set(x, 0, z, x == 0 ? "@paving_accent" : Kit.paving(r));
+            for (int side = -1; side <= 1; side += 2) {
+                int xa = side < 0 ? -12 : 6, xb = side < 0 ? -6 : 12;
+                mass(c, xa, 1, -3, xb, 13, 3, r, 7, 11);
+                for (int x = xa; x <= xb; x++) for (int z = -3; z <= 3; z++) c.set(x, 14, z, "@trim_dark");
+                for (int y : new int[]{6, 10}) {
+                    c.set(side * 9, y, 3, "@metal");
+                    c.set(side * 9, y, -3, "@metal");
+                }
+                Kit.skirt(c, xa - 1, -4, xb + 1, 4, 15, 2);
+                c.pass(Pass.SHELLS);
+                for (int x = xa + 2; x <= xb - 2; x++)
+                    for (int z = -1; z <= 1; z++)
+                        for (int y = 15; y <= 16; y++) {
+                            boolean edge = x == xa + 2 || x == xb - 2 || Math.abs(z) == 1;
+                            boolean corner = (x == xa + 2 || x == xb - 2) && Math.abs(z) == 1;
+                            if (!edge) c.air(x, y, z);
+                            else c.set(x, y, z, corner ? "@pillar" : y == 16 ? "@beam_dark[axis=" + (Math.abs(z) == 1 ? "x" : "z") + "]" : "@plank");
+                        }
+                Kit.hipRoof(c, xa, -3, xb, 3, 17, "@ridge", true);
+                Kit.hanging(c, side * 9 - 2, 12, 4, Facing.SOUTH, Kit.SULDE_5);
+                Kit.hanging(c, side * 9 + 2, 12, -4, Facing.NORTH, Kit.SULDE_5);
+                c.pass(Pass.WALLS_GATES_ROADS);
+            }
+            mass(c, -5, 1, -2, 5, 11, 2, r, 7);
+            for (int x = -2; x <= 2; x++)
+                for (int y = 1; y <= 7; y++)
+                    for (int z = -2; z <= 2; z++) c.air(x, y, z);
+            for (int z = -2; z <= 2; z++) {
+                c.set(-2, 7, z, Kit.stairs("@stone_stairs", Facing.WEST, true));
+                c.set(2, 7, z, Kit.stairs("@stone_stairs", Facing.EAST, true));
+            }
+            for (int zf : new int[]{-2, 2}) for (int x = -3; x <= 3; x++) c.set(x, 8, zf, Math.abs(x) <= 1 ? "@ridge" : "@trim_dark");
+            for (int x = -5; x <= 5; x++) if ((x & 1) == 1) {
+                c.set(x, 12, 2, Kit.masonry(r));
+                c.set(x, 12, -2, Kit.masonry(r));
+            }
+            c.pass(Pass.LIGHTING);
+            c.set(0, 7, 0, "@light[hanging=true]");
+            Kit.brazier(c, -4, 0, 5, 3);
+            Kit.brazier(c, 4, 0, 5, 3);
+            Kit.brazier(c, -4, 0, -5, 3);
+            Kit.brazier(c, 4, 0, -5, 3);
+            Kit.tug(c, 0, 11, 0, 6, "@felt");
         }
     };
 }
