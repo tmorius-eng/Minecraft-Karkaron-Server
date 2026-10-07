@@ -91,9 +91,9 @@ public final class SkillSky implements Listener {
     static final float BOX_W = 70, BOX_H = 40, BOX_D = 30;
     static final long COMBAT_MS = 8000;
     /** Tooltip: distance from the eye, text scale, line width (px); vanilla text is 0.025 blocks per pixel. */
-    static final double TIP_DIST = 2.6;
-    static final float TIP_SCALE = 0.26f;
-    static final int TIP_WIDTH = 210;
+    static final double TIP_DIST = 2.2;
+    static final float TIP_SCALE = 0.36f;
+    static final int TIP_WIDTH = 190;
 
     private static final int GOLD = 0xF2B632, WHITE = 0xF0F0F0, DIM = 0x8C8F96, DARK = 0x3C3F46, RED = 0xB03030, NAVY = 0x0B1226;
     private static final int LINE_GOLD = 0xE8A82A, LINE_OPEN = 0x9A9DA6, LINE_DARK = 0x2A2D34, LINE_RED = 0xC83030;
@@ -279,16 +279,18 @@ public final class SkillSky implements Listener {
             t.setShadowed(true);
             t.setLineWidth(400);
             t.setTeleportDuration(3);
-            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.24f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.42f), new Quaternionf()));
         }));
         s.footer = own(s, w.spawn(s.seat.getLocation(), TextDisplay.class, t -> {
             hidden(t);
             t.setBillboard(Display.Billboard.CENTER);
             t.setBackgroundColor(Color.fromARGB(150, 8, 6, 20));
-            t.setLineWidth(600);
+            t.setLineWidth(320);
             t.setTeleportDuration(3);
-            t.text(Component.text("Зүүн товш: нээх  ·  Баруун товш: буцаах  ·  W A S D: гүйлгэх  ·  Хулганы дугуй: томруулах  ·  Shift: гарах", NamedTextColor.GRAY));
-            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.15f), new Quaternionf()));
+            t.setShadowed(true);
+            t.text(Component.text("Зүүн товш: нээх   ·   Баруун товш: буцаах", NamedTextColor.WHITE).append(Component.newline())
+                    .append(Component.text("W A S D: гүйлгэх   ·   Дугуй: томруулах   ·   Shift: гарах", NamedTextColor.WHITE)));
+            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.3f), new Quaternionf()));
         }));
 
         int n = s.tree.nodes().size();
@@ -541,8 +543,8 @@ public final class SkillSky implements Listener {
         s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
         // header and footer stay in front of the eye (the camera looks +Z: world offsets)
         Location eye = cam.clone().add(0, s.eyeOff, 0);
-        s.header.teleport(eye.clone().add(0, 1.05, 2.4));
-        s.footer.teleport(eye.clone().add(0, -0.95, 2.4));
+        s.header.teleport(eye.clone().add(0, 1.0, 2.4));
+        s.footer.teleport(eye.clone().add(0, -1.3, 2.4));
     }
 
     /** The crosshair as a cursor: intersect the look ray with the tree plane and take the nearest node under it. */

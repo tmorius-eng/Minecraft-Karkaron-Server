@@ -102,9 +102,9 @@ public final class SuldServices {
                 this.repository = new InMemoryProfileRepository();
                 plugin.getLogger().warning("SULD storage is MEMORY — data is volatile and not persisted.");
             }
-            case MYSQL, POSTGRESQL -> {
+            case H2, MYSQL, POSTGRESQL -> {
                 SqlDialect dialect = SqlDialect.forStorage(config.database().type());
-                this.dataSource = DataSourceFactory.create(config.database());
+                this.dataSource = DataSourceFactory.create(config.database(), plugin.getDataFolder().toPath());
                 int applied = new SchemaMigrator(dataSource, dialect).migrate();
                 plugin.getLogger().info("SULD storage ready (" + dialect + "), migrations applied: " + applied);
                 this.repository = new JdbcProfileRepository(dataSource, dialect, ioExecutor);

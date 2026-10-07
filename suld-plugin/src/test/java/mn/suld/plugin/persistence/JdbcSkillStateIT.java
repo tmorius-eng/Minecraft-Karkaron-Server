@@ -22,21 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Real-database test of the skill-tree columns. Opt-in: SULD_TEST_PG_URL / _USER / _PASS (throwaway database). */
-@EnabledIfEnvironmentVariable(named = "SULD_TEST_PG_URL", matches = "jdbc:postgresql:.+")
 class JdbcSkillStateIT {
 
     @Test
     void skillStateSurvivesSaveAndLoad_andBadDataStopsTheLoad() throws Exception {
-        PGSimpleDataSource ds = new PGSimpleDataSource();
-        ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
-        ds.setUser(System.getenv("SULD_TEST_PG_USER"));
-        ds.setPassword(System.getenv("SULD_TEST_PG_PASS"));
-        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
-            st.execute("DROP SCHEMA public CASCADE");
-            st.execute("CREATE SCHEMA public");
-        }
-        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate());
-        JdbcProfileRepository repo = new JdbcProfileRepository(ds, SqlDialect.POSTGRESQL, Executors.newSingleThreadExecutor());
+        TestDb.Db testDb = TestDb.fresh();
+        javax.sql.DataSource ds = testDb.ds();
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, testDb.dialect()).migrate());
+        JdbcProfileRepository repo = new JdbcProfileRepository(ds, testDb.dialect(), Executors.newSingleThreadExecutor());
         SkillTree tree = SkillTreeLoader.loadAll(SkillTreeLoader.classpath()).trees().get(PlayerClass.BAATAR);
 
         // a player with nothing learned loads the empty state (also what every pre-V10 row looks like)

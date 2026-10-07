@@ -30,25 +30,19 @@ import static org.junit.jupiter.api.Assertions.*;
  * Real-database proof of relic uniqueness (opt-in, see JdbcClanRepositoryIT for the env vars;
  * DROPS all suld_ tables in the target database first).
  */
-@EnabledIfEnvironmentVariable(named = "SULD_TEST_PG_URL", matches = "jdbc:postgresql:.+")
 class JdbcRelicRepositoryIT {
 
-    private PGSimpleDataSource ds;
+    private javax.sql.DataSource ds;
+    private TestDb.Db testDb;
     private final ExecutorService pool = Executors.newFixedThreadPool(24); // real parallel connections
     private JdbcRelicRepository repo;
 
     @BeforeEach
     void freshSchema() throws Exception {
-        ds = new PGSimpleDataSource();
-        ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
-        ds.setUser(System.getenv("SULD_TEST_PG_USER"));
-        ds.setPassword(System.getenv("SULD_TEST_PG_PASS"));
-        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
-            st.execute("DROP TABLE IF EXISTS suld_clan_members, suld_clans, suld_profiles, suld_world_unique_items, "
-                    + "suld_world_unique_history, suld_analytics_events, suld_audit_log, suld_schema_version CASCADE");
-        }
-        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate(), "all migrations applied to a fresh schema");
-        repo = new JdbcRelicRepository(ds, SqlDialect.POSTGRESQL, pool);
+        testDb = TestDb.fresh();
+        ds = testDb.ds();
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, testDb.dialect()).migrate(), "all migrations applied to a fresh schema");
+        repo = new JdbcRelicRepository(ds, testDb.dialect(), pool);
     }
 
     @AfterEach

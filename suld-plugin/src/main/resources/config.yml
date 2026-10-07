@@ -5,7 +5,7 @@
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
 # Schema version of this file (SULD migrates older files on start; do not edit).
-config-version: 3
+config-version: 4
 locale: mn
 
 # ---------------------------------------------------------------------------
@@ -19,13 +19,14 @@ progression:
     exponent: 1.75
 
 # ---------------------------------------------------------------------------
-# Persistence. type: memory | mysql | postgresql
-#   memory       -> no database, data is volatile (local dev / testing only)
+# Persistence. type: h2 | memory | mysql | postgresql
+#   h2           -> embedded file database in plugins/SULD/data/ (persistent, nothing to install; default)
+#   memory       -> no database, data is LOST on every restart (automated tests only)
 #   mysql        -> requires a reachable MySQL/MariaDB server
 #   postgresql   -> requires a reachable PostgreSQL server
 # ---------------------------------------------------------------------------
 database:
-  type: memory
+  type: h2
   host: 127.0.0.1
   port: 3306
   database: suld

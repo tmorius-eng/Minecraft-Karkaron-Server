@@ -28,7 +28,7 @@ public final class SuldConfigFactory {
         String rawType = view.getString("database.type", dbd.type().name());
         // an unreadable value must stop startup: silently falling back to volatile memory would lose every save
         StorageType type = rawType == null || rawType.isBlank() ? dbd.type() : StorageType.byId(rawType)
-                .orElseThrow(() -> new IllegalArgumentException("database.type '" + rawType + "' is not one of memory, mysql, postgresql"));
+                .orElseThrow(() -> new IllegalArgumentException("database.type '" + rawType + "' is not one of h2, memory, mysql, postgresql"));
         DatabaseSettings database = new DatabaseSettings(
                 type,
                 view.getString("database.host", dbd.host()),

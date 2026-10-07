@@ -358,7 +358,11 @@ public final class SuldPlugin extends JavaPlugin {
      */
     private void migrateConfig() {
         int version = getConfig().getInt("config-version", 1);
-        if (version >= 3) return;
+        if (version >= 4) return;
+        if (version == 3) {
+            migrateStorage();
+            return;
+        }
         if (version < 2 && getConfig().getString("resource-pack.url", "").isBlank()
                 && !getConfig().getBoolean("resource-pack.enabled", false)) {
             getConfig().set("resource-pack.enabled", true);
@@ -379,6 +383,21 @@ public final class SuldPlugin extends JavaPlugin {
         getConfig().set("config-version", 3);
         saveConfig();
         getLogger().info("config.yml migrated to v3: resource pack required, branding/store/ui/owners sections added");
+        migrateStorage();
+    }
+
+    /**
+     * v4: "memory" was the shipped default, so every restart of a server that never set up a database wiped every
+     * profile (class, level, skills, class gear) while the players kept their vanilla inventories. Such a config now
+     * uses the embedded H2 file database; a server that configured MySQL/PostgreSQL is not touched.
+     */
+    private void migrateStorage() {
+        if ("memory".equalsIgnoreCase(getConfig().getString("database.type", "memory"))) {
+            getConfig().set("database.type", "h2");
+            getLogger().warning("config.yml migrated to v4: database.type memory -> h2 (plugins/SULD/data/). Progress now survives restarts.");
+        }
+        getConfig().set("config-version", 4);
+        saveConfig();
     }
 
     private void autosave() {

@@ -49,6 +49,9 @@ dependencies {
     // Test-only: JDBC integration tests against a real PostgreSQL (skipped unless
     // SULD_TEST_PG_URL is set). Same pinned version plugin.yml loads at runtime.
     testImplementation("org.postgresql:postgresql:42.7.4")
+    // embedded storage (database.type: h2); at runtime Paper downloads it from plugin.yml libraries
+    compileOnly("com.h2database:h2:2.3.232")
+    testImplementation("com.h2database:h2:2.3.232")
 }
 
 // ---------------------------------------------------------------------------------------------------------------

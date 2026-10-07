@@ -30,7 +30,7 @@ public enum SqlDialect {
 
     public static SqlDialect forStorage(StorageType type) {
         return switch (type) {
-            case MYSQL -> MYSQL;
+            case MYSQL, H2 -> MYSQL; // H2 runs in MySQL compatibility mode with the MySQL migrations and upserts
             case POSTGRESQL -> POSTGRESQL;
             case MEMORY -> throw new IllegalArgumentException("MEMORY storage has no SQL dialect");
         };

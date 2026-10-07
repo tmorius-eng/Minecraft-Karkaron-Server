@@ -103,9 +103,10 @@ public final class SchemaMigrator {
 
         boolean autoCommit = conn.getAutoCommit();
         conn.setAutoCommit(false);
+        boolean h2 = "H2".equalsIgnoreCase(conn.getMetaData().getDatabaseProductName());
         try (Statement st = conn.createStatement()) {
             for (String statement : splitStatements(script)) {
-                st.execute(statement);
+                for (String s : h2 ? h2Compat(statement) : List.of(statement)) st.execute(s);
             }
             try (PreparedStatement ps = conn.prepareStatement(
                     "INSERT INTO suld_schema_version (version, description, applied_at) VALUES (?, ?, ?)")) {
@@ -144,6 +145,43 @@ public final class SchemaMigrator {
      * blank segments dropped. (Our DDL uses no string literals containing
      * {@code --} or ';', so this simple scanner is sufficient.)
      */
+    /**
+     * The MySQL migrations as H2 (MySQL mode) accepts them: one ADD per ALTER TABLE (H2 rejects
+     * "ADD COLUMN a, ADD COLUMN b"), no MySQL table options (ENGINE, CHARSET, COLLATE), and stored generated
+     * columns in H2's spelling.
+     */
+    static List<String> h2Compat(String statement) {
+        String s = statement.replaceAll("(?i)\\s*(DEFAULT\\s+)?(ENGINE|CHARSET|CHARACTER SET|COLLATE)\\s*=?\\s*[a-z0-9_]+", "");
+        // MySQL stored generated column "AS (expr) STORED" -> H2 "GENERATED ALWAYS AS (expr)"
+        s = s.replaceAll("(?is)\\bAS\\s*\\((.*?)\\)\\s*STORED", "GENERATED ALWAYS AS ($1)");
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?is)^\\s*ALTER\\s+TABLE\\s+(\\S+)\\s+(ADD\\b.*)$").matcher(s);
+        if (!m.matches()) return List.of(s);
+        List<String> out = new ArrayList<>();
+        for (String clause : topLevelCommas(m.group(2))) out.add("ALTER TABLE " + m.group(1) + " " + clause.strip());
+        return out;
+    }
+
+    /** Split on commas outside parentheses and quotes. */
+    static List<String> topLevelCommas(String text) {
+        List<String> parts = new ArrayList<>();
+        int depth = 0;
+        boolean quoted = false;
+        StringBuilder cur = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            if (c == '\'') quoted = !quoted;
+            if (!quoted && c == '(') depth++;
+            if (!quoted && c == ')') depth--;
+            if (!quoted && depth == 0 && c == ',') {
+                parts.add(cur.toString());
+                cur.setLength(0);
+                continue;
+            }
+            cur.append(c);
+        }
+        if (!cur.toString().isBlank()) parts.add(cur.toString());
+        return parts;
+    }
+
     static List<String> splitStatements(String script) {
         StringBuilder code = new StringBuilder();
         for (String line : script.split("\n")) {

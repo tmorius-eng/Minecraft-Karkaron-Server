@@ -312,12 +312,22 @@ public final class SkillMapMenu implements Listener {
             case LEVEL_LOCKED -> Component.text("⚠ Түвшин хүрэхгүй", ORANGE, TextDecoration.BOLD);
             case PREREQUISITE_MISSING -> Component.text("⚠ Шаардлага биелээгүй", ORANGE, TextDecoration.BOLD);
             case EXCLUDED -> Component.text("✖ Өөр сонголт хийсэн (улаан холбоос)", RED, TextDecoration.BOLD);
-            case LOCKED -> Component.text("🔒 Хөрш нодыг эхлээд нээ", GRAY, TextDecoration.BOLD);
+            case LOCKED -> Component.text("🔒 Эхлээд үүнтэй шугамаар холбогдсон чадварыг нээ: " + connected(tree, a, n), GRAY, TextDecoration.BOLD);
         });
         if (!n.root()) {
             out.add(Component.text("« Зүүн товш: нээх / дээшлүүлэх · Баруун товш: буцаах · Shift: дэлгэрэнгүй »", NamedTextColor.WHITE, TextDecoration.BOLD));
         }
         return out;
+    }
+
+    /** The names of the visible nodes a line joins to {@code n} (what the player has to learn first). */
+    private static String connected(SkillTree tree, SkillAllocation a, SkillNode n) {
+        List<String> names = new ArrayList<>();
+        for (int nb : tree.neighbours(n.index())) {
+            SkillNode m = tree.node(nb);
+            if (a.visible(m)) names.add("«" + m.name() + "»");
+        }
+        return names.isEmpty() ? "—" : String.join(" эсвэл ", names);
     }
 
     private void onNode(Player p, SkillNode n, ClickType click) {

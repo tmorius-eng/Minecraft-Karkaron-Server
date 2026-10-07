@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Real-database test of the style row (V5) and discovered regions (V6). Opt-in like the other ITs:
  * SULD_TEST_PG_URL / _USER / _PASS pointing at a THROWAWAY database (its public schema is dropped).
  */
-@EnabledIfEnvironmentVariable(named = "SULD_TEST_PG_URL", matches = "jdbc:postgresql:.+")
 class JdbcStyleRepositoryIT {
 
     private JdbcStyleRepository repo;
@@ -27,16 +26,10 @@ class JdbcStyleRepositoryIT {
 
     @BeforeEach
     void freshSchema() throws Exception {
-        PGSimpleDataSource ds = new PGSimpleDataSource();
-        ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
-        ds.setUser(System.getenv("SULD_TEST_PG_USER"));
-        ds.setPassword(System.getenv("SULD_TEST_PG_PASS"));
-        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
-            st.execute("DROP SCHEMA public CASCADE");
-            st.execute("CREATE SCHEMA public");
-        }
-        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate());
-        repo = new JdbcStyleRepository(ds, SqlDialect.POSTGRESQL, single);
+        TestDb.Db testDb = TestDb.fresh();
+        javax.sql.DataSource ds = testDb.ds();
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, testDb.dialect()).migrate());
+        repo = new JdbcStyleRepository(ds, testDb.dialect(), single);
     }
 
     @Test

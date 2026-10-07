@@ -27,26 +27,20 @@ import static org.junit.jupiter.api.Assertions.*;
  * SULD_TEST_PG_URL (e.g. jdbc:postgresql://127.0.0.1:5432/suld_it), SULD_TEST_PG_USER and
  * SULD_TEST_PG_PASS to a THROWAWAY database — the test drops all suld_ tables first.
  */
-@EnabledIfEnvironmentVariable(named = "SULD_TEST_PG_URL", matches = "jdbc:postgresql:.+")
 class JdbcClanRepositoryIT {
 
-    private PGSimpleDataSource ds;
+    private javax.sql.DataSource ds;
+    private TestDb.Db testDb;
     private JdbcClanRepository repo;
     private final ExecutorService single = Executors.newSingleThreadExecutor();
 
     @BeforeEach
     void freshSchema() throws Exception {
-        ds = new PGSimpleDataSource();
-        ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
-        ds.setUser(System.getenv("SULD_TEST_PG_USER"));
-        ds.setPassword(System.getenv("SULD_TEST_PG_PASS"));
-        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
-            st.execute("DROP TABLE IF EXISTS suld_clan_members, suld_clans, suld_profiles, suld_world_unique_items, "
-                    + "suld_world_unique_history, suld_analytics_events, suld_audit_log, suld_schema_version CASCADE");
-        }
-        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate(), "all migrations applied to a fresh schema");
-        assertEquals(0, new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate(), "idempotent");
-        repo = new JdbcClanRepository(ds, SqlDialect.POSTGRESQL, single, Logger.getLogger("it"));
+        testDb = TestDb.fresh();
+        ds = testDb.ds();
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, testDb.dialect()).migrate(), "all migrations applied to a fresh schema");
+        assertEquals(0, new SchemaMigrator(ds, testDb.dialect()).migrate(), "idempotent");
+        repo = new JdbcClanRepository(ds, testDb.dialect(), single, Logger.getLogger("it"));
     }
 
     @Test

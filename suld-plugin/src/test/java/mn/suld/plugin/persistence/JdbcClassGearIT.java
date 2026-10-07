@@ -23,21 +23,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Real-database test of the class gear + active minutes columns (V13). Opt-in: SULD_TEST_PG_URL / _USER / _PASS. */
-@EnabledIfEnvironmentVariable(named = "SULD_TEST_PG_URL", matches = "jdbc:postgresql:.+")
 class JdbcClassGearIT {
 
     @Test
     void classGearAndActiveMinutesSurviveSaveAndLoad_andBadDataStopsTheLoad() throws Exception {
-        PGSimpleDataSource ds = new PGSimpleDataSource();
-        ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
-        ds.setUser(System.getenv("SULD_TEST_PG_USER"));
-        ds.setPassword(System.getenv("SULD_TEST_PG_PASS"));
-        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
-            st.execute("DROP SCHEMA public CASCADE");
-            st.execute("CREATE SCHEMA public");
-        }
-        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate());
-        JdbcProfileRepository repo = new JdbcProfileRepository(ds, SqlDialect.POSTGRESQL, Executors.newSingleThreadExecutor());
+        TestDb.Db testDb = TestDb.fresh();
+        javax.sql.DataSource ds = testDb.ds();
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, testDb.dialect()).migrate());
+        JdbcProfileRepository repo = new JdbcProfileRepository(ds, testDb.dialect(), Executors.newSingleThreadExecutor());
 
         UUID fresh = UUID.randomUUID();
         repo.save(PlayerProfile.createNew(fresh, "Fresh", Instant.now())).join();

@@ -20,25 +20,19 @@ import static org.junit.jupiter.api.Assertions.*;
  * Real-database test of the persistent death state (V12). Opt-in like the other ITs: SULD_TEST_PG_URL / _USER / _PASS
  * pointing at a THROWAWAY database (its public schema is dropped).
  */
-@EnabledIfEnvironmentVariable(named = "SULD_TEST_PG_URL", matches = "jdbc:postgresql:.+")
 class JdbcDeathRepositoryIT {
 
-    private PGSimpleDataSource ds;
+    private javax.sql.DataSource ds;
+    private TestDb.Db testDb;
     private JdbcDeathRepository repo;
     private final ExecutorService single = Executors.newSingleThreadExecutor();
 
     @BeforeEach
     void freshSchema() throws Exception {
-        ds = new PGSimpleDataSource();
-        ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
-        ds.setUser(System.getenv("SULD_TEST_PG_USER"));
-        ds.setPassword(System.getenv("SULD_TEST_PG_PASS"));
-        try (Connection c = ds.getConnection(); Statement st = c.createStatement()) {
-            st.execute("DROP SCHEMA public CASCADE");
-            st.execute("CREATE SCHEMA public");
-        }
-        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate());
-        repo = new JdbcDeathRepository(ds, SqlDialect.POSTGRESQL, single);
+        testDb = TestDb.fresh();
+        ds = testDb.ds();
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, testDb.dialect()).migrate());
+        repo = new JdbcDeathRepository(ds, testDb.dialect(), single);
     }
 
     static DeathRecord locked(UUID p, long at, long until) {

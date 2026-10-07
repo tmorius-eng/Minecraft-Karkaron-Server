@@ -7,6 +7,8 @@ import java.util.Optional;
 public enum StorageType {
     /** Volatile, no database — for local development and tests only. */
     MEMORY,
+    /** Embedded H2 file database in the plugin folder: persistent, no database server to install (local/test servers). */
+    H2,
     MYSQL,
     POSTGRESQL;
 

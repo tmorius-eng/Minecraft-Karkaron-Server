@@ -33,7 +33,7 @@ public record DatabaseSettings(
 
     public static DatabaseSettings defaults() {
         return new DatabaseSettings(
-                StorageType.MEMORY, "127.0.0.1", 3306, "suld",
+                StorageType.H2, "127.0.0.1", 3306, "suld",
                 "suld", "", 10, 10_000L, false);
     }
 }
