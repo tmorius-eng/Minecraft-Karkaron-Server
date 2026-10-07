@@ -58,7 +58,7 @@ public record ItemDefinition(
         String setId,
         boolean lootable) {
 
-    public static final Pattern ID = Pattern.compile("[a-z][a-z0-9_]*(\\.[a-z0-9_]+){1,3}");
+    public static final Pattern ID = Pattern.compile("[a-z][a-z0-9_]*(\\.[a-z0-9_]+){1,4}");
     public static final int MAX_LEVEL = 60;
 
     public ItemDefinition {

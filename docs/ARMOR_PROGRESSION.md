@@ -1,7 +1,7 @@
-# SÜLD class armour progression — armour level, tier, mastery (proposed)
+# SÜLD class armour progression — armour level, tier, mastery
 
 Part of the proposed balance (`docs/PROGRESSION_BALANCE_SPEC.md`); simulated in `docs/PROGRESSION_SIMULATION.md`
-§Class armour. **Not implemented yet.** Visuals: `docs/ARMOR_PROGRESSION_VISUAL_SPEC.md`. Item integration and binding:
+§Class armour. **Armour level, tiers and enhancement are IMPLEMENTED for Баатар (Stage C3, `api/classgear/ArmorRules`); armour mastery and tempering are not.** Visuals: `docs/ARMOR_PROGRESSION_VISUAL_SPEC.md`. Item integration and binding:
 `docs/CLASS_GEAR_SYSTEM.md`.
 
 Every class owns one evolving signature set: helmet, chest (with shoulders and arms), legs, boots, plus the class

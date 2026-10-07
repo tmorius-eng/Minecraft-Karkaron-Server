@@ -1,100 +1,111 @@
 {
-  "audited": "2026-10-07",
-  "commit": "f123253",
-  "stage": "A (audit) + B (spec)",
-  "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
-  "subsystems": {
-    "genericArmorItems": {
-      "status": "FUNCTIONAL_BUT_INCOMPLETE",
-      "evidence": "items/armor.json",
-      "note": "27 definitions, 8 sets of vanilla leather/chain/iron/diamond/netherite"
-    },
-    "classArmor": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "—"
-    },
-    "armorLevel": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "—"
-    },
-    "armorTier": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "—"
-    },
-    "armorMastery": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "—"
-    },
-    "armorUpgrade": {
-      "status": "FUNCTIONAL_BUT_INCOMPLETE",
-      "evidence": "Reforge.java",
-      "note": "generic +1 item level reforge only"
-    },
-    "armorSetBonuses": {
-      "status": "FUNCTIONAL_BUT_INCOMPLETE",
-      "evidence": "items/sets.json (3 sets)"
-    },
-    "armorVisuals": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "no assets/*/equipment/*.json, no Equippable asset_id",
-      "note": "renders as vanilla armour"
-    },
-    "activePlaytime": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "PlayerLifecycleListener.java:47,76 (session events without duration)",
-      "note": "no AFK detection; EssentialsX /afk only"
-    },
-    "statPipeline": {
-      "status": "COMPLETE",
-      "evidence": "Equipment.compute -> SkillTreeService.refreshRuntime:285-294",
-      "note": "armour stats already flow into SkillBuild; reuse"
-    },
-    "persistence": {
-      "status": "COMPLETE",
-      "evidence": "V11 equipment (JdbcProfileRepository equipment_data)",
-      "note": "equipment persisted; armour level/tier/mastery and playtime need V12"
-    },
-    "clientQa": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "—"
-    }
+ "audited": "2026-10-07",
+ "commit": "f123253",
+ "stage": "A (audit) + B (spec) + C3 (Баатар class armour, armour progression, ActivePlaytime)",
+ "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
+ "subsystems": {
+  "genericArmorItems": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "items/armor.json",
+   "note": "27 definitions, 8 sets of vanilla leather/chain/iron/diamond/netherite"
   },
-  "perClass": {
-    "baatar": {
-      "armorSets": 0,
-      "tiers": 0,
-      "visuals": "NOT_IMPLEMENTED"
-    },
-    "mergen": {
-      "armorSets": 0,
-      "tiers": 0,
-      "visuals": "NOT_IMPLEMENTED"
-    },
-    "boo": {
-      "armorSets": 0,
-      "tiers": 0,
-      "visuals": "NOT_IMPLEMENTED"
-    },
-    "darkhan": {
-      "armorSets": 0,
-      "tiers": 0,
-      "visuals": "NOT_IMPLEMENTED"
-    },
-    "khulegchin": {
-      "armorSets": 0,
-      "tiers": 0,
-      "visuals": "NOT_IMPLEMENTED"
-    }
+  "classArmor": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "items/class_armor.json (tools/content/gen_class_armor.py); item/ClassArmor.java; api/classgear/*",
+   "note": "Баатар only: 4 pieces × 6 tiers, soulbound, fixed rarity per tier, stat budget fitted to the simulator's generic proxy; granted and worn at class pick (and on join for existing Баатар characters), regenerated in place with the same UUIDs on armour level / tier changes; recover + duplicate removal; kept on death; guarded by SoulboundGuard. Other 4 classes: no definitions yet"
   },
-  "spec": {
-    "status": "SPEC (awaiting owner approval; not implemented)",
-    "docs": [
-      "docs/CLASS_ARMOR_SYSTEM.md",
-      "docs/ARMOR_PROGRESSION.md",
-      "docs/ARMOR_MASTER_DESIGN.md",
-      "docs/ACTIVE_PLAYTIME_SPEC.md",
-      "docs/ARMOR_ASSET_PIPELINE.md"
-    ],
-    "simulated": "armour level/tier breakpoints simulated (docs/PROGRESSION_SIMULATION.md §Class armour): no hardcore run reaches AL60+T6 within 30 days; T6 ~day 90 at 10 h/day; AFK scenario stays at armour level 1"
+  "armorLevel": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "ArmorRules.need/gain/settle; ClassArmor.addXp",
+   "note": "armour XP from validated active minutes (0.6), kills 0.2/1/3, quest 20, discovery 15, dungeon clear 25 × repeat fatigue; capped at the player level, ×2 catch-up; live-tested. The desk XP values still need measuring on humans (ACTIVE_PLAYTIME_SPEC). QUEST grants count as a chapter (daily tasks too) and every DISCOVERY as a region (landmarks are not told apart)"
+  },
+  "armorTier": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "ArmorTier; ArmorRules.gates; ClassArmor.upgrade; /classgear upgrade",
+   "note": "gates (armour level, dungeon cleared, coins, band materials, Ascension for T6) enforced; T2 (Говийн Булш) and T3 (Мөсөн Оргил) are reachable in today's content; T4–T6 dungeons (khar_khot, burkhan_aguy, tengeriin_ordon) and Ascension are not in the game yet, so T4+ is blocked. Bought by command, not yet at the smith NPC"
+  },
+  "armorMastery": {
+   "status": "NOT_IMPLEMENTED",
+   "evidence": "—",
+   "note": "needs class mastery (docs/MASTERY_SPEC.md), not built"
+  },
+  "armorUpgrade": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "Reforge.java",
+   "note": "generic +1 item level reforge only"
+  },
+  "armorSetBonuses": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "items/sets.json (3 + 6 set.class.baatar_t*)",
+   "note": "Баатар 2-piece max health / 4-piece damage reduction, growing per tier"
+  },
+  "armorVisuals": {
+   "status": "PLACEHOLDER",
+   "evidence": "ItemFactory.equipmentAsset (minecraft:equippable asset_id suld:baatar_tN); resourcepack/assets/suld/equipment/baatar_t*.json; tools/pack/gen_armor.py",
+   "note": "procedural 64×32 placeholder layers (helmet painted on the head layer); final art and 3D helmet models are Stage C4; MANUAL_QA_REQUIRED in a real client"
+  },
+  "activePlaytime": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "api/activity/ActivityTracker.java; plugin/activity/ActivePlaytimeService.java",
+   "note": "1-minute windows, strong/two-family rule, soul exclusion, auto-clicker (>120 identical intervals ±10 ms), AFK mob farm (3rd minute of damage-in), away after 15 min, area fatigue (armour XP only), passive movement (rail, boat, glide, water current) excluded; per-category minutes in the profile (V13); feeds armour XP and wound healing. Live: 2 combat minutes counted, 2+ AFK minutes counted 0. Not done: yaw/pitch macro pattern, the EXP part of area fatigue (a balance change), session totals to analytics, the 'away' TAB marker"
+  },
+  "statPipeline": {
+   "status": "COMPLETE",
+   "evidence": "Equipment.compute -> SkillTreeService.refreshRuntime:285-294",
+   "note": "armour stats already flow into SkillBuild; reuse"
+  },
+  "persistence": {
+   "status": "COMPLETE",
+   "evidence": "V13 class_gear + active_minutes (PostgreSQL + MySQL); JdbcClassGearIT",
+   "note": "round trip and refuse-to-load-broken-data verified on PostgreSQL; MySQL migration written, not run here"
+  },
+  "clientQa": {
+   "status": "MANUAL_QA_REQUIRED",
+   "evidence": "—",
+   "note": "worn look of the six tiers, tooltip, equip sounds"
+  },
+  "armorEnhancement": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "ArmorRules.enhanceCost/powerFactor; Equipment.Wearer.armorFactor; /classgear enhance",
+   "note": "+2 % per step through the stat pipeline (items unchanged, so the validator stays exact); tempering not implemented"
   }
+ },
+ "perClass": {
+  "baatar": {
+   "armorSets": 6,
+   "tiers": 6,
+   "visuals": "PLACEHOLDER"
+  },
+  "mergen": {
+   "armorSets": 0,
+   "tiers": 0,
+   "visuals": "NOT_IMPLEMENTED"
+  },
+  "boo": {
+   "armorSets": 0,
+   "tiers": 0,
+   "visuals": "NOT_IMPLEMENTED"
+  },
+  "darkhan": {
+   "armorSets": 0,
+   "tiers": 0,
+   "visuals": "NOT_IMPLEMENTED"
+  },
+  "khulegchin": {
+   "armorSets": 0,
+   "tiers": 0,
+   "visuals": "NOT_IMPLEMENTED"
+  }
+ },
+ "spec": {
+  "status": "IMPLEMENTED for Баатар (Stage C3); other classes SPEC",
+  "docs": [
+   "docs/CLASS_ARMOR_SYSTEM.md",
+   "docs/ARMOR_PROGRESSION.md",
+   "docs/ARMOR_MASTER_DESIGN.md",
+   "docs/ACTIVE_PLAYTIME_SPEC.md",
+   "docs/ARMOR_ASSET_PIPELINE.md"
+  ],
+  "simulated": "armour level/tier breakpoints simulated (docs/PROGRESSION_SIMULATION.md §Class armour): no hardcore run reaches AL60+T6 within 30 days; T6 ~day 90 at 10 h/day; AFK scenario stays at armour level 1"
+ }
 }

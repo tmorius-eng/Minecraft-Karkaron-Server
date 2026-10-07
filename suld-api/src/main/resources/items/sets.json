@@ -110,6 +110,162 @@
      ]
     }
    }
+  },
+  {
+   "id": "set.class.baatar_t1",
+   "name": "Баатрын Хуяг · Анхан",
+   "pieces": [
+    "armor.class.baatar.helmet.t1",
+    "armor.class.baatar.chestplate.t1",
+    "armor.class.baatar.leggings.t1",
+    "armor.class.baatar.boots.t1"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "max_health": 4
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "DAMAGE_REDUCTION",
+       "value": 3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.baatar_t2",
+   "name": "Баатрын Хуяг · Бэхжсэн",
+   "pieces": [
+    "armor.class.baatar.helmet.t2",
+    "armor.class.baatar.chestplate.t2",
+    "armor.class.baatar.leggings.t2",
+    "armor.class.baatar.boots.t2"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "max_health": 8
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "DAMAGE_REDUCTION",
+       "value": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.baatar_t3",
+   "name": "Баатрын Хуяг · Сонгомол",
+   "pieces": [
+    "armor.class.baatar.helmet.t3",
+    "armor.class.baatar.chestplate.t3",
+    "armor.class.baatar.leggings.t3",
+    "armor.class.baatar.boots.t3"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "max_health": 14
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "DAMAGE_REDUCTION",
+       "value": 5
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.baatar_t4",
+   "name": "Баатрын Хуяг · Эзэнт",
+   "pieces": [
+    "armor.class.baatar.helmet.t4",
+    "armor.class.baatar.chestplate.t4",
+    "armor.class.baatar.leggings.t4",
+    "armor.class.baatar.boots.t4"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "max_health": 20
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "DAMAGE_REDUCTION",
+       "value": 6
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.baatar_t5",
+   "name": "Баатрын Хуяг · Домогт",
+   "pieces": [
+    "armor.class.baatar.helmet.t5",
+    "armor.class.baatar.chestplate.t5",
+    "armor.class.baatar.leggings.t5",
+    "armor.class.baatar.boots.t5"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "max_health": 26
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "DAMAGE_REDUCTION",
+       "value": 7
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.baatar_t6",
+   "name": "Баатрын Хуяг · Тэнгэрлэг",
+   "pieces": [
+    "armor.class.baatar.helmet.t6",
+    "armor.class.baatar.chestplate.t6",
+    "armor.class.baatar.leggings.t6",
+    "armor.class.baatar.boots.t6"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "max_health": 32
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "DAMAGE_REDUCTION",
+       "value": 8
+      }
+     ]
+    }
+   }
   }
  ]
 }

@@ -1,0 +1,792 @@
+{
+ "items": [
+  {
+   "id": "armor.class.baatar.helmet.t1",
+   "name": "Баатрын Анхан Дуулга",
+   "material": "minecraft:leather_helmet",
+   "type": "HELMET",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.chestplate.t1",
+   "name": "Баатрын Анхан Хуяг",
+   "material": "minecraft:leather_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.39,
+     4.31
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.21,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.leggings.t1",
+   "name": "Баатрын Анхан Өмд",
+   "material": "minecraft:leather_leggings",
+   "type": "LEGGINGS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.42,
+     3.08
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.15,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.boots.t1",
+   "name": "Баатрын Анхан Гутал",
+   "material": "minecraft:leather_boots",
+   "type": "BOOTS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ],
+    "move_speed": [
+     1.45,
+     1.85
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.helmet.t2",
+   "name": "Баатрын Бэхжсэн Дуулга",
+   "material": "minecraft:chainmail_helmet",
+   "type": "HELMET",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.chestplate.t2",
+   "name": "Баатрын Бэхжсэн Хуяг",
+   "material": "minecraft:chainmail_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.76,
+     6.06
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.148,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.leggings.t2",
+   "name": "Баатрын Бэхжсэн Өмд",
+   "material": "minecraft:chainmail_leggings",
+   "type": "LEGGINGS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.42,
+     4.35
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.106,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.boots.t2",
+   "name": "Баатрын Бэхжсэн Гутал",
+   "material": "minecraft:chainmail_boots",
+   "type": "BOOTS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ],
+    "move_speed": [
+     1.68,
+     2.14
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.helmet.t3",
+   "name": "Баатрын Сонгомол Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.chestplate.t3",
+   "name": "Баатрын Сонгомол Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.35,
+     6.81
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.169,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.leggings.t3",
+   "name": "Баатрын Сонгомол Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.87,
+     4.93
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.122,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.boots.t3",
+   "name": "Баатрын Сонгомол Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ],
+    "move_speed": [
+     1.77,
+     2.25
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.helmet.t4",
+   "name": "Баатрын Эзэнт Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.chestplate.t4",
+   "name": "Баатрын Эзэнт Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     11.93,
+     15.18
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.leggings.t4",
+   "name": "Баатрын Эзэнт Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     8.71,
+     11.08
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.boots.t4",
+   "name": "Баатрын Эзэнт Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ],
+    "move_speed": [
+     1.83,
+     2.33
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.helmet.t5",
+   "name": "Баатрын Домогт Дуулга",
+   "material": "minecraft:diamond_helmet",
+   "type": "HELMET",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.chestplate.t5",
+   "name": "Баатрын Домогт Хуяг",
+   "material": "minecraft:diamond_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     9.01,
+     11.46
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.leggings.t5",
+   "name": "Баатрын Домогт Өмд",
+   "material": "minecraft:diamond_leggings",
+   "type": "LEGGINGS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     6.62,
+     8.43
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.boots.t5",
+   "name": "Баатрын Домогт Гутал",
+   "material": "minecraft:diamond_boots",
+   "type": "BOOTS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ],
+    "move_speed": [
+     1.8,
+     2.29
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.helmet.t6",
+   "name": "Баатрын Тэнгэрлэг Дуулга",
+   "material": "minecraft:netherite_helmet",
+   "type": "HELMET",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.chestplate.t6",
+   "name": "Баатрын Тэнгэрлэг Хуяг",
+   "material": "minecraft:netherite_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     10.75,
+     13.68
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.leggings.t6",
+   "name": "Баатрын Тэнгэрлэг Өмд",
+   "material": "minecraft:netherite_leggings",
+   "type": "LEGGINGS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     7.98,
+     10.16
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.baatar.boots.t6",
+   "name": "Баатрын Тэнгэрлэг Гутал",
+   "material": "minecraft:netherite_boots",
+   "type": "BOOTS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ],
+    "move_speed": [
+     2.15,
+     2.73
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.baatar_t6",
+   "lootable": false
+  }
+ ]
+}

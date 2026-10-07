@@ -149,11 +149,22 @@ public final class ClassWeapons implements Listener {
         return new org.bukkit.NamespacedKey(plugin, "class_weapon");
     }
 
+    /** Kept in the profile's class gear record (the truth) and, as before C3, on the player. */
     private void remember(Player p, java.util.UUID id) {
         p.getPersistentDataContainer().set(weaponKey(), org.bukkit.persistence.PersistentDataType.STRING, id.toString());
+        services.profiles().cached(p.getUniqueId()).ifPresent(pr -> {
+            if (!id.equals(pr.classGear().weapon())) pr.classGear(pr.classGear().withWeapon(id));
+        });
+    }
+
+    /** The identity of the player's class weapon, if known. */
+    public java.util.UUID rememberedId(Player p) {
+        return remembered(p);
     }
 
     private java.util.UUID remembered(Player p) {
+        java.util.UUID inProfile = services.profiles().cached(p.getUniqueId()).map(pr -> pr.classGear().weapon()).orElse(null);
+        if (inProfile != null) return inProfile;
         String s = p.getPersistentDataContainer().get(weaponKey(), org.bukkit.persistence.PersistentDataType.STRING);
         try {
             return s == null ? null : java.util.UUID.fromString(s);

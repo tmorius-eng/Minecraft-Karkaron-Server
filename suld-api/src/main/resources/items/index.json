@@ -3,6 +3,7 @@
  "items": [
   "weapons.json",
   "armor.json",
+  "class_armor.json",
   "jewelry.json",
   "materials.json",
   "relics.json"

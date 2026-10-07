@@ -170,6 +170,8 @@ public final class ClassSelectionGui implements Listener {
             player.getInventory().setItem(0, weapon);
             if (displaced != null && !displaced.getType().isAir()) player.getWorld().dropItemNaturally(player.getLocation(), displaced);
         }
+        // the class armour set (T1), bound and worn (docs/CLASS_ARMOR_SYSTEM.md "Lifecycle")
+        if (services.classArmor != null) services.classArmor.ensure(player);
 
         services.events().dispatch(new ClassSelectedEvent(player.getUniqueId(), clazz));
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CLASS_SELECTED, player.getUniqueId(),

@@ -7,6 +7,8 @@
 * every item model definition (assets/<ns>/items/*.json) resolves its suld: models,
   and range_dispatch thresholds are unique;
 * every model's suld: texture references resolve to a PNG on disk;
+* every equipment asset (assets/<ns>/equipment/*.json) resolves each layer's suld:
+  texture to textures/entity/equipment/<layer type>/<path>.png;
 * every registry asset with custom_model_data + base_item is actually mapped to its
   minecraft_model by the base item's definition.
 Exit non-zero on failure.
@@ -101,7 +103,7 @@ def main() -> int:
         errors.append(f"pack.mcmeta invalid: {ex}")
 
     models_dir = os.path.join(RP, "assets")
-    model_count = tex_refs = 0
+    model_count = tex_refs = equipment_count = 0
     item_defs: dict = {}
     for dirpath, _dirs, files in os.walk(models_dir):
         for fn in files:
@@ -124,6 +126,20 @@ def main() -> int:
                     if len(ts) != len(set(ts)):
                         errors.append(f"{os.path.relpath(fp, ROOT)}: duplicate range_dispatch thresholds {ts}")
                 item_defs[os.path.splitext(fn)[0]] = model
+                continue
+            if "/equipment/" in "/" + rel:
+                equipment_count += 1
+                for layer, entries in (model.get("layers") or {}).items():
+                    for entry in entries if isinstance(entries, list) else []:
+                        ref = entry.get("texture", "") if isinstance(entry, dict) else ""
+                        if not ref.startswith("suld:"):
+                            continue
+                        ns, _, path = ref.partition(":")
+                        tp = os.path.join(RP, "assets", ns, "textures", "entity", "equipment", layer, path + ".png")
+                        tex_refs += 1
+                        if not os.path.exists(tp):
+                            errors.append(f"{os.path.relpath(fp, ROOT)}: {layer} texture '{ref}' -> missing "
+                                          f"{os.path.relpath(tp, ROOT)}")
                 continue
             model_count += 1
             if "overrides" in model:
@@ -162,7 +178,8 @@ def main() -> int:
             print("  -", e)
         return 1
     print(f"resource pack OK: format covers {TARGET_PACK_FORMAT}, {model_count} model(s), "
-          f"{len(item_defs)} item definition(s), {tex_refs} texture ref(s), {mapped} registry model mapping(s)")
+          f"{len(item_defs)} item definition(s), {equipment_count} equipment asset(s), {tex_refs} texture ref(s), "
+          f"{mapped} registry model mapping(s)")
     return 0
 
 

@@ -1,6 +1,18 @@
-# ActivePlaytime — the activity tracker (proposed)
+# ActivePlaytime — the activity tracker
 
-**Not implemented yet.** It feeds armour level (`docs/ARMOR_PROGRESSION.md`), class mastery and analytics. It is
+**Status: IMPLEMENTED (Stage C3, FUNCTIONAL_BUT_INCOMPLETE).**
+
+* **Code:** `suld-api/.../activity/ActivityTracker` (pure; unit-tested with synthetic streams) and
+  `suld-plugin/.../activity/ActivePlaytimeService` (events + one timer per minute).
+* **Storage:** profile column `active_minutes` (V13).
+* **Uses:** armour XP and death-wound healing.
+* **Live-tested:** two combat minutes counted; an AFK bot counted nothing.
+* **Not done yet:**
+  * the yaw/pitch macro pattern;
+  * the EXP cut of area fatigue (only armour XP stops);
+  * session totals to analytics;
+  * the "away" mark on the TAB list.
+* **Design text below:** where it says V12, read V13. It feeds armour level (`docs/ARMOR_PROGRESSION.md`), class mastery and analytics. It is
 reusable by any system that must not reward idle time.
 
 ## Today

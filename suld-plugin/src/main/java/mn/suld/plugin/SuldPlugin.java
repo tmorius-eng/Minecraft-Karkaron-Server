@@ -115,6 +115,19 @@ public final class SuldPlugin extends JavaPlugin {
         services.woundFactor = deaths::woundFactor;
         mn.suld.plugin.command.DeathCommands deathCommands = new mn.suld.plugin.command.DeathCommands(this, services, deaths);
         for (String c : List.of("revive", "deathstatus", "deathinfo", "deathrevive", "deathreset")) registerTab(c, deathCommands);
+        // class armour + ActivePlaytime (docs/CLASS_ARMOR_SYSTEM.md, docs/ACTIVE_PLAYTIME_SPEC.md)
+        mn.suld.plugin.item.ClassArmor classArmor = new mn.suld.plugin.item.ClassArmor(this, services);
+        services.classArmor = classArmor;
+        getServer().getPluginManager().registerEvents(classArmor, this);
+        mn.suld.plugin.activity.ActivePlaytimeService activity = new mn.suld.plugin.activity.ActivePlaytimeService(this, services);
+        services.activity = activity;
+        getServer().getPluginManager().registerEvents(activity, this);
+        mn.suld.plugin.death.DeathService deathsForMinutes = deaths;
+        activity.onMinute((pl, v) -> {
+            if (v.active()) deathsForMinutes.activeMinute(pl);
+        });
+        activity.onMinute(classArmor::activeMinute);
+        activity.start();
         registerTab("classgear", new mn.suld.plugin.command.ClassGearCommand(services));
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 

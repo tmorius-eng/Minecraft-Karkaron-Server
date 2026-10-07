@@ -42,8 +42,8 @@ public enum SqlDialect {
             case MYSQL -> """
                     INSERT INTO suld_profiles
                         (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version,
-                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE
                         name = VALUES(name),
                         class_id = VALUES(class_id),
@@ -56,13 +56,15 @@ public enum SqlDialect {
                         quest_progress = VALUES(quest_progress),
                         quest_completed = VALUES(quest_completed),
                         skill_data = VALUES(skill_data),
-                        equipment_data = VALUES(equipment_data)
+                        equipment_data = VALUES(equipment_data),
+                        class_gear = VALUES(class_gear),
+                        active_minutes = VALUES(active_minutes)
                     """;
             case POSTGRESQL -> """
                     INSERT INTO suld_profiles
                         (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version,
-                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT (player_uuid) DO UPDATE SET
                         name = EXCLUDED.name,
                         class_id = EXCLUDED.class_id,
@@ -75,7 +77,9 @@ public enum SqlDialect {
                         quest_progress = EXCLUDED.quest_progress,
                         quest_completed = EXCLUDED.quest_completed,
                         skill_data = EXCLUDED.skill_data,
-                        equipment_data = EXCLUDED.equipment_data
+                        equipment_data = EXCLUDED.equipment_data,
+                        class_gear = EXCLUDED.class_gear,
+                        active_minutes = EXCLUDED.active_minutes
                     """;
         };
     }

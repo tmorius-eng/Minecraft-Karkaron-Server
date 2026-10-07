@@ -29,7 +29,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     private static final String SELECT =
             "SELECT name, class_id, level, exp_into_level, created_at, last_seen_at, version, "
-                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data "
+                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes "
                     + "FROM suld_profiles WHERE player_uuid = ?";
 
     private final DataSource dataSource;
@@ -72,7 +72,9 @@ public final class JdbcProfileRepository implements ProfileRepository {
                             rs.getLong("currency"),
                             questState,
                             readSkills(playerId, rs.getString("skill_data")),
-                            readEquipment(playerId, rs.getString("equipment_data")));
+                            readEquipment(playerId, rs.getString("equipment_data")),
+                            readClassGear(playerId, rs.getString("class_gear")),
+                            readActive(playerId, rs.getString("active_minutes")));
                     return Optional.of(profile);
                 }
             } catch (SQLException ex) {
@@ -96,6 +98,23 @@ public final class JdbcProfileRepository implements ProfileRepository {
             return mn.suld.api.item.EquipmentState.fromJson(json);
         } catch (IllegalArgumentException ex) {
             throw new RepositoryException("Equipment data of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
+        }
+    }
+
+    /** Unreadable class gear must stop the load: saving afterwards would erase the armour progress. */
+    private static mn.suld.api.classgear.ClassGear readClassGear(UUID playerId, String json) {
+        try {
+            return mn.suld.api.classgear.ClassGear.fromJson(json);
+        } catch (IllegalArgumentException ex) {
+            throw new RepositoryException("Class gear of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
+        }
+    }
+
+    private static mn.suld.api.activity.ActiveMinutes readActive(UUID playerId, String json) {
+        try {
+            return mn.suld.api.activity.ActiveMinutes.fromJson(json);
+        } catch (IllegalArgumentException ex) {
+            throw new RepositoryException("Active minutes of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
         }
     }
 
@@ -166,6 +185,8 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 ps.setBoolean(12, q.completed());
                 ps.setString(13, snap.skillState().toJson());
                 ps.setString(14, snap.equipment().isEmpty() ? null : snap.equipment().toJson());
+                ps.setString(15, snap.classGear().isEmpty() ? null : snap.classGear().toJson());
+                ps.setString(16, snap.activeMinutes().isEmpty() ? null : snap.activeMinutes().toJson());
                 ps.executeUpdate();
                 profile.markPersisted(version);
                 return profile;

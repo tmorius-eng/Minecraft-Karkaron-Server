@@ -252,7 +252,9 @@ public final class SkillService implements Listener {
     public CastResult castDirect(Player p, Spell s, boolean ignoreTiming) {
         long t = mn.suld.plugin.perf.PerfProbe.start();
         try {
-            return castDirect0(p, s, ignoreTiming);
+            CastResult r = castDirect0(p, s, ignoreTiming);
+            if (r == CastResult.CAST && services.activity != null) services.activity.signal(p.getUniqueId(), mn.suld.api.activity.ActivitySignal.SPELL);
+            return r;
         } finally {
             mn.suld.plugin.perf.PerfProbe.stop("skill.cast", t);
         }

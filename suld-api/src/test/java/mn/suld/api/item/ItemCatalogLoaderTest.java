@@ -22,7 +22,7 @@ class ItemCatalogLoaderTest {
         assertEquals(List.of(), r.issues());
         assertTrue(r.catalog().items().size() >= 80, "item definitions: " + r.catalog().items().size());
         assertTrue(r.catalog().affixes().size() >= 20);
-        assertEquals(3, r.catalog().sets().size());
+        assertEquals(3 + 6, r.catalog().sets().size()); // + the Баатар class armour tiers
         assertTrue(r.catalog().lootTables().size() >= 20);
         for (LootTier t : LootTier.values()) assertTrue(r.catalog().band(t).weights().size() > 0, t.name());
     }

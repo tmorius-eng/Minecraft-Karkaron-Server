@@ -28,21 +28,28 @@ public final class Equipment {
 
     /**
      * Who is wearing it. {@code boundFactor} scales the stats of the items soulbound to this wearer (the class gear):
-     * 1.0 normally, below 1 while a death wound is open (docs/DEATH_AND_RECOVERY.md). The item's own stats are never
-     * changed — only what they contribute.
+     * 1.0 normally, below 1 while a death wound is open (docs/DEATH_AND_RECOVERY.md). {@code armorFactor} scales their
+     * class armour ({@code armor.class.*} bound to them): the enhancement, +2 % per step (docs/ARMOR_PROGRESSION.md).
+     * The item's own stats are never changed — only what they contribute.
      */
-    public record Wearer(UUID id, PlayerClass clazz, int level, double boundFactor) {
+    public record Wearer(UUID id, PlayerClass clazz, int level, double boundFactor, double armorFactor) {
         public Wearer {
             boundFactor = Double.isFinite(boundFactor) ? Math.max(0.0, Math.min(1.0, boundFactor)) : 1.0;
+            armorFactor = Double.isFinite(armorFactor) ? Math.max(1.0, Math.min(2.0, armorFactor)) : 1.0;
+        }
+
+        public Wearer(UUID id, PlayerClass clazz, int level, double boundFactor) {
+            this(id, clazz, level, boundFactor, 1.0);
         }
 
         public Wearer(UUID id, PlayerClass clazz, int level) {
-            this(id, clazz, level, 1.0);
+            this(id, clazz, level, 1.0, 1.0);
         }
 
         /** The share of an item's stats that counts for this wearer. */
         public double factorFor(ItemInstance i) {
-            return boundFactor < 1.0 && i.soulbound() && id != null && id.equals(i.boundTo()) ? boundFactor : 1.0;
+            if (id == null || !i.soulbound() || !id.equals(i.boundTo())) return 1.0;
+            return boundFactor * (i.definitionId().startsWith("armor.class.") ? armorFactor : 1.0);
         }
     }
 

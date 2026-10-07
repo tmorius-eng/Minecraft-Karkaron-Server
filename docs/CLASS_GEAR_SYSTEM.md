@@ -1,12 +1,12 @@
 # SÜLD class gear — soulbound signature armour and weapon
 
-**Status: the WEAPON half is IMPLEMENTED (Stage C2); the class ARMOUR and the profile `class_gear` record are Stage C3.**
+**Status: IMPLEMENTED for the weapon (Stage C2) and the Баатар armour with the profile `class_gear` record (Stage C3, V13).**
 Per-vector statuses are in `audit/death-gear-status.json`; the audit findings in `docs/PROGRESSION_EXPLOIT_AUDIT.md` §2.8.
 
 What C2 built: one shared guard, `item/SoulboundGuard.java`, for every soulbound SÜLD item (the class weapon now,
 the class armour in C3 with no further code); the upgrade fix in `ClassWeapons.upgrade`; `/classgear recover`.
-Until the C3 profile record exists, the canonical weapon UUID is kept on the player (`suld:class_weapon` in the
-player's persistent data, saved with the world's player data).
+Since C3 the profile's `class_gear` record holds the weapon and armour UUIDs. The player's `suld:class_weapon` data
+is kept as a fallback for characters from before C3.
 
 Every character owns one class weapon and one class armour set: helmet, chest, legs, boots. Both are **permanently
 bound to the player's UUID**, never transferable, kept on death, and restored when lost. They are progression

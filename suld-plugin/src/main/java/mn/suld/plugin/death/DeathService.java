@@ -76,7 +76,7 @@ import java.util.concurrent.TimeUnit;
  *       loot, build, open containers, cast, ride, enter dungeons or trade; chat, menus and NPCs work.</li>
  *   <li><b>Wound</b>: when the lock ends, the class gear carries one more {@link Wound} step (−5 % effective stats,
  *       at most −15 %, through {@code Equipment.Wearer.boundFactor}). Each step heals after active play
- *       ({@code death.wound.heal-minutes} minutes with combat or real movement).</li>
+ *       ({@code death.wound.heal-minutes} active minutes, validated by the ActivePlaytime tracker).</li>
  * </ul>
  * Admin actions ({@code /deathrevive}, {@code /deathreset}) are audited. There is no paid path.
  */
@@ -102,9 +102,6 @@ public final class DeathService implements Listener {
     private final Map<UUID, BossBar> bars = new ConcurrentHashMap<>();
     /** What the last death cost, shown after respawn. */
     private final Map<UUID, Component> summaries = new ConcurrentHashMap<>();
-    /** Activity in the current minute (wound healing): combat flag and the position at the start of the minute. */
-    private final Set<UUID> fought = ConcurrentHashMap.newKeySet();
-    private final Map<UUID, Location> lastSpot = new ConcurrentHashMap<>();
 
     public DeathService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
@@ -156,7 +153,6 @@ public final class DeathService implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        lastSpot.put(p.getUniqueId(), p.getLocation());
         Bukkit.getScheduler().runTaskLater(plugin, () -> applyOnJoin(p), 20L);
     }
 
@@ -382,29 +378,25 @@ public final class DeathService implements Listener {
         }
     }
 
-    /** Once a minute: active players heal wounds; dirty wounds are saved. */
+    /** Once a minute: dirty wounds are saved (healing comes from {@link #activeMinute}). */
     private void minute() {
-        DeathSettings s = settings();
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            UUID id = p.getUniqueId();
-            boolean active = fought.remove(id);
-            Location now = p.getLocation(), before = lastSpot.put(id, now);
-            if (!active && before != null && before.getWorld() == now.getWorld() && p.getVehicle() == null && !p.isGliding()) {
-                double dx = now.getX() - before.getX(), dz = now.getZ() - before.getZ();
-                active = dx * dx + dz * dz >= 36; // moved at least 6 blocks over the minute
-            }
-            Wound w = wounds.getOrDefault(id, Wound.NONE);
-            if (!active || w.stacks() == 0 || isSoul(id)) continue;
-            Wound healed = w.heal(s, 1);
-            wounds.put(id, healed);
-            dirtyWounds.add(id);
-            if (healed.stacks() < w.stacks()) {
-                services.equipment().dirty(p);
-                p.sendMessage(Messages.success(healed.stacks() == 0 ? "Шарх бүрэн эдгэлээ — ангийн хуяг, зэвсэг бүрэн хүчтэй."
-                        : "Шарх эдгэж байна: одоо −" + healed.percent(s) + " %."));
-            }
-        }
         flushWounds();
+    }
+
+    /** One validated active minute of a player (ActivePlaytimeService): an open wound heals by it. */
+    public void activeMinute(Player p) {
+        UUID id = p.getUniqueId();
+        Wound w = wounds.getOrDefault(id, Wound.NONE);
+        if (w.stacks() == 0 || isSoul(id)) return;
+        DeathSettings s = settings();
+        Wound healed = w.heal(s, 1);
+        wounds.put(id, healed);
+        dirtyWounds.add(id);
+        if (healed.stacks() < w.stacks()) {
+            services.equipment().dirty(p);
+            p.sendMessage(Messages.success(healed.stacks() == 0 ? "Шарх бүрэн эдгэлээ — ангийн хуяг, зэвсэг бүрэн хүчтэй."
+                    : "Шарх эдгэж байна: одоо −" + healed.percent(s) + " %."));
+        }
     }
 
     private void flushWounds() {
@@ -414,14 +406,6 @@ public final class DeathService implements Listener {
                 if (ex != null) plugin.getLogger().warning("wound of " + id + " not saved: " + ex);
             });
         }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onActivity(EntityDamageByEntityEvent e) {
-        Entity d = e.getDamager();
-        if (d instanceof Projectile pr && pr.getShooter() instanceof Player shooter) d = shooter;
-        if (d instanceof Player p) fought.add(p.getUniqueId());
-        if (e.getEntity() instanceof Player p) fought.add(p.getUniqueId());
     }
 
     /** Plugin disable: save wounds, take the countdown bars off the screens. Locks are already stored. */
@@ -577,8 +561,6 @@ public final class DeathService implements Listener {
         BossBar bar = bars.remove(id);
         if (bar != null) e.getPlayer().hideBossBar(bar);
         summaries.remove(id);
-        lastSpot.remove(id);
-        fought.remove(id);
         if (dirtyWounds.remove(id)) repo.saveWound(id, wound(id));
         // keep the lock and the wound cached: the timestamp keeps running, and a quick rejoin reuses them
     }

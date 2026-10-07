@@ -1,13 +1,13 @@
 {
   "audited": "2026-10-07",
   "commit": "f123253",
-  "stage": "A (audit) + B (spec) + C1 (death and recovery) + C2 (soulbound class weapon)",
+  "stage": "A (audit) + B (spec) + C1 (death) + C2 (soulbound weapon) + C3 (class armour)",
   "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
   "subsystems": {
     "classWeaponBinding": {
       "status": "FUNCTIONAL_BUT_INCOMPLETE",
-      "evidence": "items/weapons.json (SOULBOUND); ClassWeapons.remember (suld:class_weapon on the player)",
-      "note": "canonical UUID on the player PDC until the C3 profile class_gear record"
+      "evidence": "items/weapons.json (SOULBOUND); ClassGear.weapon in the profile (V13), player PDC kept as a fallback",
+      "note": "the profile record is the truth since C3"
     },
     "classWeaponUpgrade": {
       "status": "COMPLETE",
@@ -17,11 +17,12 @@
     "classWeaponRecovery": {
       "status": "FUNCTIONAL_BUT_INCOMPLETE",
       "evidence": "ClassWeapons.recover; command/ClassGearCommand.java",
-      "note": "idempotent, same UUID, 10 min player cooldown only on a restore, staff path, audited; live-tested. Extra copies are left to the existing duplicate sweep (no quarantine step in recover yet); armour pieces in C3"
+      "note": "idempotent, same UUID, 10 min player cooldown only on a restore, staff path, audited; armour pieces too since C3 (duplicates of a recorded armour UUID in the own inventory are removed)"
     },
     "classArmor": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "items/armor.json (no class/binding keys)"
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "item/ClassArmor.java; items/class_armor.json",
+      "note": "Баатар; soulbound, kept on death, guarded, recoverable with the same UUIDs; see audit/armor-system-status.json"
     },
     "protection": {
       "drop": {
@@ -120,7 +121,7 @@
     "deathWound": {
       "status": "FUNCTIONAL_BUT_INCOMPLETE",
       "evidence": "api/death/Wound.java; Equipment.Wearer.boundFactor; DeathService.minute()",
-      "note": "-5 %/death (max -15 %) on gear soulbound to the player, heals per 180 active minutes (combat or >=6 blocks moved per minute; the full ActivePlaytime tracker is Stage C3); live-verified 5.0 -> 4.75 damage; HUD WOUND icon"
+      "note": "-5 %/death (max -15 %) on gear soulbound to the player, heals per 180 validated active minutes (ActivePlaytime tracker since C3); HUD WOUND icon"
     },
     "deathUi": {
       "status": "FUNCTIONAL_BUT_INCOMPLETE",

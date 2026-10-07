@@ -392,6 +392,10 @@ public final class TradeService implements Listener, TabExecutor {
         t.finished = true;
         trades.remove(t.a.player);
         trades.remove(t.b.player);
+        if (services.activity != null) {
+            services.activity.signal(pa.getUniqueId(), mn.suld.api.activity.ActivitySignal.TRADE);
+            services.activity.signal(pb.getUniqueId(), mn.suld.api.activity.ActivitySignal.TRADE);
+        }
         for (ItemStack it : offered(t.b)) giveBack(pa, it);
         for (ItemStack it : offered(t.a)) giveBack(pb, it);
         ra.addCurrency(t.b.coins - t.a.coins);

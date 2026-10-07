@@ -365,6 +365,7 @@ public final class DungeonService {
                 }
             }
             services.quests().onDungeonCleared(p, profile, ar.def.id());
+            if (services.classArmor != null) services.classArmor.dungeonCleared(p, ar.def.id());
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_BOSS, id));
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.BOSS_PARTICIPATION, id,
                     Map.of("boss", ar.def.bossDefinition().id(), "seconds", seconds)));

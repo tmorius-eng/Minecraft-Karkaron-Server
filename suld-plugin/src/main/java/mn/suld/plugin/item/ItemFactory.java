@@ -113,7 +113,36 @@ public final class ItemFactory {
         for (NamespacedKey legacy : List.of(keyRarity, keyLevel, keyStats, keySoulbound, keyUpgrade)) pdc.remove(legacy);
         render(meta, def, stored, viewer, max, max);
         stack.setItemMeta(meta);
+        equipmentAsset(stack, def);
         return stack;
+    }
+
+    /**
+     * Class armour is worn with its own look: the {@code minecraft:equippable} component points at the pack's
+     * equipment asset {@code suld:<class>_t<tier>} (resourcepack/assets/suld/equipment, tools/pack/gen_armor.py) instead
+     * of the vanilla material's layer.
+     */
+    private static void equipmentAsset(ItemStack stack, ItemDefinition def) {
+        mn.suld.api.classgear.ArmorRules.parse(def.id()).ifPresent(a -> {
+            org.bukkit.inventory.EquipmentSlot slot = switch (a.piece()) {
+                case HELMET -> org.bukkit.inventory.EquipmentSlot.HEAD;
+                case CHESTPLATE -> org.bukkit.inventory.EquipmentSlot.CHEST;
+                case LEGGINGS -> org.bukkit.inventory.EquipmentSlot.LEGS;
+                case BOOTS -> org.bukkit.inventory.EquipmentSlot.FEET;
+            };
+            String sound = switch (a.tier()) {
+                case T1 -> "item.armor.equip_leather";
+                case T2 -> "item.armor.equip_chain";
+                case T3, T4 -> "item.armor.equip_iron";
+                case T5 -> "item.armor.equip_diamond";
+                case T6 -> "item.armor.equip_netherite";
+            };
+            stack.setData(io.papermc.paper.datacomponent.DataComponentTypes.EQUIPPABLE,
+                    io.papermc.paper.datacomponent.item.Equippable.equippable(slot)
+                            .assetId(net.kyori.adventure.key.Key.key("suld", mn.suld.api.classgear.ArmorRules.assetId(a.clazz(), a.tier())))
+                            .equipSound(net.kyori.adventure.key.Key.key("minecraft", sound))
+                            .build());
+        });
     }
 
     /**

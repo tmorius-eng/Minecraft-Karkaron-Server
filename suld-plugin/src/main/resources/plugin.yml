@@ -24,8 +24,8 @@ commands:
     usage: /revive <player>
     permission: suld.admin.death.revive
   classgear:
-    description: Recover a lost class weapon (/classgear recover; staff /classgear recover <player>).
-    usage: /classgear recover [player]
+    description: Class gear - armour level, tier, enhancement; recover lost class gear (staff - recover/set for a player).
+    usage: /classgear [recover|upgrade|enhance] · staff /classgear recover <player> · /classgear set <player> level|tier|enhance <n>
     permission: suld.classgear
   deathstatus:
     description: Death lock, time left, wound and the last deaths of a player (admin).

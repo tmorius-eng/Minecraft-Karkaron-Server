@@ -283,6 +283,10 @@ public final class SuldServices {
     public volatile mn.suld.plugin.item.ItemService itemService;
     /** Filled by SuldPlugin: the nine equipment slots of every player. */
     public volatile mn.suld.plugin.item.EquipmentService equipment;
+    /** ActivePlaytime (null until the plugin enabled it). */
+    public volatile mn.suld.plugin.activity.ActivePlaytimeService activity;
+    /** The class armour (null until the plugin enabled it). */
+    public volatile mn.suld.plugin.item.ClassArmor classArmor;
 
     public mn.suld.plugin.item.ItemService itemService() {
         return itemService;

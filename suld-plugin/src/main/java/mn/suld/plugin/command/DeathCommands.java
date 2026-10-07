@@ -101,7 +101,7 @@ public final class DeathCommands implements TabExecutor {
                         .append(" L").append(r.level()).append(' ').append(r.cause()).append(" → §f").append(r.state());
             }
             return sb.toString();
-        }).whenComplete((text, ex) -> reply(sender, ex != null ? Messages.error("Уншиж чадсангүй: " + ex.getMessage()) : net.kyori.adventure.text.Component.text(text)));
+        }).whenComplete((text, ex) -> reply(sender, ex != null ? Messages.error("Уншиж чадсангүй: " + ex.getMessage()) : net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(text)));
     }
 
     private void info(CommandSender sender, UUID id, String name, int seq) {
@@ -115,7 +115,7 @@ public final class DeathCommands implements TabExecutor {
                 reply(sender, Messages.error("#" + seq + " олдсонгүй."));
                 return;
             }
-            reply(sender, net.kyori.adventure.text.Component.text("§b☠ " + name + " #" + r.seq() + "§7 (" + r.deathId() + ")"
+            reply(sender, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize("§b☠ " + name + " #" + r.seq() + "§7 (" + r.deathId() + ")"
                     + "\n§7 үхсэн: §f" + WHEN.format(Instant.ofEpochMilli(r.diedAt())) + "§7 · түвшин §f" + r.level()
                     + "§7 · шалтгаан §f" + r.cause()
                     + "\n§7 газар: §f" + r.world() + " " + r.x() + " " + r.y() + " " + r.z()
