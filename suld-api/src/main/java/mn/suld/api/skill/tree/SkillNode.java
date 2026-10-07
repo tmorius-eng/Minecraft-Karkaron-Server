@@ -37,6 +37,19 @@ public record SkillNode(int index, String id, String name, String description, S
 
     public boolean root() { return index == 0; }
 
+    /** Tag prefix of a satellite ("minor") node: {@code orbit:<hub id>}. Satellites hang off one grid node. */
+    public static final String ORBIT = "orbit:";
+
+    /** The hub of a satellite node, or null for a grid node. Satellites only show on the full-screen tree. */
+    public String orbit() {
+        for (String t : tags) if (t.startsWith(ORBIT)) return t.substring(ORBIT.length());
+        return null;
+    }
+
+    public boolean satellite() {
+        return orbit() != null;
+    }
+
     /** The level needed: the node's own, and for a spell modifier also the level that unlocks that spell. */
     public int effectiveLevel() {
         int need = requiredLevel;

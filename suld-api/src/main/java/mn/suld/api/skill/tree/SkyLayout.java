@@ -15,8 +15,11 @@ public final class SkyLayout {
     /** Grid column offset to angle: 40 degrees per column, so 5 columns span 10..170 degrees. */
     static final double COLUMN_DEG = 40;
     /** Ring radius: the first ring sits clear of the root, each next row one spacing further. */
-    static final double RING0 = 0.9;
-    static final double RING = 1.05;
+    static final double RING0 = 1.2;
+    static final double RING = 2.2;
+    /** Satellites sit this far from their hub, fanned over the outward side. */
+    static final double SAT = 0.9;
+    static final double SAT_FAN_DEG = 50;
 
     public record Pos(double u, double v) {
         public double distance(Pos o) {
@@ -52,12 +55,25 @@ public final class SkyLayout {
         List<Pos> out = new ArrayList<>();
         int rootX = tree.root().x();
         for (SkillNode n : tree.nodes()) {
-            if (n.root()) {
-                out.add(new Pos(0, 0));
+            if (n.root() || n.satellite()) {
+                out.add(new Pos(0, 0)); // satellites are placed below, once their hub is known
             } else if (n.tags().contains("universal")) {
                 out.add(universal(n.x() - rootX));
             } else {
                 out.add(branch(n.x() - rootX, n.y()));
+            }
+        }
+        // satellites: fanned around the outward direction of their hub (k of m: -fan .. +fan)
+        java.util.Map<String, List<SkillNode>> orbits = new java.util.LinkedHashMap<>();
+        for (SkillNode n : tree.nodes()) if (n.satellite()) orbits.computeIfAbsent(n.orbit(), k -> new ArrayList<>()).add(n);
+        for (java.util.Map.Entry<String, List<SkillNode>> e : orbits.entrySet()) {
+            Pos hub = out.get(tree.node(e.getKey()).index());
+            double base = hub.u() == 0 && hub.v() == 0 ? Math.PI / 2 : Math.atan2(hub.v(), hub.u());
+            List<SkillNode> sats = e.getValue();
+            for (int k = 0; k < sats.size(); k++) {
+                double off = sats.size() == 1 ? 0 : -SAT_FAN_DEG + 2 * SAT_FAN_DEG * k / (sats.size() - 1);
+                double a = base + Math.toRadians(off);
+                out.set(sats.get(k).index(), new Pos(hub.u() + Math.cos(a) * SAT, hub.v() + Math.sin(a) * SAT));
             }
         }
         return new SkyLayout(List.copyOf(out));

@@ -169,6 +169,7 @@ public final class SkillMapMenu implements Listener {
     // ------------------------------------------------------------------ geometry
 
     private int nodeSlot(SkillNode n, View v) {
+        if (n.satellite()) return -1; // satellites live on the full-screen tree only (they have no grid cell)
         int cx = n.x() - v.ox, cy = n.y() - v.oy;
         if (v.zoom == 1) {
             if (cx < 0 || cx > 4 || cy < 0 || cy > 2) return -1;
@@ -183,7 +184,7 @@ public final class SkillMapMenu implements Listener {
             for (int nb : tree.neighbours(x.index())) {
                 if (nb < x.index()) continue;
                 SkillNode y = tree.node(nb);
-                if (!a.visible(x) || !a.visible(y)) continue;
+                if (x.satellite() || y.satellite() || !a.visible(x) || !a.visible(y)) continue;
                 boolean xu = a.unlocked(x), yu = a.unlocked(y);
                 String color = xu && yu ? "on" : ((xu && a.reachable(y) && a.rival(y) == null) || (yu && a.reachable(x) && a.rival(x) == null)) ? "next" : "off";
                 place(m, x, y, color, v, null);

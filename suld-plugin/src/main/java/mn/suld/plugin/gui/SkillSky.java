@@ -86,9 +86,9 @@ public final class SkillSky implements Listener {
     static final float ICON = 0.36f;
     static final float LINE = 0.055f;
     /** Camera distance to the tree plane: start, nearest, farthest (the wheel zooms between them). */
-    static final double DIST0 = 6.0, DIST_MIN = 3.0, DIST_MAX = 15;
+    static final double DIST0 = 6.0, DIST_MIN = 3.0, DIST_MAX = 26;
     /** Half-size of the backdrop box around the camera (blocks). */
-    static final float BOX_W = 56, BOX_H = 32, BOX_D = 24;
+    static final float BOX_W = 70, BOX_H = 40, BOX_D = 30;
     static final long COMBAT_MS = 8000;
 
     private static final int GOLD = 0xF2B632, WHITE = 0xF0F0F0, DIM = 0x8C8F96, DARK = 0x3C3F46, RED = 0xB03030, NAVY = 0x0B1226;
@@ -301,7 +301,7 @@ public final class SkillSky implements Listener {
         for (SkillNode node : s.tree.nodes()) {
             SkyLayout.Pos pos = s.layout.of(node);
             int i = node.index();
-            float size = node.root() || node.keystone() || node.capstone() ? NODE * 1.2f : NODE;
+            float size = node.root() || node.keystone() || node.capstone() ? NODE * 1.2f : node.satellite() ? NODE * 0.72f : NODE;
             s.frames[i] = own(s, w.spawn(at(s, pos.u(), pos.v(), 0), ItemDisplay.class, d -> {
                 hidden(d);
                 d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
@@ -327,7 +327,7 @@ public final class SkillSky implements Listener {
             d.setItemStack(new ItemStack(Material.AIR));
             d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(NODE * 1.7f, NODE * 1.7f, 1), new Quaternionf()));
         }));
-        // the tooltip is a panel fixed on the right of the screen (it rides with the camera), so it reads the same at
+        // the tooltip is a panel fixed on the left of the screen (the sidebar is on the right; it rides with the camera), so it reads the same at
         // every zoom; it used to float next to the node and was unreadable from a distance
         s.tooltip = own(s, w.spawn(s.seat.getLocation(), TextDisplay.class, t -> {
             hidden(t);
@@ -337,7 +337,7 @@ public final class SkillSky implements Listener {
             t.setAlignment(TextDisplay.TextAlignment.LEFT);
             t.setShadowed(true);
             t.text(Component.empty());
-            t.setTransformation(new Transformation(new Vector3f(-1.5f, (float) s.eyeOff - 0.62f, 2.4f), new Quaternionf(), new Vector3f(0.25f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(1.45f, (float) s.eyeOff - 0.62f, 2.4f), new Quaternionf(), new Vector3f(0.25f), new Quaternionf()));
         }));
         s.seat.addPassenger(s.tooltip);
         refresh(s);
@@ -362,7 +362,7 @@ public final class SkillSky implements Listener {
     private void line(Session s, int a, int b) {
         SkyLayout.Pos pa = s.layout.of(s.tree.node(a)), pb = s.layout.of(s.tree.node(b));
         double du = (pb.u() - pa.u()) * SPACING, dv = (pb.v() - pa.v()) * SPACING;
-        double len = Math.hypot(du, dv) - NODE * 0.9;
+        double len = Math.hypot(du, dv) - NODE * 0.75;
         if (len <= 0.02) return;
         // the quad's local X goes along the edge: world dx = -du (screen-right is -X)
         float angle = (float) Math.atan2(dv, -du);
@@ -516,7 +516,7 @@ public final class SkillSky implements Listener {
             double x = eye.getX() + dir.getX() * t, y = eye.getY() + dir.getY() * t;
             double u = (s.plane.getX() - x) / SPACING, v = (y - s.plane.getY()) / SPACING;
             SkillAllocation a = st().allocation(s.p);
-            double bestD = NODE * 0.62 / SPACING;
+            double bestD = NODE * 0.55 / SPACING;
             for (SkillNode n : s.tree.nodes()) {
                 if (a != null && !a.visible(n)) continue;
                 SkyLayout.Pos p = s.layout.of(n);

@@ -24,8 +24,8 @@ class SkyLayoutTest {
                 for (SkillNode b : t.nodes()) {
                     if (a.index() >= b.index()) continue;
                     double d = l.of(a).distance(l.of(b));
-                    // a node frame is 0.6 spacings wide: 0.8 leaves a visible gap
-                    assertTrue(d >= 0.8, c + ": " + a.id() + " and " + b.id() + " are " + d + " apart");
+                    // a node frame is 0.6 spacings wide (a satellite 0.45): 0.75 leaves a visible gap
+                    assertTrue(d >= 0.75, c + ": " + a.id() + " and " + b.id() + " are " + d + " apart");
                 }
             }
         }
@@ -41,7 +41,7 @@ class SkyLayoutTest {
             else assertTrue(l.of(n).v() > 0, n.id());
         }
         double[] e = l.extent();
-        assertTrue(e[0] < 12 && e[1] < 12, "fits a zoomed-out screen: " + e[0] + "x" + e[1]);
+        assertTrue(e[0] < 22 && e[1] < 22, "fits a zoomed-out screen: " + e[0] + "x" + e[1]);
     }
 
     /** Dumps the layouts for the preview renderer (tools/pack/preview_skytree.py). */

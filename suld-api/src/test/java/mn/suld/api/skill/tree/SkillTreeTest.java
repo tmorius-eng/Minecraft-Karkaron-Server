@@ -32,13 +32,15 @@ class SkillTreeTest {
         Set<String> classOnlyNames = new HashSet<>();
         for (PlayerClass c : PlayerClass.values()) {
             SkillTree t = tree(c);
-            assertEquals(36, t.nodes().size(), c.name());
+            // 31 class nodes + 5 universal + 78 satellites (3 per notable, tools/content/gen_skill_minors.py)
+            assertEquals(114, t.nodes().size(), c.name());
+            assertEquals(78, t.nodes().stream().filter(SkillNode::satellite).count(), c + " satellites");
             total += t.nodes().size() - 1;
             assertTrue(t.totalCost() > SkillPoints.total(60, 15, 20, 0), c + " total " + t.totalCost());
             assertEquals(3, t.nodes().stream().filter(SkillNode::unlocksUltimate).count(), c + " ultimates");
             assertEquals(1, t.nodes().stream().filter(SkillNode::keystone).count(), c + " keystone");
             for (SkillNode n : t.nodes()) {
-                if (!n.root() && !n.tags().contains("universal")) assertTrue(classOnlyNames.add(n.name()), "name shared between classes: " + n.name());
+                if (!n.root() && !n.tags().contains("universal") && !n.satellite()) assertTrue(classOnlyNames.add(n.name()), "name shared between classes: " + n.name());
                 if (n.root()) continue;
                 assertFalse(EffectText.lines(n).isEmpty(), n.id());
                 for (Effect e : n.effects()) {

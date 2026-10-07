@@ -112,19 +112,56 @@ public final class SkillTreeService implements Listener {
     // ------------------------------------------------------------------ data files
 
     /** Writes the bundled data files that the server folder does not have yet, so admins can edit them. */
+    /**
+     * Put the bundled trees into the server folder and keep them current. A file the owner never edited (its hash is
+     * the one recorded when it was written) follows the bundled version on every update; an edited file is kept and
+     * the new bundled version is written next to it as {@code <name>.json.new}. Files from before the hash record
+     * existed are backed up to {@code .bak} once and updated (they were the old defaults: the satellites of the
+     * full-screen tree would otherwise never reach existing servers).
+     */
     private void extractDefaults() {
         try {
             Files.createDirectories(dataDir);
             for (String name : FILES) {
                 Path target = dataDir.resolve(name + ".json");
-                if (Files.exists(target)) continue;
+                Path stamp = dataDir.resolve("." + name + ".bundled.sha256");
+                byte[] bundled;
                 try (InputStream in = SkillTreeService.class.getResourceAsStream("/skills/" + name + ".json")) {
                     if (in == null) throw new IOException("bundled skills/" + name + ".json is missing from the jar");
-                    Files.write(target, in.readAllBytes());
+                    bundled = in.readAllBytes();
+                }
+                String want = sha256(bundled);
+                if (!Files.exists(target)) {
+                    Files.write(target, bundled);
+                    Files.writeString(stamp, want);
+                    continue;
+                }
+                String have = sha256(Files.readAllBytes(target));
+                if (have.equals(want)) {
+                    if (!Files.exists(stamp)) Files.writeString(stamp, want);
+                    continue;
+                }
+                String recorded = Files.exists(stamp) ? Files.readString(stamp).strip() : null;
+                if (recorded == null || recorded.equals(have)) {
+                    if (recorded == null) Files.copy(target, dataDir.resolve(name + ".json.bak"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    Files.write(target, bundled);
+                    Files.writeString(stamp, want);
+                    plugin.getLogger().info("[skills] " + name + ".json updated to the bundled version" + (recorded == null ? " (old copy in " + name + ".json.bak)" : ""));
+                } else {
+                    Files.write(dataDir.resolve(name + ".json.new"), bundled);
+                    plugin.getLogger().warning("[skills] " + name + ".json was edited on this server; kept. The new bundled version is in " + name + ".json.new");
                 }
             }
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Cannot prepare " + dataDir + ": " + e.getMessage(), e);
+        }
+    }
+
+    private static String sha256(byte[] b) {
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(b));
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
         }
     }
 

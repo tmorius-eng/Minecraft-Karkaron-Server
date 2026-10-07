@@ -36,7 +36,8 @@ public final class SkillTree {
             SkillNode n = nodes.get(i);
             if (n.index() != i) throw new IllegalArgumentException(n.id() + ": index " + n.index() + " != position " + i);
             if (byId.put(n.id(), n) != null) throw new IllegalArgumentException("duplicate id " + n.id());
-            if (!coords.add(n.x() + "," + n.y())) throw new IllegalArgumentException("two nodes at " + n.x() + "," + n.y());
+            if (n.satellite() && !byId.containsKey(n.orbit())) throw new IllegalArgumentException(n.id() + ": orbits unknown or later node " + n.orbit());
+            if (!n.satellite() && !coords.add(n.x() + "," + n.y())) throw new IllegalArgumentException("two nodes at " + n.x() + "," + n.y());
             if (i == 0 && (n.cost() != 0 || n.maxRank() != 1)) throw new IllegalArgumentException("the root is free");
             if (i > 0 && n.cost() < 1) throw new IllegalArgumentException(n.id() + ": cost");
             if (n.maxRank() < 1 || n.maxRank() > 5) throw new IllegalArgumentException(n.id() + ": maxRank " + n.maxRank());
@@ -49,6 +50,15 @@ public final class SkillTree {
         for (String[] e : edges) {
             SkillNode a = node(e[0]), b = node(e[1]);
             int dx = Math.abs(a.x() - b.x()), dy = Math.abs(a.y() - b.y());
+            if (a.satellite() || b.satellite()) {
+                // a satellite links only to its hub or to a sibling of the same hub (it has no place on the grid)
+                String ha = a.satellite() ? a.orbit() : a.id(), hb = b.satellite() ? b.orbit() : b.id();
+                if (!ha.equals(hb)) throw new IllegalArgumentException("edge " + a.id() + "-" + b.id() + " leaves its hub's orbit");
+                if (!edgeKeys.add(key(a.index(), b.index()))) throw new IllegalArgumentException("duplicate edge " + a.id() + "-" + b.id());
+                neighbours.get(a.index()).add(b.index());
+                neighbours.get(b.index()).add(a.index());
+                continue;
+            }
             if (dx > 1 || dy > 1 || dx + dy == 0) throw new IllegalArgumentException("edge " + a.id() + "-" + b.id() + " is not between neighbours");
             if (dx == 1 && dy == 1) {
                 // two diagonals through one cell would be drawn on top of each other
@@ -110,7 +120,7 @@ public final class SkillTree {
     public Optional<SkillNode> find(String id) { return Optional.ofNullable(byId.get(id)); }
 
     public Optional<SkillNode> at(int x, int y) {
-        for (SkillNode n : nodes) if (n.x() == x && n.y() == y) return Optional.of(n);
+        for (SkillNode n : nodes) if (!n.satellite() && n.x() == x && n.y() == y) return Optional.of(n);
         return Optional.empty();
     }
 
@@ -123,13 +133,13 @@ public final class SkillTree {
 
     public int maxY() {
         int m = 0;
-        for (SkillNode n : nodes) m = Math.max(m, n.y());
+        for (SkillNode n : nodes) if (!n.satellite()) m = Math.max(m, n.y());
         return m;
     }
 
     public int maxX() {
         int m = 0;
-        for (SkillNode n : nodes) m = Math.max(m, n.x());
+        for (SkillNode n : nodes) if (!n.satellite()) m = Math.max(m, n.x());
         return m;
     }
 
