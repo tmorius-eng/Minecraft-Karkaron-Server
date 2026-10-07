@@ -22,17 +22,16 @@ Meshy auth is injected by the cloud egress proxy for `api.meshy.ai`. This repo
 and all tooling **never read, print, or commit any key** (`tools/meshy/meshy_client.py`
 sends no Authorization header). Never add a key to env or source.
 
-## ⛔ Current hard blocker: `assets.meshy.ai`
-`api.meshy.ai` (control plane) is allowed, but Meshy serves generated models and
-textures from **`assets.meshy.ai`**, which the egress policy **denies (403)**.
-Consequently preview/refine tasks SUCCEED but their GLB/FBX/texture files cannot
-be downloaded in this session — blocking Meshy→Blender ingestion of the real
-textured mesh.
+## ✅ `assets.meshy.ai` download path (verified 2026-10-07)
+Meshy serves generated models and textures from **`assets.meshy.ai`**; the environment's network policy now
+allows it. Verified end-to-end with one text-to-3D *preview* task (20 credits): created, polled to SUCCEEDED in
+54 s, GLB downloaded (63,880 bytes, valid glTF 2.0 binary: header length = file size, JSON + BIN chunks in range),
+imported cleanly by Blender 4.0.2 headless (1 mesh, 1,800 vertices, 873 triangles; previews carry no
+materials/textures). The test output lives in `assets/generated/meshy-test/` (git-ignored scratch). If a future
+environment denies the host again, the symptom is a proxy `X-Proxy-Error` header on `assets.meshy.ai`
+(a bare-root 403 *from CloudFront* without that header is normal: the root has no object).
 
-**Fix:** allow `assets.meshy.ai` in the environment's Network access → Allowed
-domains. Then the full pipeline runs unattended.
-
-## Running the pipeline (once `assets.meshy.ai` is allowed)
+## Running the pipeline
 
 ```bash
 # 1. (fresh session) install toolchain

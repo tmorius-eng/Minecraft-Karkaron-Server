@@ -24,6 +24,8 @@ bin/
 .tools/
 # Meshy task metadata cache (safe to regenerate; contains no secrets)
 assets/.meshy_cache/
+# Scratch / verification output of the generators (e.g. the Meshy download test); never shipped
+assets/generated/
 # Large raw source meshes (Meshy/Blender) live here, NEVER in resourcepack/.
 # Kept out of git (regenerable, large). Canonical dir is assets/source/.
 assets/source/*.glb
