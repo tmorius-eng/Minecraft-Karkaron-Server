@@ -89,7 +89,11 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.STAFF, "/vanish  /socialspy  /invsee", "Нууц ажиглалт", "essentials.vanish"),
             e(Group.STAFF, "/ban  /tempban", "Түр болон бүрмөсөн хориглох", "essentials.ban"),
             e(Group.STAFF, "/co inspect|lookup|rollback", "CoreProtect: блокийн түүх, буцаалт", "coreprotect.inspect"),
-            e(Group.STAFF, "/revive <нэр>", "Сүнсний төлвөөс буцаах", "suld.admin.revive"),
+            e(Group.STAFF, "/revive <нэр>", "Үхлийн түгжээг дуусгах (= /deathrevive)", "suld.admin.death.revive"),
+            e(Group.STAFF, "/deathstatus <нэр>", "Үхлийн түгжээ, шарх, сүүлийн үхлүүд", "suld.admin.death"),
+            e(Group.STAFF, "/deathinfo <нэр> [#]", "Нэг үхлийн дэлгэрэнгүй", "suld.admin.death"),
+            e(Group.STAFF, "/deathrevive <нэр>", "Түгжээг дуусгах (шарх үлдэнэ)", "suld.admin.death.revive"),
+            e(Group.STAFF, "/deathreset <нэр>", "Түгжээ ба шархыг арилгах", "suld.admin.death.reset"),
 
             e(Group.ADMIN, "/suld exp|coins|quest|guide|auth", "EXP, зоос, эрлийн бүлэг, самбар шинэчлэх, нэвтрэлт", "suld.admin"),
             e(Group.ADMIN, "/credits give|take <нэр|uuid> <тоо>", "Дэлгүүрийн кредит", "suld.admin.credits"),

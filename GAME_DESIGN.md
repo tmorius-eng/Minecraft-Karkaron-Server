@@ -61,13 +61,15 @@ or duplicated — any non-genuine copy is destroyed on sight.
 ## Hardcore death system
 
 Configurable (see `death:` in `config.yml`). A death may place the character in
-a temporary **soul/death state** for `soul-state-seconds`, apply gear durability
+a **real-time death lock** that grows with level (geometric, 5 min at level 1 → 24 h at 60; persisted, survives
+restarts — docs/DEATH_AND_RECOVERY.md) spent as a soul, then a **wound** on the class gear (−5 % per death, max −15 %,
+healed by active play), apply gear durability
 damage, lose a fraction of current-level EXP, and drop a configurable fraction
 of non-soulbound loot. Recovery is **free in-game** (resurrection quest hooks,
 soul-shard hooks — later phases) or an **admin action**.
 
 - **No real-money resurrection** is part of the core architecture.
-- Admin recovery: `/revive <player>` (permission `suld.admin.revive`), audited.
+- Admin tools: `/deathstatus`, `/deathinfo`, `/deathrevive` (= `/revive`), `/deathreset`, all audited.
 
 Implemented (`DeathRules` in suld-api, `DeathService` in the plugin):
 

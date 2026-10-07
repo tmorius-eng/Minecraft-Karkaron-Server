@@ -48,7 +48,13 @@ public final class SuldConfigFactory {
                 view.getDouble("death.durability-damage-fraction", dd.durabilityDamageFraction()),
                 view.getBoolean("death.drop-loot", dd.dropLoot()),
                 view.getDouble("death.loot-loss-fraction", dd.lootLossFraction()),
-                view.getBoolean("death.allow-free-revive", dd.allowFreeRevive()));
+                view.getBoolean("death.allow-free-revive", dd.allowFreeRevive()),
+                lockCurve(view.getString("death.lock.curve", dd.lockCurve().name()), dd.lockCurve()),
+                view.getDouble("death.lock.min-minutes", dd.lockMinMinutes()),
+                view.getDouble("death.lock.max-minutes", dd.lockMaxMinutes()),
+                view.getDouble("death.wound.per-death", dd.woundPerDeath()),
+                view.getDouble("death.wound.max", dd.woundMax()),
+                view.getInt("death.wound.heal-minutes", dd.woundHealMinutes()));
 
         AnalyticsSettings ad = d.analytics();
         AnalyticsSettings.Sink sink;
@@ -105,5 +111,13 @@ public final class SuldConfigFactory {
                 view.getInt("world.region-mobs-per-player", wd.regionMobsPerPlayer()));
 
         return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world);
+    }
+
+    private static mn.suld.api.death.DeathLock.Curve lockCurve(String v, mn.suld.api.death.DeathLock.Curve fallback) {
+        try {
+            return mn.suld.api.death.DeathLock.Curve.valueOf(v.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (RuntimeException ex) {
+            return fallback;
+        }
     }
 }

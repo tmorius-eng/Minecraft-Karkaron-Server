@@ -139,13 +139,14 @@ public final class EquipmentService implements Listener {
 
     private Equipment.Wearer wearer(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-        return new Equipment.Wearer(p.getUniqueId(), pr == null ? null : pr.playerClass().orElse(null), pr == null ? 1 : pr.progression().level());
+        return new Equipment.Wearer(p.getUniqueId(), pr == null ? null : pr.playerClass().orElse(null), pr == null ? 1 : pr.progression().level(),
+                services.woundFactor.applyAsDouble(p.getUniqueId()));
     }
 
     private String fingerprint(Player p, Map<EquipSlot, ItemInstance> worn, Set<EquipSlot> broken) {
         StringBuilder sb = new StringBuilder();
         Equipment.Wearer w = wearer(p);
-        sb.append(w.clazz()).append('/').append(w.level());
+        sb.append(w.clazz()).append('/').append(w.level()).append('/').append(w.boundFactor());
         for (Map.Entry<EquipSlot, ItemInstance> e : worn.entrySet()) {
             ItemInstance i = e.getValue();
             sb.append('|').append(e.getKey().ordinal()).append(':').append(i.uuid()).append(':').append(i.itemLevel())

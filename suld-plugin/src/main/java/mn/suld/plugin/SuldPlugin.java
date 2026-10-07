@@ -3,7 +3,6 @@ package mn.suld.plugin;
 import mn.suld.api.config.SuldConfig;
 import mn.suld.api.config.SuldConfigFactory;
 import mn.suld.api.profile.PlayerProfile;
-import mn.suld.plugin.command.ReviveCommand;
 import mn.suld.plugin.command.SuldCommand;
 import mn.suld.plugin.config.BukkitConfigView;
 import mn.suld.plugin.listener.PlayerLifecycleListener;
@@ -112,7 +111,9 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(deaths, this);
         deaths.start();
         services.isSoul = deaths::isSoul;
-        registerCommand("revive", new ReviveCommand(this, services, deaths));
+        services.woundFactor = deaths::woundFactor;
+        mn.suld.plugin.command.DeathCommands deathCommands = new mn.suld.plugin.command.DeathCommands(this, services, deaths);
+        for (String c : List.of("revive", "deathstatus", "deathinfo", "deathrevive", "deathreset")) registerTab(c, deathCommands);
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 
         worldBuild = new mn.suld.plugin.worldbuild.WorldBuildService(this, config.world());

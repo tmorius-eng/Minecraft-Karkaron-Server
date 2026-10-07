@@ -56,6 +56,8 @@ lp group helper permission set coreprotect.lookup true
 # ---- mod: moderation tools
 lp group mod permission set suld.badge.mod true
 lp group mod permission set suld.admin.revive true
+lp group mod permission set suld.admin.death true
+lp group mod permission set suld.admin.death.revive true
 lp group mod permission set essentials.tphere true
 lp group mod permission set essentials.vanish true
 lp group mod permission set essentials.socialspy true

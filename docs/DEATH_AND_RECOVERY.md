@@ -1,6 +1,8 @@
 # SÜLD death and recovery (proposed)
 
-**Status: SPEC + SIMULATION.** It is built in Stage C1 after the owner approves Stage B. Paid Instant Revive is
+**Status: IMPLEMENTED in Stage C1 (FUNCTIONAL_BUT_INCOMPLETE; real-client UX is MANUAL_QA_REQUIRED).** Persistent
+lock (V12), level-scaled geometric lock, wound through `Equipment.Wearer.boundFactor`, audited admin commands, all
+live-tested on Paper 1.21.11 + PostgreSQL including a server restart during a lock. Paid Instant Revive is
 **deferred** (owner decision); see `docs/INSTANT_REVIVE.md`. The current state is in `audit/death-gear-status.json`.
 
 ## Today

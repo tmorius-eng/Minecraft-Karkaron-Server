@@ -305,6 +305,8 @@ final class HudPanel implements Listener {
     List<HudState.Buff> buffs(Player p) {
         List<HudState.Buff> out = new ArrayList<>();
         if (services.isSoul.test(p.getUniqueId())) out.add(new HudState.Buff("SOUL", ""));
+        double wound = services.woundFactor.applyAsDouble(p.getUniqueId());
+        if (wound < 0.999) out.add(new HudState.Buff("WOUND", "-" + Math.round(100 * (1 - wound)) + "%"));
         if (services.equipment() != null && services.equipment().bonus(p).inactive().containsValue(Equipment.Inactive.BROKEN)) {
             out.add(new HudState.Buff("BROKEN", ""));
         }

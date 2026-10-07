@@ -581,7 +581,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/icon_relic.png",
+   "file": "suld:font/hud/icon_wound.png",
    "height": 9,
    "ascent": -3,
    "chars": [
@@ -590,7 +590,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/icon_resist.png",
+   "file": "suld:font/hud/icon_relic.png",
    "height": 9,
    "ascent": -3,
    "chars": [
@@ -599,7 +599,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/icon_hunger.png",
+   "file": "suld:font/hud/icon_resist.png",
    "height": 9,
    "ascent": -3,
    "chars": [
@@ -608,7 +608,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/icon_jump.png",
+   "file": "suld:font/hud/icon_hunger.png",
    "height": 9,
    "ascent": -3,
    "chars": [
@@ -617,7 +617,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/icon_night.png",
+   "file": "suld:font/hud/icon_jump.png",
    "height": 9,
    "ascent": -3,
    "chars": [
@@ -626,7 +626,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/icon_haste.png",
+   "file": "suld:font/hud/icon_night.png",
    "height": 9,
    "ascent": -3,
    "chars": [
@@ -635,11 +635,20 @@
   },
   {
    "type": "bitmap",
+   "file": "suld:font/hud/icon_haste.png",
+   "height": 9,
+   "ascent": -3,
+   "chars": [
+    "\ue0aa"
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "suld:font/hud/digits_row_a.png",
    "height": 6,
    "ascent": -18,
    "chars": [
-    "\ue0aa\ue0ab\ue0ac\ue0ad\ue0ae\ue0af\ue0b0\ue0b1\ue0b2\ue0b3\ue0b4\ue0b5\ue0b6\ue0b7\ue0b8\ue0b9\ue0ba\ue0bb\ue0bc\ue0bd\ue0be"
+    "\ue0ab\ue0ac\ue0ad\ue0ae\ue0af\ue0b0\ue0b1\ue0b2\ue0b3\ue0b4\ue0b5\ue0b6\ue0b7\ue0b8\ue0b9\ue0ba\ue0bb\ue0bc\ue0bd\ue0be\ue0bf"
    ]
   },
   {
@@ -648,7 +657,7 @@
    "height": 6,
    "ascent": -28,
    "chars": [
-    "\ue0bf\ue0c0\ue0c1\ue0c2\ue0c3\ue0c4\ue0c5\ue0c6\ue0c7\ue0c8\ue0c9\ue0ca\ue0cb\ue0cc\ue0cd\ue0ce\ue0cf\ue0d0\ue0d1\ue0d2\ue0d3"
+    "\ue0c0\ue0c1\ue0c2\ue0c3\ue0c4\ue0c5\ue0c6\ue0c7\ue0c8\ue0c9\ue0ca\ue0cb\ue0cc\ue0cd\ue0ce\ue0cf\ue0d0\ue0d1\ue0d2\ue0d3\ue0d4"
    ]
   },
   {
@@ -657,7 +666,7 @@
    "height": 6,
    "ascent": -6,
    "chars": [
-    "\ue0d4\ue0d5\ue0d6\ue0d7\ue0d8\ue0d9\ue0da\ue0db\ue0dc\ue0dd\ue0de\ue0df\ue0e0\ue0e1\ue0e2\ue0e3\ue0e4\ue0e5\ue0e6\ue0e7\ue0e8"
+    "\ue0d5\ue0d6\ue0d7\ue0d8\ue0d9\ue0da\ue0db\ue0dc\ue0dd\ue0de\ue0df\ue0e0\ue0e1\ue0e2\ue0e3\ue0e4\ue0e5\ue0e6\ue0e7\ue0e8\ue0e9"
    ]
   },
   {
@@ -666,7 +675,7 @@
    "height": 6,
    "ascent": -5,
    "chars": [
-    "\ue0e9\ue0ea\ue0eb\ue0ec\ue0ed\ue0ee\ue0ef\ue0f0\ue0f1\ue0f2\ue0f3\ue0f4\ue0f5\ue0f6\ue0f7\ue0f8\ue0f9\ue0fa\ue0fb\ue0fc\ue0fd"
+    "\ue0ea\ue0eb\ue0ec\ue0ed\ue0ee\ue0ef\ue0f0\ue0f1\ue0f2\ue0f3\ue0f4\ue0f5\ue0f6\ue0f7\ue0f8\ue0f9\ue0fa\ue0fb\ue0fc\ue0fd\ue0fe"
    ]
   },
   {
@@ -675,7 +684,7 @@
    "height": 6,
    "ascent": -2,
    "chars": [
-    "\ue0fe\ue0ff\ue100\ue101\ue102\ue103\ue104\ue105\ue106\ue107\ue108\ue109\ue10a\ue10b\ue10c\ue10d\ue10e\ue10f\ue110\ue111\ue112"
+    "\ue0ff\ue100\ue101\ue102\ue103\ue104\ue105\ue106\ue107\ue108\ue109\ue10a\ue10b\ue10c\ue10d\ue10e\ue10f\ue110\ue111\ue112\ue113"
    ]
   },
   {
@@ -684,7 +693,7 @@
    "height": 8,
    "ascent": 7,
    "chars": [
-    "\ue113\ue114\ue115\ue116\ue117\ue118\ue119\ue11a\ue11b\ue11c\ue11d\ue11e\ue11f\ue120\ue121\ue122\ue123\ue124\ue125\ue126\ue127\ue128\ue129\ue12a\ue12b\ue12c\ue12d\ue12e\ue12f\ue130\ue131\ue132\ue133\ue134\ue135\ue136\ue137\ue138\ue139\ue13a\ue13b\ue13c\ue13d\ue13e\ue13f\ue140\ue141\ue142\ue143\ue144\ue145\ue146\ue147\ue148\ue149\ue14a\ue14b\ue14c\ue14d\ue14e\ue14f\ue150\ue151\ue152\ue153\ue154\ue155\ue156\ue157\ue158\ue159\ue15a\ue15b\ue15c\ue15d\ue15e\ue15f\ue160\ue161\ue162\ue163\ue164\ue165\ue166\ue167\ue168\ue169\ue16a\ue16b\ue16c\ue16d\ue16e\ue16f\ue170\ue171\ue172\ue173\ue174\ue175\ue176\ue177\ue178\ue179\ue17a\ue17b"
+    "\ue114\ue115\ue116\ue117\ue118\ue119\ue11a\ue11b\ue11c\ue11d\ue11e\ue11f\ue120\ue121\ue122\ue123\ue124\ue125\ue126\ue127\ue128\ue129\ue12a\ue12b\ue12c\ue12d\ue12e\ue12f\ue130\ue131\ue132\ue133\ue134\ue135\ue136\ue137\ue138\ue139\ue13a\ue13b\ue13c\ue13d\ue13e\ue13f\ue140\ue141\ue142\ue143\ue144\ue145\ue146\ue147\ue148\ue149\ue14a\ue14b\ue14c\ue14d\ue14e\ue14f\ue150\ue151\ue152\ue153\ue154\ue155\ue156\ue157\ue158\ue159\ue15a\ue15b\ue15c\ue15d\ue15e\ue15f\ue160\ue161\ue162\ue163\ue164\ue165\ue166\ue167\ue168\ue169\ue16a\ue16b\ue16c\ue16d\ue16e\ue16f\ue170\ue171\ue172\ue173\ue174\ue175\ue176\ue177\ue178\ue179\ue17a\ue17b\ue17c"
    ]
   },
   {
@@ -693,7 +702,7 @@
    "height": 8,
    "ascent": -22,
    "chars": [
-    "\ue17c\ue17d\ue17e\ue17f\ue180\ue181\ue182\ue183\ue184\ue185"
+    "\ue17d\ue17e\ue17f\ue180\ue181\ue182\ue183\ue184\ue185\ue186"
    ]
   }
  ]

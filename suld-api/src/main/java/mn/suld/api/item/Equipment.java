@@ -26,8 +26,24 @@ public final class Equipment {
     private Equipment() {
     }
 
-    /** Who is wearing it. */
-    public record Wearer(UUID id, PlayerClass clazz, int level) {
+    /**
+     * Who is wearing it. {@code boundFactor} scales the stats of the items soulbound to this wearer (the class gear):
+     * 1.0 normally, below 1 while a death wound is open (docs/DEATH_AND_RECOVERY.md). The item's own stats are never
+     * changed — only what they contribute.
+     */
+    public record Wearer(UUID id, PlayerClass clazz, int level, double boundFactor) {
+        public Wearer {
+            boundFactor = Double.isFinite(boundFactor) ? Math.max(0.0, Math.min(1.0, boundFactor)) : 1.0;
+        }
+
+        public Wearer(UUID id, PlayerClass clazz, int level) {
+            this(id, clazz, level, 1.0);
+        }
+
+        /** The share of an item's stats that counts for this wearer. */
+        public double factorFor(ItemInstance i) {
+            return boundFactor < 1.0 && i.soulbound() && id != null && id.equals(i.boundTo()) ? boundFactor : 1.0;
+        }
     }
 
     /** Why an item in a slot gives nothing. */
@@ -123,7 +139,8 @@ public final class Equipment {
                 continue;
             }
             ItemDefinition def = catalog.require(i.definitionId());
-            itemStats(catalog, i).forEach((k, v) -> stats.merge(k, v, Double::sum));
+            double f = w == null ? 1.0 : w.factorFor(i);
+            itemStats(catalog, i).forEach((k, v) -> stats.merge(k, f == 1.0 ? v : whole(k, v * f), Double::sum));
             for (RolledAffix ra : i.affixes()) {
                 catalog.affix(ra.affixId()).filter(a -> a.spell() != null)
                         .ifPresent(a -> mods.computeIfAbsent(a.spell(), x -> new EnumMap<>(ModKey.class)).merge(a.modKey(), ra.value(), Double::sum));

@@ -20,9 +20,25 @@ commands:
     description: SULD player/admin command (info, profile; admin spawnmob, exp, quest, auth).
     usage: /suld <info|profile|spawnmob>
   revive:
-    description: Revive a player from the hardcore death/soul state (admin).
+    description: Revive a player from the hardcore death lock (admin; same as /deathrevive).
     usage: /revive <player>
-    permission: suld.admin.revive
+    permission: suld.admin.death.revive
+  deathstatus:
+    description: Death lock, time left, wound and the last deaths of a player (admin).
+    usage: /deathstatus <player>
+    permission: suld.admin.death
+  deathinfo:
+    description: One recorded death of a player in full (admin).
+    usage: /deathinfo <player> [death#]
+    permission: suld.admin.death
+  deathrevive:
+    description: End a player's death lock now; the wound still applies (admin, audited).
+    usage: /deathrevive <player>
+    permission: suld.admin.death.revive
+  deathreset:
+    description: End a player's death lock and clear the wound (admin, audited; staff errors only).
+    usage: /deathreset <player>
+    permission: suld.admin.death.reset
   suldpack:
     description: SULD resource-pack control (status, reload, force).
     usage: /suldpack <status|reload|force>
@@ -222,6 +238,9 @@ permissions:
     default: op
     children:
       suld.admin.revive: true
+      suld.admin.death: true
+      suld.admin.death.revive: true
+      suld.admin.death.reset: true
       suld.admin.pack: true
       suld.admin.event: true
       suld.admin.relic: true
@@ -249,7 +268,19 @@ permissions:
     description: Operate the WorldBuilder (build, rollback, approve, lock the city).
     default: op
   suld.admin.revive:
-    description: Allows reviving players from the death/soul state.
+    description: Allows reviving players from the death lock (legacy name; grants suld.admin.death.revive).
+    default: op
+    children:
+      suld.admin.death.revive: true
+      suld.admin.death: true
+  suld.admin.death:
+    description: View death locks, wounds and death history.
+    default: op
+  suld.admin.death.revive:
+    description: End a player's death lock (audited).
+    default: op
+  suld.admin.death.reset:
+    description: Clear a player's death lock and wound (audited).
     default: op
   suld.admin.pack:
     description: Allows resource-pack admin actions.

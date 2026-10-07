@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DeathRulesTest {
 
-    private final DeathSettings s = DeathSettings.defaults(); // 10% exp, 25% wear, drop 50% of stacks
+    private final DeathSettings s = new DeathSettings(true, 30, 0.10, 0.25, true, 0.5, true); // 10% exp, 25% wear, drop 50% of stacks
 
     @Test
     void deathCostsProgressButNeverALevel() {

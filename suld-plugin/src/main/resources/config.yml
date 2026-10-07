@@ -36,17 +36,28 @@ database:
   use-ssl: false
 
 # ---------------------------------------------------------------------------
-# Hardcore PvE death system. No real-money mechanics; recovery is free in-game
-# or an admin action (/revive). All harshness levers are here.
+# Hardcore PvE death system (docs/DEATH_AND_RECOVERY.md). No real-money mechanics: recovery is the real-time lock
+# running out, or an admin action (/deathrevive). All harshness levers are here.
+#   A death locks the player out of normal play (a soul: no fighting, looting, trading, building) for a real-world
+#   time that grows with level — persisted, it survives restarts. After it ends, the class gear carries a wound
+#   (−per-death effective stats, at most −max) that heals with active play.
 # ---------------------------------------------------------------------------
 death:
   enabled: true
-  soul-state-seconds: 30
-  exp-loss-fraction: 0.10
+  soul-state-seconds: 30        # minimum soul time (also the floor of the lock)
+  exp-loss-fraction: 0.05       # of the progress into the current level (never a level)
   durability-damage-fraction: 0.25
   drop-loot: true
-  loot-loss-fraction: 0.5
-  allow-free-revive: true
+  loot-loss-fraction: 0.25      # of the droppable (non-soulbound) stacks
+  allow-free-revive: true       # false = the lock only ends by /deathrevive
+  lock:
+    curve: GEOMETRIC            # GEOMETRIC (approved) | LINEAR | STEP | FIXED
+    min-minutes: 5              # level 1   (geometric: 5 min · 288^((L−1)/59) → 31 min @20, 3.5 h @40, 24 h @60)
+    max-minutes: 1440           # level 60 and Ascension
+  wound:
+    per-death: 0.05
+    max: 0.15
+    heal-minutes: 180           # active minutes per healed step
 
 # ---------------------------------------------------------------------------
 # Analytics. sink: log | database  (database requires a configured DB above)

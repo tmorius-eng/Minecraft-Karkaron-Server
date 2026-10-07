@@ -97,12 +97,13 @@ public final class HudGlyphs {
     public static final G ICON_DANGER = new G("\uE0A1", 10);
     public static final G ICON_SAFE = new G("\uE0A2", 10);
     public static final G ICON_BROKEN = new G("\uE0A3", 10);
-    public static final G ICON_RELIC = new G("\uE0A4", 10);
-    public static final G ICON_RESIST = new G("\uE0A5", 10);
-    public static final G ICON_HUNGER = new G("\uE0A6", 10);
-    public static final G ICON_JUMP = new G("\uE0A7", 10);
-    public static final G ICON_NIGHT = new G("\uE0A8", 10);
-    public static final G ICON_HASTE = new G("\uE0A9", 10);
+    public static final G ICON_WOUND = new G("\uE0A4", 10);
+    public static final G ICON_RELIC = new G("\uE0A5", 10);
+    public static final G ICON_RESIST = new G("\uE0A6", 10);
+    public static final G ICON_HUNGER = new G("\uE0A7", 10);
+    public static final G ICON_JUMP = new G("\uE0A8", 10);
+    public static final G ICON_NIGHT = new G("\uE0A9", 10);
+    public static final G ICON_HASTE = new G("\uE0AA", 10);
 
     /** fill pieces of widths [1, 2, 4, 8, 16, 32, 64] */
     public static final G[] FILL_HP = {new G("\uE01B", 2), new G("\uE01C", 3), new G("\uE01D", 5), new G("\uE01E", 9), new G("\uE01F", 17), new G("\uE020", 33), new G("\uE021", 65)};
@@ -133,11 +134,11 @@ public final class HudGlyphs {
     /** fill pieces of widths [1, 2, 4, 8, 16, 32, 64, 128] */
     public static final G[] FILL_TGT_CHIP = {new G("\uE077", 2), new G("\uE078", 3), new G("\uE079", 5), new G("\uE07A", 9), new G("\uE07B", 17), new G("\uE07C", 33), new G("\uE07D", 65), new G("\uE07E", 129)};
 
-    public static final CharSet ROW_A = new CharSet("0123456789/%.+-ksxMAX", "\uE0AA\uE0AB\uE0AC\uE0AD\uE0AE\uE0AF\uE0B0\uE0B1\uE0B2\uE0B3\uE0B4\uE0B5\uE0B6\uE0B7\uE0B8\uE0B9\uE0BA\uE0BB\uE0BC\uE0BD\uE0BE", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
-    public static final CharSet ROW_B = new CharSet("0123456789/%.+-ksxMAX", "\uE0BF\uE0C0\uE0C1\uE0C2\uE0C3\uE0C4\uE0C5\uE0C6\uE0C7\uE0C8\uE0C9\uE0CA\uE0CB\uE0CC\uE0CD\uE0CE\uE0CF\uE0D0\uE0D1\uE0D2\uE0D3", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
-    public static final CharSet SLOT = new CharSet("0123456789/%.+-ksxMAX", "\uE0D4\uE0D5\uE0D6\uE0D7\uE0D8\uE0D9\uE0DA\uE0DB\uE0DC\uE0DD\uE0DE\uE0DF\uE0E0\uE0E1\uE0E2\uE0E3\uE0E4\uE0E5\uE0E6\uE0E7\uE0E8", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
-    public static final CharSet BUFF = new CharSet("0123456789/%.+-ksxMAX", "\uE0E9\uE0EA\uE0EB\uE0EC\uE0ED\uE0EE\uE0EF\uE0F0\uE0F1\uE0F2\uE0F3\uE0F4\uE0F5\uE0F6\uE0F7\uE0F8\uE0F9\uE0FA\uE0FB\uE0FC\uE0FD", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
-    public static final CharSet TARGET = new CharSet("0123456789/%.+-ksxMAX", "\uE0FE\uE0FF\uE100\uE101\uE102\uE103\uE104\uE105\uE106\uE107\uE108\uE109\uE10A\uE10B\uE10C\uE10D\uE10E\uE10F\uE110\uE111\uE112", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
-    public static final CharSet LINE = new CharSet(" \u0410\u0411\u0412\u0413\u0414\u0415\u0401\u0416\u0417\u0418\u0419\u041A\u041B\u041C\u041D\u041E\u04E8\u041F\u0420\u0421\u0422\u0423\u04AE\u0424\u0425\u0426\u0427\u0428\u042B\u042C\u042D\u042E\u042FSU\u00DCLDVINRGFW0123456789+-.!?/:\u00B7ABCEHKMOPTXY\u0429\u042AJQZ,'()%_=<>\u2014\u20AE\u25C6\u2726\u2714\u2716\u279C\u2665\u2694\u2605\u2744#&;\"", "\uE113\uE114\uE115\uE116\uE117\uE118\uE119\uE11A\uE11B\uE11C\uE11D\uE11E\uE11F\uE120\uE121\uE122\uE123\uE124\uE125\uE126\uE127\uE128\uE129\uE12A\uE12B\uE12C\uE12D\uE12E\uE12F\uE130\uE131\uE132\uE133\uE134\uE135\uE136\uE137\uE138\uE139\uE13A\uE13B\uE13C\uE13D\uE13E\uE13F\uE140\uE141\uE142\uE143\uE144\uE145\uE146\uE147\uE148\uE149\uE14A\uE14B\uE14C\uE14D\uE14E\uE14F\uE150\uE151\uE152\uE153\uE154\uE155\uE156\uE157\uE158\uE159\uE15A\uE15B\uE15C\uE15D\uE15E\uE15F\uE160\uE161\uE162\uE163\uE164\uE165\uE166\uE167\uE168\uE169\uE16A\uE16B\uE16C\uE16D\uE16E\uE16F\uE170\uE171\uE172\uE173\uE174\uE175\uE176\uE177\uE178\uE179\uE17A\uE17B", new int[]{4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 7, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 3, 3, 7, 7, 3, 3, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 4, 3, 4, 4, 7, 7, 7, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 4, 5});
-    public static final CharSet LEVEL = new CharSet("0123456789", "\uE17C\uE17D\uE17E\uE17F\uE180\uE181\uE182\uE183\uE184\uE185", new int[]{7, 6, 7, 7, 7, 7, 7, 7, 7, 7});
+    public static final CharSet ROW_A = new CharSet("0123456789/%.+-ksxMAX", "\uE0AB\uE0AC\uE0AD\uE0AE\uE0AF\uE0B0\uE0B1\uE0B2\uE0B3\uE0B4\uE0B5\uE0B6\uE0B7\uE0B8\uE0B9\uE0BA\uE0BB\uE0BC\uE0BD\uE0BE\uE0BF", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
+    public static final CharSet ROW_B = new CharSet("0123456789/%.+-ksxMAX", "\uE0C0\uE0C1\uE0C2\uE0C3\uE0C4\uE0C5\uE0C6\uE0C7\uE0C8\uE0C9\uE0CA\uE0CB\uE0CC\uE0CD\uE0CE\uE0CF\uE0D0\uE0D1\uE0D2\uE0D3\uE0D4", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
+    public static final CharSet SLOT = new CharSet("0123456789/%.+-ksxMAX", "\uE0D5\uE0D6\uE0D7\uE0D8\uE0D9\uE0DA\uE0DB\uE0DC\uE0DD\uE0DE\uE0DF\uE0E0\uE0E1\uE0E2\uE0E3\uE0E4\uE0E5\uE0E6\uE0E7\uE0E8\uE0E9", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
+    public static final CharSet BUFF = new CharSet("0123456789/%.+-ksxMAX", "\uE0EA\uE0EB\uE0EC\uE0ED\uE0EE\uE0EF\uE0F0\uE0F1\uE0F2\uE0F3\uE0F4\uE0F5\uE0F6\uE0F7\uE0F8\uE0F9\uE0FA\uE0FB\uE0FC\uE0FD\uE0FE", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
+    public static final CharSet TARGET = new CharSet("0123456789/%.+-ksxMAX", "\uE0FF\uE100\uE101\uE102\uE103\uE104\uE105\uE106\uE107\uE108\uE109\uE10A\uE10B\uE10C\uE10D\uE10E\uE10F\uE110\uE111\uE112\uE113", new int[]{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5, 5, 5});
+    public static final CharSet LINE = new CharSet(" \u0410\u0411\u0412\u0413\u0414\u0415\u0401\u0416\u0417\u0418\u0419\u041A\u041B\u041C\u041D\u041E\u04E8\u041F\u0420\u0421\u0422\u0423\u04AE\u0424\u0425\u0426\u0427\u0428\u042B\u042C\u042D\u042E\u042FSU\u00DCLDVINRGFW0123456789+-.!?/:\u00B7ABCEHKMOPTXY\u0429\u042AJQZ,'()%_=<>\u2014\u20AE\u25C6\u2726\u2714\u2716\u279C\u2665\u2694\u2605\u2744#&;\"", "\uE114\uE115\uE116\uE117\uE118\uE119\uE11A\uE11B\uE11C\uE11D\uE11E\uE11F\uE120\uE121\uE122\uE123\uE124\uE125\uE126\uE127\uE128\uE129\uE12A\uE12B\uE12C\uE12D\uE12E\uE12F\uE130\uE131\uE132\uE133\uE134\uE135\uE136\uE137\uE138\uE139\uE13A\uE13B\uE13C\uE13D\uE13E\uE13F\uE140\uE141\uE142\uE143\uE144\uE145\uE146\uE147\uE148\uE149\uE14A\uE14B\uE14C\uE14D\uE14E\uE14F\uE150\uE151\uE152\uE153\uE154\uE155\uE156\uE157\uE158\uE159\uE15A\uE15B\uE15C\uE15D\uE15E\uE15F\uE160\uE161\uE162\uE163\uE164\uE165\uE166\uE167\uE168\uE169\uE16A\uE16B\uE16C\uE16D\uE16E\uE16F\uE170\uE171\uE172\uE173\uE174\uE175\uE176\uE177\uE178\uE179\uE17A\uE17B\uE17C", new int[]{4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 5, 7, 7, 7, 7, 7, 7, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 3, 3, 7, 7, 3, 3, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 4, 3, 4, 4, 7, 7, 7, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 4, 5});
+    public static final CharSet LEVEL = new CharSet("0123456789", "\uE17D\uE17E\uE17F\uE180\uE181\uE182\uE183\uE184\uE185\uE186", new int[]{7, 6, 7, 7, 7, 7, 7, 7, 7, 7});
 }

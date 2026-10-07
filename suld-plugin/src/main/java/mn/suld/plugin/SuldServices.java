@@ -59,6 +59,8 @@ public final class SuldServices {
 
     private final SuldConfig config;
     private final java.util.concurrent.ExecutorService styleExecutor;
+    private final java.util.concurrent.ExecutorService deathExecutor;
+    private final mn.suld.api.persistence.DeathRepository deathRepository;
     private final mn.suld.plugin.style.StyleService styleService;
     private final mn.suld.plugin.item.ClassWeapons classWeapons;
     private final ExecutorService ioExecutor;
@@ -189,7 +191,21 @@ public final class SuldServices {
                 : new mn.suld.plugin.persistence.JdbcStyleRepository(dataSource,
                         SqlDialect.forStorage(config.database().type()), styleExecutor);
         this.styleService = new mn.suld.plugin.style.StyleService(plugin, this, styleRepository);
+        // Hardcore death (V12): one ordered writer, so a player's death and recovery never reorder.
+        this.deathExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "suld-death-io");
+            thread.setDaemon(true);
+            return thread;
+        });
+        this.deathRepository = dataSource == null
+                ? new mn.suld.api.persistence.InMemoryDeathRepository()
+                : new mn.suld.plugin.persistence.JdbcDeathRepository(dataSource,
+                        SqlDialect.forStorage(config.database().type()), deathExecutor);
         this.classWeapons = new mn.suld.plugin.item.ClassWeapons(plugin, this);
+    }
+
+    public mn.suld.api.persistence.DeathRepository deathRepository() {
+        return deathRepository;
     }
 
     public mn.suld.plugin.item.ClassWeapons classWeapons() {
@@ -249,6 +265,8 @@ public final class SuldServices {
 
     /** Filled by SuldPlugin: whether a player is currently a soul (hardcore death state). */
     public volatile java.util.function.Predicate<java.util.UUID> isSoul = id -> false;
+    /** Multiplier of a player's class-gear stats (below 1 while a death wound is open; set by the DeathService). */
+    public volatile java.util.function.ToDoubleFunction<java.util.UUID> woundFactor = id -> 1.0;
     /** Filled by SuldPlugin: send a player's steppe horse away (dungeon entry). */
     public volatile java.util.function.Consumer<java.util.UUID> dismissHorse = id -> { };
     /** Filled by SuldPlugin: id of the wild region at a player's feet, or null. */
@@ -335,6 +353,12 @@ public final class SuldServices {
     public void close() {
         styleService.stop();
         styleExecutor.shutdown();
+        deathExecutor.shutdown();
+        try {
+            deathExecutor.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
         try {
             styleExecutor.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException ex) {

@@ -1,7 +1,7 @@
 {
   "audited": "2026-10-07",
   "commit": "f123253",
-  "stage": "A (audit) + B (spec)",
+  "stage": "A (audit) + B (spec) + C1 (death and recovery implemented)",
   "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
   "subsystems": {
     "classWeaponBinding": {
@@ -91,32 +91,34 @@
       "note": "EXP 10% of bar, 50% stack loss, 25% wear"
     },
     "deathState": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "DeathService.java:68 (in-memory map)",
-      "note": "no persistent DeathState; restart frees all souls"
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "V12 suld_death_state; api/death/DeathRecord.java; plugin/persistence/JdbcDeathRepository.java; plugin/death/DeathService.java",
+      "note": "persistent per-death rows, one open lock per player enforced by the DB, CAS updates; live-verified on PostgreSQL incl. a server restart during the lock; MySQL migration written but not run here"
     },
     "deathLock": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "—",
-      "note": "30 s soul only; owner decision: level-scaled lock, curve from Stage B"
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "api/death/DeathLock.java; config.yml death.lock.*",
+      "note": "geometric 5 min -> 24 h by level (approved recommendation), real-world timestamp; soul state blocks combat, damage, pickup, building, containers; live-tested (30 s and 132 s locks, restart). MANUAL_QA_REQUIRED: real client UX"
     },
     "deathWound": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "—",
-      "note": "hook point: Equipment.compute per-item factor (Equipment.java:126)"
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "api/death/Wound.java; Equipment.Wearer.boundFactor; DeathService.minute()",
+      "note": "-5 %/death (max -15 %) on gear soulbound to the player, heals per 180 active minutes (combat or >=6 blocks moved per minute; the full ActivePlaytime tracker is Stage C3); live-verified 5.0 -> 4.75 damage; HUD WOUND icon"
     },
     "deathUi": {
       "status": "FUNCTIONAL_BUT_INCOMPLETE",
-      "evidence": "DeathService.java:194-221 (boss bar + summary)"
+      "evidence": "DeathService (title ТА УНАЛАА, countdown boss bar with local Ulaanbaatar time, cost + recovery summary)",
+      "note": "no Dialog-based death screen yet; MANUAL_QA_REQUIRED"
     },
     "adminCommands": {
-      "status": "FUNCTIONAL_BUT_INCOMPLETE",
-      "evidence": "ReviveCommand.java",
-      "note": "/revive only; not in audit log (ReviveCommand.java:62); /deathstatus|revive|reset|info missing"
+      "status": "COMPLETE",
+      "evidence": "command/DeathCommands.java; plugin.yml",
+      "note": "/deathstatus /deathinfo /deathrevive /deathreset (+ /revive alias), audited in suld_audit_log (live-verified rows); MANUAL_QA_REQUIRED in a real client"
     },
     "loginGating": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "AuthenticationService.java:121-167 (hook point after acquire, :155)"
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "DeathService.onPreLogin/applyOnJoin",
+      "note": "login allowed into a recovery (soul) state per the spec; lock loaded at pre-login"
     },
     "instantRevive": {
       "status": "NOT_IMPLEMENTED",
@@ -136,8 +138,19 @@
   },
   "requiredTests": {
     "total": 20,
-    "passing": 0,
-    "note": "directive test list; none exist yet"
+    "automated": [
+      "8 death timestamp persists (JDBC IT + live restart)",
+      "9 lock persists across restart (live)",
+      "10 recovery applies wound (unit + live)",
+      "16 one open lock / multiple deaths (DB constraint, IT)",
+      "17 restart during death state (live)",
+      "19 admin action audit (live, suld_audit_log)"
+    ],
+    "notYet": [
+      "1-7, 15: class gear (Stage C2)",
+      "11-14, 18: instant revive (deferred by owner decision)",
+      "20: real client UX (MANUAL_QA_REQUIRED)"
+    ]
   },
   "spec": {
     "status": "SPEC (awaiting owner approval; not implemented)",

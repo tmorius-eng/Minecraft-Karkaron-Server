@@ -160,4 +160,22 @@ class EquipmentTest {
         assertEquals(10.0, b.statKeys().get(StatKey.ATTACK_PCT), 1e-9);
         assertTrue(b.procs().stream().anyMatch(pr -> pr.kind() == ProcKind.SMITE));
     }
+
+    @Test
+    void woundScalesOnlyTheWearersSoulboundGear() {
+        ItemCatalog cat = catalog();
+        ItemInstance own = new ItemInstance("w.sword", UUID.randomUUID(), ItemRarity.COMMON, 30, Map.of(ItemStat.DAMAGE, 10.0, ItemStat.CRIT_CHANCE, 5.0),
+                List.of(), true, ME, 0, "t", ItemInstance.SCHEMA_VERSION);
+        Map<EquipSlot, ItemInstance> worn = new EnumMap<>(EquipSlot.class);
+        worn.put(EquipSlot.MAIN_HAND, own);
+        Equipment.Bonus healthy = Equipment.compute(cat, worn, BAATAR_30, Set.of());
+        Equipment.Bonus wounded = Equipment.compute(cat, worn, new Equipment.Wearer(ME, PlayerClass.BAATAR, 30, 0.85), Set.of());
+        assertEquals(10.0, healthy.flatDamage(), 1e-9);
+        assertEquals(8.5, wounded.flatDamage(), 1e-9, "−15 % on the class gear");
+        assertEquals(5.0 * 0.85, wounded.stat(ItemStat.CRIT_CHANCE), 1e-9);
+        // gear that is not soulbound to this wearer is untouched
+        worn.put(EquipSlot.MAIN_HAND, item("w.sword", ItemRarity.COMMON, 30, Map.of(ItemStat.DAMAGE, 10.0)));
+        assertEquals(10.0, Equipment.compute(cat, worn, new Equipment.Wearer(ME, PlayerClass.BAATAR, 30, 0.85), Set.of()).flatDamage(), 1e-9);
+        assertEquals(1.0, new Equipment.Wearer(ME, PlayerClass.BAATAR, 30, 7).boundFactor(), "clamped");
+    }
 }
