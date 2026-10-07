@@ -69,6 +69,10 @@ commands:
     description: Наадам · Морин уралдаан - the horse race board; start (admin) opens one now.
     usage: /uraldaan [start]
     aliases: [horserace]
+  barildaan:
+    description: Наадам · Бөх барилдаан - a friendly wrestling bout (push out of the ring, no damage) and your titles.
+    usage: /barildaan [<player>|accept|deny|stats]
+    aliases: [bokh, wrestle]
   chat:
     description: The SULD chat screen - tabs per channel, history with heads, send box.
     usage: /chat [channel]
