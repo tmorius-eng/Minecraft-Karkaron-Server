@@ -1,0 +1,17 @@
+{
+ "model": "gemini-3-pro-image",
+ "size": "1K",
+ "style": "Style: creature concept sheet for a dark-fantasy game boss, neutral mid-grey background, even studio light from the top left, clear readable silhouette, painterly but with crisp shape design, naturalistic anatomy, restrained ornament, no text, no letters, no numbers, no labels, no watermark, no border, no Soyombo symbol, no tamga or emblem, no human rider, no armour, no saddle, no glowing aura.",
+ "images": [
+  {
+   "id": "khasar_draft1",
+   "aspect": "16:9",
+   "prompt": "Orthographic side view (left half of the canvas) and front view (right half) of the same creature: Khasar, an enormous ancient cave wolf-beast, a four-legged wolf the size of a horse-drawn cart, NOT a werewolf, never standing upright. Long low body, very heavy deep-chested forequarters and massive shoulders, the head carried low below the shoulder line, slimmer tucked hindquarters, long thick tail held low. A thick shaggy black-grey hackle mane from the skull to the middle of the back, with a few jagged dull grey stone shards grown into the mane over the shoulders like crystals in old rock. Soot-grey fur in layered tones, pale dusty underbelly, old scars: the left ear torn with a notch, pale scar lines across the muzzle, a bald scar on the flank. Around the neck the remains of a broken collar of old yellowed bone plates on a cracked leather cord, half of it missing. Heavy wide paws with dark worn claws. Small dim ember-orange eyes, deep-set, not glowing. Mongolian steppe wolf proportions (long legs, deep chest) exaggerated into an ancient cave predator."
+  },
+  {
+   "id": "khasar_draft2",
+   "aspect": "4:3",
+   "prompt": "Three-quarter front view of Khasar, an enormous ancient cave wolf-beast, crouched low in a dark limestone cave mouth, snarling with the scarred muzzle wrinkled and long yellowed fangs bared. Four-legged wolf anatomy, NOT a werewolf: massive shoulders, deep chest, head low and forward, thick black hackle mane bristling with a few grey stone shards grown into it, torn left ear, pale scar lines across the muzzle, a broken bone-plate collar on a cracked leather cord around the neck. Soot-grey layered fur, paler dusty underside, heavy paws with dark claws. Small dim ember-orange eyes. A faint cold breath vapour from the mouth. Ancient, patient and dangerous, an old predator of the steppe that has lived in the cave for centuries."
+  }
+ ]
+}

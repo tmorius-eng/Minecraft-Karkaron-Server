@@ -2337,20 +2337,41 @@
    "type": "boss",
    "class": null,
    "tier": "BOSS",
-   "source": "gemini+meshy+blender+blockbench (planned)",
-   "concept": "assets/art/concepts/boss/khasar_sheet.png (planned)",
-   "model": "assets/models/blockbench/boss/khasar.bbmodel (planned)",
-   "texture": null,
-   "minecraftAsset": "bone models suld:entity/khasar/<bone> on ItemDisplays (renderer decision pending)",
-   "resourcePackPath": "resourcepack/assets/suld/models/entity/khasar/ (planned)",
-   "triangleCount": null,
+   "source": "procedural (authored cuboid rig tools/model/khasar.py, painter tools/model/khasar_paint.py) + meshy (proportion reference only)",
+   "concept": "docs/bosses/KHASAR.md (written brief; Gemini drafts failed: HTTP 403, no credential); Meshy proportion views assets/previews/boss/khasar_meshy_ref_side.png",
+   "model": "tools/model/khasar.py → tools/model/export_rig.py; Blockbench copy assets/models/blockbench/boss/khasar.bbmodel; Meshy reference assets/sources/01a1166a-4c56-7173-b025-56bfa0ff1317.glb (git-ignored, 31,106 tris, never shipped)",
+   "texture": [
+    "resourcepack/assets/suld/textures/entity/khasar/khasar_body.png",
+    "resourcepack/assets/suld/textures/entity/khasar/khasar_head.png"
+   ],
+   "minecraftAsset": "25 bone item models suld:entity/khasar/<bone> (+ variant suld:entity/khasar/head_rage) on ItemDisplays; rig suld-plugin/src/main/resources/models/khasar/rig.json + clips.json",
+   "resourcePackPath": "resourcepack/assets/suld/models/entity/khasar/",
+   "triangleCount": 1584,
    "textureSize": "2x 128x128",
-   "fileSize": null,
-   "status": "CONCEPT",
-   "gameplayBinding": null,
-   "clientQa": "NOT_TESTED",
+   "fileSize": 75246,
+   "status": "OPTIMIZED",
+   "gameplayBinding": "SuldContent.modelFor(\"mob.khasar\") = \"khasar\" (ModelService, KhasarBrain clips bite/pounce/roar/howl/phase_change); not yet seen in a client",
+   "clientQa": "MANUAL_QA_REQUIRED",
    "spec": "docs/BOSS_VISUAL_SPEC.md#5-хасар--full-specification",
-   "notes": "Existing BossDefinition SuldContent.KHASAR_BOSS (RAVAGER backing, 3 phases, 180 s enrage)."
+   "notes": "Rig v1 (2026-10-07): FUNCTIONAL_BUT_INCOMPLETE; MANUAL_QA_REQUIRED (real 1.21.11 client: facing/180° item-display turn, atlas source, element rotations, hit flash, gait at 10 Hz). 25 displays, 132 cuboids, 14 clips (events bite_hit, pounce_land, roar_wave, howl, phase_wave, enrage_pulse, spawn_burst, death_fall, stone_fall). Design is ORIGINAL FICTION: an ancient cave wolf-beast, not the historical Qasar; no Soyombo, tamga or script. Persistent phase visuals (mane ×1.35, shards hidden in phase 3, head_rage eyes) need renderer support. Spec deviation: owner directive replaced lamellar plates and spear shafts with a broken bone collar and cave-stone shards (docs/bosses/KHASAR.md §7).",
+   "elements": 132,
+   "fileCount": 54,
+   "licence": "own",
+   "history": "ORIGINAL FICTION",
+   "meshy": {
+    "task": "01a1166a-4c56-7173-b025-56bfa0ff1317",
+    "mode": "text-to-3d preview, no refine",
+    "credits": 20,
+    "balance_before": 1050,
+    "balance_after": 1030
+   },
+   "report": "assets/reports/boss.khasar.json",
+   "previews": [
+    "assets/previews/boss/khasar_side.png",
+    "assets/previews/boss/khasar_threequarter.png",
+    "assets/previews/boss/khasar_front.png",
+    "assets/previews/boss/khasar_silhouette.png"
+   ]
   },
   {
    "id": "relic.khukh_suld_model",

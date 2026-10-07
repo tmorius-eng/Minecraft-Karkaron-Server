@@ -1,0 +1,268 @@
+{
+ "id": "boss.khasar",
+ "name_mn": "Хасар — Агуйн Эзэн",
+ "date": "2026-10-07",
+ "history": "ORIGINAL FICTION (docs/bosses/KHASAR.md §5)",
+ "gemini": {
+  "drafts_1k": 0,
+  "refs_2k": 0,
+  "files": [],
+  "prompts": "tools/art/khasar_prompts.json",
+  "note": "2 drafts requested (khasar_draft1, khasar_draft2); both returned HTTP 403 'unregistered callers' (no Gemini credential reached the API this session). Not retried. The design was worked from the written brief and the Meshy proportion mesh."
+ },
+ "meshy": {
+  "tasks": [
+   "01a1166a-4c56-7173-b025-56bfa0ff1317"
+  ],
+  "mode": "text-to-3d preview (no refine)",
+  "art_style": "realistic",
+  "credits": 20,
+  "balance_before": 1050,
+  "balance_after": 1030,
+  "cap_for_slice": 100,
+  "files": [
+   "assets/sources/01a1166a-4c56-7173-b025-56bfa0ff1317.glb (git-ignored)",
+   "assets/sources/01a1166a-4c56-7173-b025-56bfa0ff1317_thumb.png"
+  ],
+  "use": "proportion reference only (leg positions, chest depth, tail hang); never shipped",
+  "prompt": "Enormous ancient cave wolf, four-legged quadruped standing on all four legs in a neutral side pose, not a werewolf. Long low body, very heavy deep-chested forequarters, massive shoulders, head carried low and forward, slimmer hindquarters, long thick tail held low. Thick shaggy hackle mane from skull to mid back, torn ear, scarred muzzle, broken bone collar around the neck, heavy wide paws. Dark soot-grey fur, pale underbelly."
+ },
+ "blender": {
+  "tool": "tools/blender/ortho_views.py",
+  "source_tris": 31106,
+  "glb_bytes": 1859532,
+  "raw_dims_m": [
+   0.5997,
+   1.9018,
+   1.2331
+  ],
+  "dims_blocks_at_3.4_long": [
+   1.072,
+   3.4,
+   2.204
+  ],
+  "measured": {
+   "head_end_from_nose": 0.8,
+   "front_legs_from_nose": [
+    0.8,
+    1.2
+   ],
+   "hind_legs_from_nose": [
+    2.4,
+    2.8
+   ],
+   "tail_from_nose": [
+    2.9,
+    3.4
+   ],
+   "chest_bottom": [
+    0.89,
+    0.97
+   ],
+   "withers_top": 2.2
+  },
+  "views": [
+   "assets/previews/boss/khasar_meshy_ref_side.png",
+   "assets/previews/boss/khasar_meshy_ref_front.png"
+  ],
+  "warnings": [
+   "Meshy made an ordinary upright-headed wolf; Хасар's low head, heavier forequarters and hackle mane were authored, not measured"
+  ]
+ },
+ "minecraft": {
+  "rig": "suld-plugin/src/main/resources/models/khasar/rig.json",
+  "displays": 25,
+  "elements": 132,
+  "tri_upper_bound": 1584,
+  "elements_per_bone": {
+   "body_front": 7,
+   "body_rear": 6,
+   "neck": 12,
+   "head": 14,
+   "jaw": 5,
+   "ear_l": 2,
+   "ear_r": 3,
+   "mane_1": 12,
+   "mane_2": 3,
+   "shards_flank": 6,
+   "leg_fl_upper": 4,
+   "leg_fl_lower": 3,
+   "leg_fl_paw": 10,
+   "leg_fr_upper": 4,
+   "leg_fr_lower": 3,
+   "leg_fr_paw": 10,
+   "leg_hl_upper": 3,
+   "leg_hl_lower": 3,
+   "leg_hl_paw": 5,
+   "leg_hr_upper": 3,
+   "leg_hr_lower": 3,
+   "leg_hr_paw": 5,
+   "tail_1": 2,
+   "tail_2": 2,
+   "tail_3": 2
+  },
+  "textures": {
+   "khasar_body": "128x128",
+   "khasar_head": "128x128"
+  },
+  "texture_bytes": 7342,
+  "pack_bytes": 75246,
+  "models": 26,
+  "clips": {
+   "idle": {
+    "length": 80,
+    "loop": true,
+    "events": []
+   },
+   "walk": {
+    "length": 20,
+    "loop": true,
+    "events": []
+   },
+   "run": {
+    "length": 12,
+    "loop": true,
+    "events": []
+   },
+   "frenzy_idle": {
+    "length": 40,
+    "loop": true,
+    "events": []
+   },
+   "sleep": {
+    "length": 80,
+    "loop": true,
+    "events": []
+   },
+   "bite": {
+    "length": 12,
+    "loop": false,
+    "events": [
+     [
+      6,
+      "bite_hit"
+     ]
+    ]
+   },
+   "pounce": {
+    "length": 34,
+    "loop": false,
+    "events": [
+     [
+      24,
+      "pounce_land"
+     ]
+    ]
+   },
+   "roar": {
+    "length": 40,
+    "loop": false,
+    "events": [
+     [
+      14,
+      "roar_wave"
+     ]
+    ]
+   },
+   "howl": {
+    "length": 44,
+    "loop": false,
+    "events": [
+     [
+      16,
+      "howl"
+     ]
+    ]
+   },
+   "hurt": {
+    "length": 4,
+    "loop": false,
+    "events": []
+   },
+   "phase_change": {
+    "length": 30,
+    "loop": false,
+    "events": [
+     [
+      14,
+      "phase_wave"
+     ]
+    ]
+   },
+   "enrage": {
+    "length": 30,
+    "loop": false,
+    "events": [
+     [
+      12,
+      "enrage_pulse"
+     ]
+    ]
+   },
+   "spawn": {
+    "length": 40,
+    "loop": false,
+    "events": [
+     [
+      2,
+      "spawn_burst"
+     ]
+    ]
+   },
+   "death": {
+    "length": 50,
+    "loop": false,
+    "events": [
+     [
+      24,
+      "death_fall"
+     ],
+     [
+      32,
+      "stone_fall"
+     ]
+    ]
+   }
+  },
+  "rest_bbox_blocks": {
+   "min": [
+    -0.817,
+    -0.002,
+    -1.838
+   ],
+   "max": [
+    0.829,
+    2.248,
+    1.68
+   ]
+  },
+  "display_flip": true,
+  "source": "tools/model/khasar.py (+ khasar_paint.py, khasar_clips.py) → tools/model/export_rig.py",
+  "bbmodel": "assets/models/blockbench/boss/khasar.bbmodel",
+  "java_rigloader": {
+   "ok": true,
+   "issues": [],
+   "sampler_cross_check": "20 display transforms equal to 5 decimals (Java Sampler vs tools/model/rigmath.py)"
+  }
+ },
+ "qa": {
+  "status": "NOT_TESTED",
+  "clientQa": "MANUAL_QA_REQUIRED",
+  "date": null,
+  "tester": null,
+  "screenshots": [],
+  "previews": [
+   "assets/previews/boss/khasar_side.png",
+   "assets/previews/boss/khasar_threequarter.png",
+   "assets/previews/boss/khasar_front.png",
+   "assets/previews/boss/khasar_silhouette.png"
+  ],
+  "checklist": [
+   "bones face forward (the 180° item-display turn: export_rig.py --no-display-flip if they face backwards)",
+   "textures resolve (atlases/blocks.json + items.json directory source entity/khasar)",
+   "element rotations turn the expected way (stone shards lean outwards, hind metatarsus near vertical)",
+   "hit flash tints every bone",
+   "walk/run paws stay on the ground at 10 Hz + 3-tick interpolation"
+  ]
+ }
+}
