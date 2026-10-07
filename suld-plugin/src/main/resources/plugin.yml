@@ -60,8 +60,26 @@ commands:
     usage: /clan <create|invite|accept|leave|kick|promote|demote|transfer|disband|info|top|chat>
     aliases: [ovog, clans]
   cc:
-    description: Clan chat.
+    description: Clan chat (one line to your clan).
     usage: /cc <message>
+  chat:
+    description: The SULD chat screen - tabs per channel, history with heads, send box.
+    usage: /chat [channel]
+  ch:
+    description: Choose your chat channel (нийт, ойр, бүлэг, овог, худалдаа); !text always goes to Нийт.
+    usage: /ch <channel> [message]
+  g:
+    description: One line to Нийт (global) chat; alone it switches to it.
+    usage: /g <message>
+  l:
+    description: One line to Ойр (local, 80 blocks) chat; alone it switches to it.
+    usage: /l <message>
+  pc:
+    description: One line to your party; alone it switches to party chat.
+    usage: /pc <message>
+  tr:
+    description: One line to Худалдаа (trade) chat; alone it switches to it.
+    usage: /tr <message>
   suldevent:
     description: SULD world events (status; admin start/stop).
     usage: /suldevent <status|start|stop>
@@ -110,8 +128,8 @@ commands:
     usage: /menu
     aliases: [tses, цэс]
   tutorial:
-    description: Step-by-step guide for new players.
-    usage: /tutorial
+    description: The guided first hour (7 steps, shown in a boss bar); restart replays it, skip ends it.
+    usage: /tutorial [restart|skip]
     aliases: [zaavar2, guide]
   cosmetics:
     description: Tags, name colours, chat colours, join messages, emojis.

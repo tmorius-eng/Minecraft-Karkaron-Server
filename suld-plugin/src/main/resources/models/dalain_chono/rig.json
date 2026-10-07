@@ -1,0 +1,151 @@
+{
+ "id": "dalain_chono",
+ "scale": 1.15,
+ "hostHeight": 0.9774999999999999,
+ "bones": [
+  {
+   "id": "root",
+   "parent": null,
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": false
+  },
+  {
+   "id": "body",
+   "parent": "root",
+   "pivot": [
+    0,
+    0.7812,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "head",
+   "parent": "body",
+   "pivot": [
+    0,
+    0.9688,
+    0.4688
+   ],
+   "rest": [
+    -8,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "jaw",
+   "parent": "head",
+   "pivot": [
+    0,
+    0.7969,
+    0.7812
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_fl",
+   "parent": "body",
+   "pivot": [
+    0.15,
+    0.5625,
+    0.3125
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_fr",
+   "parent": "body",
+   "pivot": [
+    -0.15,
+    0.5625,
+    0.3125
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_hl",
+   "parent": "body",
+   "pivot": [
+    0.15,
+    0.5625,
+    -0.375
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_hr",
+   "parent": "body",
+   "pivot": [
+    -0.15,
+    0.5625,
+    -0.375
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "tail",
+   "parent": "body",
+   "pivot": [
+    0,
+    0.9688,
+    -0.5
+   ],
+   "rest": [
+    -38,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  }
+ ],
+ "parts": []
+}

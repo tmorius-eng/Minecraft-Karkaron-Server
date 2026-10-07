@@ -28,11 +28,13 @@ public final class ChatListener implements Listener {
     private final ClanService clans;
     private final StyleService styles;
     private final ResourcePackService packs;
+    private final ChatChannels channels;
 
-    public ChatListener(ClanService clans, StyleService styles, ResourcePackService packs) {
+    public ChatListener(ClanService clans, StyleService styles, ResourcePackService packs, ChatChannels channels) {
         this.clans = clans;
         this.styles = styles;
         this.packs = packs;
+        this.channels = channels;
     }
 
     private boolean hasPack(Object viewer) {
@@ -49,9 +51,10 @@ public final class ChatListener implements Listener {
                 : Component.text("[" + tag + "] ", NamedTextColor.AQUA, TextDecoration.BOLD);
         Component name = StyleFormat.name(p, s);
         Component title = StyleFormat.tag(s).map(t -> Component.text(" ").append(t)).orElse(Component.empty());
+        Component channel = channels == null ? Component.empty() : channels.prefix(channels.routedChannel(event), p);
         event.renderer((source, displayName, message, viewer) -> {
             boolean pack = hasPack(viewer);
-            return StyleFormat.badges(p, s, pack).append(clan).append(name).append(title)
+            return channel.append(StyleFormat.badges(p, s, pack)).append(clan).append(name).append(title)
                     .append(Component.text(" » ", NamedTextColor.GRAY))
                     .append(StyleFormat.message(s, plain, pack));
         });

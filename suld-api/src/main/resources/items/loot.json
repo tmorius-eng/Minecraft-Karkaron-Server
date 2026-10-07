@@ -608,6 +608,687 @@
     }
    ],
    "guaranteed": []
+  },
+  {
+   "id": "loot.usny_lus",
+   "tier": "NORMAL",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 97,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 3,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [],
+   "rare": [
+    {
+     "item": "item.mosun_chuluu",
+     "chance": 0.25
+    }
+   ]
+  },
+  {
+   "id": "loot.dalain_chono",
+   "tier": "ELITE",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 88,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 12,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.chonon_arisan"
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.tangud_suns",
+   "tier": "NORMAL",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 97,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 3,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [],
+   "rare": [
+    {
+     "item": "item.altan_toos",
+     "chance": 0.25
+    }
+   ]
+  },
+  {
+   "id": "loot.balgasny_khilents",
+   "tier": "ELITE",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 88,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 12,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.khilentsiin_khor"
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.khureenii_kharuul",
+   "tier": "NORMAL",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 97,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 3,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [],
+   "rare": [
+    {
+     "item": "item.tumriin_kheltarkhii",
+     "chance": 0.25
+    }
+   ]
+  },
+  {
+   "id": "loot.dainy_chono",
+   "tier": "ELITE",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 88,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 12,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.chonon_arisan"
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.uulyn_savdag",
+   "tier": "NORMAL",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 97,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 3,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [],
+   "rare": [
+    {
+     "item": "item.altan_toos",
+     "chance": 0.25
+    }
+   ]
+  },
+  {
+   "id": "loot.aguin_baavgai",
+   "tier": "ELITE",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 88,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 12,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.baavgain_arisan"
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.tengeriin_tsereg",
+   "tier": "NORMAL",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 97,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 3,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [],
+   "rare": [
+    {
+     "item": "item.tumriin_kheltarkhii",
+     "chance": 0.25
+    }
+   ]
+  },
+  {
+   "id": "loot.tengeriin_chono",
+   "tier": "ELITE",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 88,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 12,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.chonon_arisan"
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.ordny_sakhiul",
+   "tier": "ELITE",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 88,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 12,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.altan_toos"
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.lusyn_khaan",
+   "tier": "BOSS",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.mosun_chuluu",
+     "qty": [
+      3,
+      4
+     ]
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.khar_janjin",
+   "tier": "BOSS",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.altan_toos",
+     "qty": [
+      3,
+      4
+     ]
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.ulaan_khadny_noyon",
+   "tier": "BOSS",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.tumriin_kheltarkhii",
+     "qty": [
+      3,
+      4
+     ]
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.khangai_savdag",
+   "tier": "BOSS",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.baavgain_arisan",
+     "qty": [
+      3,
+      4
+     ]
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.khukh_tengeriin_elch",
+   "tier": "BOSS",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.tengeriin_chuluu",
+     "qty": [
+      1,
+      1
+     ]
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.khukh_suldiin_sakhiul",
+   "tier": "BOSS",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.tengeriin_chuluu",
+     "qty": [
+      1,
+      1
+     ]
+    }
+   ],
+   "rare": []
+  },
+  {
+   "id": "loot.dungeon.dalain_gun",
+   "tier": "DUNGEON",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 0,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.mosun_chuluu",
+     "qty": [
+      2,
+      3
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "item.talyn_tuvshin",
+     "chance": 0.15
+    }
+   ]
+  },
+  {
+   "id": "loot.dungeon.khar_khot",
+   "tier": "DUNGEON",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 0,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.altan_toos",
+     "qty": [
+      2,
+      3
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "item.talyn_tuvshin",
+     "chance": 0.15
+    }
+   ]
+  },
+  {
+   "id": "loot.dungeon.ulaan_khad",
+   "tier": "DUNGEON",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 0,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.tumriin_kheltarkhii",
+     "qty": [
+      2,
+      3
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "item.altan_toos",
+     "chance": 0.3
+    }
+   ]
+  },
+  {
+   "id": "loot.dungeon.burkhan_agui",
+   "tier": "DUNGEON",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 0,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.baavgain_arisan",
+     "qty": [
+      2,
+      3
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "item.tengeriin_chuluu",
+     "chance": 0.05
+    }
+   ]
+  },
+  {
+   "id": "loot.dungeon.tengeriin_shat",
+   "tier": "DUNGEON",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 0,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.altan_toos",
+     "qty": [
+      2,
+      3
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "item.tengeriin_chuluu",
+     "chance": 0.08
+    }
+   ]
+  },
+  {
+   "id": "loot.dungeon.tengeriin_ordon",
+   "tier": "DUNGEON",
+   "rolls": [
+    1,
+    1
+   ],
+   "nothing": 0,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.tengeriin_chuluu",
+     "qty": [
+      1,
+      2
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "item.talyn_tuvshin",
+     "chance": 0.3
+    }
+   ]
   }
  ]
 }

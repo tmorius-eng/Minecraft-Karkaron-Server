@@ -285,8 +285,13 @@ public final class PregenService {
         } else if (mspt > target) {
             allowance = Math.max(1, allowance / 2);
             lowSince = 0;
-        } else if (mspt < target - 10 && ++lowSince >= 10) { // ten calm ticks in a row: one more in flight
-            allowance = Math.min(max, allowance + 1);
+        } else if (mspt < target - 10) {
+            if (++lowSince >= 10) { // ten calm ticks in a row: one more in flight
+                allowance = Math.min(max, allowance + 1);
+                lowSince = 0;
+            }
+        } else {
+            allowance = Math.max(1, allowance); // between calm and busy: keep going slowly, never stall after a pause
             lowSince = 0;
         }
         int perTick = Math.max(1, cfgInt("max-per-tick", 6));

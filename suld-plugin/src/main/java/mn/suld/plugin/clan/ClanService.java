@@ -265,10 +265,21 @@ public final class ClanService {
                         + c.exp() + " EXP · " + c.size() + " гишүүн")));
     }
 
+    private ChatChannels channels;
+
+    /** Clan chat then goes through the SÜLD channels (tag, head, history, chat guard). */
+    public void channels(ChatChannels c) {
+        this.channels = c;
+    }
+
     public void chat(Player sender, String message) {
         Clan clan = registry.clanOf(sender.getUniqueId()).orElse(null);
         if (clan == null) {
             sender.sendMessage(Messages.error("Та овоггүй."));
+            return;
+        }
+        if (channels != null) {
+            channels.say(sender, mn.suld.api.chat.ChatChannel.CLAN, message);
             return;
         }
         Component line = Component.text("[" + clan.tag() + "] ", NamedTextColor.GOLD)

@@ -1,0 +1,80 @@
+{
+ "id": "boss.chono_saaral",
+ "minecraft": {
+  "rig": "suld-plugin/src/main/resources/models/chono_saaral/rig.json",
+  "displays": 8,
+  "elements": 21,
+  "tri_upper_bound": 252,
+  "elements_per_bone": {
+   "body": 3,
+   "head": 7,
+   "jaw": 1,
+   "leg_fl": 2,
+   "leg_fr": 2,
+   "leg_hl": 2,
+   "leg_hr": 2,
+   "tail": 2
+  },
+  "textures": {
+   "body": "64x64"
+  },
+  "texture_bytes": 1341,
+  "pack_bytes": 12522,
+  "models": 8,
+  "clips": {
+   "idle": {
+    "length": 60,
+    "loop": true,
+    "events": []
+   },
+   "walk": {
+    "length": 20,
+    "loop": true,
+    "events": []
+   },
+   "run": {
+    "length": 12,
+    "loop": true,
+    "events": []
+   },
+   "attack": {
+    "length": 12,
+    "loop": false,
+    "events": [
+     [
+      6,
+      "attack_hit"
+     ]
+    ]
+   },
+   "hurt": {
+    "length": 8,
+    "loop": false,
+    "events": []
+   },
+   "death": {
+    "length": 30,
+    "loop": false,
+    "events": [
+     [
+      14,
+      "death_fall"
+     ]
+    ]
+   }
+  },
+  "rest_bbox_blocks": {
+   "min": [
+    -0.297,
+    -0.016,
+    -1.031
+   ],
+   "max": [
+    0.297,
+    1.358,
+    1.11
+   ]
+  },
+  "display_flip": true
+ }
+}

@@ -16,15 +16,17 @@ import java.util.function.Consumer;
  */
 public final class SuldWorldCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("border", "pregen", "report");
+    private static final List<String> SUBS = List.of("border", "pregen", "report", "halls");
     private static final List<String> PREGEN = List.of("status", "start", "pause", "resume", "cancel", "restart", "full");
 
     private final WorldBorderService border;
     private final PregenService pregen;
+    private final mn.suld.plugin.dungeon.DungeonHalls halls;
 
-    public SuldWorldCommand(WorldBorderService border, PregenService pregen) {
+    public SuldWorldCommand(WorldBorderService border, PregenService pregen, mn.suld.plugin.dungeon.DungeonHalls halls) {
         this.border = border;
         this.pregen = pregen;
+        this.halls = halls;
     }
 
     @Override
@@ -58,6 +60,10 @@ public final class SuldWorldCommand implements TabExecutor {
                     }
                     default -> say.accept("/suldworld pregen " + String.join("|", PREGEN));
                 }
+            }
+            case "halls" -> {
+                if (halls == null) say.accept("Танхим алга.");
+                else halls.describe(say);
             }
             case "report" -> {
                 border.status().forEach(say);

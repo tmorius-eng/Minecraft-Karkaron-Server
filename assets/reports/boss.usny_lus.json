@@ -1,0 +1,72 @@
+{
+ "id": "boss.usny_lus",
+ "minecraft": {
+  "rig": "suld-plugin/src/main/resources/models/usny_lus/rig.json",
+  "displays": 5,
+  "elements": 15,
+  "tri_upper_bound": 180,
+  "elements_per_bone": {
+   "hips": 3,
+   "torso": 3,
+   "head": 3,
+   "arm_l": 3,
+   "arm_r": 3
+  },
+  "textures": {
+   "body": "128x128"
+  },
+  "texture_bytes": 1362,
+  "pack_bytes": 9115,
+  "models": 5,
+  "clips": {
+   "idle": {
+    "length": 60,
+    "loop": true,
+    "events": []
+   },
+   "walk": {
+    "length": 22,
+    "loop": true,
+    "events": []
+   },
+   "attack": {
+    "length": 14,
+    "loop": false,
+    "events": [
+     [
+      8,
+      "attack_hit"
+     ]
+    ]
+   },
+   "hurt": {
+    "length": 8,
+    "loop": false,
+    "events": []
+   },
+   "death": {
+    "length": 34,
+    "loop": false,
+    "events": [
+     [
+      18,
+      "death_fall"
+     ]
+    ]
+   }
+  },
+  "rest_bbox_blocks": {
+   "min": [
+    -0.516,
+    0.0,
+    -0.297
+   ],
+   "max": [
+    0.516,
+    2.234,
+    0.281
+   ]
+  },
+  "display_flip": true
+ }
+}

@@ -71,6 +71,7 @@ public final class DungeonService {
         final Set<UUID> waveMobs = new HashSet<>();
         final BossBar bar = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
         UUID bossId;
+        DungeonHalls.Hall hall;
         String phaseName = "";
         BukkitTask ticker;
 
@@ -90,6 +91,19 @@ public final class DungeonService {
 
     private final Map<UUID, ActiveRun> runsByParty = new HashMap<>();
     private final Map<UUID, ActiveRun> runsByEntity = new HashMap<>();
+    private final Set<UUID> pending = new HashSet<>();
+    private final Map<UUID, String> lastDungeon = new java.util.concurrent.ConcurrentHashMap<>();
+    private DungeonHalls halls;
+
+    public Optional<DungeonHalls> halls() {
+        return Optional.ofNullable(halls);
+    }
+
+    /** Runs then take place in the dungeon's hall (docs/world/DUNGEON_HALLS.md). */
+    public void halls(DungeonHalls h) {
+        this.halls = h;
+        h.hooks(this::isInAnyRun, id -> Optional.ofNullable(lastDungeon.get(id)));
+    }
 
     public DungeonService(Plugin plugin, SuldServices services, MobService mobs,
                           PartyService parties, BossService bosses) {
@@ -132,25 +146,75 @@ public final class DungeonService {
             if (profile.progression().level() < def.minLevel()) {
                 return Messages.error(p.getName() + " түвшин " + def.minLevel() + "-д хүрээгүй байна.");
             }
+            DungeonDefinition prev = mn.suld.plugin.content.DungeonContent.previous(def.id());
+            if (prev != null && !cleared(p, prev.id()) && !leader.hasPermission("suld.admin.world")) {
+                return Messages.error(p.getName() + " эхлээд «" + prev.displayName() + "»-г нэг удаа давах ёстой.");
+            }
             members.add(id);
         }
 
-        // the run's arena is where the party stands: never inside Kharkhorum (a safe zone) or right at its walls
+        if (halls != null && halls.ready()) {
+            // the run happens in the dungeon's own hall; the party gathers at its gate in the open world
+            mn.suld.api.dungeon.hall.DungeonSite site = halls.site(def.id()).orElse(null);
+            if (site == null) return Messages.error("Энэ агуйд танхим тохируулаагүй байна.");
+            if (!halls.nearGate(leader, def.id()) && !leader.hasPermission("suld.admin.world")) {
+                int[] xz = halls.gateXZ(site);
+                return Messages.error(def.displayName() + "-ийн хаалга дээр ирж орно: " + xz[0] + ", " + xz[1]
+                        + " (" + mn.suld.api.region.Navigation.compass(mn.suld.api.region.Navigation.bearing(
+                        xz[0] - leader.getLocation().getX(), xz[1] - leader.getLocation().getZ())) + " зүгт)");
+            }
+            if (!pending.add(party.id())) return Messages.error("Танхим бэлдэж байна, түр хүлээнэ үү.");
+            leader.sendMessage(Messages.info("Танхим бэлдэж байна…"));
+            Party fParty = party;
+            halls.acquire(site.theme()).whenComplete((hall, err) -> {
+                pending.remove(fParty.id());
+                if (err != null || hall == null || hall.isEmpty()) {
+                    if (leader.isOnline()) leader.sendMessage(Messages.error("Бүх танхим завгүй байна — хэдэн минутын дараа дахин оролдоно уу."));
+                    return;
+                }
+                Component again = begin(leader, def, fParty, members, hall.get());
+                if (again != null) {
+                    halls.release(hall.get());
+                    if (leader.isOnline()) leader.sendMessage(again);
+                }
+            });
+            return null;
+        }
+        // no halls world: the run's arena is where the party stands, never inside Kharkhorum or right at its walls
         org.bukkit.Location here = leader.getLocation();
         if (services.city().near(here.getWorld().getName(), here.getBlockX(), here.getBlockZ(), 24)) {
             return Messages.error("Хархорумд агуйн аян эхлэхгүй. Хотын хаалгаар гараад тал нутагт /dungeon enter.");
         }
-        ActiveRun ar = new ActiveRun(new DungeonRun(def.id(), party.id(), def.totalWaves()),
-                def, party, leader.getLocation().clone());
+        return begin(leader, def, party, members, null);
+    }
+
+    /** Starts the run (main thread); with a hall the party is moved into it, otherwise it fights where the leader stands. */
+    private Component begin(Player leader, DungeonDefinition def, Party party, Set<UUID> members, DungeonHalls.Hall hall) {
+        if (!leader.isOnline()) return Messages.error("Ахлагч гарсан.");
+        if (party.isDisbanded() || party.state() == PartyState.IN_DUNGEON || runsByParty.containsKey(party.id())) {
+            return Messages.error("Баг аль хэдийн агуйд явж байна.");
+        }
+        if (!party.members().equals(members)) return Messages.error("Танхим бэлдэх зуур баг өөрчлөгдсөн — дахин оролдоно уу.");
+        for (UUID id : members) {
+            if (Bukkit.getPlayer(id) == null) return Messages.error("Багийн гишүүн онлайн биш байна.");
+            if (services.isSoul.test(id)) return Messages.error("Сүнс төлөвтэй гишүүн байна — амилтал хүлээнэ үү.");
+        }
+        Location origin = hall == null ? leader.getLocation().clone() : hall.at(mn.suld.api.dungeon.hall.HallBlueprint.WAVE_CENTER);
+        ActiveRun ar = new ActiveRun(new DungeonRun(def.id(), party.id(), def.totalWaves()), def, party, origin);
+        ar.hall = hall;
         ar.participants.addAll(members);
         for (UUID id : members) services.session(id).dungeonRuns++;
         for (UUID id : members) services.dismissHorse.accept(id); // no riding an invulnerable horse through the run
+        for (UUID id : members) lastDungeon.put(id, def.id());
         runsByParty.put(party.id(), ar);
         party.enterDungeon();
 
+        Location enter = hall == null ? null : hall.at(mn.suld.api.dungeon.hall.HallBlueprint.PLAYER_SPAWN);
         for (UUID id : members) {
             Player p = Bukkit.getPlayer(id);
-            if (!p.getUniqueId().equals(leader.getUniqueId())) {
+            if (enter != null) {
+                p.teleportAsync(enter);
+            } else if (!p.getUniqueId().equals(leader.getUniqueId())) {
                 p.teleportAsync(ar.origin); // the leader's chunk is loaded, but a member far away must not block the tick
             }
             p.showBossBar(ar.bar);
@@ -165,7 +229,7 @@ public final class DungeonService {
             if (ar.run.state() == DungeonRunState.ENTERING) {
                 beginWave(ar);
             }
-        }, 60L);
+        }, hall == null ? 60L : 120L); // in a hall: time to walk out of the corridor
         return null;
     }
 
@@ -214,7 +278,7 @@ public final class DungeonService {
     private void spawnBoss(ActiveRun ar) {
         ar.run.enterBoss();
         MobDefinition bossMob = ar.def.bossDefinition().mob();
-        LivingEntity boss = mobs.spawn(bossMob, ar.origin.clone());
+        LivingEntity boss = mobs.spawn(bossMob, ar.hall == null ? ar.origin.clone() : ar.hall.at(mn.suld.api.dungeon.hall.HallBlueprint.BOSS_SPAWN));
         boss.setRemoveWhenFarAway(false);
         boss.addScoreboardTag(DUNGEON_TAG);
         ar.bossId = boss.getUniqueId();
@@ -253,6 +317,20 @@ public final class DungeonService {
         runsByEntity.put(add.getUniqueId(), ar);
         add.addScoreboardTag(DUNGEON_TAG);
         return true;
+    }
+
+    private final org.bukkit.NamespacedKey clearsKey = new org.bukkit.NamespacedKey("suld", "dungeon_clears");
+
+    /** True once {@code p} has cleared the dungeon (kept in the player's data; opens the next one on the ladder). */
+    public boolean cleared(Player p, String dungeonId) {
+        String s = p.getPersistentDataContainer().get(clearsKey, org.bukkit.persistence.PersistentDataType.STRING);
+        return s != null && java.util.Arrays.asList(s.split(",")).contains(dungeonId);
+    }
+
+    private void markCleared(Player p, String dungeonId) {
+        if (cleared(p, dungeonId)) return;
+        String s = p.getPersistentDataContainer().get(clearsKey, org.bukkit.persistence.PersistentDataType.STRING);
+        p.getPersistentDataContainer().set(clearsKey, org.bukkit.persistence.PersistentDataType.STRING, s == null || s.isEmpty() ? dungeonId : s + "," + dungeonId);
     }
 
     /** Clears of a dungeon by a player in the last {@link #FATIGUE_WINDOW_MS} (loot fatigue; in memory). */
@@ -309,6 +387,7 @@ public final class DungeonService {
         }
         ar.downed.remove(member);
         Player p = Bukkit.getPlayer(member);
+        if (p != null && ar.hall != null && halls != null) halls.sendOut(p, ar.def.id()); // never left behind in a hall
         if (p != null) {
             p.hideBossBar(ar.bar);
             services.profiles().cached(member).ifPresent(profile -> services.hud().update(p, profile));
@@ -409,6 +488,7 @@ public final class DungeonService {
                 }
             }
             services.quests().onDungeonCleared(p, profile, ar.def.id());
+            markCleared(p, ar.def.id());
             if (services.classArmor != null) services.classArmor.dungeonCleared(p, ar.def.id());
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_BOSS, id));
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.BOSS_PARTICIPATION, id,
@@ -469,6 +549,19 @@ public final class DungeonService {
             bosses.unregister(ar.bossId);
         }
         ar.waveMobs.clear();
+        if (ar.hall != null) {
+            DungeonHalls.Hall hall = ar.hall;
+            List<UUID> people = List.copyOf(ar.participants);
+            long delay = ar.run.state() == DungeonRunState.COMPLETE ? 100L : 20L; // a moment to see the win
+            Runnable out = () -> {
+                for (UUID id : people) {
+                    Player p = Bukkit.getPlayer(id);
+                    if (p != null) halls.sendOut(p, ar.def.id());
+                }
+                Bukkit.getScheduler().runTaskLater(plugin, () -> halls.release(hall), 40L);
+            };
+            if (plugin.isEnabled()) Bukkit.getScheduler().runTaskLater(plugin, out, delay); else halls.release(hall);
+        }
         runsByParty.remove(ar.party.id());
         if (!ar.party.isDisbanded()) {
             ar.party.exitDungeon();

@@ -36,6 +36,9 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
     private mn.suld.plugin.worldbuild.PregenService pregen;
+    private mn.suld.plugin.combat.CombatFeel combatFeel;
+    private mn.suld.plugin.dungeon.DungeonHalls halls;
+    private mn.suld.plugin.branding.TutorialService tutorial;
 
     @Override
     public void onEnable() {
@@ -78,9 +81,19 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(services.styles(), this);
         services.styles().start();
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.clan.ChatGuardListener(this), this);
+        mn.suld.plugin.clan.ChatChannels chatChannels = new mn.suld.plugin.clan.ChatChannels(this, services.parties(), services.clans());
+        getServer().getPluginManager().registerEvents(chatChannels, this);
+        chatChannels.start();
+        services.clans().channels(chatChannels);
         getServer().getPluginManager().registerEvents(
-                new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks()), this);
+                new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks(), chatChannels), this);
+        mn.suld.plugin.clan.ChatScreen chatScreen = new mn.suld.plugin.clan.ChatScreen(this, chatChannels);
+        for (String c : java.util.List.of("chat", "ch", "g", "l", "pc", "tr")) registerTab(c, chatScreen);
         services.hud().attach(this, services);
+        combatFeel = new mn.suld.plugin.combat.CombatFeel(this, services);
+        getServer().getPluginManager().registerEvents(combatFeel, this);
+        combatFeel.start();
+        services.hud().lockOn(combatFeel::target);
         services.styles().onChange(p -> services.hud().teamChanged(p));
         effects = new mn.suld.plugin.style.CosmeticEffects(this, services);
         getServer().getPluginManager().registerEvents(effects, this);
@@ -124,11 +137,15 @@ public final class SuldPlugin extends JavaPlugin {
         models.start();
         services.mobs().onSpawn = (entity, def) -> {
             String rig = mn.suld.plugin.content.SuldContent.modelFor(def.id());
+            if (rig == null && (def.tier() == mn.suld.api.mob.MobTier.BOSS || getConfig().getBoolean("models.mobs", true))) {
+                rig = models.rigForMob(def.id()).orElse(null);
+            }
             if (rig != null) models.attach(entity, rig);
         };
         // boss abilities (BossBrain): Хасар, the first rigged boss (docs/bosses/KHASAR.md)
         services.bosses().brain(mn.suld.plugin.content.SuldContent.KHASAR.id(), boss -> new mn.suld.plugin.dungeon.brain.KhasarBrain(
                 this, services, mn.suld.plugin.content.SuldContent.KHASAR, mn.suld.plugin.content.SuldContent.ORKHON_CHONO));
+        registerBossBrains();
         // class armour + ActivePlaytime (docs/CLASS_ARMOR_SYSTEM.md, docs/ACTIVE_PLAYTIME_SPEC.md)
         mn.suld.plugin.item.ClassArmor classArmor = new mn.suld.plugin.item.ClassArmor(this, services);
         services.classArmor = classArmor;
@@ -179,7 +196,12 @@ public final class SuldPlugin extends JavaPlugin {
         services.hud().glowSource(npcs::glowEntries);
         mn.suld.plugin.command.MenuCommands mc = new mn.suld.plugin.command.MenuCommands(services, menus);
         registerTab("menu", mc.menu());
-        registerTab("tutorial", mc.tutorial());
+        tutorial = new mn.suld.plugin.branding.TutorialService(this, services, menus);
+        getServer().getPluginManager().registerEvents(tutorial, this);
+        tutorial.start();
+        mn.suld.plugin.gui.SkillMapMenu.onOpen = p -> tutorial.opened(p, "skills");
+        mn.suld.plugin.gui.Menus.onQuests = p -> tutorial.opened(p, "quest");
+        registerTab("tutorial", tutorial);
         registerTab("cosmetics", mc.cosmetics());
         registerTab("shop", mc.shop());
         registerTab("buy", mc.buy());
@@ -281,11 +303,24 @@ public final class SuldPlugin extends JavaPlugin {
         owners.start();
 
         pregen = new mn.suld.plugin.worldbuild.PregenService(this, worldBuild);
+        halls = new mn.suld.plugin.dungeon.DungeonHalls(this, mn.suld.plugin.content.DungeonContent.SITES);
+        getServer().getPluginManager().registerEvents(halls, this);
+        halls.start();
+        services.dungeons().halls(halls);
+        if (tutorial != null) tutorial.hooks(p -> combatFeel == null ? java.util.Optional.empty() : combatFeel.target(p), halls::gate);
+        for (mn.suld.api.dungeon.hall.DungeonSite site : mn.suld.plugin.content.DungeonContent.SITES) {
+            int[] xz = halls.gateXZ(site); // the ground around every gate is generated ahead (P2)
+            pregen.addPoint(new mn.suld.plugin.worldbuild.PregenService.Point("gate." + site.shortId(),
+                    mn.suld.api.worldbuild.PregenPlan.Priority.P2, org.bukkit.Bukkit.getWorlds().get(0).getName(), xz[0], xz[1], 96));
+        }
         mn.suld.plugin.worldbuild.WorldBorderService border = new mn.suld.plugin.worldbuild.WorldBorderService(this);
         getServer().getPluginManager().registerEvents(border, this);
         border.apply("start");
-        worldBuild.onSpawnChanged(() -> border.apply("spawn moved"));
-        registerTab("suldworld", new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen));
+        worldBuild.onSpawnChanged(() -> {
+            border.apply("spawn moved");
+            halls.placeGates(); // gates follow the spawn like every region ring
+        });
+        registerTab("suldworld", new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls));
         pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
@@ -309,6 +344,8 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (combatFeel != null) combatFeel.shutdown();
+        if (halls != null) halls.shutdown();
         if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood
         if (services != null && services.skillTree != null) {
             services.skillTree.stop();
@@ -446,4 +483,62 @@ public final class SuldPlugin extends JavaPlugin {
     public SuldServices services() {
         return services;
     }
+
+    /** Every boss without a hand-written brain fights with archetype abilities (docs/bosses/BOSS_ABILITIES.md). */
+    private void registerBossBrains() {
+        record B(mn.suld.api.mob.MobDefinition boss, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour f) {
+        }
+        var A = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability.class;
+        java.util.function.Function<mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[], java.util.Set<mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability>> set =
+                a -> mn.suld.plugin.dungeon.brain.ArchetypeBrain.of(a);
+        var CLEAVE = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability.CLEAVE;
+        var SLAM = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability.SLAM;
+        var CHARGE = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability.CHARGE;
+        var BARRAGE = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability.BARRAGE;
+        var NOVA = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability.NOVA;
+        var SUMMON = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability.SUMMON;
+        var S = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.class;
+        var L = mn.suld.plugin.content.LadderContent.class;
+        java.util.List<B> all = java.util.List.of(
+                new B(mn.suld.plugin.content.DungeonContent.SAND_KHAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Элсний Хаан",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, SLAM, NOVA, SUMMON}), 0xE0B060, org.bukkit.Particle.WHITE_ASH,
+                        org.bukkit.Material.SAND, org.bukkit.Sound.ENTITY_HUSK_AMBIENT, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.BLIND,
+                        mn.suld.plugin.content.WorldContent.SAND_SPIRIT)),
+                new B(mn.suld.plugin.content.DungeonContent.FOREST_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Ойн Эзэн",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, NOVA, SUMMON}), 0x4F7830, org.bukkit.Particle.SPORE_BLOSSOM_AIR,
+                        org.bukkit.Material.MOSS_BLOCK, org.bukkit.Sound.ENTITY_POLAR_BEAR_WARNING, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
+                        mn.suld.plugin.content.WorldContent.GREY_WOLF)),
+                new B(mn.suld.plugin.content.DungeonContent.ICE_KHAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Мөсөн Хаан",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, BARRAGE, NOVA, SUMMON}), 0x9ED2EE, org.bukkit.Particle.SNOWFLAKE,
+                        org.bukkit.Material.PACKED_ICE, org.bukkit.Sound.BLOCK_GLASS_BREAK, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.SLOW,
+                        mn.suld.plugin.content.WorldContent.ICE_SPIRIT)),
+                new B(mn.suld.plugin.content.LadderContent.LUS_KHAAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Лусын Хаан",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{BARRAGE, SLAM, NOVA, SUMMON}), 0x40FFE0, org.bukkit.Particle.BUBBLE_POP,
+                        org.bukkit.Material.PRISMARINE, org.bukkit.Sound.ENTITY_ELDER_GUARDIAN_CURSE, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PULL,
+                        mn.suld.plugin.content.LadderContent.LUS)),
+                new B(mn.suld.plugin.content.LadderContent.BLACK_GENERAL, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хар Жанжин",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, SLAM, SUMMON}), 0xA01414, org.bukkit.Particle.SMOKE,
+                        org.bukkit.Material.RED_SAND, org.bukkit.Sound.ENTITY_WITHER_SKELETON_AMBIENT, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.BLIND,
+                        mn.suld.plugin.content.LadderContent.TANGUT_GHOST)),
+                new B(mn.suld.plugin.content.LadderContent.RED_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Улаан Хадны Ноён",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, NOVA, SUMMON}), 0xD84A3C, org.bukkit.Particle.FLAME,
+                        org.bukkit.Material.RED_TERRACOTTA, org.bukkit.Sound.EVENT_RAID_HORN, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
+                        mn.suld.plugin.content.LadderContent.RAIDER)),
+                new B(mn.suld.plugin.content.LadderContent.MOUNTAIN_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хангай Савдаг",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{SLAM, CHARGE, NOVA, SUMMON}), 0x7AFF6A, org.bukkit.Particle.HAPPY_VILLAGER,
+                        org.bukkit.Material.STONE, org.bukkit.Sound.ENTITY_RAVAGER_ROAR, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
+                        mn.suld.plugin.content.LadderContent.SAVDAG)),
+                new B(mn.suld.plugin.content.LadderContent.SKY_ENVOY, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хөх Тэнгэрийн Элч",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{BARRAGE, SLAM, NOVA, SUMMON}), 0x80C0FF, org.bukkit.Particle.ELECTRIC_SPARK,
+                        org.bukkit.Material.LIGHT_BLUE_CONCRETE, org.bukkit.Sound.ITEM_TRIDENT_THUNDER, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.SLOW,
+                        mn.suld.plugin.content.LadderContent.SKY_SOLDIER)),
+                new B(mn.suld.plugin.content.LadderContent.BANNER_GUARDIAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хөх Сүлдийн Сахиул",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, BARRAGE, NOVA, SUMMON}), 0x3A6AE0, org.bukkit.Particle.END_ROD,
+                        org.bukkit.Material.GOLD_BLOCK, org.bukkit.Sound.ENTITY_WARDEN_SONIC_BOOM, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
+                        mn.suld.plugin.content.LadderContent.PALACE_GUARD)));
+        for (B b : all) {
+            services.bosses().brain(b.boss().id(), boss -> new mn.suld.plugin.dungeon.brain.ArchetypeBrain(this, services, b.boss(), b.f()));
+        }
+    }
+
 }

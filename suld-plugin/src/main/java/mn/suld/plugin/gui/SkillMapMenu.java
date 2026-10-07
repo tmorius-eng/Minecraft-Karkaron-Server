@@ -101,7 +101,11 @@ public final class SkillMapMenu implements Listener {
         this.sky = sky;
     }
 
+    /** Told whenever the skill tree opens (the tutorial's step); set by the plugin. */
+    public static volatile java.util.function.Consumer<Player> onOpen = p -> { };
+
     public void open(Player p) {
+        onOpen.accept(p);
         if (sky != null && sky.open(p)) return;
         open(p, null);
     }

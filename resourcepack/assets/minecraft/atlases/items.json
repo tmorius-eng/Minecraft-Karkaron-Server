@@ -9,6 +9,156 @@
    "type": "directory",
    "source": "entity/skytree",
    "prefix": "entity/skytree/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/vfx",
+   "prefix": "entity/vfx/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/chono_govi",
+   "prefix": "entity/chono_govi/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/chono_orkhon",
+   "prefix": "entity/chono_orkhon/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/chono_saaral",
+   "prefix": "entity/chono_saaral/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/baavgai",
+   "prefix": "entity/baavgai/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/oin_ezen",
+   "prefix": "entity/oin_ezen/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/deeremchin",
+   "prefix": "entity/deeremchin/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/elsnii_suns",
+   "prefix": "entity/elsnii_suns/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/mosun_suns",
+   "prefix": "entity/mosun_suns/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/elsnii_khaan",
+   "prefix": "entity/elsnii_khaan/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/mosun_khaan",
+   "prefix": "entity/mosun_khaan/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/altai_avarga",
+   "prefix": "entity/altai_avarga/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/khilents",
+   "prefix": "entity/khilents/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/usny_lus",
+   "prefix": "entity/usny_lus/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/dalain_chono",
+   "prefix": "entity/dalain_chono/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/lusyn_khaan",
+   "prefix": "entity/lusyn_khaan/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/tangud_suns",
+   "prefix": "entity/tangud_suns/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/balgasny_khilents",
+   "prefix": "entity/balgasny_khilents/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/khar_janjin",
+   "prefix": "entity/khar_janjin/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/khureenii_kharuul",
+   "prefix": "entity/khureenii_kharuul/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/dainy_chono",
+   "prefix": "entity/dainy_chono/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/ulaan_khadny_noyon",
+   "prefix": "entity/ulaan_khadny_noyon/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/uulyn_savdag",
+   "prefix": "entity/uulyn_savdag/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/aguin_baavgai",
+   "prefix": "entity/aguin_baavgai/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/khangai_savdag",
+   "prefix": "entity/khangai_savdag/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/tengeriin_tsereg",
+   "prefix": "entity/tengeriin_tsereg/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/tengeriin_chono",
+   "prefix": "entity/tengeriin_chono/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/khukh_tengeriin_elch",
+   "prefix": "entity/khukh_tengeriin_elch/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/ordny_sakhiul",
+   "prefix": "entity/ordny_sakhiul/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/khukh_suldiin_sakhiul",
+   "prefix": "entity/khukh_suldiin_sakhiul/"
   }
  ]
 }

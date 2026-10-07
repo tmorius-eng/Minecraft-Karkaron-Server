@@ -1,0 +1,135 @@
+{
+ "id": "baavgai",
+ "scale": 1.0,
+ "hostHeight": 1.4,
+ "bones": [
+  {
+   "id": "root",
+   "parent": null,
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": false
+  },
+  {
+   "id": "body",
+   "parent": "root",
+   "pivot": [
+    0,
+    0.875,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "head",
+   "parent": "body",
+   "pivot": [
+    0,
+    1,
+    0.75
+   ],
+   "rest": [
+    -6,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "jaw",
+   "parent": "head",
+   "pivot": [
+    0,
+    0.7812,
+    1.125
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_fl",
+   "parent": "body",
+   "pivot": [
+    0.2812,
+    0.5625,
+    0.4688
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_fr",
+   "parent": "body",
+   "pivot": [
+    -0.2812,
+    0.5625,
+    0.4688
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_hl",
+   "parent": "body",
+   "pivot": [
+    0.2812,
+    0.5625,
+    -0.5625
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_hr",
+   "parent": "body",
+   "pivot": [
+    -0.2812,
+    0.5625,
+    -0.5625
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  }
+ ],
+ "parts": []
+}

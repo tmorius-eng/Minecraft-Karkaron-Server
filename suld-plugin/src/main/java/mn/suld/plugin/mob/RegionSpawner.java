@@ -70,7 +70,7 @@ public final class RegionSpawner {
 
     private boolean eligible(Player p) {
         return p.isValid() && !p.isDead() && (p.getGameMode() == GameMode.SURVIVAL || p.getGameMode() == GameMode.ADVENTURE)
-                && p.getWorld().getEnvironment() == World.Environment.NORMAL
+                && p.getWorld().equals(Bukkit.getWorlds().get(0)) // the overworld only: not the dungeon halls
                 && !services.dungeons().isInAnyRun(p.getUniqueId())
                 && !services.city().near(p.getWorld().getName(), p.getLocation().getBlockX(), p.getLocation().getBlockZ(), CITY_MARGIN);
     }
@@ -128,7 +128,7 @@ public final class RegionSpawner {
 
     /** Title when a player crosses into another wild region: name, description and level band. */
     private void announceRegion(Player p) {
-        if (p.getWorld().getEnvironment() != World.Environment.NORMAL) return;
+        if (!p.getWorld().equals(Bukkit.getWorlds().get(0))) return; // regions exist in the overworld only
         RegionDefinition r = regionAt(p.getLocation()).orElse(null);
         String id = r == null ? "" : r.id();
         String before = lastRegion.put(p.getUniqueId(), id);

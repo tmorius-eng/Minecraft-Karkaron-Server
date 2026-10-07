@@ -116,10 +116,24 @@ class Shelf:
 class Exporter:
     def __init__(self, rig_name, display_flip=True):
         self.name = rig_name
-        self.mod = importlib.import_module(rig_name)
-        self.paint = importlib.import_module(rig_name + "_paint")
-        self.clips_mod = importlib.import_module(rig_name + "_clips")
-        self.R = self.mod.RIG
+        try:
+            self.mod = importlib.import_module(rig_name)
+            self.paint = importlib.import_module(rig_name + "_paint")
+            self.clips_mod = importlib.import_module(rig_name + "_clips")
+            self.R = self.mod.RIG
+        except ModuleNotFoundError:
+            # the body-plan rigs of tools/model/fauna.py share one painter and one set of clips
+            import types
+            import fauna
+            import fauna_clips
+            import fauna_paint
+            if rig_name not in fauna.RIGS:
+                raise SystemExit(f"no rig {rig_name!r} (neither tools/model/{rig_name}.py nor fauna.RIGS)")
+            self.R = fauna.rig(rig_name)
+            self.mod = types.SimpleNamespace(RIG=self.R)
+            self.paint = fauna_paint.painter(self.R)
+            R = self.R
+            self.clips_mod = types.SimpleNamespace(build=lambda rigj: fauna_clips.clips_for(R))
         self.flip = display_flip
         self.bones = self.R["bones"]
         self.by_id = {b["id"]: b for b in self.bones}

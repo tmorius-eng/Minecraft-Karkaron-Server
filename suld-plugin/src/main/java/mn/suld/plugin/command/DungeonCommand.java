@@ -53,13 +53,30 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
     }
 
     private void list(Player player) {
-        player.sendMessage(Messages.accent("Агуйнууд"));
+        player.sendMessage(Messages.accent("Агуйнууд — хаалга дээр нь очиж орно"));
+        int level = services.profiles().cached(player.getUniqueId()).map(p -> p.progression().level()).orElse(1);
+        var halls = services.dungeons().halls().orElse(null);
         for (DungeonDefinition d : mn.suld.plugin.content.DungeonContent.ALL) {
-            player.sendMessage(Messages.info(shortId(d) + " — " + d.displayName() + " · " + mn.suld.plugin.content.DungeonContent.where(d.id())
+            DungeonDefinition prev = mn.suld.plugin.content.DungeonContent.previous(d.id());
+            boolean done = services.dungeons().cleared(player, d.id());
+            boolean open = level >= d.minLevel() && (prev == null || services.dungeons().cleared(player, prev.id()));
+            String mark = done ? "✔ " : open ? "▶ " : "🔒 ";
+            String gate = "";
+            if (halls != null) {
+                var site = halls.site(d.id()).orElse(null);
+                if (site != null) {
+                    int[] xz = halls.gateXZ(site);
+                    double b = mn.suld.api.region.Navigation.bearing(xz[0] - player.getLocation().getX(), xz[1] - player.getLocation().getZ());
+                    int dist = (int) Math.hypot(xz[0] - player.getLocation().getX(), xz[1] - player.getLocation().getZ());
+                    gate = " · хаалга " + xz[0] + ", " + xz[1] + " (" + mn.suld.api.region.Navigation.compass(b) + ", " + dist + " блок)";
+                }
+            }
+            String lock = open || done ? "" : level < d.minLevel() ? " · түвшин " + d.minLevel() + " хэрэгтэй" : " · эхлээд «" + prev.displayName() + "»";
+            player.sendMessage(Messages.info(mark + shortId(d) + " — " + d.displayName() + " · " + mn.suld.plugin.content.DungeonContent.where(d.id())
                     + " (түвшин " + d.minLevel() + "+, " + d.minPartySize() + "–" + d.maxPartySize() + " тоглогч, "
-                    + d.totalWaves() + " давалгаа + босс)"));
+                    + d.totalWaves() + " давалгаа + босс)" + gate + lock));
         }
-        player.sendMessage(Messages.info("Эхлүүлэх: тал нутагт /dungeon enter <нэр>"));
+        player.sendMessage(Messages.info("Хаалгыг дарах эсвэл хаалган дээр /dungeon enter <нэр>"));
     }
 
     private void enter(Player player, String rawId) {

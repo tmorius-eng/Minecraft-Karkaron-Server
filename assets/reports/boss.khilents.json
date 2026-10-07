@@ -1,0 +1,80 @@
+{
+ "id": "boss.khilents",
+ "minecraft": {
+  "rig": "suld-plugin/src/main/resources/models/khilents/rig.json",
+  "displays": 8,
+  "elements": 32,
+  "tri_upper_bound": 384,
+  "elements_per_bone": {
+   "body": 4,
+   "claw_l": 4,
+   "claw_r": 4,
+   "legs_l": 8,
+   "legs_r": 8,
+   "tail_1": 1,
+   "tail_2": 1,
+   "tail_3": 2
+  },
+  "textures": {
+   "body": "64x64"
+  },
+  "texture_bytes": 1133,
+  "pack_bytes": 17347,
+  "models": 8,
+  "clips": {
+   "idle": {
+    "length": 40,
+    "loop": true,
+    "events": []
+   },
+   "walk": {
+    "length": 10,
+    "loop": true,
+    "events": []
+   },
+   "run": {
+    "length": 6,
+    "loop": true,
+    "events": []
+   },
+   "attack": {
+    "length": 12,
+    "loop": false,
+    "events": [
+     [
+      7,
+      "attack_hit"
+     ]
+    ]
+   },
+   "hurt": {
+    "length": 8,
+    "loop": false,
+    "events": []
+   },
+   "death": {
+    "length": 26,
+    "loop": false,
+    "events": [
+     [
+      12,
+      "death_fall"
+     ]
+    ]
+   }
+  },
+  "rest_bbox_blocks": {
+   "min": [
+    -0.631,
+    -0.031,
+    -0.667
+   ],
+   "max": [
+    0.631,
+    1.219,
+    1.038
+   ]
+  },
+  "display_flip": true
+ }
+}

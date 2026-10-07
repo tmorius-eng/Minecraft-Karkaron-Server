@@ -59,7 +59,11 @@ public final class ModelService implements Listener {
         models.clear();
         String index = resource("models/index.json");
         if (index == null) return;
-        for (Object o : mn.suld.api.json.Json.array(mn.suld.api.json.Json.object(mn.suld.api.json.Json.parse(index)).get("models"))) {
+        java.util.Map<String, Object> idx = mn.suld.api.json.Json.object(mn.suld.api.json.Json.parse(index));
+        mobRigs.clear();
+        Object mobs = idx.get("mobs");
+        if (mobs != null) mn.suld.api.json.Json.object(mobs).forEach((mob, rig) -> mobRigs.put(mob, String.valueOf(rig)));
+        for (Object o : mn.suld.api.json.Json.array(idx.get("models"))) {
             String id = String.valueOf(o);
             String rig = resource("models/" + id + "/rig.json"), clips = resource("models/" + id + "/clips.json");
             if (rig == null || clips == null) {
@@ -87,6 +91,14 @@ public final class ModelService implements Listener {
 
     public void start() {
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
+    }
+
+    private final Map<String, String> mobRigs = new java.util.HashMap<>();
+
+    /** The rig a SÜLD mob is dressed in (models/index.json "mobs"), if it is loaded. */
+    public Optional<String> rigForMob(String mobId) {
+        String r = mobRigs.get(mobId);
+        return r != null && models.containsKey(r) ? Optional.of(r) : Optional.empty();
     }
 
     public boolean has(String modelId) {
@@ -170,6 +182,13 @@ public final class ModelService implements Listener {
     public void onDamage(EntityDamageEvent e) {
         ModelInstance i = byHost.get(e.getEntity().getUniqueId());
         if (i != null && e.getFinalDamage() > 0) i.flash();
+    }
+
+    /** A rigged mob that lands a hit plays its attack clip (bosses with a brain play their own clips instead). */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHit(org.bukkit.event.entity.EntityDamageByEntityEvent e) {
+        ModelInstance i = byHost.get(e.getDamager().getUniqueId());
+        if (i != null && i.model().clip("attack") != null) i.play("attack", null);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

@@ -65,10 +65,31 @@ public final class DungeonContent {
 
     // ------------------------------------------------------------------ registry
 
-    /** Every dungeon in recommended order (Khasar's Den first). */
-    public static final List<DungeonDefinition> ALL = List.of(SuldContent.KHASAR_DEN, GOBI_TOMB, BEAR_LAIR, ICE_PEAK);
+    /**
+     * Where each dungeon's gate stands (bearing from the spawn, distance) and how its hall looks
+     * (docs/world/DUNGEON_HALLS.md): each inside its region, further out as the level rises.
+     */
+    public static final List<mn.suld.api.dungeon.hall.DungeonSite> SITES = List.of(
+            new mn.suld.api.dungeon.hall.DungeonSite(SuldContent.KHASAR_DEN.id(), mn.suld.api.dungeon.hall.HallTheme.DEN, 75, 380),
+            new mn.suld.api.dungeon.hall.DungeonSite("dungeon.govi_bulsh", mn.suld.api.dungeon.hall.HallTheme.TOMB, 165, 650),
+            new mn.suld.api.dungeon.hall.DungeonSite("dungeon.baavgain_uur", mn.suld.api.dungeon.hall.HallTheme.LAIR, 20, 1000),
+            new mn.suld.api.dungeon.hall.DungeonSite("dungeon.mosun_orgil", mn.suld.api.dungeon.hall.HallTheme.PEAK, 255, 1400),
+            LadderContent.SITES.get(0), LadderContent.SITES.get(1), LadderContent.SITES.get(2),
+            LadderContent.SITES.get(3), LadderContent.SITES.get(4), LadderContent.SITES.get(5));
 
-    public static final List<MobDefinition> BOSSES = List.of(SAND_KHAN, FOREST_LORD, ICE_KHAN);
+    /** Every dungeon in recommended order (Khasar's Den first). */
+    public static final List<DungeonDefinition> ALL = List.of(SuldContent.KHASAR_DEN, GOBI_TOMB, BEAR_LAIR, ICE_PEAK,
+            LadderContent.DEEP, LadderContent.RUIN, LadderContent.REDROCK, LadderContent.SACRED, LadderContent.SKYSTAIR, LadderContent.PALACE);
+
+    public static final List<MobDefinition> BOSSES = List.of(SAND_KHAN, FOREST_LORD, ICE_KHAN,
+            LadderContent.LUS_KHAAN, LadderContent.BLACK_GENERAL, LadderContent.RED_LORD, LadderContent.MOUNTAIN_LORD,
+            LadderContent.SKY_ENVOY, LadderContent.BANNER_GUARDIAN);
+
+    /** The dungeon before {@code id} on the ladder (it must be cleared once first), or null for the first. */
+    public static DungeonDefinition previous(String id) {
+        for (int i = 1; i < ALL.size(); i++) if (ALL.get(i).id().equals(id)) return ALL.get(i - 1);
+        return null;
+    }
 
     private static final Map<String, Completion> COMPLETION = Map.of(
             SuldContent.KHASAR_DEN.id(), new Completion(SuldContent.KHASAR_DEN_COMPLETION_EXP, SuldContent.KHASAR_DEN_COMPLETION_CURRENCY),
@@ -77,6 +98,8 @@ public final class DungeonContent {
             ICE_PEAK.id(), new Completion(4800, 420));
 
     public static Completion completion(String dungeonId) {
+        Completion ladder = LadderContent.completion(dungeonId);
+        if (ladder != null) return ladder;
         return COMPLETION.getOrDefault(dungeonId, new Completion(SuldContent.KHASAR_DEN_COMPLETION_EXP, SuldContent.KHASAR_DEN_COMPLETION_CURRENCY));
     }
 
@@ -85,7 +108,9 @@ public final class DungeonContent {
         return switch (dungeonId) {
             case "dungeon.govi_bulsh" -> WorldContent.GOBI.id();
             case "dungeon.baavgain_uur" -> WorldContent.KHANGAI.id();
-            case "dungeon.mosun_orgil" -> WorldContent.ALTAI.id();
+            case "dungeon.mosun_orgil", "dungeon.tengeriin_shat" -> WorldContent.ALTAI.id();
+            case "dungeon.dalain_gun", "dungeon.tengeriin_ordon" -> WorldContent.KHANGAI.id();
+            case "dungeon.khar_khot" -> WorldContent.GOBI.id();
             default -> WorldContent.KHERLEN.id();
         };
     }
@@ -96,7 +121,7 @@ public final class DungeonContent {
             case "dungeon.govi_bulsh" -> "Говь (өмнө)";
             case "dungeon.baavgain_uur" -> "Хангай (хойд)";
             case "dungeon.mosun_orgil" -> "Алтай (баруун)";
-            default -> "Хэрлэнгийн тал";
+            default -> LadderContent.where(dungeonId) != null ? LadderContent.where(dungeonId) : "Хэрлэнгийн тал";
         };
     }
 }

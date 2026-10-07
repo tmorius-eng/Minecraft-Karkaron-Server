@@ -1,0 +1,151 @@
+{
+ "id": "khar_janjin",
+ "scale": 1.5,
+ "hostHeight": 2.925,
+ "bones": [
+  {
+   "id": "root",
+   "parent": null,
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": false
+  },
+  {
+   "id": "hips",
+   "parent": "root",
+   "pivot": [
+    0,
+    0.75,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "torso",
+   "parent": "hips",
+   "pivot": [
+    0,
+    0.75,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "head",
+   "parent": "torso",
+   "pivot": [
+    0,
+    1.5,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "arm_l",
+   "parent": "torso",
+   "pivot": [
+    0.375,
+    1.375,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "arm_r",
+   "parent": "torso",
+   "pivot": [
+    -0.375,
+    1.375,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_l",
+   "parent": "hips",
+   "pivot": [
+    0.125,
+    0.75,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "leg_r",
+   "parent": "hips",
+   "pivot": [
+    -0.125,
+    0.75,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "weapon",
+   "parent": "arm_r",
+   "pivot": [
+    -0.375,
+    0.6406,
+    0
+   ],
+   "rest": [
+    -80,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  }
+ ],
+ "parts": []
+}

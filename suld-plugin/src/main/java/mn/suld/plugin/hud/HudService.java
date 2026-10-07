@@ -71,6 +71,11 @@ public final class HudService {
 
     private HudPanel panel;
 
+    /** The lock-on target source (CombatFeel): the target frame shows it before whatever the crosshair touches. */
+    public void lockOn(java.util.function.Function<org.bukkit.entity.Player, java.util.Optional<? extends org.bukkit.entity.Entity>> f) {
+        if (panel != null) panel.lockOn(f);
+    }
+
     /** Wire the services the HUD reads (called once everything exists) and start the refresh tickers. */
     public void attach(Plugin plugin, SuldServices services) {
         this.plugin = plugin;

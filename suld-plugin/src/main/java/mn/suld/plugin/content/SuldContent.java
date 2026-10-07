@@ -166,6 +166,11 @@ public final class SuldContent {
                 return m;
             }
         }
+        for (MobDefinition m : LadderContent.MOBS) {
+            if (m.id().equals(id)) {
+                return m;
+            }
+        }
         return null;
     }
 

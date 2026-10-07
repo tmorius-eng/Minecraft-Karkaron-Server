@@ -391,15 +391,17 @@ public final class NpcService implements Listener {
                         }
                         pl.closeInventory();
                         if (!travelling.add(pl.getUniqueId())) return; // a second click while the first trip loads
+                        pr.addCurrency(-TRAVEL_COST); // paid up front, refunded if the trip fails
                         mn.suld.plugin.perf.SafeTeleport.to(plugin, pl, to.clone().add(1.5, 0, 1.5),
                                 org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.PLUGIN, ok -> {
                                     travelling.remove(pl.getUniqueId());
                                     if (!ok) {
-                                        pl.sendMessage(Messages.error("Аялал боломжгүй боллоо — зоос хасагдсангүй."));
+                                        pr.addCurrency(TRAVEL_COST);
+                                        services.profiles().save(pr);
+                                        pl.sendMessage(Messages.error("Аялал боломжгүй боллоо — зоос буцаагдлаа."));
                                         return;
                                     }
-                                    long pay = Math.min(TRAVEL_COST, Math.max(0, pr.currency()));
-                                    pr.addCurrency(-pay);
+                                    long pay = TRAVEL_COST;
                                     services.profiles().save(pr);
                                     pl.playSound(pl.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1f);
                                     pl.sendMessage(Messages.success("Өртөөгөөр " + r.getValue() + " хүрлээ (-" + pay + " ₮)."));

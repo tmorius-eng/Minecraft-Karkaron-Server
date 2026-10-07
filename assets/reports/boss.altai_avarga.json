@@ -1,0 +1,80 @@
+{
+ "id": "boss.altai_avarga",
+ "minecraft": {
+  "rig": "suld-plugin/src/main/resources/models/altai_avarga/rig.json",
+  "displays": 8,
+  "elements": 16,
+  "tri_upper_bound": 192,
+  "elements_per_bone": {
+   "hips": 1,
+   "torso": 3,
+   "head": 2,
+   "arm_l": 2,
+   "arm_r": 2,
+   "leg_l": 2,
+   "leg_r": 2,
+   "weapon": 2
+  },
+  "textures": {
+   "body": "128x128"
+  },
+  "texture_bytes": 1377,
+  "pack_bytes": 10858,
+  "models": 8,
+  "clips": {
+   "idle": {
+    "length": 60,
+    "loop": true,
+    "events": []
+   },
+   "walk": {
+    "length": 22,
+    "loop": true,
+    "events": []
+   },
+   "attack": {
+    "length": 14,
+    "loop": false,
+    "events": [
+     [
+      8,
+      "attack_hit"
+     ]
+    ]
+   },
+   "hurt": {
+    "length": 8,
+    "loop": false,
+    "events": []
+   },
+   "death": {
+    "length": 34,
+    "loop": false,
+    "events": [
+     [
+      18,
+      "death_fall"
+     ]
+    ]
+   },
+   "run": {
+    "length": 14,
+    "loop": true,
+    "events": []
+   }
+  },
+  "rest_bbox_blocks": {
+   "min": [
+    -0.562,
+    0.0,
+    -0.25
+   ],
+   "max": [
+    0.562,
+    2.0,
+    0.328
+   ]
+  },
+  "display_flip": true
+ }
+}

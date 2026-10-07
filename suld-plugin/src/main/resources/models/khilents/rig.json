@@ -1,0 +1,151 @@
+{
+ "id": "khilents",
+ "scale": 1.0,
+ "hostHeight": 0.6,
+ "bones": [
+  {
+   "id": "root",
+   "parent": null,
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": false
+  },
+  {
+   "id": "body",
+   "parent": "root",
+   "pivot": [
+    0,
+    0.25,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "claw_l",
+   "parent": "body",
+   "pivot": [
+    0.1875,
+    0.25,
+    0.375
+   ],
+   "rest": [
+    0,
+    -18,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "claw_r",
+   "parent": "body",
+   "pivot": [
+    -0.1875,
+    0.25,
+    0.375
+   ],
+   "rest": [
+    0,
+    18,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "legs_l",
+   "parent": "body",
+   "pivot": [
+    0.2188,
+    0.25,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "legs_r",
+   "parent": "body",
+   "pivot": [
+    -0.2188,
+    0.25,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "tail_1",
+   "parent": "body",
+   "pivot": [
+    0,
+    0.3125,
+    -0.375
+   ],
+   "rest": [
+    55,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "tail_2",
+   "parent": "tail_1",
+   "pivot": [
+    0,
+    0.3125,
+    -0.75
+   ],
+   "rest": [
+    45,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "tail_3",
+   "parent": "tail_2",
+   "pivot": [
+    0,
+    0.3125,
+    -1.125
+   ],
+   "rest": [
+    50,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  }
+ ],
+ "parts": []
+}

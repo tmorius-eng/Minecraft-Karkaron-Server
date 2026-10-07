@@ -1,0 +1,103 @@
+{
+ "id": "mosun_suns",
+ "scale": 1.0,
+ "hostHeight": 1.95,
+ "bones": [
+  {
+   "id": "root",
+   "parent": null,
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": false
+  },
+  {
+   "id": "hips",
+   "parent": "root",
+   "pivot": [
+    0,
+    0.9375,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "torso",
+   "parent": "hips",
+   "pivot": [
+    0,
+    0.9375,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "head",
+   "parent": "torso",
+   "pivot": [
+    0,
+    1.6875,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "arm_l",
+   "parent": "torso",
+   "pivot": [
+    0.375,
+    1.5625,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  },
+  {
+   "id": "arm_r",
+   "parent": "torso",
+   "pivot": [
+    -0.375,
+    1.5625,
+    0
+   ],
+   "rest": [
+    0,
+    0,
+    0
+   ],
+   "model": true,
+   "scale": 1
+  }
+ ],
+ "parts": []
+}

@@ -232,7 +232,11 @@ public final class Menus {
     }
 
     /** The storyline: every chapter as a card — done ✔, active (glowing, with progress) or locked. */
+    /** Told whenever the quest screen opens (the tutorial's step); set by the plugin. */
+    public static volatile java.util.function.Consumer<Player> onQuests = p -> { };
+
     public void quests(Player p) {
+        onQuests.accept(p);
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         var chain = services.quests().chain();

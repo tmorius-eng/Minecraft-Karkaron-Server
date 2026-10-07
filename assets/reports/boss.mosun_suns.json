@@ -1,0 +1,72 @@
+{
+ "id": "boss.mosun_suns",
+ "minecraft": {
+  "rig": "suld-plugin/src/main/resources/models/mosun_suns/rig.json",
+  "displays": 5,
+  "elements": 20,
+  "tri_upper_bound": 240,
+  "elements_per_bone": {
+   "hips": 3,
+   "torso": 3,
+   "head": 8,
+   "arm_l": 3,
+   "arm_r": 3
+  },
+  "textures": {
+   "body": "128x128"
+  },
+  "texture_bytes": 1356,
+  "pack_bytes": 11411,
+  "models": 5,
+  "clips": {
+   "idle": {
+    "length": 60,
+    "loop": true,
+    "events": []
+   },
+   "walk": {
+    "length": 22,
+    "loop": true,
+    "events": []
+   },
+   "attack": {
+    "length": 14,
+    "loop": false,
+    "events": [
+     [
+      8,
+      "attack_hit"
+     ]
+    ]
+   },
+   "hurt": {
+    "length": 8,
+    "loop": false,
+    "events": []
+   },
+   "death": {
+    "length": 34,
+    "loop": false,
+    "events": [
+     [
+      18,
+      "death_fall"
+     ]
+    ]
+   }
+  },
+  "rest_bbox_blocks": {
+   "min": [
+    -0.516,
+    0.0,
+    -0.281
+   ],
+   "max": [
+    0.516,
+    2.562,
+    0.281
+   ]
+  },
+  "display_flip": true
+ }
+}

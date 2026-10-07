@@ -122,6 +122,15 @@ world-events:
 # ---------------------------------------------------------------------------
 # Chat protection: rate limit, repeated messages, other servers' addresses/IPs (allowed-domains pass; empty =
 # branding.domain) and SHOUTING (lowered). Staff with suld.chat.bypass are not limited.
+# SÜLD chat channels (docs/CHAT.md): /chat screen, /ch, /g /l /pc /tr /cc. heads: the speaker's head in front of every line.
+chat:
+  heads: true
+
+# 3D models (docs/models/MOB_RIGS.md): every SÜLD mob and boss is drawn by a Display-Entity rig. mobs: false keeps
+# only the bosses rigged (fewer entities on a weak server); the renderer's LOD already freezes rigs nobody is near.
+models:
+  mobs: true
+
 chat-guard:
   enabled: true
   max-messages: 4

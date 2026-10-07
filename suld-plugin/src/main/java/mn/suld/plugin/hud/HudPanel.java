@@ -82,6 +82,12 @@ final class HudPanel implements Listener {
     private final Map<UUID, Toast> toasts = new ConcurrentHashMap<>();
     private final Map<UUID, Chip> hpChips = new ConcurrentHashMap<>();
     private final Map<UUID, Target> targets = new ConcurrentHashMap<>();
+    /** The lock-on target (CombatFeel), preferred over whatever the crosshair touches. */
+    private java.util.function.Function<Player, java.util.Optional<? extends Entity>> lockOn = p -> java.util.Optional.empty();
+
+    public void lockOn(java.util.function.Function<Player, java.util.Optional<? extends Entity>> f) {
+        lockOn = f == null ? p -> java.util.Optional.empty() : f;
+    }
     private final Map<UUID, BossBar> targetBars = new ConcurrentHashMap<>();
     private long frame;
 
@@ -188,6 +194,7 @@ final class HudPanel implements Listener {
     }
 
     void forget(UUID id) {
+        lastEventRender.remove(id);
         sent.remove(id);
         toasts.remove(id);
         hpChips.remove(id);
@@ -204,11 +211,28 @@ final class HudPanel implements Listener {
             now = new ArrayList<>(dirty);
             dirty.clear();
         }
+        long tick = Bukkit.getCurrentTick();
         for (UUID id : now) {
             Player p = Bukkit.getPlayer(id);
-            if (p != null) render(p, true);
+            if (p == null) {
+                lastEventRender.remove(id);
+                continue;
+            }
+            // at most one event redraw per player every 2 ticks (10 Hz): regen and cooldowns mark players dirty almost
+            // every tick in a fight, and the action bar cannot show faster than that anyway; the rest waits a tick
+            Long last = lastEventRender.get(id);
+            if (last != null && tick - last < 2) {
+                synchronized (dirty) {
+                    dirty.add(id);
+                }
+                continue;
+            }
+            lastEventRender.put(id, tick);
+            render(p, true);
         }
     }
+
+    private final Map<UUID, Long> lastEventRender = new java.util.HashMap<>();
 
     /** True when the player's client has the SÜLD pack loaded (the glyph HUD needs its font). */
     boolean glyphHud(Player p) {
@@ -377,7 +401,8 @@ final class HudPanel implements Listener {
 
     private void target(Player p, long now) {
         long t0 = PerfProbe.start();
-        Entity look = p.getTargetEntity((int) TARGET_RANGE, false);
+        Entity locked = lockOn.apply(p).orElse(null);
+        Entity look = locked != null ? locked : p.getTargetEntity((int) TARGET_RANGE, false);
         if (targetable(p, look)) {
             Target cur = targets.get(p.getUniqueId());
             if (cur == null || !cur.entity.equals(look.getUniqueId())) targets.put(p.getUniqueId(), new Target(look.getUniqueId(), now + LOOK_HOLD_MS));

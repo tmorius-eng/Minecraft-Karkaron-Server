@@ -249,6 +249,25 @@ start_and_verify() {
   fi
 }
 
+# ---------------------------------------------------------------- 11. measured Paper tuning (docs/perf/WORLD_50.md)
+# Paper writes its config files on the first boot, so the profile is applied after it; a key the installed Paper does
+# not have fails loudly instead of being ignored. Re-applied (with one restart) only when the profile changed.
+tune_paper() {
+  local profile="$REPO_DIR/deploy/paper-tuning.conf" stamp="$SERVER_DIR/.paper-tuning.sha1" want
+  [[ -f "$profile" ]] || return 0
+  want="$(sha1sum "$profile" | cut -d' ' -f1)"
+  if [[ -f "$stamp" && "$(cat "$stamp")" == "$want" ]]; then ok "Paper tuning up to date"; return 0; fi
+  if [[ "$DRY_RUN" == "1" ]]; then echo "  [dry-run] apply $profile to $SERVER_DIR and restart once"; return 0; fi
+  log "Applying the measured Paper tuning (deploy/paper-tuning.conf)"
+  systemctl stop suld
+  as_suld python3 "$LIB_DIR/tools/paper_tune.py" --profile "$profile" "$SERVER_DIR" || die "Paper tuning failed (a key is missing in this Paper version)"
+  printf '%s\n' "$want" | install_text "$stamp" 644 "$SULD_USER:$SULD_USER"
+  local started; started="$(date +%s)"
+  systemctl start suld
+  wait_ready 300 "$started" || die "Server did not come back after tuning; see logs/latest.log"
+  ok "Paper tuning applied"
+}
+
 summary() {
   cat <<EOM
 
@@ -285,4 +304,5 @@ setup_pack_hosting
 install_service
 if ((SKIP_FIREWALL)); then warn "Skipping firewall (--skip-firewall). Make sure the host is protected."; else DRY_RUN="$DRY_RUN" bash "$LIB_DIR/firewall.sh"; fi
 start_and_verify
+tune_paper
 summary

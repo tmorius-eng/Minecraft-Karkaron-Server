@@ -1,0 +1,79 @@
+{
+ "id": "boss.aguin_baavgai",
+ "minecraft": {
+  "rig": "suld-plugin/src/main/resources/models/aguin_baavgai/rig.json",
+  "displays": 7,
+  "elements": 32,
+  "tri_upper_bound": 384,
+  "elements_per_bone": {
+   "body": 4,
+   "head": 7,
+   "jaw": 1,
+   "leg_fl": 5,
+   "leg_fr": 5,
+   "leg_hl": 5,
+   "leg_hr": 5
+  },
+  "textures": {
+   "body": "64x64"
+  },
+  "texture_bytes": 1549,
+  "pack_bytes": 17441,
+  "models": 7,
+  "clips": {
+   "idle": {
+    "length": 60,
+    "loop": true,
+    "events": []
+   },
+   "walk": {
+    "length": 25,
+    "loop": true,
+    "events": []
+   },
+   "run": {
+    "length": 15,
+    "loop": true,
+    "events": []
+   },
+   "attack": {
+    "length": 16,
+    "loop": false,
+    "events": [
+     [
+      9,
+      "attack_hit"
+     ]
+    ]
+   },
+   "hurt": {
+    "length": 8,
+    "loop": false,
+    "events": []
+   },
+   "death": {
+    "length": 30,
+    "loop": false,
+    "events": [
+     [
+      14,
+      "death_fall"
+     ]
+    ]
+   }
+  },
+  "rest_bbox_blocks": {
+   "min": [
+    -0.453,
+    -0.031,
+    -0.906
+   ],
+   "max": [
+    0.453,
+    1.406,
+    1.456
+   ]
+  },
+  "display_flip": true
+ }
+}

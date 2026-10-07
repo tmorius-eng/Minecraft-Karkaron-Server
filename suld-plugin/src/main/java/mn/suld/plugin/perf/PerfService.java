@@ -67,12 +67,25 @@ public final class PerfService implements Listener {
         return label != null;
     }
 
+    private long[] gc0 = {0, 0};
+
+    /** Total collections and collection milliseconds over all collectors since JVM start. */
+    private static long[] gcTotals() {
+        long n = 0, ms = 0;
+        for (java.lang.management.GarbageCollectorMXBean b : ManagementFactory.getGarbageCollectorMXBeans()) {
+            if (b.getCollectionCount() > 0) n += b.getCollectionCount();
+            if (b.getCollectionTime() > 0) ms += b.getCollectionTime();
+        }
+        return new long[]{n, ms};
+    }
+
     public void start(String name) {
         if (label != null) stop();
         PerfProbe.reset();
         samples.clear();
         label = name.replaceAll("[^A-Za-z0-9_.-]", "_");
         startedNs = System.nanoTime();
+        gc0 = gcTotals();
         startedAt = Instant.now();
         sampler = Bukkit.getScheduler().runTaskTimer(plugin, this::sample, 20L, 20L);
     }
@@ -125,6 +138,8 @@ public final class PerfService implements Listener {
                 .append(", \"server\": ").append(q(Bukkit.getVersion())).append(", \"jvmArgs\": ")
                 .append(q(String.join(" ", ManagementFactory.getRuntimeMXBean().getInputArguments()))).append("},\n");
         String[] names = {"t", "tps", "processCpuPct", "systemCpuPct", "heapUsedMb", "heapCommittedMb", "entities", "chunks", "players"};
+        long[] gc1 = gcTotals();
+        sb.append("  \"gc\": {\"collections\": ").append(gc1[0] - gc0[0]).append(", \"millis\": ").append(gc1[1] - gc0[1]).append("},\n");
         sb.append("  \"summary\": {");
         for (int c = 1; c < names.length; c++) {
             double min = Double.MAX_VALUE, max = -Double.MAX_VALUE, sum = 0;
@@ -320,6 +335,25 @@ public final class PerfService implements Listener {
                         }
                         Player at = a.length > 3 ? Bukkit.getPlayerExact(a[3]) : s instanceof Player p ? p : null;
                         modelBench(s, n, secs, at, a.length > 4 ? a[4] : "khasar");
+                    }
+                    case "entities" -> {
+                        // what the entity count is made of: per type, and the busiest chunks (main thread, one pass)
+                        Map<String, Integer> byType = new java.util.TreeMap<>();
+                        Map<String, Integer> byChunk = new java.util.HashMap<>();
+                        for (World w : Bukkit.getWorlds()) {
+                            for (org.bukkit.entity.Entity e : w.getEntities()) {
+                                byType.merge(e.getType().name(), 1, Integer::sum);
+                                byChunk.merge(w.getName() + " " + (e.getLocation().getBlockX() >> 4) + "," + (e.getLocation().getBlockZ() >> 4), 1, Integer::sum);
+                            }
+                        }
+                        StringBuilder t = new StringBuilder("[perf] entities:");
+                        byType.entrySet().stream().sorted((x, y) -> y.getValue() - x.getValue()).limit(16)
+                                .forEach(e -> t.append(' ').append(e.getKey()).append('=').append(e.getValue()));
+                        s.sendMessage(Messages.info(t.toString()));
+                        StringBuilder c2 = new StringBuilder("[perf] busiest chunks:");
+                        byChunk.entrySet().stream().sorted((x, y) -> y.getValue() - x.getValue()).limit(8)
+                                .forEach(e -> c2.append(" [").append(e.getKey()).append("]=").append(e.getValue()));
+                        s.sendMessage(Messages.info(c2.toString()));
                     }
                     case "hud" -> {
                         boolean on = a.length < 2 || !a[1].equalsIgnoreCase("off");
