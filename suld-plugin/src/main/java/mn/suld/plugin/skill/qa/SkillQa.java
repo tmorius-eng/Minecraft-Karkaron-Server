@@ -1512,18 +1512,21 @@ public final class SkillQa {
                 });
                 case SUM_BORON -> ultRun(c, n, () -> twoSide(10, 8), 130, none, () -> {
                     double expected = atk() * 0.9 * st.spellDamageMultiplier(p);
-                    double minHit = Double.MAX_VALUE, total = 0;
+                    double minHit = Double.MAX_VALUE, total = 0, worstFraction = 0;
                     int touchedNear = 0, touchedFar = 0;
                     for (int i = 0; i < N_DUMMIES - 1; i++) {
                         double d = k.deficit(k.dummies.get(i));
                         if (d > 0) {
                             minHit = Math.min(minHit, d);
+                            worstFraction = Math.max(worstFraction, Math.abs(d / expected - Math.rint(d / expected)));
                             total += d;
                             if (Math.abs(k.slot[i][1] - 10) <= 7.0) touchedNear++;
                             else touchedFar++;
                         }
                     }
-                    check(id + ".damage", "ultimate", what, "smallest damage a dummy took (one arrow = 0.9 x ATK)", 0, minHit, EffectNum.n(expected), minHit < Double.MAX_VALUE && nearRel(minHit, expected, 0.03));
+                    // arrows fall at random points and the dummies stand close together, so one dummy may take several
+                    check(id + ".damage", "ultimate", what, "damage each dummy took, in arrows (0.9 x ATK = " + EffectNum.n(expected) + "); worst distance from a whole number", 0, worstFraction,
+                            "every dummy took a whole number (>= 1) of arrows, +-0.03", minHit < Double.MAX_VALUE && minHit >= expected * 0.97 && worstFraction <= 0.03);
                     check(id + ".area", "ultimate", what, "dummies damaged in the rain area / outside it", touchedFar, touchedNear, ">0 within 7 blocks of the target (5 spread + 1.8 hit radius), 0 beyond", touchedNear > 0 && touchedFar == 0,
                             "total damage " + EffectNum.n(total) + ", " + EffectNum.n(total / expected) + " arrow hits");
                 });

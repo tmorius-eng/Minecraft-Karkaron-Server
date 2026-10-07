@@ -2,7 +2,7 @@
 
 Honest record of what was verified, by whom/what, and what is still open. Date of the runs: 2026-10-07.
 
-## UNIT TESTED (suld-api, 52 skill-tree tests; full build 269 tests, 0 failures)
+## UNIT TESTED (suld-api skill-tree tests + `SkillTest` cooldowns + plugin `SkillPackAssetsTest`; unit tests 274, 0 failures)
 
 `SkillTreeTest` (22), `SkillEngineTest` (19), `SkillLoaderTest` (10), `JdbcSkillStateIT` (1, below). See `SKILL_TREE_TEST_PLAN.md`
 for what each covers: graph rules, ranks, exclusive links, convergence, refund consistency, economy, respec cooldown/history,
@@ -44,12 +44,63 @@ Bugs this testing found and fixed: unquoted `: ` in plugin.yml stopped the plugi
 (absorption is capped by the MAX_ABSORPTION attribute); spell clicks on a block that protection had "cancelled" never
 counted (the city denies block use) — spell casting now ignores that cancellation.
 
-Not measured live: the numeric effect of each stat/proc/modifier/keystone in a real fight (code paths compiled and reviewed),
-craft of the Orb at a crafting table (recipe registered), tab completion, the sidebar points row.
+## LIVE PAPER — COMBAT VERIFICATION (measured, not "the code ran")
+
+`/skillsadmin qa <player> all` on Paper 1.21.11: **313 checks, 312 pass, 0 fail, 1 not measurable** (one run of every suite,
+2026-10-07 05:44 UTC). Full table: [`SKILL_TREE_COMBAT_VERIFICATION.md`](SKILL_TREE_COMBAT_VERIFICATION.md); raw data:
+`audit/qa/skill-qa-2026-10-07.json`. Every effect in the data files has a row (checked against the JSON):
+
+| category | effects in the data | rows | pass | how it is measured |
+|---|---|---|---|---|
+| stat nodes | 93 | 93 | 93 | attribute values, final damage of real hits, crit share over 4000 hits, dodge over 3000 hits, EXP from real kills, items from 300 real boss kills… |
+| spell modifiers | 65 | 65 | 64 | the real spell cast through the normal cast path: damage per hit, resource spent, reach, fire/slow/weakness ticks, mark ratio, heal, refund, velocity, echo over 150 casts; Олон Сум with real arrows |
+| passive spells | 28 | 61 | 61 | chance over 300 triggers (4σ), per-node cooldown, effect size |
+| triggers on real events | 8 | 8 | 8 | melee hit, crit, kill, damage taken, low health, sneak, cast, spell hit — each from the real Bukkit event |
+| keystones | 5 | 13 | 13 | every upside and downside |
+| ultimates | 15 | 52 | 52 | buffs, damage, reach, heal/cleanse, 45 s cooldown |
+| per-spell cooldowns | 20 | 21 | 21 | cooldown left after the cast, recast refused, ready again |
+
+Not measurable on one account: `boo.m2.SUNSNII_ZALBIRAL.RADIUS_PCT` (the heal radius only matters for other players).
+
+**Product bugs found by these measurements and fixed:**
+
+* Beam spells (Мэргэн «Тэнгэрийн Сум», Хүлэгчин «Жадны Шидэлт») never hit an enemy standing on the same ground when aimed
+  straight: the hit test measured from the eye-height ray to the enemy's **feet** (1.6 blocks > the 1.2 radius). It now
+  measures to the centre of the hitbox.
+* BURN modifiers: «Хайлсан Төмөр» set its own 2 s fire **after** the node's longer fire and wiped it; on «Галын Давталт» the
+  node's +3 s equalled the spell's own 3 s, so the node did nothing. Node seconds (and Алтан Дөш's +3 s) now add to the spell's fire.
+* Map: icons that glow in vanilla (experience bottle, nether star) looked learned when they were not; zoom out/in lost the view.
+* Looking straight up/down made spell directions NaN; shields did nothing above the absorption cap (fixed earlier this phase).
+
+Harness problems that were the suite's own fault, not the game's (fixed in the suite, listed so nobody re-chases them): wolves
+reset their max health; unloaded chunks removed parked dummies; a non-collidable entity cannot be hit by projectiles; mineflayer
+mis-scales the 1.21.11 velocity packet; night monsters killed the test player; echoes and lingering ultimates leaked into the next
+test; random arrows/anvils hit one dummy more than once; horses roll a random speed.
+
+## LIVE PAPER — SKILL MAP OVER THE PROTOCOL (all five classes)
+
+A bot opens the real chest window and checks every slot against an independent JavaScript re-implementation of the rules
+(written from the data files, not from the Java code). Final jar, 2026-10-07:
+
+| class | fixture | checks | failures | nodes checked | connectors checked | tooltips checked | jar |
+|---|---|---|---|---|---|---|---|
+| Баатар | states | 380 | 0 | 107 | 142 | 102 | final |
+| Мэргэн | states0 | 417 | 0 | 120 | 158 | 114 | final |
+| Бөө | states0 | 417 | 0 | 120 | 158 | 114 | earlier jar of this phase (same map code); final re-run in progress |
+| Дархан | states0 | 417 | 0 | 120 | 158 | 114 | earlier jar of this phase (same map code); final re-run in progress |
+| Хүлэгчин | states0 | 417 | 0 | 120 | 158 | 114 | earlier jar of this phase (same map code); final re-run in progress |
+
+Covered per class: `/skills` opens with the class title (1); every node's material, name, glint, stack count and state text in
+five views (2); the model of every connector between visible neighbours, and no stray items (3); pan incl. the clamped edges,
+zoom round trip back to the same view, overview geometry (4); tooltip cost, level, requirements, red-link rivals, rank, hint (5);
+unlock / rank up / maxed / rank down / refund / excluded / needs-points clicks with the server's answer (6); the points panel at 0
+and with the fixture (7); saving and listing a build from the respec screen (8); no node of another class on the map (9);
+resource-pack offer, SHA-1 of the downloaded zip equal to the one in the offer, every map asset present in the zip (10).
 
 ## MANUAL MINECRAFT CLIENT TESTED
 
-**Not performed.** Status of the interactive map: **FUNCTIONAL BUT MANUAL QA REQUIRED.**
+**Not performed** (no person has looked at it in the game yet). Status of the interactive map: **FUNCTIONAL BUT MANUAL QA REQUIRED.**
+The step-by-step guide with fixtures is [`SKILL_TREE_CLIENT_QA.md`](SKILL_TREE_CLIENT_QA.md).
 
 Checklist for a person with the game and the resource pack:
 
