@@ -610,7 +610,7 @@ public final class Menus {
             if (it == null) continue;
             ItemInstance ii = services.items().read(it).orElse(null);
             // "sell all" sells loot materials only: gear is sold one by one (/item sell), never by accident
-            if (ii == null || ii.soulbound()) continue;
+            if (ii == null || mn.suld.plugin.item.SoulboundGuard.soulbound(ii)) continue;
             mn.suld.api.item.ItemDefinition idef = mn.suld.plugin.content.SuldContent.definitionFor(ii.definitionId());
             if (idef == null || idef.type() != mn.suld.api.item.ItemType.MATERIAL) continue;
             if (services.itemService().check(it).verdict() == mn.suld.plugin.item.ItemService.Verdict.FORGED) continue;

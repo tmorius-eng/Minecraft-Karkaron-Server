@@ -118,20 +118,27 @@ public final class ItemCommands {
                         if (!undestroyable(p)) confirmable(p, "destroy", a, () -> destroy(p));
                     }
                     case "bind" -> confirmable(p, "bind", a, () -> bind(p));
-                    case "salvage" -> confirmable(p, "salvage", a, () -> salvage(p));
+                    case "salvage" -> {
+                        if (a.length > 1 && a[1].equalsIgnoreCase("all")) salvageAll(p, a);
+                        else confirmable(p, "salvage", a, () -> salvage(p));
+                    }
+                    case "filter" -> filterCommand(p, a);
                     case "recipes" -> recipes(p);
                     case "craft" -> {
                         if (a.length < 2) p.sendMessage(Messages.error("Хэрэглээ: /item craft <жор> (/item recipes)"));
                         else craft(p, a[1]);
                     }
-                    default -> p.sendMessage(Messages.info("/item [inspect|compare|equip [accessory1|accessory2]|unequip <нүд>|sell|destroy|bind|salvage|recipes|craft <жор>]"));
+                    default -> p.sendMessage(Messages.info("/item [inspect|compare|equip [accessory1|accessory2]|unequip <нүд>|sell|destroy|bind|salvage [all <зэрэглэл>]|filter [off|common|uncommon|rare]|recipes|craft <жор>]"));
                 }
                 return true;
             }
 
             @Override
             public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
-                if (a.length == 1) return filter(List.of("inspect", "compare", "equip", "unequip", "sell", "destroy", "bind", "salvage", "recipes", "craft"), a[0]);
+                if (a.length == 1) return filter(List.of("inspect", "compare", "equip", "unequip", "sell", "destroy", "bind", "salvage", "filter", "recipes", "craft"), a[0]);
+                if (a.length == 2 && a[0].equalsIgnoreCase("filter")) return filter(List.of("off", "common", "uncommon", "rare"), a[1]);
+                if (a.length == 2 && a[0].equalsIgnoreCase("salvage")) return filter(List.of("all", "confirm"), a[1]);
+                if (a.length == 3 && a[0].equalsIgnoreCase("salvage") && a[1].equalsIgnoreCase("all")) return filter(List.of("common", "uncommon", "rare"), a[2]);
                 if (a.length == 2 && a[0].equalsIgnoreCase("unequip")) return filter(SLOT_ARGS, a[1]);
                 if (a.length == 2 && a[0].equalsIgnoreCase("equip")) return filter(List.of("accessory1", "accessory2"), a[1]);
                 if (a.length == 2 && a[0].equalsIgnoreCase("craft")) return filter(catalog().recipes().stream().map(Recipe::id).toList(), a[1]);
@@ -281,7 +288,7 @@ public final class ItemCommands {
             return true;
         }
         ItemInstance i = items().factory().read(p.getInventory().getItemInMainHand()).orElse(null);
-        if (i != null && i.soulbound()) {
+        if (i != null && mn.suld.plugin.item.SoulboundGuard.soulbound(i)) {
             p.sendMessage(Messages.error("Сүнсэнд холбоотой (ангийн) эд зүйлийг устгах боломжгүй."));
             return true;
         }
@@ -329,6 +336,79 @@ public final class ItemCommands {
         items().give(p, out, "salvage");
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.salvage", def.id() + "-" + c.item().uuid(), describe(mats)));
         p.sendMessage(Messages.success(def.displayName() + " задлагдлаа → " + describe(mats)));
+        equipment().dirty(p);
+    }
+
+    /** /item filter [off|common|uncommon|rare]: gear at or below the rarity is salvaged into materials as it drops. */
+    private void filterCommand(Player p, String[] a) {
+        if (a.length < 2) {
+            ItemRarity f = items().filter(p);
+            p.sendMessage(Messages.info("Олзны шүүлтүүр: " + (f == null ? "унтраалттай" : f.displayName() + " ба түүнээс доош задлагдана")
+                    + ". /item filter <off|common|uncommon|rare>"));
+            return;
+        }
+        String v = a[1].toLowerCase(Locale.ROOT);
+        ItemRarity r = v.equals("off") ? null : ItemRarity.byId(v).orElse(null);
+        if (!v.equals("off") && (r == null || r.ordinal() > ItemRarity.RARE.ordinal())) {
+            p.sendMessage(Messages.error("off, common, uncommon эсвэл rare."));
+            return;
+        }
+        items().setFilter(p, r);
+        p.sendMessage(Messages.success(r == null ? "Шүүлтүүр унтарлаа: бүх олз хэвээр унана."
+                : "Шүүлтүүр: " + r.displayName() + " ба түүнээс доош хуяг, зэвсэг унахдаа түүхий эд болно."));
+    }
+
+    /**
+     * /item salvage all [rarity] [confirm]: salvage every unbound, unequipped piece of gear in the bag at or below the
+     * rarity (default Ховор/uncommon). Soulbound, bound, unique, materials and worn items are never touched. Asks once.
+     */
+    private void salvageAll(Player p, String[] a) {
+        ItemRarity upTo = a.length > 2 && !a[2].equalsIgnoreCase("confirm") ? ItemRarity.byId(a[2].toLowerCase(Locale.ROOT)).orElse(null) : ItemRarity.UNCOMMON;
+        if (upTo == null || upTo.ordinal() > ItemRarity.RARE.ordinal()) {
+            p.sendMessage(Messages.error("Хэрэглээ: /item salvage all [common|uncommon|rare]"));
+            return;
+        }
+        boolean confirm = a[a.length - 1].equalsIgnoreCase("confirm");
+        ItemStack[] inv = p.getInventory().getStorageContents();
+        Map<String, Integer> mats = new java.util.LinkedHashMap<>();
+        List<Integer> slots = new ArrayList<>();
+        for (int k = 0; k < inv.length; k++) {
+            if (inv[k] == null) continue;
+            ItemService.Checked c = items().check(inv[k]);
+            if (c.verdict() == ItemService.Verdict.NOT_SULD || c.verdict() == ItemService.Verdict.FORGED) continue;
+            ItemInstance i = c.item();
+            ItemDefinition def = catalog().item(i.definitionId()).orElse(null);
+            if (def == null || def.stackable() || i.bound() || mn.suld.plugin.item.SoulboundGuard.soulbound(i)
+                    || i.rarity().ordinal() > upTo.ordinal()) continue;
+            Map<String, Integer> m = ItemEconomy.salvage(catalog(), def, i);
+            if (m.isEmpty()) continue;
+            slots.add(k);
+            m.forEach((id, n) -> mats.merge(id, n, Integer::sum));
+        }
+        if (slots.isEmpty()) {
+            p.sendMessage(Messages.info("Задлах " + upTo.displayName() + " ба түүнээс доош хуяг, зэвсэг алга."));
+            return;
+        }
+        String key = "salvageall:" + upTo + ":" + slots + ":" + (System.currentTimeMillis() / 30_000);
+        if (!confirm || !key.equals(pending.get(p.getUniqueId()))) {
+            pending.put(p.getUniqueId(), key);
+            p.sendMessage(Messages.info(slots.size() + " зүйлийг задлах уу? → " + describe(mats)
+                    + ". Батлах: /item salvage all " + upTo.name().toLowerCase(Locale.ROOT) + " confirm"));
+            return;
+        }
+        pending.remove(p.getUniqueId());
+        for (int k : slots) {
+            ItemInstance i = items().check(inv[k]).item();
+            services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.salvage", i.definitionId() + "-" + i.uuid(), "bulk"));
+            p.getInventory().setItem(k, null);
+        }
+        List<LootDrop> out = new ArrayList<>();
+        mats.forEach((id, n) -> {
+            ItemDefinition md = catalog().require(id);
+            out.add(new LootDrop(items().generate(md, md.rarity(), 1, null, "salvage"), n));
+        });
+        items().give(p, out, "salvage");
+        p.sendMessage(Messages.success(slots.size() + " зүйл задлагдлаа → " + describe(mats)));
         equipment().dirty(p);
     }
 

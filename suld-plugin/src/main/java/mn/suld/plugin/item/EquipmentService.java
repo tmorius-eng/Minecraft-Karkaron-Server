@@ -411,7 +411,7 @@ public final class EquipmentService implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDrop(PlayerDropItemEvent e) {
         ItemInstance i = factory.read(e.getItemDrop().getItemStack()).orElse(null);
-        if (i != null && i.soulbound()) {
+        if (i != null && SoulboundGuard.soulbound(i)) {
             e.setCancelled(true);
             e.getPlayer().sendMessage(Messages.error("Сүнсэнд холбоотой эд зүйлийг хаях, устгах боломжгүй — энэ бол таны ангийн эд."));
             return;

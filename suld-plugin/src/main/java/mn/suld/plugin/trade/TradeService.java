@@ -254,7 +254,7 @@ public final class TradeService implements Listener, TabExecutor {
         if (services.relics().items().isRelic(it) || holdsRelic(it) || services.soulbound().holdsBound(it)) return false;
         var inst = services.items().read(it).orElse(null);
         if (inst != null) {
-            if (inst.soulbound() || inst.bound()) return false; // soulbound and bound gear stays with its owner
+            if (mn.suld.plugin.item.SoulboundGuard.soulbound(inst) || inst.bound()) return false; // soulbound and bound gear stays with its owner
             var def = mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId());
             if (def == null || !def.tradable()) return false;
             var checked = services.itemService().check(it);

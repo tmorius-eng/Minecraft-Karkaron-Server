@@ -34,6 +34,9 @@ import org.bukkit.event.entity.EntityDeathEvent;
  */
 public final class CombatListener implements Listener {
 
+    /** Carried by mobs a boss summons mid-fight (no loot, a fifth of the EXP). */
+    public static final String SUMMON_TAG = "suld_summon";
+
     private final SuldServices services;
     private final MobService mobs;
     private final QuestService quests;
@@ -185,6 +188,12 @@ public final class CombatListener implements Listener {
                 && def.tier().ordinal() < mn.suld.api.mob.MobTier.BOSS.ordinal()
                 && !services.worldEvents().isEventMob(entity.getUniqueId());
         double farm = openWorld && services.activity != null ? services.activity.farmedKill(killer, mobId, entity.getLocation()) : 1;
+        // boss adds (a howl's wolves) are fight mechanics, not a farm: a fifth of the EXP and no loot
+        boolean summoned = entity.getScoreboardTags().contains(SUMMON_TAG);
+        // dungeon trash drops materials only; the run's gear comes once, from the completion reward
+        boolean dungeonTrash = !openWorld && entity.getScoreboardTags().contains(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG)
+                && def.tier().ordinal() < mn.suld.api.mob.MobTier.BOSS.ordinal();
+        if (summoned) farm = Math.min(farm, 0.2);
         long expAmount = services.boosts().apply(killer.getUniqueId(), def.scaledExp());
         if (skillTree != null) expAmount = Math.round(expAmount * skillTree.expMultiplier(killer));
         if (farm < 1) expAmount = Math.max(1, Math.round(expAmount * farm));
@@ -206,6 +215,9 @@ public final class CombatListener implements Listener {
             java.util.List<mn.suld.api.loot.LootDrop> drops = new java.util.ArrayList<>(itemService.roll(def.lootTableId(), ctx));
             // the loot-chance stat (skill tree and equipment) is a chance of a whole extra roll
             if (skillTree != null && skillTree.extraLootRoll(killer)) drops.addAll(itemService.roll(def.lootTableId(), ctx));
+            if (summoned) drops.clear();
+            else if (dungeonTrash) drops.removeIf(d -> !itemService.catalog().require(d.item().definitionId()).stackable());
+            drops = itemService.filtered(killer, drops);
             for (mn.suld.api.loot.LootDrop d : drops) {
                 ItemInstance inst = d.item();
                 entity.getWorld().dropItemNaturally(entity.getLocation(), itemService.stack(inst, killer, d.amount()));

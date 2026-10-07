@@ -122,6 +122,61 @@ class LootEngineTest {
     }
 
     @Test
+    void classlessWeaponsFollowTheClassWeaponType() {
+        LootTable.Entry pool = new LootTable.Entry(null, new LootTable.Pool(Set.of(ItemType.Category.WEAPON)), 1, 1, 1, null, null, 2, null);
+        Rng rng = Rng.seeded(21);
+        for (PlayerClass c : PlayerClass.values()) {
+            int own = 0, n = 4000;
+            for (int i = 0; i < n; i++) {
+                ItemDefinition d = ENGINE.fromPool(pool, new LootContext(30, LootTier.NORMAL, c, 0, null, "t"), LootTier.NORMAL, rng);
+                if (LootEngine.affinity(c).contains(d.type())) own++;
+            }
+            // a Баатар is not flooded with bows: at least 3 in 4 weapons are his own weapon type
+            assertTrue(own / (double) n > 0.75, c + " got its own weapon type " + own + "/" + n);
+        }
+        assertTrue(LootEngine.affinity(null).isEmpty());
+    }
+
+    @Test
+    void namedOffTypeWeaponsAreRarerForOtherClasses() {
+        LootTable t = table(1000, List.of(), List.of(), List.of(new LootTable.Rare(LootTable.Entry.item("weapon.talyn_ild", 1, 1, 1), 0.4)));
+        int baatar = 0, mergen = 0, n = 8000;
+        Rng rng = Rng.seeded(23);
+        for (int i = 0; i < n; i++) {
+            baatar += ENGINE.roll(t, new LootContext(10, LootTier.NORMAL, PlayerClass.BAATAR, 0, null, "t"), rng).size();
+            mergen += ENGINE.roll(t, new LootContext(10, LootTier.NORMAL, PlayerClass.MERGEN, 0, null, "t"), rng).size();
+        }
+        assertEquals(0.4, baatar / (double) n, 0.03);
+        assertEquals(0.1, mergen / (double) n, 0.02, "a sword is a quarter as likely for an archer");
+    }
+
+    @Test
+    void bundledTablesDoNotFloodTheBag() {
+        // per kill, a normal open-world mob yields about one piece of non-stacking gear in 15-30 kills
+        Rng rng = Rng.seeded(29);
+        for (LootTable t : CAT.lootTables()) {
+            if (t.tier() != LootTier.NORMAL || t.id().equals("loot.world.rare")) continue;
+            int gear = 0, n = 4000;
+            for (int i = 0; i < n; i++) {
+                for (LootDrop d : ENGINE.roll(t, new LootContext(10, LootTier.NORMAL, PlayerClass.BAATAR, 0, null, "t"), rng)) {
+                    if (!CAT.require(d.item().definitionId()).stackable()) gear++;
+                }
+            }
+            assertTrue(gear / (double) n < 0.07, t.id() + " gear per kill " + gear / (double) n);
+        }
+        // a dungeon clear gives exactly one gear piece plus rare extras, not three
+        LootTable den = CAT.lootTable("loot.dungeon.khasar_den").orElseThrow();
+        double gear = 0;
+        int n = 4000;
+        for (int i = 0; i < n; i++) {
+            for (LootDrop d : ENGINE.roll(den, new LootContext(6, LootTier.DUNGEON, PlayerClass.BAATAR, 0, null, "t"), rng)) {
+                if (!CAT.require(d.item().definitionId()).stackable()) gear++;
+            }
+        }
+        assertTrue(gear / n >= 1.0 && gear / n < 1.4, "gear per clear " + gear / n);
+    }
+
+    @Test
     void classWeightingOnEntries() {
         LootTable.Entry bow = new LootTable.Entry("weapon.evertei_num", null, 10, 1, 1, null, null, 0, Map.of(PlayerClass.MERGEN, 3.0));
         LootTable.Entry sword = LootTable.Entry.item("weapon.tumur_ild", 10, 1, 1);

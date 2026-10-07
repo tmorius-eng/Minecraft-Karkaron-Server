@@ -159,11 +159,69 @@ public final class ItemService {
         return engine.roll(t, ctx, rng);
     }
 
+    // ------------------------------------------------------------------ loot filter
+
+    private static final org.bukkit.NamespacedKey FILTER_KEY = new org.bukkit.NamespacedKey("suld", "loot_filter");
+    /** Default: Энгийн (common) gear is salvaged on drop, so open-world farming does not flood the bag. */
+    public static final ItemRarity DEFAULT_FILTER = ItemRarity.COMMON;
+
+    /** The player's loot filter: gear of this rarity or lower is salvaged into materials as it drops; null = off. */
+    public ItemRarity filter(Player p) {
+        String v = p.getPersistentDataContainer().get(FILTER_KEY, org.bukkit.persistence.PersistentDataType.STRING);
+        if (v == null) return DEFAULT_FILTER;
+        if (v.equals("off")) return null;
+        try {
+            return ItemRarity.valueOf(v);
+        } catch (IllegalArgumentException e) {
+            return DEFAULT_FILTER;
+        }
+    }
+
+    public void setFilter(Player p, ItemRarity upTo) {
+        p.getPersistentDataContainer().set(FILTER_KEY, org.bukkit.persistence.PersistentDataType.STRING, upTo == null ? "off" : upTo.name());
+    }
+
+    /**
+     * Apply the player's loot filter: unbound gear at or below the threshold becomes its salvage materials (merged
+     * into stacks); everything else passes through. Materials, soulbound and unique items are never touched.
+     */
+    public List<LootDrop> filtered(Player p, List<LootDrop> drops) {
+        ItemRarity upTo = filter(p);
+        if (upTo == null || drops.isEmpty()) return drops;
+        List<LootDrop> out = new ArrayList<>();
+        Map<String, Integer> mats = new java.util.LinkedHashMap<>();
+        int salvaged = 0;
+        for (LootDrop d : drops) {
+            ItemDefinition def = catalog.item(d.item().definitionId()).orElse(null);
+            Map<String, Integer> m = def == null || def.stackable() || d.item().rarity().ordinal() > upTo.ordinal()
+                    ? Map.of() : mn.suld.api.item.ItemEconomy.salvage(catalog, def, d.item());
+            if (m.isEmpty()) {
+                out.add(d);
+                continue;
+            }
+            salvaged++;
+            m.forEach((id, n) -> mats.merge(id, n * d.amount(), Integer::sum));
+        }
+        if (salvaged == 0) return drops;
+        mats.forEach((id, n) -> {
+            ItemDefinition md = catalog.require(id);
+            ItemInstance mat = generate(md, md.rarity(), 1, null, "loot_filter");
+            for (int left = n; left > 0; left -= Math.max(1, md.maxStack())) out.add(new LootDrop(mat, Math.min(left, Math.max(1, md.maxStack()))));
+        });
+        p.sendMessage(Messages.info("Шүүлтүүр: " + salvaged + " " + upTo.displayName().toLowerCase(java.util.Locale.ROOT)
+                + " зүйл задлагдлаа (/item filter)"));
+        return out;
+    }
+
     /** Give loot to a player (inventory first, the ground for the rest), announcing legendary and better drops. */
     public void give(Player p, List<LootDrop> drops, String reason) {
         for (LootDrop d : drops) {
-            ItemStack s = stack(d.item(), p, d.amount());
-            p.getInventory().addItem(s).values().forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
+            // amounts above one stack (bulk salvage) are split; stack() alone would clamp and lose the rest
+            for (int left = Math.max(1, d.amount()); left > 0; ) {
+                ItemStack s = stack(d.item(), p, left);
+                left -= s.getAmount();
+                p.getInventory().addItem(s).values().forEach(rest -> p.getWorld().dropItemNaturally(p.getLocation(), rest));
+            }
             announce(p, d.item());
         }
     }

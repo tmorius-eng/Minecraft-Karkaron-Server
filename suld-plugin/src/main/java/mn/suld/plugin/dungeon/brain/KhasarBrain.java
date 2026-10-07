@@ -166,10 +166,14 @@ public final class KhasarBrain implements BossBrain {
         for (Player p : targets(boss, 24)) warn(p, Component.text("Хасар улилаа — агуйн чононууд ирж байна!", NamedTextColor.GOLD));
         playOr(boss, "howl", 12, () -> {
             if (summon == null) return;
-            for (int i = 0; i < 2; i++) {
+            // at most 4 adds alive: a long fight must not snowball into a wolf pack (or an EXP farm)
+            long alive = boss.getWorld().getNearbyEntities(boss.getLocation(), 32, 16, 32,
+                    e -> e.isValid() && e.getScoreboardTags().contains(mn.suld.plugin.combat.CombatListener.SUMMON_TAG)).size();
+            for (int i = 0; i < Math.min(2, 4 - alive); i++) {
                 Location l = boss.getLocation().add(i == 0 ? 3 : -3, 0, 2);
                 LivingEntity wolf = services.mobs().spawn(summon, l);
                 wolf.addScoreboardTag(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG);
+                wolf.addScoreboardTag(mn.suld.plugin.combat.CombatListener.SUMMON_TAG);
                 boss.getWorld().spawnParticle(Particle.LARGE_SMOKE, l.add(0, 0.5, 0), 12, 0.3, 0.4, 0.3, 0.02);
             }
         });

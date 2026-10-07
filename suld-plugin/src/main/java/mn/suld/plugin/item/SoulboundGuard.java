@@ -44,7 +44,17 @@ public final class SoulboundGuard implements Listener {
     public boolean bound(ItemStack it) {
         if (it == null || it.getType().isAir()) return false;
         ItemInstance i = factory.read(it).orElse(null);
-        return i != null && i.soulbound();
+        return i != null && soulbound(i);
+    }
+
+    /**
+     * Soulbound by the instance flag OR by its definition. Items made before the flag existed (or decoded from the
+     * legacy format) carry soulbound=false; the definition still says SOULBOUND, and that is what counts.
+     */
+    public static boolean soulbound(ItemInstance i) {
+        if (i.soulbound() || i.definitionId().startsWith("weapon.class.") || i.definitionId().startsWith("armor.class.")) return true;
+        mn.suld.api.item.ItemDefinition d = mn.suld.plugin.content.SuldContent.items().item(i.definitionId()).orElse(null);
+        return d != null && d.bindingAt(i.rarity()) == mn.suld.api.item.Binding.SOULBOUND;
     }
 
     /** A shulker box or bundle with a soulbound item inside (trade and container checks). */

@@ -7,7 +7,7 @@
     1,
     1
    ],
-   "nothing": 94,
+   "nothing": 97,
    "entries": [
     {
      "pool": [
@@ -16,7 +16,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 6,
+     "weight": 3,
      "spread": 2
     }
    ],
@@ -27,7 +27,7 @@
     },
     {
      "item": "weapon.talyn_ild",
-     "chance": 0.35
+     "chance": 0.02
     }
    ]
   },
@@ -38,7 +38,7 @@
     1,
     1
    ],
-   "nothing": 94,
+   "nothing": 97,
    "entries": [
     {
      "pool": [
@@ -47,7 +47,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 6,
+     "weight": 3,
      "spread": 2
     }
    ],
@@ -58,7 +58,7 @@
     },
     {
      "item": "item.talyn_tuvshin",
-     "chance": 0.2
+     "chance": 0.03
     }
    ]
   },
@@ -86,7 +86,7 @@
     1,
     1
    ],
-   "nothing": 60,
+   "nothing": 0,
    "entries": [
     {
      "pool": [
@@ -95,27 +95,31 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 40,
+     "weight": 1,
      "spread": 2
     }
    ],
    "guaranteed": [
     {
-     "item": "item.talyn_tuvshin"
+     "item": "item.chonon_arisan",
+     "qty": [
+      2,
+      3
+     ]
     }
    ],
    "rare": [
     {
-     "item": "weapon.talyn_ild",
-     "chance": 0.6
-    },
-    {
-     "item": "weapon.khasar_soyo",
-     "chance": 0.25
+     "item": "item.talyn_tuvshin",
+     "chance": 0.15
     },
     {
      "item": "item.khasar_zurkh",
      "chance": 0.06
+    },
+    {
+     "item": "weapon.khasar_soyo",
+     "chance": 0.12
     }
    ]
   },
@@ -126,7 +130,7 @@
     1,
     1
    ],
-   "nothing": 92,
+   "nothing": 97,
    "entries": [
     {
      "pool": [
@@ -135,7 +139,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 8,
+     "weight": 3,
      "spread": 2
     }
    ],
@@ -146,7 +150,7 @@
     },
     {
      "item": "weapon.talyn_ild",
-     "chance": 0.15
+     "chance": 0.015
     }
    ]
   },
@@ -157,7 +161,7 @@
     1,
     1
    ],
-   "nothing": 92,
+   "nothing": 97,
    "entries": [
     {
      "pool": [
@@ -166,7 +170,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 8,
+     "weight": 3,
      "spread": 2
     }
    ],
@@ -177,7 +181,7 @@
     },
     {
      "item": "weapon.govi_khutga",
-     "chance": 0.12
+     "chance": 0.015
     }
    ]
   },
@@ -188,7 +192,7 @@
     1,
     1
    ],
-   "nothing": 92,
+   "nothing": 97,
    "entries": [
     {
      "pool": [
@@ -197,7 +201,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 8,
+     "weight": 3,
      "spread": 2
     }
    ],
@@ -208,7 +212,7 @@
     },
     {
      "item": "weapon.govi_khutga",
-     "chance": 0.2
+     "chance": 0.02
     }
    ]
   },
@@ -219,7 +223,7 @@
     1,
     1
    ],
-   "nothing": 92,
+   "nothing": 97,
    "entries": [
     {
      "pool": [
@@ -228,7 +232,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 8,
+     "weight": 3,
      "spread": 2
     }
    ],
@@ -239,7 +243,7 @@
     },
     {
      "item": "weapon.khangai_sukh",
-     "chance": 0.1
+     "chance": 0.015
     }
    ]
   },
@@ -250,7 +254,7 @@
     1,
     1
    ],
-   "nothing": 80,
+   "nothing": 88,
    "entries": [
     {
      "pool": [
@@ -259,7 +263,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 20,
+     "weight": 12,
      "spread": 2
     }
    ],
@@ -270,7 +274,7 @@
     },
     {
      "item": "weapon.khangai_sukh",
-     "chance": 0.25
+     "chance": 0.06
     }
    ]
   },
@@ -281,7 +285,7 @@
     1,
     1
    ],
-   "nothing": 92,
+   "nothing": 97,
    "entries": [
     {
      "pool": [
@@ -290,7 +294,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 8,
+     "weight": 3,
      "spread": 2
     }
    ],
@@ -301,7 +305,7 @@
     },
     {
      "item": "weapon.altai_jad",
-     "chance": 0.05
+     "chance": 0.01
     }
    ]
   },
@@ -312,7 +316,7 @@
     1,
     1
    ],
-   "nothing": 80,
+   "nothing": 88,
    "entries": [
     {
      "pool": [
@@ -321,7 +325,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 20,
+     "weight": 12,
      "spread": 2
     }
    ],
@@ -333,7 +337,7 @@
    "rare": [
     {
      "item": "weapon.altai_jad",
-     "chance": 0.2
+     "chance": 0.05
     }
    ]
   },
@@ -344,7 +348,7 @@
     1,
     1
    ],
-   "nothing": 60,
+   "nothing": 0,
    "entries": [
     {
      "pool": [
@@ -353,7 +357,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 40,
+     "weight": 1,
      "spread": 2
     }
    ],
@@ -368,12 +372,8 @@
    ],
    "rare": [
     {
-     "item": "weapon.govi_khutga",
-     "chance": 0.55
-    },
-    {
      "item": "item.talyn_tuvshin",
-     "chance": 0.4
+     "chance": 0.15
     }
    ]
   },
@@ -384,7 +384,7 @@
     1,
     1
    ],
-   "nothing": 60,
+   "nothing": 0,
    "entries": [
     {
      "pool": [
@@ -393,7 +393,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 40,
+     "weight": 1,
      "spread": 2
     }
    ],
@@ -408,12 +408,8 @@
    ],
    "rare": [
     {
-     "item": "weapon.khangai_sukh",
-     "chance": 0.55
-    },
-    {
      "item": "item.talyn_tuvshin",
-     "chance": 0.4
+     "chance": 0.15
     }
    ]
   },
@@ -424,7 +420,7 @@
     1,
     1
    ],
-   "nothing": 60,
+   "nothing": 0,
    "entries": [
     {
      "pool": [
@@ -433,7 +429,7 @@
       "JEWELRY",
       "OFFHAND"
      ],
-     "weight": 40,
+     "weight": 1,
      "spread": 2
     }
    ],
@@ -447,10 +443,6 @@
     }
    ],
    "rare": [
-    {
-     "item": "weapon.altai_jad",
-     "chance": 0.45
-    },
     {
      "item": "item.khasar_zurkh",
      "chance": 0.08
