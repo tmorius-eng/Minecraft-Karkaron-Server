@@ -62,7 +62,7 @@ public final class GuideBoards {
                     + GAP + line("Бүх цэс: «/menu» (9-р нүдний цаг)")
                     + line("Заавар: «/help»  «/tutorial»")),
             new Board(-8, 5.2, -6, title("ЗООС ХЭРХЭН ОЛОХ ВЭ?") + GAP
-                    + bullet("• Мангас ан", "— олз унана (арьс, зэвсэг)")
+                    + bullet("• Мангас ан", "— олз унана (арьс, хуяг, эрдэнэ)")
                     + line("   Худалдаачинд зарна: «/shop»")
                     + bullet("• Эрэл дуусга", "— бүлэг бүр зоос өгнө")
                     + bullet("• Өдрийн даалгавар:", "«/tasks»")
@@ -79,13 +79,16 @@ public final class GuideBoards {
                     + GAP + line("Ангийн зэвсгээ барьж 3 товшилт:")
                     + line("   Баруун-Зүүн-Баруун = ид шид!")
                     + line("Хослол бүр: «/skills»")
-                    + line("Зэвсэг 1, 10, 25, 45-р түвшинд шинэчлэгдэнэ")),
+                    + line("Ганц ангийн зэвсэг: 12, 24, 36, 48, 60-р")
+                    + line("түвшинд өөрөө хувирч хүчирхэгжинэ")),
             new Board(8, 5.2, -6, title("НУТАГ, АЮУЛ") + GAP
                     + bullet("➜ Зүүн", "Хэрлэн (түвшин 1–8)")
                     + bullet("➜ Өмнө", "Говь (5–15)")
                     + bullet("➜ Хойд", "Хангай (10–20)")
                     + bullet("➜ Баруун", "Алтай (18–30)")
-                    + line("Шинэ нутгийг анх нээхэд EXP!")
+                    + line("Нутаг бүр 6 газартай (24 газар):")
+                    + line("Туул, Онон, Орхон, Сэлэнгэ, Говь...")
+                    + line("Шинэ газрыг анх нээхэд EXP!")
                     + GAP + "<bold><red>HARDCORE:</red><white> үхвэл юмныхаа</white></bold>\n"
                     + line("хагас, EXP-ийн 10 хувийг алдана.")
                     + line("Хот аюулгүй: PvP, мангас үгүй. «/spawn»")
@@ -152,6 +155,38 @@ public final class GuideBoards {
         return spawned.size();
     }
 
+    /** Boards at eye level (bottom edge 1.4 above the ground, about 3 blocks tall), in an arc around the arrival point. */
+    static final float SCALE = 0.85f;
+    static final double EYE = 1.4, RADIUS = 7.5;
+
+    /**
+     * Where a board goes: in its direction from the arrival point, at {@link #RADIUS} when that spot is clear of
+     * buildings, else the nearest clear radius from 4 to 13 (so a board never stands inside a statue or a wall).
+     * Null when no clear spot exists (the board is skipped rather than drawn through a build).
+     */
+    private static Location place(Location base, Board b) {
+        double len = Math.hypot(b.dx(), b.dz());
+        double ux = len == 0 ? 0 : b.dx() / len, uz = len == 0 ? -1 : b.dz() / len;
+        for (int k = 0; k <= 18; k++) {
+            double r = RADIUS + (k % 2 == 0 ? k / 4.0 : -(k + 1) / 4.0); // 7.5, 7.0, 8.0, 6.5, 8.5 ...
+            if (r < 4 || r > 13) continue;
+            Location at = base.clone().add(ux * r, 0, uz * r);
+            at.setY(base.getY() + EYE);
+            if (clear(at)) return at;
+        }
+        return null;
+    }
+
+    /** No solid block in the board's volume: 3 wide (it turns to face the viewer), 3.5 tall, from its bottom edge. */
+    private static boolean clear(Location at) {
+        if (!at.isChunkLoaded()) return true;
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dz = -1; dz <= 1; dz++)
+                for (int dy = 0; dy <= 3; dy++)
+                    if (!at.clone().add(dx, dy, dz).getBlock().isPassable()) return false;
+        return true;
+    }
+
     private void ensure() {
         if (!city.isBuilt()) return;
         Location base = city.pointLocation("spawn");
@@ -167,8 +202,8 @@ public final class GuideBoards {
             UUID known = i < spawned.size() ? spawned.get(i) : null;
             Entity existing = known == null ? null : Bukkit.getEntity(known);
             if (existing != null && existing.isValid()) continue;
-            Location at = base.clone().add(b.dx(), b.dy(), b.dz());
-            if (!at.isChunkLoaded()) continue;
+            Location at = place(base, b);
+            if (at == null || !at.isChunkLoaded()) continue;
             Component text = MM.deserialize(b.text());
             TextDisplay d = base.getWorld().spawn(at, TextDisplay.class, t -> {
                 t.text(text);
@@ -179,7 +214,7 @@ public final class GuideBoards {
                 t.setViewRange(0.6f);
                 t.setPersistent(false);
                 t.addScoreboardTag(TAG);
-                t.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1.25f, 1.25f, 1.25f), new AxisAngle4f()));
+                t.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(SCALE, SCALE, SCALE), new AxisAngle4f()));
             });
             if (i < spawned.size()) spawned.set(i, d.getUniqueId());
             else spawned.add(d.getUniqueId());

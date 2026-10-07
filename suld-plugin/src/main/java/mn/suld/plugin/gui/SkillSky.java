@@ -86,9 +86,9 @@ public final class SkillSky implements Listener {
     static final float ICON = 0.36f;
     static final float LINE = 0.055f;
     /** Camera distance to the tree plane: start, nearest, farthest (the wheel zooms between them). */
-    static final double DIST0 = 9.5, DIST_MIN = 4.5, DIST_MAX = 17;
+    static final double DIST0 = 6.0, DIST_MIN = 3.0, DIST_MAX = 15;
     /** Half-size of the backdrop box around the camera (blocks). */
-    static final float BOX_W = 36, BOX_H = 20, BOX_D = 20;
+    static final float BOX_W = 56, BOX_H = 32, BOX_D = 24;
     static final long COMBAT_MS = 8000;
 
     private static final int GOLD = 0xF2B632, WHITE = 0xF0F0F0, DIM = 0x8C8F96, DARK = 0x3C3F46, RED = 0xB03030, NAVY = 0x0B1226;
@@ -249,7 +249,7 @@ public final class SkillSky implements Listener {
         World w = p.getWorld();
         s.eyeOff = p.getEyeLocation().getY() - s.seat.getLocation().getY();
         // the root sits low on the screen: the branches grow up into the view
-        s.camV = 2.6;
+        s.camV = 1.9;
         s.plane = s.seat.getLocation().clone().add(0, s.eyeOff, DIST0);
         s.plane.setY(s.plane.getY() - s.camV * SPACING);
 
@@ -270,7 +270,7 @@ public final class SkillSky implements Listener {
             t.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
             t.setShadowed(true);
             t.setLineWidth(400);
-            t.setTransformation(new Transformation(new Vector3f(0, (float) s.eyeOff + 1.42f, 3.5f), new Quaternionf(), new Vector3f(0.3f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(0, (float) s.eyeOff + 1.12f, 2.4f), new Quaternionf(), new Vector3f(0.24f), new Quaternionf()));
         }));
         s.seat.addPassenger(s.header);
         s.footer = own(s, w.spawn(s.seat.getLocation(), TextDisplay.class, t -> {
@@ -279,7 +279,7 @@ public final class SkillSky implements Listener {
             t.setBackgroundColor(Color.fromARGB(150, 8, 6, 20));
             t.setLineWidth(600);
             t.text(Component.text("Зүүн товш: нээх  ·  Баруун товш: буцаах  ·  W A S D: гүйлгэх  ·  Хулганы дугуй: томруулах  ·  Shift: гарах", NamedTextColor.GRAY));
-            t.setTransformation(new Transformation(new Vector3f(0, (float) s.eyeOff - 1.62f, 3.5f), new Quaternionf(), new Vector3f(0.2f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(0, (float) s.eyeOff - 0.98f, 2.4f), new Quaternionf(), new Vector3f(0.15f), new Quaternionf()));
         }));
         s.seat.addPassenger(s.footer);
 
@@ -293,7 +293,10 @@ public final class SkillSky implements Listener {
         // edges first (drawn behind the frames)
         for (SkillNode a : s.tree.nodes()) {
             for (int b : s.tree.neighbours(a.index())) if (b > a.index()) line(s, a.index(), b);
-            for (int b : s.tree.exclusives(a.index())) if (b > a.index() && !s.tree.linked(a.index(), b)) line(s, a.index(), b);
+            for (int b : s.tree.exclusives(a.index())) {
+                // a red line only between near nodes; far rivals are named in the tooltip (long red lines cluttered the sky)
+                if (b > a.index() && !s.tree.linked(a.index(), b) && s.layout.of(a).distance(s.layout.of(s.tree.node(b))) < 1.8) line(s, a.index(), b);
+            }
         }
         for (SkillNode node : s.tree.nodes()) {
             SkyLayout.Pos pos = s.layout.of(node);
@@ -324,16 +327,19 @@ public final class SkillSky implements Listener {
             d.setItemStack(new ItemStack(Material.AIR));
             d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(NODE * 1.7f, NODE * 1.7f, 1), new Quaternionf()));
         }));
-        s.tooltip = own(s, w.spawn(s.plane, TextDisplay.class, t -> {
+        // the tooltip is a panel fixed on the right of the screen (it rides with the camera), so it reads the same at
+        // every zoom; it used to float next to the node and was unreadable from a distance
+        s.tooltip = own(s, w.spawn(s.seat.getLocation(), TextDisplay.class, t -> {
             hidden(t);
             t.setBillboard(Display.Billboard.CENTER);
-            t.setBackgroundColor(Color.fromARGB(236, 20, 10, 38));
-            t.setLineWidth(230);
+            t.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            t.setLineWidth(210);
             t.setAlignment(TextDisplay.TextAlignment.LEFT);
             t.setShadowed(true);
             t.text(Component.empty());
-            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.4f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(-1.5f, (float) s.eyeOff - 0.62f, 2.4f), new Quaternionf(), new Vector3f(0.25f), new Quaternionf()));
         }));
+        s.seat.addPassenger(s.tooltip);
         refresh(s);
         moveCamera(s);
     }
@@ -458,19 +464,15 @@ public final class SkillSky implements Listener {
             for (int k = 0; k < keep; k++) text = text.append(Component.newline()).append(lines.get(k));
         }
         s.tooltip.text(text);
+        s.tooltip.setBackgroundColor(Color.fromARGB(236, 20, 10, 38));
         SkyLayout.Pos pos = s.layout.of(n);
-        // to the right of the node (left of it on the right edge of the tree), slightly in front of everything
-        boolean flip = pos.u() > 4.5;
-        double w = 230 * 0.025 * 0.4; // text box width in blocks (line width × font scale × display scale)
-        double du = (NODE / 2 + 0.12 + w / 2) / SPACING * (flip ? -1 : 1);
-        s.tooltip.teleport(at(s, pos.u() + du, pos.v() - 0.35, 0.3));
         s.glow.teleport(at(s, pos.u(), pos.v(), -0.01));
         s.glow.setItemStack(quad("glow", state == NodeState.UNLOCKED || state == NodeState.MAXED ? GOLD : WHITE));
     }
 
     private void hideTooltip(Session s) {
         s.tooltip.text(Component.empty());
-        s.tooltip.teleport(s.plane.clone().add(0, -50, 0));
+        s.tooltip.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
         s.glow.setItemStack(new ItemStack(Material.AIR));
     }
 

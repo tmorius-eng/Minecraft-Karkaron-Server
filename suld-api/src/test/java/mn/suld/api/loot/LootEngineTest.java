@@ -151,6 +151,21 @@ class LootEngineTest {
     }
 
     @Test
+    void noBundledTableDropsAWeapon() {
+        // one weapon per player: the class weapon, which evolves in place; loot never adds another (owner's rule)
+        Rng rng = Rng.seeded(31);
+        for (LootTable t : CAT.lootTables()) {
+            for (int i = 0; i < 500; i++) {
+                for (PlayerClass c : PlayerClass.values()) {
+                    for (LootDrop d : ENGINE.roll(t, new LootContext(40, LootTier.NORMAL, c, 100, null, "t"), rng)) {
+                        assertNotEquals(ItemType.Category.WEAPON, CAT.require(d.item().definitionId()).type().category(), t.id() + " dropped " + d.item().definitionId());
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     void bundledTablesDoNotFloodTheBag() {
         // per kill, a normal open-world mob yields about one piece of non-stacking gear in 15-30 kills
         Rng rng = Rng.seeded(29);

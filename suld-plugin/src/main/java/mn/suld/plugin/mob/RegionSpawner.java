@@ -54,6 +54,14 @@ public final class RegionSpawner {
         Bukkit.getScheduler().runTaskTimer(plugin, this::careTick, 40L, 40L);
     }
 
+    /** The named area at a location (docs/world/AREAS.md), inside its region. */
+    public java.util.Optional<mn.suld.api.region.Area> areaAt(Location l) {
+        Location c = l.getWorld().getSpawnLocation();
+        return mn.suld.api.region.Area.at(WorldContent.AREAS, l.getX() - c.getX(), l.getZ() - c.getZ());
+    }
+
+    private final java.util.Map<java.util.UUID, String> lastArea = new java.util.concurrent.ConcurrentHashMap<>();
+
     /** The region at a location (offsets from the world spawn = the Kharkhorum plaza). */
     public java.util.Optional<RegionDefinition> regionAt(Location l) {
         Location c = l.getWorld().getSpawnLocation();
@@ -130,6 +138,18 @@ public final class RegionSpawner {
                 if (fresh) return; // the discovery title replaces the region banner
             }
         }
+        // the named area (Туулын Хөндий, Хөдөө Арал, ...): its own banner and a one-time discovery reward
+        mn.suld.api.region.Area area = r == null || r.safeZone() ? null : areaAt(p.getLocation()).orElse(null);
+        String areaId = area == null ? "" : area.id();
+        String areaBefore = lastArea.put(p.getUniqueId(), areaId);
+        if (area != null && !areaId.equals(areaBefore)) {
+            var pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+            if (pr != null && discoverArea(p, pr, area)) return;
+            if (areaBefore != null) {
+                areaBanner(p, area);
+                return;
+            }
+        }
         if (r == null || r.safeZone() || id.equals(before) || before == null) return;
         p.showTitle(net.kyori.adventure.title.Title.title(
                 net.kyori.adventure.text.Component.text(r.displayName(), net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),
@@ -141,6 +161,45 @@ public final class RegionSpawner {
                                 net.kyori.adventure.text.format.NamedTextColor.WHITE, net.kyori.adventure.text.format.TextDecoration.BOLD),
                 net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
                         java.time.Duration.ofMillis(700))));
+    }
+
+    private void areaBanner(Player p, mn.suld.api.region.Area a) {
+        int level = services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
+        boolean danger = level + 2 <= a.minLevel();
+        p.showTitle(net.kyori.adventure.title.Title.title(
+                net.kyori.adventure.text.Component.text(a.name(), net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),
+                        net.kyori.adventure.text.format.TextDecoration.BOLD),
+                net.kyori.adventure.text.Component.text((danger ? "⚠ Аюултай — " : a.description() + " · ") + "Түвшин " + a.levelBand(),
+                        danger ? net.kyori.adventure.text.format.NamedTextColor.RED : net.kyori.adventure.text.format.NamedTextColor.WHITE,
+                        net.kyori.adventure.text.format.TextDecoration.BOLD),
+                net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofMillis(2500),
+                        java.time.Duration.ofMillis(700))));
+    }
+
+    /** First visit to a named area: a small EXP reward, once (discovery bits 16..63 of the style row). */
+    private boolean discoverArea(Player p, mn.suld.api.profile.PlayerProfile pr, mn.suld.api.region.Area a) {
+        var style = services.styles().cached(p.getUniqueId()).orElse(null);
+        if (style == null || !style.discover(a.index())) return false;
+        int from = pr.progression().level();
+        var exp = services.progression().grantExp(pr, a.discoveryExp(), mn.suld.api.progression.ExpSource.DISCOVERY);
+        p.showTitle(net.kyori.adventure.title.Title.title(
+                net.kyori.adventure.text.Component.text("ШИНЭ ГАЗАР: " + a.name(), net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),
+                        net.kyori.adventure.text.format.TextDecoration.BOLD),
+                net.kyori.adventure.text.Component.text(a.description() + " · +" + a.discoveryExp() + " EXP",
+                        net.kyori.adventure.text.format.NamedTextColor.WHITE, net.kyori.adventure.text.format.TextDecoration.BOLD),
+                net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
+                        java.time.Duration.ofMillis(700))));
+        p.sendMessage(mn.suld.plugin.ui.Messages.success("Шинэ газар нээлээ: " + a.name() + " (" + regionName(a.regionId()) + ", түвшин "
+                + a.levelBand() + ") +" + a.discoveryExp() + " EXP"));
+        p.playSound(p.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.4f);
+        if (exp.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(p, from, exp.after().level());
+        services.hud().update(p, pr);
+        return true;
+    }
+
+    private static String regionName(String id) {
+        for (RegionDefinition r : WorldContent.REGIONS) if (r.id().equals(id)) return r.displayName();
+        return id;
     }
 
     /** The player is well below the region's level band (2+ levels under its minimum). */
@@ -174,6 +233,7 @@ public final class RegionSpawner {
     /** Keep region mobs hostile; remove them in/near the city or when no player is within 80 blocks. */
     private void careTick() {
         lastRegion.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
+        lastArea.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
         List<Player> players = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (eligible(p)) players.add(p);

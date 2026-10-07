@@ -11,7 +11,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -24,12 +23,9 @@
     {
      "item": "item.chonon_arisan",
      "chance": 0.85
-    },
-    {
-     "item": "weapon.talyn_ild",
-     "chance": 0.02
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.orkhon_chono",
@@ -42,7 +38,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -60,7 +55,8 @@
      "item": "item.talyn_tuvshin",
      "chance": 0.03
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.khasar",
@@ -77,7 +73,8 @@
       3
      ]
     }
-   ]
+   ],
+   "rare": []
   },
   {
    "id": "loot.dungeon.khasar_den",
@@ -90,7 +87,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -116,10 +112,6 @@
     {
      "item": "item.khasar_zurkh",
      "chance": 0.06
-    },
-    {
-     "item": "weapon.khasar_soyo",
-     "chance": 0.12
     }
    ]
   },
@@ -134,7 +126,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -147,12 +138,9 @@
     {
      "item": "item.chonon_arisan",
      "chance": 0.5
-    },
-    {
-     "item": "weapon.talyn_ild",
-     "chance": 0.015
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.goviin_khilents",
@@ -165,7 +153,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -178,12 +165,9 @@
     {
      "item": "item.khilentsiin_khor",
      "chance": 0.8
-    },
-    {
-     "item": "weapon.govi_khutga",
-     "chance": 0.015
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.elsnii_suns",
@@ -196,7 +180,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -209,12 +192,9 @@
     {
      "item": "item.khilentsiin_khor",
      "chance": 0.4
-    },
-    {
-     "item": "weapon.govi_khutga",
-     "chance": 0.02
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.saaral_chono",
@@ -227,7 +207,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -240,12 +219,9 @@
     {
      "item": "item.chonon_arisan",
      "chance": 0.9
-    },
-    {
-     "item": "weapon.khangai_sukh",
-     "chance": 0.015
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.khangai_baavgai",
@@ -258,7 +234,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -271,12 +246,9 @@
     {
      "item": "item.baavgain_arisan",
      "chance": 0.9
-    },
-    {
-     "item": "weapon.khangai_sukh",
-     "chance": 0.06
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.altai_mosun_suns",
@@ -289,7 +261,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -302,12 +273,9 @@
     {
      "item": "item.mosun_chuluu",
      "chance": 0.6
-    },
-    {
-     "item": "weapon.altai_jad",
-     "chance": 0.01
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.altai_avarga",
@@ -320,7 +288,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -334,12 +301,7 @@
      "item": "item.mosun_chuluu"
     }
    ],
-   "rare": [
-    {
-     "item": "weapon.altai_jad",
-     "chance": 0.05
-    }
-   ]
+   "rare": []
   },
   {
    "id": "loot.dungeon.govi_bulsh",
@@ -352,7 +314,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -388,7 +349,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -424,7 +384,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -460,7 +419,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -477,7 +435,8 @@
       4
      ]
     }
-   ]
+   ],
+   "rare": []
   },
   {
    "id": "loot.oin_ezen",
@@ -490,7 +449,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -507,7 +465,8 @@
       4
      ]
     }
-   ]
+   ],
+   "rare": []
   },
   {
    "id": "loot.mosun_khaan",
@@ -520,7 +479,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -537,7 +495,8 @@
       4
      ]
     }
-   ]
+   ],
+   "rare": []
   },
   {
    "id": "loot.world_event.chonyn_dovtolgoo",
@@ -550,7 +509,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -564,7 +522,8 @@
      "item": "jewel.chingis_tamga",
      "chance": 0.02
     }
-   ]
+   ],
+   "guaranteed": []
   },
   {
    "id": "loot.quest.reward",
@@ -577,7 +536,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -585,7 +543,9 @@
      "weight": 1,
      "spread": 2
     }
-   ]
+   ],
+   "rare": [],
+   "guaranteed": []
   },
   {
    "id": "loot.chest.steppe",
@@ -598,7 +558,6 @@
    "entries": [
     {
      "pool": [
-      "WEAPON",
       "ARMOR",
       "JEWELRY",
       "OFFHAND"
@@ -647,7 +606,8 @@
      "item": "jewel.tengeriin_sakhius",
      "chance": 0.001
     }
-   ]
+   ],
+   "guaranteed": []
   }
  ]
 }

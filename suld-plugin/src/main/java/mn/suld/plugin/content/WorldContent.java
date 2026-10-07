@@ -2,6 +2,7 @@ package mn.suld.plugin.content;
 
 import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.mob.MobTier;
+import mn.suld.api.region.Area;
 import mn.suld.api.region.RegionDefinition;
 import mn.suld.api.region.RegionShape;
 
@@ -68,4 +69,36 @@ public final class WorldContent {
             false, false, List.of(ICE_SPIRIT.id(), GIANT.id()), 600);
 
     public static final List<RegionDefinition> REGIONS = List.of(KHARKHORUM, KHERLEN, GOBI, KHANGAI, ALTAI);
+
+    // ------------------------------------------------------------- areas (docs/world/AREAS.md)
+
+    /**
+     * Named areas inside the four wild regions: three rings (to 700, 1500 and the world edge) split in two halves per
+     * region, named after real places in roughly that direction from Kharkhorum (compressed to fit the map).
+     */
+    public static final List<Area> AREAS = List.of(
+            new Area(16, "area.tuul", "Туулын Хөндий", "region.kherlen", 51, 700, 45, 90, 1, 3, 60, "Туул голын бургастай хөндий", "VERIFIED"),
+            new Area(17, "area.kherlen", "Хэрлэнгийн Тал", "region.kherlen", 51, 700, 90, 135, 1, 3, 60, "Хэрлэн голын өргөн тал", "VERIFIED"),
+            new Area(18, "area.burkhan_khaldun", "Бурхан Халдуны Бэл", "region.kherlen", 700, 1500, 45, 90, 3, 6, 120, "Хэнтийн ариун уулын бэл", "VERIFIED"),
+            new Area(19, "area.khodoo_aral", "Хөдөө Арал", "region.kherlen", 700, 1500, 90, 135, 3, 6, 120, "Хэрлэн, Цэнхэрийн бэлчир — их хуралдайн газар", "VERIFIED"),
+            new Area(20, "area.onon", "Онон Голын Хөндий", "region.kherlen", 1500, WORLD_EDGE, 45, 90, 6, 8, 200, "Онон гол — Дэлүүн Болдогийн нутаг", "VERIFIED"),
+            new Area(21, "area.buir", "Буйр Нуурын Тал", "region.kherlen", 1500, WORLD_EDGE, 90, 135, 6, 8, 200, "Татаруудын нутаг байсан алс зүүн тал", "INSPIRED"),
+            new Area(22, "area.ongi", "Онгийн Гол", "region.gobi", 51, 700, 135, 180, 5, 8, 60, "Говь руу урсах Онгийн гол", "VERIFIED"),
+            new Area(23, "area.taats", "Таацын Хөндий", "region.gobi", 51, 700, 180, 225, 5, 8, 60, "Таацын голын хуурай хөндий", "VERIFIED"),
+            new Area(24, "area.omnii_govi", "Өмнийн Говь", "region.gobi", 700, 1500, 135, 180, 8, 12, 120, "Өмнөд говийн хайрган тал", "VERIFIED"),
+            new Area(25, "area.gurvan_saikhan", "Говь Гурван Сайхан", "region.gobi", 700, 1500, 180, 225, 8, 12, 120, "Говийн гурван сайхан нуруу", "VERIFIED"),
+            new Area(26, "area.galba", "Галбын Говь", "region.gobi", 1500, WORLD_EDGE, 135, 180, 12, 15, 200, "Галбын элсэн говь", "VERIFIED"),
+            new Area(27, "area.tangut", "Тангудын Хил", "region.gobi", 1500, WORLD_EDGE, 180, 225, 12, 15, 200, "Тангуд улсын хил рүү тэмүүлэх зам", "INSPIRED"),
+            new Area(28, "area.orkhon", "Орхоны Хөндий", "region.khangai", 51, 700, 0, 45, 10, 13, 60, "Орхон голын урсгал доош — Хархорумын хойд хөндий", "VERIFIED"),
+            new Area(29, "area.khar_balgas", "Хар Балгас", "region.khangai", 51, 700, 315, 360, 10, 13, 60, "Уйгурын эртний хотын балгас", "VERIFIED"),
+            new Area(30, "area.selenge", "Сэлэнгэ Мөрөн", "region.khangai", 700, 1500, 0, 45, 13, 17, 120, "Хойд зүг урсах их мөрөн", "VERIFIED"),
+            new Area(31, "area.ider", "Идэрийн Гол", "region.khangai", 700, 1500, 315, 360, 13, 17, 120, "Ойт уулсын дундах Идэр гол", "VERIFIED"),
+            new Area(32, "area.merkit", "Мэргидийн Тайга", "region.khangai", 1500, WORLD_EDGE, 0, 45, 17, 20, 200, "Мэргид аймгийн байсан хойд ой", "INSPIRED"),
+            new Area(33, "area.khuvsgul", "Хөвсгөл Нуур", "region.khangai", 1500, WORLD_EDGE, 315, 360, 17, 20, 200, "Хойт зүгийн их цэнгэг нуур", "VERIFIED"),
+            new Area(34, "area.tamir", "Тамирын Гол", "region.altai", 51, 700, 270, 315, 18, 22, 60, "Хойд, Өмнөд Тамирын бэлчир", "VERIFIED"),
+            new Area(35, "area.khangai_range", "Хангайн Нуруу", "region.altai", 51, 700, 225, 270, 18, 22, 60, "Хархорумаас баруун өмнөх их нуруу", "VERIFIED"),
+            new Area(36, "area.zavkhan", "Завхан Гол", "region.altai", 700, 1500, 270, 315, 22, 26, 120, "Баруун зүгийн Завхан гол", "VERIFIED"),
+            new Area(37, "area.otgontenger", "Отгонтэнгэр", "region.altai", 700, 1500, 225, 270, 22, 26, 120, "Хангайн хамгийн өндөр цаст оргил", "VERIFIED"),
+            new Area(38, "area.kharkhiraa", "Хархираа Уул", "region.altai", 1500, WORLD_EDGE, 270, 315, 26, 30, 200, "Увсын мөсөн оргилууд", "VERIFIED"),
+            new Area(39, "area.naiman", "Найманы Нутаг", "region.altai", 1500, WORLD_EDGE, 225, 270, 26, 30, 200, "Найман аймгийн байсан Алтайн нутаг", "INSPIRED"));
 }
