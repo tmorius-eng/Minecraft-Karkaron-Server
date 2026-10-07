@@ -36,7 +36,7 @@ class JdbcClassGearIT {
             st.execute("DROP SCHEMA public CASCADE");
             st.execute("CREATE SCHEMA public");
         }
-        assertEquals(13, new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate());
+        assertEquals(SchemaMigrator.latestVersion(), new SchemaMigrator(ds, SqlDialect.POSTGRESQL).migrate());
         JdbcProfileRepository repo = new JdbcProfileRepository(ds, SqlDialect.POSTGRESQL, Executors.newSingleThreadExecutor());
 
         UUID fresh = UUID.randomUUID();

@@ -168,6 +168,7 @@ public final class ArmorRules {
         if (next == null) return out;
         out.add(new Gate("Хуягийн түвшин " + next.armorLevel(), g.armorLevel() >= next.armorLevel()));
         if (next.dungeon() != null) out.add(new Gate("Давсан агуй: " + name.apply(next.dungeon()), g.cleared().contains(next.dungeon())));
+        if (next.mastery() > 0) out.add(new Gate("Хуягийн ур чадвар " + next.mastery() + "-р зэрэг", g.mastery() >= next.mastery()));
         if (next.ascension() > 0) out.add(new Gate("Тэнгэрийн Зэрэг " + roman(next.ascension()), h.ascension() >= next.ascension()));
         out.add(new Gate(next.coins() + " зоос", h.coins() >= next.coins()));
         if (next.material() != null) out.add(new Gate(next.materials() + " × " + name.apply(next.material()), h.materials() >= next.materials()));

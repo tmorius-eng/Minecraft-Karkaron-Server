@@ -179,6 +179,7 @@ public final class DeathService implements Listener {
         DeathSettings s = settings();
         if (!s.enabled() || e.getKeepInventory()) return;
         Player p = e.getEntity();
+        services.session(p.getUniqueId()).deaths++;
 
         // Everything still in the drop list at HIGHEST (relics are already taken out by the relic system) is either
         // soulbound (kept), lost (dropped) or kept.
@@ -479,6 +480,7 @@ public final class DeathService implements Listener {
 
     private void afterRecovery(Player p, DeathRecord.State how) {
         if (!p.isOnline()) return;
+        services.session(p.getUniqueId()).revives++;
         BossBar bar = bars.remove(p.getUniqueId());
         if (bar != null) p.hideBossBar(bar);
         p.removePotionEffect(PotionEffectType.SLOWNESS);

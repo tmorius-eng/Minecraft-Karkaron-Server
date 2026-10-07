@@ -24,19 +24,41 @@ FLOOR = {"common": 0, "uncommon": 0, "rare": .1, "epic": .25, "legendary": .4, "
 PIECES = ["helmet", "chestplate", "leggings", "boots"]
 TIER_AL = [1, 12, 24, 36, 48, 60]
 TIER_RARITY = ["uncommon", "rare", "epic", "legendary", "ancient", "mythic"]
-TIER_NAME = ["Анхан", "Бэхжсэн", "Сонгомол", "Эзэнт", "Домогт", "Тэнгэрлэг"]
+TIER_NAME = ["Эхлэл", "Сайжруулсан", "Элчин", "Хааны", "Тэнгэрлэг", "Дээдэс"]
 TIER_MATERIAL = ["leather", "chainmail", "iron", "iron", "diamond", "netherite"]
 PIECE_NAME = {"helmet": "Дуулга", "chestplate": "Хуяг", "leggings": "Өмд", "boots": "Гутал"}
 
+def _stats(key, values):
+    return lambda t: {"stats": {key: values[t]}}
+
+
+def _effect(key, values):
+    return lambda t: {"effects": [{"type": "stat", "key": key, "value": values[t]}]}
+
+
+# Class identity is in the per-tier set bonuses (ARMOR_PROGRESSION "Armour and the class"); the pieces themselves
+# keep the generic budget, so no class is stronger than another by its armour alone.
 CLASSES = {
-    "baatar": {
-        "name": "Баатрын",
-        "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
-        # 2 pieces: health, 4 pieces: damage reduction (ARMOR_PROGRESSION "Armour and the class")
-        "set2": lambda t: {"stats": {"max_health": [4, 8, 14, 20, 26, 32][t]}},
-        "set4": lambda t: {"effects": [{"type": "stat", "key": "DAMAGE_REDUCTION", "value": [3, 4, 5, 6, 7, 8][t]}]},
-        "setName": "Баатрын Хуяг",
-    },
+    "baatar": {"name": "Баатрын", "setName": "Баатрын Хуяг",
+               "lore": "Баатрын ангийн хуяг — хуягийн түвшин ахих тусам хамт ахина.",
+               "set2": _stats("max_health", [4, 8, 14, 20, 26, 32]),
+               "set4": _effect("DAMAGE_REDUCTION", [3, 4, 5, 6, 7, 8])},
+    "mergen": {"name": "Мэргэний", "setName": "Мэргэний Хуяг",
+               "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+               "set2": _stats("crit_chance", [2, 3, 4, 5, 6, 7]),
+               "set4": _effect("MOVE_PCT", [4, 5, 6, 7, 8, 9])},
+    "boo": {"name": "Бөөгийн", "setName": "Бөөгийн Хувцас",
+            "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+            "set2": _stats("spell_damage", [3, 5, 7, 9, 11, 13]),
+            "set4": _effect("HEAL_POWER", [5, 7, 9, 11, 13, 15])},
+    "darkhan": {"name": "Дарханы", "setName": "Дарханы Хуяг",
+                "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+                "set2": _stats("armor", [2, 3, 4, 6, 8, 10]),
+                "set4": _effect("THORNS", [5, 7, 9, 11, 13, 15])},
+    "khulegchin": {"name": "Хүлэгчний", "setName": "Хүлэгчний Хуяг",
+                   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+                   "set2": _stats("move_speed", [3, 4, 5, 6, 7, 8]),
+                   "set4": _effect("ATTACK_PCT", [3, 4, 5, 6, 7, 8])},
 }
 
 generic = json.load(open(os.path.join(ITEMS, "armor.json"), encoding="utf-8"))["items"]

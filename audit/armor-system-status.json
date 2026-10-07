@@ -1,7 +1,7 @@
 {
  "audited": "2026-10-07",
  "commit": "f123253",
- "stage": "A (audit) + B (spec) + C3 (Баатар class armour, armour progression, ActivePlaytime)",
+ "stage": "A + B + C3 (Баатар) + C3b (all 5 classes, mastery, smith, farming factor, 6 weapon tiers)",
  "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
  "subsystems": {
   "genericArmorItems": {
@@ -12,7 +12,7 @@
   "classArmor": {
    "status": "FUNCTIONAL_BUT_INCOMPLETE",
    "evidence": "items/class_armor.json (tools/content/gen_class_armor.py); item/ClassArmor.java; api/classgear/*",
-   "note": "Баатар only: 4 pieces × 6 tiers, soulbound, fixed rarity per tier, stat budget fitted to the simulator's generic proxy; granted and worn at class pick (and on join for existing Баатар characters), regenerated in place with the same UUIDs on armour level / tier changes; recover + duplicate removal; kept on death; guarded by SoulboundGuard. Other 4 classes: no definitions yet"
+   "note": "all 5 classes: 4 pieces × 6 tiers each (120 definitions, 30 sets), soulbound, budget fitted to the simulator's generic proxy; granted and worn at class pick and on join; regenerated in place; recover; kept on death; SoulboundGuard"
   },
   "armorLevel": {
    "status": "FUNCTIONAL_BUT_INCOMPLETE",
@@ -22,12 +22,12 @@
   "armorTier": {
    "status": "FUNCTIONAL_BUT_INCOMPLETE",
    "evidence": "ArmorTier; ArmorRules.gates; ClassArmor.upgrade; /classgear upgrade",
-   "note": "gates (armour level, dungeon cleared, coins, band materials, Ascension for T6) enforced; T2 (Говийн Булш) and T3 (Мөсөн Оргил) are reachable in today's content; T4–T6 dungeons (khar_khot, burkhan_aguy, tengeriin_ordon) and Ascension are not in the game yet, so T4+ is blocked. Bought by command, not yet at the smith NPC"
+   "note": "gates: armour level, dungeon cleared, mastery rank (T3 1 / T4 3 / T5 5 / T6 7), coins, band materials, Ascension for T6. T2/T3 reachable with today's dungeons; T4–T6 dungeons and Ascension are not in the game. Bought at the Дархан smith (SmithMenu, confirmation step); the command is staff/debug only. Tier names renamed (no rarity collision)"
   },
   "armorMastery": {
-   "status": "NOT_IMPLEMENTED",
-   "evidence": "—",
-   "note": "needs class mastery (docs/MASTERY_SPEC.md), not built"
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "api/classgear/MasteryRules, MasteryPerks; ClassArmor.addMastery/mobKilled/spellCast/objective; SkillTreeService.refreshRuntime; SkillService resource multipliers",
+   "note": "activity-based sources with per-minute caps, gap rule, repeat fatigue, farming factor; rank milestones (level ≥ 6r, dungeons); perks at 3/6/9 (some (≈) substitutions documented); +0.25 %/rank power; sim C13 PASS (day-7 p90 rank 5)"
   },
   "armorUpgrade": {
    "status": "FUNCTIONAL_BUT_INCOMPLETE",
@@ -68,37 +68,52 @@
    "status": "FUNCTIONAL_BUT_INCOMPLETE",
    "evidence": "ArmorRules.enhanceCost/powerFactor; Equipment.Wearer.armorFactor; /classgear enhance",
    "note": "+2 % per step through the stat pipeline (items unchanged, so the validator stays exact); tempering not implemented"
+  },
+  "smithNpc": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "gui/SmithMenu.java; NpcService.repair (\"⚔ Ангийн хуяг\")",
+   "note": "inspect pieces + weapon, current/next tier, every requirement with held/needed, mastery and perks, enhance; confirmation re-checks gates and distance to the smith (≤ 8 blocks). MANUAL_QA_REQUIRED in a real client"
+  },
+  "farmingFatigue": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "api/activity/ActivityTracker.farmFactor; CombatListener",
+   "note": "player EXP, armour XP and mastery from open-world kills; f(n)=max(0.25, 1/(1+(n-40)/60)) over 30 active minutes within 48 blocks; dungeons/events/bosses/quests untouched; docs/PROGRESSION_BALANCE_SPEC.md §4.x"
+  },
+  "classWeaponTiers": {
+   "status": "FUNCTIONAL_BUT_INCOMPLETE",
+   "evidence": "api/classgear/WeaponTiers; items/weapons.json weapon.class.*.1..6; tools/pack/gen_weapons.py",
+   "note": "6 tiers at 1/12/24/36/48/60, stored weapons stay valid; visuals MANUAL_QA_REQUIRED"
   }
  },
  "perClass": {
   "baatar": {
    "armorSets": 6,
    "tiers": 6,
-   "visuals": "PLACEHOLDER"
+   "visuals": "FUNCTIONAL_BUT_INCOMPLETE (procedural v1); MANUAL_QA_REQUIRED"
   },
   "mergen": {
-   "armorSets": 0,
-   "tiers": 0,
-   "visuals": "NOT_IMPLEMENTED"
+   "armorSets": 6,
+   "tiers": 6,
+   "visuals": "FUNCTIONAL_BUT_INCOMPLETE (procedural v1); MANUAL_QA_REQUIRED"
   },
   "boo": {
-   "armorSets": 0,
-   "tiers": 0,
-   "visuals": "NOT_IMPLEMENTED"
+   "armorSets": 6,
+   "tiers": 6,
+   "visuals": "FUNCTIONAL_BUT_INCOMPLETE (procedural v1); MANUAL_QA_REQUIRED"
   },
   "darkhan": {
-   "armorSets": 0,
-   "tiers": 0,
-   "visuals": "NOT_IMPLEMENTED"
+   "armorSets": 6,
+   "tiers": 6,
+   "visuals": "FUNCTIONAL_BUT_INCOMPLETE (procedural v1); MANUAL_QA_REQUIRED"
   },
   "khulegchin": {
-   "armorSets": 0,
-   "tiers": 0,
-   "visuals": "NOT_IMPLEMENTED"
+   "armorSets": 6,
+   "tiers": 6,
+   "visuals": "FUNCTIONAL_BUT_INCOMPLETE (procedural v1); MANUAL_QA_REQUIRED"
   }
  },
  "spec": {
-  "status": "IMPLEMENTED for Баатар (Stage C3); other classes SPEC",
+  "status": "IMPLEMENTED for all 5 classes (C3 + C3b)",
   "docs": [
    "docs/CLASS_ARMOR_SYSTEM.md",
    "docs/ARMOR_PROGRESSION.md",

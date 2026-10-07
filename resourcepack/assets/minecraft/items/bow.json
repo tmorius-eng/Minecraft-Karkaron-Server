@@ -227,6 +227,78 @@
           "property": "minecraft:using_item",
           "on_false": {
             "type": "minecraft:model",
+            "model": "suld:item/weapon/mergen_5"
+          },
+          "on_true": {
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:use_duration",
+            "scale": 0.05,
+            "entries": [
+              {
+                "threshold": 0.65,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_5_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.9,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_5_pulling_2"
+                }
+              }
+            ],
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_5_pulling_0"
+            }
+          }
+        }
+      },
+      {
+        "threshold": 871016,
+        "model": {
+          "type": "minecraft:condition",
+          "property": "minecraft:using_item",
+          "on_false": {
+            "type": "minecraft:model",
+            "model": "suld:item/weapon/mergen_6"
+          },
+          "on_true": {
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:use_duration",
+            "scale": 0.05,
+            "entries": [
+              {
+                "threshold": 0.65,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_6_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.9,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_6_pulling_2"
+                }
+              }
+            ],
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_6_pulling_0"
+            }
+          }
+        }
+      },
+      {
+        "threshold": 871017,
+        "model": {
+          "type": "minecraft:condition",
+          "property": "minecraft:using_item",
+          "on_false": {
+            "type": "minecraft:model",
             "model": "minecraft:item/bow"
           },
           "on_true": {

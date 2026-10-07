@@ -6,6 +6,8 @@ import mn.suld.api.classgear.ArmorPiece;
 import mn.suld.api.classgear.ArmorRules;
 import mn.suld.api.classgear.ArmorTier;
 import mn.suld.api.classgear.ClassGear;
+import mn.suld.api.classgear.MasteryPerks;
+import mn.suld.api.classgear.MasteryRules;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.event.ExpGainedEvent;
 import mn.suld.api.event.LevelUpEvent;
@@ -202,6 +204,7 @@ public final class ClassArmor implements Listener {
         ArmorRules.Gain gain = ArmorRules.gain(pr.classGear(), xp, pr.progression().level());
         if (gain.added() <= 0) return;
         pr.classGear(gain.after());
+        services.session(p.getUniqueId()).armorXp += gain.added();
         if (gain.levels() > 0) levelled(p, gain.after());
     }
 
@@ -213,17 +216,118 @@ public final class ClassArmor implements Listener {
 
     /** ActivePlaytime: one validated active minute (no armour XP while area-fatigued). */
     public void activeMinute(Player p, ActivityTracker.Verdict v) {
-        if (!v.active() || services.activity == null || services.activity.fatigued(p.getUniqueId())) return;
-        addXp(p, ArmorRules.XP_ACTIVE_MINUTE);
+        if (!v.active()) return;
+        addXp(p, ArmorRules.XP_ACTIVE_MINUTE * (services.activity == null ? 1 : services.activity.areaFactor(p.getUniqueId())));
     }
 
     /** A dungeon clear: armour XP with repeat fatigue, and the tier gate. */
     public void dungeonCleared(Player p, String dungeonId) {
         PlayerProfile pr = profile(p).orElse(null);
         if (pr == null || !supports(pr.playerClass().orElse(null))) return;
-        double xp = ArmorRules.dungeonXp(pr.classGear(), dungeonId);
-        pr.classGear(pr.classGear().withCleared(dungeonId));
+        ClassGear before = pr.classGear();
+        double xp = ArmorRules.dungeonXp(before, dungeonId);
+        double mastery = MasteryRules.XP_DUNGEON * ArmorRules.fatigue(before, dungeonId)
+                + (before.cleared().contains(dungeonId) ? 0 : MasteryRules.XP_FIRST_BOSS);
+        pr.classGear(before.withCleared(dungeonId));
         addXp(p, xp);
+        addMastery(p, mastery);
+    }
+
+    // ------------------------------------------------------------------------------------------------ mastery
+
+    private final Map<UUID, MasteryRules.MinuteCap> castCaps = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<UUID, MasteryRules.MinuteCap> objectiveCaps = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<UUID, Double> damageTaken = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Add armour mastery XP; new ranks refresh the stat pipeline (perks, +0.25 % power per rank). */
+    public void addMastery(Player p, double xp) {
+        PlayerProfile pr = profile(p).orElse(null);
+        if (pr == null || !(xp > 0) || !supports(pr.playerClass().orElse(null)) || services.isSoul.test(p.getUniqueId())) return;
+        MasteryRules.Gain gain = MasteryRules.gain(pr.classGear(), xp, pr.progression().level());
+        pr.classGear(gain.after());
+        services.session(p.getUniqueId()).masteryXp += xp;
+        if (gain.ranks() > 0) masteryRanked(p, pr, gain.after());
+    }
+
+    private void masteryRanked(Player p, PlayerProfile pr, ClassGear g) {
+        services.equipment().dirty(p);
+        StringBuilder sb = new StringBuilder("Хуягийн ур чадвар " + g.mastery() + "-р зэрэгт хүрлээ!");
+        for (MasteryPerks.Perk perk : MasteryPerks.of(pr.playerClass().orElse(null))) {
+            if (perk.rank() == g.mastery()) sb.append(" Шинэ чадвар: ").append(perk.text());
+        }
+        p.sendMessage(Messages.success(sb.toString()));
+        p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.4f);
+        services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "classgear.mastery", p.getUniqueId().toString(), "rank=" + g.mastery()));
+    }
+
+    /** A class objective (capped per minute): the meaningful class-specific act of each class. */
+    public void objective(Player p) {
+        if (objectiveCaps.computeIfAbsent(p.getUniqueId(), k -> new MasteryRules.MinuteCap(MasteryRules.OBJECTIVES_PER_MINUTE))
+                .take(System.currentTimeMillis())) addMastery(p, MasteryRules.XP_OBJECTIVE);
+    }
+
+    /** A cast of one of the player's own class spells (SkillService, real casts only). */
+    public void spellCast(Player p, mn.suld.api.skill.Spell spell) {
+        PlayerProfile pr = profile(p).orElse(null);
+        if (pr == null || pr.playerClass().orElse(null) != spell.clazz()) return;
+        if (castCaps.computeIfAbsent(p.getUniqueId(), k -> new MasteryRules.MinuteCap(MasteryRules.CASTS_PER_MINUTE))
+                .take(System.currentTimeMillis())) addMastery(p, MasteryRules.XP_CAST);
+        // Бөө: a healing prayer that actually heals someone hurt (self or a player within 8 blocks below 80 %)
+        if (spell == mn.suld.api.skill.Spell.SUNSNII_ZALBIRAL || spell == mn.suld.api.skill.Spell.TENGERIIN_KHAALGA) {
+            for (Player o : p.getWorld().getPlayers()) {
+                if (o.getLocation().distanceSquared(p.getLocation()) <= 64 && o.getHealth() < 0.8 * mn.suld.plugin.mob.MobService.maxHealth(o)) {
+                    objective(p);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * A SÜLD mob kill in the open world or a dungeon ({@code farm} = the farming factor, 1 inside dungeons): armour XP
+     * by tier, mastery by tier and level gap, and the kill-based class objectives.
+     */
+    public void mobKilled(Player p, org.bukkit.entity.LivingEntity mob, mn.suld.api.mob.MobDefinition def, double farm) {
+        PlayerProfile pr = profile(p).orElse(null);
+        if (pr == null) return;
+        PlayerClass c = pr.playerClass().orElse(null);
+        if (!supports(c)) return;
+        double armorXp = switch (def.tier()) {
+            case NORMAL -> ArmorRules.XP_KILL;
+            case ELITE -> ArmorRules.XP_ELITE;
+            default -> ArmorRules.XP_CHAMPION;
+        };
+        addXp(p, armorXp * farm);
+        addMastery(p, MasteryRules.killXp(def.tier(), def.level(), pr.progression().level()) * farm);
+        if (c == PlayerClass.MERGEN && mob.getLastDamageCause() instanceof org.bukkit.event.entity.EntityDamageByEntityEvent by
+                && by.getDamager() instanceof org.bukkit.entity.Projectile && p.getLocation().distance(mob.getLocation()) >= 16) objective(p);
+        if (c == PlayerClass.KHULEGCHIN && p.isInsideVehicle()) objective(p);
+    }
+
+    /** Баатар's objective: every 40 damage taken from mobs while fighting. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHurt(org.bukkit.event.entity.EntityDamageByEntityEvent e) {
+        if (!(e.getEntity() instanceof Player p) || e.getDamager() instanceof Player) return;
+        PlayerProfile pr = profile(p).orElse(null);
+        if (pr == null || pr.playerClass().orElse(null) != PlayerClass.BAATAR) return;
+        double total = damageTaken.merge(p.getUniqueId(), e.getFinalDamage(), Double::sum);
+        while (total >= 40) {
+            total -= 40;
+            objective(p);
+        }
+        damageTaken.put(p.getUniqueId(), total);
+    }
+
+    /** Дархан's objective: crafting at the bench (and smith work, called by the smith). */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onCraft(org.bukkit.event.inventory.CraftItemEvent e) {
+        if (!(e.getWhoClicked() instanceof Player p)) return;
+        if (profile(p).flatMap(PlayerProfile::playerClass).orElse(null) == PlayerClass.DARKHAN) objective(p);
+    }
+
+    /** Smith work (repair / item upgrade at the Дархан NPC): Дархан's objective. */
+    public void smithWork(Player p) {
+        if (profile(p).flatMap(PlayerProfile::playerClass).orElse(null) == PlayerClass.DARKHAN) objective(p);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -231,10 +335,9 @@ public final class ClassArmor implements Listener {
         if (e.payload() instanceof ExpGainedEvent g) {
             Player p = Bukkit.getPlayer(g.player());
             if (p == null) return;
-            boolean kill = g.source() == ExpSource.MOB_KILL || g.source() == ExpSource.ELITE_KILL || g.source() == ExpSource.BOSS_KILL;
-            if (kill && services.activity != null && services.activity.fatigued(p.getUniqueId())) return;
-            double xp = ArmorRules.xpFor(g.source());
-            if (xp > 0) addXp(p, xp);
+            // kills are credited by mobKilled (with tier and the farming factor); quests and discoveries here
+            if (g.source() == ExpSource.QUEST || g.source() == ExpSource.DISCOVERY) addXp(p, ArmorRules.xpFor(g.source()));
+            if (g.source() == ExpSource.DISCOVERY) addMastery(p, MasteryRules.XP_DISCOVERY);
         } else if (e.payload() instanceof LevelUpEvent lu) {
             Player p = Bukkit.getPlayer(lu.player());
             PlayerProfile pr = p == null ? null : profile(p).orElse(null);
@@ -244,7 +347,19 @@ public final class ClassArmor implements Listener {
                 pr.classGear(gain.after());
                 levelled(p, gain.after());
             }
+            MasteryRules.Gain m = MasteryRules.settle(pr.classGear(), lu.toLevel());
+            if (m.ranks() > 0) {
+                pr.classGear(m.after());
+                masteryRanked(p, pr, m.after());
+            }
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent e) {
+        castCaps.remove(e.getPlayer().getUniqueId());
+        objectiveCaps.remove(e.getPlayer().getUniqueId());
+        damageTaken.remove(e.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -279,6 +394,16 @@ public final class ClassArmor implements Listener {
             if (use == st[i].getAmount()) p.getInventory().setItem(i, null);
             else st[i].setAmount(st[i].getAmount() - use);
         }
+    }
+
+    /** Display name of a material (catalog) or a dungeon (the ones in the game); unknown dungeons say so. */
+    public String displayName(String id) {
+        if (id == null) return "";
+        if (id.startsWith("dungeon.")) {
+            var d = mn.suld.plugin.content.SuldContent.dungeonFor(id);
+            return d != null ? d.displayName() : id.substring("dungeon.".length()) + " (тоглоомд хараахан нэмэгдээгүй)";
+        }
+        return items().catalog().item(id).map(ItemDefinition::displayName).orElse(id);
     }
 
     /** What the player holds towards the next tier. */
@@ -328,7 +453,15 @@ public final class ClassArmor implements Listener {
         return Enhance.DONE;
     }
 
-    /** Staff QA: set the armour level / tier / enhancement directly (audited by the command). */
+    /** Staff QA: a dungeon counted as cleared (tier gates), audited by the command. */
+    public void markCleared(Player p, String dungeonId) {
+        profile(p).ifPresent(pr -> {
+            pr.classGear(pr.classGear().withCleared(dungeonId));
+            services.profiles().save(pr);
+        });
+    }
+
+    /** Staff QA: set the armour level / tier / enhancement / mastery directly (audited by the command). */
     public void set(Player p, String what, int value) {
         PlayerProfile pr = profile(p).orElse(null);
         if (pr == null) return;
@@ -337,6 +470,7 @@ public final class ClassArmor implements Listener {
             case "level" -> g.withProgress(value, 0);
             case "tier" -> g.withTier(ArmorTier.of(value));
             case "enhance" -> g.withEnhance(value);
+            case "mastery" -> g.withMastery(value, 0);
             default -> g;
         };
         pr.classGear(after);

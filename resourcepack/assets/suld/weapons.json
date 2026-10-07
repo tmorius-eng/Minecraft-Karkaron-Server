@@ -23,6 +23,18 @@
   "model": "suld:item/weapon/baatar_4",
   "bow": false
  },
+ "baatar_5": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871005,
+  "model": "suld:item/weapon/baatar_5",
+  "bow": false
+ },
+ "baatar_6": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871006,
+  "model": "suld:item/weapon/baatar_6",
+  "bow": false
+ },
  "mergen_1": {
   "base_item": "minecraft:bow",
   "custom_model_data": 871011,
@@ -45,6 +57,18 @@
   "base_item": "minecraft:bow",
   "custom_model_data": 871014,
   "model": "suld:item/weapon/mergen_4",
+  "bow": true
+ },
+ "mergen_5": {
+  "base_item": "minecraft:bow",
+  "custom_model_data": 871015,
+  "model": "suld:item/weapon/mergen_5",
+  "bow": true
+ },
+ "mergen_6": {
+  "base_item": "minecraft:bow",
+  "custom_model_data": 871016,
+  "model": "suld:item/weapon/mergen_6",
   "bow": true
  },
  "boo_1": {
@@ -71,6 +95,18 @@
   "model": "suld:item/weapon/boo_4",
   "bow": false
  },
+ "boo_5": {
+  "base_item": "minecraft:blaze_rod",
+  "custom_model_data": 871025,
+  "model": "suld:item/weapon/boo_5",
+  "bow": false
+ },
+ "boo_6": {
+  "base_item": "minecraft:blaze_rod",
+  "custom_model_data": 871026,
+  "model": "suld:item/weapon/boo_6",
+  "bow": false
+ },
  "darkhan_1": {
   "base_item": "minecraft:iron_axe",
   "custom_model_data": 871031,
@@ -95,6 +131,18 @@
   "model": "suld:item/weapon/darkhan_4",
   "bow": false
  },
+ "darkhan_5": {
+  "base_item": "minecraft:iron_axe",
+  "custom_model_data": 871035,
+  "model": "suld:item/weapon/darkhan_5",
+  "bow": false
+ },
+ "darkhan_6": {
+  "base_item": "minecraft:iron_axe",
+  "custom_model_data": 871036,
+  "model": "suld:item/weapon/darkhan_6",
+  "bow": false
+ },
  "khulegchin_1": {
   "base_item": "minecraft:iron_sword",
   "custom_model_data": 871041,
@@ -117,6 +165,18 @@
   "base_item": "minecraft:iron_sword",
   "custom_model_data": 871044,
   "model": "suld:item/weapon/khulegchin_4",
+  "bow": false
+ },
+ "khulegchin_5": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871045,
+  "model": "suld:item/weapon/khulegchin_5",
+  "bow": false
+ },
+ "khulegchin_6": {
+  "base_item": "minecraft:iron_sword",
+  "custom_model_data": 871046,
+  "model": "suld:item/weapon/khulegchin_6",
   "bow": false
  }
 }

@@ -1,6 +1,12 @@
 # SÜLD mastery (proposed)
 
-Part of the proposed balance. **Not implemented yet.** Numbers come from `ProposedRules` / `Engine.mastery`.
+Part of the proposed balance. Numbers come from `ProposedRules` / `Engine.mastery`.
+
+**Status:**
+* The **Class track is IMPLEMENTED as Armour Mastery** (Stage C3b, `suld-api/.../classgear/MasteryRules`,
+  `MasteryPerks`, stored in the profile's `class_gear` record), FUNCTIONAL_BUT_INCOMPLETE. It is described under
+  "Armour mastery (as built)" below.
+* The other seven tracks are SPEC.
 
 Mastery is long-term progression **separate from level** (directive §16). It starts at level 1, so casual players
 always see something move. It continues after 60, gates parts of Ascension, and gives mostly horizontal rewards.
@@ -73,3 +79,41 @@ See `docs/PROGRESSION_SIMULATION.md` §Player progression table. Total mastery r
 
 No archetype completes all 80 ranks within 180 days. Exploration and Collection are capped by content, so new regions
 and items raise them.
+
+
+## Armour mastery (as built, Stage C3b)
+
+Ranks 0–10 per character. Rank r → r + 1 needs 300·(r + 1)^1.9 mastery XP (94,463 in total).
+
+| Source | Mastery XP | Diminishing return |
+|---|---|---|
+| Kill | 1 / 4 / 10 (normal / elite / champion and up) | none if the mob is more than 3 levels below the player; × the farming factor |
+| Own class spell cast (not QA casts) | 0.5 | at most 12 count per minute |
+| Class objective | 1 | at most 10 per minute |
+| Dungeon clear | 40 × repeat fatigue | −15 % per same-dungeon clear in the last 8 (floor 25 %) |
+| First clear of a dungeon (its boss) | +100 | once per dungeon |
+| Region discovery (first visit) | 30 | once per region |
+
+Class objectives:
+* Баатар: every 40 damage taken from mobs.
+* Мэргэн: a projectile kill from 16 blocks or more.
+* Бөө: a healing prayer (Сүнсний Залбирал / Тэнгэрийн Хаалга) cast while someone within 8 blocks is below 80 % HP.
+* Дархан: crafting, and the smith's repairs and upgrades.
+* Хүлэгчин: a kill while mounted.
+
+* **Milestones:** rank r needs player level ≥ 6r. From rank 4 it also needs r − 2 different dungeons cleared. Rank
+  10 therefore needs level 60 and 8 dungeons, which no player can have in 7 days (simulation C2 and C13).
+* **Power:** +0.25 % class-armour power per rank, through `Equipment.Wearer.armorFactor`.
+* **Tier gates:** T3 needs rank 1, T4 rank 3, T5 rank 5, T6 rank 7.
+* **Perks at ranks 3 / 6 / 9** (`MasteryPerks`): stats and spell modifiers merged into the SkillBuild by
+  `SkillTreeService.refreshRuntime`, plus resource gain/regeneration multipliers read by `SkillService`. Where the spec
+  wording has no exact hook, the closest existing modifier is used; these are marked (≈) in-game:
+  * Мэргэн r6: first arrow after a dodge → Чонын Нүд +25 % damage.
+  * Мэргэн r9: Volley +1 arrow → 20 % echo.
+  * Бөө r9: Онгон +2 s → 15 % echo.
+  * Баатар r9: War cry refund → −20 % cost.
+  * Хүлэгчин r3: momentum decay → +15 % regeneration.
+  * Хүлэгчин r6: charge stun → 1 s slow.
+  * Хүлэгчин r9: mounted damage → +5 % attack.
+* **Simulation:** day-7 armour mastery is rank 5 at p90 for a 10 h/day player. No run reaches maximum armour power in 7
+  days (C13 PASS).

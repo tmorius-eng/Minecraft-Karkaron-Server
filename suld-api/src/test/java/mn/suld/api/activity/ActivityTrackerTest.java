@@ -94,21 +94,50 @@ class ActivityTrackerTest {
     }
 
     @Test
-    void areaFatigueEndsWhenThePlayerMovesOn() {
+    void farmingCurveIsSoftAndHasAFloor() {
+        assertEquals(1.0, ActivityTracker.factor(0));
+        assertEquals(1.0, ActivityTracker.factor(40));
+        assertEquals(0.5, ActivityTracker.factor(100), 1e-9);
+        assertEquals(1 / 3.0, ActivityTracker.factor(160), 1e-9);
+        assertEquals(0.25, ActivityTracker.factor(220), 1e-9);
+        assertEquals(0.25, ActivityTracker.factor(10_000), 1e-9, "never zero: some reward stays");
+    }
+
+    @Test
+    void farmingOneSpotLowersTheRewardAndMovingOnRestoresIt() {
         ActivityTracker t = new ActivityTracker();
-        for (int m = 0; m < 10; m++) {
-            for (int k = 0; k < 16; k++) t.kill(10 + k, 10);
-            t.closeMinute();
+        double last = 1;
+        for (int k = 0; k < 200; k++) {
+            last = t.kill("mob.zombie", 10 + k % 20, 10);
+            if (k % 10 == 9) t.closeMinute(); // ~10 kills per active minute
         }
-        assertTrue(t.areaFatigued(), "160 kills in one 64-block area");
-        t.move(500, 500, false, 1_000_000);
-        assertFalse(t.areaFatigued());
-        ActivityTracker u = new ActivityTracker();
-        for (int m = 0; m < 10; m++) {
-            for (int k = 0; k < 16; k++) u.kill(m * 100 + k, 10);
-            u.closeMinute();
+        assertTrue(last < 0.4, "200 kills of one mob in one spot: " + last);
+        assertTrue(t.areaFactor() < 0.5);
+        assertEquals(1.0, t.kill("mob.zombie", 500, 500), "another area is a fresh count");
+        assertEquals(1.0, t.farmFactor("mob.wolf", 900, 900));
+    }
+
+    @Test
+    void otherMobTypesCountHalf() {
+        ActivityTracker a = new ActivityTracker();
+        for (int k = 0; k < 100; k++) a.kill(k % 2 == 0 ? "mob.a" : "mob.b", 5, 5);
+        ActivityTracker b = new ActivityTracker();
+        for (int k = 0; k < 100; k++) b.kill("mob.a", 5, 5);
+        assertTrue(a.farmFactor("mob.a", 5, 5) > b.farmFactor("mob.a", 5, 5), "variety is farmed less");
+    }
+
+    @Test
+    void killsExpireByActiveMinutesNotByIdleTime() {
+        ActivityTracker t = new ActivityTracker();
+        for (int k = 0; k < 160; k++) t.kill("mob.zombie", 1, 1);
+        double tired = t.farmFactor("mob.zombie", 1, 1);
+        for (int m = 0; m < 120; m++) t.closeMinute(); // two idle hours: nothing expires
+        assertEquals(tired, t.farmFactor("mob.zombie", 1, 1), 1e-9);
+        for (int m = 0; m < 31; m++) {
+            t.signal(ActivitySignal.QUEST);
+            t.closeMinute(); // 31 active minutes elsewhere
         }
-        assertFalse(u.areaFatigued(), "spread over the map");
+        assertEquals(1.0, t.farmFactor("mob.zombie", 1, 1), 1e-9);
     }
 
     @Test

@@ -510,7 +510,7 @@
    "type": "SWORD",
    "rarity": "epic",
    "maxRarity": "epic",
-   "level": 25,
+   "level": 24,
    "stats": {
     "damage": 14,
     "crit_chance": 9
@@ -528,12 +528,12 @@
   },
   {
    "id": "weapon.class.baatar.4",
-   "name": "Тэнгэрийн Хөх Илд",
+   "name": "Хурц Нуруут Илд",
    "material": "minecraft:iron_sword",
    "type": "SWORD",
    "rarity": "legendary",
    "maxRarity": "legendary",
-   "level": 45,
+   "level": 36,
    "stats": {
     "damage": 21,
     "crit_chance": 11
@@ -542,6 +542,52 @@
    "durability": 0,
    "sell": 0,
    "model": 871004,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.baatar.5",
+   "name": "Чонын Эртний Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 48,
+   "stats": {
+    "damage": 28,
+    "crit_chance": 13
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871005,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.baatar.6",
+   "name": "Тэнгэрийн Одот Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 60,
+   "stats": {
+    "damage": 36,
+    "crit_chance": 15
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871006,
    "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
    "classes": [
     "baatar"
@@ -602,7 +648,7 @@
    "type": "BOW",
    "rarity": "epic",
    "maxRarity": "epic",
-   "level": 25,
+   "level": 24,
    "stats": {
     "damage": 14,
     "crit_chance": 14
@@ -620,12 +666,12 @@
   },
   {
    "id": "weapon.class.mergen.4",
-   "name": "Тэнгэрийн Хөх Нум",
+   "name": "Ясан Хавтант Дайны Нум",
    "material": "minecraft:bow",
    "type": "BOW",
    "rarity": "legendary",
    "maxRarity": "legendary",
-   "level": 45,
+   "level": 36,
    "stats": {
     "damage": 21,
     "crit_chance": 16
@@ -634,6 +680,52 @@
    "durability": 0,
    "sell": 0,
    "model": 871014,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.mergen.5",
+   "name": "Бүргэдийн Далавчит Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 48,
+   "stats": {
+    "damage": 28,
+    "crit_chance": 18
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871015,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.mergen.6",
+   "name": "Тэнгэрийн Одот Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 60,
+   "stats": {
+    "damage": 36,
+    "crit_chance": 20
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871016,
    "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
    "classes": [
     "mergen"
@@ -694,7 +786,7 @@
    "type": "STAFF",
    "rarity": "epic",
    "maxRarity": "epic",
-   "level": 25,
+   "level": 24,
    "stats": {
     "damage": 14,
     "crit_chance": 8
@@ -712,12 +804,12 @@
   },
   {
    "id": "weapon.class.boo.4",
-   "name": "Тэнгэрийн Хөх Таяг",
+   "name": "Толинт Таяг",
    "material": "minecraft:blaze_rod",
    "type": "STAFF",
    "rarity": "legendary",
    "maxRarity": "legendary",
-   "level": 45,
+   "level": 36,
    "stats": {
     "damage": 21,
     "crit_chance": 10
@@ -726,6 +818,52 @@
    "durability": 0,
    "sell": 0,
    "model": 871024,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.boo.5",
+   "name": "Хонхот Ясан Таяг",
+   "material": "minecraft:blaze_rod",
+   "type": "STAFF",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 48,
+   "stats": {
+    "damage": 28,
+    "crit_chance": 12
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871025,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.boo.6",
+   "name": "Тэнгэрийн Хаалганы Таяг",
+   "material": "minecraft:blaze_rod",
+   "type": "STAFF",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 60,
+   "stats": {
+    "damage": 36,
+    "crit_chance": 14
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871026,
    "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
    "classes": [
     "boo"
@@ -786,7 +924,7 @@
    "type": "AXE",
    "rarity": "epic",
    "maxRarity": "epic",
-   "level": 25,
+   "level": 24,
    "stats": {
     "damage": 14,
     "crit_chance": 8
@@ -804,12 +942,12 @@
   },
   {
    "id": "weapon.class.darkhan.4",
-   "name": "Тэнгэрийн Хөх Алх",
+   "name": "Дөлөн Зүрхт Алх",
    "material": "minecraft:iron_axe",
    "type": "AXE",
    "rarity": "legendary",
    "maxRarity": "legendary",
-   "level": 45,
+   "level": 36,
    "stats": {
     "damage": 21,
     "crit_chance": 10
@@ -818,6 +956,52 @@
    "durability": 0,
    "sell": 0,
    "model": 871034,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.darkhan.5",
+   "name": "Чонын Амт Алх",
+   "material": "minecraft:iron_axe",
+   "type": "AXE",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 48,
+   "stats": {
+    "damage": 28,
+    "crit_chance": 12
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871035,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.darkhan.6",
+   "name": "Тэнгэрийн Дөшит Алх",
+   "material": "minecraft:iron_axe",
+   "type": "AXE",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 60,
+   "stats": {
+    "damage": 36,
+    "crit_chance": 14
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871036,
    "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
    "classes": [
     "darkhan"
@@ -873,12 +1057,12 @@
   },
   {
    "id": "weapon.class.khulegchin.3",
-   "name": "Хааны Алтан Жад",
+   "name": "Далавчит Алтан Жад",
    "material": "minecraft:iron_sword",
    "type": "SPEAR",
    "rarity": "epic",
    "maxRarity": "epic",
-   "level": 25,
+   "level": 24,
    "stats": {
     "damage": 14,
     "crit_chance": 11
@@ -896,12 +1080,12 @@
   },
   {
    "id": "weapon.class.khulegchin.4",
-   "name": "Тэнгэрийн Хөх Жад",
+   "name": "Дэгээт Жад",
    "material": "minecraft:iron_sword",
    "type": "SPEAR",
    "rarity": "legendary",
    "maxRarity": "legendary",
-   "level": 45,
+   "level": 36,
    "stats": {
     "damage": 21,
     "crit_chance": 13
@@ -910,6 +1094,52 @@
    "durability": 0,
    "sell": 0,
    "model": 871044,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.khulegchin.5",
+   "name": "Морин Гавалт Жад",
+   "material": "minecraft:iron_sword",
+   "type": "SPEAR",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 48,
+   "stats": {
+    "damage": 28,
+    "crit_chance": 15
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871045,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.khulegchin.6",
+   "name": "Сүүлт Одны Жад",
+   "material": "minecraft:iron_sword",
+   "type": "SPEAR",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 60,
+   "stats": {
+    "damage": 36,
+    "crit_chance": 17
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871046,
    "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
    "classes": [
     "khulegchin"

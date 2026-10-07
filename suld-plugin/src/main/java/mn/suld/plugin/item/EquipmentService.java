@@ -141,7 +141,8 @@ public final class EquipmentService implements Listener {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         return new Equipment.Wearer(p.getUniqueId(), pr == null ? null : pr.playerClass().orElse(null), pr == null ? 1 : pr.progression().level(),
                 services.woundFactor.applyAsDouble(p.getUniqueId()),
-                pr == null ? 1.0 : mn.suld.api.classgear.ArmorRules.powerFactor(pr.classGear().enhance()));
+                pr == null ? 1.0 : mn.suld.api.classgear.ArmorRules.powerFactor(pr.classGear().enhance())
+                        * mn.suld.api.classgear.MasteryRules.powerFactor(pr.classGear().mastery()));
     }
 
     private String fingerprint(Player p, Map<EquipSlot, ItemInstance> worn, Set<EquipSlot> broken) {

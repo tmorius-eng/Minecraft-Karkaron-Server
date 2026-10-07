@@ -24,7 +24,7 @@ Source: `audit/visual-content-status.json` and the 2026-10-07 visual audit.
 
 | Area | Today | Status |
 |---|---|---|
-| Class weapons | 20 voxel-extruded models (5 classes × 4 tiers) + 12 bow frames, `tools/pack/gen_weapons.py`, 60–147 cuboids each | INTEGRATED, not client-tested |
+| Class weapons | 30 voxel-extruded models (5 classes × 6 tiers, C3b) + 18 bow frames, `tools/pack/gen_weapons.py`, 60–147 cuboids each | INTEGRATED, not client-tested |
 | Other weapons, items | 16×16 sprites for 6 weapons, 2 materials, 3 rings (`gen_item_textures.py`); 18 weapons show vanilla | FUNCTIONAL_BUT_INCOMPLETE |
 | Class armour | None. `armor.json` holds 27 vanilla leather/chain/iron/diamond/netherite pieces; no `equipment/` assets | NOT_IMPLEMENTED |
 | Mobs, elites, bosses | Vanilla entities with names (Хасар = RAVAGER) | NOT_IMPLEMENTED |
@@ -75,8 +75,8 @@ One complete, client-tested slice proves every stage of the pipeline before anyt
 
 | # | Deliverable | Registry id(s) | Technique | Acceptance criteria |
 |---|---|---|---|---|
-| 1 | Баатар armour, **T1 Анхан → T6 Тэнгэрлэг** (helmet, chest with shoulder/arm, legs, boots for each tier) | `armor.baatar_t1` … `armor.baatar_t6` | Equipment layers at 128×64, 3D helmet item models, pauldron passengers on T3–T6 only | (a) Six tiers that read as different gear at 16 blocks in a side-by-side screenshot with no HUD, judged on silhouette, not colour; (b) every row of the [armour QA checklist](ARMOR_ASSET_PIPELINE.md#7-qa-checklist-per-armour-set) passes in a real 1.21.11 client; (c) items built by `ItemFactory` with Equippable + ITEM_MODEL, with the tooltip and rarity colour right; (d) within the [budget](ASSET_BUDGET.md#6-per-asset-budget-баатар-slice) |
-| 2 | Signature weapon: Баатар sabre, **T6 Тэнгэрлэг** hero model | `weapon.baatar_sabre_t6` | Blockbench cuboid item model, 64×64 texture, `ITEM_MODEL` | Reads as a sabre in first person, third person and the GUI. No clipping with the T6 gauntlet. Matches the T6 armour materials. The 4 existing Баатар voxel weapons also pass a client check |
+| 1 | Баатар armour, **T1 Эхлэл → T6 Дээдэс** (helmet, chest with shoulder/arm, legs, boots for each tier) | `armor.baatar_t1` … `armor.baatar_t6` | Equipment layers at 128×64, 3D helmet item models, pauldron passengers on T3–T6 only | (a) Six tiers that read as different gear at 16 blocks in a side-by-side screenshot with no HUD, judged on silhouette, not colour; (b) every row of the [armour QA checklist](ARMOR_ASSET_PIPELINE.md#7-qa-checklist-per-armour-set) passes in a real 1.21.11 client; (c) items built by `ItemFactory` with Equippable + ITEM_MODEL, with the tooltip and rarity colour right; (d) within the [budget](ASSET_BUDGET.md#6-per-asset-budget-баатар-slice) |
+| 2 | Signature weapon: Баатар sabre, **T6 Дээдэс** hero model | `weapon.baatar_sabre_t6` | Blockbench cuboid item model, 64×64 texture, `ITEM_MODEL` | Reads as a sabre in first person, third person and the GUI. No clipping with the T6 gauntlet. Matches the T6 armour materials. The 4 existing Баатар voxel weapons also pass a client check |
 | 3 | Elite mob: **Хангайн Баавгай** (existing ELITE, `WorldContent.BEAR`) | `mob.khangai_baavgai` | Quadruped bone rig, 12–15 bones | Idle, walk, attack and death play; the hitbox is visually honest (±15 %); the elite cues of [BOSS_VISUAL_SPEC §3](BOSS_VISUAL_SPEC.md#3-elite--champion-visual-categories) are visible; under 5 KB/s per viewer when idle (measured) |
 | 4 | Dungeon boss: **Хасар — Агуйн Эзэн** | `boss.khasar` | 24–30 display bones on the invisible RAVAGER host | All clips in [BOSS_VISUAL_SPEC §5](BOSS_VISUAL_SPEC.md#5-хасар--full-specification) play. The phase changes at 60 % and 30 % and the 180 s enrage are visible without reading chat. The death clip finishes. 4 players in the arena hold 20 TPS with mspt < 35 (spark) |
 | 5 | Relic visual: **Хөх Сүлд** | `relic.khukh_suld_model` | 3D tug-standard item model (inventory and hand) + shrine `ItemDisplay` | Distinct inventory icon, held model, shrine presentation and acquisition moment. The blue is labelled ORIGINAL FICTION. No Soyombo |
@@ -162,7 +162,7 @@ decals, T1 armour if the draft is clear enough).
 | Pack budget validator already fails (102 findings in HUD textures) | `build-pack.sh` aborts | Fix the allowlist and duplicates in phase 11 or earlier (not part of this doc set) |
 | Historical mislabelling (Soyombo, invented tamga, "blue banner") | Public criticism | Labels on every motif; the style guide's "do not" list; review before public use |
 | Bedrock players via Geyser see vanilla shapes | Inconsistent look | Document; consider a Geyser mapping pack later |
-| Naming clash: tier "Домогт" (T5) vs the EPIC rarity display name "Домогт" (`ItemRarity.java`) | A confusing tooltip | Owner question; see the open questions in ARMOR_PROGRESSION_VISUAL_SPEC |
+| RESOLVED: tiers renamed (Эхлэл…Дээдэс); was a naming clash: tier "Домогт" (T5) vs the EPIC rarity display name "Домогт" (`ItemRarity.java`) | A confusing tooltip | Owner question; see the open questions in ARMOR_PROGRESSION_VISUAL_SPEC |
 
 ## 9. Status
 

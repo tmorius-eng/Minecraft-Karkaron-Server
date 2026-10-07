@@ -27,12 +27,12 @@ The one-page view of the class armour programme. Details:
 
 | Axis | Count | Gate | Simulated arrival (hardcore / active / casual) |
 |---|---|---|---|
-| T1 Анхан | at class pick | — | day 1 |
-| T2 Бэхжсэн | AL 12 + Говийн Булш | first dungeons | day 2–3 / 3 / 6 |
-| T3 Сонгомол | AL 24 + Мөсөн Оргил | the Алтай band | day 4 / ~10 / ~30 |
-| T4 Эзэнт | AL 36 + Хар Хотын Балгас | Act II | ~day 10 / ~20 / ~55 |
-| T5 Домогт | AL 48 + Бурхан Халдуны Агуй | late game | ~day 20 / ~30 / ~85 |
-| T6 Тэнгэрлэг | AL 60 + Тэнгэрийн Ордон + Ascension III | endgame | days 90–180 / ~180 / beyond 180 |
+| T1 Эхлэл | at class pick | — | day 1 |
+| T2 Сайжруулсан | AL 12 + Говийн Булш | first dungeons | day 2–3 / 3 / 6 |
+| T3 Элчин | AL 24 + Мөсөн Оргил | the Алтай band | day 4 / ~10 / ~30 |
+| T4 Хааны | AL 36 + Хар Хотын Балгас | Act II | ~day 10 / ~20 / ~55 |
+| T5 Тэнгэрлэг | AL 48 + Бурхан Халдуны Агуй | late game | ~day 20 / ~30 / ~85 |
+| T6 Дээдэс | AL 60 + Тэнгэрийн Ордон + Ascension III | endgame | days 90–180 / ~180 / beyond 180 |
 
 The day numbers are p50 readings of the armour table in `docs/PROGRESSION_SIMULATION.md`.
 

@@ -24,12 +24,14 @@ import java.util.UUID;
  * @param weapon     the identity of the class weapon (null = unknown)
  * @param cleared    dungeons cleared at least once (tier gates)
  * @param recent     the last {@link ArmorRules#RECENT_CLEARS} dungeon clears, newest last (repeat fatigue)
+ * @param mastery    armour mastery rank (0..{@link MasteryRules#MAX_RANK})
+ * @param masteryXp  mastery XP into the current rank
  */
 public record ClassGear(int armorLevel, double armorXp, ArmorTier tier, int enhance, Map<ArmorPiece, UUID> pieces, UUID weapon,
-                        Set<String> cleared, List<String> recent) {
+                        Set<String> cleared, List<String> recent, int mastery, double masteryXp) {
 
     public static final int VERSION = 1;
-    public static final ClassGear NONE = new ClassGear(1, 0, ArmorTier.T1, 0, Map.of(), null, Set.of(), List.of());
+    public static final ClassGear NONE = new ClassGear(1, 0, ArmorTier.T1, 0, Map.of(), null, Set.of(), List.of(), 0, 0);
 
     public ClassGear {
         armorLevel = Math.max(1, Math.min(ArmorRules.MAX_ARMOR_LEVEL, armorLevel));
@@ -43,6 +45,12 @@ public record ClassGear(int armorLevel, double armorXp, ArmorTier tier, int enha
         pieces = Collections.unmodifiableMap(p);
         cleared = cleared == null ? Set.of() : Collections.unmodifiableSet(new TreeSet<>(cleared));
         recent = recent == null ? List.of() : List.copyOf(recent.subList(Math.max(0, recent.size() - ArmorRules.RECENT_CLEARS), recent.size()));
+        mastery = Math.max(0, Math.min(MasteryRules.MAX_RANK, mastery));
+        masteryXp = Double.isFinite(masteryXp) ? Math.max(0, masteryXp) : 0;
+    }
+
+    public ClassGear withMastery(int rank, double xp) {
+        return new ClassGear(armorLevel, armorXp, tier, enhance, pieces, weapon, cleared, recent, rank, xp);
     }
 
     public boolean isEmpty() {
@@ -57,23 +65,23 @@ public record ClassGear(int armorLevel, double armorXp, ArmorTier tier, int enha
         Map<ArmorPiece, UUID> m = new EnumMap<>(ArmorPiece.class);
         m.putAll(pieces);
         m.put(p, id);
-        return new ClassGear(armorLevel, armorXp, tier, enhance, m, weapon, cleared, recent);
+        return new ClassGear(armorLevel, armorXp, tier, enhance, m, weapon, cleared, recent, mastery, masteryXp);
     }
 
     public ClassGear withWeapon(UUID id) {
-        return new ClassGear(armorLevel, armorXp, tier, enhance, pieces, id, cleared, recent);
+        return new ClassGear(armorLevel, armorXp, tier, enhance, pieces, id, cleared, recent, mastery, masteryXp);
     }
 
     public ClassGear withProgress(int level, double xp) {
-        return new ClassGear(level, xp, tier, enhance, pieces, weapon, cleared, recent);
+        return new ClassGear(level, xp, tier, enhance, pieces, weapon, cleared, recent, mastery, masteryXp);
     }
 
     public ClassGear withTier(ArmorTier t) {
-        return new ClassGear(armorLevel, armorXp, t, 0, pieces, weapon, cleared, recent); // a new tier resets enhancement
+        return new ClassGear(armorLevel, armorXp, t, 0, pieces, weapon, cleared, recent, mastery, masteryXp); // a new tier resets enhancement
     }
 
     public ClassGear withEnhance(int e) {
-        return new ClassGear(armorLevel, armorXp, tier, e, pieces, weapon, cleared, recent);
+        return new ClassGear(armorLevel, armorXp, tier, e, pieces, weapon, cleared, recent, mastery, masteryXp);
     }
 
     /** A dungeon clear: the tier gate set and the repeat-fatigue list. */
@@ -82,7 +90,7 @@ public record ClassGear(int armorLevel, double armorXp, ArmorTier tier, int enha
         s.add(dungeonId);
         List<String> r = new java.util.ArrayList<>(recent);
         r.add(dungeonId);
-        return new ClassGear(armorLevel, armorXp, tier, enhance, pieces, weapon, s, r);
+        return new ClassGear(armorLevel, armorXp, tier, enhance, pieces, weapon, s, r, mastery, masteryXp);
     }
 
     public String toJson() {
@@ -98,6 +106,8 @@ public record ClassGear(int armorLevel, double armorXp, ArmorTier tier, int enha
         if (weapon != null) m.put("w", weapon.toString());
         m.put("c", List.copyOf(cleared));
         m.put("r", recent);
+        m.put("m", mastery);
+        m.put("mx", Math.round(masteryXp * 100) / 100.0);
         return Json.write(m);
     }
 
@@ -125,7 +135,8 @@ public record ClassGear(int armorLevel, double armorXp, ArmorTier tier, int enha
             Object w = m.get("w");
             return new ClassGear(Json.integer(m.getOrDefault("al", 1)), m.get("xp") instanceof Number n ? n.doubleValue() : 0,
                     ArmorTier.of(Json.integer(m.getOrDefault("t", 1))), Json.integer(m.getOrDefault("e", 0)), pieces,
-                    w == null ? null : UUID.fromString(String.valueOf(w)), cleared, recent);
+                    w == null ? null : UUID.fromString(String.valueOf(w)), cleared, recent,
+                    Json.integer(m.getOrDefault("m", 0)), m.get("mx") instanceof Number nx ? nx.doubleValue() : 0); // absent before C3b: 0
         } catch (RuntimeException e) {
             throw new IllegalArgumentException("broken class gear data: " + e.getMessage(), e);
         }

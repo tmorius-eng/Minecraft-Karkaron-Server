@@ -1,0 +1,14 @@
+{
+ "layers": {
+  "humanoid": [
+   {
+    "texture": "suld:mergen_t1"
+   }
+  ],
+  "humanoid_leggings": [
+   {
+    "texture": "suld:mergen_t1"
+   }
+  ]
+ }
+}

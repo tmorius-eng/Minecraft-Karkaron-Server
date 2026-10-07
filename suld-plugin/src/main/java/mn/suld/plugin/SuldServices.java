@@ -93,13 +93,6 @@ public final class SuldServices {
     public SuldServices(Plugin plugin, SuldConfig config) {
         this.config = config;
         this.events = new BukkitEventDispatcher(plugin);
-        this.analytics = config.analytics().enabled()
-                ? new LoggingAnalyticsSink(plugin.getLogger())
-                : AnalyticsSink.NOOP;
-
-        ProgressionEngine engine = new ProgressionEngine(config.progression().toCurve());
-        this.progressionService = new DefaultProgressionService(engine, events, analytics);
-
         int poolSize = Math.max(2, config.database().poolSize());
         this.ioExecutor = Executors.newFixedThreadPool(poolSize, daemonThreadFactory());
 
@@ -120,6 +113,21 @@ public final class SuldServices {
         }
 
         this.profileService = new DefaultProfileService(repository);
+
+        // analytics: the database sink needs the storage above (docs/ANALYTICS.md); otherwise the log sink
+        if (!config.analytics().enabled()) {
+            this.analytics = AnalyticsSink.NOOP;
+        } else if (config.analytics().sink() == mn.suld.api.config.AnalyticsSettings.Sink.DATABASE && dataSource != null) {
+            this.analytics = new mn.suld.plugin.analytics.JdbcAnalyticsSink(dataSource, SqlDialect.forStorage(config.database().type()),
+                    ioExecutor, plugin.getLogger(), config.analytics().skipTypes(), config.analytics().queueLimit());
+        } else {
+            if (config.analytics().sink() == mn.suld.api.config.AnalyticsSettings.Sink.DATABASE) {
+                plugin.getLogger().warning("analytics.sink: database needs MySQL/PostgreSQL storage; using the log sink.");
+            }
+            this.analytics = new LoggingAnalyticsSink(plugin.getLogger());
+        }
+        ProgressionEngine engine = new ProgressionEngine(config.progression().toCurve());
+        this.progressionService = new DefaultProgressionService(engine, events, analytics);
 
         // Authentication + audit (identity = authenticated UUID; fail closed when unverified).
         this.auditLog = dataSource == null
@@ -283,6 +291,24 @@ public final class SuldServices {
     public volatile mn.suld.plugin.item.ItemService itemService;
     /** Filled by SuldPlugin: the nine equipment slots of every player. */
     public volatile mn.suld.plugin.item.EquipmentService equipment;
+    /** Aggregate totals of each online player's current session (docs/ANALYTICS.md); main thread. */
+    private final java.util.Map<java.util.UUID, mn.suld.api.analytics.SessionTotals> sessions = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The session totals of an online player (a throwaway instance for anyone else, so hooks never null-check). */
+    public mn.suld.api.analytics.SessionTotals session(java.util.UUID player) {
+        mn.suld.api.analytics.SessionTotals t = sessions.get(player);
+        return t != null ? t : new mn.suld.api.analytics.SessionTotals(System.currentTimeMillis());
+    }
+
+    public void sessionStarted(java.util.UUID player) {
+        sessions.put(player, new mn.suld.api.analytics.SessionTotals(System.currentTimeMillis()));
+    }
+
+    /** Removes and returns the session totals (null if none was open). */
+    public mn.suld.api.analytics.SessionTotals sessionEnded(java.util.UUID player) {
+        return sessions.remove(player);
+    }
+
     /** ActivePlaytime (null until the plugin enabled it). */
     public volatile mn.suld.plugin.activity.ActivePlaytimeService activity;
     /** The class armour (null until the plugin enabled it). */

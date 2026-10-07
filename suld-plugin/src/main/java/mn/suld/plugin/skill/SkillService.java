@@ -198,8 +198,8 @@ public final class SkillService implements Listener {
         if (e.getDamager() instanceof Player p) {
             click(p, 'L');
             PlayerClass c = clazzOf(p);
-            if (c == PlayerClass.BAATAR) pool(p).gain(4);   // Хил grows in battle
-            if (c == PlayerClass.DARKHAN) pool(p).gain(3);  // the forge heats with every blow
+            if (c == PlayerClass.BAATAR) pool(p).gain(4 * masteryGain(p, c));   // Хил grows in battle
+            if (c == PlayerClass.DARKHAN) pool(p).gain(3 * masteryGain(p, c));  // the forge heats with every blow
         }
     }
 
@@ -254,6 +254,7 @@ public final class SkillService implements Listener {
         try {
             CastResult r = castDirect0(p, s, ignoreTiming);
             if (r == CastResult.CAST && services.activity != null) services.activity.signal(p.getUniqueId(), mn.suld.api.activity.ActivitySignal.SPELL);
+            if (r == CastResult.CAST && !ignoreTiming && services.classArmor != null) services.classArmor.spellCast(p, s); // QA casts never count
             return r;
         } finally {
             mn.suld.plugin.perf.PerfProbe.stop("skill.cast", t);
@@ -852,6 +853,15 @@ public final class SkillService implements Listener {
     }
 
     /** One second of resource regeneration for a player (also what the QA suite measures). */
+    /** The player's armour mastery rank (perks of docs/ARMOR_PROGRESSION.md). */
+    private int masteryRank(Player p) {
+        return services.profiles().cached(p.getUniqueId()).map(pr -> pr.classGear().mastery()).orElse(0);
+    }
+
+    private double masteryGain(Player p, PlayerClass c) {
+        return mn.suld.api.classgear.MasteryPerks.resourceGain(c, masteryRank(p));
+    }
+
     public void regenOne(Player p) {
         PlayerClass c = clazzOf(p);
         if (c == null) return;
@@ -863,7 +873,8 @@ public final class SkillService implements Listener {
             case KHULEGCHIN -> p.isSprinting() ? 9 : 4;
         };
         SkillBuild b = buildOf(p);
-        pool(p).gain(rate + b.stat(StatKey.RESOURCE_REGEN) + (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH) ? 3 : 0));
+        pool(p).gain((rate + b.stat(StatKey.RESOURCE_REGEN) + (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH) ? 3 : 0))
+                * mn.suld.api.classgear.MasteryPerks.resourceRegen(c, masteryRank(p)));
         double hp = b.stat(StatKey.HEALTH_REGEN);
         if (hp > 0 && services.skillTree() != null) services.skillTree().regenerate(p, hp);
     }

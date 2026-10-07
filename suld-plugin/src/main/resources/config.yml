@@ -65,7 +65,10 @@ death:
 analytics:
   enabled: true
   flush-interval-seconds: 30
-  sink: log
+  sink: log                  # database: batched rows in suld_analytics_events + one suld_sessions row per session
+  retention-days: 90         # database sink: rows older than this are purged daily (0 = keep forever)
+  skip-types: [exp_gain]     # high-volume types not stored (the session totals carry them)
+  queue-limit: 10000         # most events buffered between flushes; beyond it the oldest are dropped
 
 # ---------------------------------------------------------------------------
 # Resource pack (custom HUD, item skins). Sent automatically on join.

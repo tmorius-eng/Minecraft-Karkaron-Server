@@ -171,15 +171,27 @@ public final class CombatListener implements Listener {
             return;
         }
 
-        services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
-                mn.suld.api.analytics.AnalyticsEventType.FIRST_MOB_KILL, killer.getUniqueId()));
+        // first_mob_kill once per session (it used to be recorded for every kill); every kill is in the session totals
+        if (services.session(killer.getUniqueId()).mobsDefeated++ == 0) {
+            services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
+                    mn.suld.api.analytics.AnalyticsEventType.FIRST_MOB_KILL, killer.getUniqueId()));
+        }
 
         int fromLevel = profile.progression().level();
         mn.suld.plugin.skill.SkillTreeService skillTree = services.skillTree();
+        // farming one spot: a soft diminishing return on open-world kills only (ActivityTracker.farmFactor);
+        // dungeon, world-event and boss kills, quests and dungeon completions are never reduced
+        boolean openWorld = !entity.getScoreboardTags().contains(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG)
+                && def.tier().ordinal() < mn.suld.api.mob.MobTier.BOSS.ordinal()
+                && !services.worldEvents().isEventMob(entity.getUniqueId());
+        double farm = openWorld && services.activity != null ? services.activity.farmedKill(killer, mobId, entity.getLocation()) : 1;
         long expAmount = services.boosts().apply(killer.getUniqueId(), def.scaledExp());
         if (skillTree != null) expAmount = Math.round(expAmount * skillTree.expMultiplier(killer));
+        if (farm < 1) expAmount = Math.max(1, Math.round(expAmount * farm));
         ExpGainResult exp = services.progression().grantExp(profile, expAmount, ExpSource.MOB_KILL);
-        killer.sendMessage(Messages.info("+" + expAmount + " EXP (" + def.displayName() + ")"));
+        killer.sendMessage(Messages.info("+" + expAmount + " EXP (" + def.displayName() + ")"
+                + (farm < 1 ? " · нэг газарт хэт олон агнасан ×" + Math.round(farm * 100) / 100.0 + " — өөр газар оч" : "")));
+        if (services.classArmor != null) services.classArmor.mobKilled(killer, entity, def, farm);
         services.clans().contribute(killer.getUniqueId(), SuldContent.CLAN_EXP_PER_MOB_KILL);
         if (exp.leveledUp()) {
             Presentation.levelUp(killer, fromLevel, exp.after().level());
@@ -198,10 +210,12 @@ public final class CombatListener implements Listener {
                 ItemInstance inst = d.item();
                 entity.getWorld().dropItemNaturally(entity.getLocation(), itemService.stack(inst, killer, d.amount()));
                 itemService.announce(killer, inst);
-                services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
+                // "first" events once per session (they used to be one row per drop); counts are in the session totals
+                mn.suld.api.analytics.SessionTotals st = services.session(killer.getUniqueId());
+                if (st.itemsLooted++ == 0) services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
                         mn.suld.api.analytics.AnalyticsEventType.FIRST_ITEM, killer.getUniqueId()));
                 if (inst.rarity().ordinal() >= ItemRarity.RARE.ordinal()) {
-                    services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
+                    if (st.rareItems++ == 0) services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
                             mn.suld.api.analytics.AnalyticsEventType.FIRST_RARE_ITEM, killer.getUniqueId()));
                     killer.sendMessage(Messages.accent("Ховор олз: " + mn.suld.api.item.ItemTooltip.name(itemService.catalog(),
                             itemService.catalog().require(inst.definitionId()), inst) + "!"));

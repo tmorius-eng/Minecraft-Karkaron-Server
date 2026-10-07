@@ -27,8 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <pre>
  *   /classgear                    armour level, XP, tier, enhancement, next tier's gates, active minutes
  *   /classgear recover            get lost class gear back (idempotent, same identities; once per 10 min)
- *   /classgear upgrade            buy the next armour tier when every gate is met
- *   /classgear enhance            enhancement +1 (coins)
+ *   /classgear upgrade            staff/debug: buy the next armour tier (players use the Дархан smith, SmithMenu)
+ *   /classgear enhance            staff/debug: enhancement +1 (players use the smith)
  *   /classgear recover &lt;player&gt;                       staff (suld.admin.classgear)
  *   /classgear set &lt;player&gt; level|tier|enhance &lt;n&gt;   staff QA (suld.admin.classgear), audited
  * </pre>
@@ -55,6 +55,11 @@ public final class ClassGearCommand implements TabExecutor {
             case "recover" -> recover(sender, args);
             case "set" -> set(sender, args);
             case "info", "upgrade", "enhance" -> {
+                if (!sub.equals("info") && !sender.hasPermission("suld.admin.classgear")) {
+                    // the player path is the smith's menu with its confirmation (SmithMenu); the command is staff/debug only
+                    sender.sendMessage(Messages.info("Ангийн хуягийн зэргийг Хархорумын Дархан ахиулна — түүн дээр оч."));
+                    return true;
+                }
                 if (!(sender instanceof Player p)) {
                     sender.sendMessage(Messages.info("/classgear recover <тоглогч> · /classgear set <тоглогч> level|tier|enhance <n>"));
                     return true;
@@ -63,7 +68,7 @@ public final class ClassGearCommand implements TabExecutor {
                 else if (sub.equals("upgrade")) upgrade(p);
                 else enhance(p);
             }
-            default -> sender.sendMessage(Messages.info("/classgear [recover|upgrade|enhance]"));
+            default -> sender.sendMessage(Messages.info("/classgear [recover]"));
         }
         return true;
     }
@@ -92,18 +97,21 @@ public final class ClassGearCommand implements TabExecutor {
             sb.append("\n§7Сайжруулалт +").append(g.enhance() + 1).append(": §f")
                     .append(ArmorRules.enhanceCost(g.armorLevel(), g.enhance() + 1, g.tier())).append(" зоос §7(/classgear enhance)");
         }
+        sb.append("\n§7Ур чадвар: §f").append(g.mastery()).append("/").append(mn.suld.api.classgear.MasteryRules.MAX_RANK);
+        long mneed = mn.suld.api.classgear.MasteryRules.need(g.mastery());
+        if (mneed > 0) sb.append("§7 (").append(Math.round(g.masteryXp())).append('/').append(mneed).append(")");
+        for (mn.suld.api.classgear.MasteryPerks.Perk perk : mn.suld.api.classgear.MasteryPerks.of(pr.playerClass().orElse(null))) {
+            sb.append("\n  ").append(g.mastery() >= perk.rank() ? "§a✔ " : "§8· ").append(perk.rank()).append(": ").append(perk.text());
+        }
+        sb.append("\n§7Зэрэг ахиулах, сайжруулах: Хархорумын §fДархан§7 дээр.");
         sb.append("\n§7Идэвхтэй тоглолт: §f").append(pr.activeMinutes().total()).append(" мин");
-        if (services.activity != null && services.activity.fatigued(p.getUniqueId())) sb.append("§c · энэ газар ядарсан: хуягийн XP алга, өөр газар оч");
+        double area = services.activity == null ? 1 : services.activity.areaFactor(p.getUniqueId());
+        if (area < 1) sb.append("§c · энэ газар хэт олон агнасан (×").append(Math.round(area * 100) / 100.0).append("): өөр газар оч");
         p.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(sb.toString()));
     }
 
-    /** Display name of a material (catalog) or dungeon (the ones in the game); unknown dungeons say so. */
     private String name(String id) {
-        if (id.startsWith("dungeon.")) {
-            var d = mn.suld.plugin.content.SuldContent.dungeonFor(id);
-            return d != null ? d.displayName() : id.substring("dungeon.".length()) + " (тоглоомд хараахан нэмэгдээгүй)";
-        }
-        return services.itemService().catalog().item(id).map(mn.suld.api.item.ItemDefinition::displayName).orElse(id);
+        return armor().displayName(id);
     }
 
     private void upgrade(Player p) {
@@ -187,18 +195,25 @@ public final class ClassGearCommand implements TabExecutor {
             return;
         }
         if (args.length < 4 || armor() == null) {
-            sender.sendMessage(Messages.info("/classgear set <тоглогч> level|tier|enhance <n>"));
+            sender.sendMessage(Messages.info("/classgear set <тоглогч> level|tier|enhance|mastery <n> · cleared <dungeon id>"));
             return;
         }
         Player target = Bukkit.getPlayerExact(args[1]);
         String what = args[2].toLowerCase(Locale.ROOT);
+        if (what.equals("cleared") && target != null) {
+            armor().markCleared(target, args[3]);
+            services.audit().record(AuditEvent.of(sender instanceof Player p ? p.getUniqueId().toString() : "console",
+                    "classgear.set", target.getUniqueId().toString(), "cleared=" + args[3]));
+            sender.sendMessage(Messages.success(target.getName() + ": cleared " + args[3]));
+            return;
+        }
         int n;
         try {
             n = Integer.parseInt(args[3]);
         } catch (NumberFormatException e) {
             n = -1;
         }
-        if (target == null || n < 0 || !List.of("level", "tier", "enhance").contains(what)) {
+        if (target == null || n < 0 || !List.of("level", "tier", "enhance", "mastery").contains(what)) {
             sender.sendMessage(Messages.error("/classgear set <онлайн тоглогч> level|tier|enhance <n>"));
             return;
         }
@@ -211,11 +226,11 @@ public final class ClassGearCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         boolean staff = sender.hasPermission("suld.admin.classgear");
-        if (args.length == 1) return staff ? List.of("recover", "upgrade", "enhance", "set") : List.of("recover", "upgrade", "enhance");
+        if (args.length == 1) return staff ? List.of("recover", "upgrade", "enhance", "set") : List.of("recover");
         if (args.length == 2 && staff && List.of("recover", "set").contains(args[0].toLowerCase(Locale.ROOT))) {
             return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
         }
-        if (args.length == 3 && staff && args[0].equalsIgnoreCase("set")) return List.of("level", "tier", "enhance");
+        if (args.length == 3 && staff && args[0].equalsIgnoreCase("set")) return List.of("level", "tier", "enhance", "mastery", "cleared");
         return List.of();
     }
 }

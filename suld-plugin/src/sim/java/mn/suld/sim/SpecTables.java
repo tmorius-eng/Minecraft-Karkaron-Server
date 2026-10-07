@@ -129,13 +129,13 @@ public final class SpecTables {
     }
 
     static String tiers() {
-        StringBuilder t = new StringBuilder("| Tier | Name | Armour level | Must have cleared | Coins | Materials | Class-gear rarity |\n|---|---|---|---|---|---|---|\n");
-        String[] names = {"", "Анхан (starter)", "Бэхжсэн (reinforced)", "Сонгомол (elite)", "Эзэнт (imperial)", "Домогт (legendary)", "Тэнгэрлэг (endgame)"};
+        StringBuilder t = new StringBuilder("| Tier | Name | Armour level | Must have cleared | Mastery rank | Coins | Materials | Class-gear rarity |\n|---|---|---|---|---|---|---|---|\n");
+        String[] names = {"", "Эхлэл (beginning)", "Сайжруулсан (improved)", "Элчин (envoy)", "Хааны (royal)", "Тэнгэрлэг (celestial)", "Дээдэс (supreme)"};
         for (int i = 1; i < ProposedRules.TIER_ARMOR_LEVEL.length; i++) {
             String d = ProposedRules.TIER_DUNGEON[i];
             String dn = d == null ? "—" : ProposedRules.DUNGEONS.stream().filter(x -> x.id().equals(d)).findFirst().map(ProposedRules.DungeonSpec::name).orElse(d);
             t.append("| T").append(i).append(" | ").append(names[i]).append(" | ").append(ProposedRules.TIER_ARMOR_LEVEL[i]).append(" | ")
-                    .append(dn).append(i == 6 ? " + Ascension III" : "").append(" | ").append(ProposedRules.TIER_COINS[i]).append(" | ")
+                    .append(dn).append(i == 6 ? " + Ascension III" : "").append(" | ").append(mn.suld.api.classgear.ArmorTier.of(i).mastery()).append(" | ").append(ProposedRules.TIER_COINS[i]).append(" | ")
                     .append(i == 1 ? "—" : (5 * i) + " band materials").append(" | ").append(ProposedRules.TIER_RARITY[i].id()).append(" |\n");
         }
         t.append("\nEnhancement +1…+").append(ProposedRules.MAX_ENHANCE).append(" inside a tier: +2 % item power each, 40 × armour level × step × tier coins; reset by the next tier.\n");

@@ -50,6 +50,20 @@
         "threshold": 871035,
         "model": {
           "type": "minecraft:model",
+          "model": "suld:item/weapon/darkhan_5"
+        }
+      },
+      {
+        "threshold": 871036,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/darkhan_6"
+        }
+      },
+      {
+        "threshold": 871037,
+        "model": {
+          "type": "minecraft:model",
           "model": "minecraft:item/iron_axe"
         }
       }

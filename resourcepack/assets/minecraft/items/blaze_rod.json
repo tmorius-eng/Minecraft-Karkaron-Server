@@ -36,6 +36,20 @@
         "threshold": 871025,
         "model": {
           "type": "minecraft:model",
+          "model": "suld:item/weapon/boo_5"
+        }
+      },
+      {
+        "threshold": 871026,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/boo_6"
+        }
+      },
+      {
+        "threshold": 871027,
+        "model": {
+          "type": "minecraft:model",
           "model": "minecraft:item/blaze_rod"
         }
       }

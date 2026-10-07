@@ -64,10 +64,14 @@ public final class SuldConfigFactory {
         } catch (IllegalArgumentException ex) {
             sink = ad.sink();
         }
+        java.util.List<String> skip = view.getStringList("analytics.skip-types");
         AnalyticsSettings analytics = new AnalyticsSettings(
                 view.getBoolean("analytics.enabled", ad.enabled()),
                 view.getInt("analytics.flush-interval-seconds", ad.flushIntervalSeconds()),
-                sink);
+                sink,
+                view.getInt("analytics.retention-days", ad.retentionDays()),
+                skip == null || skip.isEmpty() ? ad.skipTypes() : new java.util.HashSet<>(skip),
+                view.getInt("analytics.queue-limit", ad.queueLimit()));
 
         ResourcePackSettings rpd = d.resourcePack();
         ResourcePackSettings resourcePack = new ResourcePackSettings(

@@ -44,7 +44,8 @@ public final class SchemaMigrator {
             new Migration(10, "skill_tree", "V10__skill_tree.sql"),
             new Migration(11, "equipment", "V11__equipment.sql"),
             new Migration(12, "death_state", "V12__death_state.sql"),
-            new Migration(13, "class_gear", "V13__class_gear.sql")
+            new Migration(13, "class_gear", "V13__class_gear.sql"),
+            new Migration(14, "sessions", "V14__sessions.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */

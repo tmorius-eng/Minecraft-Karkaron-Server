@@ -80,7 +80,7 @@ class ArmorRulesTest {
         assertFalse(ArmorRules.canUpgrade(g, new ArmorRules.Holdings(1_999, 10, 0)));
         assertFalse(ArmorRules.canUpgrade(g, new ArmorRules.Holdings(10_000, 9, 0)));
         assertFalse(ArmorRules.canUpgrade(g.withProgress(11, 0), rich));
-        ClassGear t5 = ClassGear.NONE.withProgress(60, 0).withTier(ArmorTier.T5).withCleared("dungeon.tengeriin_ordon");
+        ClassGear t5 = ClassGear.NONE.withProgress(60, 0).withTier(ArmorTier.T5).withCleared("dungeon.tengeriin_ordon").withMastery(7, 0);
         assertFalse(ArmorRules.canUpgrade(t5, new ArmorRules.Holdings(1_000_000, 99, 2)), "T6 needs Ascension III");
         assertTrue(ArmorRules.canUpgrade(t5, new ArmorRules.Holdings(1_000_000, 99, 3)));
         assertTrue(ArmorRules.gates(t5.withTier(ArmorTier.T6), rich).isEmpty());
@@ -115,19 +115,19 @@ class ArmorRulesTest {
     }
 
     @Test
-    void theBaatarSetIsGenuineAtEveryLevelAndTierAndFollowsTheGenericBudget() {
+    void everyClassSetIsGenuineAtEveryLevelAndTierAndFollowsTheGenericBudget() {
         ItemCatalog cat = ItemCatalogLoader.load(ItemCatalogLoader.classpath()).catalog();
         ItemGenerator gen = new ItemGenerator(cat);
         ItemValidator val = new ItemValidator(cat);
-        for (ArmorTier t : ArmorTier.values()) {
+        for (PlayerClass clazz : PlayerClass.values()) for (ArmorTier t : ArmorTier.values()) {
             Set<String> ids = new java.util.HashSet<>();
             for (ArmorPiece piece : ArmorPiece.values()) {
-                ItemDefinition d = cat.require(ArmorRules.definitionId(PlayerClass.BAATAR, piece, t));
+                ItemDefinition d = cat.require(ArmorRules.definitionId(clazz, piece, t));
                 ids.add(d.id());
                 assertEquals(t.rarity(), d.rarity());
                 assertTrue(d.fixedRarity());
                 assertEquals(1, d.levelReq(), "the armour level never blocks equipping");
-                assertEquals(Set.of(PlayerClass.BAATAR), d.classes());
+                assertEquals(Set.of(clazz), d.classes());
                 assertFalse(d.lootable());
                 for (int al : List.of(1, t.armorLevel(), 60)) {
                     ItemInstance i = gen.generate(d, d.rarity(), al, Rng.seeded(ArmorRules.seed(ME, piece, t)), "class", ME, UUID.randomUUID());
@@ -135,7 +135,7 @@ class ArmorRulesTest {
                     assertEquals(List.of(), val.problems(i), d.id() + " at " + al);
                 }
             }
-            assertEquals(ids, Set.copyOf(cat.set("set.class.baatar_t" + t.number()).orElseThrow().pieces()));
+            assertEquals(ids, Set.copyOf(cat.set("set.class." + clazz.id() + "_t" + t.number()).orElseThrow().pieces()));
         }
         // the same seed rolls the same piece: a level change only adds the per-level growth
         ItemDefinition chest = cat.require("armor.class.baatar.chestplate.t3");

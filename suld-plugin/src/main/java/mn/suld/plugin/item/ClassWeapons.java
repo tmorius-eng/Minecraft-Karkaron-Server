@@ -1,5 +1,6 @@
 package mn.suld.plugin.item;
 
+import mn.suld.api.classgear.WeaponTiers;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.event.LevelUpEvent;
 import mn.suld.api.item.ItemDefinition;
@@ -37,50 +38,45 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The five class weapons, each in four tiers that follow the player's level: the weapon a player owns is upgraded
- * in place (same item, same UUID) when they reach level 10, 25 and 45 — a new 3D model, a new name, higher stats,
- * and from tier 2 on visual effects while held and on hit (class-coloured; tier 4 shines with the celestial blue).
+ * The five class weapons, each in six tiers that follow the player's level ({@link WeaponTiers}: 12 / 24 / 36 / 48 /
+ * 60, the levels of the armour tiers): the weapon a player owns is upgraded in place (same item, same UUID) — a new 3D
+ * model with a new silhouette, a new name, higher stats, and from tier 2 on effects while held and on hit
+ * (class-coloured; tier 4 steel light, tier 5 ancient turquoise, tier 6 the celestial star-light).
  * Models: tools/pack/gen_weapons.py (custom_model_data 871000 + classIndex*10 + tier).
  */
 public final class ClassWeapons implements Listener {
 
-    public static final int[] TIER_LEVEL = {0, 1, 10, 25, 45};
+    public static final int[] TIER_LEVEL = WeaponTiers.LEVEL;
     private static final String PREFIX = "weapon.class.";
     private static final java.util.Set<String> LEGACY_STARTERS = java.util.Set.of("weapon.surgamj_ild", "weapon.surgamj_num");
 
-    private record Line(PlayerClass clazz, int index, String base, String[] names, Color color, double crit) {
+    private record Line(PlayerClass clazz, int index, String base, Color color, double crit) { // names: items/weapons.json
     }
 
     private static final Map<PlayerClass, Line> LINES = new EnumMap<>(PlayerClass.class);
 
     static {
-        add(new Line(PlayerClass.BAATAR, 0, "minecraft:iron_sword",
-                new String[]{"Сургамжийн Илд", "Цэргийн Ган Илд", "Баатрын Алтан Илд", "Тэнгэрийн Хөх Илд"}, Color.fromRGB(255, 90, 70), 0.05));
-        add(new Line(PlayerClass.MERGEN, 1, "minecraft:bow",
-                new String[]{"Сургамжийн Нум", "Эвэр Нум", "Мэргэний Алтан Нум", "Тэнгэрийн Хөх Нум"}, Color.fromRGB(110, 220, 110), 0.10));
-        add(new Line(PlayerClass.BOO, 2, "minecraft:blaze_rod",
-                new String[]{"Бөөгийн Таяг", "Онгоны Таяг", "Сүнсний Алтан Таяг", "Тэнгэрийн Хөх Таяг"}, Color.fromRGB(170, 110, 255), 0.04));
-        add(new Line(PlayerClass.DARKHAN, 3, "minecraft:iron_axe",
-                new String[]{"Дархны Алх", "Ган Алх", "Галын Алтан Алх", "Тэнгэрийн Хөх Алх"}, Color.fromRGB(255, 150, 50), 0.04));
-        add(new Line(PlayerClass.KHULEGCHIN, 4, "minecraft:iron_sword",
-                new String[]{"Хүлэгчийн Жад", "Цэргийн Жад", "Хааны Алтан Жад", "Тэнгэрийн Хөх Жад"}, Color.fromRGB(90, 170, 255), 0.07));
+        add(new Line(PlayerClass.BAATAR, 0, "minecraft:iron_sword", Color.fromRGB(255, 90, 70), 0.05));
+        add(new Line(PlayerClass.MERGEN, 1, "minecraft:bow", Color.fromRGB(110, 220, 110), 0.10));
+        add(new Line(PlayerClass.BOO, 2, "minecraft:blaze_rod", Color.fromRGB(170, 110, 255), 0.04));
+        add(new Line(PlayerClass.DARKHAN, 3, "minecraft:iron_axe", Color.fromRGB(255, 150, 50), 0.04));
+        add(new Line(PlayerClass.KHULEGCHIN, 4, "minecraft:iron_sword", Color.fromRGB(90, 170, 255), 0.07));
     }
 
     private static void add(Line l) {
         LINES.put(l.clazz(), l);
     }
 
-    private static final double[] ATTACK = {0, 5, 9, 14, 21};
-    private static final ItemRarity[] RARITY = {null, ItemRarity.COMMON, ItemRarity.RARE, ItemRarity.EPIC, ItemRarity.LEGENDARY};
+    private static final double[] ATTACK = {0, 5, 9, 14, 21, 28, 36};
+    private static final ItemRarity[] RARITY = {null, ItemRarity.COMMON, ItemRarity.RARE, ItemRarity.EPIC, ItemRarity.LEGENDARY,
+            ItemRarity.ANCIENT, ItemRarity.MYTHIC};
 
     public static String id(PlayerClass c, int tier) {
         return PREFIX + c.id() + "." + tier;
     }
 
     public static int tierFor(int level) {
-        int t = 1;
-        for (int i = 1; i < TIER_LEVEL.length; i++) if (level >= TIER_LEVEL[i]) t = i;
-        return t;
+        return WeaponTiers.tierFor(level);
     }
 
     /** The catalog definition of a class weapon tier (items/weapons.json). */
@@ -97,7 +93,7 @@ public final class ClassWeapons implements Listener {
             if (c.id().equals(p[0])) {
                 try {
                     int t = Integer.parseInt(p[1]);
-                    return t >= 1 && t <= 4 ? definition(c, t) : null;
+                    return t >= 1 && t <= WeaponTiers.MAX_TIER ? definition(c, t) : null;
                 } catch (NumberFormatException e) {
                     return null;
                 }
@@ -283,9 +279,19 @@ public final class ClassWeapons implements Listener {
                     p.getWorld().spawnParticle(Particle.DUST, hand, 2, 0.12, 0.18, 0.12, 0, new Particle.DustOptions(l.color(), 0.8f));
                     if (Math.random() < 0.4) p.getWorld().spawnParticle(Particle.ENCHANT, hand, 2, 0.2, 0.2, 0.2, 0.3);
                 }
+                case 4 -> {
+                    p.getWorld().spawnParticle(Particle.DUST, hand, 2, 0.12, 0.2, 0.12, 0, new Particle.DustOptions(STEEL, 0.9f));
+                    if (Math.random() < 0.3) p.getWorld().spawnParticle(Particle.DUST, hand, 2, 0.1, 0.1, 0.1, 0,
+                            new Particle.DustOptions(l.color(), 1.0f));
+                }
+                case 5 -> {
+                    p.getWorld().spawnParticle(Particle.DUST, hand, 3, 0.14, 0.22, 0.14, 0, new Particle.DustOptions(TURQUOISE, 1.0f));
+                    if (Math.random() < 0.35) p.getWorld().spawnParticle(Particle.ENCHANT, hand, 3, 0.2, 0.25, 0.2, 0.4);
+                    if (Math.random() < 0.25) p.getWorld().spawnParticle(Particle.DUST, hand, 2, 0.1, 0.1, 0.1, 0,
+                            new Particle.DustOptions(l.color(), 1.1f));
+                }
                 default -> {
-                    p.getWorld().spawnParticle(Particle.DUST, hand, 3, 0.14, 0.22, 0.14, 0,
-                            new Particle.DustOptions(Color.fromRGB(150, 235, 255), 1.0f));
+                    p.getWorld().spawnParticle(Particle.DUST, hand, 3, 0.14, 0.22, 0.14, 0, new Particle.DustOptions(CELESTIAL, 1.0f));
                     if (Math.random() < 0.5) p.getWorld().spawnParticle(Particle.END_ROD, hand, 1, 0.1, 0.15, 0.1, 0.005);
                     if (Math.random() < 0.25) p.getWorld().spawnParticle(Particle.DUST, hand, 2, 0.1, 0.1, 0.1, 0,
                             new Particle.DustOptions(l.color(), 1.1f));
@@ -311,19 +317,24 @@ public final class ClassWeapons implements Listener {
         if (h.tier() >= 4) p.getWorld().playSound(at, Sound.BLOCK_AMETHYST_BLOCK_RESONATE, 0.7f, 1.6f);
     }
 
+    private static final Color STEEL = Color.fromRGB(205, 215, 230);
+    private static final Color TURQUOISE = Color.fromRGB(64, 200, 190);
+    private static final Color CELESTIAL = Color.fromRGB(150, 235, 255);
+
     private static void burst(Location at, Color color, int tier, int count) {
         at.getWorld().spawnParticle(Particle.DUST, at, count, 0.3, 0.3, 0.3, 0, new Particle.DustOptions(color, 1.2f));
         if (tier >= 3) at.getWorld().spawnParticle(Particle.CRIT, at, count / 2, 0.3, 0.3, 0.3, 0.2);
-        if (tier >= 4) {
+        if (tier == 4) at.getWorld().spawnParticle(Particle.DUST, at, count / 2, 0.3, 0.3, 0.3, 0, new Particle.DustOptions(STEEL, 1.2f));
+        if (tier == 5) at.getWorld().spawnParticle(Particle.DUST, at, count, 0.35, 0.35, 0.35, 0, new Particle.DustOptions(TURQUOISE, 1.3f));
+        if (tier >= 6) {
             at.getWorld().spawnParticle(Particle.END_ROD, at, count / 2, 0.25, 0.25, 0.25, 0.05);
-            at.getWorld().spawnParticle(Particle.DUST, at, count, 0.35, 0.35, 0.35, 0,
-                    new Particle.DustOptions(Color.fromRGB(150, 235, 255), 1.3f));
+            at.getWorld().spawnParticle(Particle.DUST, at, count, 0.35, 0.35, 0.35, 0, new Particle.DustOptions(CELESTIAL, 1.3f));
         }
     }
 
     public static List<ItemDefinition> all() {
         List<ItemDefinition> out = new ArrayList<>();
-        for (PlayerClass c : PlayerClass.values()) for (int t = 1; t <= 4; t++) out.add(definition(c, t));
+        for (PlayerClass c : PlayerClass.values()) for (int t = 1; t <= WeaponTiers.MAX_TIER; t++) out.add(definition(c, t));
         return out;
     }
 }

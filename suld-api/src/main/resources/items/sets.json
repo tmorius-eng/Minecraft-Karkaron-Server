@@ -113,7 +113,7 @@
   },
   {
    "id": "set.class.baatar_t1",
-   "name": "Баатрын Хуяг · Анхан",
+   "name": "Баатрын Хуяг · Эхлэл",
    "pieces": [
     "armor.class.baatar.helmet.t1",
     "armor.class.baatar.chestplate.t1",
@@ -139,7 +139,7 @@
   },
   {
    "id": "set.class.baatar_t2",
-   "name": "Баатрын Хуяг · Бэхжсэн",
+   "name": "Баатрын Хуяг · Сайжруулсан",
    "pieces": [
     "armor.class.baatar.helmet.t2",
     "armor.class.baatar.chestplate.t2",
@@ -165,7 +165,7 @@
   },
   {
    "id": "set.class.baatar_t3",
-   "name": "Баатрын Хуяг · Сонгомол",
+   "name": "Баатрын Хуяг · Элчин",
    "pieces": [
     "armor.class.baatar.helmet.t3",
     "armor.class.baatar.chestplate.t3",
@@ -191,7 +191,7 @@
   },
   {
    "id": "set.class.baatar_t4",
-   "name": "Баатрын Хуяг · Эзэнт",
+   "name": "Баатрын Хуяг · Хааны",
    "pieces": [
     "armor.class.baatar.helmet.t4",
     "armor.class.baatar.chestplate.t4",
@@ -217,7 +217,7 @@
   },
   {
    "id": "set.class.baatar_t5",
-   "name": "Баатрын Хуяг · Домогт",
+   "name": "Баатрын Хуяг · Тэнгэрлэг",
    "pieces": [
     "armor.class.baatar.helmet.t5",
     "armor.class.baatar.chestplate.t5",
@@ -243,7 +243,7 @@
   },
   {
    "id": "set.class.baatar_t6",
-   "name": "Баатрын Хуяг · Тэнгэрлэг",
+   "name": "Баатрын Хуяг · Дээдэс",
    "pieces": [
     "armor.class.baatar.helmet.t6",
     "armor.class.baatar.chestplate.t6",
@@ -261,6 +261,630 @@
       {
        "type": "stat",
        "key": "DAMAGE_REDUCTION",
+       "value": 8
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.mergen_t1",
+   "name": "Мэргэний Хуяг · Эхлэл",
+   "pieces": [
+    "armor.class.mergen.helmet.t1",
+    "armor.class.mergen.chestplate.t1",
+    "armor.class.mergen.leggings.t1",
+    "armor.class.mergen.boots.t1"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "crit_chance": 2
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "MOVE_PCT",
+       "value": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.mergen_t2",
+   "name": "Мэргэний Хуяг · Сайжруулсан",
+   "pieces": [
+    "armor.class.mergen.helmet.t2",
+    "armor.class.mergen.chestplate.t2",
+    "armor.class.mergen.leggings.t2",
+    "armor.class.mergen.boots.t2"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "crit_chance": 3
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "MOVE_PCT",
+       "value": 5
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.mergen_t3",
+   "name": "Мэргэний Хуяг · Элчин",
+   "pieces": [
+    "armor.class.mergen.helmet.t3",
+    "armor.class.mergen.chestplate.t3",
+    "armor.class.mergen.leggings.t3",
+    "armor.class.mergen.boots.t3"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "crit_chance": 4
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "MOVE_PCT",
+       "value": 6
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.mergen_t4",
+   "name": "Мэргэний Хуяг · Хааны",
+   "pieces": [
+    "armor.class.mergen.helmet.t4",
+    "armor.class.mergen.chestplate.t4",
+    "armor.class.mergen.leggings.t4",
+    "armor.class.mergen.boots.t4"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "crit_chance": 5
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "MOVE_PCT",
+       "value": 7
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.mergen_t5",
+   "name": "Мэргэний Хуяг · Тэнгэрлэг",
+   "pieces": [
+    "armor.class.mergen.helmet.t5",
+    "armor.class.mergen.chestplate.t5",
+    "armor.class.mergen.leggings.t5",
+    "armor.class.mergen.boots.t5"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "crit_chance": 6
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "MOVE_PCT",
+       "value": 8
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.mergen_t6",
+   "name": "Мэргэний Хуяг · Дээдэс",
+   "pieces": [
+    "armor.class.mergen.helmet.t6",
+    "armor.class.mergen.chestplate.t6",
+    "armor.class.mergen.leggings.t6",
+    "armor.class.mergen.boots.t6"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "crit_chance": 7
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "MOVE_PCT",
+       "value": 9
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.boo_t1",
+   "name": "Бөөгийн Хувцас · Эхлэл",
+   "pieces": [
+    "armor.class.boo.helmet.t1",
+    "armor.class.boo.chestplate.t1",
+    "armor.class.boo.leggings.t1",
+    "armor.class.boo.boots.t1"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "spell_damage": 3
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "HEAL_POWER",
+       "value": 5
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.boo_t2",
+   "name": "Бөөгийн Хувцас · Сайжруулсан",
+   "pieces": [
+    "armor.class.boo.helmet.t2",
+    "armor.class.boo.chestplate.t2",
+    "armor.class.boo.leggings.t2",
+    "armor.class.boo.boots.t2"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "spell_damage": 5
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "HEAL_POWER",
+       "value": 7
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.boo_t3",
+   "name": "Бөөгийн Хувцас · Элчин",
+   "pieces": [
+    "armor.class.boo.helmet.t3",
+    "armor.class.boo.chestplate.t3",
+    "armor.class.boo.leggings.t3",
+    "armor.class.boo.boots.t3"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "spell_damage": 7
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "HEAL_POWER",
+       "value": 9
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.boo_t4",
+   "name": "Бөөгийн Хувцас · Хааны",
+   "pieces": [
+    "armor.class.boo.helmet.t4",
+    "armor.class.boo.chestplate.t4",
+    "armor.class.boo.leggings.t4",
+    "armor.class.boo.boots.t4"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "spell_damage": 9
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "HEAL_POWER",
+       "value": 11
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.boo_t5",
+   "name": "Бөөгийн Хувцас · Тэнгэрлэг",
+   "pieces": [
+    "armor.class.boo.helmet.t5",
+    "armor.class.boo.chestplate.t5",
+    "armor.class.boo.leggings.t5",
+    "armor.class.boo.boots.t5"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "spell_damage": 11
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "HEAL_POWER",
+       "value": 13
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.boo_t6",
+   "name": "Бөөгийн Хувцас · Дээдэс",
+   "pieces": [
+    "armor.class.boo.helmet.t6",
+    "armor.class.boo.chestplate.t6",
+    "armor.class.boo.leggings.t6",
+    "armor.class.boo.boots.t6"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "spell_damage": 13
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "HEAL_POWER",
+       "value": 15
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.darkhan_t1",
+   "name": "Дарханы Хуяг · Эхлэл",
+   "pieces": [
+    "armor.class.darkhan.helmet.t1",
+    "armor.class.darkhan.chestplate.t1",
+    "armor.class.darkhan.leggings.t1",
+    "armor.class.darkhan.boots.t1"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "armor": 2
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "THORNS",
+       "value": 5
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.darkhan_t2",
+   "name": "Дарханы Хуяг · Сайжруулсан",
+   "pieces": [
+    "armor.class.darkhan.helmet.t2",
+    "armor.class.darkhan.chestplate.t2",
+    "armor.class.darkhan.leggings.t2",
+    "armor.class.darkhan.boots.t2"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "armor": 3
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "THORNS",
+       "value": 7
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.darkhan_t3",
+   "name": "Дарханы Хуяг · Элчин",
+   "pieces": [
+    "armor.class.darkhan.helmet.t3",
+    "armor.class.darkhan.chestplate.t3",
+    "armor.class.darkhan.leggings.t3",
+    "armor.class.darkhan.boots.t3"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "armor": 4
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "THORNS",
+       "value": 9
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.darkhan_t4",
+   "name": "Дарханы Хуяг · Хааны",
+   "pieces": [
+    "armor.class.darkhan.helmet.t4",
+    "armor.class.darkhan.chestplate.t4",
+    "armor.class.darkhan.leggings.t4",
+    "armor.class.darkhan.boots.t4"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "armor": 6
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "THORNS",
+       "value": 11
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.darkhan_t5",
+   "name": "Дарханы Хуяг · Тэнгэрлэг",
+   "pieces": [
+    "armor.class.darkhan.helmet.t5",
+    "armor.class.darkhan.chestplate.t5",
+    "armor.class.darkhan.leggings.t5",
+    "armor.class.darkhan.boots.t5"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "armor": 8
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "THORNS",
+       "value": 13
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.darkhan_t6",
+   "name": "Дарханы Хуяг · Дээдэс",
+   "pieces": [
+    "armor.class.darkhan.helmet.t6",
+    "armor.class.darkhan.chestplate.t6",
+    "armor.class.darkhan.leggings.t6",
+    "armor.class.darkhan.boots.t6"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "armor": 10
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "THORNS",
+       "value": 15
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.khulegchin_t1",
+   "name": "Хүлэгчний Хуяг · Эхлэл",
+   "pieces": [
+    "armor.class.khulegchin.helmet.t1",
+    "armor.class.khulegchin.chestplate.t1",
+    "armor.class.khulegchin.leggings.t1",
+    "armor.class.khulegchin.boots.t1"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "move_speed": 3
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "ATTACK_PCT",
+       "value": 3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.khulegchin_t2",
+   "name": "Хүлэгчний Хуяг · Сайжруулсан",
+   "pieces": [
+    "armor.class.khulegchin.helmet.t2",
+    "armor.class.khulegchin.chestplate.t2",
+    "armor.class.khulegchin.leggings.t2",
+    "armor.class.khulegchin.boots.t2"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "move_speed": 4
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "ATTACK_PCT",
+       "value": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.khulegchin_t3",
+   "name": "Хүлэгчний Хуяг · Элчин",
+   "pieces": [
+    "armor.class.khulegchin.helmet.t3",
+    "armor.class.khulegchin.chestplate.t3",
+    "armor.class.khulegchin.leggings.t3",
+    "armor.class.khulegchin.boots.t3"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "move_speed": 5
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "ATTACK_PCT",
+       "value": 5
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.khulegchin_t4",
+   "name": "Хүлэгчний Хуяг · Хааны",
+   "pieces": [
+    "armor.class.khulegchin.helmet.t4",
+    "armor.class.khulegchin.chestplate.t4",
+    "armor.class.khulegchin.leggings.t4",
+    "armor.class.khulegchin.boots.t4"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "move_speed": 6
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "ATTACK_PCT",
+       "value": 6
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.khulegchin_t5",
+   "name": "Хүлэгчний Хуяг · Тэнгэрлэг",
+   "pieces": [
+    "armor.class.khulegchin.helmet.t5",
+    "armor.class.khulegchin.chestplate.t5",
+    "armor.class.khulegchin.leggings.t5",
+    "armor.class.khulegchin.boots.t5"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "move_speed": 7
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "ATTACK_PCT",
+       "value": 7
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.class.khulegchin_t6",
+   "name": "Хүлэгчний Хуяг · Дээдэс",
+   "pieces": [
+    "armor.class.khulegchin.helmet.t6",
+    "armor.class.khulegchin.chestplate.t6",
+    "armor.class.khulegchin.leggings.t6",
+    "armor.class.khulegchin.boots.t6"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "move_speed": 8
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "ATTACK_PCT",
        "value": 8
       }
      ]

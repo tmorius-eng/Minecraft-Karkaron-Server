@@ -266,6 +266,14 @@ public final class SuldPlugin extends JavaPlugin {
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
         getServer().getScheduler().runTaskTimerAsynchronously(this,
                 () -> services.analytics().flush(), flushTicks, flushTicks);
+        // analytics retention (docs/ANALYTICS.md): the database sink purges old rows once a day, off the main thread
+        if (services.analytics() instanceof mn.suld.plugin.analytics.JdbcAnalyticsSink db && config.analytics().retentionDays() > 0) {
+            int days = config.analytics().retentionDays();
+            getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+                int n = db.purge(days);
+                if (n > 0) getLogger().info("analytics: purged " + n + " row(s) older than " + days + " days");
+            }, TICKS_PER_SECOND * 300, TICKS_PER_SECOND * 86_400);
+        }
 
         long autosaveTicks = TICKS_PER_SECOND * AUTOSAVE_SECONDS;
         getServer().getScheduler().runTaskTimerAsynchronously(this, this::autosave, autosaveTicks, autosaveTicks);

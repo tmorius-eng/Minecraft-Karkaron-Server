@@ -1,0 +1,14 @@
+{
+ "layers": {
+  "humanoid": [
+   {
+    "texture": "suld:boo_t3"
+   }
+  ],
+  "humanoid_leggings": [
+   {
+    "texture": "suld:boo_t3"
+   }
+  ]
+ }
+}

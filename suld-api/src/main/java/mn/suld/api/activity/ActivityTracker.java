@@ -19,8 +19,14 @@ import java.util.Set;
  *   <li>more than {@value #MACRO_INTERVALS} attack intervals in it were identical within ±10 ms (an auto-clicker);</li>
  *   <li>it is the third or later minute in a row of taking damage while dealing none (an AFK mob farm).</li>
  * </ul>
- * No signal for {@value #AWAY_MINUTES} minutes makes the player "away". More than {@value #AREA_KILLS} kills in one
- * 64-block area during the last 30 active minutes is area fatigue: armour XP stops until they move on.
+ * No signal for {@value #AWAY_MINUTES} minutes makes the player "away".
+ *
+ * <p><b>Farming fatigue</b> ({@link #farmFactor}): kills are remembered with their mob type and position for the
+ * last 30 <em>active</em> minutes (idle time does not wash them out). For a new kill,
+ * {@code n = same mob type within 48 blocks + 0.5 × other mobs within 48 blocks}; the reward factor is 1 up to
+ * {@value #FARM_FREE} and then {@code max(0.25, 1 / (1 + (n − 40) / 60))} — 0.5 at n = 100, 0.33 at 160, the 0.25
+ * floor at 220. Moving to another area is a fresh count. It applies to player EXP, armour XP and mastery from normal
+ * world kills only (dungeon, world-event and boss kills and quest rewards are never reduced).
  */
 public final class ActivityTracker {
 
@@ -30,9 +36,14 @@ public final class ActivityTracker {
     public static final int AWAY_MINUTES = 15;
     public static final double MOVE_BLOCKS = 6;
     public static final long MOVE_SAMPLE_MS = 5_000;
-    public static final int AREA_KILLS = 150;
+    public static final int FARM_FREE = 40;
+    public static final double FARM_HALF = 60;
+    public static final double FARM_FLOOR = 0.25;
+    /** Kills remembered (enough for the floor and then some). */
+    public static final int KILL_MEMORY = 600;
     public static final int AREA_WINDOW_MINUTES = 30;
-    public static final int AREA_CELL = 64;
+    /** Kills within this many blocks of a new kill count towards it (a radius, so no grid border to stand on). */
+    public static final int FARM_RADIUS = 48;
 
     public enum Reason { ACTIVE, IDLE, TOO_WEAK, SOUL, MACRO, DAMAGE_IN }
 
@@ -54,8 +65,9 @@ public final class ActivityTracker {
     private int damageInStreak;
     private int idleMinutes;
     private long activeIndex;
-    private long lastCell = Long.MIN_VALUE;
-    private final Deque<long[]> kills = new ArrayDeque<>(); // {active minute index, cell}
+    private final Deque<double[]> kills = new ArrayDeque<>(); // {active minute index, x, z, mob type hash}
+    private double lastX = Double.NaN;
+    private double lastZ = Double.NaN;
 
     public void signal(ActivitySignal s) {
         signals.add(s);
@@ -68,13 +80,42 @@ public final class ActivityTracker {
         signals.add(ActivitySignal.DAMAGE_DEALT);
     }
 
-    /** A kill at a position (combat signal + area fatigue). */
+    /** A kill at a position (combat signal) of an untyped mob (vanilla); it counts towards the area. */
     public void kill(double x, double z) {
+        kill("", x, z);
+    }
+
+    /**
+     * A kill of mob type {@code mobId} at a position: the combat signal, and the farming factor of this kill
+     * (computed from the kills before it, then this kill is remembered).
+     */
+    public double kill(String mobId, double x, double z) {
         signals.add(ActivitySignal.KILL);
-        long cell = cell(x, z);
-        lastCell = cell;
-        kills.addLast(new long[] {activeIndex, cell});
-        if (kills.size() > 4 * AREA_KILLS) kills.removeFirst();
+        lastX = x;
+        lastZ = z;
+        double f = farmFactor(mobId, x, z);
+        kills.addLast(new double[] {activeIndex, x, z, mobId.hashCode()});
+        if (kills.size() > KILL_MEMORY) kills.removeFirst();
+        return f;
+    }
+
+    /** The reward factor a kill of this mob type here would get now (see the class comment). */
+    public double farmFactor(String mobId, double x, double z) {
+        int hash = mobId.hashCode();
+        double n = 0, r2 = (double) FARM_RADIUS * FARM_RADIUS;
+        for (double[] k : kills) {
+            if (k[0] < activeIndex - AREA_WINDOW_MINUTES) continue;
+            double dx = k[1] - x, dz = k[2] - z;
+            if (dx * dx + dz * dz > r2) continue;
+            n += (int) k[3] == hash ? 1 : 0.5;
+        }
+        return factor(n);
+    }
+
+    /** The farming curve. */
+    public static double factor(double n) {
+        if (n <= FARM_FREE) return 1;
+        return Math.max(FARM_FLOOR, 1 / (1 + (n - FARM_FREE) / FARM_HALF));
     }
 
     /**
@@ -85,7 +126,8 @@ public final class ActivityTracker {
         if (nowMs - lastSample < MOVE_SAMPLE_MS) return;
         lastSample = nowMs;
         if (passive) return;
-        lastCell = cell(x, z); // area fatigue follows the player: moving on ends it
+        lastX = x; // the farming area follows the player: moving on ends it
+        lastZ = z;
         if (Double.isNaN(startX)) {
             startX = x;
             startZ = z;
@@ -168,17 +210,14 @@ public final class ActivityTracker {
         return idleMinutes;
     }
 
-    /** Too many kills in the area of the latest kill during the last 30 active minutes. */
-    public boolean areaFatigued() {
-        if (lastCell == Long.MIN_VALUE) return false;
-        int n = 0;
-        for (long[] k : kills) if (k[1] == lastCell && k[0] >= activeIndex - AREA_WINDOW_MINUTES) n++;
-        return n > AREA_KILLS;
-    }
-
-    static long cell(double x, double z) {
-        long cx = (long) Math.floor(x / AREA_CELL);
-        long cz = (long) Math.floor(z / AREA_CELL);
-        return (cx << 32) ^ (cz & 0xffffffffL);
+    /** The farming factor of where the player is now (around their last kill until they move on). */
+    public double areaFactor() {
+        if (Double.isNaN(lastX)) return 1;
+        double n = 0, r2 = (double) FARM_RADIUS * FARM_RADIUS;
+        for (double[] k : kills) {
+            double dx = k[1] - lastX, dz = k[2] - lastZ;
+            if (k[0] >= activeIndex - AREA_WINDOW_MINUTES && dx * dx + dz * dz <= r2) n += 1;
+        }
+        return factor(n);
     }
 }

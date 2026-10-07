@@ -143,6 +143,7 @@ public final class DungeonService {
         ActiveRun ar = new ActiveRun(new DungeonRun(def.id(), party.id(), def.totalWaves()),
                 def, party, leader.getLocation().clone());
         ar.participants.addAll(members);
+        for (UUID id : members) services.session(id).dungeonRuns++;
         for (UUID id : members) services.dismissHorse.accept(id); // no riding an invulnerable horse through the run
         runsByParty.put(party.id(), ar);
         party.enterDungeon();
@@ -335,6 +336,8 @@ public final class DungeonService {
                 continue;
             }
             int from = profile.progression().level();
+            services.session(id).dungeonClears++;
+            services.session(id).bossesDefeated++;
             var bonus = mn.suld.plugin.content.DungeonContent.completion(ar.def.id());
             long completionExp = services.boosts().apply(id, bonus.exp());
             ExpGainResult exp = services.progression().grantExp(profile, completionExp, ExpSource.DUNGEON);

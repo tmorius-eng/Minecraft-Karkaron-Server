@@ -36,7 +36,7 @@ public final class SuldCommand implements CommandExecutor {
         switch (sub) {
             case "info" -> info(sender);
             case "profile" -> profile(sender);
-            case "spawnmob" -> spawnMob(sender);
+            case "spawnmob" -> spawnMob(sender, args);
             case "auth" -> authStatus(sender);
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
@@ -54,17 +54,33 @@ public final class SuldCommand implements CommandExecutor {
         return true;
     }
 
-    private void spawnMob(CommandSender sender) {
+    /** Admin: {@code /suld spawnmob [player] [mobId] [count]} — SÜLD mobs at a player (console too; QA of mob rewards). */
+    private void spawnMob(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
             sender.sendMessage(Messages.error("Эрх алга."));
             return;
         }
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(Messages.error("Зөвхөн тоглогч ашиглана."));
+        Player at = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : sender instanceof Player p ? p : null;
+        if (at == null) {
+            sender.sendMessage(Messages.error("/suld spawnmob <тоглогч> [mob id] [тоо]"));
             return;
         }
-        services.mobs().spawn(mn.suld.plugin.content.SuldContent.GOVIIN_CHONO, player.getLocation());
-        sender.sendMessage(Messages.success("Говийн Чоно дуудлаа."));
+        mn.suld.api.mob.MobDefinition def = args.length > 2 ? mn.suld.plugin.content.SuldContent.mobFor(args[2])
+                : mn.suld.plugin.content.SuldContent.GOVIIN_CHONO;
+        if (def == null) {
+            sender.sendMessage(Messages.error("Мангас олдсонгүй: " + args[2]));
+            return;
+        }
+        int n = 1;
+        if (args.length > 3) {
+            try {
+                n = Math.max(1, Math.min(50, Integer.parseInt(args[3])));
+            } catch (NumberFormatException ignored) {
+                // keep 1
+            }
+        }
+        for (int i = 0; i < n; i++) services.mobs().spawn(def, at.getLocation().add((i % 5) - 2, 0, (i / 5) - 2));
+        sender.sendMessage(Messages.success(def.displayName() + " ×" + n + " дуудлаа."));
     }
 
     /** Admin/console: {@code /suld exp <player> <amount>} — grant EXP (levels up, upgrades class weapons). */

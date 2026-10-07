@@ -450,6 +450,7 @@ public final class Sim {
                 if (r == proposed) exploitDay7.put(e.name(), p90);
                 if (r == proposed && e == Profile.Exploit.AFK) exploitDay7.put("AFK_ARMOR", pct(col(rs, x -> snap(x, 7, "armorLevel")), 0.9));
                 if (r == proposed) exploitDay7.put(e.name() + "_EPH", eph);
+                if (r == proposed) exploitDay7.put(e.name() + "_MAXARMOR", col(rs, x -> snap(x, 7, "maxArmor")).stream().mapToDouble(Double::doubleValue).sum());
             }
         }
         out.put("exploits", m);
@@ -670,6 +671,12 @@ public final class Sim {
         }
         check("C12", "no exploit beats normal optimal play by more than ×1.25 in EXP per online hour", best <= 1.25 * optEph,
                 bestName + " " + f0(best) + " vs optimal " + f0(optEph) + " EXP/h");
+        // C13: maximum armour power (AL 60 + T6 + enhancement +5 + mastery 10) is never reached in 7 days at 10 h/day
+        double maxArmorRuns = col(hp, x -> snap(x, 7, "maxArmor")).stream().mapToDouble(Double::doubleValue).sum()
+                + exploitDay7.entrySet().stream().filter(e -> e.getKey().endsWith("_MAXARMOR")).mapToDouble(Map.Entry::getValue).sum();
+        double mastP90 = pct(col(hp, x -> snap(x, 7, "armorMastery")), 0.9);
+        check("C13", "10 h/day × 7 days: no run reaches maximum armour power (AL 60 + T6 + enhancement 5 + mastery 10), every exploit included",
+                maxArmorRuns == 0, (int) maxArmorRuns + " runs at max; armour mastery day 7 p90 = " + f1(mastP90));
     }
 
     static double toD(Object o) {

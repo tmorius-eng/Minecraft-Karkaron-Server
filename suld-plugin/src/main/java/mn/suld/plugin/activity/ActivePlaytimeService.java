@@ -89,10 +89,19 @@ public final class ActivePlaytimeService implements Listener {
         return t != null && t.away();
     }
 
-    /** Area fatigue: armour XP stops until the player moves on. */
-    public boolean fatigued(UUID player) {
+    /**
+     * A SÜLD mob kill in the open world: records it and returns its farming factor (1 = full reward, down to 0.25 for
+     * farming one spot; ActivityTracker documents the curve). 1 for players without a tracker.
+     */
+    public double farmedKill(Player killer, String mobId, Location at) {
+        ActivityTracker t = trackers.get(killer.getUniqueId());
+        return t == null ? 1 : t.kill(mobId, at.getX(), at.getZ());
+    }
+
+    /** The farming factor of where the player is now (armour XP of active minutes). */
+    public double areaFactor(UUID player) {
         ActivityTracker t = trackers.get(player);
-        return t != null && t.areaFatigued();
+        return t == null ? 1 : t.areaFactor();
     }
 
     private void closeMinute() {
@@ -101,6 +110,9 @@ public final class ActivePlaytimeService implements Listener {
             if (services.isSoul.test(p.getUniqueId())) t.exclude();
             ActivityTracker.Verdict v = t.closeMinute();
             if (v.active()) {
+                mn.suld.api.analytics.SessionTotals st = services.session(p.getUniqueId());
+                st.activeMinutes++;
+                if (v.category() == mn.suld.api.activity.ActivityCategory.COMBAT || v.category() == mn.suld.api.activity.ActivityCategory.DUNGEON) st.combatMinutes++;
                 PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
                 if (pr != null) pr.activeMinutes(pr.activeMinutes().plus(v.category(), 1));
             }
@@ -121,6 +133,7 @@ public final class ActivePlaytimeService implements Listener {
         Entity d = e.getDamager();
         if (d instanceof Projectile pr && pr.getShooter() instanceof Entity shooter) d = shooter;
         if (d instanceof Player p && !(e.getEntity() instanceof Player) && e.getEntity() instanceof LivingEntity) {
+            services.session(p.getUniqueId()).damageDealt += e.getFinalDamage();
             ActivityTracker t = trackers.get(p.getUniqueId());
             if (t != null) {
                 if (e.getDamager() instanceof Projectile) t.signal(ActivitySignal.DAMAGE_DEALT);
@@ -129,6 +142,7 @@ public final class ActivePlaytimeService implements Listener {
         }
         if (e.getEntity() instanceof Player p && !(d instanceof Player) && d instanceof LivingEntity) {
             signal(p.getUniqueId(), ActivitySignal.DAMAGE_TAKEN);
+            services.session(p.getUniqueId()).damageTaken += e.getFinalDamage();
         }
     }
 
@@ -136,6 +150,8 @@ public final class ActivePlaytimeService implements Listener {
     public void onKill(EntityDeathEvent e) {
         Player k = e.getEntity().getKiller();
         if (k == null || e.getEntity() instanceof Player) return;
+        // SÜLD mobs are recorded (with their type) by CombatListener through farmedKill; this is for the rest
+        if (e.getEntity().getPersistentDataContainer().has(new org.bukkit.NamespacedKey(plugin, "mob_id"))) return;
         ActivityTracker t = trackers.get(k.getUniqueId());
         if (t != null) t.kill(e.getEntity().getLocation().getX(), e.getEntity().getLocation().getZ());
     }

@@ -542,7 +542,9 @@ public final class Engine {
             }
         }
         if (pr != null) armorXp(0.6 * minutes);
-        if (pr != null) mastery(SimPlayer.M_CLASS, 0.1 * minutes);
+        // class (= armour) mastery from class spells and objectives while active: ≈ 1.5 / active minute against the
+        // live caps of 12 casts × 0.5 + 10 objectives × 1 per minute (MasteryRules)
+        if (pr != null) mastery(SimPlayer.M_CLASS, 1.5 * minutes);
     }
 
     private void travel(World.Zone z) {
@@ -558,6 +560,7 @@ public final class Engine {
             grant(z.discoveryExp(), "discovery", false);
             armorXp(15);
             mastery(SimPlayer.M_EXPLORE, 300);
+            mastery(SimPlayer.M_CLASS, mn.suld.api.classgear.MasteryRules.XP_DISCOVERY);
         }
     }
 
@@ -609,7 +612,9 @@ public final class Engine {
         int gap = m.level() - p.level;
         double share = party > 1 ? r.partyKillShare(party) : 1.0;
         double exp = m.exp() * r.gapExpFactor(gap) * share * expMultiplier(true);
-        if (pr != null && afkFatigueKills > 150) exp *= 0.3;
+        // farming one spot (live ActivityTracker.farmFactor; the AFK spot kills one mob type in one cell)
+        double farm = pr != null ? mn.suld.api.activity.ActivityTracker.factor(afkFatigueKills) : 1;
+        exp *= farm;
         if (p.restedExp > 0) {
             double bonus = Math.min(p.restedExp, exp);
             p.restedExp -= bonus;
@@ -624,10 +629,10 @@ public final class Engine {
         if (r.gapAllowsGear(gap)) loot(m.lootTable(), m.level(), LootTier.of(m.tier()));
         else if (pr != null) p.addMaterial("item.chonon_arisan", rng.nextDouble() < 0.3 ? 1 : 0);
         if (pr != null) {
-            armorXp(m.tier() == MobTier.NORMAL ? 0.2 : m.tier() == MobTier.ELITE ? 1 : 3);
+            armorXp((m.tier() == MobTier.NORMAL ? 0.2 : m.tier() == MobTier.ELITE ? 1 : 3) * farm);
             if (gap >= -3) mastery(SimPlayer.M_COMBAT, m.tier() == MobTier.NORMAL ? 1 : m.tier() == MobTier.ELITE ? 4 : 10);
             mastery(SimPlayer.M_WEAPON, 0.5);
-            mastery(SimPlayer.M_CLASS, 0.6);
+            mastery(SimPlayer.M_CLASS, mn.suld.api.classgear.MasteryRules.killXp(m.tier(), m.level(), p.level) * farm); // live ClassArmor.mobKilled
         }
     }
 
@@ -1071,6 +1076,7 @@ public final class Engine {
         if (next < ProposedRules.TIER_ARMOR_LEVEL.length && p.armorLevel >= ProposedRules.TIER_ARMOR_LEVEL[next]
                 && p.clears.getOrDefault(ProposedRules.TIER_DUNGEON[next], 0) > 0
                 && (next < 6 || p.ascension >= 3)
+                && p.mastery[SimPlayer.M_CLASS] >= mn.suld.api.classgear.ArmorTier.of(next).mastery()
                 && p.coins >= ProposedRules.TIER_COINS[next]) {
             String mat = ProposedRules.BANDS.get(ProposedRules.TIER_BAND[next]).material();
             if (p.takeMaterial(mat, 5 * next) || p.takeMaterial("item.tengeriin_chuluu", 3 * next)) {
@@ -1177,6 +1183,7 @@ public final class Engine {
             case SimPlayer.M_EXPLORE -> p.regions.size() >= Math.min(8, rank) && landmarksTotal() >= 4 * rank;
             case SimPlayer.M_CRAFT -> p.crafted + p.tempers + p.salvaged / 20 >= 2 * rank;
             case SimPlayer.M_COLLECT -> p.collection.size() >= 6 * rank;
+            case SimPlayer.M_CLASS -> mn.suld.api.classgear.MasteryRules.milestone(rank, p.level, p.distinctClears());
             default -> p.level >= Math.min(60, 6 * rank);
         };
     }
@@ -1255,9 +1262,9 @@ public final class Engine {
         if (!r.hasClassArmor() && p.level != before) classWeaponUpgrade();
     }
 
-    /** Live ClassWeapons.upgrade: tier by level (1/10/25/45), regenerated at the player's level. */
+    /** Live ClassWeapons.upgrade: tier by level (WeaponTiers: 1/12/24/36/48/60), regenerated at the player's level. */
     private void classWeaponUpgrade() {
-        int tier = p.level >= 45 ? 4 : p.level >= 25 ? 3 : p.level >= 10 ? 2 : 1;
+        int tier = mn.suld.api.classgear.WeaponTiers.tierFor(p.level);
         Gear.Piece cur = p.gear.get(EquipSlot.MAIN_HAND);
         String id = "weapon.class." + p.clazz.id() + "." + tier;
         if (cur != null && cur.def().id().equals(id)) return;
@@ -1317,6 +1324,9 @@ public final class Engine {
         m.put("ascension", (double) p.ascension);
         m.put("armorLevel", (double) (r.hasClassArmor() ? p.armorLevel : 0));
         m.put("armorTier", (double) (r.hasClassArmor() ? p.armorTier : 0));
+        m.put("armorMastery", (double) p.mastery[SimPlayer.M_CLASS]);
+        m.put("maxArmor", r.hasClassArmor() && p.armorLevel >= 60 && p.armorTier >= 6 && p.armorEnhance >= ProposedRules.MAX_ENHANCE
+                && p.mastery[SimPlayer.M_CLASS] >= mn.suld.api.classgear.MasteryRules.MAX_RANK ? 1.0 : 0.0);
         m.put("mythicTier", (double) p.mythicTier);
         m.put("deaths", (double) p.deaths);
         m.put("lockedHours", p.lockedMinutes / 60.0);

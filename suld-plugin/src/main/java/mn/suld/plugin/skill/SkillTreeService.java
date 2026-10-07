@@ -281,6 +281,8 @@ public final class SkillTreeService implements Listener {
 
     /** Item passives are indexed from here so their cooldowns never collide with the tree's node indices. */
     public static final int ITEM_PROC_INDEX = 100_000;
+    /** Mastery perks carry no procs today; their index range is reserved apart from items. */
+    public static final int MASTERY_PROC_INDEX = 200_000;
 
     private void refreshRuntime(Player p, PlayerProfile pr, Runtime r) {
         r.allocation = SkillEngine.allocation(pr, r.tree);
@@ -288,6 +290,13 @@ public final class SkillTreeService implements Listener {
         mn.suld.plugin.item.EquipmentService eq = services.equipment();
         mn.suld.api.item.Equipment.Bonus gear = eq == null ? mn.suld.api.item.Equipment.Bonus.NONE : eq.compute(p);
         r.build = r.allocation.build().plus(gear.statKeys(), gear.mods(), gear.procs(), ITEM_PROC_INDEX);
+        // armour mastery perks (ranks 3 / 6 / 9): stats and spell modifiers through the same build
+        mn.suld.api.clazz.PlayerClass clazz = pr.playerClass().orElse(null);
+        int rank = pr.classGear().mastery();
+        if (rank >= 3 && clazz != null) {
+            r.build = r.build.plus(mn.suld.api.classgear.MasteryPerks.stats(clazz, rank), mn.suld.api.classgear.MasteryPerks.mods(clazz, rank),
+                    java.util.List.of(), MASTERY_PROC_INDEX);
+        }
         applyAttributes(p, r.build);
         // resource pool size follows the build
         skills.rebuildPool(p);

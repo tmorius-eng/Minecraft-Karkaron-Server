@@ -88,6 +88,7 @@ public final class NpcService implements Listener {
     private final NamespacedKey key;
     private final Map<String, UUID> spawned = new ConcurrentHashMap<>();
     private final Map<UUID, Long> blessed = new ConcurrentHashMap<>();
+    private final mn.suld.plugin.gui.SmithMenu smith;
 
     public NpcService(Plugin plugin, SuldServices services, WorldBuildService city, Menus menus) {
         this.plugin = plugin;
@@ -95,6 +96,7 @@ public final class NpcService implements Listener {
         this.city = city;
         this.menus = menus;
         this.key = new NamespacedKey(plugin, "npc");
+        this.smith = new mn.suld.plugin.gui.SmithMenu(plugin, services);
     }
 
     public void start() {
@@ -239,6 +241,9 @@ public final class NpcService implements Listener {
         mn.suld.api.item.ItemInstance inst = it.getType().isAir() ? null : services.items().read(it).orElse(null);
         boolean upgradable = inst != null && !inst.definitionId().startsWith("weapon.class.") && !services.relics().items().isRelic(it)
                 && mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId()) != null;
+        // the class armour: inspect, next tier, mastery, upgrade with confirmation (SmithMenu)
+        m.set(22, Menu.item(Material.NETHERITE_CHESTPLATE, Menu.title("⚔ Ангийн хуяг", NamedTextColor.GOLD),
+                List.of(Menu.line("Хуягаа үзэх, зэрэг ахиулах, сайжруулах"))), (pl, c) -> smith.open(pl, this::smithLocation));
         if (!damaged && !upgradable) {
             m.set(13, Menu.item(Material.ANVIL, Menu.title("Засах, сайжруулах зүйл алга", NamedTextColor.RED),
                     List.of(Menu.line("Гэмтсэн зэвсэг/хуяг эсвэл SÜLD зэвсгээ гартаа барь."),
@@ -268,6 +273,7 @@ public final class NpcService implements Listener {
                     hand.setItemMeta(hd);
                     pl.playSound(pl.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
                     pl.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " ₮)."));
+                    if (services.classArmor != null) services.classArmor.smithWork(pl);
                 }
                 pl.closeInventory();
             });
@@ -310,10 +316,18 @@ public final class NpcService implements Listener {
                 pl.getWorld().spawnParticle(org.bukkit.Particle.ENCHANT, pl.getLocation().add(0, 1.2, 0), 40, 0.4, 0.6, 0.4, 0.4);
                 pl.sendMessage(Messages.success(def.displayName() + " → Зэрэг " + up.itemLevel() + " (+" + up.upgradeLevel() + ")"));
                 services.profiles().save(pr);
+                if (services.classArmor != null) services.classArmor.smithWork(pl);
                 pl.closeInventory();
             });
         }
         m.open(p);
+    }
+
+    /** Where the smith stands (the purchase confirmation checks the player is still there). */
+    private Location smithLocation() {
+        UUID id = spawned.get("blacksmith");
+        Entity e = id == null ? null : Bukkit.getEntity(id);
+        return e != null && e.isValid() ? e.getLocation() : city.pointLocation("blacksmith");
     }
 
     private int countItem(Player p, String definitionId) {

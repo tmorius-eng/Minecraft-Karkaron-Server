@@ -71,6 +71,20 @@
         "threshold": 871005,
         "model": {
           "type": "minecraft:model",
+          "model": "suld:item/weapon/baatar_5"
+        }
+      },
+      {
+        "threshold": 871006,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/baatar_6"
+        }
+      },
+      {
+        "threshold": 871007,
+        "model": {
+          "type": "minecraft:model",
           "model": "minecraft:item/iron_sword"
         }
       },
@@ -104,6 +118,20 @@
       },
       {
         "threshold": 871045,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/khulegchin_5"
+        }
+      },
+      {
+        "threshold": 871046,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/weapon/khulegchin_6"
+        }
+      },
+      {
+        "threshold": 871047,
         "model": {
           "type": "minecraft:model",
           "model": "minecraft:item/iron_sword"

@@ -55,14 +55,14 @@ a short break never strands it.
 ## Armour tiers
 
 <!-- spec:begin tiers -->
-| Tier | Name | Armour level | Must have cleared | Coins | Materials | Class-gear rarity |
-|---|---|---|---|---|---|---|
-| T1 | Анхан (starter) | 1 | — | 0 | — | uncommon |
-| T2 | Бэхжсэн (reinforced) | 12 | Говийн Булш | 2000 | 10 band materials | rare |
-| T3 | Сонгомол (elite) | 24 | Мөсөн Оргил | 12000 | 15 band materials | epic |
-| T4 | Эзэнт (imperial) | 36 | Хар Хотын Балгас | 45000 | 20 band materials | legendary |
-| T5 | Домогт (legendary) | 48 | Бурхан Халдуны Агуй | 120000 | 25 band materials | ancient |
-| T6 | Тэнгэрлэг (endgame) | 60 | Тэнгэрийн Ордон + Ascension III | 300000 | 30 band materials | mythic |
+| Tier | Name | Armour level | Must have cleared | Mastery rank | Coins | Materials | Class-gear rarity |
+|---|---|---|---|---|---|---|---|
+| T1 | Эхлэл (beginning) | 1 | — | 0 | 0 | — | uncommon |
+| T2 | Сайжруулсан (improved) | 12 | Говийн Булш | 0 | 2000 | 10 band materials | rare |
+| T3 | Элчин (envoy) | 24 | Мөсөн Оргил | 1 | 12000 | 15 band materials | epic |
+| T4 | Хааны (royal) | 36 | Хар Хотын Балгас | 3 | 45000 | 20 band materials | legendary |
+| T5 | Тэнгэрлэг (celestial) | 48 | Бурхан Халдуны Агуй | 5 | 120000 | 25 band materials | ancient |
+| T6 | Дээдэс (supreme) | 60 | Тэнгэрийн Ордон + Ascension III | 7 | 300000 | 30 band materials | mythic |
 
 Enhancement +1…+5 inside a tier: +2 % item power each, 40 × armour level × step × tier coins; reset by the next tier.
 <!-- spec:end tiers -->

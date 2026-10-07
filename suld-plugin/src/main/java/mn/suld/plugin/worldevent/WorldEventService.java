@@ -59,6 +59,11 @@ public final class WorldEventService {
     private final BossBar bar = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.PURPLE, BossBar.Overlay.NOTCHED_10);
     private final Set<UUID> eventMobs = new HashSet<>();
 
+    /** True for a mob spawned by a running world event (its rewards are the event's, never farming-reduced). */
+    public boolean isEventMob(UUID entity) {
+        return eventMobs.contains(entity);
+    }
+
     private WorldEventRun active;
     private BukkitTask ticker;
     private long nextAutoStartMillis;

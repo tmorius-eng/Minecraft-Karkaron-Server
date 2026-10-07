@@ -44,6 +44,7 @@ public final class PlayerLifecycleListener implements Listener {
         if (profile == null) {
             return; // the auth pipeline refuses (kicks) joins without a profile
         }
+        services.sessionStarted(id);
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.SESSION_START, id));
         services.resourcePacks().send(player);
         org.bukkit.inventory.ItemStack[] contents = player.getInventory().getContents();
@@ -64,6 +65,16 @@ public final class PlayerLifecycleListener implements Listener {
         }
     }
 
+    /** Session totals from domain events: EXP, quests completed, discoveries. */
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
+    public void onDomain(mn.suld.plugin.event.SuldDomainBukkitEvent e) {
+        if (!(e.payload() instanceof mn.suld.api.event.ExpGainedEvent g)) return;
+        mn.suld.api.analytics.SessionTotals t = services.session(g.player());
+        t.exp += g.amount();
+        if (g.source() == mn.suld.api.progression.ExpSource.QUEST) t.questsCompleted++;
+        if (g.source() == mn.suld.api.progression.ExpSource.DISCOVERY) t.discoveries++;
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
@@ -73,7 +84,10 @@ public final class PlayerLifecycleListener implements Listener {
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.LOGOUT_LOCATION, id, Map.of(
                 "world", loc.getWorld() == null ? "?" : loc.getWorld().getName(),
                 "x", loc.getBlockX(), "y", loc.getBlockY(), "z", loc.getBlockZ())));
-        services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.SESSION_END, id));
+        // one event with the session's aggregate totals (also a suld_sessions row with the database sink)
+        mn.suld.api.analytics.SessionTotals totals = services.sessionEnded(id);
+        services.analytics().record(totals == null ? AnalyticsEvent.of(AnalyticsEventType.SESSION_END, id)
+                : AnalyticsEvent.of(AnalyticsEventType.SESSION_END, id, totals.attributes(System.currentTimeMillis())));
         // Saving/unloading is session-aware and owned by AuthenticationService (runs at MONITOR).
     }
 }

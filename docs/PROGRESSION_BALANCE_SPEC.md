@@ -128,6 +128,32 @@ Each band unlocks something (directive §4):
 | 51–59 | Отгонтэнгэр — endgame preparation | → ~195 h | dungeon IX, world boss at 55, tree node 54 |
 | 60 | cap | 205.9 h | raid, heroics, Ascension I, mythic tiers, T6 path |
 
+### 4.x Farming fatigue (IMPLEMENTED, Stage C3b)
+
+The rule stops "find one spawn, stand there for 10 hours, reach max level". It reduces the reward of **normal
+open-world kills only**. Dungeon waves and bosses, world-event mobs, BOSS-tier mobs, quests, dungeon completions and
+discoveries are never reduced. Exploring and moving between areas never meet it.
+
+* **Memory:** for each player, the last kills with their mob type and position (`ActivityTracker`, up to 600
+  kills). A kill is counted for **30 active minutes**. The window advances only with validated active minutes, so
+  logging off or idling does not wash the count out. Doing something else, somewhere else, does.
+* **Count:** for a new kill of mob type *m*,
+  n = (kills of *m* within 48 blocks) + 0.5 × (kills of other types within 48 blocks); a radius, so there is no grid border to stand on.
+* **Factor:** f(n) = 1 for n ≤ 40, otherwise **f(n) = max(0.25, 1 / (1 + (n − 40) / 60))**.
+
+| n | 40 | 70 | 100 | 160 | 220+ |
+|---|---|---|---|---|---|
+| f | 1.00 | 0.67 | 0.50 | 0.33 | 0.25 (floor; some reward always stays) |
+
+* **What f multiplies:**
+  * the kill's player EXP (`CombatListener`, after boosts and the skill-tree EXP bonus);
+  * its armour XP;
+  * its armour mastery XP.
+  * Active-minute armour XP uses the factor of the area the player is in.
+* **Player feedback:** the EXP message says the area is over-hunted, and `/classgear` shows the area factor.
+* **Simulator:** the AFK/one-spot exploit uses the same curve. C6 and C12 still PASS: AFK EXP/hour is 12,720 against
+  120,935 for active play.
+
 ## 5. Player tables (directive §5, §25, §26, §38)
 
 The full tables are generated in `docs/PROGRESSION_SIMULATION.md`. Headline numbers (p50, mid calibration, all five

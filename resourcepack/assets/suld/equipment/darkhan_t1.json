@@ -1,0 +1,14 @@
+{
+ "layers": {
+  "humanoid": [
+   {
+    "texture": "suld:darkhan_t1"
+   }
+  ],
+  "humanoid_leggings": [
+   {
+    "texture": "suld:darkhan_t1"
+   }
+  ]
+ }
+}

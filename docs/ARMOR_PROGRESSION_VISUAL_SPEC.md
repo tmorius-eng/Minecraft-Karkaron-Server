@@ -11,12 +11,12 @@ Gameplay numbers come from the armour progression spec and are not changed here.
 
 | Tier | Name | Unlock (gameplay spec) | Rarity | Rarity colour (`ItemRarity.java`) | Visual theme |
 |---|---|---|---|---|---|
-| T1 | Анхан (starter) | Armour level 1 | uncommon | `#1eff00` | Practical steppe gear: felt, leather, a little iron |
-| T2 | Бэхжсэн (reinforced) | AL 12 + clear Говийн Булш | rare | `#0070dd` | Hard armour appears: iron lamellar over the deel |
-| T3 | Сонгомол (elite) | AL 24 + Мөсөн Оргил | epic | `#a335ee` | Elite construction: full lamellar coat, first 3D shoulder pieces |
-| T4 | Эзэнт (imperial) | AL 36 + Хар Хотын Балгас | legendary | `#ff8000` | Imperial: steel, silver inlay, layered pauldrons, rank insignia |
-| T5 | Домогт (legendary) | AL 48 + Бурхан Халдуны Агуй | ancient | `#e6cc80` | Legendary: figurative ornament, blued steel, turquoise |
-| T6 | Тэнгэрлэг (endgame) | AL 60 + Тэнгэрийн Ордон raid + Ascension III | mythic | `#ff4040` | Unmistakable silhouette: crest, back standard, night-sky steel |
+| T1 | Эхлэл (beginning) | Armour level 1 | uncommon | `#1eff00` | Practical steppe gear: felt, leather, a little iron |
+| T2 | Сайжруулсан (improved) | AL 12 + clear Говийн Булш | rare | `#0070dd` | Hard armour appears: iron lamellar over the deel |
+| T3 | Элчин (envoy) | AL 24 + Мөсөн Оргил | epic | `#a335ee` | Elite construction: full lamellar coat, first 3D shoulder pieces |
+| T4 | Хааны (royal) | AL 36 + Хар Хотын Балгас | legendary | `#ff8000` | Imperial: steel, silver inlay, layered pauldrons, rank insignia |
+| T5 | Тэнгэрлэг (celestial) | AL 48 + Бурхан Халдуны Агуй | ancient | `#e6cc80` | Legendary: figurative ornament, blued steel, turquoise |
+| T6 | Дээдэс (supreme) | AL 60 + Тэнгэрийн Ордон raid + Ascension III | mythic | `#ff4040` | Unmistakable silhouette: crest, back standard, night-sky steel |
 
 The rarity colour belongs to the **tooltip name and UI frames only**. It is never the paint scheme of the armour,
 because that would make the tiers colour swaps.
@@ -69,7 +69,7 @@ shoulders, sword-and-shield compatible. Lamellar armour, iron with leather and r
 **VERIFIED** vocabulary ([MATERIAL_CULTURE §1](research/history/MATERIAL_CULTURE.md#1-armour-and-helmets)).
 Every specific design below is **INSPIRED** unless marked otherwise.
 
-### 3.1 T1 Анхан: "the recruit"
+### 3.1 T1 Эхлэл: "the recruit"
 
 | Aspect | Spec |
 |---|---|
@@ -83,7 +83,7 @@ Every specific design below is **INSPIRED** unless marked otherwise.
 | Ornament | Stitch lines only. No metal ornament |
 | Attachments, VFX | None |
 
-### 3.2 T2 Бэхжсэн: "the soldier" (from T1: soft becomes hard)
+### 3.2 T2 Сайжруулсан: "the soldier" (from T1: soft becomes hard)
 
 | Aspect | Spec |
 |---|---|
@@ -97,7 +97,7 @@ Every specific design below is **INSPIRED** unless marked otherwise.
 | Ornament | Lacing pattern as ornament; one bronze boss on the belt |
 | Attachments, VFX | None |
 
-### 3.3 T3 Сонгомол: "the chosen" (from T2: torso armour becomes a full coat; first off-body mass)
+### 3.3 T3 Элчин: "the chosen" (from T2: torso armour becomes a full coat; first off-body mass)
 
 | Aspect | Spec |
 |---|---|
@@ -111,7 +111,7 @@ Every specific design below is **INSPIRED** unless marked otherwise.
 | Ornament | Horn-scroll (эвэр хээ) border on the skirt hem: INSPIRED, drawn from scratch |
 | Attachments, VFX | 1 attachment (pauldrons). No VFX |
 
-### 3.4 T4 Эзэнт: "imperial guard" (from T3: lamellae become plate-and-lamellar; insignia appear)
+### 3.4 T4 Хааны: "imperial guard" (from T3: lamellae become plate-and-lamellar; insignia appear)
 
 | Aspect | Spec |
 |---|---|
@@ -125,7 +125,7 @@ Every specific design below is **INSPIRED** unless marked otherwise.
 | Ornament | Belt plaques laid out like a **rank insignia** (INSPIRED by Marco Polo's paiza ranks, which are VERIFIED as his account). No real seal text |
 | Attachments, VFX | 1 attachment (pauldrons, larger). No idle VFX |
 
-### 3.5 T5 Домогт: "legend" (from T4: material and figurative ornament change)
+### 3.5 T5 Тэнгэрлэг: "legend" (from T4: material and figurative ornament change)
 
 | Aspect | Spec |
 |---|---|
@@ -139,7 +139,7 @@ Every specific design below is **INSPIRED** unless marked otherwise.
 | Ornament | Figurative: wolf and eagle. Each must be an original drawing |
 | Attachments, VFX | 2 (pauldrons + half-cape). Cast-time accent only (§3.7) |
 
-### 3.6 T6 Тэнгэрлэг: "of the sky" (from T5: silhouette becomes unmistakable)
+### 3.6 T6 Дээдэс: "of the sky" (from T5: silhouette becomes unmistakable)
 
 | Aspect | Spec |
 |---|---|
@@ -240,7 +240,7 @@ and a client test that shows a visible gain.
 
 ## 6. Open questions for the owner
 
-1. The T5 name **Домогт** is also the display name of the EPIC rarity (`ItemRarity.EPIC`, "Домогт"), and T5 is
+1. RESOLVED (owner, Stage C3b): the armour tiers were renamed Эхлэл · Сайжруулсан · Элчин · Хааны · Тэнгэрлэг · Дээдэс so no tier name equals a rarity name (a unit test enforces it). Originally: the T5 name **Домогт** was also the display name of the EPIC rarity (`ItemRarity.EPIC`, "Домогт"), and T5 is
    *ancient* rarity. Keep it, or rename the tier (for example "Домгийн" belongs to MYTHIC, so a third word is needed)?
 2. Pieces upgrade together, or one at a time? This decides how much the seam grid (§2.1.1) matters.
 3. May the T6 crest and back standard hide during combat in crowded areas (LOD), or must they always show?

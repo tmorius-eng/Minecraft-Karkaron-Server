@@ -2,7 +2,7 @@
  "items": [
   {
    "id": "armor.class.baatar.helmet.t1",
-   "name": "Баатрын Анхан Дуулга",
+   "name": "Баатрын Эхлэл Дуулга",
    "material": "minecraft:leather_helmet",
    "type": "HELMET",
    "rarity": "uncommon",
@@ -34,7 +34,7 @@
   },
   {
    "id": "armor.class.baatar.chestplate.t1",
-   "name": "Баатрын Анхан Хуяг",
+   "name": "Баатрын Эхлэл Хуяг",
    "material": "minecraft:leather_chestplate",
    "type": "CHESTPLATE",
    "rarity": "uncommon",
@@ -66,7 +66,7 @@
   },
   {
    "id": "armor.class.baatar.leggings.t1",
-   "name": "Баатрын Анхан Өмд",
+   "name": "Баатрын Эхлэл Өмд",
    "material": "minecraft:leather_leggings",
    "type": "LEGGINGS",
    "rarity": "uncommon",
@@ -98,7 +98,7 @@
   },
   {
    "id": "armor.class.baatar.boots.t1",
-   "name": "Баатрын Анхан Гутал",
+   "name": "Баатрын Эхлэл Гутал",
    "material": "minecraft:leather_boots",
    "type": "BOOTS",
    "rarity": "uncommon",
@@ -134,7 +134,7 @@
   },
   {
    "id": "armor.class.baatar.helmet.t2",
-   "name": "Баатрын Бэхжсэн Дуулга",
+   "name": "Баатрын Сайжруулсан Дуулга",
    "material": "minecraft:chainmail_helmet",
    "type": "HELMET",
    "rarity": "rare",
@@ -166,7 +166,7 @@
   },
   {
    "id": "armor.class.baatar.chestplate.t2",
-   "name": "Баатрын Бэхжсэн Хуяг",
+   "name": "Баатрын Сайжруулсан Хуяг",
    "material": "minecraft:chainmail_chestplate",
    "type": "CHESTPLATE",
    "rarity": "rare",
@@ -198,7 +198,7 @@
   },
   {
    "id": "armor.class.baatar.leggings.t2",
-   "name": "Баатрын Бэхжсэн Өмд",
+   "name": "Баатрын Сайжруулсан Өмд",
    "material": "minecraft:chainmail_leggings",
    "type": "LEGGINGS",
    "rarity": "rare",
@@ -230,7 +230,7 @@
   },
   {
    "id": "armor.class.baatar.boots.t2",
-   "name": "Баатрын Бэхжсэн Гутал",
+   "name": "Баатрын Сайжруулсан Гутал",
    "material": "minecraft:chainmail_boots",
    "type": "BOOTS",
    "rarity": "rare",
@@ -266,7 +266,7 @@
   },
   {
    "id": "armor.class.baatar.helmet.t3",
-   "name": "Баатрын Сонгомол Дуулга",
+   "name": "Баатрын Элчин Дуулга",
    "material": "minecraft:iron_helmet",
    "type": "HELMET",
    "rarity": "epic",
@@ -298,7 +298,7 @@
   },
   {
    "id": "armor.class.baatar.chestplate.t3",
-   "name": "Баатрын Сонгомол Хуяг",
+   "name": "Баатрын Элчин Хуяг",
    "material": "minecraft:iron_chestplate",
    "type": "CHESTPLATE",
    "rarity": "epic",
@@ -330,7 +330,7 @@
   },
   {
    "id": "armor.class.baatar.leggings.t3",
-   "name": "Баатрын Сонгомол Өмд",
+   "name": "Баатрын Элчин Өмд",
    "material": "minecraft:iron_leggings",
    "type": "LEGGINGS",
    "rarity": "epic",
@@ -362,7 +362,7 @@
   },
   {
    "id": "armor.class.baatar.boots.t3",
-   "name": "Баатрын Сонгомол Гутал",
+   "name": "Баатрын Элчин Гутал",
    "material": "minecraft:iron_boots",
    "type": "BOOTS",
    "rarity": "epic",
@@ -398,7 +398,7 @@
   },
   {
    "id": "armor.class.baatar.helmet.t4",
-   "name": "Баатрын Эзэнт Дуулга",
+   "name": "Баатрын Хааны Дуулга",
    "material": "minecraft:iron_helmet",
    "type": "HELMET",
    "rarity": "legendary",
@@ -429,7 +429,7 @@
   },
   {
    "id": "armor.class.baatar.chestplate.t4",
-   "name": "Баатрын Эзэнт Хуяг",
+   "name": "Баатрын Хааны Хуяг",
    "material": "minecraft:iron_chestplate",
    "type": "CHESTPLATE",
    "rarity": "legendary",
@@ -460,7 +460,7 @@
   },
   {
    "id": "armor.class.baatar.leggings.t4",
-   "name": "Баатрын Эзэнт Өмд",
+   "name": "Баатрын Хааны Өмд",
    "material": "minecraft:iron_leggings",
    "type": "LEGGINGS",
    "rarity": "legendary",
@@ -491,7 +491,7 @@
   },
   {
    "id": "armor.class.baatar.boots.t4",
-   "name": "Баатрын Эзэнт Гутал",
+   "name": "Баатрын Хааны Гутал",
    "material": "minecraft:iron_boots",
    "type": "BOOTS",
    "rarity": "legendary",
@@ -526,7 +526,7 @@
   },
   {
    "id": "armor.class.baatar.helmet.t5",
-   "name": "Баатрын Домогт Дуулга",
+   "name": "Баатрын Тэнгэрлэг Дуулга",
    "material": "minecraft:diamond_helmet",
    "type": "HELMET",
    "rarity": "ancient",
@@ -558,7 +558,7 @@
   },
   {
    "id": "armor.class.baatar.chestplate.t5",
-   "name": "Баатрын Домогт Хуяг",
+   "name": "Баатрын Тэнгэрлэг Хуяг",
    "material": "minecraft:diamond_chestplate",
    "type": "CHESTPLATE",
    "rarity": "ancient",
@@ -590,7 +590,7 @@
   },
   {
    "id": "armor.class.baatar.leggings.t5",
-   "name": "Баатрын Домогт Өмд",
+   "name": "Баатрын Тэнгэрлэг Өмд",
    "material": "minecraft:diamond_leggings",
    "type": "LEGGINGS",
    "rarity": "ancient",
@@ -622,7 +622,7 @@
   },
   {
    "id": "armor.class.baatar.boots.t5",
-   "name": "Баатрын Домогт Гутал",
+   "name": "Баатрын Тэнгэрлэг Гутал",
    "material": "minecraft:diamond_boots",
    "type": "BOOTS",
    "rarity": "ancient",
@@ -658,7 +658,7 @@
   },
   {
    "id": "armor.class.baatar.helmet.t6",
-   "name": "Баатрын Тэнгэрлэг Дуулга",
+   "name": "Баатрын Дээдэс Дуулга",
    "material": "minecraft:netherite_helmet",
    "type": "HELMET",
    "rarity": "mythic",
@@ -690,7 +690,7 @@
   },
   {
    "id": "armor.class.baatar.chestplate.t6",
-   "name": "Баатрын Тэнгэрлэг Хуяг",
+   "name": "Баатрын Дээдэс Хуяг",
    "material": "minecraft:netherite_chestplate",
    "type": "CHESTPLATE",
    "rarity": "mythic",
@@ -722,7 +722,7 @@
   },
   {
    "id": "armor.class.baatar.leggings.t6",
-   "name": "Баатрын Тэнгэрлэг Өмд",
+   "name": "Баатрын Дээдэс Өмд",
    "material": "minecraft:netherite_leggings",
    "type": "LEGGINGS",
    "rarity": "mythic",
@@ -754,7 +754,7 @@
   },
   {
    "id": "armor.class.baatar.boots.t6",
-   "name": "Баатрын Тэнгэрлэг Гутал",
+   "name": "Баатрын Дээдэс Гутал",
    "material": "minecraft:netherite_boots",
    "type": "BOOTS",
    "rarity": "mythic",
@@ -786,6 +786,3158 @@
    ],
    "binding": "SOULBOUND",
    "set": "set.class.baatar_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.helmet.t1",
+   "name": "Мэргэний Эхлэл Дуулга",
+   "material": "minecraft:leather_helmet",
+   "type": "HELMET",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.chestplate.t1",
+   "name": "Мэргэний Эхлэл Хуяг",
+   "material": "minecraft:leather_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.39,
+     4.31
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.21,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.leggings.t1",
+   "name": "Мэргэний Эхлэл Өмд",
+   "material": "minecraft:leather_leggings",
+   "type": "LEGGINGS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.42,
+     3.08
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.15,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.boots.t1",
+   "name": "Мэргэний Эхлэл Гутал",
+   "material": "minecraft:leather_boots",
+   "type": "BOOTS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ],
+    "move_speed": [
+     1.45,
+     1.85
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.helmet.t2",
+   "name": "Мэргэний Сайжруулсан Дуулга",
+   "material": "minecraft:chainmail_helmet",
+   "type": "HELMET",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.chestplate.t2",
+   "name": "Мэргэний Сайжруулсан Хуяг",
+   "material": "minecraft:chainmail_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.76,
+     6.06
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.148,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.leggings.t2",
+   "name": "Мэргэний Сайжруулсан Өмд",
+   "material": "minecraft:chainmail_leggings",
+   "type": "LEGGINGS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.42,
+     4.35
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.106,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.boots.t2",
+   "name": "Мэргэний Сайжруулсан Гутал",
+   "material": "minecraft:chainmail_boots",
+   "type": "BOOTS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ],
+    "move_speed": [
+     1.68,
+     2.14
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.helmet.t3",
+   "name": "Мэргэний Элчин Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.chestplate.t3",
+   "name": "Мэргэний Элчин Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.35,
+     6.81
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.169,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.leggings.t3",
+   "name": "Мэргэний Элчин Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.87,
+     4.93
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.122,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.boots.t3",
+   "name": "Мэргэний Элчин Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ],
+    "move_speed": [
+     1.77,
+     2.25
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.helmet.t4",
+   "name": "Мэргэний Хааны Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.chestplate.t4",
+   "name": "Мэргэний Хааны Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     11.93,
+     15.18
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.leggings.t4",
+   "name": "Мэргэний Хааны Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     8.71,
+     11.08
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.boots.t4",
+   "name": "Мэргэний Хааны Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ],
+    "move_speed": [
+     1.83,
+     2.33
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.helmet.t5",
+   "name": "Мэргэний Тэнгэрлэг Дуулга",
+   "material": "minecraft:diamond_helmet",
+   "type": "HELMET",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.chestplate.t5",
+   "name": "Мэргэний Тэнгэрлэг Хуяг",
+   "material": "minecraft:diamond_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     9.01,
+     11.46
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.leggings.t5",
+   "name": "Мэргэний Тэнгэрлэг Өмд",
+   "material": "minecraft:diamond_leggings",
+   "type": "LEGGINGS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     6.62,
+     8.43
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.boots.t5",
+   "name": "Мэргэний Тэнгэрлэг Гутал",
+   "material": "minecraft:diamond_boots",
+   "type": "BOOTS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ],
+    "move_speed": [
+     1.8,
+     2.29
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.helmet.t6",
+   "name": "Мэргэний Дээдэс Дуулга",
+   "material": "minecraft:netherite_helmet",
+   "type": "HELMET",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.chestplate.t6",
+   "name": "Мэргэний Дээдэс Хуяг",
+   "material": "minecraft:netherite_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     10.75,
+     13.68
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.leggings.t6",
+   "name": "Мэргэний Дээдэс Өмд",
+   "material": "minecraft:netherite_leggings",
+   "type": "LEGGINGS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     7.98,
+     10.16
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.mergen.boots.t6",
+   "name": "Мэргэний Дээдэс Гутал",
+   "material": "minecraft:netherite_boots",
+   "type": "BOOTS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ],
+    "move_speed": [
+     2.15,
+     2.73
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Мэргэний ангийн хуяг — хөнгөн, чимээгүй, нүд хурц.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.mergen_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.helmet.t1",
+   "name": "Бөөгийн Эхлэл Дуулга",
+   "material": "minecraft:leather_helmet",
+   "type": "HELMET",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.chestplate.t1",
+   "name": "Бөөгийн Эхлэл Хуяг",
+   "material": "minecraft:leather_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.39,
+     4.31
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.21,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.leggings.t1",
+   "name": "Бөөгийн Эхлэл Өмд",
+   "material": "minecraft:leather_leggings",
+   "type": "LEGGINGS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.42,
+     3.08
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.15,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.boots.t1",
+   "name": "Бөөгийн Эхлэл Гутал",
+   "material": "minecraft:leather_boots",
+   "type": "BOOTS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ],
+    "move_speed": [
+     1.45,
+     1.85
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.helmet.t2",
+   "name": "Бөөгийн Сайжруулсан Дуулга",
+   "material": "minecraft:chainmail_helmet",
+   "type": "HELMET",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.chestplate.t2",
+   "name": "Бөөгийн Сайжруулсан Хуяг",
+   "material": "minecraft:chainmail_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.76,
+     6.06
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.148,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.leggings.t2",
+   "name": "Бөөгийн Сайжруулсан Өмд",
+   "material": "minecraft:chainmail_leggings",
+   "type": "LEGGINGS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.42,
+     4.35
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.106,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.boots.t2",
+   "name": "Бөөгийн Сайжруулсан Гутал",
+   "material": "minecraft:chainmail_boots",
+   "type": "BOOTS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ],
+    "move_speed": [
+     1.68,
+     2.14
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.helmet.t3",
+   "name": "Бөөгийн Элчин Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.chestplate.t3",
+   "name": "Бөөгийн Элчин Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.35,
+     6.81
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.169,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.leggings.t3",
+   "name": "Бөөгийн Элчин Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.87,
+     4.93
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.122,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.boots.t3",
+   "name": "Бөөгийн Элчин Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ],
+    "move_speed": [
+     1.77,
+     2.25
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.helmet.t4",
+   "name": "Бөөгийн Хааны Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.chestplate.t4",
+   "name": "Бөөгийн Хааны Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     11.93,
+     15.18
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.leggings.t4",
+   "name": "Бөөгийн Хааны Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     8.71,
+     11.08
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.boots.t4",
+   "name": "Бөөгийн Хааны Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ],
+    "move_speed": [
+     1.83,
+     2.33
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.helmet.t5",
+   "name": "Бөөгийн Тэнгэрлэг Дуулга",
+   "material": "minecraft:diamond_helmet",
+   "type": "HELMET",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.chestplate.t5",
+   "name": "Бөөгийн Тэнгэрлэг Хуяг",
+   "material": "minecraft:diamond_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     9.01,
+     11.46
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.leggings.t5",
+   "name": "Бөөгийн Тэнгэрлэг Өмд",
+   "material": "minecraft:diamond_leggings",
+   "type": "LEGGINGS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     6.62,
+     8.43
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.boots.t5",
+   "name": "Бөөгийн Тэнгэрлэг Гутал",
+   "material": "minecraft:diamond_boots",
+   "type": "BOOTS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ],
+    "move_speed": [
+     1.8,
+     2.29
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.helmet.t6",
+   "name": "Бөөгийн Дээдэс Дуулга",
+   "material": "minecraft:netherite_helmet",
+   "type": "HELMET",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.chestplate.t6",
+   "name": "Бөөгийн Дээдэс Хуяг",
+   "material": "minecraft:netherite_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     10.75,
+     13.68
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.leggings.t6",
+   "name": "Бөөгийн Дээдэс Өмд",
+   "material": "minecraft:netherite_leggings",
+   "type": "LEGGINGS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     7.98,
+     10.16
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.boo.boots.t6",
+   "name": "Бөөгийн Дээдэс Гутал",
+   "material": "minecraft:netherite_boots",
+   "type": "BOOTS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ],
+    "move_speed": [
+     2.15,
+     2.73
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Бөөгийн ангийн хувцас — онгодын хүч дагалдана.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.boo_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.helmet.t1",
+   "name": "Дарханы Эхлэл Дуулга",
+   "material": "minecraft:leather_helmet",
+   "type": "HELMET",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.chestplate.t1",
+   "name": "Дарханы Эхлэл Хуяг",
+   "material": "minecraft:leather_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.39,
+     4.31
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.21,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.leggings.t1",
+   "name": "Дарханы Эхлэл Өмд",
+   "material": "minecraft:leather_leggings",
+   "type": "LEGGINGS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.42,
+     3.08
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.15,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.boots.t1",
+   "name": "Дарханы Эхлэл Гутал",
+   "material": "minecraft:leather_boots",
+   "type": "BOOTS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ],
+    "move_speed": [
+     1.45,
+     1.85
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.helmet.t2",
+   "name": "Дарханы Сайжруулсан Дуулга",
+   "material": "minecraft:chainmail_helmet",
+   "type": "HELMET",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.chestplate.t2",
+   "name": "Дарханы Сайжруулсан Хуяг",
+   "material": "minecraft:chainmail_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.76,
+     6.06
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.148,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.leggings.t2",
+   "name": "Дарханы Сайжруулсан Өмд",
+   "material": "minecraft:chainmail_leggings",
+   "type": "LEGGINGS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.42,
+     4.35
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.106,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.boots.t2",
+   "name": "Дарханы Сайжруулсан Гутал",
+   "material": "minecraft:chainmail_boots",
+   "type": "BOOTS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ],
+    "move_speed": [
+     1.68,
+     2.14
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.helmet.t3",
+   "name": "Дарханы Элчин Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.chestplate.t3",
+   "name": "Дарханы Элчин Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.35,
+     6.81
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.169,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.leggings.t3",
+   "name": "Дарханы Элчин Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.87,
+     4.93
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.122,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.boots.t3",
+   "name": "Дарханы Элчин Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ],
+    "move_speed": [
+     1.77,
+     2.25
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.helmet.t4",
+   "name": "Дарханы Хааны Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.chestplate.t4",
+   "name": "Дарханы Хааны Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     11.93,
+     15.18
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.leggings.t4",
+   "name": "Дарханы Хааны Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     8.71,
+     11.08
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.boots.t4",
+   "name": "Дарханы Хааны Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ],
+    "move_speed": [
+     1.83,
+     2.33
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.helmet.t5",
+   "name": "Дарханы Тэнгэрлэг Дуулга",
+   "material": "minecraft:diamond_helmet",
+   "type": "HELMET",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.chestplate.t5",
+   "name": "Дарханы Тэнгэрлэг Хуяг",
+   "material": "minecraft:diamond_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     9.01,
+     11.46
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.leggings.t5",
+   "name": "Дарханы Тэнгэрлэг Өмд",
+   "material": "minecraft:diamond_leggings",
+   "type": "LEGGINGS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     6.62,
+     8.43
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.boots.t5",
+   "name": "Дарханы Тэнгэрлэг Гутал",
+   "material": "minecraft:diamond_boots",
+   "type": "BOOTS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ],
+    "move_speed": [
+     1.8,
+     2.29
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.helmet.t6",
+   "name": "Дарханы Дээдэс Дуулга",
+   "material": "minecraft:netherite_helmet",
+   "type": "HELMET",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.chestplate.t6",
+   "name": "Дарханы Дээдэс Хуяг",
+   "material": "minecraft:netherite_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     10.75,
+     13.68
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.leggings.t6",
+   "name": "Дарханы Дээдэс Өмд",
+   "material": "minecraft:netherite_leggings",
+   "type": "LEGGINGS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     7.98,
+     10.16
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.darkhan.boots.t6",
+   "name": "Дарханы Дээдэс Гутал",
+   "material": "minecraft:netherite_boots",
+   "type": "BOOTS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ],
+    "move_speed": [
+     2.15,
+     2.73
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Дарханы ангийн хуяг — өөрийн гараар давтсан ган.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.darkhan_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.helmet.t1",
+   "name": "Хүлэгчний Эхлэл Дуулга",
+   "material": "minecraft:leather_helmet",
+   "type": "HELMET",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.chestplate.t1",
+   "name": "Хүлэгчний Эхлэл Хуяг",
+   "material": "minecraft:leather_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.39,
+     4.31
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.21,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.leggings.t1",
+   "name": "Хүлэгчний Эхлэл Өмд",
+   "material": "minecraft:leather_leggings",
+   "type": "LEGGINGS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.42,
+     3.08
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ]
+   },
+   "perLevel": {
+    "armor": 0.15,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.boots.t1",
+   "name": "Хүлэгчний Эхлэл Гутал",
+   "material": "minecraft:leather_boots",
+   "type": "BOOTS",
+   "rarity": "uncommon",
+   "maxRarity": "uncommon",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.45,
+     1.85
+    ],
+    "max_health": [
+     2.32,
+     2.96
+    ],
+    "move_speed": [
+     1.45,
+     1.85
+    ]
+   },
+   "perLevel": {
+    "armor": 0.09,
+    "max_health": 0.66
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t1",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.helmet.t2",
+   "name": "Хүлэгчний Сайжруулсан Дуулга",
+   "material": "minecraft:chainmail_helmet",
+   "type": "HELMET",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.chestplate.t2",
+   "name": "Хүлэгчний Сайжруулсан Хуяг",
+   "material": "minecraft:chainmail_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.76,
+     6.06
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.148,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.leggings.t2",
+   "name": "Хүлэгчний Сайжруулсан Өмд",
+   "material": "minecraft:chainmail_leggings",
+   "type": "LEGGINGS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.42,
+     4.35
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ]
+   },
+   "perLevel": {
+    "armor": 0.106,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.boots.t2",
+   "name": "Хүлэгчний Сайжруулсан Гутал",
+   "material": "minecraft:chainmail_boots",
+   "type": "BOOTS",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.08,
+     2.64
+    ],
+    "max_health": [
+     2.76,
+     3.52
+    ],
+    "move_speed": [
+     1.68,
+     2.14
+    ]
+   },
+   "perLevel": {
+    "armor": 0.065,
+    "max_health": 0.704
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t2",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.helmet.t3",
+   "name": "Хүлэгчний Элчин Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.chestplate.t3",
+   "name": "Хүлэгчний Элчин Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.35,
+     6.81
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.169,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.leggings.t3",
+   "name": "Хүлэгчний Элчин Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.87,
+     4.93
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ]
+   },
+   "perLevel": {
+    "armor": 0.122,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.boots.t3",
+   "name": "Хүлэгчний Элчин Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.4,
+     3.05
+    ],
+    "max_health": [
+     1.29,
+     1.64
+    ],
+    "move_speed": [
+     1.77,
+     2.25
+    ]
+   },
+   "perLevel": {
+    "armor": 0.076,
+    "max_health": 0.857
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t3",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.helmet.t4",
+   "name": "Хүлэгчний Хааны Дуулга",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.chestplate.t4",
+   "name": "Хүлэгчний Хааны Хуяг",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     11.93,
+     15.18
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.leggings.t4",
+   "name": "Хүлэгчний Хааны Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     8.71,
+     11.08
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.boots.t4",
+   "name": "Хүлэгчний Хааны Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.48,
+     6.98
+    ],
+    "max_health": [
+     0.25,
+     0.32
+    ],
+    "move_speed": [
+     1.83,
+     2.33
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.994
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t4",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.helmet.t5",
+   "name": "Хүлэгчний Тэнгэрлэг Дуулга",
+   "material": "minecraft:diamond_helmet",
+   "type": "HELMET",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.chestplate.t5",
+   "name": "Хүлэгчний Тэнгэрлэг Хуяг",
+   "material": "minecraft:diamond_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     9.01,
+     11.46
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.leggings.t5",
+   "name": "Хүлэгчний Тэнгэрлэг Өмд",
+   "material": "minecraft:diamond_leggings",
+   "type": "LEGGINGS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     6.62,
+     8.43
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.boots.t5",
+   "name": "Хүлэгчний Тэнгэрлэг Гутал",
+   "material": "minecraft:diamond_boots",
+   "type": "BOOTS",
+   "rarity": "ancient",
+   "maxRarity": "ancient",
+   "level": 1,
+   "stats": {
+    "armor": [
+     4.23,
+     5.39
+    ],
+    "max_health": [
+     30.09,
+     38.3
+    ],
+    "move_speed": [
+     1.8,
+     2.29
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t5",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.helmet.t6",
+   "name": "Хүлэгчний Дээдэс Дуулга",
+   "material": "minecraft:netherite_helmet",
+   "type": "HELMET",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.chestplate.t6",
+   "name": "Хүлэгчний Дээдэс Хуяг",
+   "material": "minecraft:netherite_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     10.75,
+     13.68
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.111,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.leggings.t6",
+   "name": "Хүлэгчний Дээдэс Өмд",
+   "material": "minecraft:netherite_leggings",
+   "type": "LEGGINGS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     7.98,
+     10.16
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ]
+   },
+   "perLevel": {
+    "armor": 0.082,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t6",
+   "lootable": false
+  },
+  {
+   "id": "armor.class.khulegchin.boots.t6",
+   "name": "Хүлэгчний Дээдэс Гутал",
+   "material": "minecraft:netherite_boots",
+   "type": "BOOTS",
+   "rarity": "mythic",
+   "maxRarity": "mythic",
+   "level": 1,
+   "stats": {
+    "armor": [
+     5.22,
+     6.64
+    ],
+    "max_health": [
+     33.7,
+     42.89
+    ],
+    "move_speed": [
+     2.15,
+     2.73
+    ]
+   },
+   "perLevel": {
+    "armor": 0.052,
+    "max_health": 0.31
+   },
+   "durability": 0,
+   "sell": 0,
+   "lore": "Хүлэгчний ангийн хуяг — морин дээр төрж, морин дээр тулалдана.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "set": "set.class.khulegchin_t6",
    "lootable": false
   }
  ]
