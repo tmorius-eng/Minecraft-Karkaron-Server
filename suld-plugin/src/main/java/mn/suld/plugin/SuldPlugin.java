@@ -39,6 +39,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.combat.CombatFeel combatFeel;
     private mn.suld.plugin.dungeon.DungeonHalls halls;
     private mn.suld.plugin.branding.TutorialService tutorial;
+    private mn.suld.plugin.worldevent.NaadamService naadam;
 
     @Override
     public void onEnable() {
@@ -325,6 +326,10 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.region.OvooService ovoo = new mn.suld.plugin.region.OvooService(this, services);
         getServer().getPluginManager().registerEvents(ovoo, this);
         ovoo.start();
+        naadam = new mn.suld.plugin.worldevent.NaadamService(this, services, worldBuild);
+        getServer().getPluginManager().registerEvents(naadam, this);
+        naadam.start();
+        registerTab("naadam", naadam);
         pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
@@ -349,6 +354,7 @@ public final class SuldPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (combatFeel != null) combatFeel.shutdown();
+        if (naadam != null) naadam.shutdown(); // the festival field goes back to what it was
         if (halls != null) halls.shutdown();
         if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood
         if (services != null && services.skillTree != null) {
