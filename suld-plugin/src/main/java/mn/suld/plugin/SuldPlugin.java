@@ -321,6 +321,10 @@ public final class SuldPlugin extends JavaPlugin {
             halls.placeGates(); // gates follow the spawn like every region ring
         });
         registerTab("suldworld", new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls));
+        // ovoo at the heart of every area (docs/world/OVOO.md): circle three times clockwise for Тэнгэрийн ивээл
+        mn.suld.plugin.region.OvooService ovoo = new mn.suld.plugin.region.OvooService(this, services);
+        getServer().getPluginManager().registerEvents(ovoo, this);
+        ovoo.start();
         pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
