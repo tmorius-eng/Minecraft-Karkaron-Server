@@ -95,6 +95,53 @@ place in halls.
   (2.5 blocks).
 * **Models:** all 30 rigs load.
 
+## Memory and join/quit soak (bots/soak.sh, 90 minutes)
+
+**Workload.** 25 mixed bots for 90 minutes, on the jar of 17:05 with the tuning above:
+* 6 city, 6 combat, 4 explore, 3 boss, 3 travel and 3 quest;
+* plus 10 churn bots that join, play briefly and leave over and over.
+
+The workload totalled:
+* 1 838 join/quit cycles and 1 903 teleports;
+* 174 dungeon entries, 3 222 commands and 17 deaths;
+* 0 failed joins and 0 kicks.
+
+Every 5 minutes the script forced a full GC (`jcmd GC.run`) and sampled the heap and threads.
+
+| Time (UTC) | Heap after full GC | Threads | Note |
+|---|---|---|---|
+| 17:17 | 777 MB | 116 | before the bots |
+| 17:22 | 1 936 MB | 140 | 25 bots spread over the world |
+| 17:47 | 2 227 MB | 138 | |
+| 18:13 | 2 234 MB | 137 | |
+| 18:44 | 2 325 MB | 138 | last sample under load |
+| 18:49 | **1 048 MB** | 128 | 30 s after the last bot left |
+
+Single samples peaked at 2.68 and 2.70 GB (17:42 and 18:08). These were spikes: the next sample was back at 2.2 GB.
+
+**Reading.**
+* **Under load:** the heap plateaus at about 2.2 GB after the first ramp. There is no upward trend over 80 minutes;
+  the spikes are the loaded-chunk count following the explorers.
+* **After the last bot leaves:** the heap falls back to 1.05 GB. The 270 MB above the cold baseline is the
+  warmed-up chunk cache, JIT code and SÜLD's caches (profile cache, chat history, halls).
+* **Entities:** the census shows no SÜLD entity left behind once the players have gone.
+* **Threads:** 116 → 127 after the soak, so no thread leak.
+
+**One trend under load (not a leak).** Ambient and water mobs (bats, nautilus, squid) kept rising while 25 players
+stayed online:
+* nautilus 65 → 459;
+* bats 76 → 333.
+
+Two things cause it:
+* mobs in chunks that are loaded but outside the simulation distance (view 6 > simulation 4) are frozen: they
+  neither tick nor despawn, and they do not count toward the spawn caps;
+* nautilus persist like animals.
+
+They cost memory and entity tracking, not AI ticks, and they unload with their chunks. If a long-running production
+world shows the same, Paper's `chunks.entity-per-chunk-save-limit` (for example `bat: 4`, `nautilus: 4`) caps what
+is saved per chunk. `deploy/tools/paper_tune.py` only edits existing keys, so it would need a small extension to add
+them. Not applied tonight.
+
 ## Known main-thread work that remains (one-off, documented)
 
 * Relic shrine placement on a brand-new world generates up to 16 chunks synchronously, once ever.
@@ -112,7 +159,7 @@ place in halls.
 | 50-player test | ✘ TPS 11.8, mean 92 ms, p95 139 ms on this bench (best config) |
 | main-thread DB IO | ✔ none |
 | spark profiling | ✔ JFR profiles taken instead (the spark viewer needs upload, which is blocked here) |
-| memory stress (2 h+) | ✘ not run tonight |
+| memory stress | ◐ 90-minute soak with 25 bots and 1 838 join/quit cycles: heap plateaus at ~2.2 GB and returns to 1.05 GB after logout, no thread or entity leak (above); a 2 h+ run on the production host is still owed |
 | real client QA | ✘ owner |
 
 **Recommendation:** production for 50 players needs a dedicated host with high single-thread speed (for example a
