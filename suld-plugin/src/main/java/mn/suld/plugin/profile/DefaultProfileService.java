@@ -89,6 +89,8 @@ public final class DefaultProfileService implements ProfileService {
             if (profile == null) {
                 return CompletableFuture.completedFuture(null);
             }
+            // last seen = when they left (the relic's offline expiry counts from here, not from the login)
+            profile.touch(java.time.Instant.now());
             // Evict only after the save succeeded: a failed save keeps the live copy for retry.
             return repository.save(profile).thenApply(saved -> {
                 cache.remove(playerId, profile);

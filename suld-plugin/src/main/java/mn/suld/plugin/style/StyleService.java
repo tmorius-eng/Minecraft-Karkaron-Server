@@ -105,9 +105,13 @@ public final class StyleService implements Listener {
         }
     }
 
+    /** When each player last passed pre-login (nanoTime): a quit's delayed eviction must not hit a login in progress. */
+    private final Map<UUID, Long> preLoginAt = new ConcurrentHashMap<>();
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPreLogin(AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+        preLoginAt.put(e.getUniqueId(), System.nanoTime());
         // A duplicate or quick re-login reuses the live object: its unsaved changes must not be replaced by a stale read.
         if (cache.containsKey(e.getUniqueId())) return;
         PlayerStyle loaded = tryLoad(e.getUniqueId());
@@ -125,14 +129,34 @@ public final class StyleService implements Listener {
         PlayerStyle s = cache.get(id);
         if (s == null) return;
         persist(s);
-        // Keep it a moment: a duplicate login's pre-login (which runs before this quit) already relies on this object.
+        // Keep it a moment: a duplicate login's pre-login (which runs before this quit) already relies on this object,
+        // and so does a quick reconnect whose pre-login came after this quit (the player is not visible until join)
+        long quitAt = System.nanoTime();
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (Bukkit.getPlayer(id) == null && cache.remove(id, s)) persist(s);
+            Long pre = preLoginAt.get(id);
+            if (pre != null && pre - quitAt > 0) return; // logging in again right now: keep the live object
+            if (Bukkit.getPlayer(id) == null && cache.remove(id, s)) {
+                persist(s);
+                preLoginAt.remove(id);
+            }
         }, 40L);
     }
 
     private void flush() {
         for (PlayerStyle s : cache.values()) persist(s);
+        // styles of logins refused after pre-login (ban, whitelist, full) never see a quit: drop them after 5 minutes
+        long now = System.nanoTime();
+        for (Map.Entry<UUID, Long> en : preLoginAt.entrySet()) {
+            UUID id = en.getKey();
+            if (now - en.getValue() > TimeUnit.MINUTES.toNanos(5) && Bukkit.getPlayer(id) == null) {
+                PlayerStyle st = cache.get(id);
+                if (st != null) {
+                    persist(st);
+                    cache.remove(id, st);
+                }
+                preLoginAt.remove(id, en.getValue());
+            }
+        }
     }
 
     private void save(UUID id) {
@@ -171,9 +195,34 @@ public final class StyleService implements Listener {
         return true;
     }
 
-    /** The player's style (online players always have one). */
+    /**
+     * The player's style (online players always have one). Should it be missing, a placeholder is returned that is
+     * never written and blocks paid actions ({@link #ready}) while the stored one loads in the background: a default
+     * style must never overwrite a player's rank and claimed rewards.
+     */
     public PlayerStyle of(UUID id) {
-        return cache.computeIfAbsent(id, k -> new PlayerStyle(k));
+        PlayerStyle s = cache.get(id);
+        if (s != null) return s;
+        PlayerStyle placeholder = new PlayerStyle(id);
+        PlayerStyle prev = cache.putIfAbsent(id, placeholder);
+        if (prev != null) return prev;
+        unsafe.add(id);
+        plugin.getLogger().warning("style of " + id + " was not cached; reloading it");
+        repository.load(id).whenComplete((stored, err) -> {
+            if (err != null || !plugin.isEnabled()) return; // stays unsafe: never written
+            PlayerStyle real = stored.map(PlayerStyle::restore).orElseGet(() -> new PlayerStyle(id));
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (cache.replace(id, placeholder, real)) unsafe.remove(id);
+                Player p = Bukkit.getPlayer(id);
+                if (p != null) changed(p);
+            });
+        });
+        return placeholder;
+    }
+
+    /** False while a player's style is not known to match storage: rewards and purchases must wait. */
+    public boolean ready(UUID id) {
+        return cache.containsKey(id) && !unsafe.contains(id);
     }
 
     public Optional<PlayerStyle> cached(UUID id) {

@@ -452,17 +452,22 @@ public final class ItemService {
                 .getOrDefault(new org.bukkit.NamespacedKey(plugin, "item"), org.bukkit.persistence.PersistentDataType.STRING, "") : "";
         ItemInstance i = factory.read(s).orElse(null);
         String id = i == null ? "unknown" : i.definitionId() + "-" + i.uuid();
-        try {
-            Path dir = plugin.getDataFolder().toPath().resolve("quarantine");
-            Files.createDirectories(dir);
-            String name = Instant.now().toString().replace(':', '-') + "-" + owner.getUniqueId() + "-" + id.replaceAll("[^A-Za-z0-9._-]", "_") + ".json";
-            String body = "{\"owner\":\"" + owner.getUniqueId() + "\",\"name\":\"" + owner.getName() + "\",\"where\":\"" + where
-                    + "\",\"why\":" + mn.suld.api.json.Json.write(why) + ",\"amount\":" + s.getAmount() + ",\"material\":\"" + s.getType().name()
-                    + "\",\"item\":" + mn.suld.api.json.Json.write(doc) + "}\n";
-            Files.writeString(dir.resolve(name), body, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            plugin.getLogger().warning("[items] could not write quarantine file: " + e.getMessage());
-        }
+        Path dir = plugin.getDataFolder().toPath().resolve("quarantine");
+        String name = Instant.now().toString().replace(':', '-') + "-" + owner.getUniqueId() + "-" + id.replaceAll("[^A-Za-z0-9._-]", "_") + ".json";
+        String body = "{\"owner\":\"" + owner.getUniqueId() + "\",\"name\":\"" + owner.getName() + "\",\"where\":\"" + where
+                + "\",\"why\":" + mn.suld.api.json.Json.write(why) + ",\"amount\":" + s.getAmount() + ",\"material\":\"" + s.getType().name()
+                + "\",\"item\":" + mn.suld.api.json.Json.write(doc) + "}\n";
+        Runnable write = () -> {
+            try {
+                Files.createDirectories(dir);
+                Files.writeString(dir.resolve(name), body, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                plugin.getLogger().warning("[items] could not write quarantine file: " + e.getMessage());
+            }
+        };
+        // off the main thread (a sweep may quarantine many stacks at once); inline while shutting down
+        if (plugin.isEnabled()) Bukkit.getScheduler().runTaskAsynchronously(plugin, write);
+        else write.run();
         services.audit().record(AuditEvent.of(owner.getUniqueId().toString(), "item.quarantine", id, where + ": " + why));
         plugin.getLogger().warning("[items] quarantined " + id + " from " + owner.getName() + " (" + where + "): " + why);
     }

@@ -269,7 +269,13 @@ public final class CombatListener implements Listener {
             drops = itemService.filtered(killer, drops);
             for (mn.suld.api.loot.LootDrop d : drops) {
                 ItemInstance inst = d.item();
-                entity.getWorld().dropItemNaturally(entity.getLocation(), itemService.stack(inst, killer, d.amount()));
+                // the killer's loot for 45 s (nobody standing on the kill takes it), then anyone's
+                entity.getWorld().dropItemNaturally(entity.getLocation(), itemService.stack(inst, killer, d.amount()), it -> {
+                    it.setOwner(killer.getUniqueId());
+                    org.bukkit.Bukkit.getScheduler().runTaskLater(org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(CombatListener.class), () -> {
+                        if (it.isValid()) it.setOwner(null);
+                    }, 45 * 20L);
+                });
                 itemService.announce(killer, inst);
                 // "first" events once per session (they used to be one row per drop); counts are in the session totals
                 mn.suld.api.analytics.SessionTotals st = services.session(killer.getUniqueId());

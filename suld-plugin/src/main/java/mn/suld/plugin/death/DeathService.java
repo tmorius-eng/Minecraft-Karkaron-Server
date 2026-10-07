@@ -130,10 +130,15 @@ public final class DeathService implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPreLogin(AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
-        preload(e.getUniqueId());
+        // an unknown death lock must not let a soul play as the living: refuse the login until the state is readable
+        if (!preload(e.getUniqueId())) {
+            e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    Component.text("Өгөгдөл ачаалж чадсангүй. Түр хүлээгээд дахин орно уу.", NamedTextColor.RED));
+        }
     }
 
-    private void preload(UUID id) {
+    /** Loads the death lock and the wound; false if storage did not answer. */
+    private boolean preload(UUID id) {
         try {
             Optional<DeathRecord> lock = repo.openLock(id).get(5, TimeUnit.SECONDS);
             Wound w = repo.wound(id).get(5, TimeUnit.SECONDS);
@@ -145,8 +150,10 @@ public final class DeathService implements Listener {
                 locks.remove(id);
                 lockedUntil.remove(id);
             }
+            return true;
         } catch (Exception ex) {
             plugin.getLogger().warning("death state of " + id + " could not be loaded: " + ex);
+            return false;
         }
     }
 

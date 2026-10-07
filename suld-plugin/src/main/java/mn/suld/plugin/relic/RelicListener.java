@@ -200,6 +200,48 @@ public final class RelicListener implements Listener {
         }
     }
 
+    /** Nothing may be built into the shrine either (blocks around the altar would lock the relic away for good). */
+    @EventHandler(ignoreCancelled = true)
+    public void onPlace(org.bukkit.event.block.BlockPlaceEvent event) {
+        if (relics.shrineAt(event.getBlockPlaced(), false).isPresent()
+                && !(event.getPlayer().hasPermission("suld.admin.relic") && event.getPlayer().isSneaking())) {
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(Messages.error("Сүмд юу ч барьж болохгүй."));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBucket(org.bukkit.event.player.PlayerBucketEmptyEvent event) {
+        if (relics.shrineAt(event.getBlock(), false).isPresent()) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPistonExtend(org.bukkit.event.block.BlockPistonExtendEvent event) {
+        org.bukkit.block.BlockFace f = event.getDirection();
+        for (org.bukkit.block.Block b : event.getBlocks()) {
+            if (relics.shrineAt(b, false).isPresent() || relics.shrineAt(b.getRelative(f), false).isPresent()) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+        if (relics.shrineAt(event.getBlock().getRelative(f), false).isPresent()) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPistonRetract(org.bukkit.event.block.BlockPistonRetractEvent event) {
+        for (org.bukkit.block.Block b : event.getBlocks()) {
+            if (relics.shrineAt(b, false).isPresent() || relics.shrineAt(b.getRelative(event.getDirection()), false).isPresent()) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onFlow(org.bukkit.event.block.BlockFromToEvent event) {
+        if (relics.shrineAt(event.getToBlock(), false).isPresent()) event.setCancelled(true);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
         event.blockList().removeIf(b -> relics.shrineAt(b, false).isPresent());

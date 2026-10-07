@@ -439,6 +439,10 @@ public final class RelicService {
             return;
         }
         UUID id = player.getUniqueId();
+        if (borneBy(id).isPresent()) { // gained another relic during the ritual (a seize): one relic per bearer
+            player.sendMessage(Messages.error("Та аль хэдийн нэг Сүлд тээж байна."));
+            return;
+        }
         whenDone(repository.apply(RelicTransition.claim(rec, id, player.getName(), RelicEvent.DISCOVERED, id.toString(),
                 "ritual at shrine")), (cas, err) -> {
             if (err != null) {
