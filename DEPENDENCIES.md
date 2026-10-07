@@ -61,7 +61,7 @@ Modrinth (or Hangar).
 
 | Profile | Plugins |
 |---|---|
-| core | LuckPerms, EssentialsX, VaultUnlocked, PlaceholderAPI, CoreProtect, WorldEdit (WorldGuard's library), WorldGuard, spark, Chunky, DiscordSRV |
+| core | LuckPerms, EssentialsX, VaultUnlocked, PlaceholderAPI, CoreProtect, WorldEdit (WorldGuard's library), WorldGuard, spark, DiscordSRV (Chunky: optional, manual only) |
 | hardening (production) | GrimAC, Plan, LibertyBans, ViaVersion |
 | optional | BlueMap, InventoryRollbackPlus |
 | dev (build server) | FastAsyncWorldEdit, Axiom Paper Plugin |

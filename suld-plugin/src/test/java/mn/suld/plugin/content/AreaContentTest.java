@@ -25,7 +25,7 @@ class AreaContentTest {
             assertTrue(List.of("VERIFIED", "INSPIRED", "FICTION").contains(a.history()), a.id());
         }
         assertTrue(WorldContent.REGIONS.size() <= 16, "regions own bits 0..15");
-        for (double r = 60; r < 3000; r += 37) {
+        for (double r = 60; r < 5000; r += 37) {
             for (double deg = 0; deg < 360; deg += 2.5) {
                 double dx = Math.sin(Math.toRadians(deg)) * r, dz = -Math.cos(Math.toRadians(deg)) * r;
                 long n = WorldContent.AREAS.stream().filter(a -> a.contains(dx, dz)).count();

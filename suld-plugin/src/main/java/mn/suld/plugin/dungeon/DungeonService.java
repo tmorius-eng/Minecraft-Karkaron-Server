@@ -151,7 +151,7 @@ public final class DungeonService {
         for (UUID id : members) {
             Player p = Bukkit.getPlayer(id);
             if (!p.getUniqueId().equals(leader.getUniqueId())) {
-                p.teleport(ar.origin);
+                p.teleportAsync(ar.origin); // the leader's chunk is loaded, but a member far away must not block the tick
             }
             p.showBossBar(ar.bar);
             Presentation.banner(p, def.displayName().toUpperCase(java.util.Locale.ROOT),

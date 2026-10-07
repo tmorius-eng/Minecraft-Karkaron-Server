@@ -281,6 +281,11 @@ public final class SuldPlugin extends JavaPlugin {
         owners.start();
 
         pregen = new mn.suld.plugin.worldbuild.PregenService(this, worldBuild);
+        mn.suld.plugin.worldbuild.WorldBorderService border = new mn.suld.plugin.worldbuild.WorldBorderService(this);
+        getServer().getPluginManager().registerEvents(border, this);
+        border.apply("start");
+        worldBuild.onSpawnChanged(() -> border.apply("spawn moved"));
+        registerTab("suldworld", new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen));
         pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());

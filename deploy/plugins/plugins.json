@@ -61,10 +61,10 @@
     {
       "id": "chunky",
       "name": "Chunky",
-      "profile": "core",
+      "profile": "optional",
       "modrinth": "chunky",
       "hangar": "pop4959/Chunky",
-      "why": "pre-generate the world around Kharkhorum"
+      "why": "manual bulk pre-generation only; SULD's own throttled pre-generator (/suldworld pregen) covers the priority areas, never run both at once"
     },
     {
       "id": "discordsrv",

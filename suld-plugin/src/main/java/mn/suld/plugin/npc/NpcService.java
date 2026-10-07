@@ -82,6 +82,8 @@ public final class NpcService implements Listener {
     private static final long BLESSING_COOLDOWN_MS = 10 * 60_000L;
 
     private final Plugin plugin;
+    /** Players whose relay trip is loading (teleportAsync), so a double click cannot pay or travel twice. */
+    private final java.util.Set<java.util.UUID> travelling = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final SuldServices services;
     private final WorldBuildService city;
     private final Menus menus;
@@ -388,14 +390,20 @@ public final class NpcService implements Listener {
                             return;
                         }
                         pl.closeInventory();
-                        if (!pl.teleport(to.clone().add(1.5, 0, 1.5))) {
-                            pl.sendMessage(Messages.error("Аялал боломжгүй боллоо — зоос хасагдсангүй."));
-                            return;
-                        }
-                        pr.addCurrency(-TRAVEL_COST);
-                        services.profiles().save(pr);
-                        pl.playSound(pl.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1f);
-                        pl.sendMessage(Messages.success("Өртөөгөөр " + r.getValue() + " хүрлээ (-" + TRAVEL_COST + " ₮)."));
+                        if (!travelling.add(pl.getUniqueId())) return; // a second click while the first trip loads
+                        mn.suld.plugin.perf.SafeTeleport.to(plugin, pl, to.clone().add(1.5, 0, 1.5),
+                                org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.PLUGIN, ok -> {
+                                    travelling.remove(pl.getUniqueId());
+                                    if (!ok) {
+                                        pl.sendMessage(Messages.error("Аялал боломжгүй боллоо — зоос хасагдсангүй."));
+                                        return;
+                                    }
+                                    long pay = Math.min(TRAVEL_COST, Math.max(0, pr.currency()));
+                                    pr.addCurrency(-pay);
+                                    services.profiles().save(pr);
+                                    pl.playSound(pl.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1f);
+                                    pl.sendMessage(Messages.success("Өртөөгөөр " + r.getValue() + " хүрлээ (-" + pay + " ₮)."));
+                                });
                     });
         }
         m.open(p);

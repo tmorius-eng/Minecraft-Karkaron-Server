@@ -210,7 +210,14 @@ commands:
     usage: /worldbuild <status|build|pause|resume|validate|dump|rollback|approve|lock|unlock|tp>
     aliases: [wbuild]
     permission: suld.admin.world
+  suldworld:
+    description: World border and the throttled pre-generator (border [apply], pregen status|start|pause|resume|cancel|restart|full confirm, report).
+    usage: /suldworld <border|pregen|report>
+    permission: suld.admin.world
 permissions:
+  suld.border.bypass:
+    description: Teleport past the world border (staff).
+    default: op
   suld.badge.owner:
     description: Badge ЭЗЭН (server owner). Given automatically to the owners in config.yml.
     default: false

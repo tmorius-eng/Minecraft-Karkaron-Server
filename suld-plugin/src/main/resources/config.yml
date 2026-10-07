@@ -214,11 +214,29 @@ world:
   build-blocks-per-tick: 4000
   region-spawning: true
   region-mobs-per-player: 4
-  # Pre-generate the overworld around Kharkhorum with Chunky (core plugin profile) once the city is
-  # built, so exploring never waits on chunk generation. Resumes after restarts. /chunky progress
+  # The playable overworld: Minecraft's own world border, set once and kept in level.dat (docs/world/WORLD_BORDER.md).
+  # centre: "spawn" (Kharkhorum's plaza; every region ring is measured from it) or fixed "x z".
+  border:
+    enabled: true
+    center: spawn
+    diameter: 10000             # 10 000 x 10 000 blocks, radius 5 000
+    warning-distance: 24
+    damage-buffer: 4
+    damage-per-block: 0.5
+  # SÜLD's throttled pre-generator (docs/world/PREGENERATION.md): only the places players are sent to are generated
+  # ahead; the wilderness generates as it is explored. P0 spawn+Kharkhorum, P1 routes to the inner areas, P2 shrines
+  # and dungeon grounds, P3 the heart of every area, P4 routes to the outer areas, P5 everything (/suldworld pregen full).
+  # The speed follows the tick time: halved above target-mspt, stopped above pause-mspt. Resumes after restarts.
   pregenerate:
     enabled: true
-    radius: 2000
+    levels: [P0, P1, P2, P3]
+    spawn-radius: 384           # blocks around the spawn (P0)
+    corridor-half-width: 2      # chunks either side of a route (P1/P4)
+    area-radius: 128            # blocks around each area's heart (P3)
+    max-in-flight: 12           # outstanding asynchronous chunk requests
+    max-per-tick: 6             # new requests per tick
+    target-mspt: 30
+    pause-mspt: 45
 
 # ---------------------------------------------------------------------------
 # Skill tree (/skills). The node data lives in plugins/SULD/skills/*.json (copied from the jar on first start,

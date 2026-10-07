@@ -823,12 +823,20 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
         return null;
     }
 
+    private Runnable spawnChanged = () -> { };
+
+    /** Runs (main thread) after the city moves the world spawn, e.g. to re-centre the world border on it. */
+    public void onSpawnChanged(Runnable r) {
+        spawnChanged = r == null ? () -> { } : r;
+    }
+
     @SuppressWarnings("removal")
     private void applySpawn() {
         Location spawn = point("spawn");
         if (spawn == null) return;
         World world = spawn.getWorld();
         world.setSpawnLocation(spawn);
+        spawnChanged.run();
         try {
             world.setGameRule(GameRule.SPAWN_RADIUS, 0); // renamed/data-driven in newer versions; best effort
         } catch (RuntimeException ignored) {
@@ -846,13 +854,15 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
         Location spawn = point("spawn");
         if (spawn == null) return;
         p.getPersistentDataContainer().set(visitedKey, PersistentDataType.BYTE, (byte) 1);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> p.teleport(spawn), 10L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (p.isOnline()) mn.suld.plugin.perf.SafeTeleport.to(plugin, p, spawn);
+        }, 10L);
     }
 
     public boolean teleport(Player p, String id) {
         Location l = point(id);
         if (l == null) return false;
-        p.teleport(l);
+        mn.suld.plugin.perf.SafeTeleport.to(plugin, p, l, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND, null);
         return true;
     }
 

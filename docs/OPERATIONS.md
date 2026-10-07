@@ -152,8 +152,10 @@ built-in tips about /daily, /quest, skills, dungeons, death and the shop).
 
 ## World pre-generation
 
-With Chunky installed, `world.pregenerate` pre-generates the playable area on first start (resumes after restarts)
-so exploring the steppe does not stall the server. Progress: `/chunky progress`.
+SÜLD's own throttled pre-generator (`world.pregenerate`, docs/world/PREGENERATION.md) generates spawn, Kharkhorum,
+the routes and the heart of every area once the city is built, and resumes after restarts. Progress:
+`/suldworld pregen status`; the world, border and disk report: `/suldworld report`. The world border (10 000 blocks,
+centred on the spawn) is docs/world/WORLD_BORDER.md.
 
 
 ## Skill tree

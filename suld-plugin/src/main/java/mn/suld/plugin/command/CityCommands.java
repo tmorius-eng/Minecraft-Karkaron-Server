@@ -238,7 +238,7 @@ public final class CityCommands implements Listener {
                 return true;
             }
             if (p.hasPermission("suld.admin") || services.inCity(p.getLocation())) {
-                p.teleport(target);
+                mn.suld.plugin.perf.SafeTeleport.to(plugin, p, target, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND, null);
                 return true;
             }
             BukkitTask old = warmups.remove(p.getUniqueId());
@@ -255,8 +255,9 @@ public final class CityCommands implements Listener {
                 if (--left[0] <= 0) {
                     BukkitTask t = warmups.remove(p.getUniqueId());
                     if (t != null) t.cancel();
-                    p.teleport(dest);
-                    p.playSound(dest, Sound.ENTITY_ENDERMAN_TELEPORT, 0.6f, 1.2f);
+                    mn.suld.plugin.perf.SafeTeleport.to(plugin, p, dest, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND, ok -> {
+                        if (ok) p.playSound(dest, Sound.ENTITY_ENDERMAN_TELEPORT, 0.6f, 1.2f);
+                    });
                 }
             }, 20L, 20L));
             return true;

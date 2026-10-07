@@ -18,7 +18,8 @@ public final class WorldContent {
     private WorldContent() {
     }
 
-    private static final double WORLD_EDGE = 3000;
+    /** The outer edge of the outer ring: the world border's radius (world.border.diameter 10 000 / 2). */
+    private static final double WORLD_EDGE = 5000;
 
     // -------------------------------------------------------------- mobs
 

@@ -71,7 +71,7 @@ public final class RelicCommand implements CommandExecutor, TabCompleter {
                 RelicRecord r = key == null ? null : relics.record(key).orElse(null);
                 Location loc = r == null ? null : relics.shrineLocation(r);
                 if (!(sender instanceof Player p) || loc == null) sender.sendMessage(Messages.error("Сүм олдсонгүй."));
-                else p.teleport(loc.clone().add(0.5, 0, 2.5));
+                else p.teleportAsync(loc.clone().add(0.5, 0, 2.5), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
             }
             default -> sender.sendMessage(Messages.info("/relic <" + String.join("|", PLAYER_SUBS) + ">"));
         }
