@@ -73,6 +73,9 @@ commands:
     description: Наадам · Бөх барилдаан - a friendly wrestling bout (push out of the ring, no damage) and your titles.
     usage: /barildaan [<player>|accept|deny|stats]
     aliases: [bokh, wrestle]
+  shagai:
+    description: Шагай буулгах - cast four ankle bones once a day; horses bring a small EXP blessing.
+    usage: /shagai
   chat:
     description: The SULD chat screen - tabs per channel, history with heads, send box.
     usage: /chat [channel]

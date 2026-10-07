@@ -339,6 +339,9 @@ public final class SuldPlugin extends JavaPlugin {
         bokh = new mn.suld.plugin.worldevent.BokhService(this, services);
         getServer().getPluginManager().registerEvents(bokh, this);
         registerTab("barildaan", bokh);
+        mn.suld.plugin.worldevent.ShagaiService shagai = new mn.suld.plugin.worldevent.ShagaiService(this, services);
+        getServer().getPluginManager().registerEvents(shagai, this);
+        registerTab("shagai", shagai);
         pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());

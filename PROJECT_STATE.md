@@ -39,7 +39,7 @@ vertical slice: death/recovery → class gear → armour + ActivePlaytime → as
   * view 6 / simulation 4;
   * the release gate is **not** passed on this bench (docs/perf/WORLD_50.md).
 * **Наадам festival (all Three Manly Games):** archery outside the south gate (`/naadam`), a horse race around
-  Kharkhorum (`/uraldaan`), friendly wrestling bouts with the real titles (`/barildaan`), and 24 ovoo to circle three times clockwise for a blessing (docs/world/NAADAM.md, docs/world/OVOO.md).
+  Kharkhorum (`/uraldaan`), friendly wrestling bouts with the real titles (`/barildaan`), a daily ankle-bone cast (`/shagai`, docs/world/SHAGAI.md), and 24 ovoo to circle three times clockwise for a blessing (docs/world/NAADAM.md, docs/world/OVOO.md).
 * **Fixes from two code reviews:** see the commit log.
 * **Gameplay logic review (11 fixes):**
   * melee follows the attack charge; a sweep hits for 30 %;

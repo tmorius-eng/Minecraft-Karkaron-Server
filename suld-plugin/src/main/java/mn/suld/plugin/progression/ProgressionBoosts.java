@@ -16,11 +16,18 @@ public final class ProgressionBoosts {
         this.services = services;
     }
 
-    /** Timed blessings (an ovoo's, docs/world/OVOO.md): player → (until millis, bonus). */
-    private final java.util.Map<UUID, double[]> blessings = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * Timed blessings by source (an ovoo's, docs/world/OVOO.md; a lucky shagai cast): player → source → (until
+     * millis, bonus). Different sources add up; a new blessing from the same source replaces the old one.
+     */
+    private final java.util.Map<UUID, java.util.Map<String, double[]>> blessings = new java.util.concurrent.ConcurrentHashMap<>();
 
     public void bless(UUID player, long untilMillis, double bonus) {
-        blessings.put(player, new double[]{untilMillis, bonus});
+        bless(player, "ovoo", untilMillis, bonus);
+    }
+
+    public void bless(UUID player, String source, long untilMillis, double bonus) {
+        blessings.computeIfAbsent(player, k -> new java.util.concurrent.ConcurrentHashMap<>()).put(source, new double[]{untilMillis, bonus});
     }
 
     public void forget(UUID player) {
@@ -28,13 +35,13 @@ public final class ProgressionBoosts {
     }
 
     private double blessing(UUID player) {
-        double[] b = blessings.get(player);
-        if (b == null) return 0;
-        if (System.currentTimeMillis() > b[0]) {
-            blessings.remove(player);
-            return 0;
-        }
-        return b[1];
+        java.util.Map<String, double[]> mine = blessings.get(player);
+        if (mine == null) return 0;
+        long now = System.currentTimeMillis();
+        mine.values().removeIf(b -> now > b[0]);
+        double sum = 0;
+        for (double[] b : mine.values()) sum += b[1];
+        return sum;
     }
 
     public double bonus(UUID player) {
