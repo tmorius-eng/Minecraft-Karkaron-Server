@@ -1,0 +1,120 @@
+{
+  "audited": "2026-10-07",
+  "commit": "f123253",
+  "stage": "A (forensic audit, read-only)",
+  "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
+  "subsystems": {
+    "classWeapons": {
+      "status": "INTEGRATED",
+      "evidence": "resourcepack/assets/suld/models/item/weapon/ (32); tools/pack/gen_weapons.py",
+      "note": "20 voxel-extruded 32x32 models (5 classes x 4 tiers) + 12 bow frames; procedural, not Meshy; client QA pending (MANUAL_QA_REQUIRED)"
+    },
+    "otherWeapons": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "tools/pack/gen_item_textures.py",
+      "note": "7 have 16x16 sprites; 18 show vanilla"
+    },
+    "classArmor": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "genericArmor": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "armor.json has no model field",
+      "note": "vanilla look"
+    },
+    "bosses": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "MobService.java; SuldContent/DungeonContent",
+      "note": "Хасар = vanilla RAVAGER, others HUSK/POLAR_BEAR/STRAY"
+    },
+    "eliteMobs": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "WorldContent.java",
+      "note": "vanilla entities with names"
+    },
+    "npcs": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "tools/pack/gen_skins.py; NpcService.java",
+      "note": "7 pack skins on Mannequins; no silhouette kit"
+    },
+    "relics": {
+      "status": "PLACEHOLDER",
+      "evidence": "RelicItems.java; textures 16x16",
+      "note": "flat sprites on nether_star; no shrine/world presentation"
+    },
+    "skillVfx": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "SkillService.java:320+; Ultimates.java",
+      "note": "vanilla particles/sounds per class; no custom particles or sounds.json"
+    },
+    "hud": {
+      "status": "INTEGRATED",
+      "evidence": "docs/HUD.md; audit/hud-status.json",
+      "note": "MANUAL_QA_REQUIRED (16 client checks)"
+    },
+    "guiArt": {
+      "status": "INTEGRATED",
+      "evidence": "tools/pack/gen_ui.py; assets/art/source/"
+    },
+    "kharkhorumAssets": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "assets/world/kharkhorum/; worldbuild modules",
+      "note": "procedural vanilla-block modules; schematics.json empty"
+    },
+    "assetRegistry": {
+      "status": "SCAFFOLD",
+      "evidence": "assets/registry/assets.json (11 entries)",
+      "note": "class weapons and rings missing; directive asks for assets/registry.json schema"
+    },
+    "pipelineGemini": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "tools/art/gemini_image.py",
+      "note": "used for GUI/HUD art"
+    },
+    "pipelineMeshy": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "tools/meshy/meshy_client.py; ASSET_PIPELINE.md",
+      "note": "download path verified 2026-10-07; 1,050 credits"
+    },
+    "pipelineBlender": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "tools/blender/*.py; /usr/bin/blender 4.0.2",
+      "note": "headless works; MCP server not connected (.tools/ missing)"
+    },
+    "pipelineBlockbench": {
+      "status": "SCAFFOLD",
+      "evidence": "tools/blockbench/bb_mcp.py",
+      "note": "MCP server not connected; Java item models are boxes only"
+    },
+    "equipmentRendering": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "no DataComponentTypes.EQUIPPABLE use",
+      "note": "plan: Equippable assetId + 3D helmet item models"
+    },
+    "bossRendering": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—",
+      "note": "owner decision pending: BetterModel (conflicts with CONTRIBUTING.md:5-12 / DEPENDENCIES.md:70) vs own ItemDisplay bone renderer (default)"
+    },
+    "packBudget": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "assets/registry/pack_budget.json; tools/validation/validate_pack_budget.py",
+      "note": "pack 285.8 KiB built"
+    }
+  },
+  "verticalSlice": {
+    "class": "baatar",
+    "armorSet": "NOT_IMPLEMENTED",
+    "signatureWeapon": "INTEGRATED (procedural)",
+    "eliteMob": "NOT_IMPLEMENTED",
+    "boss": "NOT_IMPLEMENTED (Хасар)",
+    "relic": "PLACEHOLDER",
+    "npc": "FUNCTIONAL_BUT_INCOMPLETE",
+    "skillVfx": "FUNCTIONAL_BUT_INCOMPLETE"
+  },
+  "meshyCredits": {
+    "remaining": 1050,
+    "spentThisMilestone": 20
+  }
+}

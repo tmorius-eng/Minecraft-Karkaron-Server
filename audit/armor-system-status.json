@@ -1,0 +1,89 @@
+{
+  "audited": "2026-10-07",
+  "commit": "f123253",
+  "stage": "A (forensic audit, read-only)",
+  "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
+  "subsystems": {
+    "genericArmorItems": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "items/armor.json",
+      "note": "27 definitions, 8 sets of vanilla leather/chain/iron/diamond/netherite"
+    },
+    "classArmor": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "armorLevel": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "armorTier": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "armorMastery": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "armorUpgrade": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "Reforge.java",
+      "note": "generic +1 item level reforge only"
+    },
+    "armorSetBonuses": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "items/sets.json (3 sets)"
+    },
+    "armorVisuals": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "no assets/*/equipment/*.json, no Equippable asset_id",
+      "note": "renders as vanilla armour"
+    },
+    "activePlaytime": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "PlayerLifecycleListener.java:47,76 (session events without duration)",
+      "note": "no AFK detection; EssentialsX /afk only"
+    },
+    "statPipeline": {
+      "status": "COMPLETE",
+      "evidence": "Equipment.compute -> SkillTreeService.refreshRuntime:285-294",
+      "note": "armour stats already flow into SkillBuild; reuse"
+    },
+    "persistence": {
+      "status": "COMPLETE",
+      "evidence": "V11 equipment (JdbcProfileRepository equipment_data)",
+      "note": "equipment persisted; armour level/tier/mastery and playtime need V12"
+    },
+    "clientQa": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    }
+  },
+  "perClass": {
+    "baatar": {
+      "armorSets": 0,
+      "tiers": 0,
+      "visuals": "NOT_IMPLEMENTED"
+    },
+    "mergen": {
+      "armorSets": 0,
+      "tiers": 0,
+      "visuals": "NOT_IMPLEMENTED"
+    },
+    "boo": {
+      "armorSets": 0,
+      "tiers": 0,
+      "visuals": "NOT_IMPLEMENTED"
+    },
+    "darkhan": {
+      "armorSets": 0,
+      "tiers": 0,
+      "visuals": "NOT_IMPLEMENTED"
+    },
+    "khulegchin": {
+      "armorSets": 0,
+      "tiers": 0,
+      "visuals": "NOT_IMPLEMENTED"
+    }
+  }
+}

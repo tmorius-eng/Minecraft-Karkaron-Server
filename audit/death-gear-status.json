@@ -1,0 +1,142 @@
+{
+  "audited": "2026-10-07",
+  "commit": "f123253",
+  "stage": "A (forensic audit, read-only)",
+  "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
+  "subsystems": {
+    "classWeaponBinding": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "items/weapons.json:480-917 (SOULBOUND); ItemGenerator.java:51-53"
+    },
+    "classWeaponUpgrade": {
+      "status": "BROKEN",
+      "evidence": "ClassWeapons.java:161-182",
+      "note": "re-binds any lower-tier class weapon to the holder (SB-1); scans inventory only"
+    },
+    "classWeaponRecovery": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "ItemCommands.java:571-603 (admin give only)"
+    },
+    "classArmor": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "items/armor.json (no class/binding keys)"
+    },
+    "protection": {
+      "drop": {
+        "status": "COMPLETE",
+        "evidence": "EquipmentService.java:408-417",
+        "note": "soulbound only"
+      },
+      "groundPickupByOther": {
+        "status": "COMPLETE",
+        "evidence": "EquipmentService.java:420-429"
+      },
+      "hopperGroundPickup": {
+        "status": "NOT_IMPLEMENTED",
+        "evidence": "no InventoryPickupItemEvent handler"
+      },
+      "death": {
+        "status": "COMPLETE",
+        "evidence": "DeathService.java:103,143-154"
+      },
+      "tradeDirect": {
+        "status": "COMPLETE",
+        "evidence": "TradeService.java:252-264"
+      },
+      "tradeViaShulkerOrBundle": {
+        "status": "NOT_IMPLEMENTED",
+        "evidence": "TradeService.java:267-277 (relics only)"
+      },
+      "sell": {
+        "status": "COMPLETE",
+        "evidence": "ItemEconomy.java:14; Menus.java:613-615"
+      },
+      "salvage": {
+        "status": "COMPLETE",
+        "evidence": "ItemEconomy.java:21"
+      },
+      "destroyCommand": {
+        "status": "BROKEN",
+        "evidence": "ItemCommands.java:275-286",
+        "note": "deletes class weapons; message at EquipmentService.java:413 suggests it"
+      },
+      "containers": {
+        "status": "NOT_IMPLEMENTED",
+        "evidence": "only relics guarded: RelicListener.java:92-123"
+      },
+      "hopperMove": {
+        "status": "NOT_IMPLEMENTED",
+        "evidence": "RelicListener.java:125-130 (relics only)"
+      },
+      "itemFramesArmorStands": {
+        "status": "NOT_IMPLEMENTED",
+        "evidence": "RelicListener.java:162-177 (relics only); CityProtectionListener.java:208-219 city only"
+      },
+      "bundles": {
+        "status": "NOT_IMPLEMENTED",
+        "evidence": "RelicService.java:208-224 (relics only)"
+      },
+      "forgedData": {
+        "status": "FUNCTIONAL_BUT_INCOMPLETE",
+        "evidence": "ItemValidator.java:64; ItemService sweep on join"
+      },
+      "duplicates": {
+        "status": "FUNCTIONAL_BUT_INCOMPLETE",
+        "evidence": "ItemService.java:262,303-325"
+      }
+    },
+    "deathRules": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "api/death/DeathRules.java:22-47",
+      "note": "EXP 10% of bar, 50% stack loss, 25% wear"
+    },
+    "deathState": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "DeathService.java:68 (in-memory map)",
+      "note": "no persistent DeathState; restart frees all souls"
+    },
+    "deathLock": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—",
+      "note": "30 s soul only; owner decision: level-scaled lock, curve from Stage B"
+    },
+    "deathWound": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—",
+      "note": "hook point: Equipment.compute per-item factor (Equipment.java:126)"
+    },
+    "deathUi": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "DeathService.java:194-221 (boss bar + summary)"
+    },
+    "adminCommands": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "ReviveCommand.java",
+      "note": "/revive only; not in audit log (ReviveCommand.java:62); /deathstatus|revive|reset|info missing"
+    },
+    "loginGating": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "AuthenticationService.java:121-167 (hook point after acquire, :155)"
+    },
+    "instantRevive": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—",
+      "note": "owner decision: deferred, design doc only"
+    },
+    "paymentProvider": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—",
+      "note": "future provider: Bonum; no webhook/HTTP code exists"
+    },
+    "monetizationPolicy": {
+      "status": "COMPLETE",
+      "evidence": "config.yml:104-106; GAME_DESIGN.md:69,158-163; DeathSettings.java:7-8",
+      "note": "current policy: cosmetics only, no real-money resurrection — conflicts with directive §7; owner must resolve before any paid revive"
+    }
+  },
+  "requiredTests": {
+    "total": 20,
+    "passing": 0,
+    "note": "directive test list; none exist yet"
+  }
+}

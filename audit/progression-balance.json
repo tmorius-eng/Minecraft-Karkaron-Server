@@ -1,0 +1,362 @@
+{
+  "audited": "2026-10-07",
+  "commit": "f123253",
+  "stage": "A (forensic audit, read-only)",
+  "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
+  "liveFormulas": {
+    "levelCurve": {
+      "formula": "round(100*L^1.75) per level",
+      "maxLevel": 60,
+      "expTo60": 2757813,
+      "cumulative": {
+        "10": 17717,
+        "20": 128241,
+        "30": 400477,
+        "40": 893828,
+        "50": 1662634,
+        "60": 2757813
+      },
+      "evidence": "api/progression/PolynomialLevelCurve.java:47; config.yml:15-19"
+    },
+    "mobExp": {
+      "formula": "baseExp * tierReward (NORMAL 1, ELITE 1.8, CHAMPION 3, MYTHIC 5, BOSS 10, WORLD_BOSS 25); no level-gap factor",
+      "boosts": "x(1+clan<=0.18+relic 0.25|0.15) then x(1+EXP_PCT/100) on kills only",
+      "evidence": "api/mob/MobDefinition.java:38-40; api/mob/MobTier.java:8-13; plg/combat/CombatListener.java:178-180; plg/progression/ProgressionBoosts.java:19-25"
+    },
+    "story": {
+      "chapters": 18,
+      "exp": 25750,
+      "coins": 2950,
+      "evidence": "plg/content/QuestContent.java:29-64"
+    },
+    "dungeons": [
+      {
+        "id": "dungeon.khasar_den",
+        "min": 2,
+        "completionExp": 400,
+        "coins": 75,
+        "killExp": 1030,
+        "boss": "mob.khasar (5)"
+      },
+      {
+        "id": "dungeon.govi_bulsh",
+        "min": 8,
+        "completionExp": 1200,
+        "coins": 160,
+        "killExp": 2280,
+        "boss": "mob.elsnii_khaan (12)"
+      },
+      {
+        "id": "dungeon.baavgain_uur",
+        "min": 14,
+        "completionExp": 2600,
+        "coins": 260,
+        "killExp": 3622,
+        "boss": "mob.oin_ezen (18)"
+      },
+      {
+        "id": "dungeon.mosun_orgil",
+        "min": 22,
+        "completionExp": 4800,
+        "coins": 420,
+        "killExp": 5600,
+        "boss": "mob.mosun_khaan (26)"
+      }
+    ],
+    "dungeonLootLevel": {
+      "formula": "max(dungeon.min, playerLevel)",
+      "evidence": "plg/dungeon/DungeonService.java:352"
+    },
+    "skillPoints": {
+      "formula": "1/level to 30, 1 per 2 after; story min(5,ch/3); discovery min(4,regions/5)",
+      "at60": 49,
+      "evidence": "api/skill/tree/SkillPoints.java:14-33"
+    },
+    "skillTree": {
+      "classNodes": 31,
+      "universalNodes": 5,
+      "highestNodeLevel": 36,
+      "pointsToMaxClassTree": "77-80",
+      "pointsToMaxUniversal": 15
+    },
+    "playerPower": {
+      "attack": "class base 7-9 + 0.75*(L-1) + gear flat, x tree multiplier",
+      "health": "vanilla 20 + HEALTH stat; class baseHealth unused; no level growth",
+      "evidence": "plg/combat/CombatListener.java:59-68; plg/skill/SkillTreeService.java:335-340"
+    },
+    "gearScore": {
+      "formula": "sum(itemLevel * (1 + 0.25*rarityOrdinal)) over active worn items",
+      "evidence": "api/item/Equipment.java:177-184"
+    },
+    "reforge": {
+      "formula": "+1 item level for 25L+25 coins + 2 materials; <= player level, max 60",
+      "evidence": "api/item/Reforge.java:10-35"
+    },
+    "death": {
+      "expLoss": "floor(expIntoLevel*0.10)",
+      "itemLoss": "50% of droppable stacks",
+      "wear": "25% max durability",
+      "soulSeconds": 30,
+      "persistence": "memory only",
+      "evidence": "api/death/DeathRules.java:22-47; plg/death/DeathService.java:68"
+    },
+    "contentCeiling": {
+      "highestMobLevel": 26,
+      "highestDungeonMin": 22,
+      "storyEndsAround": 23,
+      "levelsWithoutContent": "27-60"
+    }
+  },
+  "subsystems": {
+    "levelCurve": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "PolynomialLevelCurve.java:47",
+      "note": "estimated 16-35 efficient hours to 60 vs owner target ~200 h"
+    },
+    "expSources": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "CombatListener.java:178; MobDefinition.java:38",
+      "note": "no level-gap factor, boosts uncapped"
+    },
+    "regions": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "WorldContent.java:51-70; RegionSpawner.java",
+      "note": "4 regions to level 30, bands advisory"
+    },
+    "mobs": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "SuldContent/WorldContent",
+      "note": "non-boss baseAttack unused; nothing above level 26"
+    },
+    "dungeons": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "DungeonService.java:107-169,319-374",
+      "note": "level-only gate, no lockout/diminishing returns, loot level exploit"
+    },
+    "bosses": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "BossService.java:76-124",
+      "note": "same 3 HP phases everywhere, enrage does not wipe, BOSS loot band"
+    },
+    "story": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "QuestContent.java:29-64",
+      "note": "18 chapters to ~level 23, mostly kill/collect"
+    },
+    "exploration": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "RegionSpawner.java:125,153-158",
+      "note": "4 discoveries, 1,350 EXP, 0 skill points, no landmarks"
+    },
+    "skillPoints": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "SkillPoints.java",
+      "note": "discovery source dead; nothing to buy after level 36"
+    },
+    "skillTree": {
+      "status": "COMPLETE",
+      "evidence": "skills/*.json; audit/skill-tree-status.json",
+      "note": "content complete for levels 1-36; balance of points vs levels needs Stage B"
+    },
+    "gearLoot": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "LootEngine; tiers.json; loot.json",
+      "note": "boss band too generous, dead tables, item level decoupled"
+    },
+    "gearScore": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "Equipment.java:177-184",
+      "note": "item level x rarity only"
+    },
+    "crafting": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "recipes.json",
+      "note": "4 recipes; tengeriin_taiag sell arbitrage"
+    },
+    "economy": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "ItemEconomy.java; Rank.java; NpcService.java",
+      "note": "no mob coins, thin recurring sinks"
+    },
+    "death": {
+      "status": "NEEDS_REBALANCE",
+      "evidence": "DeathRules.java; DeathService.java",
+      "note": "light penalty, memory-only soul state"
+    },
+    "dailyTasks": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "api/reward/DailyTasks.java; plg/reward/TaskService.java"
+    },
+    "worldEvents": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "SuldContent.java:77-81; WorldEventService.java",
+      "note": "one level-2 wolf raid for every level"
+    },
+    "relics": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "RelicService.java",
+      "note": "EXP-only relic bonuses; stack with clan"
+    },
+    "party": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "PartyService.java; CombatListener.java:152-218",
+      "note": "kill EXP and loot killer-only, no share or carry rule"
+    },
+    "mastery": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "ascension": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "achievements": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "DATABASE.md:93-94 (planned tables only)"
+    },
+    "catchUp": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—"
+    },
+    "simulation": {
+      "status": "NOT_IMPLEMENTED",
+      "evidence": "—",
+      "note": "Stage B"
+    }
+  },
+  "exploits": [
+    {
+      "id": "DG-1",
+      "severity": "CRITICAL",
+      "title": "dungeon loot level = max(min, player level)",
+      "evidence": "DungeonService.java:352"
+    },
+    {
+      "id": "DG-2",
+      "severity": "CRITICAL",
+      "title": "no dungeon lockout / diminishing returns / prerequisites",
+      "evidence": "DungeonService.java:107-169"
+    },
+    {
+      "id": "DG-3",
+      "severity": "CRITICAL",
+      "title": "dungeon bosses roll BOSS band (legendary+)",
+      "evidence": "loot.json; tiers.json"
+    },
+    {
+      "id": "DG-9",
+      "severity": "CRITICAL",
+      "title": "level 20 reaches 75% of the dungeon ladder",
+      "evidence": "DungeonContent.java"
+    },
+    {
+      "id": "XP-1",
+      "severity": "HIGH",
+      "title": "mob EXP ignores level gap",
+      "evidence": "MobDefinition.java:38-40"
+    },
+    {
+      "id": "XP-2",
+      "severity": "HIGH",
+      "title": "region bands unenforced + vanilla damage for normal mobs",
+      "evidence": "RegionSpawner.java:147-150; BossService.java:113"
+    },
+    {
+      "id": "GR-1",
+      "severity": "HIGH",
+      "title": "item level decoupled from definition",
+      "evidence": "ItemGenerator.java:42"
+    },
+    {
+      "id": "PW-1",
+      "severity": "HIGH",
+      "title": "class base health never applied, no HP growth",
+      "evidence": "PlayerClass.java; SkillTreeService.java:335-340"
+    },
+    {
+      "id": "SB-1",
+      "severity": "HIGH",
+      "title": "ClassWeapons.upgrade re-binds another player's weapon",
+      "evidence": "ClassWeapons.java:161-182"
+    },
+    {
+      "id": "XP-3",
+      "severity": "MEDIUM",
+      "title": "Altai mobs spawn near the city",
+      "evidence": "RegionSpawner.java:84-86"
+    },
+    {
+      "id": "XP-4",
+      "severity": "MEDIUM",
+      "title": "no spawn-camp fatigue",
+      "evidence": "RegionSpawner.java:53,76-77"
+    },
+    {
+      "id": "XP-5",
+      "severity": "MEDIUM",
+      "title": "uncapped boost stacking ~x1.6",
+      "evidence": "ProgressionBoosts.java:19-25"
+    },
+    {
+      "id": "DG-4",
+      "severity": "MEDIUM",
+      "title": "killer-only kill EXP and boss loot",
+      "evidence": "CombatListener.java:152-218"
+    },
+    {
+      "id": "DG-5",
+      "severity": "MEDIUM",
+      "title": "carry: completion rewards with no level-gap rule",
+      "evidence": "DungeonService.java:337-352"
+    },
+    {
+      "id": "DG-7",
+      "severity": "MEDIUM",
+      "title": "enrage never wipes",
+      "evidence": "BossService.java:76-86"
+    },
+    {
+      "id": "GR-2",
+      "severity": "MEDIUM",
+      "title": "linear reforge cost",
+      "evidence": "Reforge.java:10-35"
+    },
+    {
+      "id": "EC-2",
+      "severity": "MEDIUM",
+      "title": "legendary salvage -> tengeriin_taiag craft -> sell",
+      "evidence": "recipes.json; ItemEconomy.java"
+    },
+    {
+      "id": "SP-3",
+      "severity": "MEDIUM",
+      "title": "free respec via Orb of Oblivion vanilla recipe",
+      "evidence": "OrbOfOblivion.java:76-78"
+    },
+    {
+      "id": "DU-1",
+      "severity": "MEDIUM",
+      "title": "same-inventory UUID duplicates caught only at join",
+      "evidence": "ItemService.java:262,303-325"
+    },
+    {
+      "id": "GR-6",
+      "severity": "LATENT-CRITICAL",
+      "title": "dead loot tables with ancient/mythic entries",
+      "evidence": "loot.json:551,578,599,639"
+    },
+    {
+      "id": "GR-5",
+      "severity": "LATENT",
+      "title": "unused rarity bands and mob tiers",
+      "evidence": "tiers.json; MobTier.java"
+    }
+  ],
+  "balancedChecklist": {
+    "passed": 2,
+    "failed": 11,
+    "partial": 4,
+    "see": "docs/PROGRESSION_EXPLOIT_AUDIT.md §3"
+  },
+  "simulation": null
+}
