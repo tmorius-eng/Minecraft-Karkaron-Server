@@ -115,6 +115,19 @@ public final class SuldPlugin extends JavaPlugin {
         services.woundFactor = deaths::woundFactor;
         mn.suld.plugin.command.DeathCommands deathCommands = new mn.suld.plugin.command.DeathCommands(this, services, deaths);
         for (String c : List.of("revive", "deathstatus", "deathinfo", "deathrevive", "deathreset")) registerTab(c, deathCommands);
+        // the Display-Entity model renderer (docs/MODEL_RENDERER.md): rigged SÜLD mobs are dressed on spawn
+        mn.suld.plugin.model.ModelService models = new mn.suld.plugin.model.ModelService(this);
+        models.load();
+        services.models = models;
+        getServer().getPluginManager().registerEvents(models, this);
+        models.start();
+        services.mobs().onSpawn = (entity, def) -> {
+            String rig = mn.suld.plugin.content.SuldContent.modelFor(def.id());
+            if (rig != null) models.attach(entity, rig);
+        };
+        // boss abilities (BossBrain): Хасар, the first rigged boss (docs/bosses/KHASAR.md)
+        services.bosses().brain(mn.suld.plugin.content.SuldContent.KHASAR.id(), boss -> new mn.suld.plugin.dungeon.brain.KhasarBrain(
+                this, services, mn.suld.plugin.content.SuldContent.KHASAR, mn.suld.plugin.content.WorldContent.GREY_WOLF));
         // class armour + ActivePlaytime (docs/CLASS_ARMOR_SYSTEM.md, docs/ACTIVE_PLAYTIME_SPEC.md)
         mn.suld.plugin.item.ClassArmor classArmor = new mn.suld.plugin.item.ClassArmor(this, services);
         services.classArmor = classArmor;
@@ -292,6 +305,9 @@ public final class SuldPlugin extends JavaPlugin {
         }
         if (horses != null) {
             horses.shutdown();
+        }
+        if (services != null && services.models != null) {
+            services.models.shutdown();
         }
         if (deaths != null) {
             deaths.shutdown();

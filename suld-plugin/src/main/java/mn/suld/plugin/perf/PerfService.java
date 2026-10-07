@@ -117,6 +117,7 @@ public final class PerfService implements Listener {
     private String report() {
         StringBuilder sb = new StringBuilder("{\n");
         sb.append("  \"label\": ").append(q(label)).append(",\n");
+        if (!benchExtra.isEmpty()) sb.append("  ").append(benchExtra).append("\n");
         sb.append("  \"startedAt\": ").append(q(startedAt.toString())).append(",\n");
         sb.append("  \"seconds\": ").append(n((System.nanoTime() - startedNs) / 1e9)).append(",\n");
         sb.append("  \"environment\": {\"java\": ").append(q(System.getProperty("java.version"))).append(", \"cpus\": ")
@@ -233,6 +234,57 @@ public final class PerfService implements Listener {
 
     // ------------------------------------------------------------------ /suldperf
 
+    /**
+     * Model-renderer benchmark (docs/perf/MODEL_RENDERER_BENCH.md): n rig hosts (wandering Ravagers dressed with the
+     * rig) around a player for {@code seconds}, recorded as a perf session ({@code model_<rig>_<n>.json}) plus the
+     * renderer's own figures — displays, entities, transforms sent per second, heap delta, spawn/despawn cost.
+     */
+    private void modelBench(CommandSender s, int n, int seconds, Player at, String rig) {
+        mn.suld.plugin.model.ModelService models = services.models;
+        if (models == null || !models.has(rig) || at == null) {
+            s.sendMessage(Messages.error("[perf] model <n> <сек> <тоглогч> [rig] — rig loaded: " + (models == null ? "none" : models.modelIds())));
+            return;
+        }
+        start("model_" + rig + "_" + n);
+        Runtime rt = Runtime.getRuntime();
+        long heap0 = rt.totalMemory() - rt.freeMemory();
+        int entities0 = at.getWorld().getEntityCount();
+        long sent0 = models.transformsSent();
+        boolean invul = at.isInvulnerable();
+        at.setInvulnerable(true);
+        List<org.bukkit.entity.LivingEntity> hosts = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            double ang = 2 * Math.PI * i / n, r = 6 + (i % 3) * 2;
+            org.bukkit.Location l = at.getLocation().add(Math.cos(ang) * r, 0, Math.sin(ang) * r);
+            org.bukkit.entity.Ravager host = at.getWorld().spawn(l, org.bukkit.entity.Ravager.class, h -> {
+                h.setPersistent(false);
+                h.setRemoveWhenFarAway(false);
+            });
+            models.attach(host, rig);
+            hosts.add(host);
+        }
+        int entities1 = at.getWorld().getEntityCount(), displays = models.displays();
+        s.sendMessage(Messages.info("[perf] " + n + " × " + rig + ": " + displays + " displays, " + (entities1 - entities0) + " new entities; " + seconds + " s…"));
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            long heap1 = rt.totalMemory() - rt.freeMemory();
+            double perSecond = (models.transformsSent() - sent0) / (double) seconds;
+            for (org.bukkit.entity.LivingEntity h : hosts) h.remove();
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                at.setInvulnerable(invul);
+                benchExtra = String.format(Locale.ROOT, "\"model\":{\"rig\":\"%s\",\"instances\":%d,\"displays\":%d,\"newEntities\":%d,"
+                        + "\"transformsPerSecond\":%.1f,\"heapDeltaMb\":%.2f,\"leftAfterDespawn\":%d},", rig, n, displays, entities1 - entities0,
+                        perSecond, (heap1 - heap0) / 1048576.0, models.displays());
+                Path p = stop();
+                benchExtra = "";
+                s.sendMessage(Messages.success(String.format(Locale.ROOT, "[perf] %d × %s: %.0f transforms/s, heap Δ %.1f MB → %s", n, rig,
+                        perSecond, (heap1 - heap0) / 1048576.0, p)));
+            }, 3L);
+        }, seconds * 20L);
+    }
+
+    /** Extra JSON members of the next report (model benchmark figures). */
+    private String benchExtra = "";
+
     public TabExecutor command() {
         return new TabExecutor() {
             @Override
@@ -256,6 +308,17 @@ public final class PerfService implements Listener {
                         }
                         bench(s, n);
                     }
+                    case "model" -> {
+                        int n = 1, secs = 30;
+                        try {
+                            if (a.length > 1) n = Math.max(1, Math.min(50, Integer.parseInt(a[1])));
+                            if (a.length > 2) secs = Math.max(5, Math.min(600, Integer.parseInt(a[2])));
+                        } catch (NumberFormatException ignored) {
+                            // defaults
+                        }
+                        Player at = a.length > 3 ? Bukkit.getPlayerExact(a[3]) : s instanceof Player p ? p : null;
+                        modelBench(s, n, secs, at, a.length > 4 ? a[4] : "khasar");
+                    }
                     case "hud" -> {
                         boolean on = a.length < 2 || !a[1].equalsIgnoreCase("off");
                         services.hud().panelEnabled(on);
@@ -268,14 +331,14 @@ public final class PerfService implements Listener {
                                     e.getKey(), st.count(), st.meanUs(), st.p95Us(), st.p99Us(), st.maxUs())));
                         }
                     }
-                    default -> s.sendMessage(Messages.info("/suldperf start <нэр> | stop | bench [n] | report | hud on|off"));
+                    default -> s.sendMessage(Messages.info("/suldperf start <нэр> | stop | bench [n] | report | hud on|off | model <n> <сек> [тоглогч] [rig]"));
                 }
                 return true;
             }
 
             @Override
             public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
-                return a.length == 1 ? List.of("start", "stop", "bench", "report", "hud").stream().filter(x -> x.startsWith(a[0].toLowerCase(Locale.ROOT))).toList() : List.of();
+                return a.length == 1 ? List.of("start", "stop", "bench", "report", "hud", "model").stream().filter(x -> x.startsWith(a[0].toLowerCase(Locale.ROOT))).toList() : List.of();
             }
         };
     }

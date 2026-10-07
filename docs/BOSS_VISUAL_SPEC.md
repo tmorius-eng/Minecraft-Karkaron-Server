@@ -5,9 +5,10 @@ with a custom name (`mob/MobService.java`; content in `content/SuldContent.java`
 `WorldContent.java`). Хасар is a vanilla RAVAGER. `dungeon/BossService.java` adds phase escalation, phase damage
 scaling, an enrage timer and a ravager roar on phase change (`BossService.java:122`), nothing visual beyond that.
 
-The renderer is an **open owner decision**: the SÜLD ItemDisplay-bone renderer (default) or BetterModel. See
-[VISUAL_CONTENT_MASTER_PLAN §5](VISUAL_CONTENT_MASTER_PLAN.md#5-open-decision-boss-and-elite-rendering-owner-to-decide).
-This spec is written for either one: bones, clips and budgets are the same.
+**Renderer: decided by the owner (Stage D1).** It is SÜLD's own Display-Entity renderer, specified in
+docs/MODEL_RENDERER.md and implemented in `suld-api/.../model` and `suld-plugin/.../model`. BetterModel, ModelEngine,
+MythicMobs and any similar runtime model plugin are excluded. Хасар is its first production rig. The status lines below
+date from before D1; current statuses are in `audit/visual-content-status.json`.
 
 ## 1. Facts from the code
 

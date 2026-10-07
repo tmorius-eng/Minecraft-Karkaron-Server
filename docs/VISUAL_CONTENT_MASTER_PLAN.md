@@ -58,7 +58,7 @@ equipment assets or display bones without a separate Geyser mapping pack. That i
 | Helmet (class silhouette) | Head-slot item with **no** asset id, so the client draws the item model on the head (true 3D cuboids) | `EQUIPPABLE(HEAD)` without assetId + `ITEM_MODEL` | `assets/suld/items/armor/<id>_helmet.json` → `models/item/armor/…` |
 | Pauldrons, back banner (T3+) | `ItemDisplay` passenger on the player, hidden from the wearer, at most 2 per player | `addPassenger`, `Player#hideEntity`, interpolated `Transformation` | `models/item/armor/<id>_pauldrons.json` |
 | Weapons, relics | Item model definition on the held item | `ITEM_MODEL` (new assets); the legacy `custom_model_data` stays for the existing 32 | `assets/suld/items/…` |
-| Bosses, elites | **Open decision (§5)**: SÜLD ItemDisplay-bone renderer (default) or BetterModel | `ItemDisplay` bones on an invisible host entity | `models/entity/<mob>/<bone>.json` |
+| Bosses, elites | **Decided (owner, D1): SÜLD's own Display-Entity renderer** (docs/MODEL_RENDERER.md); no BetterModel/ModelEngine/MythicMobs | `ItemDisplay` bones on an invisible host entity | `models/entity/<mob>/<bone>.json` |
 | Cheap elite variants | Equipment layers on vanilla-backed mobs: `wolf_body` for wolves, `humanoid` for husk/stray | `EQUIPPABLE(BODY)` with `allowedEntities` | `textures/entity/equipment/wolf_body/<id>.png` |
 | Cavalry mounts | `horse_body` equipment layer (barding) | `EQUIPPABLE(BODY)` on horse armour items | `textures/entity/equipment/horse_body/<id>.png` |
 | Human NPCs | Mannequin + `ResolvableProfile` skin patch (already used) + SÜLD armour, 3D hats, held items | `Mannequin#setProfile`, `getEquipment()` | `textures/entity/npc/<id>.png` |

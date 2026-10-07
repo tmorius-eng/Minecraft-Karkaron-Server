@@ -143,6 +143,13 @@ public final class SuldContent {
         return items().lootTable(id).orElse(null);
     }
 
+    /** Mobs rendered by a model rig (docs/MODEL_RENDERER.md): mob id → rig id. */
+    private static final java.util.Map<String, String> MODELS = java.util.Map.of("mob.khasar", "khasar");
+
+    public static String modelFor(String mobId) {
+        return MODELS.get(mobId);
+    }
+
     public static MobDefinition mobFor(String id) {
         for (MobDefinition m : List.of(GOVIIN_CHONO, ORKHON_CHONO, KHASAR)) {
             if (m.id().equals(id)) {

@@ -35,6 +35,9 @@ public final class MobService implements org.bukkit.event.Listener {
         this.keyMobLevel = new NamespacedKey(plugin, "mob_level");
     }
 
+    /** Called for every SÜLD mob right after spawning (the model renderer dresses rigged mobs here). */
+    public volatile java.util.function.BiConsumer<LivingEntity, MobDefinition> onSpawn = (e, d) -> { };
+
     public LivingEntity spawn(MobDefinition def, Location location) {
         EntityType type = EntityType.valueOf(def.backingEntity());
         Entity entity = location.getWorld().spawnEntity(location, type);
@@ -55,6 +58,7 @@ public final class MobService implements org.bukkit.event.Listener {
 
         living.getPersistentDataContainer().set(keyMobId, PersistentDataType.STRING, def.id());
         living.getPersistentDataContainer().set(keyMobLevel, PersistentDataType.INTEGER, def.level());
+        onSpawn.accept(living, def);
         return living;
     }
 

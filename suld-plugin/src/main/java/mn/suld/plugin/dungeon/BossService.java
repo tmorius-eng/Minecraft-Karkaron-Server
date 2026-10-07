@@ -41,6 +41,7 @@ public final class BossService implements Listener {
         final Consumer<PhaseChange> onPhase;
         int phaseIndex = 0;
         boolean enraged = false;
+        BossBrain brain;
 
         Fight(BossDefinition def, Consumer<PhaseChange> onPhase) {
             this.def = def;
@@ -50,13 +51,33 @@ public final class BossService implements Listener {
 
     private final Map<UUID, Fight> fights = new HashMap<>();
 
+    /** Abilities per boss mob id (registered by content; a boss without one fights with phases only). */
+    private final Map<String, java.util.function.Function<LivingEntity, BossBrain>> brains = new HashMap<>();
+
+    public void brain(String bossMobId, java.util.function.Function<LivingEntity, BossBrain> factory) {
+        brains.put(bossMobId, factory);
+    }
+
     public void register(LivingEntity boss, BossDefinition def, Consumer<PhaseChange> onPhase) {
-        fights.put(boss.getUniqueId(), new Fight(def, onPhase));
+        Fight f = new Fight(def, onPhase);
+        var factory = brains.get(def.mob().id());
+        if (factory != null) f.brain = factory.apply(boss);
+        fights.put(boss.getUniqueId(), f);
     }
 
     public void unregister(UUID bossId) {
-        fights.remove(bossId);
+        Fight f = fights.remove(bossId);
+        if (f != null && f.brain != null) {
+            org.bukkit.entity.Entity e = org.bukkit.Bukkit.getEntity(bossId);
+            if (e instanceof LivingEntity le) f.brain.end(le);
+        }
     }
+
+    /**
+     * Set while a brain applies ability damage: the melee override below keeps its hands off, so an ability can hit
+     * harder or softer than the phase's melee. Main thread.
+     */
+    public static boolean abilityDamage;
 
     public boolean isBoss(UUID entityId) {
         return fights.containsKey(entityId);
@@ -75,6 +96,7 @@ public final class BossService implements Listener {
     /** Called about twice a second by the owning dungeon run: enforces the enrage timer. */
     public void tick(LivingEntity boss) {
         Fight f = fights.get(boss.getUniqueId());
+        if (f != null && f.brain != null && boss.isValid() && !boss.isDead()) f.brain.tick(boss, f.phaseIndex, f.enraged);
         if (f == null || f.enraged || f.def.enrageSeconds() <= 0) {
             return;
         }
@@ -106,7 +128,7 @@ public final class BossService implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBossAttack(EntityDamageByEntityEvent event) {
         Fight f = fights.get(event.getDamager().getUniqueId());
-        if (f == null || !(event.getEntity() instanceof Player)) {
+        if (f == null || !(event.getEntity() instanceof Player) || abilityDamage) {
             return;
         }
         BossPhase phase = f.def.phases().get(f.phaseIndex);
@@ -124,6 +146,7 @@ public final class BossService implements Listener {
             boss.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
         }
         f.onPhase.accept(new PhaseChange(boss, f.def, targetIndex, phase, enraged));
+        if (f.brain != null) f.brain.onPhase(boss, targetIndex, enraged);
     }
 
     /** Remove all tracked fights (shutdown). */

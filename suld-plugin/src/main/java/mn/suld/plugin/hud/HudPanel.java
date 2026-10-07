@@ -406,7 +406,9 @@ final class HudPanel implements Listener {
     }
 
     static boolean targetable(Player viewer, Entity e) {
-        if (!(e instanceof LivingEntity le) || e instanceof ArmorStand || e.equals(viewer) || le.isInvisible()) return false;
+        if (!(e instanceof LivingEntity le) || e instanceof ArmorStand || e.equals(viewer)) return false;
+        // an invisible host rendered by a model rig is a visible creature (docs/MODEL_RENDERER.md)
+        if (le.isInvisible() && !e.getScoreboardTags().contains(mn.suld.plugin.model.ModelService.HOST_TAG)) return false;
         return !(e instanceof Player other) || other.getGameMode() != GameMode.SPECTATOR;
     }
 

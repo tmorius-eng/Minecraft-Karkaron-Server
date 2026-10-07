@@ -103,6 +103,7 @@ public final class CombatFeedback implements Listener {
     /** "Говийн Чоно [Lvl 2] ▮▮▮▮▮▮▯▯▯▯" — green, yellow under 50 %, red under 25 %. */
     private void nameBar(LivingEntity mob) {
         if (!mob.isValid() || mob.isDead()) return;
+        if (mob.getScoreboardTags().contains(mn.suld.plugin.model.ModelService.HOST_TAG)) return; // a rig: no name over its invisible host
         String id = mobs.mobId(mob).orElse(null);
         MobDefinition def = id == null ? null : SuldContent.mobFor(id);
         if (def == null) return;

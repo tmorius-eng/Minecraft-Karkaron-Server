@@ -309,6 +309,9 @@ public final class SuldServices {
         return sessions.remove(player);
     }
 
+    /** The Display-Entity model renderer (null until the plugin enabled it). */
+    public volatile mn.suld.plugin.model.ModelService models;
+
     /** ActivePlaytime (null until the plugin enabled it). */
     public volatile mn.suld.plugin.activity.ActivePlaytimeService activity;
     /** The class armour (null until the plugin enabled it). */
