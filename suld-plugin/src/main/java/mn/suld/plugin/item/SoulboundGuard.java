@@ -99,15 +99,81 @@ public final class SoulboundGuard implements Listener {
         if (!boundInvolved) return;
         boolean container = !ownView(e.getView().getTopInventory().getType(), e.getView().getTopInventory().getHolder());
         boolean bundle = isBundle(current) || isBundle(cursor);
+        // throwing it out of the inventory screen: Q / Ctrl+Q over a slot, or a click outside the window with it on
+        // the cursor (also the creative inventory's "throw"), or parking it in the 2x2 grid (dropped if the bag is full)
+        boolean throwing = switch (e.getClick()) {
+            case DROP, CONTROL_DROP, WINDOW_BORDER_LEFT, WINDOW_BORDER_RIGHT -> true;
+            default -> e.getSlotType() == org.bukkit.event.inventory.InventoryType.SlotType.OUTSIDE
+                    || e.getAction().name().startsWith("DROP_");
+        };
+        boolean grid = e.getSlotType() == org.bukkit.event.inventory.InventoryType.SlotType.CRAFTING && (bound(cursor) || bound(hotbar));
+        if (throwing || grid) {
+            e.setCancelled(true);
+            p.sendMessage(Messages.error("Ангийн эд зүйлийг хаях боломжгүй — энэ бол таны сүнсний зэвсэг."));
+            return;
+        }
         if (container || bundle) {
             e.setCancelled(true);
             p.sendMessage(Messages.error("Сүнсэнд холбоотой эд зүйл таны биеэс салахгүй."));
         }
     }
 
+    /** Closing the inventory with a bound item on the cursor would drop it: put it back into the bag instead. */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onClose(org.bukkit.event.inventory.InventoryCloseEvent e) {
+        if (!(e.getPlayer() instanceof Player p)) return;
+        ItemStack cursor = p.getItemOnCursor();
+        if (!bound(cursor)) return;
+        p.setItemOnCursor(null);
+        giveBack(p, cursor);
+    }
+
+    /**
+     * The last line: whatever path made a soulbound item into an item entity on the ground (a drop path nobody
+     * thought of, a full inventory, a plugin), it never spawns there; it goes back into its owner's bag. With no owner
+     * online it simply does not appear (/classgear recover restores class gear).
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onItemSpawn(org.bukkit.event.entity.ItemSpawnEvent e) {
+        ItemStack it = e.getEntity().getItemStack();
+        if (!bound(it)) return;
+        e.setCancelled(true);
+        ItemInstance i = factory.read(it).orElse(null);
+        Player owner = i == null || i.boundTo() == null ? null : org.bukkit.Bukkit.getPlayer(i.boundTo());
+        if (owner == null) {
+            // legacy items without an owner: the nearest player within 4 blocks threw it
+            for (Player near : e.getLocation().getNearbyPlayers(4)) {
+                owner = near;
+                break;
+            }
+        }
+        if (owner != null) giveBack(owner, it.clone());
+    }
+
+    /** Into the bag; if it is full, the bound item takes a hotbar/bag slot of an unbound item, which drops instead. */
+    private void giveBack(Player p, ItemStack it) {
+        var left = p.getInventory().addItem(it);
+        if (left.isEmpty()) return;
+        ItemStack[] inv = p.getInventory().getStorageContents();
+        for (int k = inv.length - 1; k >= 0; k--) {
+            if (inv[k] != null && !bound(inv[k])) {
+                ItemStack out = inv[k];
+                p.getInventory().setItem(k, left.values().iterator().next());
+                p.getWorld().dropItemNaturally(p.getLocation(), out);
+                return;
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDrag(InventoryDragEvent e) {
         if (!bound(e.getOldCursor())) return;
+        // the 2x2 crafting grid (raw slots 1-4 of the player's own view) is no place for it either
+        if (e.getView().getTopInventory().getType() == org.bukkit.event.inventory.InventoryType.CRAFTING
+                && e.getRawSlots().stream().anyMatch(s -> s >= 1 && s <= 4)) {
+            e.setCancelled(true);
+            return;
+        }
         if (ownView(e.getView().getTopInventory().getType(), e.getView().getTopInventory().getHolder())) return;
         int topSize = e.getView().getTopInventory().getSize();
         if (e.getRawSlots().stream().anyMatch(s -> s < topSize)) e.setCancelled(true);
