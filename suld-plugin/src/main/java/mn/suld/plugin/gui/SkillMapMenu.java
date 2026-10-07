@@ -94,7 +94,15 @@ public final class SkillMapMenu implements Listener {
 
     // ------------------------------------------------------------------ open / redraw
 
+    /** The full-screen tree (SkillSky); the chest map is the fallback where it cannot open (combat, dungeon, soul). */
+    private SkillSky sky;
+
+    public void sky(SkillSky sky) {
+        this.sky = sky;
+    }
+
     public void open(Player p) {
+        if (sky != null && sky.open(p)) return;
         open(p, null);
     }
 
@@ -263,7 +271,7 @@ public final class SkillMapMenu implements Listener {
         return it;
     }
 
-    private List<Component> tooltip(Player p, SkillTree tree, SkillAllocation a, SkillNode n, NodeState state, boolean dim) {
+    List<Component> tooltip(Player p, SkillTree tree, SkillAllocation a, SkillNode n, NodeState state, boolean dim) {
         List<Component> out = new ArrayList<>();
         out.add(Menu.line(n.category().label() + (n.keystone() ? " · Түлхүүр чадвар" : n.capstone() ? " · Дуулал" : n.hasProc() ? " · Идэвхгүй шид" : "")));
         if (n.maxRank() > 1) out.add(Menu.kv("Түвшин", a.rank(n) + "/" + n.maxRank(), a.maxed(n) ? GOLD : NamedTextColor.WHITE));

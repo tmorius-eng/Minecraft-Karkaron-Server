@@ -4,6 +4,11 @@
    "type": "directory",
    "source": "entity/khasar",
    "prefix": "entity/khasar/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/skytree",
+   "prefix": "entity/skytree/"
   }
  ]
 }

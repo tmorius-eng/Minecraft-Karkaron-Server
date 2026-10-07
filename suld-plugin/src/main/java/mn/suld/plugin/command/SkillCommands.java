@@ -87,6 +87,7 @@ public final class SkillCommands {
                 String sub = a.length == 0 ? "tree" : a[0].toLowerCase(Locale.ROOT);
                 switch (sub) {
                     case "tree", "map", "gazar" -> map.open(p);
+                    case "chest", "grid" -> map.open(p, null); // the inventory map (no camera change)
                     case "spells", "shid" -> menus.skills(p);
                     case "info" -> info(p);
                     case "reset" -> reset(p, a);

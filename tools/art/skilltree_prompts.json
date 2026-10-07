@@ -1,0 +1,6 @@
+{"model": "gemini-2.5-flash-image",
+ "style": "Pixel-art style with visible chunky pixels, muted desaturated night palette (deep navy, slate blue, charcoal), soft and dark so bright UI icons placed on top stay readable, no text, no letters, no UI, no watermark, no border, no people.",
+ "images": [
+  {"id": "skilltree_bg", "aspect": "16:9",
+   "prompt": "A wide panoramic night sky over the Mongolian steppe: a starry sky with a faint milky way taking up the upper two thirds, distant layered dark blue mountain ridges on the horizon, rolling dark hills in the foreground, a small round white ger (yurt) with a tiny warm campfire glowing beside it at the bottom centre, and the silhouette of an old stone watchtower ruin on a cliff at the far right edge. Calm, dark and atmospheric; the centre of the image is open dark sky."}
+ ]}

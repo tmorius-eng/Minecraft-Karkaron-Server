@@ -32,6 +32,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.trade.TradeService trades;
     private mn.suld.plugin.style.CosmeticEffects effects;
     private mn.suld.plugin.death.DeathService deaths;
+    private mn.suld.plugin.gui.SkillSky skillSky;
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
     private mn.suld.plugin.worldbuild.PregenService pregen;
@@ -200,6 +201,12 @@ public final class SuldPlugin extends JavaPlugin {
         menus.skillMap(skillMap);
         skills.skillMap(skillMap::open); // sneak + right click with the class weapon
         getServer().getPluginManager().registerEvents(skillMap, this);
+        // the full-screen tree (docs/SKILL_SKY.md); the chest map stays the fallback
+        mn.suld.plugin.death.DeathService deathsForSky = deaths;
+        skillSky = new mn.suld.plugin.gui.SkillSky(this, services, skillMap, id -> deathsForSky != null && deathsForSky.isSoul(id));
+        skillMap.sky(skillSky);
+        getServer().getPluginManager().registerEvents(skillSky, this);
+        skillSky.start();
         mn.suld.plugin.command.SkillCommands skillCommands = new mn.suld.plugin.command.SkillCommands(services, skillMap, menus,
                 new mn.suld.plugin.skill.qa.SkillQa(this, services, skillTree, skills));
         registerTab("skills", skillCommands.skills());
@@ -297,6 +304,7 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood
         if (services != null && services.skillTree != null) {
             services.skillTree.stop();
         }
