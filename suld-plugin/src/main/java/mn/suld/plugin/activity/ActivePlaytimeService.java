@@ -56,6 +56,7 @@ public final class ActivePlaytimeService implements Listener {
     private final SuldServices services;
     private final Map<UUID, ActivityTracker> trackers = new ConcurrentHashMap<>();
     private final Map<UUID, Set<Long>> areas = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastQuit = new ConcurrentHashMap<>();
     private final List<BiConsumer<Player, ActivityTracker.Verdict>> listeners = new ArrayList<>();
 
     public ActivePlaytimeService(Plugin plugin, SuldServices services) {
@@ -222,8 +223,11 @@ public final class ActivePlaytimeService implements Listener {
         UUID id = e.getPlayer().getUniqueId();
         ActivityTracker t = trackers.get(id);
         if (t == null) return;
+        long at = System.nanoTime();
+        lastQuit.put(id, at);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (Bukkit.getPlayer(id) == null && trackers.remove(id, t)) areas.remove(id);
+            // only the latest quit's timer may drop it (an earlier one must not cut a later 30 minutes short)
+            if (Bukkit.getPlayer(id) == null && lastQuit.remove(id, at) && trackers.remove(id, t)) areas.remove(id);
         }, 30L * 60 * 20);
     }
 }

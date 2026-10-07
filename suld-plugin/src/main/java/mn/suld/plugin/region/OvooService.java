@@ -103,12 +103,20 @@ public final class OvooService implements Listener {
         for (Ovoo o : ovoos) {
             int[] b = built.get(o.id());
             if (b != null && b[0] == o.x() && b[2] == o.z()) continue;
-            if (!w.isChunkLoaded(o.x() >> 4, o.z() >> 4)) continue; // never force a load: built when someone is near
+            if (!footprintLoaded(w, o.x(), o.z())) continue; // never force a load: built when someone is near
             int y = w.getHighestBlockYAt(o.x(), o.z(), HeightMap.MOTION_BLOCKING_NO_LEAVES);
             build(w, o.x(), y + 1, o.z());
             built.put(o.id(), new int[]{o.x(), y + 1, o.z()});
             save();
         }
+    }
+
+    /** The cairn reaches 3 blocks out (base and stones): every chunk it touches must already be loaded. */
+    private static boolean footprintLoaded(World w, int x, int z) {
+        for (int dx = -3; dx <= 3; dx += 6) {
+            for (int dz = -3; dz <= 3; dz += 6) if (!w.isChunkLoaded((x + dx) >> 4, (z + dz) >> 4)) return false;
+        }
+        return true;
     }
 
     /** A cone of stones (5 wide at the base), a spruce pole with blue silk khadag on top, three stones to add. */

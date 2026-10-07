@@ -91,6 +91,12 @@ public final class SkillService implements Listener {
             regen();
             mn.suld.plugin.perf.PerfProbe.stop("skill.regen_tick", t);
         }, 20L, 20L);
+        // cooldowns kept across a relog: drop those of offline players once they have run out
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            long now = System.currentTimeMillis();
+            spellReady.entrySet().removeIf(e -> Bukkit.getPlayer(e.getKey()) == null
+                    && e.getValue().values().stream().allMatch(at -> at <= now));
+        }, 6000L, 6000L);
     }
 
     private PlayerClass clazzOf(Player p) {

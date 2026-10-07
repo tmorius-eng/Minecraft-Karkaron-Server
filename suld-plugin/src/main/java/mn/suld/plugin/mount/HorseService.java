@@ -199,6 +199,12 @@ public final class HorseService implements Listener, TabExecutor {
         if (isSteppeHorse(e.getEntity())) e.setCancelled(true);
     }
 
+    /** A dispenser with shears strips saddles too (1.21.6+). */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onBlockShear(org.bukkit.event.block.BlockShearEntityEvent e) {
+        if (isSteppeHorse(e.getEntity())) e.setCancelled(true);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onDamage(EntityDamageEvent e) {
         if (isSteppeHorse(e.getEntity())) e.setCancelled(true);

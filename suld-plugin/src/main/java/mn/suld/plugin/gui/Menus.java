@@ -630,7 +630,7 @@ public final class Menus {
         }
         pr.addCurrency(total);
         services.profiles().save(pr);
-        p.saveData(); // coins and the emptied slots reach disk together (no crash dupe)
+        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, p); // coins and the emptied slots reach disk together (no crash dupe)
         p.sendMessage(Messages.success(count + " олз зарж +" + fmt(total) + " ₮ авлаа."));
     }
 

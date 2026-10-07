@@ -137,6 +137,11 @@ public final class CombatListener implements Listener {
         Player player;
         double scale = 1.0;
         if (event.getDamager() instanceof Player p) {
+            org.bukkit.event.entity.EntityDamageEvent.DamageCause cause = event.getCause();
+            if (cause != org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK
+                    && cause != org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
+                return; // thorns and other player-sourced damage keep their vanilla amount, not the SÜLD attack
+            }
             player = p;
             scale = meleeScale(p, event);
         } else if (event.getDamager() instanceof org.bukkit.entity.AbstractArrow arrow && arrow.getShooter() instanceof Player p) {

@@ -499,8 +499,10 @@ public final class TradeService implements Listener, TabExecutor {
         if (offer == null) return;
         List<ItemStack> back = new ArrayList<>();
         for (ItemStack it : offer) {
-            boolean dropped = !e.getKeepInventory() && !e.isCancelled() && e.getDrops().stream().anyMatch(d -> d == it);
-            if (!dropped) {
+            // kept only if the death rules put this very stack in the keep list (or nothing drops at all); anything
+            // else was lost, wherever another handler moved it (the halls re-drop at the gate)
+            boolean kept = e.getKeepInventory() || e.isCancelled() || e.getItemsToKeep().stream().anyMatch(d -> d == it);
+            if (kept) {
                 e.getDrops().removeIf(d -> d == it);
                 e.getItemsToKeep().removeIf(d -> d == it);
                 back.add(it);

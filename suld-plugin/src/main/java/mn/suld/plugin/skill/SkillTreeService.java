@@ -461,6 +461,7 @@ public final class SkillTreeService implements Listener {
         if (gone != null && gone.ultReady > now) ultHeld.put(id, gone.ultReady);
         if (ultHeld.size() > 512) ultHeld.values().removeIf(t -> t <= now);
         marks.remove(id);
+        recentUnlocks.remove(id);
         availableMemo.remove(id);
         if (ultimates != null) ultimates.forget(id);
     }
@@ -507,7 +508,10 @@ public final class SkillTreeService implements Listener {
         if (pr == null || t == null) return new SkillAllocation.Check(SkillAllocation.Why.NOT_CONNECTED, n, null, 0);
         SkillAllocation.Check c = SkillEngine.unlock(pr, t, n, context(p));
         if (c.ok()) {
-            recentUnlocks.computeIfAbsent(p.getUniqueId(), k -> new ConcurrentHashMap<>()).put(n.id(), System.currentTimeMillis());
+            Map<String, Long> mine = recentUnlocks.computeIfAbsent(p.getUniqueId(), k -> new ConcurrentHashMap<>());
+            long now = System.currentTimeMillis();
+            mine.values().removeIf(t0 -> now - t0 >= REFUND_GRACE_MS); // only the grace window matters
+            mine.put(n.id(), now);
             afterChange(p);
             p.playSound(p.getLocation(), n.keystone() ? Sound.BLOCK_BEACON_ACTIVATE : Sound.ENTITY_PLAYER_LEVELUP, 0.7f, n.keystone() ? 1.2f : 1.7f);
         } else {
@@ -524,7 +528,7 @@ public final class SkillTreeService implements Listener {
         // rank unlocked in the last two minutes (a misclick) and below the free-reset level
         Map<String, Long> recent = recentUnlocks.get(p.getUniqueId());
         Long at = recent == null ? null : recent.get(n.id());
-        long coins = at != null && System.currentTimeMillis() - at < REFUND_GRACE_MS ? 0 : respecCost(p, 1);
+        long coins = at != null && System.currentTimeMillis() - at < REFUND_GRACE_MS ? 0 : respecCost(p, n.cost()); // per point, like a reset
         SkillAllocation.Check c;
         synchronized (pr) {
             if (pr.currency() < coins) {
@@ -614,7 +618,7 @@ public final class SkillTreeService implements Listener {
             if (stored != null) {
                 SkillAllocation cur = SkillEngine.allocation(pr, t), next = SkillAllocation.decode(t, stored).allocation();
                 int removed = 0;
-                for (SkillNode n : t.nodes()) removed += Math.max(0, cur.rank(n) - next.rank(n));
+                for (SkillNode n : t.nodes()) removed += Math.max(0, cur.rank(n) - next.rank(n)) * n.cost(); // points, not ranks
                 coins = respecCost(p, removed);
                 if (pr.currency() < coins) return new SkillEngine.Result(SkillEngine.Outcome.INVALID, coins + " ₮ хэрэгтэй");
             }

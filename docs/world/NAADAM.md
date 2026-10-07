@@ -24,6 +24,14 @@ SÜLD stages the **archery** and the **horse race**. Archery:
   3. Сумын Мэргэн +100 ₮.
 * **Cleanup:** every placed block is restored to what was there, also on shutdown. The targets cannot be broken
   while the contest runs.
+  * While a contest runs, the replaced blocks are also kept in `plugins/SULD/naadam-restore.yml`. After a crash the
+    next start puts them back (verified with `kill -9` mid-contest: 28 blocks restored).
+  * The field never replaces a block with contents (a chest, a sign, a banner), and the сур and banners only go
+    into air.
+  * Every chunk the field touches is loaded asynchronously before it is built, so nobody has to stand at the gate.
+* **Shooting position:** an arrow scores only if it was loosed from behind the line. Its launch position counts, not
+  where the archer stands when it lands.
+* **Prizes** go to the archers still online at the closing ceremony.
 
 Live bot check (dev Paper):
 * the field and its 15 сур are placed outside the south gate;

@@ -225,7 +225,16 @@ public final class NpcService implements Listener {
         e.getRightClicked().getWorld().spawnParticle(Particle.HAPPY_VILLAGER, e.getRightClicked().getLocation().add(0, 2.1, 0), 5, 0.3, 0.2, 0.3);
         // a conversation first (docs/NPC_DIALOGUE.md); Shift + right-click goes straight to the action
         if (!p.isSneaking() && plugin.getConfig().getBoolean("npc.dialogue", true) && dialogue.has(id)) {
-            dialogue.open(p, id, services.profiles().cached(p.getUniqueId()).orElse(null), actionLabel(id), () -> act(p, id));
+            org.bukkit.Location npcAt = e.getRightClicked().getLocation();
+            // the button can be pressed minutes later: only while still beside the NPC, alive (not a soul)
+            dialogue.open(p, id, services.profiles().cached(p.getUniqueId()).orElse(null), actionLabel(id), () -> {
+                if (p.isOnline() && p.getWorld().equals(npcAt.getWorld()) && p.getLocation().distanceSquared(npcAt) <= 8 * 8
+                        && !services.isSoul.test(p.getUniqueId())) {
+                    act(p, id);
+                } else {
+                    p.sendMessage(Messages.error("Ярилцагчаасаа хэт холдсон байна — дахин ойртоод ярь."));
+                }
+            });
         } else {
             act(p, id);
         }

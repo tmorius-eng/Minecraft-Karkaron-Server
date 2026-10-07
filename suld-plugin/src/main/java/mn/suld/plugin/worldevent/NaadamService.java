@@ -65,7 +65,8 @@ public final class NaadamService implements Listener, TabExecutor {
     private final Map<UUID, Integer> scores = new HashMap<>();
     /** Arrows shot at this contest per archer: each has a quiver of {@link #ARROWS} (a real archer shoots a set count). */
     private final Map<UUID, Integer> shots = new HashMap<>();
-    private final java.util.Set<UUID> counted = new java.util.HashSet<>(); // arrows within the quiver
+    /** Arrows within the quiver -> where along the field their archer stood when shooting (z). */
+    private final Map<UUID, Double> launchZ = new HashMap<>();
     private static final int ARROWS = 20;
     private final Map<UUID, String> names = new HashMap<>();
     private final Set<UUID> viewers = new HashSet<>();
@@ -80,6 +81,7 @@ public final class NaadamService implements Listener, TabExecutor {
     }
 
     public void start() {
+        restoreAfterCrash();
         long every = Math.max(10, plugin.getConfig().getInt("naadam.every-minutes", 120)) * 60L * 20L;
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (!running() && Bukkit.getOnlinePlayers().size() >= plugin.getConfig().getInt("naadam.min-players", 2)) open(null);
@@ -92,46 +94,68 @@ public final class NaadamService implements Listener, TabExecutor {
 
     // ------------------------------------------------------------------ the field
 
-    /** The shooting line: outside the south gate, past the city's footprint, on the ground. */
-    private Location field() {
+    /** The shooting line's column: outside the south gate, past the city's footprint (no chunk is read here). */
+    private int[] fieldColumn(World w) {
         Location gate = city.pointLocation("fast_travel.gate_south");
-        World w = Bukkit.getWorlds().get(0);
         if (gate == null) gate = w.getSpawnLocation().clone().add(0, 0, 60);
         int x = gate.getBlockX(), z = gate.getBlockZ();
         for (int i = 0; i < 80 && city.near(w.getName(), x, z, 4); i++) z++; // walk south until clear of the walls
-        z += 6;
-        if (!w.isChunkLoaded(x >> 4, z >> 4) || !w.isChunkLoaded(x >> 4, (z + 44) >> 4)) return null; // never force a load
-        int y = w.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1;
-        return new Location(w, x + 0.5, y, z + 0.5, 0, 0); // facing south (+z)
+        return new int[]{x, z + 6};
     }
 
+    private boolean opening;
+
+    /**
+     * Every chunk the field touches (the line with its banners at x±6, the сур out to 40 blocks) is loaded
+     * asynchronously first; nothing is loaded or generated on the main thread, and nobody has to stand at the gate.
+     */
     private void open(CommandSender by) {
-        Location at = field();
-        if (at == null) {
-            if (by != null) by.sendMessage(Messages.error("Наадмын талбайн chunk ачаалагдаагүй байна — хотын өмнөд хаалганы ойр очоод дахин."));
-            return;
+        if (opening) return;
+        World w = Bukkit.getWorlds().get(0);
+        int[] c = fieldColumn(w);
+        List<java.util.concurrent.CompletableFuture<?>> loads = new ArrayList<>();
+        for (int cx = (c[0] - 8) >> 4; cx <= (c[0] + 8) >> 4; cx++) {
+            for (int cz = (c[1] - 2) >> 4; cz <= (c[1] + RANGES[RANGES.length - 1] + 2) >> 4; cz++) loads.add(w.getChunkAtAsync(cx, cz));
         }
+        opening = true;
+        java.util.concurrent.CompletableFuture.allOf(loads.toArray(new java.util.concurrent.CompletableFuture<?>[0])).whenComplete((ok, err) -> {
+            if (!plugin.isEnabled()) {
+                opening = false;
+                return;
+            }
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                opening = false;
+                if (err != null || running()) {
+                    if (err != null && by != null) by.sendMessage(Messages.error("Наадмын талбайг ачаалж чадсангүй: " + err.getMessage()));
+                    return;
+                }
+                build(w, c[0], c[1]);
+            });
+        });
+    }
+
+    private void build(World w, int fx, int fz) {
+        Location at = new Location(w, fx + 0.5, w.getHighestBlockYAt(fx, fz, HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1, fz + 0.5, 0, 0); // facing south
         line = at;
-        World w = at.getWorld();
-        // the сур: five targets abreast at each range, a white lane line, a banner on the shooting line
+        // the сур: five targets abreast at each range, a white lane line, a banner on each side of the line
         for (int r = 0; r < RANGES.length; r++) {
             for (int dx = -2; dx <= 2; dx++) {
                 int x = at.getBlockX() + dx * 2, z = at.getBlockZ() + RANGES[r];
                 int y = w.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1;
                 Block b = w.getBlockAt(x, y, z);
-                put(b, Material.TARGET);
-                targetPoints.put(b, POINTS[r]);
+                if (put(b, Material.TARGET, true)) targetPoints.put(b, POINTS[r]);
             }
         }
         for (int dx = -5; dx <= 5; dx++) {
             Block b = w.getBlockAt(at.getBlockX() + dx, at.getBlockY() - 1, at.getBlockZ());
-            if (!b.getType().isAir() && b.getType().isSolid()) put(b, Material.WHITE_CONCRETE);
+            if (!b.getType().isAir() && b.getType().isSolid()) put(b, Material.WHITE_CONCRETE, false);
         }
-        put(w.getBlockAt(at.getBlockX() - 6, at.getBlockY(), at.getBlockZ()), Material.LIGHT_BLUE_BANNER);
-        put(w.getBlockAt(at.getBlockX() + 6, at.getBlockY(), at.getBlockZ()), Material.LIGHT_BLUE_BANNER);
+        put(w.getBlockAt(at.getBlockX() - 6, at.getBlockY(), at.getBlockZ()), Material.LIGHT_BLUE_BANNER, true);
+        put(w.getBlockAt(at.getBlockX() + 6, at.getBlockY(), at.getBlockZ()), Material.LIGHT_BLUE_BANNER, true);
+        saveRestore();
         scores.clear();
         shots.clear();
-        counted.clear();
+        launchZ.clear();
         names.clear();
         endsAt = System.currentTimeMillis() + DURATION_S * 1000L;
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -142,9 +166,76 @@ public final class NaadamService implements Listener, TabExecutor {
         ticker = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L).getTaskId();
     }
 
-    private void put(Block b, Material m) {
+    /**
+     * Places a festival block, remembering what was there. Never over a block with contents (a chest, a sign, a
+     * banner: its contents would not come back); {@code intoAir} only into air or replaceable plants.
+     */
+    private boolean put(Block b, Material m, boolean intoAir) {
+        if (b.getState() instanceof org.bukkit.block.TileState) return false;
+        if (intoAir && !(b.getType().isAir() || b.isReplaceable())) return false;
         if (!placed.containsKey(b)) placed.put(b, b.getBlockData().clone());
         b.setType(m, false);
+        return true;
+    }
+
+    // ------------------------------------------------------------------ crash safety
+
+    /** What the field replaced, on disk while a contest runs: a crash or a kill mid-contest is undone at the next start. */
+    private java.io.File restoreFile() {
+        return new java.io.File(plugin.getDataFolder(), "naadam-restore.yml");
+    }
+
+    private void saveRestore() {
+        org.bukkit.configuration.file.YamlConfiguration y = new org.bukkit.configuration.file.YamlConfiguration();
+        List<String> rows = new ArrayList<>();
+        for (Map.Entry<Block, BlockData> e : placed.entrySet()) {
+            Block b = e.getKey();
+            rows.add(b.getWorld().getName() + ";" + b.getX() + ";" + b.getY() + ";" + b.getZ() + ";" + e.getValue().getAsString());
+        }
+        y.set("blocks", rows);
+        String text = y.saveToString();
+        java.nio.file.Path file = restoreFile().toPath();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                java.nio.file.Files.createDirectories(file.getParent());
+                java.nio.file.Path tmp = file.resolveSibling("naadam-restore.yml.tmp");
+                java.nio.file.Files.writeString(tmp, text);
+                java.nio.file.Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.io.IOException ex) {
+                plugin.getLogger().warning("naadam-restore.yml: " + ex.getMessage());
+            }
+        });
+    }
+
+    /** At start: a field left behind by a crash is put back (its chunks loaded asynchronously first). */
+    private void restoreAfterCrash() {
+        java.io.File f = restoreFile();
+        if (!f.exists()) return;
+        List<String> rows = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f).getStringList("blocks");
+        List<Object[]> todo = new ArrayList<>();
+        List<java.util.concurrent.CompletableFuture<?>> loads = new ArrayList<>();
+        for (String row : rows) {
+            String[] c = row.split(";", 5);
+            World w = c.length == 5 ? Bukkit.getWorld(c[0]) : null;
+            if (w == null) continue;
+            int x = Integer.parseInt(c[1]), y = Integer.parseInt(c[2]), z = Integer.parseInt(c[3]);
+            todo.add(new Object[]{w, x, y, z, c[4]});
+            loads.add(w.getChunkAtAsync(x >> 4, z >> 4));
+        }
+        java.util.concurrent.CompletableFuture.allOf(loads.toArray(new java.util.concurrent.CompletableFuture<?>[0])).whenComplete((ok, err) -> {
+            if (!plugin.isEnabled() || err != null) return;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                for (Object[] t : todo) {
+                    try {
+                        ((World) t[0]).getBlockAt((int) t[1], (int) t[2], (int) t[3]).setBlockData(Bukkit.createBlockData((String) t[4]), false);
+                    } catch (IllegalArgumentException ex) {
+                        plugin.getLogger().warning("naadam restore: " + ex.getMessage());
+                    }
+                }
+                plugin.getLogger().info("Naadam: restored " + todo.size() + " field blocks left by an unclean stop.");
+                if (!f.delete()) plugin.getLogger().warning("naadam-restore.yml could not be deleted");
+            });
+        });
     }
 
     private void tick() {
@@ -165,6 +256,8 @@ public final class NaadamService implements Listener, TabExecutor {
         if (ticker != -1) Bukkit.getScheduler().cancelTask(ticker);
         ticker = -1;
         List<Map.Entry<UUID, Integer>> top = new ArrayList<>(scores.entrySet());
+        // titles and prizes are given at the closing ceremony: to archers who are still here
+        top.removeIf(en -> Bukkit.getPlayer(en.getKey()) == null || services.profiles().cached(en.getKey()).isEmpty());
         top.sort(Map.Entry.<UUID, Integer>comparingByValue().reversed());
         if (top.isEmpty()) {
             Bukkit.broadcast(Messages.info("Наадам өндөрлөлөө — энэ удаа харвасан мэргэн алга."));
@@ -186,7 +279,9 @@ public final class NaadamService implements Listener, TabExecutor {
 
     private void restore() {
         for (Map.Entry<Block, BlockData> e : placed.entrySet()) e.getKey().setBlockData(e.getValue(), false);
+        boolean had = !placed.isEmpty();
         placed.clear();
+        if (had && restoreFile().exists() && !restoreFile().delete()) plugin.getLogger().warning("naadam-restore.yml could not be deleted");
         targetPoints.clear();
         for (UUID id : viewers) {
             Player p = Bukkit.getPlayer(id);
@@ -214,7 +309,7 @@ public final class NaadamService implements Listener, TabExecutor {
         if (!p.getWorld().equals(line.getWorld()) || p.getLocation().distanceSquared(line) > 90 * 90) return;
         int n = shots.merge(p.getUniqueId(), 1, Integer::sum);
         if (n <= ARROWS) {
-            counted.add(a.getUniqueId());
+            launchZ.put(a.getUniqueId(), p.getLocation().getZ());
             if (n == ARROWS) p.sendActionBar(Component.text("Сүүлчийн сум!", NamedTextColor.GOLD));
         } else if (n == ARROWS + 1) {
             p.sendMessage(Messages.info("Таны " + ARROWS + " сум дууслаа — энэ наадамд цаашдын харвалт тооцогдохгүй."));
@@ -224,12 +319,12 @@ public final class NaadamService implements Listener, TabExecutor {
     @EventHandler
     public void onHit(ProjectileHitEvent e) {
         if (!running() || !(e.getEntity() instanceof Arrow a) || !(a.getShooter() instanceof Player p)) return;
-        boolean inQuiver = counted.remove(a.getUniqueId()); // forgotten on any hit, so misses do not pile up
+        Double shotFrom = launchZ.remove(a.getUniqueId()); // forgotten on any hit, so misses do not pile up
         if (e.getHitBlock() == null) return;
         Integer pts = targetPoints.get(e.getHitBlock());
-        if (pts == null || !inQuiver) return; // not a сур, or past the quiver, a spell arrow, shot from afar
-        // the shot must come from behind the shooting line (no walking up to the сур)
-        if (p.getLocation().getZ() > line.getZ() + 1.5) {
+        if (pts == null || shotFrom == null) return; // not a сур, or past the quiver, a spell arrow, shot from afar
+        // the shot must have been loosed from behind the shooting line (not lobbed from the сур, then run back)
+        if (shotFrom > line.getZ() + 1.5) {
             p.sendActionBar(Messages.error("Харвах шугамын цаанаас харвана!"));
             return;
         }

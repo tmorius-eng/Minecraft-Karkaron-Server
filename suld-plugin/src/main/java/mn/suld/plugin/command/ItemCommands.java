@@ -276,7 +276,7 @@ public final class ItemCommands {
         p.getInventory().setItemInMainHand(null);
         pr.addCurrency(price);
         services.profiles().save(pr);
-        p.saveData(); // the item is gone on disk as soon as the coins are (no crash dupe)
+        mn.suld.plugin.item.PlayerDataSaves.soon(org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ItemCommands.class), p); // item gone on disk with the coins
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.sell", def.id() + "-" + c.item().uuid(), amount + " for " + price));
         p.sendMessage(Messages.success(def.displayName() + (amount > 1 ? " ×" + amount : "") + " зарагдлаа: +" + price + " ₮"));
         services.hud().update(p, pr);
