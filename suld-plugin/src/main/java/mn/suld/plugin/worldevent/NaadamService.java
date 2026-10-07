@@ -63,6 +63,10 @@ public final class NaadamService implements Listener, TabExecutor {
     private final Map<Block, BlockData> placed = new LinkedHashMap<>();
     private final Map<Block, Integer> targetPoints = new HashMap<>();
     private final Map<UUID, Integer> scores = new HashMap<>();
+    /** Arrows shot at this contest per archer: each has a quiver of {@link #ARROWS} (a real archer shoots a set count). */
+    private final Map<UUID, Integer> shots = new HashMap<>();
+    private final java.util.Set<UUID> counted = new java.util.HashSet<>(); // arrows within the quiver
+    private static final int ARROWS = 20;
     private final Map<UUID, String> names = new HashMap<>();
     private final Set<UUID> viewers = new HashSet<>();
     private Location line;
@@ -126,6 +130,8 @@ public final class NaadamService implements Listener, TabExecutor {
         put(w.getBlockAt(at.getBlockX() - 6, at.getBlockY(), at.getBlockZ()), Material.LIGHT_BLUE_BANNER);
         put(w.getBlockAt(at.getBlockX() + 6, at.getBlockY(), at.getBlockZ()), Material.LIGHT_BLUE_BANNER);
         scores.clear();
+        shots.clear();
+        counted.clear();
         names.clear();
         endsAt = System.currentTimeMillis() + DURATION_S * 1000L;
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -197,11 +203,31 @@ public final class NaadamService implements Listener, TabExecutor {
 
     // ------------------------------------------------------------------ scoring
 
+    /**
+     * Every arrow an archer near the field looses counts against the quiver (a multishot crossbow looses three);
+     * arrows past the 20th, and spell arrows (the Mergen's volley), do not score.
+     */
+    @EventHandler(ignoreCancelled = true)
+    public void onLaunch(org.bukkit.event.entity.ProjectileLaunchEvent e) {
+        if (!running() || !(e.getEntity() instanceof Arrow a) || !(a.getShooter() instanceof Player p)) return;
+        if (a.getScoreboardTags().contains("suld_volley")) return;
+        if (!p.getWorld().equals(line.getWorld()) || p.getLocation().distanceSquared(line) > 90 * 90) return;
+        int n = shots.merge(p.getUniqueId(), 1, Integer::sum);
+        if (n <= ARROWS) {
+            counted.add(a.getUniqueId());
+            if (n == ARROWS) p.sendActionBar(Component.text("Сүүлчийн сум!", NamedTextColor.GOLD));
+        } else if (n == ARROWS + 1) {
+            p.sendMessage(Messages.info("Таны " + ARROWS + " сум дууслаа — энэ наадамд цаашдын харвалт тооцогдохгүй."));
+        }
+    }
+
     @EventHandler
     public void onHit(ProjectileHitEvent e) {
-        if (!running() || !(e.getEntity() instanceof Arrow a) || !(a.getShooter() instanceof Player p) || e.getHitBlock() == null) return;
+        if (!running() || !(e.getEntity() instanceof Arrow a) || !(a.getShooter() instanceof Player p)) return;
+        boolean inQuiver = counted.remove(a.getUniqueId()); // forgotten on any hit, so misses do not pile up
+        if (e.getHitBlock() == null) return;
         Integer pts = targetPoints.get(e.getHitBlock());
-        if (pts == null) return;
+        if (pts == null || !inQuiver) return; // not a сур, or past the quiver, a spell arrow, shot from afar
         // the shot must come from behind the shooting line (no walking up to the сур)
         if (p.getLocation().getZ() > line.getZ() + 1.5) {
             p.sendActionBar(Messages.error("Харвах шугамын цаанаас харвана!"));

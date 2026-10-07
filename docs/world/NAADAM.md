@@ -14,6 +14,8 @@ SÜLD stages the **archery** and the **horse race**. Archery:
   * **Five сур** (target blocks) lie at each of 20, 30 and 40 blocks.
   * If the field's chunks are not loaded, the contest waits: nothing is ever force-loaded.
 * **Scoring:** 3 / 5 / 8 points by range, +2 for the centre of the face. Shots must come from behind the line.
+  Each archer has a quiver of **20 arrows** per contest: a multishot crossbow uses three, and arrows past the 20th
+  do not score. Spell arrows (the Mergen's volley) never score.
 * **Display:** a boss bar «Наадам · Сур харваа — m:ss · Тэргүүн: name score» for everyone within 90 blocks;
   `/naadam` shows the top five.
 * **End** after 5 minutes. The best three are proclaimed and paid:
@@ -22,6 +24,11 @@ SÜLD stages the **archery** and the **horse race**. Archery:
   3. Сумын Мэргэн +100 ₮.
 * **Cleanup:** every placed block is restored to what was there, also on shutdown. The targets cannot be broken
   while the contest runs.
+
+Live bot check (dev Paper):
+* the field and its 15 сур are placed outside the south gate;
+* bow hits from the shooting line score (the board showed 8, 13 and 11 points in three runs);
+* the quiver-empty notice comes after the 20th arrow.
 
 The titles follow the real naadam rank names (улсын, аймгийн, сумын: national, province, district). They are given
 here as contest titles only.
