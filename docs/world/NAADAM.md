@@ -34,15 +34,34 @@ game-scale loop around Kharkhorum (`worldevent/HorseRaceService`).
 * **When:** every `naadam.race-every-minutes` (120), an hour after the archery cycle, with the same
   `naadam.min-players`. `/uraldaan start` (`suld.admin.event`) opens one at once.
 * **Course:** 8 checkpoints in a ring 140 blocks from the spawn, starting at the south. They are drawn as columns of
-  dust: green for checkpoint 1, gold for the rest. If a checkpoint's chunk is not loaded, the race does not open
-  (nothing is force-loaded).
+  dust: green for checkpoint 1, gold for the rest. The ring lies past the city's view distance, so its 8 chunks
+  are loaded asynchronously (pre-generated ground, never a main-thread load) before the race opens.
+  A checkpoint stands on natural ground only (dirt, grass, sand, stone, gravel, snow…), never in water (kelp and
+  waterlogged blocks count), on a trunk, a roof or a city wall. If its whole chunk is a lake, it slides along the
+  ring (±6°, ±12°, ±18°) to the nearest dry chunk.
 * **Who:** only a rider on their **own** SÜLD steppe horse (`/horse`) counts. Riding through checkpoint 1 starts the
-  rider's clock. Each checkpoint must be passed in order, within 6 blocks. Back to checkpoint 1 closes the loop.
+  rider's clock. Each checkpoint must be passed in order, within 6 blocks on the map (and 8 in height). Back to
+  checkpoint 1 closes the loop.
+  A teleport mid-race (`/tpa`, `/home`, the relay, a pearl) or logging out puts the rider back to the start.
 * **Display:** a boss bar with the time left, riders and finishers; the action bar shows `Цэг n/8 · m:ss.d`.
   `/uraldaan` lists the finishers.
 * **Prizes** for the first three home: +300 / +200 / +100 ₮. The winner is hailed «Түрүү морь»: at a real naadam the
   winning horse is praised as the түрүү.
 * **Open** for 5 minutes. Checks run every 5 ticks, mounted players only.
 
-MANUAL_QA_REQUIRED in a real client: the field placement on the dev world's south gate, the arrow feel, the race
-loop's terrain (rivers and walls on the ring).
+The race rules (gates in order, start, finish, places, prizes, reset) are the pure `mn.suld.api.worldevent.HorseRace`,
+covered by `HorseRaceTest`. On the dev Paper, a bot riding its steppe horse by `vehicle_move` packets verified:
+* the async opening;
+* gates on natural ground (none in a lake, on kelp, a roof or a wall);
+* the start and checkpoints 1–6 in order;
+* the reset on a teleport;
+* the locked saddle, against a control vanilla horse whose inventory opens.
+
+The scripted rider could not find its way through the walled canal of the east quarter, so the full loop on that
+world is not bot-verified.
+
+On the dev world the ring at 140 blocks runs through the outer east quarter of Kharkhorum (houses and a walled
+canal). Riders take the streets there.
+
+MANUAL_QA_REQUIRED in a real client: the archery field placement on the dev world's south gate, the arrow feel, and
+riding the whole loop.

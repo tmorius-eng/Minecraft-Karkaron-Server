@@ -332,6 +332,7 @@ public final class SuldPlugin extends JavaPlugin {
         naadam.start();
         registerTab("naadam", naadam);
         race = new mn.suld.plugin.worldevent.HorseRaceService(this, services);
+        getServer().getPluginManager().registerEvents(race, this);
         race.start();
         registerTab("uraldaan", race);
         pregen.start();
