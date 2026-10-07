@@ -327,6 +327,11 @@ public final class DungeonService {
         return s != null && java.util.Arrays.asList(s.split(",")).contains(dungeonId);
     }
 
+    /** Support: count a dungeon as cleared for {@code p} (opens the next one). */
+    public void grantClear(Player p, String dungeonId) {
+        markCleared(p, dungeonId);
+    }
+
     private void markCleared(Player p, String dungeonId) {
         if (cleared(p, dungeonId)) return;
         String s = p.getPersistentDataContainer().get(clearsKey, org.bukkit.persistence.PersistentDataType.STRING);

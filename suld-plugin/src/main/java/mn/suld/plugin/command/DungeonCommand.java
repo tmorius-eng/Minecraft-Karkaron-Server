@@ -31,6 +31,27 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
+        if (args.length >= 3 && args[0].equalsIgnoreCase("grant")) { // /dungeon grant <player> <dungeon|all>: support
+            if (!sender.hasPermission("suld.admin.world")) {
+                sender.sendMessage(Messages.error("Эрх алга."));
+                return true;
+            }
+            Player target = org.bukkit.Bukkit.getPlayerExact(args[1]);
+            if (target == null) {
+                sender.sendMessage(Messages.error("Тоглогч онлайн биш."));
+                return true;
+            }
+            int n = 0;
+            for (DungeonDefinition d : mn.suld.plugin.content.DungeonContent.ALL) {
+                if (args[2].equalsIgnoreCase("all") || shortId(d).equalsIgnoreCase(args[2]) || d.id().equalsIgnoreCase(args[2])) {
+                    services.dungeons().grantClear(target, d.id());
+                    n++;
+                }
+            }
+            sender.sendMessage(n == 0 ? Messages.error("Ийм агуй алга.") : Messages.success(target.getName() + ": " + n + " агуй давсанд тооцлоо."));
+            services.audit().record(mn.suld.api.audit.AuditEvent.of(sender.getName(), "dungeon.grant", target.getName(), args[2]));
+            return true;
+        }
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Messages.error("Зөвхөн тоглогч ашиглана."));
             return true;

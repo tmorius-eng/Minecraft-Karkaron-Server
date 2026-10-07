@@ -36,6 +36,18 @@ All bots join 5 at a time.
 | B50 | tuned, vd 8 / sd 5 | 50 | 146 ms | 145 | 308 | 451 | 1967 | 1100 / 1555 | 6 479 | 16 512 | 10.7 |
 | C50 | tuned, **vd 6 / sd 4** | 50 | 132 ms | 127 | **214** | **357** | 937 | 1561 / 1817 | 6 582 | 12 131 | 4.3 |
 | D50 | tuned, vd 7 / sd 5 | 50 | 153 ms | 147 | 256 | 463 | 1880 | 1307 / 1570 | 6 964 | 14 710 | 6.0 |
+| E50 | tuned, vd 8 / sd 6 | 50 | 168 ms | 167 | 310 | 482 | 1923 | 1096 / 1408 | 7 132 | 17 460 | 8.8 |
+| G50 | **new jar** (rigs on every mob, halls, chat, lock-on, tutorial), vd 6 / sd 4 | 50 | 122 ms | 106 | 184 | 307 | 12 454¹ | 1230 / 1944 | 5 896 | 10 405 | 3.1 |
+| **F50** | G50 + **entity density** (monster cap 30, monster despawn 30/72, item merge 2.0) | 50 | **92 ms** | **86** | **139** | **213** | 920 | 627 / 2603 | 5 266 | 9 841 | 3.0 |
+
+¹ One 12.4 s stall: `World#addPluginChunkTicket` synchronously loaded and generated a dungeon hall's chunks on the
+main thread the first time a slot was claimed. It was found by the Paper watchdog dump and **fixed**: the hall's
+chunks are now prepared with `getChunkAtAsync` and ticketed only once loaded, and the hall is handed to the run
+only then. The F50 run's worst tick of 0.92 s came after that fix.
+
+In G50/F50 the dungeon bots walk to the gates. Dungeons 2–4 now need the previous dungeon cleared, so most of them
+were refused and fought in the open, which means somewhat less wave load than A–E. The Хасар runs (5 bots) took
+place in halls.
 
 * **10 players** (earlier, 2 GB heap, before tuning): mean 45 ms, p95 63 ms, TPS 19.7.
 * 0 players: 1–3 ms per tick.
@@ -68,7 +80,25 @@ All bots join 5 at a time.
 | A player in fresh terrain can generate unlimited chunks per second | `chunk-loading-basic.player-max-chunk-generate-rate: 40` | bounds one player's generation burst; nearest chunks first |
 | A 10 000 border is no reason to generate 390 k chunks | own throttled pre-generator, priority areas only (about 9 k chunks), MSPT-adaptive | 13–108 chunks/s at tick p95 ≤ 6 ms with no players |
 | Teleports into unloaded chunks loaded them on the main thread | every SÜLD teleport through `teleportAsync` (SafeTeleport) | no synchronous chunk load from SÜLD |
-| View/simulation distance | vd 6 / sd 4 gave the best p95/p99 at 50 players | p95 308 → 214 ms, worst tick 1.97 s → 0.94 s versus vd 8 / sd 5 |
+| View/simulation distance | vd 6 / sd 4 gave the best p95/p99 at 50 players (vd 7/5 and 8/6 were worse) | p95 308 → 214 ms, worst tick 1.97 s → 0.94 s versus vd 8 / sd 5; now the deploy template default |
+| Vanilla hostiles still dominate at 50 players | monster cap 30, monster soft/hard despawn 30/72, item merge radius 2.0 (`deploy/paper-tuning.conf`) | F50 vs G50: mean −24 %, p95 −25 %, p99 −31 %, TPS 9.5 → 11.8 |
+| Main-thread chunk generation when a hall slot was ticketed | async preparation, tickets on loaded chunks only | the 12.4 s stall is gone |
+| HUD event redraws | at most one per player every 2 ticks | — |
+
+## Functional checks with the final jar (bots/featbot.js, 16/16 passed)
+
+* **Tutorial:** starts on first join and advances.
+* **Chat:** local reaches 80 blocks and not 400; `!` goes global; party reaches the party and not others; `/` stays
+  chat; the `[Б]` tag is in front.
+* **Lock-on:** Q keeps the weapon and shows the reticle.
+* **Dungeon:** the gate is known; the run starts in the hall; waves, boss, rewards; the party is back at the gate
+  (2.5 blocks).
+* **Models:** all 30 rigs load.
+
+## Known main-thread work that remains (one-off, documented)
+
+* Relic shrine placement on a brand-new world generates up to 16 chunks synchronously, once ever.
+* The city build snapshots its own chunks, once.
 
 ## Release gate (docs/DEPLOYMENT.md)
 
@@ -79,7 +109,7 @@ All bots join 5 at a time.
 | chunk generation / loading benchmark | ✔ pre-generator and exploring bots measured |
 | 10-player test | ✔ TPS 19.7 |
 | 25-player test | ✘ TPS 13 on this bench |
-| 50-player test | ✘ TPS 9–10 on this bench |
+| 50-player test | ✘ TPS 11.8, mean 92 ms, p95 139 ms on this bench (best config) |
 | main-thread DB IO | ✔ none |
 | spark profiling | ✔ JFR profiles taken instead (the spark viewer needs upload, which is blocked here) |
 | memory stress (2 h+) | ✘ not run tonight |

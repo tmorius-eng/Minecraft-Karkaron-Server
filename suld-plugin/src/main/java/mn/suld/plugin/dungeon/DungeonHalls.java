@@ -105,7 +105,7 @@ public final class DungeonHalls implements Listener {
     // ------------------------------------------------------------------ lifecycle
 
     /** An empty world: no terrain, no structures, no caves; one void biome. */
-    static final class Void extends ChunkGenerator {
+    static final class VoidGenerator extends ChunkGenerator {
         @Override public boolean shouldGenerateNoise() { return false; }
         @Override public boolean shouldGenerateSurface() { return false; }
         @Override public boolean shouldGenerateCaves() { return false; }
@@ -126,7 +126,7 @@ public final class DungeonHalls implements Listener {
     public void start() {
         world = Bukkit.getWorld(WORLD);
         if (world == null) {
-            world = new WorldCreator(WORLD).generator(new Void()).generateStructures(false).createWorld();
+            world = new WorldCreator(WORLD).generator(new VoidGenerator()).generateStructures(false).createWorld();
         }
         if (world == null) {
             plugin.getLogger().severe("Dungeon halls: cannot create world " + WORLD + "; dungeons run in the open world.");
@@ -241,8 +241,8 @@ public final class DungeonHalls implements Listener {
             if (!busy.get(t).contains(s)) {
                 busy.get(t).add(s);
                 Hall h = new Hall(t, s, originOf(t, s));
-                hold(h, true);
-                f.complete(Optional.of(h));
+                // the slot's chunks may be unloaded: prepare them off the main thread, then hand the hall over
+                holdAsync(h).whenComplete((v, err) -> onMain(() -> f.complete(Optional.of(h))));
                 return f;
             }
         }
@@ -261,8 +261,7 @@ public final class DungeonHalls implements Listener {
         building.get(t).add(s);
         busy.get(t).add(s);
         Hall h = new Hall(t, s, originOf(t, s));
-        hold(h, true);
-        build(h.origin(), HallBlueprint.build(t), true, () -> { // the run keeps the tickets hold() placed
+        build(h.origin(), HallBlueprint.build(t), true, () -> { // build() loads the chunks async and leaves its tickets for the run
             building.get(t).remove(s);
             built.get(t).add(s);
             saveState();
@@ -286,7 +285,29 @@ public final class DungeonHalls implements Listener {
         hold(h, false);
     }
 
-    /** Plugin chunk tickets on the hall's chunks while a run uses it. */
+    /**
+     * Loads the hall's chunks asynchronously and tickets them for the run. A plugin ticket on an unloaded chunk would
+     * load (or generate) it synchronously on the main thread (World#addPluginChunkTicket), so tickets are only ever
+     * added to chunks that are already loaded.
+     */
+    private CompletableFuture<Void> holdAsync(Hall h) {
+        int r = HallBlueprint.extent();
+        int cx0 = (h.origin().getBlockX() - r) >> 4, cx1 = (h.origin().getBlockX() + r) >> 4;
+        int cz0 = (h.origin().getBlockZ() - r) >> 4, cz1 = (h.origin().getBlockZ() + r) >> 4;
+        List<CompletableFuture<?>> loads = new ArrayList<>();
+        for (int cx = cx0; cx <= cx1; cx++) {
+            for (int cz = cz0; cz <= cz1; cz++) {
+                loads.add(world.getChunkAtAsync(cx, cz, true).thenAccept(c -> onMain(() -> c.addPluginChunkTicket(plugin))));
+            }
+        }
+        return CompletableFuture.allOf(loads.toArray(new CompletableFuture[0]));
+    }
+
+    private void onMain(Runnable r) {
+        if (Bukkit.isPrimaryThread()) r.run(); else Bukkit.getScheduler().runTask(plugin, r);
+    }
+
+    /** Removes the run's chunk tickets (removal never loads anything). */
     private void hold(Hall h, boolean on) {
         int r = HallBlueprint.extent();
         int cx0 = (h.origin().getBlockX() - r) >> 4, cx1 = (h.origin().getBlockX() + r) >> 4;
