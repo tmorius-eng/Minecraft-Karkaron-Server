@@ -10,7 +10,8 @@ the README (local test server).
 |---|---|
 | `/menu` (or the clock in hotbar slot 9) | Main menu: character, class, quests, rank, shop, tutorial |
 | `/help`, `/tutorial` | Guide GUI · step-by-step guide for new players |
-| `/class`, `/profile`, `/exp`, `/skills` | Class GUI · character sheet · level/EXP · spells and click combos |
+| `/class`, `/profile`, `/exp` | Class GUI · character sheet · level/EXP |
+| `/skills` (`/tree`), `/skill <node>` | Skill-tree map (points, passive spells, spell modifiers, ultimate), spells list, builds, respec, search |
 | `/quest` | Storyline board (18 chapters); `/quest info` prints the active chapter; `/quest track` toggles the tracker (boss bar with arrow and distance to the objective's region) |
 | `/rankup`, `/lvlup` | Rank ladder (Ард → Хаан, costs ₮) · level rewards |
 | `/shop`, `/cosmetics`, `/buy` | Supplies and selling loot · tags/colours/join messages/emojis · credit store |
@@ -153,3 +154,22 @@ built-in tips about /daily, /quest, skills, dungeons, death and the shop).
 
 With Chunky installed, `world.pregenerate` pre-generates the playable area on first start (resumes after restarts)
 so exploring the steppe does not stall the server. Progress: `/chunky progress`.
+
+
+## Skill tree
+
+* Players spend **skill points** on `/skills` (a map: gold line = learned path, turquoise = next step, red link = pick one).
+  Points: one per level to 30 then one per two levels (44 at 60), +1 per three finished story chapters, +1 per five
+  discovered regions (max 4), plus admin grants. Left click learns / ranks up, right click refunds a rank, Shift+click
+  shows details. `F` (swap hands) while holding the class weapon casts the learned ultimate (60 resource, 45 s).
+* `/skills build save|load|delete|list <name>` (slots: `skills.builds.slots`), `/skills reset [defense|spell|offense]`
+  (confirmation, `skills.respec.coins-per-point`, 300 s cooldown, free up to level 10). **Мартагдлын Бөмбөрцөг**
+  (1 diamond + 4 ender pearls) refunds everything for free with no cooldown.
+* Admin (`suld.admin.skills`, included in `suld.admin`): `/skillsadmin inspect|grantpoints|unlock|reset|orb|fire <player> …`,
+  `reload` (re-read the data files), `validate` (report problems with exact file and field without applying).
+* **Content is data**: `plugins/SULD/skills/*.json` (copied from the jar on first start; edit and `/skillsadmin reload`).
+  A file with a problem is reported (file + field) and that class keeps its previous tree. Saved builds refer to node ids,
+  so renaming/reordering nodes is safe; removing a node refunds its points on the player's next join.
+* Storage: `suld_profiles.skill_data` (migration V10), one versioned JSON document per player. A newer or unreadable
+  document makes that login fail loudly instead of being overwritten.
+* Design, architecture, tests and QA record: `docs/SKILL_TREE_*.md`, `audit/skill-tree-status.json`.

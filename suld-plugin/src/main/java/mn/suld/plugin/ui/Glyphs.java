@@ -126,6 +126,8 @@ public final class Glyphs {
     public static final String GUI_COSMETICS = "\uE038";
     /** chest background frame 176x126 (framed slots) */
     public static final String GUI_FRAME = "\uE039";
+    /** chest background skillmap 176x126 (parchment map, toolbar row) */
+    public static final String GUI_SKILLMAP = "\uE03A";
 
     private Glyphs() {
     }

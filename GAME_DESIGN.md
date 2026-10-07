@@ -15,7 +15,7 @@ pay-to-win, no gambling mechanics.
 ## Classes
 
 Five classes. Each has active, passive, and ultimate skills via a class skill
-tree (later phase). Numbers below are **direction**, not final balance — all
+tree (built: `/skills`, see docs/SKILL_TREE_DESIGN.md). Numbers below are **direction**, not final balance — all
 real values are data-driven in config.
 
 | Class | Fantasy archetype | Role | Difficulty | DMG | DEF | Mobility |

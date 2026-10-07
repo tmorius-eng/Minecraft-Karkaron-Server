@@ -254,6 +254,13 @@ public final class SuldServices {
     /** Filled by SuldPlugin: id of the wild region at a player's feet, or null. */
     public volatile java.util.function.Function<org.bukkit.entity.Player, String> regionIdAt = p -> null;
 
+    /** Filled by SuldPlugin once the skill tree has loaded; may be null very early in startup. */
+    public volatile mn.suld.plugin.skill.SkillTreeService skillTree;
+
+    public mn.suld.plugin.skill.SkillTreeService skillTree() {
+        return skillTree;
+    }
+
     public MobService mobs() {
         return mobService;
     }

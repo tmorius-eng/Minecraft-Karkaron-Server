@@ -160,6 +160,10 @@ public final class HudService {
         if (style != null) lines.add(Component.text("  Цол: ", KEY).append(StyleFormat.rankBadge(style.rank(), true)));
         lines.add(row("Түвшин", Component.text(p.level(), NamedTextColor.GREEN)
                 .append(Component.text(toNext > 0 ? "  " + Math.round(frac * 100) + "%" : "  MAX", NamedTextColor.GRAY))));
+        if (services != null && services.skillTree() != null && profile.hasSelectedClass()) {
+            int avail = services.skillTree().available(player);
+            if (avail > 0) lines.add(row("Чадвар", Component.text("◆ " + avail + " оноо /skills", NamedTextColor.AQUA)));
+        }
         lines.add(Component.empty());
         lines.add(section(Glyphs.ICON_COIN, "Хөрөнгө"));
         lines.add(row("Зоос", Component.text(num(profile.currency()) + " ₮", NamedTextColor.GOLD)));

@@ -151,6 +151,8 @@ Nothing here should be discarded.
   `version`) to be hardened during the anti-dup slice.
 
 ### 5. What is missing (the bulk of the game — roadmapped)
+(Update: the class skill tree is built — see docs/SKILL_TREE_ARCHITECTURE.md and audit/skill-tree-status.json
+for what is complete, what needs a person with the game client, and what is not implemented.)
 Combat engine, skills, full item system, loot, mobs/bosses, dungeons, quests,
 clans, economy, achievements, the custom UI/HUD/TAB/rank/tag stack, world
 regions, spawn, resource-pack delivery service, web/API. See ROADMAP.md and the

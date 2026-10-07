@@ -46,6 +46,22 @@ class PluginDescriptorTest {
         }
     }
 
+    /** A plain YAML value containing ": " is a syntax error ("mapping values are not allowed here") that stops the plugin loading. */
+    @Test
+    void plainValuesNeverContainColonSpace() throws Exception {
+        int lineNo = 0;
+        for (String raw : lines()) {
+            lineNo++;
+            String t = raw.strip();
+            if (t.isEmpty() || t.startsWith("#") || t.startsWith("- ")) continue;
+            int colon = t.indexOf(": ");
+            if (colon < 0) continue;
+            String value = t.substring(colon + 2).strip();
+            if (value.isEmpty() || value.startsWith("\"") || value.startsWith("'") || value.startsWith("[") || value.startsWith("{")) continue;
+            assertFalse(value.contains(": "), "unquoted value contains ': ' at line " + lineNo + ": " + t);
+        }
+    }
+
     @Test
     void everyRegisteredCommandIsDeclared() throws Exception {
         List<String> declared = new ArrayList<>();

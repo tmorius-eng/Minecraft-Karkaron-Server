@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "class": "universal",
+  "nodes": [
+    {"id": "x1", "name": "Нүүдэлчний Мэдлэг", "category": "UTILITY", "icon": "BOOK", "x": 1, "y": 0, "cost": 1, "maxRank": 3, "level": 1, "tags": ["universal"],
+     "effects": [{"type": "stat", "key": "EXP_PCT", "value": 4}]},
+    {"id": "x2", "name": "Олзны Нүд", "category": "UTILITY", "icon": "GOLD_NUGGET", "x": 0, "y": 0, "cost": 1, "maxRank": 3, "level": 5, "tags": ["universal"],
+     "effects": [{"type": "stat", "key": "LOOT_PCT", "value": 5}]},
+    {"id": "x3", "name": "Уулын Гар", "category": "UTILITY", "icon": "IRON_PICKAXE", "x": 3, "y": 0, "cost": 1, "maxRank": 3, "level": 5, "tags": ["universal"],
+     "effects": [{"type": "stat", "key": "MINING_SPEED_PCT", "value": 15}]},
+    {"id": "x4", "name": "Салхин Мөр", "category": "UTILITY", "icon": "PHANTOM_MEMBRANE", "x": 4, "y": 0, "cost": 1, "maxRank": 3, "level": 10, "tags": ["universal"],
+     "effects": [{"type": "stat", "key": "DODGE_PCT", "value": 2}]},
+    {"id": "x5", "name": "Цаг Хугацааны Эзэн", "category": "UTILITY", "icon": "CLOCK", "x": 5, "y": 0, "cost": 1, "maxRank": 3, "level": 20, "tags": ["universal"],
+     "effects": [{"type": "stat", "key": "COOLDOWN_REDUCTION", "value": 5}]}
+  ],
+  "edges": [
+    ["root", "x1"], ["x1", "x2"], ["root", "x3"], ["x3", "x4"],
+    ["x4", "x5"]
+  ],
+  "exclusive": []
+}

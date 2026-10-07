@@ -3,6 +3,7 @@ package mn.suld.api.profile;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.progression.Progression;
 import mn.suld.api.quest.QuestState;
+import mn.suld.api.skill.tree.SkillState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,10 +40,11 @@ public final class PlayerProfile {
     private boolean dirty;
     private long currency;
     private QuestState questState;
+    private SkillState skillState;
 
     private PlayerProfile(UUID playerId, String name, PlayerClass playerClass,
                           Progression progression, Instant createdAt, Instant lastSeenAt,
-                          long version, long currency, QuestState questState) {
+                          long version, long currency, QuestState questState, SkillState skillState) {
         this.playerId = Objects.requireNonNull(playerId, "playerId");
         this.name = Objects.requireNonNull(name, "name");
         this.playerClass = playerClass;
@@ -52,20 +54,22 @@ public final class PlayerProfile {
         this.version = version;
         this.currency = Math.max(0, currency);
         this.questState = questState == null ? QuestState.NONE : questState;
+        this.skillState = skillState == null ? SkillState.NONE : skillState;
     }
 
     /** Create a brand-new profile for a first-time player (no class yet). */
     public static PlayerProfile createNew(UUID playerId, String name, Instant now) {
         Objects.requireNonNull(now, "now");
-        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L, 0L, QuestState.NONE);
+        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L, 0L, QuestState.NONE, SkillState.NONE);
     }
 
     /** Rehydrate a profile loaded from storage. Used by persistence adapters. */
     public static PlayerProfile restore(UUID playerId, String name, @Nullable PlayerClass playerClass,
                                         Progression progression, Instant createdAt, Instant lastSeenAt,
-                                        long version, long currency, QuestState questState) {
+                                        long version, long currency, QuestState questState,
+                                        @Nullable SkillState skillState) {
         return new PlayerProfile(playerId, name, playerClass, progression, createdAt, lastSeenAt,
-                version, currency, questState);
+                version, currency, questState, skillState);
     }
 
     public @NotNull UUID playerId() {
@@ -153,6 +157,15 @@ public final class PlayerProfile {
         touchInternal();
     }
 
+    public synchronized @NotNull SkillState skillState() {
+        return skillState;
+    }
+
+    public synchronized void skillState(SkillState skillState) {
+        this.skillState = skillState == null ? SkillState.NONE : skillState;
+        touchInternal();
+    }
+
     public synchronized @NotNull Instant lastSeenAt() {
         return lastSeenAt;
     }
@@ -175,11 +188,11 @@ public final class PlayerProfile {
 
     /** Everything that is stored, read under one lock so the row never mixes moments. */
     public record Snapshot(UUID playerId, String name, PlayerClass playerClass, Progression progression, Instant createdAt,
-                           Instant lastSeenAt, long version, long currency, QuestState questState) {
+                           Instant lastSeenAt, long version, long currency, QuestState questState, SkillState skillState) {
     }
 
     public synchronized Snapshot snapshot() {
-        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState);
+        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState);
     }
 
     /**

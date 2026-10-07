@@ -65,13 +65,18 @@ public final class CombatListener implements Listener {
         double attack = clazz.baseAttack() + (profile.progression().level() - 1) * 0.75;
         ItemInstance weapon = services.items().read(player.getInventory().getItemInMainHand()).orElse(null);
         if (weapon != null) attack += weapon.stat(ItemStat.ATTACK);
-        return attack;
+        mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
+        return tree == null ? attack : attack * tree.attackMultiplier(player);
     }
 
     private double critOf(Player player) {
         ItemInstance weapon = items.read(player.getInventory().getItemInMainHand()).orElse(null);
-        return 0.05 + (weapon == null ? 0 : weapon.stat(ItemStat.CRIT_CHANCE));
+        mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
+        return 0.05 + (weapon == null ? 0 : weapon.stat(ItemStat.CRIT_CHANCE)) + (tree == null ? 0 : tree.critChance(player));
     }
+
+    /** Victim id -> time of the critical hit just dealt (the skill tree's crit passives read and clear it). */
+    public static final java.util.Map<java.util.UUID, Long> CRIT_AT = new java.util.concurrent.ConcurrentHashMap<>();
 
     /** Victims of a critical SÜLD hit this tick (read and cleared by the damage-number display). */
     public static final java.util.Set<java.util.UUID> CRIT_HITS = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -94,7 +99,15 @@ public final class CombatListener implements Listener {
             // a fully drawn arrow does ~6 vanilla damage: scale the SÜLD attack by how hard it was drawn
             player = p;
             scale = Math.max(0.25, Math.min(1.4, event.getDamage() / 6.0));
-            if (arrow.getScoreboardTags().contains("suld_volley")) scale *= 0.9;
+            mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
+            mn.suld.api.skill.tree.SkillBuild skill = tree == null ? mn.suld.api.skill.tree.SkillBuild.EMPTY : tree.build(p);
+            boolean single = skill.has(mn.suld.api.skill.tree.KeystoneKind.NEG_SUMNII_KHUVI);
+            if (arrow.getScoreboardTags().contains("suld_volley")) {
+                scale *= 0.9 * (1 + skill.mod(mn.suld.api.skill.Spell.OLON_SUM, mn.suld.api.skill.tree.ModKey.DAMAGE_PCT) / 100.0)
+                        * (tree == null ? 1 : tree.spellDamageMultiplier(p)) * (single ? 0.7 : 1.0);
+            } else if (single) {
+                scale *= 1.4;
+            }
             Integer left = EMPOWERED_ARROWS.get(p.getUniqueId());
             Long until = EMPOWERED_UNTIL.get(p.getUniqueId());
             if (until != null && until < System.currentTimeMillis()) {
@@ -113,10 +126,13 @@ public final class CombatListener implements Listener {
         if (services.profiles().cached(player.getUniqueId()).isEmpty()) {
             return;
         }
-        DamageResult result = calculator.compute(attackOf(services, player) * scale, critOf(player), 1.5, 0.0, ThreadLocalRandomRoll());
+        mn.suld.plugin.skill.SkillTreeService skillTree = services.skillTree();
+        DamageResult result = calculator.compute(attackOf(services, player) * scale, critOf(player),
+                skillTree == null ? 1.5 : skillTree.critMultiplier(player), 0.0, ThreadLocalRandomRoll());
         event.setDamage(result.finalDamage());
         if (result.critical()) {
             CRIT_HITS.add(event.getEntity().getUniqueId());
+            CRIT_AT.put(event.getEntity().getUniqueId(), System.currentTimeMillis());
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1f, 1.2f);
         }
     }
@@ -151,7 +167,9 @@ public final class CombatListener implements Listener {
                 mn.suld.api.analytics.AnalyticsEventType.FIRST_MOB_KILL, killer.getUniqueId()));
 
         int fromLevel = profile.progression().level();
+        mn.suld.plugin.skill.SkillTreeService skillTree = services.skillTree();
         long expAmount = services.boosts().apply(killer.getUniqueId(), def.scaledExp());
+        if (skillTree != null) expAmount = Math.round(expAmount * skillTree.expMultiplier(killer));
         ExpGainResult exp = services.progression().grantExp(profile, expAmount, ExpSource.MOB_KILL);
         killer.sendMessage(Messages.info("+" + expAmount + " EXP (" + def.displayName() + ")"));
         services.clans().contribute(killer.getUniqueId(), SuldContent.CLAN_EXP_PER_MOB_KILL);
@@ -161,7 +179,11 @@ public final class CombatListener implements Listener {
 
         quests.onMobKilled(killer, profile, mobId);
 
-        for (ItemInstance inst : lootRoller.roll(SuldContent.lootTableFor(def.lootTableId()), "mob:" + mobId)) {
+        java.util.List<ItemInstance> drops = new java.util.ArrayList<>(lootRoller.roll(SuldContent.lootTableFor(def.lootTableId()), "mob:" + mobId));
+        if (skillTree != null && skillTree.extraLootRoll(killer)) {
+            drops.addAll(lootRoller.roll(SuldContent.lootTableFor(def.lootTableId()), "mob:" + mobId));
+        }
+        for (ItemInstance inst : drops) {
             ItemDefinition idef = SuldContent.definitionFor(inst.definitionId());
             if (idef == null) {
                 continue;

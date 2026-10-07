@@ -204,3 +204,18 @@ world:
   pregenerate:
     enabled: true
     radius: 2000
+
+# ---------------------------------------------------------------------------
+# Skill tree (/skills). The node data lives in plugins/SULD/skills/*.json (copied from the jar on first start,
+# validated on every start and on /skillsadmin reload; a broken class keeps its previous tree and the exact file and
+# field are logged). Points come from levels, finished story chapters, discovered regions and admin grants.
+# ---------------------------------------------------------------------------
+skills:
+  respec:
+    cooldown-seconds: 300       # between two refunds (an Orb of Oblivion ignores it)
+    coins-per-point: 25         # price per refunded point; free up to free-level
+    free-level: 10
+  builds:
+    slots: 3                    # saved builds per player (/skills build save <name>)
+  ultimate:
+    resource-cost: 60           # class resource spent by the F ultimate (45 s cooldown)

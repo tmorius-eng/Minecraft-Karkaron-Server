@@ -123,6 +123,10 @@ public final class OnboardingService implements Listener {
             var def = services.quests().definition(q.questId()).orElse(null);
             if (def != null) hints.add("Эрэл: " + def.title() + " " + q.progress() + "/" + def.requiredCount() + " — заагч дээд талд");
         }
+        if (services.skillTree() != null && services.skillTree().available(p) > 0) {
+            hints.add("◆ " + services.skillTree().available(p) + " чадварын оноо байна — /skills (газрын зураг дээр нод нээ)");
+            hints.add("◆ Чадварын оноогоо зарцуул: /skills");
+        }
         if (level < 5) hints.add("Хотын хаалгаар гарч мангас ан — зүүн зүгт Хэрлэн (олз, EXP)");
         if (hasLoot(p)) hints.add("Олзоо /shop-д зарж зоос ол");
         Rank next = services.styles().of(p.getUniqueId()).rank().next().orElse(null);

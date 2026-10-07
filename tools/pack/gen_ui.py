@@ -329,6 +329,155 @@ def blank_item() -> None:
         fh.write("\n")
 
 
+# ----------------------------------------------------------------------------------------- skill map
+
+PARCH = (212, 188, 138)
+PARCH_D = (172, 146, 98)
+BRONZE = (96, 64, 30)
+BRONZE_L = (150, 104, 44)
+LEATHER = (52, 36, 22)
+TURQ = (42, 196, 180)
+
+
+def gui_skillmap(preview: str | None) -> None:
+    """The skill-map chest: aged parchment with contour lines and steppe motifs, a bronze frame with turquoise
+    corner studs, and a dark leather toolbar row. Procedural and deterministic (no external art)."""
+    import random
+    rows = 6
+    height = 17 + rows * 18 + 1
+    img = Image.new("RGBA", (176, height), LEATHER + (255,))
+    px = img.load()
+    rnd = random.Random(20240607)
+    # parchment area (the five map rows)
+    y0, y1 = 17, 17 + 5 * 18
+    for y in range(y0, y1):
+        for x in range(1, 175):
+            n = rnd.randint(-7, 7)
+            edge = min(x - 1, 174 - x, y - y0, y1 - 1 - y)
+            shade = 0 if edge > 9 else (9 - edge) * 3
+            c = tuple(max(0, min(255, PARCH[i] + n - shade)) for i in range(3))
+            px[x, y] = c + (255,)
+    d = ImageDraw.Draw(img)
+    # contour lines (low hills) and little grass ticks: the steppe
+    for k in range(7):
+        base = y0 + 8 + k * 11
+        phase = rnd.random() * 6.28
+        import math
+        prev = None
+        for x in range(4, 172):
+            y = int(base + 3 * math.sin(x / 11.0 + phase) + 2 * math.sin(x / 5.0 + phase * 2))
+            if y0 + 3 <= y < y1 - 3:
+                px[x, y] = tuple(max(0, c - 22) for c in PARCH_D) + (255,)
+    for _ in range(46):
+        x, y = rnd.randint(8, 166), rnd.randint(y0 + 6, y1 - 8)
+        col = tuple(max(0, c - 34) for c in PARCH_D) + (255,)
+        px[x, y] = col
+        px[x - 1, y - 1] = col
+        px[x + 1, y - 1] = col
+    # a compass rose in the lower-left of the map, a sun in the upper-right (decor, behind the icons)
+    cx, cy = 14, y1 - 14
+    for i in range(-5, 6):
+        px[cx + i, cy] = BRONZE + (255,)
+        px[cx, cy + i] = BRONZE + (255,)
+    px[cx, cy - 6] = (176, 40, 40, 255)
+    # bronze frame around the map and a gold inner line
+    d.rectangle([0, y0 - 1, 175, y1], outline=BRONZE)
+    d.rectangle([1, y0, 174, y1 - 1], outline=BRONZE_L)
+    # header
+    d.rectangle([0, 0, 175, 16], fill=LEATHER)
+    d.line([0, 16, 175, 16], fill=GOLD)
+    for ox in (3, 164):
+        for (dx, dy) in ((1, 0), (2, 0), (0, 1), (3, 1), (1, 2), (2, 2), (0, 3), (3, 3), (1, 4), (2, 4)):
+            img.putpixel((ox + dx * 2, 4 + dy * 2), GOLD + (255,))
+    # toolbar row: nine bronze-rimmed wells for the buttons
+    d.line([0, y1, 175, y1], fill=GOLD)
+    for c in range(9):
+        x, y = 8 + c * 18, 18 + 5 * 18
+        d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=(34, 24, 14), outline=BRONZE_L)
+    # turquoise studs in the frame corners
+    for (x, y) in ((2, y0 + 1), (173, y0 + 1), (2, y1 - 2), (173, y1 - 2)):
+        for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+            img.putpixel((x + dx - (1 if x > 100 else 0), y + dy - (1 if y > 100 else 0)), TURQ + (255,))
+    d.rectangle([0, 0, 175, height - 1], outline=BRONZE)
+    add_bitmap("GUI_SKILLMAP", img, "gui/skillmap", height, 13, f"chest background skillmap 176x{height} (parchment map, toolbar row)")
+    if preview:
+        img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_skillmap.png"))
+
+
+TREE_COLORS = {
+    "off": ((84, 62, 36), (50, 36, 20)),
+    "on": ((250, 196, 60), (150, 100, 20)),
+    "next": ((60, 224, 204), (20, 120, 110)),
+    "red": ((226, 64, 64), (120, 24, 24)),
+}
+
+
+def tree_items() -> None:
+    """Connector lines between skill nodes: horizontal, vertical and both diagonals in four states (unlearned,
+    learned path, next step, exclusive choice). Each is an item model scaled to fill an 18 px slot so neighbours join."""
+    os.makedirs(os.path.join(RP, "textures", "item"), exist_ok=True)
+    os.makedirs(os.path.join(RP, "models", "item"), exist_ok=True)
+    os.makedirs(os.path.join(RP, "items"), exist_ok=True)
+    for color, (main, dark) in TREE_COLORS.items():
+        for kind in ("h", "v", "d1", "d2"):
+            img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+            d = ImageDraw.Draw(img)
+            if kind == "h":
+                d.rectangle([0, 7, 15, 8], fill=main + (255,))
+                d.line([0, 9, 15, 9], fill=dark + (255,))
+            elif kind == "v":
+                d.rectangle([7, 0, 8, 15], fill=main + (255,))
+                d.line([9, 0, 9, 15], fill=dark + (255,))
+            else:
+                for i in range(16):
+                    x = i if kind == "d1" else 15 - i
+                    for dx in (0, 1):
+                        xx = min(15, max(0, x + dx - (1 if kind == "d2" else 0)))
+                        img.putpixel((xx, i), main + (255,))
+                    xs = min(15, max(0, x + 2 - (1 if kind == "d2" else 0)))
+                    if img.getpixel((xs, i))[3] == 0:
+                        img.putpixel((xs, i), dark + (255,))
+            name = f"tree_{kind}_{color}"
+            img.save(os.path.join(RP, "textures", "item", name + ".png"))
+            with open(os.path.join(RP, "models", "item", name + ".json"), "w", encoding="utf-8") as fh:
+                json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": f"suld:item/{name}"},
+                           "display": {"gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1.125, 1.125, 1.125]}}}, fh, indent=2)
+                fh.write("\n")
+            with open(os.path.join(RP, "items", name + ".json"), "w", encoding="utf-8") as fh:
+                json.dump({"model": {"type": "minecraft:model", "model": f"suld:item/{name}"}}, fh, indent=2)
+                fh.write("\n")
+
+
+def orb_item() -> None:
+    """Orb of Oblivion: a violet sphere with a bright core (resets the skill tree)."""
+    import math
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y in range(16):
+        for x in range(16):
+            dx, dy = x - 7.5, y - 7.5
+            r = math.hypot(dx, dy)
+            if r <= 7.2:
+                t = r / 7.2
+                lx, ly = x - 5.5, y - 5.0
+                hi = max(0.0, 1 - math.hypot(lx, ly) / 5.5)
+                base = (int(70 + 120 * (1 - t) + 80 * hi), int(18 + 40 * (1 - t) + 120 * hi), int(120 + 100 * (1 - t) + 100 * hi))
+                if 0.55 < t < 0.75 and (x + y) % 3 == 0:
+                    base = (200, 90, 230)
+                img.putpixel((x, y), tuple(min(255, c) for c in base) + (255,))
+    for (x, y) in ((8, 8), (7, 7), (8, 7), (7, 8)):
+        img.putpixel((x, y), (250, 220, 255, 255))
+    img.putpixel((3, 6), (255, 255, 255, 255))
+    img.putpixel((12, 3), (230, 180, 255, 255))
+    name = "orb_oblivion"
+    img.save(os.path.join(RP, "textures", "item", name + ".png"))
+    with open(os.path.join(RP, "models", "item", name + ".json"), "w", encoding="utf-8") as fh:
+        json.dump({"parent": "minecraft:item/generated", "textures": {"layer0": f"suld:item/{name}"}}, fh, indent=2)
+        fh.write("\n")
+    with open(os.path.join(RP, "items", name + ".json"), "w", encoding="utf-8") as fh:
+        json.dump({"model": {"type": "minecraft:model", "model": f"suld:item/{name}"}}, fh, indent=2)
+        fh.write("\n")
+
+
 # ----------------------------------------------------------------------------------------- java
 
 def write_java() -> None:
@@ -396,7 +545,10 @@ def main() -> None:
     gui_menu("welcome", WELCOME, args.preview, rows=3)
     gui_grid("cosmetics", COSMETICS, args.preview)
     gui_frame("frame", args.preview)
+    gui_skillmap(args.preview)
     blank_item()
+    tree_items()
+    orb_item()
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)

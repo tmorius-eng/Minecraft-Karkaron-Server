@@ -72,6 +72,7 @@ public final class InMemoryProfileRepository implements ProfileRepository {
                 source.lastSeenAt(),
                 source.version(),
                 source.currency(),
-                source.questState());
+                source.questState(),
+                source.skillState());
     }
 }

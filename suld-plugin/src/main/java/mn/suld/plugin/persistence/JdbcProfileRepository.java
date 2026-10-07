@@ -29,7 +29,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     private static final String SELECT =
             "SELECT name, class_id, level, exp_into_level, created_at, last_seen_at, version, "
-                    + "currency, active_quest_id, quest_progress, quest_completed "
+                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data "
                     + "FROM suld_profiles WHERE player_uuid = ?";
 
     private final DataSource dataSource;
@@ -70,13 +70,23 @@ public final class JdbcProfileRepository implements ProfileRepository {
                             Instant.ofEpochMilli(rs.getLong("last_seen_at")),
                             rs.getLong("version"),
                             rs.getLong("currency"),
-                            questState);
+                            questState,
+                            readSkills(playerId, rs.getString("skill_data")));
                     return Optional.of(profile);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to load profile " + playerId, ex);
             }
         }, executor);
+    }
+
+    /** Unreadable skill data must stop the load: saving the profile afterwards would erase the player's build. */
+    private static mn.suld.api.skill.tree.SkillState readSkills(UUID playerId, String json) {
+        try {
+            return mn.suld.api.skill.tree.SkillState.fromJson(json);
+        } catch (IllegalArgumentException ex) {
+            throw new RepositoryException("Skill data of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
+        }
     }
 
     @Override
@@ -144,6 +154,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 ps.setString(10, q.questId().isEmpty() ? null : q.questId());
                 ps.setInt(11, q.progress());
                 ps.setBoolean(12, q.completed());
+                ps.setString(13, snap.skillState().toJson());
                 ps.executeUpdate();
                 profile.markPersisted(version);
                 return profile;

@@ -146,10 +146,23 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("rankup", mc.rankup());
         registerTab("lvlup", mc.lvlup());
         registerTab("credits", mc.credits());
-        registerTab("skills", mc.skills());
         mn.suld.plugin.skill.SkillService skills = new mn.suld.plugin.skill.SkillService(this, services);
         getServer().getPluginManager().registerEvents(skills, this);
         skills.start();
+        mn.suld.plugin.skill.SkillTreeService skillTree = new mn.suld.plugin.skill.SkillTreeService(this, services);
+        skillTree.skills(skills);
+        services.skillTree = skillTree;
+        getServer().getPluginManager().registerEvents(skillTree, this);
+        skillTree.start();
+        mn.suld.plugin.skill.OrbOfOblivion.registerRecipe(this);
+        mn.suld.plugin.gui.SkillMapMenu skillMap = new mn.suld.plugin.gui.SkillMapMenu(this, services);
+        skillMap.menus(menus);
+        menus.skillMap(skillMap);
+        getServer().getPluginManager().registerEvents(skillMap, this);
+        mn.suld.plugin.command.SkillCommands skillCommands = new mn.suld.plugin.command.SkillCommands(services, skillMap, menus);
+        registerTab("skills", skillCommands.skills());
+        registerTab("skill", skillCommands.skill());
+        registerTab("skillsadmin", skillCommands.admin());
         services.quests().onChange((p, pr) -> services.hud().update(p, pr));
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
@@ -225,6 +238,9 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (services != null && services.skillTree != null) {
+            services.skillTree.stop();
+        }
         if (trades != null) {
             trades.shutdown();
         }

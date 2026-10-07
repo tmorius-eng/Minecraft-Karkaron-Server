@@ -80,6 +80,12 @@ public final class Menu implements InventoryHolder {
         }
     }
 
+    /** Empties the menu in place (the title/background stays): used by menus that redraw on every click. */
+    public void clear() {
+        inventory.clear();
+        clicks.clear();
+    }
+
     public void open(Player p) {
         p.openInventory(inventory);
     }
@@ -92,6 +98,16 @@ public final class Menu implements InventoryHolder {
         ItemStack it = item(Material.PAPER, name, lore);
         ItemMeta m = it.getItemMeta();
         m.setItemModel(BLANK);
+        it.setItemMeta(m);
+        return it;
+    }
+
+    /** A pack-drawn item (e.g. a map connector): PAPER wearing the model {@code suld:<model>}; no tooltip when {@code lore} is null. */
+    public static ItemStack model(String model, Component name, List<Component> lore) {
+        ItemStack it = item(Material.PAPER, name == null ? Component.empty() : name, lore == null ? List.of() : lore);
+        ItemMeta m = it.getItemMeta();
+        m.setItemModel(new NamespacedKey("suld", model));
+        if (lore == null) m.setHideTooltip(true);
         it.setItemMeta(m);
         return it;
     }

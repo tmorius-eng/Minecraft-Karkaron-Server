@@ -190,7 +190,10 @@ public final class Menus {
                 List.of(b("Цол, нэрийн өнгө, чатын өнгө, мэндчилгээ, эможи.")), List.of(), "Дарж нээх")), (pl, c) -> cosmetics(pl));
         m.set(32, Menu.item(Material.WRITABLE_BOOK, Menu.title("Эрэл · /quest", GOLD), List.of()), (pl, c) -> quests(pl));
         m.set(28, Menu.item(Material.BLAZE_POWDER, Menu.title("Ур чадвар · /skills", RED), Menu.lore(RED,
-                List.of(b("Ангийн 4 шившлэг, хослол, нөөц.")), List.of(), "Дарж нээх")), (pl, c) -> skills(pl));
+                List.of(b("Чадварын мод: идэвхтэй ба идэвхгүй шившлэг, өөрчлөлт.")), List.of(), "Дарж нээх")), (pl, c) -> {
+            if (skillMap != null) skillMap.open(pl);
+            else skills(pl);
+        });
         m.set(33, Menu.item(Material.WHITE_BANNER, Menu.title("Овог · /clan info", NamedTextColor.AQUA), List.of()), (pl, c) -> {
             pl.closeInventory();
             pl.performCommand("clan info");
@@ -280,6 +283,12 @@ public final class Menus {
 
     private static final Material[] SPELL_ICON = {Material.BLAZE_POWDER, Material.FIRE_CHARGE, Material.FEATHER, Material.NETHER_STAR};
 
+    private SkillMapMenu skillMap;
+
+    public void skillMap(SkillMapMenu map) {
+        this.skillMap = map;
+    }
+
     public void skills(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
@@ -314,6 +323,10 @@ public final class Menus {
             slot += 2;
         }
         m.set(18, Menu.item(Material.ARROW, Menu.title("« Дүр", GOLD), List.of()), (pl, c) -> profile(pl));
+        if (skillMap != null) {
+            m.set(22, Menu.item(Material.FILLED_MAP, Menu.title("Чадварын газрын зураг", TextColor.fromHexString("#2AC4B4")),
+                    List.of(b("Оноо зарцуулж шившлэгээ хөгжүүл."))), (pl, c) -> skillMap.open(pl));
+        }
         m.open(p);
     }
 

@@ -26,7 +26,7 @@ Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (215 test
   bosses; world events; two world-unique relics; clans and parties.
 - **Hardcore death:** loot and EXP loss, gear wear, soul state.
 - **UI:** Mongolian-themed resource pack, sidebar, TAB, chat badges, GUIs for every command (menu, help, tutorial,
-  class, skills, quests, rank-up, level rewards, cosmetics, shop, credit store, daily reward, leaderboards).
+  class, skill tree (/skills map), quests, rank-up, level rewards, cosmetics, shop, credit store, daily reward, leaderboards).
 - **Retention and social:** daily streak reward, daily hunting tasks, `/top` leaderboards, `/trade`, personal
   steppe horses, blacksmith upgrades, level milestones, rank ladder, cosmetics bought with coins or store credits
   (cosmetics only). Damage numbers and mob health bars.
