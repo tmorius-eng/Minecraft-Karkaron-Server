@@ -98,6 +98,7 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.item.EquipmentService equipment = new mn.suld.plugin.item.EquipmentService(this, services);
         services.equipment = equipment;
         getServer().getPluginManager().registerEvents(equipment, this);
+        getServer().getPluginManager().registerEvents(services.soulbound(), this);
         equipment.start();
         // two online players holding the same item identity: one copy is a duplicate
         getServer().getScheduler().runTaskTimer(this, itemService::sweepOnline, TICKS_PER_SECOND * 30, TICKS_PER_SECOND * 30);
@@ -114,6 +115,7 @@ public final class SuldPlugin extends JavaPlugin {
         services.woundFactor = deaths::woundFactor;
         mn.suld.plugin.command.DeathCommands deathCommands = new mn.suld.plugin.command.DeathCommands(this, services, deaths);
         for (String c : List.of("revive", "deathstatus", "deathinfo", "deathrevive", "deathreset")) registerTab(c, deathCommands);
+        registerTab("classgear", new mn.suld.plugin.command.ClassGearCommand(services));
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 
         worldBuild = new mn.suld.plugin.worldbuild.WorldBuildService(this, config.world());

@@ -140,7 +140,57 @@ public final class ClassWeapons implements Listener {
     public ItemStack starter(PlayerClass c, int level, Player owner) {
         ItemDefinition d = definition(c, tierFor(level));
         ItemInstance i = services.itemService().generate(d, d.rarity(), level, owner == null ? null : owner.getUniqueId(), "starter");
+        if (owner != null) remember(owner, i.uuid());
         return services.itemService().stack(i, owner, 1);
+    }
+
+    /** The identity of a player's class weapon, kept on the player (survives in the world's player data). */
+    private org.bukkit.NamespacedKey weaponKey() {
+        return new org.bukkit.NamespacedKey(plugin, "class_weapon");
+    }
+
+    private void remember(Player p, java.util.UUID id) {
+        p.getPersistentDataContainer().set(weaponKey(), org.bukkit.persistence.PersistentDataType.STRING, id.toString());
+    }
+
+    private java.util.UUID remembered(Player p) {
+        String s = p.getPersistentDataContainer().get(weaponKey(), org.bukkit.persistence.PersistentDataType.STRING);
+        try {
+            return s == null ? null : java.util.UUID.fromString(s);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public enum Recovery { HAS_IT, RESTORED, NO_CLASS, NO_ROOM }
+
+    /**
+     * {@code /classgear recover}: idempotent. If the player carries (inventory, armour, ender chest) a class weapon of
+     * their class bound to them, nothing happens. Otherwise the weapon is rebuilt at the tier of their level with the
+     * SAME identity as before when it is known — so an old copy that resurfaces is a duplicate the item sweep removes.
+     */
+    public Recovery recover(Player p) {
+        PlayerClass c = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
+        if (c == null) return Recovery.NO_CLASS;
+        List<ItemStack> all = new ArrayList<>(java.util.Arrays.asList(p.getInventory().getContents()));
+        all.addAll(java.util.Arrays.asList(p.getEnderChest().getContents()));
+        all.add(p.getItemOnCursor());
+        for (ItemStack it : all) {
+            ItemInstance ii = it == null ? null : services.items().read(it).orElse(null);
+            if (ii == null) continue;
+            Held h = parse(ii.definitionId()).orElse(null);
+            if (h != null && h.clazz() == c && p.getUniqueId().equals(ii.boundTo())) return Recovery.HAS_IT;
+        }
+        if (p.getInventory().firstEmpty() < 0) return Recovery.NO_ROOM;
+        int level = services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
+        ItemDefinition d = definition(c, tierFor(level));
+        java.util.UUID id = remembered(p);
+        ItemInstance i = id == null
+                ? services.itemService().generate(d, d.rarity(), level, p.getUniqueId(), "recover")
+                : services.itemService().generator().generate(d, d.rarity(), level, mn.suld.api.loot.Rng.threadLocal(), "recover", p.getUniqueId(), id);
+        remember(p, i.uuid());
+        p.getInventory().addItem(services.itemService().stack(i, p, 1));
+        return Recovery.RESTORED;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -173,12 +223,17 @@ public final class ClassWeapons implements Listener {
                 if (c != null) h = new Held(c, 0);
             }
             if (h == null || h.tier() >= want) continue;
+            // only this player's own class weapon: never one bound to someone else (it used to be re-bound here)
+            if (ii.boundTo() != null && !ii.boundTo().equals(p.getUniqueId())) continue;
+            PlayerClass mine = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
+            if (mine != null && h.clazz() != mine) continue;
             ItemDefinition next = definition(h.clazz(), want);
             // the same item (identity, binding) in its next form: new name, model, stats and affixes
             ItemInstance rolled = services.itemService().generator().generate(next, next.rarity(), level, mn.suld.api.loot.Rng.threadLocal(),
                     "upgrade", p.getUniqueId(), ii.uuid());
             ItemStack up = services.itemService().stack(rolled, p, 1);
             p.getInventory().setItem(i, up);
+            remember(p, rolled.uuid());
             changed = true;
             if (announce) {
                 Line l = LINES.get(h.clazz());

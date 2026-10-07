@@ -71,6 +71,7 @@ public final class SuldServices {
     private final AnalyticsSink analytics;
     private final EventDispatcher events;
     private final ItemFactory itemFactory;
+    private final mn.suld.plugin.item.SoulboundGuard soulboundGuard;
     private final HudService hudService;
     private final QuestService questService;
     private final MobService mobService;
@@ -143,6 +144,7 @@ public final class SuldServices {
 
         // Vertical Slice 1 services.
         this.itemFactory = new ItemFactory(plugin);
+        this.soulboundGuard = new mn.suld.plugin.item.SoulboundGuard(itemFactory);
         this.hudService = new HudService(progressionService);
         this.questService = new QuestService(progressionService);
         this.questService.items(itemFactory);
@@ -202,6 +204,11 @@ public final class SuldServices {
                 : new mn.suld.plugin.persistence.JdbcDeathRepository(dataSource,
                         SqlDialect.forStorage(config.database().type()), deathExecutor);
         this.classWeapons = new mn.suld.plugin.item.ClassWeapons(plugin, this);
+    }
+
+    /** The shared "never leaves the owner" guard of soulbound items. */
+    public mn.suld.plugin.item.SoulboundGuard soulbound() {
+        return soulboundGuard;
     }
 
     public mn.suld.api.persistence.DeathRepository deathRepository() {

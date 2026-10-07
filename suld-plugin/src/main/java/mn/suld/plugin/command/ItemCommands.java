@@ -114,7 +114,9 @@ public final class ItemCommands {
                         else unequip(p, slot);
                     }
                     case "sell" -> confirmable(p, "sell", a, () -> sell(p));
-                    case "destroy" -> confirmable(p, "destroy", a, () -> destroy(p));
+                    case "destroy" -> {
+                        if (!undestroyable(p)) confirmable(p, "destroy", a, () -> destroy(p));
+                    }
                     case "bind" -> confirmable(p, "bind", a, () -> bind(p));
                     case "salvage" -> confirmable(p, "salvage", a, () -> salvage(p));
                     case "recipes" -> recipes(p);
@@ -272,13 +274,23 @@ public final class ItemCommands {
         services.hud().update(p, pr);
     }
 
-    private void destroy(Player p) {
-        ItemService.Checked c = held(p);
-        if (c == null) return;
+    /** Relics and soulbound (class) gear are refused up front, before the confirmation is even asked. */
+    private boolean undestroyable(Player p) {
         if (services.relics().items().isRelic(p.getInventory().getItemInMainHand())) {
             p.sendMessage(Messages.error("Дурсгалыг устгах боломжгүй."));
-            return;
+            return true;
         }
+        ItemInstance i = items().factory().read(p.getInventory().getItemInMainHand()).orElse(null);
+        if (i != null && i.soulbound()) {
+            p.sendMessage(Messages.error("Сүнсэнд холбоотой (ангийн) эд зүйлийг устгах боломжгүй."));
+            return true;
+        }
+        return false;
+    }
+
+    private void destroy(Player p) {
+        ItemService.Checked c = held(p);
+        if (c == null || undestroyable(p)) return;
         p.getInventory().setItemInMainHand(null);
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.destroy", c.item().definitionId() + "-" + c.item().uuid(), ""));
         p.sendMessage(Messages.success("Устгагдлаа."));

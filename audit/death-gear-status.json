@@ -1,21 +1,23 @@
 {
   "audited": "2026-10-07",
   "commit": "f123253",
-  "stage": "A (audit) + B (spec) + C1 (death and recovery implemented)",
+  "stage": "A (audit) + B (spec) + C1 (death and recovery) + C2 (soulbound class weapon)",
   "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
   "subsystems": {
     "classWeaponBinding": {
       "status": "FUNCTIONAL_BUT_INCOMPLETE",
-      "evidence": "items/weapons.json:480-917 (SOULBOUND); ItemGenerator.java:51-53"
+      "evidence": "items/weapons.json (SOULBOUND); ClassWeapons.remember (suld:class_weapon on the player)",
+      "note": "canonical UUID on the player PDC until the C3 profile class_gear record"
     },
     "classWeaponUpgrade": {
-      "status": "BROKEN",
-      "evidence": "ClassWeapons.java:161-182",
-      "note": "re-binds any lower-tier class weapon to the holder (SB-1); scans inventory only"
+      "status": "COMPLETE",
+      "evidence": "ClassWeapons.upgrade",
+      "note": "only the holder's own class weapon of their class, same UUID; live-tested with a foreign copy (left at tier 1, still bound to its owner)"
     },
     "classWeaponRecovery": {
-      "status": "NOT_IMPLEMENTED",
-      "evidence": "ItemCommands.java:571-603 (admin give only)"
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "evidence": "ClassWeapons.recover; command/ClassGearCommand.java",
+      "note": "idempotent, same UUID, 10 min player cooldown only on a restore, staff path, audited; live-tested. Extra copies are left to the existing duplicate sweep (no quarantine step in recover yet); armour pieces in C3"
     },
     "classArmor": {
       "status": "NOT_IMPLEMENTED",
@@ -32,8 +34,9 @@
         "evidence": "EquipmentService.java:420-429"
       },
       "hopperGroundPickup": {
-        "status": "NOT_IMPLEMENTED",
-        "evidence": "no InventoryPickupItemEvent handler"
+        "status": "COMPLETE",
+        "evidence": "SoulboundGuard.onHopperPickup",
+        "note": "code path; the weapon can no longer reach the ground (ClassSelectionGui full-inventory fix)"
       },
       "death": {
         "status": "COMPLETE",
@@ -44,8 +47,9 @@
         "evidence": "TradeService.java:252-264"
       },
       "tradeViaShulkerOrBundle": {
-        "status": "NOT_IMPLEMENTED",
-        "evidence": "TradeService.java:267-277 (relics only)"
+        "status": "COMPLETE",
+        "evidence": "TradeService.tradable + SoulboundGuard.holdsBound",
+        "note": "code; not live-tested this stage"
       },
       "sell": {
         "status": "COMPLETE",
@@ -56,25 +60,28 @@
         "evidence": "ItemEconomy.java:21"
       },
       "destroyCommand": {
-        "status": "BROKEN",
-        "evidence": "ItemCommands.java:275-286",
-        "note": "deletes class weapons; message at EquipmentService.java:413 suggests it"
+        "status": "COMPLETE",
+        "evidence": "ItemCommands.undestroyable",
+        "note": "refused before the confirmation; live-tested"
       },
       "containers": {
-        "status": "NOT_IMPLEMENTED",
-        "evidence": "only relics guarded: RelicListener.java:92-123"
+        "status": "COMPLETE",
+        "evidence": "SoulboundGuard.onClick/onDrag/onPot",
+        "note": "every non-player top inventory incl. ender chest, anvil, grindstone, smithing, crafter; live-tested chest/shulker/hopper/anvil; decorated pot code only"
       },
       "hopperMove": {
-        "status": "NOT_IMPLEMENTED",
-        "evidence": "RelicListener.java:125-130 (relics only)"
+        "status": "COMPLETE",
+        "evidence": "SoulboundGuard.onHopper"
       },
       "itemFramesArmorStands": {
-        "status": "NOT_IMPLEMENTED",
-        "evidence": "RelicListener.java:162-177 (relics only); CityProtectionListener.java:208-219 city only"
+        "status": "COMPLETE",
+        "evidence": "SoulboundGuard.onInteractEntity/onArmorStand",
+        "note": "live-tested item frame + armour stand; allay/fox/dolphin code only"
       },
       "bundles": {
-        "status": "NOT_IMPLEMENTED",
-        "evidence": "RelicService.java:208-224 (relics only)"
+        "status": "COMPLETE",
+        "evidence": "SoulboundGuard.onClick (isBundle)",
+        "note": "live-tested"
       },
       "forgedData": {
         "status": "FUNCTIONAL_BUT_INCOMPLETE",
@@ -83,6 +90,16 @@
       "duplicates": {
         "status": "FUNCTIONAL_BUT_INCOMPLETE",
         "evidence": "ItemService.java:262,303-325"
+      },
+      "craftingGrid": {
+        "status": "COMPLETE",
+        "evidence": "SoulboundGuard.onCraft",
+        "note": "never an ingredient; live-tested"
+      },
+      "adminGiveToOther": {
+        "status": "NOT_IMPLEMENTED",
+        "evidence": "ItemCommands give",
+        "note": "staff-only and audited; C3"
       }
     },
     "deathRules": {

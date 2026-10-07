@@ -23,6 +23,10 @@ commands:
     description: Revive a player from the hardcore death lock (admin; same as /deathrevive).
     usage: /revive <player>
     permission: suld.admin.death.revive
+  classgear:
+    description: Recover a lost class weapon (/classgear recover; staff /classgear recover <player>).
+    usage: /classgear recover [player]
+    permission: suld.classgear
   deathstatus:
     description: Death lock, time left, wound and the last deaths of a player (admin).
     usage: /deathstatus <player>
@@ -241,6 +245,7 @@ permissions:
       suld.admin.death: true
       suld.admin.death.revive: true
       suld.admin.death.reset: true
+      suld.admin.classgear: true
       suld.admin.pack: true
       suld.admin.event: true
       suld.admin.relic: true
@@ -273,6 +278,12 @@ permissions:
     children:
       suld.admin.death.revive: true
       suld.admin.death: true
+  suld.classgear:
+    description: Recover your own lost class gear.
+    default: true
+  suld.admin.classgear:
+    description: Recover another player's class gear (audited).
+    default: op
   suld.admin.death:
     description: View death locks, wounds and death history.
     default: op

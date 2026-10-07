@@ -162,8 +162,13 @@ public final class ClassSelectionGui implements Listener {
 
         // Starter equipment.
         // the class weapon (tier follows the level: upgraded in place at 10 / 25 / 45)
-        for (ItemStack left : player.getInventory().addItem(services.classWeapons().starter(clazz, profile.progression().level(), player)).values()) {
-            player.getWorld().dropItemNaturally(player.getLocation(), left); // full inventory: it lands at their feet, not in the void
+        ItemStack weapon = services.classWeapons().starter(clazz, profile.progression().level(), player);
+        if (!player.getInventory().addItem(weapon).isEmpty()) {
+            // full inventory: the class weapon never touches the ground (a hopper could take it) — it takes the first
+            // hotbar slot and whatever was there drops instead
+            ItemStack displaced = player.getInventory().getItem(0);
+            player.getInventory().setItem(0, weapon);
+            if (displaced != null && !displaced.getType().isAir()) player.getWorld().dropItemNaturally(player.getLocation(), displaced);
         }
 
         services.events().dispatch(new ClassSelectedEvent(player.getUniqueId(), clazz));

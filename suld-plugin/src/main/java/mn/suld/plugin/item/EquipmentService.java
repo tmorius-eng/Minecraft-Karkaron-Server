@@ -411,7 +411,7 @@ public final class EquipmentService implements Listener {
         ItemInstance i = factory.read(e.getItemDrop().getItemStack()).orElse(null);
         if (i != null && i.soulbound()) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage(Messages.error("Сүнсэнд холбоотой эд зүйлийг хаях боломжгүй (/item destroy)."));
+            e.getPlayer().sendMessage(Messages.error("Сүнсэнд холбоотой эд зүйлийг хаях, устгах боломжгүй — энэ бол таны ангийн эд."));
             return;
         }
         dirty(e.getPlayer());

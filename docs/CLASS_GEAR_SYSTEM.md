@@ -1,7 +1,12 @@
-# SÜLD class gear — soulbound signature armour and weapon (proposed)
+# SÜLD class gear — soulbound signature armour and weapon
 
-**Status: SPEC.** It is built in Stage C2 after the owner approves Stage B. The current state is in
-`audit/death-gear-status.json` and `docs/PROGRESSION_EXPLOIT_AUDIT.md` §2.8.
+**Status: the WEAPON half is IMPLEMENTED (Stage C2); the class ARMOUR and the profile `class_gear` record are Stage C3.**
+Per-vector statuses are in `audit/death-gear-status.json`; the audit findings in `docs/PROGRESSION_EXPLOIT_AUDIT.md` §2.8.
+
+What C2 built: one shared guard, `item/SoulboundGuard.java`, for every soulbound SÜLD item (the class weapon now,
+the class armour in C3 with no further code); the upgrade fix in `ClassWeapons.upgrade`; `/classgear recover`.
+Until the C3 profile record exists, the canonical weapon UUID is kept on the player (`suld:class_weapon` in the
+player's persistent data, saved with the world's player data).
 
 Every character owns one class weapon and one class armour set: helmet, chest, legs, boots. Both are **permanently
 bound to the player's UUID**, never transferable, kept on death, and restored when lost. They are progression
@@ -22,21 +27,24 @@ equipment: item level from the armour level, rarity from the tier, plus enhancem
 
 Live status is in brackets (from the audit).
 
-| Vector | Rule | Today |
+| Vector | Rule | After C2 |
 |---|---|---|
-| Drop (Q, drag out) | cancelled | protected (soulbound) |
-| Ground pickup by another player / hopper / allay | the item is never on the ground. If it ever is (full inventory), it goes to the class-gear stash instead | **open**: `ClassSelectionGui.java:166` drops it at the feet |
-| Containers (chest, barrel, shulker, ender chest, dispenser, dropper, crafter, decorated pot, hopper minecart, brewing/furnace slots) | click and drag into any non-player top inventory are cancelled; shift-click too | **open** (relics only) |
-| Bundles | cannot be inserted; existing bundles are stripped (`RelicService.java:208-224` pattern) | **open** |
-| Item frames, armour stands, allays, display entities | interaction cancelled | **open** outside the city |
-| Hopper / `InventoryMoveItemEvent` | cancelled | **open** |
-| Trade window, including a shulker or bundle carrying gear | refused (`TradeService.java:252-277`, extended to look inside containers) | partly open |
-| Sell / salvage / craft input / anvil / grindstone / smithing | refused | sell & salvage protected; the anvil/grindstone/smithing inputs need guards |
-| `/item destroy` | refused for class gear (today it deletes class weapons) | **broken** (`ItemCommands.java:275-286`) |
-| Death | always kept, never dropped, no durability loss | protected |
-| Admin `/itemsadmin give` of a class piece to another player | refused; class gear is created only by the class-gear service for the owner | **open** |
-| `ClassWeapons.upgrade` | regenerates only items whose `boundTo` is this player | **broken** (re-binds, SB-1) |
-| Creative middle-click copies | the duplicate sweep + creative-event guard; class gear is never accepted from the creative inventory | partial |
+| Drop (Q, drag out of the window) | cancelled | **protected**, live-tested |
+| Ground pickup by another player / hopper / allay | the item is never on the ground; a hopper or hopper minecart can never pick one up | **protected**: at class pick on a full inventory the weapon takes hotbar slot 0 and the displaced item drops instead (`ClassSelectionGui`); `InventoryPickupItemEvent` guard (code path, not reachable live) |
+| Containers (chest, barrel, shulker, ender chest, dispenser, dropper, crafter, hopper, furnace/brewing, anvil, grindstone, smithing, enchanting, crafting table, merchant) | any click (pick/place, shift-click, number-key swap, offhand swap) or drag that involves a bound item while any non-player top inventory is open is cancelled; SÜLD menus are exempt (they cancel their own clicks) | **protected**; live-tested chest (shift, pick+place, number key), shulker box, hopper, anvil |
+| Decorated pot (right-click insert) | cancelled | **protected** (code; not live-tested) |
+| Bundles | a bound item can't be put into a bundle and a bundle can't take it (any click involving both) | **protected**, live-tested |
+| 2x2 crafting grid | allowed to sit there (player's own view), never an ingredient: the result is cleared (vanilla repair recipe) | **protected**, live-tested |
+| Item frames, armour stands, allays, foxes, dolphins | interaction holding a bound item (or a shulker/bundle holding one) is cancelled | **protected**; live-tested item frame and armour stand |
+| Hopper / `InventoryMoveItemEvent` | cancelled (also for a shulker box carrying one) | **protected** (code) |
+| Trade window, including a shulker or bundle carrying gear | refused (`TradeService.tradable` + `SoulboundGuard.holdsBound`) | **protected** (code; the direct case was live-tested in the item stage) |
+| Sell / salvage | refused | protected |
+| `/item destroy` | refused before the confirmation is asked | **protected**, live-tested (it used to delete class weapons) |
+| Death | always kept, never dropped, no durability loss (class weapons are unbreakable) | protected, live-tested |
+| Reconnect / server restart | vanilla player data | live-tested |
+| `ClassWeapons.upgrade` | regenerates only the holder's own class weapon of their class (same UUID); a copy bound to someone else is left alone | **fixed**, live-tested (a level-10 player holding another player's tier-1 copy: own → tier 2, the foreign one stays tier 1 bound to its owner; foreign bound gear gives no stats, `Inactive.BOUND_TO_OTHER`) |
+| Admin `/itemsadmin give` of a class piece to another player | should be refused | **open** (staff-only and audited; C3 moves creation into the class-gear service) |
+| Creative middle-click copies | duplicate sweep | partial (as before) |
 | Death in lava, the void, cactus, despawn | not applicable (never on the ground); if missing, recovery | n/a |
 
 The relic code already contains most of these guards for unique relics (`RelicListener.java:92-177`). The class gear
@@ -44,7 +52,14 @@ reuses one shared "never leaves the owner" guard instead of copying them.
 
 ## Recovery: `/classgear recover`
 
-This is idempotent and duplication-safe:
+This is idempotent and duplication-safe. **As built in C2 (weapon only):** if the player carries (inventory, armour,
+offhand, cursor, ender chest) a class weapon of their class bound to them, nothing happens and no cooldown is spent.
+Otherwise the weapon is rebuilt at the tier of their level with the **remembered UUID**, so a resurfacing old copy is
+a duplicate for the existing sweep. Refused while a soul or with a full inventory. Live-tested: held → no-op; cleared
+→ restored with the same UUID `6fcc01e8…`; second try → cooldown; staff path → restored, second staff call → no-op;
+one `classgear.recover` audit row per restore.
+
+**Target design (C3, with the profile record and the armour):**
 
 1. Read the profile's `class_gear` record.
 2. Scan the owner's inventory, armour slots and ender chest.

@@ -251,7 +251,7 @@ public final class TradeService implements Listener, TabExecutor {
 
     private boolean tradable(ItemStack it) {
         if (it == null || it.getType().isAir()) return false;
-        if (services.relics().items().isRelic(it) || holdsRelic(it)) return false;
+        if (services.relics().items().isRelic(it) || holdsRelic(it) || services.soulbound().holdsBound(it)) return false;
         var inst = services.items().read(it).orElse(null);
         if (inst != null) {
             if (inst.soulbound() || inst.bound()) return false; // soulbound and bound gear stays with its owner
