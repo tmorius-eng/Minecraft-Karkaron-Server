@@ -40,6 +40,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.dungeon.DungeonHalls halls;
     private mn.suld.plugin.branding.TutorialService tutorial;
     private mn.suld.plugin.worldevent.NaadamService naadam;
+    private mn.suld.plugin.worldevent.HorseRaceService race;
 
     @Override
     public void onEnable() {
@@ -330,6 +331,9 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(naadam, this);
         naadam.start();
         registerTab("naadam", naadam);
+        race = new mn.suld.plugin.worldevent.HorseRaceService(this, services);
+        race.start();
+        registerTab("uraldaan", race);
         pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());
@@ -354,6 +358,7 @@ public final class SuldPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (combatFeel != null) combatFeel.shutdown();
+        if (race != null) race.shutdown();
         if (naadam != null) naadam.shutdown(); // the festival field goes back to what it was
         if (halls != null) halls.shutdown();
         if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood

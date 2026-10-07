@@ -139,6 +139,8 @@ npc:
 naadam:
   every-minutes: 120
   min-players: 2
+  # Морин уралдаан: a horse race around Kharkhorum, offset an hour from the archery.
+  race-every-minutes: 120
 
 # Dungeon halls (docs/world/DUNGEON_HALLS.md): build one hall per theme shortly after start, one at a time.
 dungeons:

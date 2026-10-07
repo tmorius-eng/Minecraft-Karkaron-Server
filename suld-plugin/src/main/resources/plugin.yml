@@ -65,6 +65,10 @@ commands:
   naadam:
     description: Наадам · Сур харваа - the archery contest board; start (admin) opens one now.
     usage: /naadam [start]
+  uraldaan:
+    description: Наадам · Морин уралдаан - the horse race board; start (admin) opens one now.
+    usage: /uraldaan [start]
+    aliases: [horserace]
   chat:
     description: The SULD chat screen - tabs per channel, history with heads, send box.
     usage: /chat [channel]
