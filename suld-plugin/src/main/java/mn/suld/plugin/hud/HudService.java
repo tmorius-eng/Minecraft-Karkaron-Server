@@ -77,12 +77,24 @@ public final class HudService {
         this.services = services;
         this.panel = new HudPanel(plugin, services);
         Bukkit.getPluginManager().registerEvents(panel, plugin);
+        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
+            public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) {
+                teamJoin(e.getPlayer());
+            }
+
+            @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
+            public void onQuit(org.bukkit.event.player.PlayerQuitEvent e) {
+                teamQuit(e.getPlayer());
+            }
+        }, plugin);
         panel.start();
+        // every player is refreshed once per 40 ticks, spread over the ticks (it was all players on one tick)
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             long t = mn.suld.plugin.perf.PerfProbe.start();
             tick();
             mn.suld.plugin.perf.PerfProbe.stop("hud.sidebar_tick", t);
-        }, 40L, 40L);
+        }, 40L, 1L);
     }
 
     /** The spell system the panel reads (resource pool, cooldowns, combos); set once it exists. */
@@ -121,13 +133,25 @@ public final class HudService {
         statusLines.add(provider);
     }
 
+    private long sidebarTick;
+
     private void tick() {
         if (services == null) return;
+        long tick = ++sidebarTick;
         for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!mn.suld.plugin.perf.Stagger.due(p.getUniqueId(), tick, 40)) continue;
+            long t0 = mn.suld.plugin.perf.PerfProbe.start();
             services.profiles().cached(p.getUniqueId()).ifPresent(pr -> update(p, pr));
+            mn.suld.plugin.perf.PerfProbe.stop("hud.sidebar_lines", t0);
+            long t1 = mn.suld.plugin.perf.PerfProbe.start();
             tab(p);
+            mn.suld.plugin.perf.PerfProbe.stop("hud.tab", t1);
         }
-        refreshTeams();
+        long now = System.currentTimeMillis();
+        if (now - lastFullReconcile > 60_000) {
+            lastFullReconcile = now;
+            refreshTeams();
+        }
     }
 
     private Scoreboard board(Player p) {
@@ -159,10 +183,8 @@ public final class HudService {
     }
 
     public void clear(Player player) {
-        lastLines.remove(player.getUniqueId());
-        boards.remove(player.getUniqueId());
         player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
-        refreshTeams();
+        teamQuit(player);
     }
 
     private static Component title() {
@@ -232,11 +254,17 @@ public final class HudService {
 
     // ------------------------------------------------------------------ TAB list
 
+    private Component tabHeader;
+    private final Map<UUID, Component> lastListName = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> lastListLevel = new ConcurrentHashMap<>();
+    private final Set<UUID> listDirty = ConcurrentHashMap.newKeySet();
+
     private void tab(Player p) {
         double tps = Math.min(20.0, Bukkit.getTPS()[0]);
-        Component header = Component.text("\n").append(StyleFormat.glyph(Glyphs.LOGO)).append(Component.text("\n\n\n"))
+        if (tabHeader == null) tabHeader = Component.text("\n").append(StyleFormat.glyph(Glyphs.LOGO)).append(Component.text("\n\n\n"))
                 .append(Component.text("Монгол Hardcore MMORPG", TextColor.fromHexString("#FFE08A"), TextDecoration.BOLD))
                 .append(Component.text("\n" + domain() + "\n", NamedTextColor.GRAY));
+        Component header = tabHeader;
         Component footer = Component.text("\n")
                 .append(Component.text("Онлайн ", NamedTextColor.GRAY)).append(Component.text(Bukkit.getOnlinePlayers().size(), NamedTextColor.GREEN))
                 .append(Component.text("  ·  Пинг ", NamedTextColor.GRAY)).append(Component.text(p.getPing() + "ms", ping(p.getPing())))
@@ -247,8 +275,15 @@ public final class HudService {
         p.sendPlayerListHeaderAndFooter(header, footer);
         PlayerStyle s = services.styles().of(p.getUniqueId());
         int level = services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
-        p.playerListName(StyleFormat.badges(p, s, true).append(StyleFormat.name(p, s))
-                .append(Component.text(" " + level, TextColor.fromHexString("#8C96A8"))));
+        // playerListName broadcasts an info update to every online player: only when it actually changed, and the
+        // name (badges + MiniMessage styles) is only rebuilt when the style or the level changed
+        Integer seenLevel = lastListLevel.get(p.getUniqueId());
+        if (seenLevel == null || seenLevel != level || listDirty.remove(p.getUniqueId())) {
+            lastListLevel.put(p.getUniqueId(), level);
+            Component listName = StyleFormat.badges(p, s, true).append(StyleFormat.name(p, s))
+                    .append(Component.text(" " + level, TextColor.fromHexString("#8C96A8")));
+            if (!listName.equals(lastListName.put(p.getUniqueId(), listName))) p.playerListName(listName);
+        }
     }
 
     private static NamedTextColor ping(int ms) {
@@ -263,35 +298,114 @@ public final class HudService {
         return "s" + staff + rank + p.getUniqueId().toString().replace("-", "").substring(0, 12);
     }
 
-    /** Make every player's board know every online player's team (badges, tag, order). */
+    /** One player's name-tag team (TAB order, badges before, tag after): computed once, shared by every board. */
+    record TeamSpec(String name, String entry, Component prefix, Component suffix) {
+    }
+
+    /** The current spec of every online player (the only place badges/tags are computed for name tags). */
+    private final Map<UUID, TeamSpec> specs = new ConcurrentHashMap<>();
+    private long lastFullReconcile;
+
+    private TeamSpec specOf(Player p) {
+        PlayerStyle s = services.styles().of(p.getUniqueId());
+        Component prefix = StyleFormat.badges(p, s, true);
+        Component suffix = StyleFormat.tag(s).map(t -> Component.text(" ").append(t)).orElse(Component.empty());
+        return new TeamSpec(teamName(p, s), p.getName(), prefix, suffix);
+    }
+
+    /** Write one spec into one board; the old team of that player (another name after a rank change) goes. */
+    private static void apply(Scoreboard board, TeamSpec spec, TeamSpec old) {
+        if (old != null && !old.name().equals(spec.name())) {
+            Team gone = board.getTeam(old.name());
+            if (gone != null) gone.unregister();
+        }
+        Team team = board.getTeam(spec.name());
+        if (team == null) team = board.registerNewTeam(spec.name());
+        if (!spec.prefix().equals(team.prefix())) team.prefix(spec.prefix());
+        if (!spec.suffix().equals(team.suffix())) team.suffix(spec.suffix());
+        if (!team.hasEntry(spec.entry())) team.addEntry(spec.entry());
+    }
+
+    private void applyGlow(Scoreboard board) {
+        for (Map.Entry<String, NamedTextColor> g : glow.get().entrySet()) {
+            String name = "glow_" + g.getValue().toString();
+            Team team = board.getTeam(name);
+            if (team == null) {
+                team = board.registerNewTeam(name);
+                team.color(g.getValue());
+                team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+            }
+            if (!team.hasEntry(g.getKey())) team.addEntry(g.getKey());
+        }
+    }
+
+    /**
+     * A player joined: their board gets every online player's team (and the NPC glow teams), and every other board
+     * gets theirs. O(players), not O(players²).
+     */
+    public void teamJoin(Player p) {
+        if (services == null) return;
+        TeamSpec mine = specOf(p);
+        TeamSpec old = specs.put(p.getUniqueId(), mine);
+        Scoreboard own = board(p);
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            TeamSpec theirs = other.equals(p) ? mine : specs.computeIfAbsent(other.getUniqueId(), k -> specOf(other));
+            apply(own, theirs, null);
+            if (!other.equals(p)) apply(board(other), mine, old);
+        }
+        applyGlow(own);
+    }
+
+    /** A player's badges, tag or rank changed: rewrite only their team, on every board, and only if it changed. */
+    public void teamChanged(Player p) {
+        if (services == null || !p.isOnline()) return;
+        listDirty.add(p.getUniqueId());
+        TeamSpec now = specOf(p);
+        TeamSpec old = specs.put(p.getUniqueId(), now);
+        if (now.equals(old)) return;
+        for (Player viewer : Bukkit.getOnlinePlayers()) apply(board(viewer), now, old);
+    }
+
+    /** A player left: their team leaves every board, their own board and caches go (they were kept forever before). */
+    public void teamQuit(Player p) {
+        TeamSpec old = specs.remove(p.getUniqueId());
+        boards.remove(p.getUniqueId());
+        lastLines.remove(p.getUniqueId());
+        lastListName.remove(p.getUniqueId());
+        lastListLevel.remove(p.getUniqueId());
+        listDirty.remove(p.getUniqueId());
+        if (old == null) return;
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (viewer.equals(p)) continue;
+            Scoreboard b = boards.get(viewer.getUniqueId());
+            Team t = b == null ? null : b.getTeam(old.name());
+            if (t != null) t.unregister();
+        }
+    }
+
+    /** The NPC glow set changed (an NPC respawned): only the glow teams are written. */
+    public void refreshGlow() {
+        for (Player viewer : Bukkit.getOnlinePlayers()) applyGlow(board(viewer));
+    }
+
+    /**
+     * Full reconcile (the safety net for anything an event missed: a permission changed outside SÜLD): every board
+     * against the cached specs. Still O(players²) but cheap per pair (no badge/MiniMessage work: specs are cached) and
+     * at most once a minute.
+     */
     public void refreshTeams() {
         if (services == null) return;
         List<Player> online = new ArrayList<>(Bukkit.getOnlinePlayers());
+        for (Player p : online) specs.put(p.getUniqueId(), specOf(p));
         for (Player viewer : online) {
             Scoreboard board = board(viewer);
             Set<String> wanted = new HashSet<>();
             for (Player target : online) {
-                PlayerStyle s = services.styles().of(target.getUniqueId());
-                String name = teamName(target, s);
-                wanted.add(name);
-                Team team = board.getTeam(name);
-                if (team == null) team = board.registerNewTeam(name);
-                Component prefix = StyleFormat.badges(target, s, true);
-                Component suffix = StyleFormat.tag(s).map(t -> Component.text(" ").append(t)).orElse(Component.empty());
-                if (!prefix.equals(team.prefix())) team.prefix(prefix);
-                if (!suffix.equals(team.suffix())) team.suffix(suffix);
-                if (!team.hasEntry(target.getName())) team.addEntry(target.getName());
+                TeamSpec spec = specs.get(target.getUniqueId());
+                wanted.add(spec.name());
+                apply(board, spec, null);
             }
-            for (Map.Entry<String, NamedTextColor> g : glow.get().entrySet()) {
-                String name = "glow_" + g.getValue().toString();
-                Team team = board.getTeam(name);
-                if (team == null) {
-                    team = board.registerNewTeam(name);
-                    team.color(g.getValue());
-                    team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
-                }
-                if (!team.hasEntry(g.getKey())) team.addEntry(g.getKey());
-            }
+            applyGlow(board);
             for (Team t : new ArrayList<>(board.getTeams())) {
                 if (t.getName().startsWith("s") && t.getName().length() == 15 && !wanted.contains(t.getName())) t.unregister();
             }

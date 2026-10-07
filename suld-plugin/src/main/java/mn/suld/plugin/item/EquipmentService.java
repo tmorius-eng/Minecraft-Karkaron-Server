@@ -68,10 +68,15 @@ public final class EquipmentService implements Listener {
         this.factory = services.items();
     }
 
+    private long checkTicks;
+
     public void start() {
         Bukkit.getScheduler().runTaskTimer(plugin, this::flush, 1L, 1L);
         // a safety net for changes no event announces (plugins editing inventories): a cheap fingerprint check
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> Bukkit.getOnlinePlayers().forEach(this::check), 40L, 40L);
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            long t = ++checkTicks;
+            for (Player p : Bukkit.getOnlinePlayers()) if (mn.suld.plugin.perf.Stagger.due(p.getUniqueId(), t, 40)) check(p);
+        }, 40L, 1L);
     }
 
     // ------------------------------------------------------------------ queries
@@ -373,6 +378,7 @@ public final class EquipmentService implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         states.remove(e.getPlayer().getUniqueId());
+        if (services.itemService() != null) services.itemService().forget(e.getPlayer().getUniqueId());
         synchronized (dirty) {
             dirty.remove(e.getPlayer().getUniqueId());
         }

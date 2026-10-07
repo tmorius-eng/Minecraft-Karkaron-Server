@@ -144,7 +144,10 @@ public final class CombatListener implements Listener {
         event.setDamage(result.finalDamage());
         if (result.critical()) {
             CRIT_HITS.add(event.getEntity().getUniqueId());
-            CRIT_AT.put(event.getEntity().getUniqueId(), System.currentTimeMillis());
+            long now = System.currentTimeMillis();
+            CRIT_AT.put(event.getEntity().getUniqueId(), now);
+            // entries are consumed by the skill tree's crit trigger; anything older than 5 s (no build, mob gone) is dropped
+            if (CRIT_AT.size() > 256) CRIT_AT.values().removeIf(at -> now - at > 5000);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1f, 1.2f);
         }
     }
@@ -160,6 +163,8 @@ public final class CombatListener implements Listener {
         if (!mobs.isSuldMob(entity)) {
             return;
         }
+        CRIT_AT.remove(entity.getUniqueId());
+        CRIT_HITS.remove(entity.getUniqueId());
         // SÜLD mobs use custom loot/EXP, not vanilla drops.
         event.getDrops().clear();
         event.setDroppedExp(0);
@@ -242,8 +247,22 @@ public final class CombatListener implements Listener {
             }
         }
 
-        services.profiles().save(profile);
+        // a save per kill was an async 4-column upsert ~30 times a second in a busy world; at most one per 30 s per
+        // player now (quit, death, level-up, rewards and the autosave still save at once)
+        long now = System.currentTimeMillis();
+        Long last = lastKillSave.get(killer.getUniqueId());
+        if (last == null || now - last > 30_000 || exp.leveledUp()) {
+            lastKillSave.put(killer.getUniqueId(), now);
+            services.profiles().save(profile);
+        }
         hud.update(killer, profile);
+    }
+
+    private final java.util.Map<java.util.UUID, Long> lastKillSave = new java.util.concurrent.ConcurrentHashMap<>();
+
+    @EventHandler
+    public void onQuitForget(org.bukkit.event.player.PlayerQuitEvent e) {
+        lastKillSave.remove(e.getPlayer().getUniqueId());
     }
 
     private static double ThreadLocalRandomRoll() {

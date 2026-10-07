@@ -136,7 +136,25 @@ public final class NpcService implements Listener {
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent e) {
-        Bukkit.getScheduler().runTask(plugin, this::ensureAll);
+        // only a chunk that holds an NPC point matters (exploring or pre-generating loads hundreds a second), and
+        // several such loads in one tick share one ensureAll
+        if (ensurePending || !city.isBuilt() || !hasNpcPoint(e.getChunk())) return;
+        ensurePending = true;
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ensurePending = false;
+            ensureAll();
+        });
+    }
+
+    private boolean ensurePending;
+
+    private boolean hasNpcPoint(org.bukkit.Chunk c) {
+        for (WorldPoint p : city.slicePoints()) {
+            if (roleFor(p) == null) continue;
+            Location at = city.pointLocation(p.id());
+            if (at != null && at.getWorld() == c.getWorld() && (at.getBlockX() >> 4) == c.getX() && (at.getBlockZ() >> 4) == c.getZ()) return true;
+        }
+        return false;
     }
 
     private void spawn(WorldPoint p, Role r, Location at) {
@@ -162,7 +180,7 @@ public final class NpcService implements Listener {
             mq.addScoreboardTag("city_npc");
         });
         spawned.put(p.id(), m.getUniqueId());
-        services.hud().refreshTeams();
+        services.hud().refreshGlow();
     }
 
     /** Turn each NPC's head to the nearest player within 8 blocks. */

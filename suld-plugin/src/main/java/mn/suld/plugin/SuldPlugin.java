@@ -81,7 +81,7 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks()), this);
         services.hud().attach(this, services);
-        services.styles().onChange(p -> services.hud().refreshTeams());
+        services.styles().onChange(p -> services.hud().teamChanged(p));
         effects = new mn.suld.plugin.style.CosmeticEffects(this, services);
         getServer().getPluginManager().registerEvents(effects, this);
         effects.start();
@@ -102,7 +102,7 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(services.soulbound(), this);
         equipment.start();
         // two online players holding the same item identity: one copy is a duplicate
-        getServer().getScheduler().runTaskTimer(this, itemService::sweepOnline, TICKS_PER_SECOND * 30, TICKS_PER_SECOND * 30);
+        getServer().getScheduler().runTaskTimer(this, itemService::sweepTick, TICKS_PER_SECOND * 30, 1L); // staggered: each player every 30 s
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.relic.RelicListener(this, services.relics()), this);
         registerCommand("relic", new mn.suld.plugin.command.RelicCommand(services.relics()));

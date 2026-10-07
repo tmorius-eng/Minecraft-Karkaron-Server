@@ -215,14 +215,27 @@ public final class ItemFactory {
         return inspect(stack).map(Read::item);
     }
 
+    /**
+     * Decoded documents by their exact text: an item's document never changes without its text changing, and
+     * inventory scans, combat and HUD read the same few items over and over. Bounded LRU; thread-safe.
+     */
+    private final java.util.Map<String, Optional<ItemInstance>> decoded = java.util.Collections.synchronizedMap(
+            new java.util.LinkedHashMap<>(512, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(java.util.Map.Entry<String, Optional<ItemInstance>> eldest) {
+                    return size() > 4096;
+                }
+            });
+
     public Optional<Read> inspect(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !stack.hasItemMeta()) return Optional.empty();
-        PersistentDataContainer pdc = stack.getItemMeta().getPersistentDataContainer();
+        // the read-only view: no ItemMeta clone per read (the old path cloned the whole meta for every slot scanned)
+        io.papermc.paper.persistence.PersistentDataContainerView pdc = stack.getPersistentDataContainer();
         String doc = pdc.get(keyItem, PersistentDataType.STRING);
         if (doc != null) {
+            Optional<ItemInstance> item = decoded.computeIfAbsent(doc, ItemCodec::decode);
             // a document the server cannot read is reported as an unreadable item, never treated as "not SÜLD"
-            return Optional.of(ItemCodec.decode(doc).map(i -> new Read(i, false))
-                    .orElse(new Read(unreadable(pdc), false)));
+            return Optional.of(item.map(i -> new Read(i, false)).orElseGet(() -> new Read(unreadable(pdc), false)));
         }
         String id = pdc.get(keyId, PersistentDataType.STRING);
         String uuid = pdc.get(keyUuid, PersistentDataType.STRING);
@@ -238,7 +251,7 @@ public final class ItemFactory {
     }
 
     /** A placeholder the validator always refuses (schema 0), so an unreadable document is quarantined, not ignored. */
-    private ItemInstance unreadable(PersistentDataContainer pdc) {
+    private ItemInstance unreadable(io.papermc.paper.persistence.PersistentDataContainerView pdc) {
         String id = pdc.getOrDefault(keyId, PersistentDataType.STRING, "unreadable.item");
         UUID u;
         try {

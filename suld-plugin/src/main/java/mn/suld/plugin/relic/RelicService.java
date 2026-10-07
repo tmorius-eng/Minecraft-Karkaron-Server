@@ -111,7 +111,11 @@ public final class RelicService {
             return;
         }
         Bukkit.getScheduler().runTask(plugin, this::autoPlaceShrines);
-        Bukkit.getScheduler().runTaskTimer(plugin, this::validateAll, VALIDATE_EVERY_TICKS, VALIDATE_EVERY_TICKS);
+        // staggered: each player is validated once per VALIDATE_EVERY_TICKS, spread over the ticks
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            long t = ++validateTicks;
+            for (Player p : Bukkit.getOnlinePlayers()) if (mn.suld.plugin.perf.Stagger.due(p.getUniqueId(), t, (int) VALIDATE_EVERY_TICKS)) validate(p);
+        }, VALIDATE_EVERY_TICKS, 1L);
         Bukkit.getScheduler().runTaskTimer(plugin, this::tickRituals, RITUAL_TICK, RITUAL_TICK);
         Bukkit.getScheduler().runTaskTimer(plugin, this::expireAbsentBearers, 20L * 60, EXPIRY_EVERY_TICKS);
     }
@@ -179,6 +183,8 @@ public final class RelicService {
             player.setGlowing(bears); // the bearer is visible to everyone: holding a relic means being hunted
         }
     }
+
+    private long validateTicks;
 
     public void validateAll() {
         for (Player p : Bukkit.getOnlinePlayers()) {

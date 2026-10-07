@@ -23,7 +23,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
@@ -62,12 +61,25 @@ public final class CombatFeedback implements Listener {
         if (damager instanceof Projectile p && p.getShooter() instanceof Player shooter) damager = shooter;
         boolean crit = CombatListener.CRIT_HITS.remove(mob.getUniqueId());
         if (damager instanceof Player player) number(player, mob, e.getFinalDamage(), crit);
-        Bukkit.getScheduler().runTask(plugin, () -> nameBar(mob));
+        queueBar(mob);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onHeal(EntityRegainHealthEvent e) {
-        if (e.getEntity() instanceof LivingEntity mob && mobs.isSuldMob(mob)) Bukkit.getScheduler().runTask(plugin, () -> nameBar(mob));
+        if (e.getEntity() instanceof LivingEntity mob && mobs.isSuldMob(mob)) queueBar(mob);
+    }
+
+    /** Mobs whose name bar changed this tick: one update per mob per tick, however many hits it took. */
+    private final java.util.Set<LivingEntity> bars = new java.util.LinkedHashSet<>();
+
+    private void queueBar(LivingEntity mob) {
+        boolean first = bars.isEmpty();
+        bars.add(mob);
+        if (first) Bukkit.getScheduler().runTask(plugin, () -> {
+            java.util.List<LivingEntity> due = new java.util.ArrayList<>(bars);
+            bars.clear();
+            for (LivingEntity m : due) nameBar(m);
+        });
     }
 
     private void number(Player viewer, LivingEntity mob, double damage, boolean crit) {
@@ -85,19 +97,15 @@ public final class CombatFeedback implements Listener {
                     new org.joml.AxisAngle4f(), new org.joml.Vector3f(1.4f, 1.4f, 1.4f), new org.joml.AxisAngle4f()));
         });
         viewer.showEntity(plugin, d);
-        new BukkitRunnable() {
-            int ticks;
-
-            @Override
-            public void run() {
-                if (!d.isValid() || ++ticks > 16) {
-                    d.remove();
-                    cancel();
-                    return;
-                }
-                d.teleport(d.getLocation().add(0, 0.05, 0));
-            }
-        }.runTaskTimer(plugin, 1L, 1L);
+        // the rise is one client-side interpolation (no teleport per tick, no runnable per hit), removed after 16 ticks
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!d.isValid()) return;
+            d.setInterpolationDelay(0);
+            d.setInterpolationDuration(15);
+            org.bukkit.util.Transformation tr = d.getTransformation();
+            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(0, 0.8f, 0), tr.getLeftRotation(), tr.getScale(), tr.getRightRotation()));
+        }, 1L);
+        Bukkit.getScheduler().runTaskLater(plugin, d::remove, 17L);
     }
 
     /** "Говийн Чоно [Lvl 2] ▮▮▮▮▮▮▯▯▯▯" — green, yellow under 50 %, red under 25 %. */

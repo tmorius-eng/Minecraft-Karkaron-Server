@@ -95,3 +95,28 @@ Paired at equal world size (off 2 → on 2): **+0.57 ms mean MSPT for 10 players
 0.21–0.25 ms per tick (`hud.render` 78–92 µs per player per 4-tick pass, `hud.target` crosshair ray-trace 12–19 µs).
 The old text action bar cost ~33 µs/tick for 10 players; the new HUD draws far more (two bar rows, slots, buffs,
 target frame) for about 0.2 ms more per tick. Well inside the 35 ms budget; noted for the audit.
+
+## Perf pass 2 (audit fixes, measured on the dev server with mineflayer bots)
+
+The audit found these costs: O(n²) work, everyone handled on a single tick, and per-event waste. Fixes:
+
+| Area | Before | After |
+|---|---|---|
+| Name-tag teams (`HudService`) | Every viewer × every target every 2 s, with badges and MiniMessage per pair (39.7 ms p99 at 10 players) | A cached `TeamSpec` per player. Join, quit and style change are O(n). A full reconcile runs once a minute against cached specs. |
+| TAB list name | Set for every player every 2 s, so an info packet went to all players | Rebuilt only when the style or level changes, and sent only when it differs |
+| Sidebar + TAB | All players on one tick every 40 ticks (3.6 ms) | Each player once per 40 ticks, spread over the ticks (`Stagger`): **0.14 ms mean per tick** at 10 bots |
+| HUD panel (4-tick pass) | All players on one tick | A quarter of them on each tick |
+| Item reads (`ItemFactory.inspect`) | An `ItemMeta` clone and a JSON decode per read | The read-only PDC view plus a bounded decode cache (immutable instances) |
+| Duplicate sweep, relic check, equipment check | Every inventory of every player on one tick | Staggered over 600 / 200 / 40 ticks |
+| Damage numbers | A runnable per hit, teleporting the display every tick for 16 ticks | One interpolated move and one removal; name bars coalesced to one update per mob per tick |
+| Region mob care | Scanned every living entity in every world every 2 s | Iterates only the spawner's own mob set; region mobs are non-persistent |
+| NPC respawn check | Ran on every chunk load | Only for chunks that hold an NPC point, coalesced |
+| Profile save on kill | One async upsert per kill | At most one per 30 s per player (immediately on level-up; quit, death, rewards and autosave unchanged) |
+| Free skill points | Re-decoded on every call (HUD and sky every tick) | Memoised on the values it depends on |
+
+**Leaks fixed:**
+- Per-player scoreboards, last lines and specs are now dropped on quit.
+- `CRIT_AT` entries are pruned (they grew forever for players without a build).
+- The item holder map forgets players who quit.
+
+Measured (`/suldperf`, load12_v2): `hud.sidebar_tick` mean 136 µs per tick (before: 3 660 µs every 40th tick); 0 ticks over 50 ms in the window.

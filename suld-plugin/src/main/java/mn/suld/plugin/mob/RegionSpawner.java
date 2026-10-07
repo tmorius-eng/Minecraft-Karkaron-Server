@@ -97,7 +97,9 @@ public final class RegionSpawner {
                 LivingEntity mob = services.mobs().spawn(def, at);
                 if (mob != null) {
                     mob.addScoreboardTag(TAG);
+                    regionMobs.add(mob.getUniqueId());
                     mob.setRemoveWhenFarAway(false);
+                    mob.setPersistent(false); // a mob in an unloaded chunk is gone, never an untracked leftover
                     near++;
                 }
             }
@@ -230,6 +232,9 @@ public final class RegionSpawner {
         return true;
     }
 
+    /** Region mobs alive now (UUIDs), so care does not scan every entity of the world. */
+    private final java.util.Set<java.util.UUID> regionMobs = new java.util.LinkedHashSet<>();
+
     /** Keep region mobs hostile; remove them in/near the city or when no player is within 80 blocks. */
     private void careTick() {
         lastRegion.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
@@ -239,13 +244,19 @@ public final class RegionSpawner {
             if (eligible(p)) players.add(p);
             announceRegion(p);
         }
-        for (World w : Bukkit.getWorlds()) {
-            if (w.getEnvironment() != World.Environment.NORMAL) continue;
-            for (Entity e : w.getEntitiesByClasses(LivingEntity.class)) {
-                if (!e.getScoreboardTags().contains(TAG) || !(e instanceof LivingEntity mob)) continue;
+        // only the mobs this spawner made (it used to scan every living entity of every world every 2 s)
+        for (java.util.Iterator<java.util.UUID> it = regionMobs.iterator(); it.hasNext(); ) {
+            Entity e = Bukkit.getEntity(it.next());
+            if (!(e instanceof LivingEntity mob) || !mob.isValid() || mob.isDead()) {
+                it.remove();
+                continue;
+            }
+            {
+                World w = mob.getWorld();
                 Location l = mob.getLocation();
                 if (services.city().near(w.getName(), l.getBlockX(), l.getBlockZ(), 6)) {
                     mob.remove();
+                    it.remove();
                     continue;
                 }
                 boolean anyone = false;
@@ -257,6 +268,7 @@ public final class RegionSpawner {
                 }
                 if (!anyone) {
                     mob.remove();
+                    it.remove();
                     continue;
                 }
                 MobService.keepHostile(mob, players, 24);

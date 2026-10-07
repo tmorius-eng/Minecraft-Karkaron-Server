@@ -278,8 +278,26 @@ public final class SkillTreeService implements Listener {
         return pr == null || t == null ? 0 : SkillEngine.spent(pr, t);
     }
 
+    /**
+     * Free points, memoised per player on everything they depend on (the skill state, level, quest chapter and
+     * discoveries): the HUD asks every few ticks and the full-screen tree every tick, and each uncached call
+     * re-decoded the allocation string and walked the tree.
+     */
+    private record PointsKey(Object skillState, int level, String quest, boolean done, long discovered) {
+    }
+
+    private final Map<UUID, Map.Entry<PointsKey, Integer>> availableMemo = new ConcurrentHashMap<>();
+
     public int available(Player p) {
-        return Math.max(0, total(p) - spent(p));
+        PlayerProfile pr = profile(p);
+        if (pr == null) return 0;
+        PointsKey key = new PointsKey(pr.skillState(), pr.progression().level(), pr.questState().questId(), pr.questState().completed(),
+                services.styles().cached(p.getUniqueId()).map(mn.suld.api.style.PlayerStyle::discovered).orElse(0L));
+        Map.Entry<PointsKey, Integer> hit = availableMemo.get(p.getUniqueId());
+        if (hit != null && hit.getKey().equals(key)) return hit.getValue();
+        int v = Math.max(0, total(p) - spent(p));
+        availableMemo.put(p.getUniqueId(), Map.entry(key, v));
+        return v;
     }
 
     public SkillAllocation allocation(Player p) {
@@ -430,6 +448,7 @@ public final class SkillTreeService implements Listener {
         UUID id = e.getPlayer().getUniqueId();
         runtime.remove(id);
         marks.remove(id);
+        availableMemo.remove(id);
         if (ultimates != null) ultimates.forget(id);
     }
 

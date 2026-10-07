@@ -140,17 +140,24 @@ final class HudPanel implements Listener {
         this.skills = skills;
     }
 
+    private long staggerTick;
+
     /** Measurement switch (/suldperf hud off): skips drawing so the HUD's cost can be A/B-measured. */
     volatile boolean enabled = true;
 
     void start() {
         Bukkit.getScheduler().runTaskTimer(plugin, this::flushDirty, 1L, 1L);
+        // every player is redrawn once per PERIOD_TICKS, but a quarter of them on each tick (it used to be everyone on
+        // the same tick: an ~8 ms spike every 4th tick at 100 players); events still redraw at once via flushDirty
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            frame++;
             long t = PerfProbe.start();
-            for (Player p : Bukkit.getOnlinePlayers()) render(p, false);
+            long tick = ++staggerTick;
+            if (tick % PERIOD_TICKS == 0) frame++;
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (mn.suld.plugin.perf.Stagger.due(p.getUniqueId(), tick, PERIOD_TICKS)) render(p, false);
+            }
             PerfProbe.stop("hud.panel_tick", t);
-        }, PERIOD_TICKS, PERIOD_TICKS);
+        }, 1L, 1L);
     }
 
     // ------------------------------------------------------------------ API used by HudService

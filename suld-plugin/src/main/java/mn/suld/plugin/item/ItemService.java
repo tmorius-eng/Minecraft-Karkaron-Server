@@ -358,6 +358,55 @@ public final class ItemService {
      */
     private final Map<UUID, UUID> holderOf = new HashMap<>();
 
+    /** Which player last held each non-stacking item, and which items each online player held at their last scan. */
+    private final Map<UUID, Set<UUID>> heldBy = new HashMap<>();
+    private long sweepTicks;
+
+    /**
+     * The duplicate sweep, staggered: called every tick, it scans the players due this tick (each one every 30 s), so
+     * the cost is spread instead of every inventory of every player on one tick. A non-stacking item seen in two
+     * online inventories stays with whoever held it before; the newer copy is quarantined.
+     */
+    public void sweepTick() {
+        long tick = ++sweepTicks;
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!mn.suld.plugin.perf.Stagger.due(p.getUniqueId(), tick, 600)) continue;
+            Set<UUID> mine = new HashSet<>();
+            Inventory inv = p.getInventory();
+            for (int slot = 0; slot < inv.getSize(); slot++) {
+                ItemStack st = inv.getItem(slot);
+                if (st == null || st.isEmpty() || !st.hasItemMeta()) continue;
+                ItemInstance i = factory.read(st).orElse(null);
+                if (i == null || catalog.item(i.definitionId()).map(ItemDefinition::stackable).orElse(true)) continue;
+                UUID holder = holderOf.get(i.uuid());
+                Player other = holder == null || holder.equals(p.getUniqueId()) ? null : Bukkit.getPlayer(holder);
+                if (other != null && holds(other, i.uuid())) {
+                    removeCopy(p, i.uuid(), "duplicate of an item held by " + other.getName());
+                    continue;
+                }
+                holderOf.put(i.uuid(), p.getUniqueId());
+                mine.add(i.uuid());
+            }
+            Set<UUID> before = heldBy.put(p.getUniqueId(), mine);
+            if (before != null) for (UUID gone : before) if (!mine.contains(gone)) holderOf.remove(gone, p.getUniqueId());
+        }
+    }
+
+    /** A player left: their items are no longer "held" (the old full sweep only compared online players too). */
+    public void forget(UUID player) {
+        Set<UUID> items = heldBy.remove(player);
+        if (items != null) for (UUID i : items) holderOf.remove(i, player);
+    }
+
+    private boolean holds(Player p, UUID itemId) {
+        for (ItemStack st : p.getInventory().getContents()) {
+            ItemInstance i = st == null || st.isEmpty() || !st.hasItemMeta() ? null : factory.read(st).orElse(null);
+            if (i != null && i.uuid().equals(itemId)) return true;
+        }
+        return false;
+    }
+
+    /** The full sweep of every online inventory at once (admin command / tests); the timer uses {@link #sweepTick}. */
     public int sweepOnline() {
         Map<UUID, UUID> now = new HashMap<>();
         int taken = 0;
