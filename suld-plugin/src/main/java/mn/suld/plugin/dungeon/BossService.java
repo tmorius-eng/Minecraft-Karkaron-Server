@@ -132,14 +132,19 @@ public final class BossService implements Listener {
             return;
         }
         BossPhase phase = f.def.phases().get(f.phaseIndex);
-        event.setDamage(f.def.mob().scaledAttack() * phase.attackMultiplier());
+        event.setDamage(f.def.mob().scaledAttack() * phase.attackMultiplier() * (f.enraged ? ENRAGE_MULTIPLIER : 1.0));
     }
 
+    /** Enrage (the fight ran past its time limit) hits this much harder on top of the phase, in any phase. */
+    public static final double ENRAGE_MULTIPLIER = 1.25;
+
     private void escalate(LivingEntity boss, Fight f, int targetIndex, boolean enraged) {
-        if (targetIndex <= f.phaseIndex) {
+        if (targetIndex <= f.phaseIndex && !enraged) {
             return; // phases never regress
         }
-        f.phaseIndex = targetIndex;
+        // enrage also fires when the boss is already in its final phase (it used to do nothing there)
+        f.phaseIndex = Math.max(f.phaseIndex, targetIndex);
+        targetIndex = f.phaseIndex;
         BossPhase phase = f.def.phases().get(targetIndex);
         boss.getWorld().playSound(boss.getLocation(), Sound.ENTITY_RAVAGER_ROAR, 2f, 0.8f);
         if (targetIndex == f.def.finalPhaseIndex()) {

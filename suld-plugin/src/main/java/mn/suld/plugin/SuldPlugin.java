@@ -127,7 +127,7 @@ public final class SuldPlugin extends JavaPlugin {
         };
         // boss abilities (BossBrain): Хасар, the first rigged boss (docs/bosses/KHASAR.md)
         services.bosses().brain(mn.suld.plugin.content.SuldContent.KHASAR.id(), boss -> new mn.suld.plugin.dungeon.brain.KhasarBrain(
-                this, services, mn.suld.plugin.content.SuldContent.KHASAR, mn.suld.plugin.content.WorldContent.GREY_WOLF));
+                this, services, mn.suld.plugin.content.SuldContent.KHASAR, mn.suld.plugin.content.SuldContent.ORKHON_CHONO));
         // class armour + ActivePlaytime (docs/CLASS_ARMOR_SYSTEM.md, docs/ACTIVE_PLAYTIME_SPEC.md)
         mn.suld.plugin.item.ClassArmor classArmor = new mn.suld.plugin.item.ClassArmor(this, services);
         services.classArmor = classArmor;

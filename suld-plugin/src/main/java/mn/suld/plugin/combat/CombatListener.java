@@ -36,6 +36,7 @@ public final class CombatListener implements Listener {
 
     /** Carried by mobs a boss summons mid-fight (no loot, a fifth of the EXP). */
     public static final String SUMMON_TAG = "suld_summon";
+    static final String WORLD_RARE_TABLE = "loot.world.rare";
 
     private final SuldServices services;
     private final MobService mobs;
@@ -191,8 +192,8 @@ public final class CombatListener implements Listener {
         // boss adds (a howl's wolves) are fight mechanics, not a farm: a fifth of the EXP and no loot
         boolean summoned = entity.getScoreboardTags().contains(SUMMON_TAG);
         // dungeon trash drops materials only; the run's gear comes once, from the completion reward
-        boolean dungeonTrash = !openWorld && entity.getScoreboardTags().contains(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG)
-                && def.tier().ordinal() < mn.suld.api.mob.MobTier.BOSS.ordinal();
+        // (the boss too: its run pays gear once, at completion, to every participant)
+        boolean dungeonTrash = entity.getScoreboardTags().contains(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG);
         if (summoned) farm = Math.min(farm, 0.2);
         long expAmount = services.boosts().apply(killer.getUniqueId(), def.scaledExp());
         if (skillTree != null) expAmount = Math.round(expAmount * skillTree.expMultiplier(killer));
@@ -211,10 +212,16 @@ public final class CombatListener implements Listener {
         mn.suld.plugin.item.ItemService itemService = services.itemService();
         if (itemService != null) {
             mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(def.level(), mn.suld.api.loot.LootTier.of(def.tier()),
-                    profile.playerClass().orElse(null), 0, killer.getUniqueId(), "mob:" + mobId);
+                    profile.playerClass().orElse(null), skillTree == null ? 0 : skillTree.lootPct(killer), killer.getUniqueId(), "mob:" + mobId);
+            // the loot-chance stat raises rare chances (lootBonus); it used to re-roll the whole table, doubling everything
             java.util.List<mn.suld.api.loot.LootDrop> drops = new java.util.ArrayList<>(itemService.roll(def.lootTableId(), ctx));
-            // the loot-chance stat (skill tree and equipment) is a chance of a whole extra roll
-            if (skillTree != null && skillTree.extraLootRoll(killer)) drops.addAll(itemService.roll(def.lootTableId(), ctx));
+            // open-world rarities (Chinggis set pieces, Тэнгэрийн сахиус): a tiny chance on every open-world kill
+            if (openWorld) drops.addAll(itemService.roll(WORLD_RARE_TABLE, ctx));
+            // farming one spot thins the loot the same way it thins EXP
+            if (farm < 1) {
+                final double keep = farm;
+                drops.removeIf(d -> java.util.concurrent.ThreadLocalRandom.current().nextDouble() >= keep);
+            }
             if (summoned) drops.clear();
             else if (dungeonTrash) drops.removeIf(d -> !itemService.catalog().require(d.item().definitionId()).stackable());
             drops = itemService.filtered(killer, drops);

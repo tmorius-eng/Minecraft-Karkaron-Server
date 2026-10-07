@@ -684,6 +684,11 @@ public final class SkillTreeService implements Listener {
     }
 
     /** Whether the loot table should be rolled one more time (LOOT_PCT is the chance in percent). */
+    /** The loot-chance stat (%), raising rare-drop chances (LootContext.lootBonus). */
+    public double lootPct(Player p) {
+        return Math.max(0, build(p).stat(StatKey.LOOT_PCT));
+    }
+
     public boolean extraLootRoll(Player p) {
         double c = build(p).stat(StatKey.LOOT_PCT);
         return c > 0 && ThreadLocalRandom.current().nextDouble() * 100 < c;

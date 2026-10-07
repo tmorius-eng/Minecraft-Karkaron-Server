@@ -18,11 +18,17 @@ public final class ItemEconomy {
     /** Salvage materials: the rarity's yield plus one per 10 item levels, of the rarity band's material. */
     public static Map<String, Integer> salvage(ItemCatalog catalog, ItemDefinition def, ItemInstance i) {
         Map<String, Integer> out = new LinkedHashMap<>();
-        if (!def.equippable() || i.rarity() == ItemRarity.UNIQUE || i.soulbound()) return out;
+        // class gear never; other soulbound items (a boss trophy) can be broken down, or they would fill the bag forever
+        if (!def.equippable() || i.rarity() == ItemRarity.UNIQUE || classGear(def.id())) return out;
         String mat = catalog.salvageMaterial(i.rarity());
         if (mat == null) return out;
         out.put(mat, i.rarity().salvageYield() + i.itemLevel() / 10);
         return out;
+    }
+
+    /** The class weapon and class armour: soulbound for good, never sold, salvaged or destroyed. */
+    public static boolean classGear(String definitionId) {
+        return definitionId.startsWith("weapon.class.") || definitionId.startsWith("armor.class.") || definitionId.startsWith("weapon.surgamj_");
     }
 
     /** Coins to repair {@code missing} durability points. */

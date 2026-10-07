@@ -125,7 +125,8 @@ public final class LootEngine {
             if (hi.ordinal() < lo.ordinal()) hi = lo;
             rarity = catalog.band(tier).pick(rng, lo, hi);
         }
-        int level = ctx.level() + (e.levelSpread() == 0 ? 0 : rng.between(-e.levelSpread(), e.levelSpread()));
+        // the spread only goes down: loot is never above its level, so a reward rolled at the player's level is wearable
+        int level = ctx.level() - (e.levelSpread() == 0 ? 0 : rng.between(0, e.levelSpread()));
         return generator.generate(def, rarity, level, rng, ctx.source(), ctx.owner());
     }
 

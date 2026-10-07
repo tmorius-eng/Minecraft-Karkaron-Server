@@ -280,13 +280,15 @@ public final class DeathService implements Listener {
         if (it.hasItemMeta() && it.getItemMeta().getPersistentDataContainer().has(menuKey, PersistentDataType.BYTE)) {
             return true;
         }
-        String name = it.getType().name();
-        if (name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS")
-                || name.endsWith("_BOOTS") || name.equals("ELYTRA") || name.equals("SHIELD")) {
-            return true;
-        }
         ItemInstance ii = services.items().read(it).orElse(null);
-        return ii != null && (ii.soulbound() || ii.definitionId().startsWith("weapon.class.") || ii.definitionId().startsWith("weapon.surgamj_"));
+        if (ii == null) {
+            // vanilla armour without a SÜLD document (not SÜLD loot) keeps the old rule
+            String name = it.getType().name();
+            return name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS")
+                    || name.endsWith("_BOOTS") || name.equals("ELYTRA") || name.equals("SHIELD");
+        }
+        // SÜLD items: only soulbound gear is kept; loot armour drops like any other loot (it used to be kept by material)
+        return mn.suld.plugin.item.SoulboundGuard.soulbound(ii) || ii.definitionId().startsWith("weapon.surgamj_");
     }
 
     /** Applies death wear to a damageable item in place; true if it was worn. */

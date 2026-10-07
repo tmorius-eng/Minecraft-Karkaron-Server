@@ -109,7 +109,7 @@ class LootEngineTest {
         for (int i = 0; i < 6000; i++) {
             ItemDefinition d = ENGINE.fromPool(pool, new LootContext(10, LootTier.NORMAL, PlayerClass.MERGEN, 0, null, "t"), LootTier.NORMAL, rng);
             assertNotNull(d);
-            assertTrue(d.levelReq() <= 12, d.id() + " needs " + d.levelReq());
+            assertTrue(d.levelReq() <= 10, d.id() + " needs " + d.levelReq());
             assertTrue(d.lootable());
             total++;
             if (!d.classes().isEmpty()) {
@@ -198,7 +198,7 @@ class LootEngineTest {
         Rng rng = Rng.seeded(19);
         for (int i = 0; i < 1000; i++) {
             int lvl = ENGINE.roll(t, LootContext.of(20, LootTier.NORMAL), rng).get(0).item().itemLevel();
-            assertTrue(lvl >= 17 && lvl <= 23, "level " + lvl);
+            assertTrue(lvl >= 17 && lvl <= 20, "level " + lvl + " (the spread only goes down)");
             int low = ENGINE.roll(t, LootContext.of(5, LootTier.NORMAL), rng).get(0).item().itemLevel();
             assertEquals(12, Math.max(12, low), "never below the definition's level 12");
             assertTrue(low >= 12);

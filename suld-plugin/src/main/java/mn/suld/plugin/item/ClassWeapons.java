@@ -219,12 +219,24 @@ public final class ClassWeapons implements Listener {
         int want = tierFor(level);
         ItemStack[] inv = p.getInventory().getContents();
         boolean changed = false;
+        // old players had both starters (saber + bow), sometimes next to a class weapon: only one becomes the class weapon
+        boolean legacyDone = false;
+        for (ItemStack it : inv) {
+            ItemInstance ii = it == null ? null : services.items().read(it).orElse(null);
+            if (ii != null && parse(ii.definitionId()).isPresent()) legacyDone = true;
+        }
         for (int i = 0; i < inv.length; i++) {
             ItemStack it = inv[i];
             ItemInstance ii = it == null ? null : services.items().read(it).orElse(null);
             if (ii == null) continue;
             Held h = parse(ii.definitionId()).orElse(null);
+            if (h == null && LEGACY_STARTERS.contains(ii.definitionId()) && legacyDone) {
+                p.getInventory().setItem(i, null);
+                changed = true;
+                continue;
+            }
             if (h == null && LEGACY_STARTERS.contains(ii.definitionId())) {
+                legacyDone = true;
                 // the old starter saber/bow becomes this player's class weapon
                 PlayerClass c = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
                 if (c != null) h = new Held(c, 0);

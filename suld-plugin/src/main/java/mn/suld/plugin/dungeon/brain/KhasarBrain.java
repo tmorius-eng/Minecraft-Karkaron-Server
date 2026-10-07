@@ -173,6 +173,7 @@ public final class KhasarBrain implements BossBrain {
                 Location l = boss.getLocation().add(i == 0 ? 3 : -3, 0, 2);
                 LivingEntity wolf = services.mobs().spawn(summon, l);
                 wolf.addScoreboardTag(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG);
+                services.dungeons().adopt(boss.getUniqueId(), wolf); // the run's cleanup removes it
                 wolf.addScoreboardTag(mn.suld.plugin.combat.CombatListener.SUMMON_TAG);
                 boss.getWorld().spawnParticle(Particle.LARGE_SMOKE, l.add(0, 0.5, 0), 12, 0.3, 0.4, 0.3, 0.02);
             }

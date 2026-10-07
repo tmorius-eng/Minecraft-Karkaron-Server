@@ -288,8 +288,8 @@ public final class ItemCommands {
             return true;
         }
         ItemInstance i = items().factory().read(p.getInventory().getItemInMainHand()).orElse(null);
-        if (i != null && mn.suld.plugin.item.SoulboundGuard.soulbound(i)) {
-            p.sendMessage(Messages.error("Сүнсэнд холбоотой (ангийн) эд зүйлийг устгах боломжгүй."));
+        if (i != null && ItemEconomy.classGear(i.definitionId())) {
+            p.sendMessage(Messages.error("Ангийн зэвсэг, хуягийг устгах боломжгүй."));
             return true;
         }
         return false;

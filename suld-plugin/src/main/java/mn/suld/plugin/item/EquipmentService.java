@@ -257,6 +257,12 @@ public final class EquipmentService implements Listener {
         var why = Equipment.check(SuldContent.items(), target, c.item(), wearer(p), false);
         if (why.isPresent()) return def.displayName() + ": " + why.get().text();
         ItemInstance old = pr.equipment().get(target).orElse(null);
+        // one of each item worn: two copies of the same jewel would stack its proc
+        for (EquipSlot other : new EquipSlot[]{EquipSlot.ACCESSORY_1, EquipSlot.ACCESSORY_2}) {
+            if (other == target) continue;
+            ItemInstance worn = pr.equipment().get(other).orElse(null);
+            if (worn != null && worn.definitionId().equals(c.item().definitionId())) return def.displayName() + ": ижил зүйлийг хоёр нүдэнд зүүх боломжгүй.";
+        }
         p.getInventory().setItem(invSlot, old == null ? null : services.itemService().stack(old, p, 1));
         pr.equipment(pr.equipment().with(target, c.item()));
         services.profiles().save(pr);

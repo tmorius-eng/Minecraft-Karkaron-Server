@@ -122,7 +122,7 @@ public final class ItemCatalog {
         for (ItemDefinition d : items.values()) {
             if (!d.lootable() || d.rarity() == ItemRarity.UNIQUE || !d.equippable()) continue;
             if (!categories.isEmpty() && !categories.contains(d.type().category())) continue;
-            if (d.levelReq() > level + 2) continue;
+            if (d.levelReq() > level) continue;
             out.add(d);
         }
         return out;

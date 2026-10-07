@@ -235,13 +235,45 @@ public final class DungeonService {
     private void onPhaseChange(ActiveRun ar, BossService.PhaseChange change) {
         ar.phaseName = change.phase().phaseName();
         String text = change.enraged()
-                ? "Босс ХАЛУУРЛАА! Хугацаа дууслаа!"
+                ? "Босс галзуурлаа! Тулаан хэт удсан тул цохилт нь ×" + BossService.ENRAGE_MULTIPLIER + " хүчтэй боллоо!"
                 : "Босс шинэ шат: " + change.phase().phaseName() + " (х" + change.phase().attackMultiplier() + ")";
         broadcast(ar, Messages.error(text));
         updateBar(ar);
     }
 
     // ----------------------------------------------------------- death hooks
+
+    /**
+     * Track a mob a boss spawned mid-fight (a howl's wolves) as part of the boss's run, so the run's cleanup removes
+     * it. Not a wave mob: killing it does not advance anything. False when the boss is in no run.
+     */
+    public boolean adopt(UUID boss, LivingEntity add) {
+        ActiveRun ar = runsByEntity.get(boss);
+        if (ar == null || !ar.run.isActive()) return false;
+        runsByEntity.put(add.getUniqueId(), ar);
+        add.addScoreboardTag(DUNGEON_TAG);
+        return true;
+    }
+
+    /** Clears of a dungeon by a player in the last {@link #FATIGUE_WINDOW_MS} (loot fatigue; in memory). */
+    private final Map<String, java.util.ArrayDeque<Long>> recentClears = new HashMap<>();
+    static final long FATIGUE_WINDOW_MS = 2 * 60 * 60 * 1000L;
+
+    /**
+     * Gear chance of the completion reward: full for the first 3 clears of one dungeon in a rolling 2 hours, then
+     * ×0.5, then ×0.25 (never zero). Materials, EXP and coins are not reduced. Records this clear.
+     */
+    double clearFatigue(UUID player, String dungeonId, long now) {
+        java.util.ArrayDeque<Long> q = recentClears.computeIfAbsent(player + ":" + dungeonId, k -> new java.util.ArrayDeque<>());
+        while (!q.isEmpty() && now - q.peekFirst() > FATIGUE_WINDOW_MS) q.pollFirst();
+        int before = q.size();
+        q.addLast(now);
+        return fatigueFactor(before);
+    }
+
+    static double fatigueFactor(int clearsBefore) {
+        return clearsBefore < 3 ? 1.0 : clearsBefore < 5 ? 0.5 : 0.25;
+    }
 
     /** Called by the listener for every dying entity; ignores anything not in a run. */
     public void onEntityDeath(LivingEntity entity) {
@@ -352,9 +384,18 @@ public final class DungeonService {
                 Presentation.levelUp(p, from, exp.after().level());
             }
             mn.suld.plugin.item.ItemService items = services.itemService();
-            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(Math.max(ar.def.minLevel(), profile.progression().level()),
-                    mn.suld.api.loot.LootTier.DUNGEON, profile.playerClass().orElse(null), 0, id, provenance);
-            for (mn.suld.api.loot.LootDrop drop : items == null ? java.util.List.<mn.suld.api.loot.LootDrop>of() : items.roll(ar.def.rewardTableId(), ctx)) {
+            // reward items at the player's own level (the engine never rolls above it), so every reward is wearable now
+            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(profile.progression().level(),
+                    mn.suld.api.loot.LootTier.DUNGEON, profile.playerClass().orElse(null), lootBonus(p), id, provenance);
+            java.util.List<mn.suld.api.loot.LootDrop> rewards = new java.util.ArrayList<>(items == null ? java.util.List.of() : items.roll(ar.def.rewardTableId(), ctx));
+            double fatigue = clearFatigue(id, ar.def.id(), System.currentTimeMillis());
+            if (fatigue < 1 && items != null) {
+                rewards.removeIf(d -> !items.catalog().require(d.item().definitionId()).stackable()
+                        && java.util.concurrent.ThreadLocalRandom.current().nextDouble() >= fatigue);
+                p.sendMessage(Messages.info("Энэ агуйг саяхан олон удаа цэвэрлэсэн: хуяг зэвсгийн шагнал ×" + fatigue + " (2 цагийн дотор)."));
+            }
+            if (items != null) rewards = items.filtered(p, rewards);
+            for (mn.suld.api.loot.LootDrop drop : rewards) {
                 ItemInstance inst = drop.item();
                 ItemDefinition idef = items.catalog().require(inst.definitionId());
                 ItemStack stack = items.stack(inst, p, drop.amount());
@@ -375,6 +416,11 @@ public final class DungeonService {
             services.profiles().save(profile);
         }
         cleanup(ar);
+    }
+
+    private double lootBonus(Player p) {
+        mn.suld.plugin.skill.SkillTreeService t = services.skillTree();
+        return t == null ? 0 : t.lootPct(p);
     }
 
     private void fail(ActiveRun ar, String reason) {

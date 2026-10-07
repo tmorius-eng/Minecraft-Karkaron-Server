@@ -239,7 +239,7 @@ public final class NpcService implements Listener {
         Menu m = new Menu(3, "Дархан · Засвар ба сайжруулалт", null);
         boolean damaged = !it.getType().isAir() && it.getItemMeta() instanceof Damageable d && d.hasDamage();
         mn.suld.api.item.ItemInstance inst = it.getType().isAir() ? null : services.items().read(it).orElse(null);
-        boolean upgradable = inst != null && !inst.definitionId().startsWith("weapon.class.") && !services.relics().items().isRelic(it)
+        boolean upgradable = inst != null && !inst.definitionId().startsWith("weapon.class.") && !inst.definitionId().startsWith("armor.class.") && !services.relics().items().isRelic(it)
                 && mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId()) != null;
         // the class armour: inspect, next tier, mastery, upgrade with confirmation (SmithMenu)
         m.set(22, Menu.item(Material.NETHERITE_CHESTPLATE, Menu.title("⚔ Ангийн хуяг", NamedTextColor.GOLD),

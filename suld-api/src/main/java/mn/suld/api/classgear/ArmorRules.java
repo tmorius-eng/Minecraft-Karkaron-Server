@@ -143,7 +143,10 @@ public final class ArmorRules {
 
     /** Coins for enhancement step {@code step} (1..5): 40 × armour level × step × tier. */
     public static long enhanceCost(int armorLevel, int step, ArmorTier t) {
-        return 40L * armorLevel * step * t.number();
+        // priced at the tier's top armour level, not the current one: enhancement survives levelling inside a tier,
+        // so pricing by the current level made +5 at the bottom of a tier ten times cheaper for the same final power
+        int top = t.ordinal() + 1 < ArmorTier.values().length ? ArmorTier.values()[t.ordinal() + 1].armorLevel() - 1 : t.armorLevel();
+        return 40L * Math.max(armorLevel, top) * step * t.number();
     }
 
     // ------------------------------------------------------------------------------------------------ tiers

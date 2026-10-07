@@ -98,7 +98,8 @@ class ArmorRulesTest {
         assertEquals("baatar_t3", ArmorRules.assetId(PlayerClass.BAATAR, ArmorTier.T3));
         assertEquals(1.10, ArmorRules.powerFactor(5), 1e-9);
         assertEquals(1.10, ArmorRules.powerFactor(9), 1e-9);
-        assertEquals(40L * 30 * 2 * 3, ArmorRules.enhanceCost(30, 2, ArmorTier.T3));
+        assertEquals(40L * 35 * 2 * 3, ArmorRules.enhanceCost(30, 2, ArmorTier.T3));
+        assertEquals(ArmorRules.enhanceCost(24, 5, ArmorTier.T3), ArmorRules.enhanceCost(35, 5, ArmorTier.T3), "same price anywhere in a tier");
     }
 
     @Test
