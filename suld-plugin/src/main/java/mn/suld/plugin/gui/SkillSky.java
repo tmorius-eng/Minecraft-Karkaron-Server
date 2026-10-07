@@ -90,6 +90,10 @@ public final class SkillSky implements Listener {
     /** Half-size of the backdrop box around the camera (blocks). */
     static final float BOX_W = 70, BOX_H = 40, BOX_D = 30;
     static final long COMBAT_MS = 8000;
+    /** Tooltip: distance from the eye, text scale, line width (px); vanilla text is 0.025 blocks per pixel. */
+    static final double TIP_DIST = 2.6;
+    static final float TIP_SCALE = 0.26f;
+    static final int TIP_WIDTH = 210;
 
     private static final int GOLD = 0xF2B632, WHITE = 0xF0F0F0, DIM = 0x8C8F96, DARK = 0x3C3F46, RED = 0xB03030, NAVY = 0x0B1226;
     private static final int LINE_GOLD = 0xE8A82A, LINE_OPEN = 0x9A9DA6, LINE_DARK = 0x2A2D34, LINE_RED = 0xC83030;
@@ -145,6 +149,8 @@ public final class SkillSky implements Listener {
         boolean moved = true, closing, ready;
         long lastClick;
         int lastSlot;
+        int tipLines;
+        Location tipAt;
 
         Session(Player p, SkillTree tree) {
             this.p = p;
@@ -263,25 +269,27 @@ public final class SkillSky implements Listener {
         backdrop(s, "line", 0x070B18, new Vector3f(0, (float) s.eyeOff - hy, 0), rx, new Vector3f(hx * 2, hz * 2, 1));
         backdrop(s, "line", NAVY, new Vector3f(0, (float) s.eyeOff, -hz), new Quaternionf(), new Vector3f(hx * 2, hy * 2, 1));
 
-        // header and footer ride with the camera like a HUD
+        // header and footer: standalone billboards that moveCamera() keeps in front of the eye. NOT seat passengers:
+        // a billboarded display applies its translation in the camera-facing frame, where +Z points back at the camera,
+        // so a passenger at "z = 2.4" was drawn behind the player's eyes and never seen
         s.header = own(s, w.spawn(s.seat.getLocation(), TextDisplay.class, t -> {
             hidden(t);
             t.setBillboard(Display.Billboard.CENTER);
             t.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
             t.setShadowed(true);
             t.setLineWidth(400);
-            t.setTransformation(new Transformation(new Vector3f(0, (float) s.eyeOff + 1.12f, 2.4f), new Quaternionf(), new Vector3f(0.24f), new Quaternionf()));
+            t.setTeleportDuration(3);
+            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.24f), new Quaternionf()));
         }));
-        s.seat.addPassenger(s.header);
         s.footer = own(s, w.spawn(s.seat.getLocation(), TextDisplay.class, t -> {
             hidden(t);
             t.setBillboard(Display.Billboard.CENTER);
             t.setBackgroundColor(Color.fromARGB(150, 8, 6, 20));
             t.setLineWidth(600);
+            t.setTeleportDuration(3);
             t.text(Component.text("Зүүн товш: нээх  ·  Баруун товш: буцаах  ·  W A S D: гүйлгэх  ·  Хулганы дугуй: томруулах  ·  Shift: гарах", NamedTextColor.GRAY));
-            t.setTransformation(new Transformation(new Vector3f(0, (float) s.eyeOff - 0.98f, 2.4f), new Quaternionf(), new Vector3f(0.15f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.15f), new Quaternionf()));
         }));
-        s.seat.addPassenger(s.footer);
 
         int n = s.tree.nodes().size();
         s.frames = new ItemDisplay[n];
@@ -327,19 +335,19 @@ public final class SkillSky implements Listener {
             d.setItemStack(new ItemStack(Material.AIR));
             d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(NODE * 1.7f, NODE * 1.7f, 1), new Quaternionf()));
         }));
-        // the tooltip is a panel fixed on the left of the screen (the sidebar is on the right; it rides with the camera), so it reads the same at
-        // every zoom; it used to float next to the node and was unreadable from a distance
+        // the tooltip follows the cursor: a standalone billboard kept TIP_DIST blocks from the eye, just right of the
+        // hovered node (followTooltip), so it reads the same at every zoom and is always where the player looks
         s.tooltip = own(s, w.spawn(s.seat.getLocation(), TextDisplay.class, t -> {
             hidden(t);
             t.setBillboard(Display.Billboard.CENTER);
             t.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
-            t.setLineWidth(210);
+            t.setLineWidth(TIP_WIDTH);
             t.setAlignment(TextDisplay.TextAlignment.LEFT);
             t.setShadowed(true);
+            t.setTeleportDuration(1);
             t.text(Component.empty());
-            t.setTransformation(new Transformation(new Vector3f(1.45f, (float) s.eyeOff - 0.62f, 2.4f), new Quaternionf(), new Vector3f(0.25f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(TIP_SCALE), new Quaternionf()));
         }));
-        s.seat.addPassenger(s.tooltip);
         refresh(s);
         moveCamera(s);
     }
@@ -464,10 +472,36 @@ public final class SkillSky implements Listener {
             for (int k = 0; k < keep; k++) text = text.append(Component.newline()).append(lines.get(k));
         }
         s.tooltip.text(text);
+        s.tipLines = 1 + net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(text).split("\n", -1).length - 1;
         s.tooltip.setBackgroundColor(Color.fromARGB(236, 20, 10, 38));
+        s.tipAt = null;
+        followTooltip(s);
         SkyLayout.Pos pos = s.layout.of(n);
         s.glow.teleport(at(s, pos.u(), pos.v(), -0.01));
         s.glow.setItemStack(quad("glow", state == NodeState.UNLOCKED || state == NodeState.MAXED ? GOLD : WHITE));
+    }
+
+    /**
+     * Keep the tooltip next to the cursor: TIP_DIST blocks from the eye on the line to the hovered node, shifted right
+     * by half its width plus a margin, top edge just above the node (a text display's origin is its bottom centre).
+     */
+    private void followTooltip(Session s) {
+        if (s.hover < 0) return;
+        SkyLayout.Pos pos = s.layout.of(s.tree.node(s.hover));
+        Location eye = s.p.getEyeLocation();
+        Vector d = at(s, pos.u(), pos.v(), 0).toVector().subtract(eye.toVector());
+        if (d.lengthSquared() < 1e-6) return;
+        d.normalize();
+        Vector up = new Vector(0, 1, 0);
+        Vector right = d.clone().crossProduct(up);
+        if (right.lengthSquared() < 1e-6) right = new Vector(-1, 0, 0);
+        right.normalize();
+        double px = 0.025 * TIP_SCALE;
+        double w = TIP_WIDTH * px, h = (s.tipLines * 10 + 2) * px;
+        Location to = eye.clone().add(d.multiply(TIP_DIST)).add(right.multiply(w / 2 + 0.18)).subtract(0, h - 0.12, 0);
+        if (s.tipAt != null && s.tipAt.distanceSquared(to) < 1e-4) return;
+        s.tipAt = to;
+        s.tooltip.teleport(to);
     }
 
     private void hideTooltip(Session s) {
@@ -494,6 +528,7 @@ public final class SkillSky implements Listener {
             if (s.up || s.down || s.left || s.right) s.moved = true;
             if (s.moved && Bukkit.getCurrentTick() % 2 == 0) moveCamera(s);
             hover(s);
+            followTooltip(s);
         }
     }
 
@@ -504,6 +539,10 @@ public final class SkillSky implements Listener {
         cam.setYaw(0);
         cam.setPitch(0);
         s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+        // header and footer stay in front of the eye (the camera looks +Z: world offsets)
+        Location eye = cam.clone().add(0, s.eyeOff, 0);
+        s.header.teleport(eye.clone().add(0, 1.05, 2.4));
+        s.footer.teleport(eye.clone().add(0, -0.95, 2.4));
     }
 
     /** The crosshair as a cursor: intersect the look ray with the tree plane and take the nearest node under it. */
