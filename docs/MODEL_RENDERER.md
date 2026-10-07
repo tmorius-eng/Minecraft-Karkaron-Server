@@ -1,7 +1,11 @@
 # SÜLD model renderer (Display-Entity rigs)
 
-**Status:** SCAFFOLD → being built in Stage D1. The renderer and every rig are MANUAL_QA_REQUIRED until they are seen
-in a real 1.21.11 client.
+**Status:** FUNCTIONAL_BUT_INCOMPLETE + MANUAL_QA_REQUIRED (Stage D1).
+
+* Server side verified live: spawn, follow, clips, ability events, hit flash, death clip, cleanup, and the 1/5/10-rig
+  benchmark (docs/perf/MODEL_RENDERER_BENCH.md).
+* Still needs the owner's 1.21.11 client test: looks, the 180° bone flip, smoothness.
+* `parts` Interaction hitboxes are not built yet (the host's vanilla hitbox is used).
 
 This is SÜLD's own server-side renderer for custom creatures (bosses, elites, future mobs). It uses no third-party
 model plugin: no ModelEngine, BetterModel or MythicMobs. The geometry and textures ship in the resource pack as ordinary
@@ -23,6 +27,7 @@ host (vanilla LivingEntity, invisible + silent; AI, hitbox, HP, damage)
   `Sampler` and `RigLoader`.
 * **Plugin part.** `suld-plugin/.../model/*` contains one manager, `ModelService`, ticked by a single timer.
   * `ModelInstance` holds the displays of one creature.
+  * Phase visuals: `swapModel(bone, model)`, `visible(bone, on)`, `boneScale(bone, k)`, `idleClip(clip)`.
   * Mobs whose definition names a `modelId` get a rig on spawn (`MobService`).
 * **Update rate.** 10 Hz while players are within 24 blocks, 5 Hz up to 48 blocks, and frozen beyond 48. Only changed
   transforms are sent.
@@ -76,7 +81,7 @@ The plugin sets item_model `suld:entity/<rig>/<bone>`.
  "parts": [{"bone": "head", "width": 1.2, "height": 1.0}]}
 ```
 * `model: false` marks a pure transform node with no display.
-* `pivot` is in blocks, model space, at rest.
+* `pivot` is in blocks, model space, at rest. At runtime a child's offset `pivot − parentPivot` is applied in the parent's rotated frame.
 * `parts` are optional extra `Interaction` hitboxes that follow a bone.
 
 ### `suld-plugin/src/main/resources/models/<rig>/clips.json`

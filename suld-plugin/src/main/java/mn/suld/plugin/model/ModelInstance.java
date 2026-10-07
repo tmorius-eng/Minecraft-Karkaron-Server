@@ -162,7 +162,7 @@ public final class ModelInstance {
         flashUntil = now + FLASH_TICKS;
         if (!flashed) {
             for (int i = 0; i < bones.length; i++) {
-                if (bones[i] == null) continue;
+                if (bones[i] == null || items[i].getType().isAir()) continue;
                 ItemStack red = items[i].clone();
                 red.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData().addColor(FLASH).build());
                 bones[i].setItemStack(red);
@@ -220,7 +220,7 @@ public final class ModelInstance {
             root.teleport(flat, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
             lastLoc = l;
         }
-        String want = speed > RUN && model.clip("run") != null ? "run" : speed > WALK ? "walk" : "idle";
+        String want = speed > RUN && model.clip("run") != null ? "run" : speed > WALK ? "walk" : idleOverride != null ? idleOverride : "idle";
         if (!want.equals(base)) {
             base = want;
             baseStart = now;
@@ -266,7 +266,7 @@ public final class ModelInstance {
                     && Math.abs(s.scale() - x.scale()) < 0.001) continue;
             bones[i].setInterpolationDelay(0);
             bones[i].setInterpolationDuration(Math.max(2, every + 1));
-            float sc = (float) x.scale();
+            float sc = (float) (x.scale() * (extraScale == null ? 1 : extraScale[i]));
             bones[i].setTransformation(new Transformation(
                     new Vector3f((float) x.translation().x(), (float) x.translation().y(), (float) x.translation().z()),
                     new Quaternionf((float) x.rotation().x(), (float) x.rotation().y(), (float) x.rotation().z(), (float) x.rotation().w()),
@@ -279,6 +279,49 @@ public final class ModelInstance {
     }
 
     private float lastYaw;
+    private double[] extraScale;
+    private String idleOverride;
+
+    /** Lasting look changes a clip cannot hold (boss phases): show another model of the rig on a bone. */
+    public void swapModel(String bone, String model) {
+        int i = model().rig().index(bone);
+        if (i < 0 || bones[i] == null) return;
+        ItemStack it = new ItemStack(Material.PAPER);
+        ItemMeta meta = it.getItemMeta();
+        meta.setItemModel(new NamespacedKey("suld", "entity/" + model().rig().id() + "/" + model));
+        it.setItemMeta(meta);
+        items[i] = it;
+        if (!flashed) bones[i].setItemStack(it);
+    }
+
+    /** Hide or show a bone's display. */
+    public void visible(String bone, boolean on) {
+        int i = model().rig().index(bone);
+        if (i < 0 || bones[i] == null) return;
+        if (on) {
+            bones[i].setItemStack(items[i]);
+        } else {
+            items[i] = new ItemStack(Material.AIR);
+            bones[i].setItemStack(items[i]);
+        }
+    }
+
+    /** A lasting extra display scale on one bone (e.g. a bristling mane). */
+    public void boneScale(String bone, double factor) {
+        int i = model().rig().index(bone);
+        if (i < 0) return;
+        if (extraScale == null) {
+            extraScale = new double[bones.length];
+            java.util.Arrays.fill(extraScale, 1);
+        }
+        extraScale[i] = factor;
+        sent[i] = null; // resend
+    }
+
+    /** Use another looping clip instead of "idle" when standing (e.g. a frenzied idle); null restores it. */
+    public void idleClip(String clip) {
+        idleOverride = clip != null && model().clip(clip) != null ? clip : null;
+    }
 
     /** The bones' world positions (VFX anchors): host location + the bone's display translation. */
     public Location bone(String id) {

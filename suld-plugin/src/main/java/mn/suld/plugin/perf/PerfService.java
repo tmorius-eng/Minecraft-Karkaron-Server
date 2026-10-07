@@ -247,6 +247,7 @@ public final class PerfService implements Listener {
         }
         start("model_" + rig + "_" + n);
         Runtime rt = Runtime.getRuntime();
+        System.gc(); // a benchmark-only full GC, so the heap delta is the rigs' retained memory, not garbage
         long heap0 = rt.totalMemory() - rt.freeMemory();
         int entities0 = at.getWorld().getEntityCount();
         long sent0 = models.transformsSent();
@@ -266,6 +267,7 @@ public final class PerfService implements Listener {
         int entities1 = at.getWorld().getEntityCount(), displays = models.displays();
         s.sendMessage(Messages.info("[perf] " + n + " × " + rig + ": " + displays + " displays, " + (entities1 - entities0) + " new entities; " + seconds + " s…"));
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            System.gc();
             long heap1 = rt.totalMemory() - rt.freeMemory();
             double perSecond = (models.transformsSent() - sent0) / (double) seconds;
             for (org.bukkit.entity.LivingEntity h : hosts) h.remove();

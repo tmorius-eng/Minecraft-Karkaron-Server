@@ -56,6 +56,11 @@ public final class KhasarBrain implements BossBrain {
     @Override
     public void tick(LivingEntity boss, int phase, boolean enraged) {
         t++;
+        if (t == 1) {
+            hold(4);
+            playOr(boss, "spawn", 0, null); // wakes from the cave floor
+            return;
+        }
         if (busy && t >= busyUntil) busy = false;
         if (phase >= 2 && t % 2 == 0) frenzyFx(boss);
         if (busy) return;
@@ -81,11 +86,28 @@ public final class KhasarBrain implements BossBrain {
     @Override
     public void onPhase(LivingEntity boss, int phase, boolean enraged) {
         playOr(boss, "phase_change", 0, null);
+        ModelInstance m = rig(boss);
+        if (m != null && phase >= 1) {
+            m.swapModel("head", "head_rage"); // the ember eyes brighten
+            m.boneScale("mane_1", 1.35);
+            m.boneScale("mane_2", 1.35);
+        }
+        if (m != null && phase >= 2) {
+            m.visible("shards_flank", false); // the calcified stone cracks off
+            m.idleClip("frenzy_idle");
+        }
+        if (m != null && enraged) playOr(boss, "enrage", 0, null);
         boss.getWorld().spawnParticle(Particle.BLOCK, boss.getLocation().add(0, 0.2, 0), 60, 2, 0.2, 2, 0, Material.STONE.createBlockData());
         if (phase >= 2) {
             boss.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, false, false));
-            for (Player p : targets(boss, 24)) p.sendActionBar(Component.text("Хасар галзуурлаа!", NamedTextColor.DARK_RED));
+            for (Player p : targets(boss, 24)) warn(p, Component.text("Хасар галзуурлаа!", NamedTextColor.DARK_RED));
         }
+    }
+
+    /** Warnings go to the HUD notice line: a raw action bar would be replaced by the HUD panel on its next draw. */
+    private void warn(Player p, Component message) {
+        if (services.hud() != null) services.hud().toast(p, message, 1800);
+        else p.sendActionBar(message);
     }
 
     // --------------------------------------------------------------------------------------------- abilities
@@ -104,7 +126,7 @@ public final class KhasarBrain implements BossBrain {
         Location land = target.getLocation().clone();
         // telegraph: a ring where Хасар will land, and a warning
         ring(land, 3, Particle.DUST, new Particle.DustOptions(org.bukkit.Color.fromRGB(200, 40, 30), 1.6f), 28);
-        target.sendActionBar(Component.text("⚠ Хасар үсрэх гэж байна — зайл!", NamedTextColor.RED));
+        warn(target, Component.text("⚠ Хасар үсрэх гэж байна — зайл!", NamedTextColor.RED));
         boss.getWorld().playSound(boss.getLocation(), Sound.ENTITY_RAVAGER_STEP, 1.5f, 0.6f);
         double dmg = self.scaledAttack() * 1.6;
         playOr(boss, "pounce", 10, () -> {
@@ -141,7 +163,7 @@ public final class KhasarBrain implements BossBrain {
     private void howl(LivingEntity boss) {
         hold(6);
         boss.getWorld().playSound(boss.getLocation(), Sound.ENTITY_WOLF_ANGRY_AMBIENT, 2f, 0.45f);
-        for (Player p : targets(boss, 24)) p.sendActionBar(Component.text("Хасар улилаа — агуйн чононууд ирж байна!", NamedTextColor.GOLD));
+        for (Player p : targets(boss, 24)) warn(p, Component.text("Хасар улилаа — агуйн чононууд ирж байна!", NamedTextColor.GOLD));
         playOr(boss, "howl", 12, () -> {
             if (summon == null) return;
             for (int i = 0; i < 2; i++) {
