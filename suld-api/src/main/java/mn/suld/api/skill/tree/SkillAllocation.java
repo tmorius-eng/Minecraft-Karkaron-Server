@@ -15,7 +15,9 @@ import java.util.TreeMap;
 public final class SkillAllocation {
 
     public enum Why {
-        OK, ROOT, MAXED, NOT_CONNECTED, LEVEL, POINTS, EXCLUSIVE, REQUIRES, NOT_UNLOCKED, WOULD_BREAK
+        OK, ROOT, MAXED, NOT_CONNECTED, LEVEL, POINTS, EXCLUSIVE, REQUIRES, NOT_UNLOCKED, WOULD_BREAK,
+        /** A paid refund the player cannot afford ({@code amount} = coins needed); set by the plugin's respec policy. */
+        COINS
     }
 
     /** The answer to "may I change this node?"; {@code other} is the blocking node (rival, missing requirement, orphan). */

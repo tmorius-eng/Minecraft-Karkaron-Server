@@ -272,6 +272,11 @@ public final class NpcService implements Listener {
 
     // ------------------------------------------------------------------ blacksmith
 
+    /** Only equippable, non-stacking gear levels up (a stack of materials at a higher level would sell for more). */
+    private static boolean upgradableDef(mn.suld.api.item.ItemDefinition def) {
+        return def != null && def.equippable() && !def.stackable();
+    }
+
     /** The smith: repair worn gear (coins) and upgrade SÜLD items one level (coins + region materials). */
     private void repair(Player p) {
         ItemStack it = p.getInventory().getItemInMainHand();
@@ -279,7 +284,7 @@ public final class NpcService implements Listener {
         boolean damaged = !it.getType().isAir() && it.getItemMeta() instanceof Damageable d && d.hasDamage();
         mn.suld.api.item.ItemInstance inst = it.getType().isAir() ? null : services.items().read(it).orElse(null);
         boolean upgradable = inst != null && !inst.definitionId().startsWith("weapon.class.") && !inst.definitionId().startsWith("armor.class.") && !services.relics().items().isRelic(it)
-                && mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId()) != null;
+                && upgradableDef(mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId())) && it.getAmount() == 1;
         // the class armour: inspect, next tier, mastery, upgrade with confirmation (SmithMenu)
         m.set(22, Menu.item(Material.NETHERITE_CHESTPLATE, Menu.title("⚔ Ангийн хуяг", NamedTextColor.GOLD),
                 List.of(Menu.line("Хуягаа үзэх, зэрэг ахиулах, сайжруулах"))), (pl, c) -> smith.open(pl, this::smithLocation));
@@ -345,6 +350,7 @@ public final class NpcService implements Listener {
                     return;
                 }
                 mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(now.definitionId());
+                if (!upgradableDef(def) || hand.getAmount() != 1) return; // only single equippable gear, never materials
                 mn.suld.api.item.ItemInstance up = services.itemService().generator().upgrade(now, def);
                 takeItem(pl, cost.materialId(), cost.materialCount());
                 pr.addCurrency(-cost.coins());

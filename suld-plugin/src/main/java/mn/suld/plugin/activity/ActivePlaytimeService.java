@@ -217,7 +217,13 @@ public final class ActivePlaytimeService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
-        trackers.remove(e.getPlayer().getUniqueId());
-        areas.remove(e.getPlayer().getUniqueId());
+        // the kill memory (farming fatigue) must survive a relog, or reconnecting would reset it: keep the tracker
+        // 30 minutes, dropped then only if the player is still away
+        UUID id = e.getPlayer().getUniqueId();
+        ActivityTracker t = trackers.get(id);
+        if (t == null) return;
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (Bukkit.getPlayer(id) == null && trackers.remove(id, t)) areas.remove(id);
+        }, 30L * 60 * 20);
     }
 }

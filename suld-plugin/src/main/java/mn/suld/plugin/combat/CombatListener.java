@@ -17,6 +17,7 @@ import mn.suld.plugin.mob.MobService;
 import mn.suld.plugin.quest.QuestService;
 import mn.suld.plugin.ui.Messages;
 import mn.suld.plugin.ui.Presentation;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -89,6 +90,36 @@ public final class CombatListener implements Listener {
     /** When the empowered arrows run out even if unused. */
     public static final java.util.Map<java.util.UUID, Long> EMPOWERED_UNTIL = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** Player id -> {attack charge 0..1, server tick} of the melee swing in progress (vanilla resets it before the hit). */
+    private record Charge(float value, int tick) {
+    }
+
+    private final java.util.Map<java.util.UUID, Charge> charge = new java.util.HashMap<>();
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSwingCharge(io.papermc.paper.event.player.PrePlayerAttackEntityEvent e) {
+        charge.put(e.getPlayer().getUniqueId(), new Charge(e.getPlayer().getAttackCooldown(), Bukkit.getCurrentTick()));
+    }
+
+    @EventHandler
+    public void onChargeQuit(org.bukkit.event.player.PlayerQuitEvent e) {
+        charge.remove(e.getPlayer().getUniqueId());
+    }
+
+    /**
+     * Melee scale: vanilla's attack-strength curve (0.2 + 0.8·charge²), so spam-clicking is weak and ATTACK_SPEED
+     * matters; a sweep hit deals 30 %; punching with a bow or crossbow deals 30 % (the Mergen's attack is the draw).
+     */
+    private double meleeScale(Player p, EntityDamageByEntityEvent event) {
+        Charge c = charge.get(p.getUniqueId());
+        double ch = c != null && Bukkit.getCurrentTick() - c.tick() <= 1 ? Math.max(0, Math.min(1, c.value())) : 1.0;
+        double s = 0.2 + 0.8 * ch * ch;
+        if (event.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) s *= 0.3;
+        org.bukkit.Material hand = p.getInventory().getItemInMainHand().getType();
+        if (hand == org.bukkit.Material.BOW || hand == org.bukkit.Material.CROSSBOW) s *= 0.3;
+        return s;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent event) {
         long t = mn.suld.plugin.perf.PerfProbe.start();
@@ -107,6 +138,7 @@ public final class CombatListener implements Listener {
         double scale = 1.0;
         if (event.getDamager() instanceof Player p) {
             player = p;
+            scale = meleeScale(p, event);
         } else if (event.getDamager() instanceof org.bukkit.entity.AbstractArrow arrow && arrow.getShooter() instanceof Player p) {
             // a fully drawn arrow does ~6 vanilla damage: scale the SÜLD attack by how hard it was drawn
             player = p;
@@ -207,7 +239,7 @@ public final class CombatListener implements Listener {
         killer.sendMessage(Messages.info("+" + expAmount + " EXP (" + def.displayName() + ")"
                 + (farm < 1 ? " · нэг газарт хэт олон агнасан ×" + Math.round(farm * 100) / 100.0 + " — өөр газар оч" : "")));
         if (services.classArmor != null) services.classArmor.mobKilled(killer, entity, def, farm);
-        services.clans().contribute(killer.getUniqueId(), SuldContent.CLAN_EXP_PER_MOB_KILL);
+        services.clans().contribute(killer.getUniqueId(), Math.round(SuldContent.CLAN_EXP_PER_MOB_KILL * farm)); // fatigued and summoned kills level the clan less too
         if (exp.leveledUp()) {
             Presentation.levelUp(killer, fromLevel, exp.after().level());
         }

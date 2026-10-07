@@ -23,6 +23,7 @@ public final class SkillText {
             case REQUIRES -> "«" + n + "» — «" + o + "» шаардлагатай";
             case NOT_UNLOCKED -> "«" + n + "» нээгдээгүй байна";
             case WOULD_BREAK -> "«" + o + "» нь «" + n + "»-ээс хамаардаг — түүнийг эхлээд буцаа";
+            case COINS -> "«" + n + "»-г буцаахад " + c.amount() + " ₮ хэрэгтэй";
         };
     }
 

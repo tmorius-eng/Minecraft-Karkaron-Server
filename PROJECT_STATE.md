@@ -38,7 +38,21 @@ vertical slice: death/recovery → class gear → armour + ActivePlaytime → as
   * measured Paper tuning applied by deploy.sh;
   * view 6 / simulation 4;
   * the release gate is **not** passed on this bench (docs/perf/WORLD_50.md).
+* **Наадам festival:** archery outside the south gate (`/naadam`), a horse race around Kharkhorum (`/uraldaan`),
+  and 24 ovoo to circle three times clockwise for a blessing (docs/world/NAADAM.md, docs/world/OVOO.md).
 * **Fixes from two code reviews:** see the commit log.
+* **Gameplay logic review (11 fixes):**
+  * melee follows the attack charge; a sweep hits for 30 %;
+  * farming fatigue survives a relog, and clan EXP scales with it;
+  * the smith upgrades single gear only;
+  * a trade offer counts toward the death loss;
+  * coins and inventory are saved together on sell and trade;
+  * single refunds and build loads pay the respec price (a refund within 2 minutes stays free);
+  * spell and ultimate cooldowns survive a relog;
+  * the steppe horse's saddle is locked;
+  * souls cannot trade or join parties;
+  * the death loss is rounded at random;
+  * the respec orb no longer charges coins by surprise.
 * **Functional bots:** 16/16 passed.
 
 ---

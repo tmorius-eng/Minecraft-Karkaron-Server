@@ -163,6 +163,7 @@ public final class SuldServices {
 
         // Vertical Slice 2 services.
         this.partyService = new PartyService();
+        this.partyService.soul = id -> isSoul.test(id); // isSoul is set later by the death system
         this.bossService = new BossService();
         this.dungeonService = new DungeonService(plugin, this, mobService, partyService, bossService);
         this.hudService.addStatusLine(id -> dungeonService.statusLine(id).map(s -> "§7Агуй: §c" + s));

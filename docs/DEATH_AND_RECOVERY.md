@@ -71,7 +71,7 @@ community. Gameplay is gated, the connection is not.
 | Cost | Today | Proposed |
 |---|---|---|
 | EXP | −10 % of the bar | **−5 %** of the bar (the lock is the main cost now) |
-| Materials | 50 % of droppable stacks | **25 %** |
+| Materials | 50 % of droppable stacks | **25 %** (the fraction is rounded at random: 3 stacks lose 0 or 1, on average 0.75) |
 | Durability | 25 % wear on kept items | repair cost of 3 hours' wear (class gear is unbreakable; the wound replaces wear) |
 | Class gear | kept | kept, never dropped (`docs/CLASS_GEAR_SYSTEM.md`) |
 | Dungeon | downed members lose the reward | unchanged; a party wipe ends the run (enrage wipes) |

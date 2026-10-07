@@ -72,6 +72,8 @@ public final class TradeService implements Listener, TabExecutor {
     private final Map<UUID, Trade> trades = new HashMap<>();
     /** Offers of players who died mid-trade: handed back after respawn (the death itself never touches them). */
     private final Map<UUID, List<ItemStack>> afterRespawn = new HashMap<>();
+    /** The offer of a player whose death event is in progress (between LOWEST and MONITOR). */
+    private final Map<UUID, List<ItemStack>> dyingOffer = new HashMap<>();
 
     public TradeService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
@@ -170,6 +172,7 @@ public final class TradeService implements Listener, TabExecutor {
             return "Агуйд арилжаа хийхгүй.";
         }
         if (p.isDead() || o.isDead()) return "Одоо арилжаа хийх боломжгүй.";
+        if (services.isSoul.test(p.getUniqueId()) || services.isSoul.test(o.getUniqueId())) return "Сүнс арилжаа хийх боломжгүй.";
         return null;
     }
 
@@ -402,6 +405,9 @@ public final class TradeService implements Listener, TabExecutor {
         rb.addCurrency(t.a.coins - t.b.coins);
         services.profiles().save(ra);
         services.profiles().save(rb);
+        // the coins are in SQL now: write the inventories too, so a crash before the autosave cannot undo one side only
+        pa.saveData();
+        pb.saveData();
         plugin.getLogger().info("[audit] trade " + pa.getName() + " (" + offered(t.a).size() + " stacks, " + t.a.coins + " coins) <-> "
                 + pb.getName() + " (" + offered(t.b).size() + " stacks, " + t.b.coins + " coins)");
         pa.closeInventory();
@@ -430,7 +436,7 @@ public final class TradeService implements Listener, TabExecutor {
             Player p = Bukkit.getPlayer(s.player);
             List<ItemStack> back = offered(s);
             if (s.player.equals(dying)) {
-                afterRespawn.computeIfAbsent(s.player, k -> new ArrayList<>()).addAll(back);
+                dyingOffer.put(s.player, back); // onDeath puts these through the death rules like the inventory
                 back = List.of();
             }
             if (p != null) {
@@ -468,10 +474,39 @@ public final class TradeService implements Listener, TabExecutor {
         requests.remove(e.getPlayer().getUniqueId());
     }
 
+    /**
+     * Dying mid-trade: the offer is part of what the player carried, so it joins the drop list before the hardcore
+     * death rules (DeathService, HIGHEST) pick the lost stacks; offering valuables never shields them from a death.
+     */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onDeath(PlayerDeathEvent e) {
-        Trade t = trades.get(e.getEntity().getUniqueId());
-        if (t != null) cancel(t, "нас барсан", e.getEntity().getUniqueId());
+        UUID id = e.getEntity().getUniqueId();
+        Trade t = trades.get(id);
+        if (t != null) cancel(t, "нас барсан", id);
+        List<ItemStack> offer = dyingOffer.get(id);
+        if (offer != null) e.getDrops().addAll(offer);
+    }
+
+    /**
+     * After the death rules: a kept offer stack is in getItemsToKeep, but Paper only keeps stacks that are in the
+     * inventory, so it is handed back on respawn instead; a lost one stays in the drops. With keepInventory on,
+     * the whole offer comes back.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDeathAfterRules(PlayerDeathEvent e) {
+        UUID id = e.getEntity().getUniqueId();
+        List<ItemStack> offer = dyingOffer.remove(id);
+        if (offer == null) return;
+        List<ItemStack> back = new ArrayList<>();
+        for (ItemStack it : offer) {
+            boolean dropped = !e.getKeepInventory() && !e.isCancelled() && e.getDrops().stream().anyMatch(d -> d == it);
+            if (!dropped) {
+                e.getDrops().removeIf(d -> d == it);
+                e.getItemsToKeep().removeIf(d -> d == it);
+                back.add(it);
+            }
+        }
+        if (!back.isEmpty()) afterRespawn.computeIfAbsent(id, k -> new ArrayList<>()).addAll(back);
     }
 
     @EventHandler

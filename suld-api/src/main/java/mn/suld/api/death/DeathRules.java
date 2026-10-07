@@ -27,13 +27,18 @@ public final class DeathRules {
 
     /**
      * Which of {@code droppable} stack indices are lost (dropped where the player died): a random
-     * {@code lootLossFraction} of them, rounded down, chosen with {@code rng}. Empty when loot drop is off.
+     * {@code lootLossFraction} of them, chosen with {@code rng}. The fraction is rounded at random (2.75 stacks =
+     * 2, plus a third with 75 % chance), so a small inventory still carries the expected loss instead of none.
+     * Empty when loot drop is off.
      */
     public static List<Integer> lostStacks(List<Integer> droppable, DeathSettings s, Random rng) {
         if (!s.enabled() || !s.dropLoot() || droppable.isEmpty()) return List.of();
-        int n = (int) Math.floor(droppable.size() * s.lootLossFraction());
+        double exact = droppable.size() * s.lootLossFraction();
+        int n = (int) Math.floor(exact);
         List<Integer> shuffled = new ArrayList<>(droppable);
         Collections.shuffle(shuffled, rng);
+        double frac = exact - n;
+        if (frac > 1e-9 && rng.nextDouble() < frac) n = Math.min(droppable.size(), n + 1);
         List<Integer> out = new ArrayList<>(shuffled.subList(0, n));
         Collections.sort(out);
         return out;

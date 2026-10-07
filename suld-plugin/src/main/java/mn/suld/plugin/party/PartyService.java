@@ -40,7 +40,14 @@ public final class PartyService {
         this.memberRemovedHook = hook;
     }
 
+    /** Souls (docs/DEATH_AND_RECOVERY.md) cannot form parties; set by SuldServices. */
+    public java.util.function.Predicate<java.util.UUID> soul = id -> false;
+
     public void invite(Player inviter, Player target) {
+        if (soul.test(inviter.getUniqueId()) || soul.test(target.getUniqueId())) {
+            inviter.sendMessage(Messages.error("Сүнс багт нэгдэх боломжгүй."));
+            return;
+        }
         PartyRegistry.Action a = registry.invite(inviter.getUniqueId(), target.getUniqueId());
         switch (a.result()) {
             case INVITED -> {
@@ -58,6 +65,10 @@ public final class PartyService {
     }
 
     public void accept(Player player) {
+        if (soul.test(player.getUniqueId())) {
+            player.sendMessage(Messages.error("Сүнс багт нэгдэх боломжгүй — эхлээд амил."));
+            return;
+        }
         PartyRegistry.Action a = registry.accept(player.getUniqueId());
         switch (a.result()) {
             case JOINED -> {

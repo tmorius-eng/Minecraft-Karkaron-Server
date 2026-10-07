@@ -605,9 +605,19 @@ public final class SkillMapMenu implements Listener {
         lines.add("Түвшин, EXP, мөнгө, хийсэн бүтцүүд хэвээр үлдэнэ");
         m.set(11, bar(Material.LIME_CONCRETE, "✔ Баталгаажуулах", GREEN, lines), (pl, c) -> {
             boolean used = false;
-            if (orb) used = OrbOfOblivion.consumeOne(pl);
+            if (orb) {
+                used = OrbOfOblivion.consumeOne(pl);
+                if (!used) { // the orb left the inventory since this screen said "free": never charge coins instead
+                    say(pl, "Мартагдлын Бөмбөрцөг олдсонгүй — дахин нээгээд үзнэ үү.");
+                    pl.closeInventory();
+                    return;
+                }
+            }
             SkillTreeService.ResetResult r = st().reset(pl, category, used);
-            if (used && r.outcome() != SkillTreeService.ResetOutcome.OK) pl.getInventory().addItem(OrbOfOblivion.create(1));
+            if (used && r.outcome() != SkillTreeService.ResetOutcome.OK) {
+                pl.getInventory().addItem(OrbOfOblivion.create(1)).values()
+                        .forEach(left -> pl.getWorld().dropItemNaturally(pl.getLocation(), left));
+            }
             say(pl, SkillText.reset(r));
             pl.closeInventory();
             Bukkit.getScheduler().runTask(plugin, () -> open(pl));

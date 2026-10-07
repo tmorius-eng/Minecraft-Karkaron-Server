@@ -88,8 +88,13 @@ public final class SkillTreeService implements Listener {
     private volatile Map<PlayerClass, SkillTree> trees = new EnumMap<>(PlayerClass.class);
     private volatile List<SkillTreeLoader.Issue> issues = List.of();
     private final Map<UUID, Runtime> runtime = new ConcurrentHashMap<>();
+    /** Ultimate cooldowns of players who logged out while it was running (relogging must not reset it). */
+    private final Map<UUID, Long> ultHeld = new ConcurrentHashMap<>();
     /** Enemies marked to take extra damage: entity id -> {until, percent}. */
     private final Map<UUID, double[]> marks = new ConcurrentHashMap<>();
+    /** Player -> node id -> when its last rank was unlocked (a refund within the grace is a free misclick undo). */
+    private final Map<UUID, Map<String, Long>> recentUnlocks = new ConcurrentHashMap<>();
+    private static final long REFUND_GRACE_MS = 120_000;
     private SkillService skills;
     private Ultimates ultimates;
     /** How many times a passive spell of each trigger actually ran (QA measures chance and wiring with it). */
@@ -328,7 +333,12 @@ public final class SkillTreeService implements Listener {
         SkillTree t = trees.get(pr.playerClass().get());
         int refunded = SkillEngine.normalise(pr, t, context(p));
         if (refunded > 0) p.sendMessage(Messages.info("Чадварын мод шинэчлэгдлээ: " + refunded + " оноо буцаагдлаа."));
-        Runtime r = runtime.computeIfAbsent(p.getUniqueId(), k -> new Runtime());
+        Runtime r = runtime.computeIfAbsent(p.getUniqueId(), k -> {
+            Runtime fresh = new Runtime();
+            Long held = ultHeld.remove(k); // a relog keeps the ultimate's cooldown
+            if (held != null) fresh.ultReady = held;
+            return fresh;
+        });
         r.clazz = pr.playerClass().get();
         r.tree = t;
         refreshRuntime(p, pr, r);
@@ -446,7 +456,10 @@ public final class SkillTreeService implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
-        runtime.remove(id);
+        Runtime gone = runtime.remove(id);
+        long now = System.currentTimeMillis();
+        if (gone != null && gone.ultReady > now) ultHeld.put(id, gone.ultReady);
+        if (ultHeld.size() > 512) ultHeld.values().removeIf(t -> t <= now);
         marks.remove(id);
         availableMemo.remove(id);
         if (ultimates != null) ultimates.forget(id);
@@ -494,6 +507,7 @@ public final class SkillTreeService implements Listener {
         if (pr == null || t == null) return new SkillAllocation.Check(SkillAllocation.Why.NOT_CONNECTED, n, null, 0);
         SkillAllocation.Check c = SkillEngine.unlock(pr, t, n, context(p));
         if (c.ok()) {
+            recentUnlocks.computeIfAbsent(p.getUniqueId(), k -> new ConcurrentHashMap<>()).put(n.id(), System.currentTimeMillis());
             afterChange(p);
             p.playSound(p.getLocation(), n.keystone() ? Sound.BLOCK_BEACON_ACTIVATE : Sound.ENTITY_PLAYER_LEVELUP, 0.7f, n.keystone() ? 1.2f : 1.7f);
         } else {
@@ -506,8 +520,22 @@ public final class SkillTreeService implements Listener {
         PlayerProfile pr = profile(p);
         SkillTree t = tree(p);
         if (pr == null || t == null) return new SkillAllocation.Check(SkillAllocation.Why.NOT_UNLOCKED, n, null, 0);
-        SkillAllocation.Check c = SkillEngine.refund(pr, t, n);
+        // a refund is a respec (docs/SKILL_TREE_ARCHITECTURE.md §7): it costs the per-point respec price, except a
+        // rank unlocked in the last two minutes (a misclick) and below the free-reset level
+        Map<String, Long> recent = recentUnlocks.get(p.getUniqueId());
+        Long at = recent == null ? null : recent.get(n.id());
+        long coins = at != null && System.currentTimeMillis() - at < REFUND_GRACE_MS ? 0 : respecCost(p, 1);
+        SkillAllocation.Check c;
+        synchronized (pr) {
+            if (pr.currency() < coins) {
+                c = new SkillAllocation.Check(SkillAllocation.Why.COINS, n, null, (int) Math.min(Integer.MAX_VALUE, coins));
+            } else {
+                c = SkillEngine.refund(pr, t, n);
+                if (c.ok() && coins > 0) pr.addCurrency(-coins);
+            }
+        }
         if (c.ok()) {
+            if (recent != null && coins == 0) recent.remove(n.id());
             afterChange(p);
             p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 0.4f, 1.6f);
         } else {
@@ -575,13 +603,28 @@ public final class SkillTreeService implements Listener {
         return r;
     }
 
+    /** Loading a build is a respec of the points it takes away: those cost the respec price like a reset. */
     public SkillEngine.Result loadBuild(Player p, String name) {
         PlayerProfile pr = profile(p);
         SkillTree t = tree(p);
         if (pr == null || t == null) return new SkillEngine.Result(SkillEngine.Outcome.INVALID, "no class");
-        SkillEngine.Result r = SkillEngine.loadBuild(pr, t, name, context(p), System.currentTimeMillis(), respecCooldownMs());
-        if (r.ok()) afterChange(p);
-        return r;
+        synchronized (pr) {
+            long coins = 0;
+            String stored = pr.skillState().builds().get(name);
+            if (stored != null) {
+                SkillAllocation cur = SkillEngine.allocation(pr, t), next = SkillAllocation.decode(t, stored).allocation();
+                int removed = 0;
+                for (SkillNode n : t.nodes()) removed += Math.max(0, cur.rank(n) - next.rank(n));
+                coins = respecCost(p, removed);
+                if (pr.currency() < coins) return new SkillEngine.Result(SkillEngine.Outcome.INVALID, coins + " ₮ хэрэгтэй");
+            }
+            SkillEngine.Result r = SkillEngine.loadBuild(pr, t, name, context(p), System.currentTimeMillis(), respecCooldownMs());
+            if (r.ok()) {
+                if (coins > 0) pr.addCurrency(-coins);
+                afterChange(p);
+            }
+            return r;
+        }
     }
 
     public SkillEngine.Result deleteBuild(Player p, String name) {

@@ -23,11 +23,16 @@ class DeathRulesTest {
     }
 
     @Test
-    void halfTheDroppableStacksAreLostRoundedDown() {
+    void halfTheDroppableStacksAreLostRoundedAtRandom() {
         List<Integer> lost = DeathRules.lostStacks(List.of(1, 4, 7, 9, 12), s, new Random(42));
-        assertEquals(2, lost.size());
+        assertTrue(lost.size() == 2 || lost.size() == 3); // 2.5 → 2 or 3
         assertTrue(List.of(1, 4, 7, 9, 12).containsAll(lost));
-        assertEquals(List.of(), DeathRules.lostStacks(List.of(3), s, new Random(1))); // 0.5 rounds down
+        assertEquals(2, DeathRules.lostStacks(List.of(1, 2, 3, 4), s, new Random(1)).size()); // exact: no roll
+        // a single stack at 50 % is lost about half the time, never "never" (the old floor kept small inventories safe)
+        Random r = new Random(7);
+        int lostOne = 0;
+        for (int i = 0; i < 2000; i++) lostOne += DeathRules.lostStacks(List.of(3), s, r).size();
+        assertTrue(lostOne > 850 && lostOne < 1150, "lost " + lostOne + "/2000");
         DeathSettings keep = new DeathSettings(true, 30, 0.1, 0.25, false, 0.5, true);
         assertEquals(List.of(), DeathRules.lostStacks(List.of(1, 2, 3, 4), keep, new Random(1)));
     }

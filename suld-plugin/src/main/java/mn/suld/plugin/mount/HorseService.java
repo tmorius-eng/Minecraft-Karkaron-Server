@@ -184,7 +184,19 @@ public final class HorseService implements Listener, TabExecutor {
     public void onInteract(PlayerInteractEntityEvent e) {
         if (!isSteppeHorse(e.getRightClicked())) return;
         String owner = e.getRightClicked().getPersistentDataContainer().get(key, PersistentDataType.STRING);
-        if (!e.getPlayer().getUniqueId().toString().equals(owner) || e.getPlayer().isSneaking()) e.setCancelled(true);
+        if (!e.getPlayer().getUniqueId().toString().equals(owner) || e.getPlayer().isSneaking()
+                || e.getPlayer().getInventory().getItem(e.getHand()).getType() == Material.SHEARS) e.setCancelled(true);
+    }
+
+    /** The summoned saddle stays on the horse: its inventory never opens (else /mori would print free saddles). */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onOpen(org.bukkit.event.inventory.InventoryOpenEvent e) {
+        if (e.getInventory().getHolder() instanceof Entity h && isSteppeHorse(h)) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onShear(org.bukkit.event.player.PlayerShearEntityEvent e) {
+        if (isSteppeHorse(e.getEntity())) e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)

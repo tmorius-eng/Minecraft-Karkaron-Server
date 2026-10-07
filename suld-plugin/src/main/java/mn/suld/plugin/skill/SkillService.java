@@ -127,7 +127,13 @@ public final class SkillService implements Listener {
         combos.remove(id);
         mapOpened.remove(id);
         lastCast.remove(id);
-        spellReady.remove(id);
+        // spell cooldowns survive a relog (like the pool): only the expired ones are dropped
+        Map<Spell, Long> ready = spellReady.get(id);
+        if (ready != null) {
+            long now = System.currentTimeMillis();
+            ready.values().removeIf(t -> t <= now);
+            if (ready.isEmpty()) spellReady.remove(id, ready);
+        }
         castAttack.remove(id);
         lastClickByType.keySet().removeIf(k -> k.startsWith(id.toString()));
         CombatListener.EMPOWERED_ARROWS.remove(id);
