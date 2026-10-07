@@ -121,9 +121,23 @@ public final class QuestTracker implements Listener {
         if (d == null || !s.active()) return null;
         Component head = Component.text("✦ " + d.title() + " ", GOLD, TextDecoration.BOLD)
                 .append(Component.text(s.progress() + "/" + d.requiredCount(), NamedTextColor.WHITE, TextDecoration.BOLD));
+        Location l = p.getLocation();
+        if (d.type() == mn.suld.api.quest.QuestType.COMPLETE_DUNGEON) {
+            // a dungeon chapter points at the dungeon's gate itself (docs/world/DUNGEON_HALLS.md)
+            Location gate = services.dungeons().halls().flatMap(h -> h.gate(d.targetId())).orElse(null);
+            if (gate != null && gate.getWorld().equals(l.getWorld())) {
+                double gx = gate.getX() - l.getX(), gz = gate.getZ() - l.getZ();
+                long gd = Math.round(Math.hypot(gx, gz));
+                var def = SuldContent.dungeonFor(d.targetId());
+                String name = def == null ? "Агуйн хаалга" : def.displayName() + "-ийн хаалга";
+                if (gd <= 16) return head.append(Component.text("  ⚔ " + name + " — энд! Хаалгыг дар", NamedTextColor.GREEN, TextDecoration.BOLD));
+                double gb = Navigation.bearing(gx, gz);
+                return head.append(Component.text("  " + Navigation.arrow(gb, Navigation.facing(l.getYaw())) + " ", NamedTextColor.AQUA, TextDecoration.BOLD))
+                        .append(Component.text("⚔ " + name + " · " + Navigation.compass(gb) + " · " + gd + "м", NamedTextColor.WHITE, TextDecoration.BOLD));
+            }
+        }
         RegionDefinition target = targetRegion(d).orElse(null);
         if (target == null) return head;
-        Location l = p.getLocation();
         Location spawn = p.getWorld().getSpawnLocation();
         double dx = l.getX() - spawn.getX(), dz = l.getZ() - spawn.getZ();
         RegionDefinition here = regions.at(dx, dz).orElse(null);

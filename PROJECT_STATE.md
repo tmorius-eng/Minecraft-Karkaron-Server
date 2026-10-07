@@ -19,6 +19,28 @@ mastery, difficulty, economy, class-armour, active-playtime, class-gear, death, 
 (deferred) and visual-pipeline docs). Nothing of the proposed balance is in the game yet. Next: Stage C (Баатар
 vertical slice: death/recovery → class gear → armour + ActivePlaytime → assets).
 
+**Overnight 2026-10-07/08 (all on `main`, bot-tested on the dev Paper; visuals MANUAL_QA_REQUIRED):**
+* **World:** 10 000-block native border centred on the spawn (docs/world/WORLD_BORDER.md); SÜLD's throttled
+  pre-generator, priority areas only (docs/world/PREGENERATION.md); every SÜLD teleport is async.
+* **Dungeons:**
+  * a gate in the open world plus a themed hall (10 themes) in the void world `suld_halls`, with 12 instance slots
+    per theme (docs/world/DUNGEON_HALLS.md);
+  * a 10-dungeon ladder, with the previous dungeon required (docs/world/DUNGEON_LADDER.md);
+  * archetype boss brains (cleave, slam, charge, barrage, nova, summon) for the 9 bosses without a hand-written
+    brain.
+* **Models:** 29 new Display-Entity rigs. Every SÜLD mob and boss now has a model (docs/models/MOB_RIGS.md).
+* **Chat channels and the `/chat` dialog screen** with player heads (docs/CHAT.md).
+* **Lock-on and class attack decals** (docs/COMBAT_FEEL.md).
+* **Persistent 7-step tutorial** (docs/TUTORIAL.md).
+* **NPC dialogue** with history topics (docs/NPC_DIALOGUE.md).
+* **50-player benchmarks:**
+  * best on the 4-core bench: F50, TPS 11.8, mean tick 92 ms, p95 139 ms;
+  * measured Paper tuning applied by deploy.sh;
+  * view 6 / simulation 4;
+  * the release gate is **not** passed on this bench (docs/perf/WORLD_50.md).
+* **Fixes from two code reviews:** see the commit log.
+* **Functional bots:** 16/16 passed.
+
 ---
 
 ## Vertical Slice 1 (join→class→HUD→quest→combat→mob→loot→tooltip→EXP→level→save→reconnect)
