@@ -1,0 +1,12 @@
+{
+ "model": "gemini-3-pro-image",
+ "size": "1K",
+ "style": "Style: a single game UI asset for a fantasy MMORPG interface, orthographic front view, perfectly centred and symmetric, crisp hand-painted metal and gem materials, strong readable silhouette that stays legible when shrunk to 26 pixels, flat even studio lighting, isolated on a pure flat black background (#000000), no text, no letters, no numbers, no watermark, no frame around the canvas, no drop shadow onto the background.",
+ "images": [
+  {
+   "id": "hud_diamond",
+   "aspect": "1:1",
+   "prompt": "A diamond-shaped (rhombus, a square rotated 45 degrees, pointed at top, bottom, left and right) Mongolian imperial emblem: a thick polished bronze rhombus frame with a thin gold inner rim and a tiny gold stud at each of the four points, engraved with a continuous traditional Mongolian khee meander pattern along the frame, and inside it a faceted deep turquoise gemstone cut as a rhombus with four bevelled facets catching light (upper-left facet brightest), the gem's centre plain so a number can be written on it later. Bronze, gold and turquoise only."
+  }
+ ]
+}

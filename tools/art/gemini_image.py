@@ -22,10 +22,13 @@ API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateC
 UA = "tmorius-eng/Minecraft-Karkaron-Server/1.0"
 
 
-def generate(model: str, prompt: str, aspect: str) -> bytes:
+def generate(model: str, prompt: str, aspect: str, size: str | None = None) -> bytes:
+    image_config = {"aspectRatio": aspect}
+    if size:
+        image_config["imageSize"] = size  # "1K" / "2K" (Gemini 3 image models)
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": {"aspectRatio": aspect}},
+        "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": image_config},
     }
     headers = {"Content-Type": "application/json", "User-Agent": UA}
     key = os.environ.get("GEMINI_API_KEY")
@@ -71,7 +74,7 @@ def main() -> int:
             continue
         prompt = item["prompt"] + (" " + style if item.get("style", True) else "")
         try:
-            png = generate(item.get("model", spec.get("model", "gemini-2.5-flash-image")), prompt, item.get("aspect", "1:1"))
+            png = generate(item.get("model", spec.get("model", "gemini-2.5-flash-image")), prompt, item.get("aspect", "1:1"), item.get("size", spec.get("size")))
         except Exception as e:  # report and continue
             print(f"  !! {item['id']}: {e}")
             failed += 1

@@ -412,7 +412,7 @@ public final class RelicService {
             p.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, r.shrineCenter().clone().add(0.5, 1.2, 0.5), 12, 0.6, 0.6, 0.6, 0.01);
             if (left > 0) {
                 rituals.put(e.getKey(), new Ritual(r.key(), r.shrineCenter(), left));
-                p.sendActionBar(Component.text("Тахилга: " + left + "с", NamedTextColor.AQUA));
+                services.hud().toast(p, Component.text("Тахилга: " + left + "с", NamedTextColor.AQUA));
                 p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.8f, 0.5f + 0.1f * (settings.ritualSeconds() - left));
             } else {
                 rituals.remove(e.getKey());

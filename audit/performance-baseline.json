@@ -1,0 +1,622 @@
+{
+ "generated": "2026-10-07",
+ "commit": "61eca90 (+ PerfProbe instrumentation, no behaviour change)",
+ "environment": {
+  "server": "Paper 1.21.11 (dev server srv2, offline-mode, local only)",
+  "java": "21",
+  "jvm": "-Xms1G -Xmx2G (default GC = G1, no Aikar flags)",
+  "host": "cloud container, 4 vCPU, 16 GB RAM, shared with the mineflayer bots and PostgreSQL 16 (same host)",
+  "storage": "PostgreSQL 16 (throwaway local cluster)",
+  "plugins": "SULD + Chunky, CoreProtect, DecentHolograms, DiscordSRV (no token), EssentialsX, GSit, LuckPerms, PlaceholderAPI, SkinsRestorer, VaultUnlocked, ViaVersion/Backwards, WorldEdit, WorldGuard, spark"
+ },
+ "resourcePack": {
+  "zipBytes": 292666,
+  "files": 225,
+  "uncompressedBytes": 1252569,
+  "note": "suld-resourcepack.zip as built by Gradle and self-hosted (285 KiB)"
+ },
+ "scenarios": {
+  "s1_idle_empty": {
+   "what": "server idle, no players, 60 s",
+   "seconds": 60,
+   "tps": {
+    "avg": 19.62,
+    "min": 17.85
+   },
+   "msptMs": {
+    "mean": 0.44,
+    "p50": 0.36,
+    "p95": 1.03,
+    "p99": 1.84,
+    "max": 4.33
+   },
+   "ticksOver": {
+    "50ms": 0,
+    "100ms": 0,
+    "300ms": 0,
+    "window": 1200
+   },
+   "processCpuPct": {
+    "avg": 2.7,
+    "max": 12.6
+   },
+   "heapUsedMb": {
+    "avg": 1368,
+    "max": 1396
+   },
+   "heapCommittedMb": 1720,
+   "entitiesMax": 0,
+   "chunksMax": 0,
+   "playersMax": 0,
+   "probesUs": {
+    "hud.actionbar_tick": {
+     "mean": 8.0,
+     "p95": 20.2,
+     "p99": 48.7,
+     "max": 54.9,
+     "count": 120
+    },
+    "hud.sidebar_tick": {
+     "mean": 35.5,
+     "p95": 68.4,
+     "p99": 91.7,
+     "max": 91.7,
+     "count": 30
+    },
+    "skill.regen_tick": {
+     "mean": 7.3,
+     "p95": 16.4,
+     "p99": 26.7,
+     "max": 26.7,
+     "count": 60
+    }
+   }
+  },
+  "s2_one_player": {
+   "what": "1 bot idle/wandering in Kharkhorum, 60 s",
+   "seconds": 60,
+   "tps": {
+    "avg": 19.94,
+    "min": 19.93
+   },
+   "msptMs": {
+    "mean": 6.59,
+    "p50": 5.94,
+    "p95": 10.42,
+    "p99": 18.18,
+    "max": 39.22
+   },
+   "ticksOver": {
+    "50ms": 0,
+    "100ms": 0,
+    "300ms": 0,
+    "window": 1201
+   },
+   "processCpuPct": {
+    "avg": 12.4,
+    "max": 44.8
+   },
+   "heapUsedMb": {
+    "avg": 1212,
+    "max": 1540
+   },
+   "heapCommittedMb": 1720,
+   "entitiesMax": 222,
+   "chunksMax": 525,
+   "playersMax": 1,
+   "probesUs": {
+    "combat.damaged": {
+     "mean": 5.6,
+     "p95": 34.0,
+     "p99": 34.0,
+     "max": 34.0,
+     "count": 13
+    },
+    "combat.damaged_after": {
+     "mean": 2.3,
+     "p95": 18.1,
+     "p99": 18.1,
+     "max": 18.1,
+     "count": 13
+    },
+    "hud.actionbar_tick": {
+     "mean": 317.2,
+     "p95": 499.6,
+     "p99": 672.5,
+     "max": 1229.5,
+     "count": 120
+    },
+    "hud.sidebar_tick": {
+     "mean": 1812.8,
+     "p95": 3627.7,
+     "p99": 5333.5,
+     "max": 5333.5,
+     "count": 30
+    },
+    "skill.regen_tick": {
+     "mean": 40.1,
+     "p95": 75.8,
+     "p99": 130.0,
+     "max": 130.0,
+     "count": 60
+    }
+   }
+  },
+  "s3_ten_players": {
+   "what": "10 bots wandering (city + steppe), 120 s",
+   "seconds": 120,
+   "tps": {
+    "avg": 20.0,
+    "min": 20.0
+   },
+   "msptMs": {
+    "mean": 7.83,
+    "p50": 7.15,
+    "p95": 13.03,
+    "p99": 17.95,
+    "max": 68.73
+   },
+   "ticksOver": {
+    "50ms": 1,
+    "100ms": 0,
+    "300ms": 0,
+    "window": 2400
+   },
+   "processCpuPct": {
+    "avg": 14.4,
+    "max": 50.0
+   },
+   "heapUsedMb": {
+    "avg": 1245,
+    "max": 1616
+   },
+   "heapCommittedMb": 1720,
+   "entitiesMax": 425,
+   "chunksMax": 749,
+   "playersMax": 10,
+   "probesUs": {
+    "combat.damaged": {
+     "mean": 5.2,
+     "p95": 20.2,
+     "p99": 36.3,
+     "max": 36.3,
+     "count": 48
+    },
+    "combat.damaged_after": {
+     "mean": 2.2,
+     "p95": 2.3,
+     "p99": 38.2,
+     "max": 38.2,
+     "count": 48
+    },
+    "combat.hit": {
+     "mean": 21.1,
+     "p95": 99.0,
+     "p99": 99.0,
+     "max": 99.0,
+     "count": 6
+    },
+    "db.profile.find": {
+     "mean": 1087.6,
+     "p95": 1810.6,
+     "p99": 1810.6,
+     "max": 1810.6,
+     "count": 6
+    },
+    "db.profile.save": {
+     "mean": 3956.4,
+     "p95": 15741.8,
+     "p99": 15741.8,
+     "max": 15741.8,
+     "count": 12
+    },
+    "gui.click": {
+     "mean": 98.8,
+     "p95": 212.8,
+     "p99": 212.8,
+     "max": 212.8,
+     "count": 6
+    },
+    "hud.actionbar_tick": {
+     "mean": 328.7,
+     "p95": 709.1,
+     "p99": 1354.2,
+     "max": 2770.1,
+     "count": 240
+    },
+    "hud.sidebar_tick": {
+     "mean": 4508.0,
+     "p95": 6823.4,
+     "p99": 39718.7,
+     "max": 39718.7,
+     "count": 60
+    },
+    "skill.regen_tick": {
+     "mean": 42.0,
+     "p95": 88.8,
+     "p99": 193.2,
+     "max": 210.7,
+     "count": 120
+    }
+   }
+  },
+  "s4_churn": {
+   "what": "20 sequential join -> 4 s -> quit cycles while 10 bots are online (profile load/save)",
+   "seconds": 150,
+   "tps": {
+    "avg": 20.0,
+    "min": 19.98
+   },
+   "msptMs": {
+    "mean": 7.83,
+    "p50": 5.53,
+    "p95": 16.57,
+    "p99": 23.19,
+    "max": 178.98
+   },
+   "ticksOver": {
+    "50ms": 5,
+    "100ms": 2,
+    "300ms": 0,
+    "window": 3006
+   },
+   "processCpuPct": {
+    "avg": 11.3,
+    "max": 39.6
+   },
+   "heapUsedMb": {
+    "avg": 1250,
+    "max": 1625
+   },
+   "heapCommittedMb": 1720,
+   "entitiesMax": 544,
+   "chunksMax": 876,
+   "playersMax": 11,
+   "probesUs": {
+    "combat.damaged": {
+     "mean": 4.3,
+     "p95": 6.1,
+     "p99": 19.4,
+     "max": 19.4,
+     "count": 51
+    },
+    "combat.damaged_after": {
+     "mean": 1.3,
+     "p95": 1.8,
+     "p99": 10.3,
+     "max": 10.3,
+     "count": 51
+    },
+    "combat.hit": {
+     "mean": 13.6,
+     "p95": 26.9,
+     "p99": 26.9,
+     "max": 26.9,
+     "count": 3
+    },
+    "db.profile.find": {
+     "mean": 1260.9,
+     "p95": 2629.8,
+     "p99": 2777.0,
+     "max": 2777.0,
+     "count": 20
+    },
+    "db.profile.save": {
+     "mean": 2656.6,
+     "p95": 6053.0,
+     "p99": 12011.0,
+     "max": 12011.0,
+     "count": 70
+    },
+    "gui.click": {
+     "mean": 48.6,
+     "p95": 73.0,
+     "p99": 87.6,
+     "max": 87.6,
+     "count": 20
+    },
+    "hud.actionbar_tick": {
+     "mean": 167.7,
+     "p95": 550.5,
+     "p99": 1180.7,
+     "max": 1242.3,
+     "count": 300
+    },
+    "hud.sidebar_tick": {
+     "mean": 1916.1,
+     "p95": 5020.4,
+     "p99": 11028.3,
+     "max": 11028.3,
+     "count": 75
+    },
+    "skill.regen_tick": {
+     "mean": 25.9,
+     "p95": 75.6,
+     "p99": 164.2,
+     "max": 275.0,
+     "count": 150
+    }
+   }
+  },
+  "s5_combat_qa": {
+   "what": "full combat verification suite (333 checks: skills, procs, items) on 1 player, 390 s",
+   "seconds": 390,
+   "tps": {
+    "avg": 19.73,
+    "min": 18.19
+   },
+   "msptMs": {
+    "mean": 6.14,
+    "p50": 4.12,
+    "p95": 8.33,
+    "p99": 30.74,
+    "max": 1560.15
+   },
+   "ticksOver": {
+    "50ms": 52,
+    "100ms": 30,
+    "300ms": 9,
+    "window": 7686
+   },
+   "processCpuPct": {
+    "avg": 7.1,
+    "max": 90.8
+   },
+   "heapUsedMb": {
+    "avg": 1273,
+    "max": 1654
+   },
+   "heapCommittedMb": 1743,
+   "entitiesMax": 957,
+   "chunksMax": 882,
+   "playersMax": 1,
+   "probesUs": {
+    "combat.damaged": {
+     "mean": 0.3,
+     "p95": 0.5,
+     "p99": 1.2,
+     "max": 486.3,
+     "count": 90567
+    },
+    "combat.damaged_after": {
+     "mean": 0.3,
+     "p95": 0.4,
+     "p99": 0.7,
+     "max": 728.0,
+     "count": 90338
+    },
+    "combat.hit": {
+     "mean": 4.2,
+     "p95": 4.8,
+     "p99": 16.1,
+     "max": 25567.9,
+     "count": 89762
+    },
+    "db.profile.find": {
+     "mean": 587.9,
+     "p95": 587.9,
+     "p99": 587.9,
+     "max": 587.9,
+     "count": 1
+    },
+    "db.profile.save": {
+     "mean": 1725.6,
+     "p95": 5000.2,
+     "p99": 8483.8,
+     "max": 18039.7,
+     "count": 1230
+    },
+    "gui.click": {
+     "mean": 54.9,
+     "p95": 54.9,
+     "p99": 54.9,
+     "max": 54.9,
+     "count": 1
+    },
+    "hud.actionbar_tick": {
+     "mean": 181.0,
+     "p95": 292.0,
+     "p99": 1031.8,
+     "max": 4702.3,
+     "count": 769
+    },
+    "hud.sidebar_tick": {
+     "mean": 1290.3,
+     "p95": 1934.2,
+     "p99": 4285.2,
+     "max": 12938.9,
+     "count": 192
+    },
+    "skill.cast": {
+     "mean": 207.6,
+     "p95": 697.3,
+     "p99": 3906.7,
+     "max": 19138.3,
+     "count": 1633
+    },
+    "skill.regen_tick": {
+     "mean": 27.1,
+     "p95": 65.8,
+     "p99": 124.4,
+     "max": 166.1,
+     "count": 384
+    }
+   }
+  },
+  "s6_gui_actions": {
+   "what": "bot: /equipment, picker, equip/unequip, /items, /item sell|bind|salvage|destroy|craft",
+   "seconds": 50,
+   "tps": {
+    "avg": 19.95,
+    "min": 19.95
+   },
+   "msptMs": {
+    "mean": 4.41,
+    "p50": 3.8,
+    "p95": 7.27,
+    "p99": 16.13,
+    "max": 43.5
+   },
+   "ticksOver": {
+    "50ms": 0,
+    "100ms": 0,
+    "300ms": 0,
+    "window": 998
+   },
+   "processCpuPct": {
+    "avg": 7.5,
+    "max": 47.9
+   },
+   "heapUsedMb": {
+    "avg": 1436,
+    "max": 1629
+   },
+   "heapCommittedMb": 1743,
+   "entitiesMax": 258,
+   "chunksMax": 882,
+   "playersMax": 1,
+   "probesUs": {
+    "db.profile.find": {
+     "mean": 1179.6,
+     "p95": 1244.0,
+     "p99": 1244.0,
+     "max": 1244.0,
+     "count": 2
+    },
+    "db.profile.save": {
+     "mean": 2845.3,
+     "p95": 5468.6,
+     "p99": 5468.6,
+     "max": 5468.6,
+     "count": 10
+    },
+    "gui.click": {
+     "mean": 3499.4,
+     "p95": 6124.3,
+     "p99": 6124.3,
+     "max": 6124.3,
+     "count": 5
+    },
+    "hud.actionbar_tick": {
+     "mean": 92.9,
+     "p95": 191.7,
+     "p99": 210.0,
+     "max": 259.4,
+     "count": 100
+    },
+    "hud.sidebar_tick": {
+     "mean": 1092.7,
+     "p95": 1679.7,
+     "p99": 2870.2,
+     "max": 2870.2,
+     "count": 25
+    },
+    "skill.regen_tick": {
+     "mean": 25.4,
+     "p95": 70.8,
+     "p99": 117.0,
+     "max": 117.0,
+     "count": 50
+    }
+   }
+  },
+  "s7_bench": {
+   "what": "/suldperf bench 10000 (item engine on the main thread, 1 player online)",
+   "seconds": 5,
+   "tps": {
+    "avg": 19.87,
+    "min": 19.87
+   },
+   "msptMs": {
+    "mean": 11.36,
+    "p50": 3.59,
+    "p95": 6.02,
+    "p99": 698.44,
+    "max": 698.44
+   },
+   "ticksOver": {
+    "50ms": 1,
+    "100ms": 1,
+    "300ms": 1,
+    "window": 93
+   },
+   "processCpuPct": {
+    "avg": 10.0,
+    "max": 28.7
+   },
+   "heapUsedMb": {
+    "avg": 1283,
+    "max": 1303
+   },
+   "heapCommittedMb": 1743,
+   "entitiesMax": 152,
+   "chunksMax": 483,
+   "playersMax": 1,
+   "probesUs": {
+    "bench.equipment.compute": {
+     "mean": 11.8,
+     "p95": 17.2,
+     "p99": 49.9,
+     "max": 165.0,
+     "count": 2000
+    },
+    "bench.item.check_cached": {
+     "mean": 10.8,
+     "p95": 14.6,
+     "p99": 39.6,
+     "max": 329.7,
+     "count": 10000
+    },
+    "bench.item.check_uncached": {
+     "mean": 30.0,
+     "p95": 64.2,
+     "p99": 122.0,
+     "max": 1050.5,
+     "count": 2000
+    },
+    "bench.item.generate": {
+     "mean": 6.0,
+     "p95": 9.5,
+     "p99": 16.7,
+     "max": 422.5,
+     "count": 10000
+    },
+    "bench.item.stack_build": {
+     "mean": 80.3,
+     "p95": 181.8,
+     "p99": 269.7,
+     "max": 4797.1,
+     "count": 2000
+    },
+    "bench.loot.roll": {
+     "mean": 10.3,
+     "p95": 28.9,
+     "p99": 63.6,
+     "max": 310.9,
+     "count": 10000
+    },
+    "hud.actionbar_tick": {
+     "mean": 121.0,
+     "p95": 222.4,
+     "p99": 222.4,
+     "max": 222.4,
+     "count": 9
+    },
+    "hud.sidebar_tick": {
+     "mean": 1004.6,
+     "p95": 1126.9,
+     "p99": 1126.9,
+     "max": 1126.9,
+     "count": 3
+    },
+    "skill.regen_tick": {
+     "mean": 22.5,
+     "p95": 32.8,
+     "p99": 32.8,
+     "max": 32.8,
+     "count": 5
+    }
+   }
+  }
+ }
+}

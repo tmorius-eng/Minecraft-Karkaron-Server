@@ -303,7 +303,7 @@ public final class SkillTreeService implements Listener {
             return;
         }
         refreshRuntime(p, pr, r);
-        skills.actionBar(p);
+        services.hud().refresh(p);
     }
 
     /** Call after any change to a player's tree: refresh derived state, save, update the HUD. */
@@ -314,7 +314,7 @@ public final class SkillTreeService implements Listener {
         refreshRuntime(p, pr, r);
         services.profiles().save(pr);
         services.hud().update(p, pr);
-        skills.actionBar(p);
+        services.hud().refresh(p);
     }
 
     // ------------------------------------------------------------------ attributes
@@ -404,7 +404,7 @@ public final class SkillTreeService implements Listener {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     attach(p);
                     p.sendMessage(Messages.accent("◆ Чадварын мод нээгдлээ: түвшин ахих бүрт, түүхийн эрэл дуусгаж, шинэ газар нээхэд оноо ирнэ."));
-                    p.sendMessage(Messages.info("Оноогоо /skills (газрын зураг) дээр зарцуулж, шид болон идэвхгүй чадвараа сонго. Улаан холбоос = зөвхөн нэгийг сонгоно."));
+                    p.sendMessage(Messages.info("Оноогоо /skills (газрын зураг; эсвэл ангийн зэвсгээ барьж Shift + баруун товч) дээр зарцуулж, шид болон идэвхгүй чадвараа сонго. Улаан холбоос = зөвхөн нэгийг сонгоно."));
                 });
             }
         } else if (e.payload() instanceof LevelUpEvent ev) {
@@ -851,6 +851,15 @@ public final class SkillTreeService implements Listener {
     /** Damage the player takes: reductions, keystone, dodge (before the damage is applied). */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onDamaged(EntityDamageEvent e) {
+        long t = mn.suld.plugin.perf.PerfProbe.start();
+        try {
+            onDamaged0(e);
+        } finally {
+            mn.suld.plugin.perf.PerfProbe.stop("combat.damaged", t);
+        }
+    }
+
+    private void onDamaged0(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player p)) return;
         Runtime r = runtime.get(p.getUniqueId());
         if (r == null || r.build.isEmpty()) return;
@@ -873,6 +882,15 @@ public final class SkillTreeService implements Listener {
     /** After the damage: passive spells (damaged / low health) and the damage reflected by thorns. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDamagedAfter(EntityDamageEvent e) {
+        long t = mn.suld.plugin.perf.PerfProbe.start();
+        try {
+            onDamagedAfter0(e);
+        } finally {
+            mn.suld.plugin.perf.PerfProbe.stop("combat.damaged_after", t);
+        }
+    }
+
+    private void onDamagedAfter0(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player p)) return;
         Runtime r = runtime.get(p.getUniqueId());
         if (r == null || r.build.isEmpty()) return;

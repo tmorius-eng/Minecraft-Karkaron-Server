@@ -327,7 +327,7 @@ public final class SkillMapMenu implements Listener {
     }
 
     private void feedback(Player p, String text) {
-        p.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(text)
+        services.hud().toast(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(text)
                 .decoration(TextDecoration.BOLD, true));
     }
 

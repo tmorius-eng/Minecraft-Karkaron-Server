@@ -44,7 +44,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     @Override
     public CompletableFuture<Optional<PlayerProfile>> find(UUID playerId) {
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(mn.suld.plugin.perf.PerfProbe.timed("db.profile.find", () -> {
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement ps = conn.prepareStatement(SELECT)) {
                 bindUuid(ps, 1, playerId);
@@ -78,7 +78,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to load profile " + playerId, ex);
             }
-        }, executor);
+        }), executor);
     }
 
     /** Unreadable skill data must stop the load: saving the profile afterwards would erase the player's build. */
@@ -144,7 +144,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     @Override
     public CompletableFuture<PlayerProfile> save(PlayerProfile profile) {
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(mn.suld.plugin.perf.PerfProbe.timed("db.profile.save", () -> {
             // One consistent snapshot (all fields and the version under the profile's lock): the row and the
             // in-memory "persisted" marker agree, and a change made meanwhile stays dirty for the next save.
             PlayerProfile.Snapshot snap = profile.snapshot();
@@ -172,7 +172,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to save profile " + profile.playerId(), ex);
             }
-        }, executor);
+        }), executor);
     }
 
     @Override

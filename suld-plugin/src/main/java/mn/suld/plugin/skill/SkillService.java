@@ -77,7 +77,6 @@ public final class SkillService implements Listener {
     public final java.util.concurrent.atomic.AtomicInteger executions = new java.util.concurrent.atomic.AtomicInteger();
     /** Counts enemies a spell touched (each gets the modifier riders once); the QA suite derives expected totals from it. */
     public final java.util.concurrent.atomic.AtomicInteger riderCalls = new java.util.concurrent.atomic.AtomicInteger();
-    private final Map<UUID, String> notice = new ConcurrentHashMap<>();
     /** The caster's ATK when the spell was cast: swapping weapons while it is still flying changes nothing. */
     private final Map<UUID, Double> castAttack = new ConcurrentHashMap<>();
 
@@ -87,8 +86,11 @@ public final class SkillService implements Listener {
     }
 
     public void start() {
-        Bukkit.getScheduler().runTaskTimer(plugin, this::regen, 20L, 20L);
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> actionBar(), 10L, 10L);
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            long t = mn.suld.plugin.perf.PerfProbe.start();
+            regen();
+            mn.suld.plugin.perf.PerfProbe.stop("skill.regen_tick", t);
+        }, 20L, 20L);
     }
 
     private PlayerClass clazzOf(Player p) {
@@ -123,9 +125,9 @@ public final class SkillService implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
         combos.remove(id);
+        mapOpened.remove(id);
         lastCast.remove(id);
         spellReady.remove(id);
-        notice.remove(id);
         castAttack.remove(id);
         lastClickByType.keySet().removeIf(k -> k.startsWith(id.toString()));
         CombatListener.EMPOWERED_ARROWS.remove(id);
@@ -149,10 +151,31 @@ public final class SkillService implements Listener {
      * A right click on a block is often "cancelled" by block protection (the city denies using most blocks): that says
      * nothing about casting, so cancelled interacts still count (the class weapon check decides).
      */
+    /** Opens the skill-tree map (set by the plugin once the map exists). */
+    private java.util.function.Consumer<Player> skillMap = p -> { };
+    private final Map<UUID, Long> mapOpened = new ConcurrentHashMap<>();
+
+    public void skillMap(java.util.function.Consumer<Player> open) {
+        this.skillMap = open;
+    }
+
+    /**
+     * Sneak + right click with the class weapon opens the skill-tree map. It is not a combo click (combos are plain
+     * clicks), so spells and the map never get in each other's way.
+     */
+    private boolean mapShortcut(Player p) {
+        if (!p.isSneaking() || !holdsClassWeapon(p)) return false;
+        long now = System.currentTimeMillis();
+        Long last = mapOpened.put(p.getUniqueId(), now);
+        if (last == null || now - last > 600) Bukkit.getScheduler().runTask(plugin, () -> skillMap.accept(p));
+        return true;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInteract(PlayerInteractEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;
         Action a = e.getAction();
+        if ((a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) && mapShortcut(e.getPlayer())) return;
         if (a == Action.LEFT_CLICK_AIR || a == Action.LEFT_CLICK_BLOCK) click(e.getPlayer(), 'L');
         else if (a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) click(e.getPlayer(), 'R');
     }
@@ -165,7 +188,8 @@ public final class SkillService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInteractEntity(PlayerInteractEntityEvent e) {
-        if (e.getHand() == EquipmentSlot.HAND) click(e.getPlayer(), 'R');
+        if (e.getHand() != EquipmentSlot.HAND || mapShortcut(e.getPlayer())) return;
+        click(e.getPlayer(), 'R');
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -195,7 +219,7 @@ public final class SkillService implements Listener {
         ComboTracker.Result r = t.click(c, now);
         if (r.kind() == ComboTracker.Kind.PROGRESS) {
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.35f, r.combo().length() == 1 ? 1.4f : 1.7f);
-            actionBar(p);
+            services.hud().refresh(p);
         } else if (r.kind() == ComboTracker.Kind.COMPLETE) {
             t.spellFor(r.combo()).ifPresent(s -> cast(p, s));
         }
@@ -226,6 +250,15 @@ public final class SkillService implements Listener {
      * {@code ignoreTiming} skips the anti-spam gap and the cooldown (used by the QA suite to cast repeatedly).
      */
     public CastResult castDirect(Player p, Spell s, boolean ignoreTiming) {
+        long t = mn.suld.plugin.perf.PerfProbe.start();
+        try {
+            return castDirect0(p, s, ignoreTiming);
+        } finally {
+            mn.suld.plugin.perf.PerfProbe.stop("skill.cast", t);
+        }
+    }
+
+    private CastResult castDirect0(Player p, Spell s, boolean ignoreTiming) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return CastResult.NO_PROFILE;
         if (services.isSoul.test(p.getUniqueId())) { // a soul cannot cast
@@ -314,8 +347,25 @@ public final class SkillService implements Listener {
     }
 
     public void say(Player p, String text) {
-        notice.put(p.getUniqueId(), text + "§r@" + (System.currentTimeMillis() + 1500));
-        actionBar(p);
+        services.hud().toast(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(text), 1500);
+    }
+
+    // ------------------------------------------------------------------ read by the HUD
+
+    /** The player's class, or null before one is chosen. */
+    public PlayerClass clazz(Player p) {
+        return clazzOf(p);
+    }
+
+    /** The click combo being typed ("LR"), or empty. */
+    public String comboInProgress(Player p) {
+        ComboTracker t = combos.get(p.getUniqueId());
+        return t == null ? "" : t.current(System.currentTimeMillis());
+    }
+
+    /** What casting {@code s} costs this player now (spell modifiers included). */
+    public int costFor(Player p, Spell s) {
+        return costOf(buildOf(p), s);
     }
 
     // ------------------------------------------------------------------ spell helpers
@@ -816,63 +866,4 @@ public final class SkillService implements Listener {
         if (hp > 0 && services.skillTree() != null) services.skillTree().regenerate(p, hp);
     }
 
-    private static TextColor resourceColor(PlayerClass c) {
-        return switch (c) {
-            case BAATAR -> TextColor.fromHexString("#FF5A46");
-            case MERGEN -> TextColor.fromHexString("#7CE07C");
-            case BOO -> TextColor.fromHexString("#B06BFF");
-            case DARKHAN -> TextColor.fromHexString("#FF9A3C");
-            case KHULEGCHIN -> TextColor.fromHexString("#5AAFFF");
-        };
-    }
-
-    private void actionBar() {
-        for (Player p : Bukkit.getOnlinePlayers()) actionBar(p);
-    }
-
-    /** ❤ HP  ·  resource bar  ·  combo in progress (or the last spell notice). */
-    public void actionBar(Player p) {
-        PlayerClass c = clazzOf(p);
-        if (c == null) return;
-        ResourcePool pool = pool(p);
-        var max = p.getAttribute(Attribute.MAX_HEALTH);
-        int maxHp = (int) Math.ceil(max == null ? 20 : max.getValue());
-        int hp = Math.min((int) Math.ceil(p.getHealth()), maxHp);
-        int filled = (int) Math.round(pool.fraction() * 10);
-        TextColor rc = resourceColor(c);
-        Component bar = Component.empty().append(StyleFormat.glyph(Glyphs.ICON_HEART)).append(Component.text(" " + hp + "/" + maxHp, NamedTextColor.RED, TextDecoration.BOLD))
-                .append(Component.text("    " + c.resourceName().split(" ")[0] + " ", rc, TextDecoration.BOLD))
-                .append(Component.text("▰".repeat(filled), rc)).append(Component.text("▱".repeat(10 - filled), NamedTextColor.DARK_GRAY))
-                .append(Component.text(" " + pool.value(), rc, TextDecoration.BOLD));
-        String n = notice.get(p.getUniqueId());
-        String tail = null;
-        if (n != null) {
-            int at = n.lastIndexOf('@');
-            if (System.currentTimeMillis() < Long.parseLong(n.substring(at + 1))) tail = n.substring(0, at);
-            else notice.remove(p.getUniqueId());
-        }
-        ComboTracker t = combos.get(p.getUniqueId());
-        String combo = t == null ? "" : t.current(System.currentTimeMillis());
-        if (!combo.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < 3; i++) sb.append(i < combo.length() ? combo.charAt(i) : '_').append(i < 2 ? "-" : "");
-            tail = "§e§l" + sb;
-        }
-        SkillTreeService tree = services.skillTree();
-        if (tail == null && tree != null) {
-            // idle line: ultimate state and unspent points (compact, only when relevant)
-            StringBuilder sb = new StringBuilder();
-            mn.suld.api.skill.tree.Ultimate ult = tree.ultimateOf(p);
-            if (ult != null) {
-                int cd = tree.ultimateCooldownSeconds(p);
-                sb.append(cd > 0 ? "§7F ✦ " + cd + "с" : "§6§lF ✦ бэлэн");
-            }
-            int avail = tree.available(p);
-            if (avail > 0) sb.append(sb.length() > 0 ? "  " : "").append("§b◆").append(avail).append(" оноо");
-            if (sb.length() > 0) tail = sb.toString();
-        }
-        if (tail != null) bar = bar.append(Component.text("    ")).append(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(tail)
-                .decoration(TextDecoration.BOLD, true));
-        p.sendActionBar(bar);
-    }
 }

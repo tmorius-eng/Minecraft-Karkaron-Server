@@ -31,6 +31,8 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:$paperApiVersion")
+    // the HUD composition (Adventure components, no server) is unit-tested
+    testImplementation("io.papermc.paper:paper-api:$paperApiVersion")
 
     // Our own domain layer — not published to any repository, so it is shaded
     // into the final jar.

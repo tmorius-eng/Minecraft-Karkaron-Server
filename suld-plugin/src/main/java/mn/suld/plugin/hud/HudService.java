@@ -69,11 +69,48 @@ public final class HudService {
         this.progression = progression;
     }
 
-    /** Wire the services the HUD reads (called once everything exists) and start the refresh ticker. */
+    private HudPanel panel;
+
+    /** Wire the services the HUD reads (called once everything exists) and start the refresh tickers. */
     public void attach(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
         this.services = services;
-        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 40L, 40L);
+        this.panel = new HudPanel(plugin, services);
+        Bukkit.getPluginManager().registerEvents(panel, plugin);
+        panel.start();
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            long t = mn.suld.plugin.perf.PerfProbe.start();
+            tick();
+            mn.suld.plugin.perf.PerfProbe.stop("hud.sidebar_tick", t);
+        }, 40L, 40L);
+    }
+
+    /** The spell system the panel reads (resource pool, cooldowns, combos); set once it exists. */
+    public void skills(mn.suld.plugin.skill.SkillService skills) {
+        if (panel != null) panel.skills(skills);
+    }
+
+    /** Measurement only (/suldperf hud on|off): turn the panel drawing off/on to A/B its cost. */
+    public void panelEnabled(boolean on) {
+        if (panel != null) panel.enabled = on;
+    }
+
+    /** Redraw this player's panel on the next tick (call after anything it shows changes). */
+    public void refresh(Player player) {
+        if (panel != null) panel.refresh(player);
+    }
+
+    /**
+     * A short notice in the HUD's text line above the panel (instead of a raw action bar, which would replace the
+     * panel). Clients without the SÜLD pack get the message as a plain action bar.
+     */
+    public void toast(Player player, Component message) {
+        toast(player, message, 2500);
+    }
+
+    public void toast(Player player, Component message, long millis) {
+        if (panel != null) panel.toast(player, message, millis);
+        else player.sendActionBar(message);
     }
 
     /**

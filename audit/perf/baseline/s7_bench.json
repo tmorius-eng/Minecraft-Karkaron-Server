@@ -1,0 +1,27 @@
+{
+  "label": "s7_bench",
+  "startedAt": "2026-10-07T08:05:47.143093332Z",
+  "seconds": 5.051,
+  "environment": {"java": "21.0.12.1", "cpus": 4, "maxHeapMb": 2048, "server": "1.21.11-132-c5eb079 (MC: 1.21.11)", "jvmArgs": "-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=46051 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes= -Xms1G -Xmx2G"},
+  "summary": {"tps": {"min": 19.867, "avg": 19.867, "max": 19.867}, "processCpuPct": {"min": 4.315, "avg": 9.963, "max": 28.686}, "systemCpuPct": {"min": 9.711, "avg": 14.255, "max": 29.759}, "heapUsedMb": {"min": 1242.275, "avg": 1282.604, "max": 1303.259}, "heapCommittedMb": {"min": 1743.000, "avg": 1743.000, "max": 1743.000}, "entities": {"min": 150.000, "avg": 151.600, "max": 152.000}, "chunks": {"min": 462.000, "avg": 478.800, "max": 483.000}, "players": {"min": 1.000, "avg": 1.000, "max": 1.000}},
+  "probesUs": {
+    "bench.equipment.compute": {"count": 2000, "mean": 11.836, "p50": 10.785, "p95": 17.198, "p99": 49.935, "max": 165.028},
+    "bench.item.check_cached": {"count": 10000, "mean": 10.842, "p50": 8.518, "p95": 14.563, "p99": 39.570, "max": 329.698},
+    "bench.item.check_uncached": {"count": 2000, "mean": 29.981, "p50": 23.528, "p95": 64.226, "p99": 122.016, "max": 1050.524},
+    "bench.item.generate": {"count": 10000, "mean": 6.003, "p50": 5.099, "p95": 9.526, "p99": 16.738, "max": 422.503},
+    "bench.item.stack_build": {"count": 2000, "mean": 80.300, "p50": 56.627, "p95": 181.760, "p99": 269.721, "max": 4797.065},
+    "bench.loot.roll": {"count": 10000, "mean": 10.285, "p50": 2.399, "p95": 28.936, "p99": 63.629, "max": 310.888},
+    "hud.actionbar_tick": {"count": 9, "mean": 120.977, "p50": 119.682, "p95": 222.393, "p99": 222.393, "max": 222.393},
+    "hud.sidebar_tick": {"count": 3, "mean": 1004.588, "p50": 970.429, "p95": 1126.892, "p99": 1126.892, "max": 1126.892},
+    "server.tick": {"count": 93, "mean": 11355.517, "p50": 3589.915, "p95": 6023.643, "p99": 698436.029, "max": 698436.029},
+    "skill.regen_tick": {"count": 5, "mean": 22.541, "p50": 24.407, "p95": 32.761, "p99": 32.761, "max": 32.761}
+  },
+  "ticksOver": {"50ms": 1, "100ms": 1, "300ms": 1, "window": 93},
+  "samples": [
+    [1.397, 19.867, 28.686, 29.759, 1242.275, 1743.000, 150.000, 462.000, 1.000],
+    [2.398, 19.867, 7.612, 9.711, 1280.759, 1743.000, 152.000, 483.000, 1.000],
+    [3.396, 19.867, 4.872, 10.769, 1289.468, 1743.000, 152.000, 483.000, 1.000],
+    [4.396, 19.867, 4.315, 10.406, 1297.259, 1743.000, 152.000, 483.000, 1.000],
+    [5.050, 19.867, 4.331, 10.630, 1303.259, 1743.000, 152.000, 483.000, 1.000]
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "generated": "2026-10-07",
+  "legend": [
+    "COMPLETE",
+    "FUNCTIONAL_BUT_INCOMPLETE",
+    "MANUAL_QA_REQUIRED",
+    "BROKEN"
+  ],
+  "note": "COMPLETE = implemented and verified by unit tests and by the live bot that decodes the HUD from the real action-bar/boss-bar packets on Paper 1.21.11. Visual judgement in a real client is MANUAL_QA_REQUIRED (docs/HUD_MANUAL_QA.md).",
+  "tests": {
+    "unit": "HudComposerTest (13), HudChipTest (2): exact glyph positions, fills, numbers, slots, buffs, line cut, target frame, damage chip",
+    "live": "hudbot.js on all 5 classes: 14 checks each = 70/70 PASS; reconnect 5/5 PASS; toastbot 2/2 PASS; combat regression 332/0/1 of 333",
+    "build": "./gradlew clean build: 342 tests, 0 failed, 0 skipped"
+  },
+  "subsystems": {
+    "single HUD manager (HudService owns sidebar, TAB, action bar, target frame)": {
+      "status": "COMPLETE",
+      "evidence": "SkillService no longer writes the action bar; 7 systems route notices through HudService.toast"
+    },
+    "health bar + numbers + absorption + damage chip + low-health pulse": {
+      "status": "COMPLETE",
+      "evidence": "live hud.hp_matches_player (5 classes); unit absorptionAndTheDamageChip, lowHealthPulsesTheFrame"
+    },
+    "class-specific resource bar": {
+      "status": "COMPLETE",
+      "evidence": "live hud.class_resource: RES_<class> fill only, for all 5 classes"
+    },
+    "level + EXP progress": {
+      "status": "COMPLETE",
+      "evidence": "live hud.level_up (1 -> 13, EXP % follows); reconnect keeps level 13"
+    },
+    "food / mount health / breath (second row)": {
+      "status": "COMPLETE",
+      "evidence": "live hud.food_matches_player; unit mount and air cases"
+    },
+    "spell slots: ready / cooldown countdown / locked / not enough resource / ultimate": {
+      "status": "COMPLETE",
+      "evidence": "live hud.cooldown_shown + hud.cooldown_cleared + hud.slots_unlock_with_level (5 classes); unit slotsShowStateCooldownAndUltimate"
+    },
+    "status icons (buffs/debuffs, soul, broken gear, relic, safe zone, empowered arrows)": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "reason": "composition unit-tested and drawn live (SAFE seen in the city); each potion/state icon was not individually triggered live"
+    },
+    "text line: combo / notice / status (class, coins, skill points, gear score)": {
+      "status": "COMPLETE",
+      "evidence": "live toastbot (notice shown, cut at a word, expires), status line read back live"
+    },
+    "target frame (crosshair / last hit, tiered frame, HP, chip, clear on death)": {
+      "status": "COMPLETE",
+      "evidence": "live hud.target_on_look, target_hp (10 -> 6 after /damage, fill 180 -> 108 px), target_damage_chip (72 px then 0), target_changes, target_cleared (within 1 s)"
+    },
+    "SÜLD mob tiers on the target frame (elite silver, boss gold)": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "reason": "unit-tested (targetFrame); live test used vanilla animals, no SÜLD elite/boss was targeted"
+    },
+    "quest progress": {
+      "status": "COMPLETE",
+      "evidence": "existing QuestTracker compass bar + sidebar, reused (not duplicated)"
+    },
+    "join / reconnect": {
+      "status": "COMPLETE",
+      "evidence": "live: HUD present right after join; same level after quit/rejoin"
+    },
+    "clients without the pack (plain text fallback)": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "reason": "code path kept (old bar); not exercised live because the pack is required on this server"
+    },
+    "Shift + right click with the class weapon opens the skill map": {
+      "status": "COMPLETE",
+      "evidence": "live hud.shift_right_click_opens_skill_map (5 classes); the click does not start a combo"
+    },
+    "vanilla HUD hidden (hearts, food, armour, air, XP) + hotbar re-skin + transparent white boss bar": {
+      "status": "MANUAL_QA_REQUIRED",
+      "evidence": "sprites generated; only a client shows them"
+    },
+    "visual layout at all GUI scales": {
+      "status": "MANUAL_QA_REQUIRED",
+      "evidence": "offline render tools/pack/hud_render.py (docs/hud_preview.png); real client needed"
+    },
+    "performance": {
+      "status": "COMPLETE",
+      "evidence": "A/B in one session, 10 players: +0.57 ms mean MSPT; HUD probes 0.21-0.25 ms/tick (docs/perf/PERFORMANCE_BASELINE.md)"
+    }
+  },
+  "resourcePack": {
+    "beforeBytes": 292666,
+    "afterBytes": 349224,
+    "beforeFiles": 225,
+    "afterFiles": 368
+  },
+  "knownLimits": [
+    "hotbar cannot move server-side (Ares' left/vertical hotbar needs a client mod)",
+    "EquipmentService (completed item engine, not modified) still sends its rare 'item inactive' notice as a raw action bar: the panel is replaced for at most 1 s",
+    "other plugins using WHITE+PROGRESS boss bars would show no bar (none installed do)"
+  ]
+}

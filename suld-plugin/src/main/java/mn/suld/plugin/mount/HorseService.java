@@ -144,7 +144,7 @@ public final class HorseService implements Listener, TabExecutor {
         h.addPassenger(p);
         p.playSound(p.getLocation(), Sound.ENTITY_HORSE_AMBIENT, 1f, 1f);
         p.getWorld().spawnParticle(Particle.CLOUD, h.getLocation().add(0, 1, 0), 20, 0.5, 0.4, 0.5, 0.02);
-        p.sendActionBar(Component.text("Монгол морь · " + rank.displayName() + " · /mori — буух", TextColor.fromHexString("#FFD24A")));
+        services.hud().toast(p, Component.text("Монгол морь · " + rank.displayName() + " · /mori — буух", TextColor.fromHexString("#FFD24A")));
     }
 
     private boolean isSteppeHorse(Entity e) {

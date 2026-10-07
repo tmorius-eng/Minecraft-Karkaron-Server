@@ -129,7 +129,7 @@ public final class WorldEventService {
         }
         services.clans().contribute(killer.getUniqueId(), active.definition().clanExpPerKill());
         int mine = active.contributions().getOrDefault(killer.getUniqueId(), 0);
-        killer.sendActionBar(Component.text(active.definition().displayName() + ": таны хувь " + mine
+        services.hud().toast(killer, Component.text(active.definition().displayName() + ": таны хувь " + mine
                 + " · нийт " + active.kills() + "/" + active.definition().targetKills(), NamedTextColor.LIGHT_PURPLE));
         updateBar();
         if (!active.isActive()) {

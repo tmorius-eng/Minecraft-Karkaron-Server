@@ -50,6 +50,15 @@ public final class MenuListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onClick(InventoryClickEvent e) {
+        long t = mn.suld.plugin.perf.PerfProbe.start();
+        try {
+            onClick0(e);
+        } finally {
+            mn.suld.plugin.perf.PerfProbe.stop("gui.click", t);
+        }
+    }
+
+    private void onClick0(InventoryClickEvent e) {
         if (e.getView().getTopInventory().getHolder() instanceof Menu menu) {
             e.setCancelled(true);
             if (e.getWhoClicked() instanceof Player p && e.getClickedInventory() == e.getView().getTopInventory()) {

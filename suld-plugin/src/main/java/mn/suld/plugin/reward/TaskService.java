@@ -110,7 +110,7 @@ public final class TaskService implements Listener, TabExecutor {
         } else {
             for (int i = 0; i < tasks.size(); i++) {
                 if (tasks.get(i).prey().mobId().equals(mobId) && progress[i] < tasks.get(i).count()) {
-                    killer.sendActionBar(Component.text("Даалгавар · " + tasks.get(i).prey().mobName() + " " + progress[i] + "/" + tasks.get(i).count(),
+                    services.hud().toast(killer, Component.text("Даалгавар · " + tasks.get(i).prey().mobName() + " " + progress[i] + "/" + tasks.get(i).count(),
                             GOLD, TextDecoration.BOLD));
                     break;
                 }

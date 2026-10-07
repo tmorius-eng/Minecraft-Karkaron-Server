@@ -117,7 +117,7 @@ public final class CityProtectionListener implements Listener {
         Long last = lastNotice.get(p.getUniqueId());
         if (last != null && now - last < NOTICE_COOLDOWN_MS) return;
         lastNotice.put(p.getUniqueId(), now);
-        p.sendActionBar(Component.text("🛡 " + text, NamedTextColor.GOLD));
+        services.hud().toast(p, Component.text("🛡 " + text, NamedTextColor.GOLD));
     }
 
     private static boolean isNpc(Entity e) {

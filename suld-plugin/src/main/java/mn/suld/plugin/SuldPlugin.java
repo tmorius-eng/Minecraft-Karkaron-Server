@@ -159,6 +159,7 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.skill.SkillService skills = new mn.suld.plugin.skill.SkillService(this, services);
         getServer().getPluginManager().registerEvents(skills, this);
         skills.start();
+        services.hud().skills(skills);
         mn.suld.plugin.skill.SkillTreeService skillTree = new mn.suld.plugin.skill.SkillTreeService(this, services);
         skillTree.skills(skills);
         services.skillTree = skillTree;
@@ -168,6 +169,7 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.gui.SkillMapMenu skillMap = new mn.suld.plugin.gui.SkillMapMenu(this, services);
         skillMap.menus(menus);
         menus.skillMap(skillMap);
+        skills.skillMap(skillMap::open); // sneak + right click with the class weapon
         getServer().getPluginManager().registerEvents(skillMap, this);
         mn.suld.plugin.command.SkillCommands skillCommands = new mn.suld.plugin.command.SkillCommands(services, skillMap, menus,
                 new mn.suld.plugin.skill.qa.SkillQa(this, services, skillTree, skills));
@@ -180,6 +182,9 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("equipment", itemCommands.equipmentMenu());
         registerTab("loot", itemCommands.loot());
         registerTab("itemsadmin", itemCommands.admin());
+        mn.suld.plugin.perf.PerfService perf = new mn.suld.plugin.perf.PerfService(this, services);
+        getServer().getPluginManager().registerEvents(perf, this);
+        registerTab("suldperf", perf.command());
         services.quests().onChange((p, pr) -> services.hud().update(p, pr));
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);

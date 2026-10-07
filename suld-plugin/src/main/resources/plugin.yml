@@ -151,6 +151,10 @@ commands:
     usage: /itemsadmin <inspect|give|roll|validate|reload|sweep|quarantine> ...
     aliases: [iadmin]
     permission: suld.admin.items
+  suldperf:
+    description: Performance measurement sessions and item-engine benchmarks (start, stop, bench, report).
+    usage: /suldperf <start <label>|stop|bench [n]|report>
+    permission: suld.admin.perf
   credits:
     description: Your SULD credits; admin/console give|take.
     usage: /credits [give|take <player|uuid> <amount>]
@@ -225,9 +229,13 @@ permissions:
       suld.admin.credits: true
       suld.admin.skills: true
       suld.admin.items: true
+      suld.admin.perf: true
   suld.skills:
     description: Use the skill tree (/skills, /skill).
     default: true
+  suld.admin.perf:
+    description: Performance measurement (/suldperf) - tick, CPU, memory, entity sampling and code-path timings.
+    default: op
   suld.items:
     description: Use SULD items (/item, /items, /equipment, /loot).
     default: true

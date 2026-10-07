@@ -87,6 +87,15 @@ public final class CombatListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent event) {
+        long t = mn.suld.plugin.perf.PerfProbe.start();
+        try {
+            onHit0(event);
+        } finally {
+            mn.suld.plugin.perf.PerfProbe.stop("combat.hit", t);
+        }
+    }
+
+    private void onHit0(EntityDamageByEntityEvent event) {
         if (spellDamage || !isTarget(event.getEntity())) {
             return;
         }

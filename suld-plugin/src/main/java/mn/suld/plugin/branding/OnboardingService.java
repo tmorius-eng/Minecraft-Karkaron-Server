@@ -155,7 +155,7 @@ public final class OnboardingService implements Listener {
             if (services.dungeons().isInAnyRun(p.getUniqueId())) continue;
             int i = hintIndex.merge(p.getUniqueId(), 1, Integer::sum);
             String hint = hintFor(p, pr, i);
-            if (hint != null) p.sendActionBar(Component.text("➜ " + hint, GOLD, TextDecoration.BOLD));
+            if (hint != null) services.hud().toast(p, Component.text("➜ " + hint, GOLD, TextDecoration.BOLD));
         }
     }
 }
