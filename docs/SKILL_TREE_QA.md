@@ -86,9 +86,9 @@ A bot opens the real chest window and checks every slot against an independent J
 |---|---|---|---|---|---|---|---|
 | Баатар | states | 380 | 0 | 107 | 142 | 102 | final |
 | Мэргэн | states0 | 417 | 0 | 120 | 158 | 114 | final |
-| Бөө | states0 | 417 | 0 | 120 | 158 | 114 | earlier jar of this phase (same map code); final re-run in progress |
-| Дархан | states0 | 417 | 0 | 120 | 158 | 114 | earlier jar of this phase (same map code); final re-run in progress |
-| Хүлэгчин | states0 | 417 | 0 | 120 | 158 | 114 | earlier jar of this phase (same map code); final re-run in progress |
+| Бөө | states0 | 417 | 0 | 120 | 158 | 114 | final |
+| Дархан | states0 | 417 | 0 | 120 | 158 | 114 | final |
+| Хүлэгчин | states0 | 417 | 0 | 120 | 158 | 114 | final |
 
 Covered per class: `/skills` opens with the class title (1); every node's material, name, glint, stack count and state text in
 five views (2); the model of every connector between visible neighbours, and no stray items (3); pan incl. the clamped edges,
