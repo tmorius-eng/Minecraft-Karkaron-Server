@@ -11,6 +11,11 @@
 4. **Manual client test** — the one step that needs a real Minecraft client
    connecting (join flow, GUI clicks, resource-pack acceptance). Not automatable
    in a headless cloud box; steps listed below for a human tester.
+5. **Progression simulation (`suld-plugin/src/sim`)** — `./gradlew :suld-plugin:simTest`
+   (part of `check`): golden tests that the live model mirrors the content classes and the
+   curve, determinism, loot bands, the 7-day rule, AFK, lock curves.
+   `./gradlew :suld-plugin:simulate` re-runs the full matrix and rewrites
+   `docs/PROGRESSION_SIMULATION.md`, the spec tables and `audit/progression-balance.json`.
 
 ## Critical invariants (unit-tested)
 - Progression: level/EXP curve, overflow at cap, multi-level rollover.

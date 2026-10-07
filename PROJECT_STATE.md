@@ -3,13 +3,21 @@
 > Living status doc for continuity across sessions. Update it whenever state
 > changes. Dates are UTC.
 
-**Last updated:** 2026-10-06
-**Build:** `./gradlew build` green (215 tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
+**Last updated:** 2026-10-07
+**Build:** `./gradlew build` green (289 api + 53 plugin + 12 simulator tests). Asset validations green. Live Paper 1.21.11 + PostgreSQL verified.
 **Current phase:** Vertical Slice 4 (world relic → discovery → global uniqueness → broadcast → ownership) implemented and live-tested with bots on PostgreSQL (docs/RELICS.md). Auth done (docs/AUTHENTICATION.md). Slices 1–4 await one manual Minecraft-client pass.
 
 **Since the slices (all live-tested with bots on Paper 1.21.11):** hardcore death (DeathService), the 18-chapter
 storyline + quest tracker, four dungeons, region discovery rewards (V6), daily reward (V7), leaderboards, steppe
 horses, chat guard, MOTD/icon, tips, operator guide (docs/OPERATIONS.md), Bedrock UDP port in the firewall.
+
+**Progression master plan (2026-10-07), Stages A + B done, awaiting owner approval of the numbers:**
+forensic audit (`docs/PROGRESSION_EXPLOIT_AUDIT.md`, `audit/*-status.json`), the progression simulator
+(`./gradlew :suld-plugin:simulate`, `docs/PROGRESSION_SIMULATION.md`: live game = level 60 in 17 h; proposed = 206 h,
+12/12 compliance checks) and the spec set (`docs/PROGRESSION_BALANCE_SPEC.md` and the dungeon, gear, ascension,
+mastery, difficulty, economy, class-armour, active-playtime, class-gear, death, instant-revive (deferred), payment
+(deferred) and visual-pipeline docs). Nothing of the proposed balance is in the game yet. Next: Stage C (Баатар
+vertical slice: death/recovery → class gear → armour + ActivePlaytime → assets).
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "audited": "2026-10-07",
   "commit": "f123253",
-  "stage": "A (forensic audit, read-only)",
+  "stage": "A (audit) + B (spec)",
   "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
   "subsystems": {
     "genericArmorItems": {
@@ -85,5 +85,16 @@
       "tiers": 0,
       "visuals": "NOT_IMPLEMENTED"
     }
+  },
+  "spec": {
+    "status": "SPEC (awaiting owner approval; not implemented)",
+    "docs": [
+      "docs/CLASS_ARMOR_SYSTEM.md",
+      "docs/ARMOR_PROGRESSION.md",
+      "docs/ARMOR_MASTER_DESIGN.md",
+      "docs/ACTIVE_PLAYTIME_SPEC.md",
+      "docs/ARMOR_ASSET_PIPELINE.md"
+    ],
+    "simulated": "armour level/tier breakpoints simulated (docs/PROGRESSION_SIMULATION.md §Class armour): no hardcore run reaches AL60+T6 within 30 days; T6 ~day 90 at 10 h/day; AFK scenario stays at armour level 1"
   }
 }

@@ -1,7 +1,7 @@
 {
   "audited": "2026-10-07",
   "commit": "f123253",
-  "stage": "A (forensic audit, read-only)",
+  "stage": "A (audit) + B (spec)",
   "doc": "docs/PROGRESSION_EXPLOIT_AUDIT.md",
   "subsystems": {
     "classWeaponBinding": {
@@ -138,5 +138,16 @@
     "total": 20,
     "passing": 0,
     "note": "directive test list; none exist yet"
+  },
+  "spec": {
+    "status": "SPEC (awaiting owner approval; not implemented)",
+    "docs": [
+      "docs/CLASS_GEAR_SYSTEM.md",
+      "docs/DEATH_AND_RECOVERY.md",
+      "docs/INSTANT_REVIVE.md",
+      "docs/PAYMENT_ARCHITECTURE.md"
+    ],
+    "deathLockRecommendation": "GEOMETRIC 5 min x 288^((L-1)/59): 7 min @5, 31 min @20, 3.5 h @40, 24 h @60; simulated play time lost 2.5-4.2 %; owner picks the final curve",
+    "instantRevive": "DESIGN ONLY by owner decision; blocked on owner review of GAME_DESIGN.md:69/158-163 and config.yml:104-106 (cosmetics-only rule) and Mojang usage guidelines"
   }
 }

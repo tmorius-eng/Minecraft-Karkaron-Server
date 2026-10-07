@@ -51,6 +51,56 @@ dependencies {
     testImplementation("org.postgresql:postgresql:42.7.4")
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Progression simulator (docs/PROGRESSION_SIMULATION.md). A separate source set: it never ships in the plugin jar
+// (shadowJar takes `main` only) and needs no Paper API, so it builds without repo.papermc.io. It compiles against
+// suld-api plus a *copy* of the Bukkit-free content classes, so the live model reads the real mobs, dungeons and
+// story instead of a transcription that could drift.
+// ---------------------------------------------------------------------------------------------------------------
+val syncSimContent = tasks.register<Sync>("syncSimContent") {
+    from("src/main/java/mn/suld/plugin/content")
+    into(layout.buildDirectory.dir("generated/simContent/java/mn/suld/plugin/content"))
+}
+
+val sim: SourceSet = sourceSets.create("sim") {
+    java.srcDir("src/sim/java")
+    java.srcDir(layout.buildDirectory.dir("generated/simContent/java"))
+}
+val simTestSet: SourceSet = sourceSets.create("simTest") {
+    compileClasspath += sim.output
+    runtimeClasspath += sim.output
+}
+dependencies {
+    add(sim.implementationConfigurationName, project(":suld-api"))
+    add(simTestSet.implementationConfigurationName, project(":suld-api"))
+    add(simTestSet.implementationConfigurationName, platform("org.junit:junit-bom:5.11.3"))
+    add(simTestSet.implementationConfigurationName, "org.junit.jupiter:junit-jupiter")
+    add(simTestSet.runtimeOnlyConfigurationName, "org.junit.platform:junit-platform-launcher")
+}
+tasks.named(sim.compileJavaTaskName) { dependsOn(syncSimContent) }
+
+val simTest = tasks.register<Test>("simTest") {
+    description = "Golden and compliance tests of the progression simulator (quick mode)."
+    group = "verification"
+    testClassesDirs = simTestSet.output.classesDirs
+    classpath = simTestSet.runtimeClasspath
+    maxHeapSize = "2g"
+}
+tasks.named("check") { dependsOn(simTest) }
+
+// ./gradlew :suld-plugin:simulate            full run -> audit/progression-balance.json + docs tables
+// ./gradlew :suld-plugin:simulate -Pquick    small Monte-Carlo for a fast look
+tasks.register<JavaExec>("simulate") {
+    description = "Runs the progression simulation (live vs proposed rules) and writes the reports."
+    group = "application"
+    classpath = sim.runtimeClasspath
+    mainClass.set("mn.suld.sim.Sim")
+    workingDir = rootProject.projectDir
+    maxHeapSize = "3g"
+    args = listOfNotNull("--out", "audit/progression-balance.json", "--doc", "docs/PROGRESSION_SIMULATION.md",
+        if (project.hasProperty("quick")) "--quick" else null)
+}
+
 // The SÜLD resource pack, zipped reproducibly (fixed timestamps, stable order) and bundled into the
 // plugin jar, so the server can self-host it with a stable SHA-1.
 val resourcePackZip = tasks.register<Zip>("resourcePackZip") {
@@ -105,3 +155,39 @@ tasks {
         }
     }
 }
+
+tasks.register<JavaExec>("simProbe") {
+    description = "Development aid: one simulated trajectory (-Pargs='live hardcore baatar 30')."
+    group = "application"
+    classpath = sim.runtimeClasspath
+    mainClass.set("mn.suld.sim.Probe")
+    workingDir = rootProject.projectDir
+    args = ((findProperty("args") as String?) ?: "live hardcore baatar 30").split(" ")
+}
+
+tasks.register<JavaExec>("simCalibrate") {
+    description = "Development aid: median player power by level (proposed rules)."
+    group = "application"
+    classpath = sim.runtimeClasspath
+    mainClass.set("mn.suld.sim.Calibrate")
+    workingDir = rootProject.projectDir
+}
+
+tasks.register<JavaExec>("simTune") {
+    description = "Development aid: bisects the curve base for ~200 efficient hours to level 60."
+    group = "application"
+    classpath = sim.runtimeClasspath
+    mainClass.set("mn.suld.sim.Sim")
+    workingDir = rootProject.projectDir
+    maxHeapSize = "3g"
+    args = listOf("--tune")
+}
+
+tasks.register<JavaExec>("specTables") {
+    description = "Writes the exact proposed numbers into the spec documents."
+    group = "application"
+    classpath = sim.runtimeClasspath
+    mainClass.set("mn.suld.sim.SpecTables")
+    workingDir = rootProject.projectDir
+}
+tasks.named("simulate") { finalizedBy("specTables") }
