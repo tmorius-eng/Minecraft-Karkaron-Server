@@ -142,6 +142,15 @@ public final class Menu implements InventoryHolder {
         return Component.text(key + " ", NamedTextColor.WHITE, TextDecoration.BOLD).append(Component.text(value, color, TextDecoration.BOLD));
     }
 
+    /** Slots of a 2-wide, 3-tall card in the 4x2 cosmetics grid (card index 0..7, four per row). */
+    public static int[] card4(int index) {
+        int col0 = (index % 4) * 2, row0 = (index / 4) * 3;
+        int[] out = new int[6];
+        int n = 0;
+        for (int r = 0; r < 3; r++) for (int c = 0; c < 2; c++) out[n++] = (row0 + r) * 9 + col0 + c;
+        return out;
+    }
+
     /** Slots of a 3x3 card in a 6-row menu (card index 0..5, laid out 3 per row). */
     public static int[] card(int index) {
         int col0 = (index % 3) * 3, row0 = (index / 3) * 3;

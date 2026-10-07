@@ -24,7 +24,10 @@ public record Cosmetic(String id, Category category, String name, long price, St
         NAME_COLOR("Нэрийн өнгө", "Чат болон TAB дахь нэрний өнгө"),
         CHAT_COLOR("Чатын өнгө", "Таны бичсэн мессежийн өнгө"),
         JOIN_MESSAGE("Мэндчилгээ", "Таныг ороход бүгдэд харагдах мэдэгдэл"),
-        EMOJI("Эможи", "Чатад :код: бичихэд гарах дүрс");
+        EMOJI("Эможи", "Чатад :код: бичихэд гарах дүрс"),
+        AURA("Гэрэлт тойрог", "Таны эргэн тойронд эргэлдэх гэрэл"),
+        TRAIL("Мөр", "Явах замд тань үлдэх гялбаа"),
+        KILL_EFFECT("Ялалтын нөлөө", "Мангас устгахад гарах үзэгдэл");
 
         private final String displayName;
         private final String description;

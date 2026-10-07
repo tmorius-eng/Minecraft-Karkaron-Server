@@ -31,6 +31,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.mount.HorseService horses;
     private mn.suld.plugin.branding.GuideBoards guide;
     private mn.suld.plugin.trade.TradeService trades;
+    private mn.suld.plugin.style.CosmeticEffects effects;
     private mn.suld.plugin.death.DeathService deaths;
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
@@ -81,6 +82,9 @@ public final class SuldPlugin extends JavaPlugin {
                 new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks()), this);
         services.hud().attach(this, services);
         services.styles().onChange(p -> services.hud().refreshTeams());
+        effects = new mn.suld.plugin.style.CosmeticEffects(this, services);
+        getServer().getPluginManager().registerEvents(effects, this);
+        effects.start();
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.clan.SocialListener(services.clans(), services.worldEvents()), this);
         mn.suld.plugin.command.ClanCommand clanCommand = new mn.suld.plugin.command.ClanCommand(services.clans());
@@ -318,6 +322,10 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand(name, executor);
         PluginCommand command = getCommand(name);
         if (command != null) command.setTabCompleter(executor);
+    }
+
+    public mn.suld.plugin.style.CosmeticEffects effects() {
+        return effects;
     }
 
     public mn.suld.plugin.branding.GuideBoards guide() {

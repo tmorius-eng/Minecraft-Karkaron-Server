@@ -387,28 +387,67 @@ public final class Menus {
     private static final Map<Cosmetic.Category, Material> CAT_ICON = Map.of(
             Cosmetic.Category.TAG, Material.NAME_TAG, Cosmetic.Category.NAME_COLOR, Material.ORANGE_DYE,
             Cosmetic.Category.CHAT_COLOR, Material.WRITABLE_BOOK, Cosmetic.Category.JOIN_MESSAGE, Material.GOAT_HORN,
-            Cosmetic.Category.EMOJI, Material.SUNFLOWER);
+            Cosmetic.Category.EMOJI, Material.SUNFLOWER, Cosmetic.Category.AURA, Material.NETHER_STAR,
+            Cosmetic.Category.TRAIL, Material.LEATHER_BOOTS, Cosmetic.Category.KILL_EFFECT, Material.FIREWORK_ROCKET);
     private static final Map<Cosmetic.Category, TextColor> CAT_COLOR = Map.of(
             Cosmetic.Category.TAG, GOLD, Cosmetic.Category.NAME_COLOR, RED, Cosmetic.Category.CHAT_COLOR, SKY,
-            Cosmetic.Category.JOIN_MESSAGE, PURPLE, Cosmetic.Category.EMOJI, TextColor.fromHexString("#FF6BB0"));
+            Cosmetic.Category.JOIN_MESSAGE, PURPLE, Cosmetic.Category.EMOJI, TextColor.fromHexString("#FF6BB0"),
+            Cosmetic.Category.AURA, TextColor.fromHexString("#5FE0E0"), Cosmetic.Category.TRAIL, GREEN,
+            Cosmetic.Category.KILL_EFFECT, TextColor.fromHexString("#FF9A3C"));
 
+    /** The card grid: eight categories on art cards (the order matches COSMETICS in tools/pack/gen_ui.py). */
     public void cosmetics(Player p) {
         PlayerStyle s = styles().of(p.getUniqueId());
-        Menu m = new Menu(3, "Гоёл · Cosmetics", null);
-        int[] slots = {11, 12, 13, 14, 15};
-        int i = 0;
-        for (Cosmetic.Category cat : Cosmetic.Category.values()) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        Menu m = new Menu(6, "Гоёл · Cosmetics", Glyphs.GUI_COSMETICS);
+        Cosmetic.Category[] order = {Cosmetic.Category.TAG, Cosmetic.Category.NAME_COLOR, Cosmetic.Category.CHAT_COLOR,
+                Cosmetic.Category.JOIN_MESSAGE, Cosmetic.Category.EMOJI, Cosmetic.Category.AURA, Cosmetic.Category.TRAIL,
+                Cosmetic.Category.KILL_EFFECT};
+        for (int i = 0; i < order.length; i++) {
+            Cosmetic.Category cat = order[i];
             TextColor c = CAT_COLOR.get(cat);
             long total = CosmeticCatalog.of(cat).size();
             Component equipped = s.equipped(cat).map(x -> Menu.kv("Зүүсэн:", x.name(), c)).orElse(Menu.kv("Зүүсэн:", "—", NamedTextColor.GRAY));
-            m.set(slots[i++], Menu.item(CAT_ICON.get(cat), Menu.title(cat.displayName(), c), Menu.lore(c,
-                    List.of(b(cat.description() + ".")), List.of(Menu.kv("Авсан:", s.ownedIn(cat) + "/" + total, c), equipped),
-                    "Ангилал үзэх")), (pl, ct) -> category(pl, cat));
+            m.area(Menu.card4(i), Menu.title(cat.displayName(), c), Menu.lore(c, List.of(b(cat.description() + ".")),
+                    List.of(Menu.kv("Авсан:", s.ownedIn(cat) + "/" + total, c), equipped), "Ангилал үзэх"), (pl, ct) -> category(pl, cat));
         }
-        m.set(18, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
+        m.set(8, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
+        m.set(17, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(
+                Menu.kv("Зоос:", fmt(pr == null ? 0 : pr.currency()) + " ₮", GOLD), Menu.kv("Кредит:", fmt(s.credits()) + " ✦", SKY))), null);
         m.set(26, Menu.item(Material.EMERALD, Menu.title("Кредит · /buy", SKY), Menu.lore(SKY,
-                List.of(b("Сүлд Кредитээр гоёл авна.")), List.of(Menu.kv("Танд:", fmt(s.credits()) + " ✦", SKY)), "Дарж нээх")), (pl, c) -> buy(pl));
+                List.of(b("Сүлд Кредитээр гоёл авна.")), List.of(), "Дарж нээх")), (pl, c) -> buy(pl));
+        m.set(35, Menu.item(Material.CHEST, Menu.title("Дэлгүүр · /shop", GREEN), List.of()), (pl, c) -> shop(pl));
+        m.set(44, Menu.item(Material.BARRIER, Menu.title("Бүгдийг тайлах", RED), List.of(b("Зүүсэн бүх гоёлыг тайлна."))), (pl, c) -> {
+            PlayerStyle st = styles().of(pl.getUniqueId());
+            for (Cosmetic.Category cat : Cosmetic.Category.values()) st.equip(cat, null);
+            styles().onEquipChanged(pl);
+            cosmetics(pl);
+        });
         m.open(p);
+    }
+
+    /** A sample of what the cosmetic looks like, sent to the viewer's chat (effects play around them instead). */
+    private void previewCosmetic(Player p, Cosmetic c) {
+        PlayerStyle s = styles().of(p.getUniqueId());
+        Component hello = Component.text("Сайн байна уу!", NamedTextColor.WHITE, TextDecoration.BOLD);
+        Component line = switch (c.category()) {
+            case TAG -> StyleFormat.name(p, s).append(Component.text(" ")).append(StyleFormat.mini(c.style()))
+                    .append(Component.text(" » ", NamedTextColor.GRAY)).append(hello);
+            case NAME_COLOR -> StyleFormat.mini(c.style().replace("{}", p.getName())).append(Component.text(" » ", NamedTextColor.GRAY)).append(hello);
+            case CHAT_COLOR -> StyleFormat.name(p, s).append(Component.text(" » ", NamedTextColor.GRAY))
+                    .append(StyleFormat.mini(c.style().replace("{}", "Сайн байна уу!")));
+            case JOIN_MESSAGE -> StyleFormat.joinMessage(c, p.getName());
+            case EMOJI -> Component.text(c.style() + "  ←  чатад ингэж бичнэ", NamedTextColor.WHITE, TextDecoration.BOLD);
+            default -> null;
+        };
+        if (line != null) {
+            p.sendMessage(Component.text("Урьдчилан харах › ", GOLD, TextDecoration.BOLD).append(line));
+            return;
+        }
+        if (plugin instanceof mn.suld.plugin.SuldPlugin sp && sp.effects() != null) {
+            sp.effects().preview(p, c);
+            p.sendMessage(Messages.info("Урьдчилан харж байна: " + c.name()));
+        }
     }
 
     public void category(Player p, Cosmetic.Category cat) {
@@ -416,7 +455,7 @@ public final class Menus {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         long coins = pr == null ? 0 : pr.currency();
         TextColor accent = CAT_COLOR.get(cat);
-        Menu m = new Menu(6, cat.displayName(), null);
+        Menu m = new Menu(6, cat.displayName() + " · " + s.ownedIn(cat) + "/" + CosmeticCatalog.of(cat).size(), Glyphs.GUI_FRAME);
         int slot = 0;
         for (Cosmetic c : CosmeticCatalog.of(cat)) {
             if (slot >= 45) break;
@@ -427,7 +466,7 @@ public final class Menus {
                 case TAG -> StyleFormat.mini(c.style()).decoration(TextDecoration.BOLD, true);
                 case NAME_COLOR -> StyleFormat.mini(c.style().replace("{}", p.getName())).decoration(TextDecoration.BOLD, true);
                 case CHAT_COLOR -> StyleFormat.mini(c.style().replace("{}", c.name() + " чат")).decoration(TextDecoration.BOLD, true);
-                case JOIN_MESSAGE -> Component.text(c.name(), rc, TextDecoration.BOLD);
+                case JOIN_MESSAGE, AURA, TRAIL, KILL_EFFECT -> Component.text(c.name(), rc, TextDecoration.BOLD);
                 case EMOJI -> Component.text(c.name() + "  " + c.style(), rc, TextDecoration.BOLD);
             };
             List<Component> body = new ArrayList<>();
@@ -444,10 +483,15 @@ public final class Menus {
                 if (c.source().startsWith("level:")) info.add(Menu.kv("Авах:", "Түвшин " + c.source().substring(6) + " · /lvlup", PURPLE));
                 hint = c.sold() ? "Зүүн: зоосоор · Баруун: кредитээр" : c.creditPrice() > 0 ? "Дарж кредитээр авах" : "Түвшний шагнал";
             }
+            body.add(Component.text("Shift + зүүн дарж урьдчилан харна", NamedTextColor.GRAY, TextDecoration.BOLD));
             Material icon = owned ? CAT_ICON.get(cat) : Material.GRAY_DYE;
             ItemStack it = Menu.item(icon, name, Menu.lore(accent, body, info, hint));
             if (on) Menu.glow(it);
             m.set(slot++, it, (pl, click) -> {
+                if (click == ClickType.SHIFT_LEFT) {
+                    previewCosmetic(pl, c);
+                    return;
+                }
                 StyleService.Currency cur = (click == ClickType.RIGHT || click == ClickType.SHIFT_RIGHT || !c.sold())
                         ? StyleService.Currency.CREDITS : StyleService.Currency.COINS;
                 if (!owned && !c.sold() && c.creditPrice() == 0) return;

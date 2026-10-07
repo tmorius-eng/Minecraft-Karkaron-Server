@@ -19,9 +19,9 @@ public final class InMemoryStyleRepository implements StyleRepository {
         PlayerStyle.Snapshot s = store.get(player);
         long c = credits.getOrDefault(player, 0L);
         if (s == null && c == 0) return CompletableFuture.completedFuture(Optional.empty());
-        if (s == null) s = new PlayerStyle.Snapshot(player, mn.suld.api.style.Rank.ARD, java.util.Set.of(), null, null, null, null, 0, c, 0, 0, 0, 0, "");
+        if (s == null) s = new PlayerStyle.Snapshot(player, mn.suld.api.style.Rank.ARD, java.util.Set.of(), null, null, null, null, 0, c, 0, 0, 0, 0, "", null, null, null);
         return CompletableFuture.completedFuture(Optional.of(new PlayerStyle.Snapshot(s.player(), s.rank(), s.owned(), s.tag(),
-                s.nameColor(), s.chatColor(), s.joinMessage(), s.claimedLevels(), c, s.discovered(), s.dailyDay(), s.dailyStreak(), s.taskDay(), s.taskProgress())));
+                s.nameColor(), s.chatColor(), s.joinMessage(), s.claimedLevels(), c, s.discovered(), s.dailyDay(), s.dailyStreak(), s.taskDay(), s.taskProgress(), s.aura(), s.trail(), s.killEffect())));
     }
 
     @Override

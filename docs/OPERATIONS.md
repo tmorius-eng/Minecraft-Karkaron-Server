@@ -93,6 +93,14 @@ lp group sponsor permission set suld.badge.sponsor
 lp user <name> parent add mod
 ```
 
+## Cosmetics
+
+`/cosmetics` is a card menu with eight categories: tags, name colours, chat colours, join messages, emojis, and
+three particle categories — **auras** (light circling the player), **trails** (left behind while walking or riding)
+and **kill effects** (where a monster falls). Everything is visual only. Shift + left click previews an item before
+buying (a chat sample, or the effect around the player). Coins buy most items (a tenth of the price in credits works
+too); some are credits-only (see `/buy`). Effects are skipped for invisible players, spectators and souls.
+
 ## Credit store
 
 - Credits (✦) buy **cosmetics only** — tags, colours, join messages, emojis. Nothing that affects combat

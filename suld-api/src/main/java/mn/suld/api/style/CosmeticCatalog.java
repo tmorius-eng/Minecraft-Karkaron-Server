@@ -39,6 +39,11 @@ public final class CosmeticCatalog {
         return new Cosmetic(id, cat, name, credits, style, r, "store");
     }
 
+    /** A particle effect (aura, trail, kill effect); {@code key} names the effect in the plugin's CosmeticEffects. */
+    private static Cosmetic fx(Category cat, String id, String name, String key, long price, Rarity r) {
+        return new Cosmetic(id, cat, name, price, key, r, "shop");
+    }
+
     private static Cosmetic levelTag(String id, String name, String mm, int level, Rarity r) {
         return new Cosmetic("tag." + id, Category.TAG, name, 0, mm, r, "level:" + level);
     }
@@ -99,7 +104,32 @@ public final class CosmeticCatalog {
             emoji("od", "Од", ":od:", 150, Rarity.COMMON),
             emoji("ild", "Илд", ":ild:", 250, Rarity.RARE),
             emoji("ulzii", "Өлзий", ":ulzii:", 400, Rarity.EPIC),
-            emoji("guul", "Гавал", ":guul:", 400, Rarity.EPIC));
+            emoji("guul", "Гавал", ":guul:", 400, Rarity.EPIC),
+            // --- auras: light that circles the player ---
+            fx(Category.AURA, "aura.tal", "Талын Салхи", "tal", 450, Rarity.RARE),
+            fx(Category.AURA, "aura.od", "Одот Тэнгэр", "od", 600, Rarity.RARE),
+            fx(Category.AURA, "aura.gal", "Галын Бүрхэвч", "gal", 700, Rarity.EPIC),
+            fx(Category.AURA, "aura.tsas", "Цасан Шуурга", "tsas", 700, Rarity.EPIC),
+            fx(Category.AURA, "aura.altan", "Алтан Гэрэл", "altan", 1_200, Rarity.EPIC),
+            fx(Category.AURA, "aura.tenger", "Мөнх Тэнгэр", "tenger", 2_500, Rarity.LEGENDARY),
+            store("aura.suld_dul", Category.AURA, "Сүлдний Дөл", "suld", 300, Rarity.LEGENDARY),
+            // --- trails: sparkles left behind while moving or riding ---
+            fx(Category.TRAIL, "trail.shuurkhai", "Шороон Хөвөрөл", "shuurkhai", 250, Rarity.COMMON),
+            fx(Category.TRAIL, "trail.tal", "Талын Дэнгэ", "tal", 400, Rarity.RARE),
+            fx(Category.TRAIL, "trail.od", "Одны Мөр", "od", 500, Rarity.RARE),
+            fx(Category.TRAIL, "trail.gal", "Галт Мөр", "gal", 650, Rarity.EPIC),
+            fx(Category.TRAIL, "trail.tsas", "Цасан Мөр", "tsas", 650, Rarity.EPIC),
+            fx(Category.TRAIL, "trail.zurkh", "Зүрхэн Мөр", "zurkh", 800, Rarity.EPIC),
+            fx(Category.TRAIL, "trail.altan", "Алтан Мөр", "altan", 1_000, Rarity.EPIC),
+            fx(Category.TRAIL, "trail.tenger", "Тэнгэрийн Мөр", "tenger", 2_200, Rarity.LEGENDARY),
+            // --- kill effects: what happens where a monster falls ---
+            fx(Category.KILL_EFFECT, "kill.salyut", "Салют", "salyut", 500, Rarity.RARE),
+            fx(Category.KILL_EFFECT, "kill.suns", "Сүнсний Нисэл", "suns", 600, Rarity.RARE),
+            fx(Category.KILL_EFFECT, "kill.gal", "Галын Дэлбэрэлт", "gal", 700, Rarity.EPIC),
+            fx(Category.KILL_EFFECT, "kill.tsas", "Цасан Дэлбэрэлт", "tsas", 700, Rarity.EPIC),
+            fx(Category.KILL_EFFECT, "kill.altan", "Алтан Бороо", "altan", 1_200, Rarity.EPIC),
+            fx(Category.KILL_EFFECT, "kill.tenger", "Тэнгэрийн Тэнхээ", "tenger", 2_500, Rarity.LEGENDARY),
+            store("kill.tsakhilgaan", Category.KILL_EFFECT, "Цахилгаан", "tsakhilgaan", 350, Rarity.LEGENDARY));
 
     private static final Map<String, Cosmetic> BY_ID = new LinkedHashMap<>();
 

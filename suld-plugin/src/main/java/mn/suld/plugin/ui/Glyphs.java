@@ -122,6 +122,10 @@ public final class Glyphs {
     public static final String GUI_MAIN = "\uE036";
     /** chest background welcome 176x72 */
     public static final String GUI_WELCOME = "\uE037";
+    /** chest background cosmetics 176x126 (4x2 cards) */
+    public static final String GUI_COSMETICS = "\uE038";
+    /** chest background frame 176x126 (framed slots) */
+    public static final String GUI_FRAME = "\uE039";
 
     private Glyphs() {
     }

@@ -47,6 +47,8 @@ class JdbcStyleRepositoryIT {
         assertTrue(s.claimLevel(5));
         assertTrue(s.claimDaily(20_000, 3));
         s.taskProgress(20_000, "4,0,9");
+        assertTrue(s.grant("aura.altan"));
+        assertTrue(s.equip(mn.suld.api.style.Cosmetic.Category.AURA, "aura.altan"));
         assertTrue(s.discover(1));
         assertTrue(s.discover(3));
         assertFalse(s.discover(3), "a region is discovered once");
@@ -57,6 +59,7 @@ class JdbcStyleRepositoryIT {
         assertEquals(0b1010, back.discovered());
         assertEquals(20_000, back.dailyDay());
         assertEquals(3, back.dailyStreak());
+        assertEquals("aura.altan", back.equipped(mn.suld.api.style.Cosmetic.Category.AURA).orElseThrow().id());
         assertEquals("4,0,9", back.taskProgress(20_000));
         assertEquals("", back.taskProgress(20_001), "progress belongs to its day");
         assertFalse(back.claimDaily(20_000, 4), "one claim per day");

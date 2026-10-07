@@ -270,6 +270,44 @@ def gui_menu(name: str, cards: list[tuple[str, str, tuple]], preview: str | None
         img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, f"gui_{name}.png"))
 
 
+def gui_grid(name: str, cards: list[tuple[str, str, tuple]], preview: str | None) -> None:
+    """A 6-row chest with 4x2 portrait cards, each 2 slots wide and 3 tall; the 9th slot column holds buttons."""
+    rows = 6
+    height = 17 + rows * 18 + 1
+    img = Image.new("RGBA", (176, height), NAVY + (255,))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, 175, height - 1], outline=GOLD_D)
+    header(img)
+    for i, (art, label, banner) in enumerate(cards):
+        col, row = i % 4, i // 4
+        card(img, art, label, 8 + col * 36 + 1, 18 + row * 54 + 1, 34, 52, banner)
+    # the ninth column: two button wells, drawn as empty slots
+    for r in range(rows):
+        x, y = 8 + 8 * 18, 18 + r * 18
+        d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=NAVY2, outline=GOLD_D)
+    add_bitmap(f"GUI_{name.upper()}", img, f"gui/{name}", height, 13, f"chest background {name} 176x{height} (4x2 cards)")
+    if preview:
+        img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, f"gui_{name}.png"))
+
+
+def gui_frame(name: str, preview: str | None) -> None:
+    """A 6-row chest with a framed 9x5 item area and a separate bottom row for navigation."""
+    rows = 6
+    height = 17 + rows * 18 + 1
+    img = Image.new("RGBA", (176, height), NAVY + (255,))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, 175, height - 1], outline=GOLD_D)
+    header(img)
+    for r in range(rows):
+        for c in range(9):
+            x, y = 8 + c * 18, 18 + r * 18
+            d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=NAVY2 if r < 5 else NAVY, outline=GOLD_D if r < 5 else (60, 46, 24))
+    d.line([2, 18 + 5 * 18 - 2, 173, 18 + 5 * 18 - 2], fill=GOLD)
+    add_bitmap(f"GUI_{name.upper()}", img, f"gui/{name}", height, 13, f"chest background {name} 176x{height} (framed slots)")
+    if preview:
+        img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, f"gui_{name}.png"))
+
+
 # ----------------------------------------------------------------------------------------- invisible item
 
 def blank_item() -> None:
@@ -321,6 +359,17 @@ MAIN_MENU = [
     ("card_help", "ЗААВАР", (30, 120, 120)),
 ]
 
+COSMETICS = [
+    ("card_cos_tag", "ЦОЛ", (200, 140, 30)),
+    ("card_cos_name", "НЭР", (176, 40, 40)),
+    ("card_cos_chat", "ЧАТ", (40, 90, 200)),
+    ("card_cos_join", "ЗАР", (130, 60, 190)),
+    ("card_cos_emoji", "ЭМО", (200, 90, 140)),
+    ("card_cos_aura", "ЦОГ", (30, 120, 120)),
+    ("card_cos_trail", "МӨР", (40, 140, 60)),
+    ("card_cos_kill", "ЯЛА", (176, 70, 40)),
+]
+
 WELCOME = [
     ("card_help", "ЗААВАР", (40, 140, 60)),
     ("card_welcome", "ЦЭС", (200, 140, 30)),
@@ -340,6 +389,8 @@ def main() -> None:
     badges(args.preview)
     gui_menu("main", MAIN_MENU, args.preview)
     gui_menu("welcome", WELCOME, args.preview, rows=3)
+    gui_grid("cosmetics", COSMETICS, args.preview)
+    gui_frame("frame", args.preview)
     blank_item()
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:

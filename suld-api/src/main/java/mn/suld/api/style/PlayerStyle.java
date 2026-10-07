@@ -14,7 +14,8 @@ public final class PlayerStyle {
 
     /** Immutable copy for persistence. */
     public record Snapshot(UUID player, Rank rank, Set<String> owned, String tag, String nameColor, String chatColor,
-                           String joinMessage, long claimedLevels, long credits, long discovered, long dailyDay, int dailyStreak, long taskDay, String taskProgress) {
+                           String joinMessage, long claimedLevels, long credits, long discovered, long dailyDay, int dailyStreak, long taskDay, String taskProgress,
+                           String aura, String trail, String killEffect) {
     }
 
     private final UUID player;
@@ -24,6 +25,9 @@ public final class PlayerStyle {
     private String nameColor;
     private String chatColor;
     private String joinMessage;
+    private String aura;
+    private String trail;
+    private String killEffect;
     private long claimedLevels;
     private long discovered;
     private long dailyDay;
@@ -46,6 +50,9 @@ public final class PlayerStyle {
         p.nameColor = p.ownedOrNull(s.nameColor());
         p.chatColor = p.ownedOrNull(s.chatColor());
         p.joinMessage = p.ownedOrNull(s.joinMessage());
+        p.aura = p.ownedOrNull(s.aura());
+        p.trail = p.ownedOrNull(s.trail());
+        p.killEffect = p.ownedOrNull(s.killEffect());
         p.claimedLevels = s.claimedLevels();
         p.discovered = s.discovered();
         p.dailyDay = s.dailyDay();
@@ -91,6 +98,9 @@ public final class PlayerStyle {
             case NAME_COLOR -> nameColor;
             case CHAT_COLOR -> chatColor;
             case JOIN_MESSAGE -> joinMessage;
+            case AURA -> aura;
+            case TRAIL -> trail;
+            case KILL_EFFECT -> killEffect;
             case EMOJI -> null;
         };
         return id == null ? Optional.empty() : CosmeticCatalog.byId(id);
@@ -107,6 +117,9 @@ public final class PlayerStyle {
             case NAME_COLOR -> nameColor = id;
             case CHAT_COLOR -> chatColor = id;
             case JOIN_MESSAGE -> joinMessage = id;
+            case AURA -> aura = id;
+            case TRAIL -> trail = id;
+            case KILL_EFFECT -> killEffect = id;
             case EMOJI -> {
                 return false;
             }
@@ -173,7 +186,7 @@ public final class PlayerStyle {
 
     public synchronized Snapshot snapshotAndClean() {
         dirty = false;
-        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered, dailyDay, dailyStreak, taskDay, taskProgress);
+        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered, dailyDay, dailyStreak, taskDay, taskProgress, aura, trail, killEffect);
     }
 
     public synchronized void markDirty() { dirty = true; }

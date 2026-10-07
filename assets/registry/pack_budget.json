@@ -1,5 +1,5 @@
 {
-  "_comment": "Production resource-pack budget + validation limits (SÜLD). Raw source meshes (GLB/FBX/OBJ) are FORBIDDEN in resourcepack/ — they live in assets/source/. Textures: 32/64/128 for ordinary items, 256 for hero items (listed), higher only with justification in `justified_large`.",
+  "_comment": "Production resource-pack budget + validation limits (S\u00dcLD). Raw source meshes (GLB/FBX/OBJ) are FORBIDDEN in resourcepack/ \u2014 they live in assets/source/. Textures: 32/64/128 for ordinary items, 256 for hero items (listed), higher only with justification in `justified_large`.",
   "max_texture_px_ordinary": 128,
   "max_texture_px_hero": 256,
   "hero_textures": [
@@ -7,7 +7,9 @@
   ],
   "justified_large": {
     "resourcepack/assets/suld/textures/font/gui/main.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
-    "resourcepack/assets/suld/textures/font/gui/welcome.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen"
+    "resourcepack/assets/suld/textures/font/gui/welcome.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
+    "resourcepack/assets/suld/textures/font/gui/cosmetics.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
+    "resourcepack/assets/suld/textures/font/gui/frame.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen"
   },
   "max_file_kb": 512,
   "total_budget_mb": 20,
