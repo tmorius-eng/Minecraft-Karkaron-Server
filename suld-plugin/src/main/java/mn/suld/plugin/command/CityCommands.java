@@ -43,7 +43,9 @@ public final class CityCommands implements Listener {
     private static final Set<String> OWNED = Set.of("help", "?", "tuslamj", "zaavar", "rules", "juram",
             "spawn", "hot", "balance", "bal", "money", "zoos", "pay", "tuluh",
             "class", "angi", "profile", "stats", "dur", "exp", "level", "lvl", "tuvshin", "quest", "quests", "erel",
-            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits", "skills", "spells", "daily", "mori", "top", "baltop", "trade", "discord", "website", "vote", "tasks");
+            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits", "skills", "spells", "daily", "mori", "top", "baltop", "trade", "discord", "website", "vote", "tasks", "commands", "cmds");
+    private static final Set<String> NO_TELEPORT_IN_DUNGEON = Set.of("home", "homes", "tpa", "tpahere", "tpaccept", "tpyes",
+            "back", "return", "warp", "warps", "tp", "tpo", "tphere", "tppos", "tpr", "tpaall", "tpall", "etp", "etpa", "ewarp", "ehome");
     private static final int SPAWN_WARMUP_SECONDS = 3;
 
     private final Plugin plugin;
@@ -69,6 +71,14 @@ public final class CityCommands implements Listener {
         String msg = e.getMessage();
         int sp = msg.indexOf(' ');
         String label = (sp < 0 ? msg.substring(1) : msg.substring(1, sp)).toLowerCase(Locale.ROOT);
+        // no teleporting out of a dungeon run with another plugin's commands (staff excepted)
+        String bare = label.contains(":") ? label.substring(label.indexOf(':') + 1) : label;
+        if (NO_TELEPORT_IN_DUNGEON.contains(bare) && services.dungeons().isInAnyRun(e.getPlayer().getUniqueId())
+                && !e.getPlayer().hasPermission("suld.admin")) {
+            e.setCancelled(true);
+            e.getPlayer().sendMessage(Messages.error("Агуйн аянд явж байхад хөдлөх боломжгүй. Гарах: /dungeon leave"));
+            return;
+        }
         if (OWNED.contains(label)) e.setMessage("/suld:" + label + (sp < 0 ? "" : msg.substring(sp)));
     }
 
@@ -91,6 +101,13 @@ public final class CityCommands implements Listener {
                     l("5. Олз (чонын арьс)-оо захын худалдаачинд зарж зоос ол.", null),
                     l("6. Дархнаас зэвсгээ засуул, Өртөөгөөр хаалга хооронд хурдан яв.", null),
                     l("Хот руу буцах: /spawn", "/spawn"))),
+            new Page("coins", "Зоос олох · Earning coins", List.of(
+                    l("Мангас ан — олз (арьс, зэвсэг) унана; захын худалдаачинд зарна: /shop", "/shop"),
+                    l("Эрэл дуусга — «Сүлдний Зам»-ын бүлэг бүр зоос, EXP өгнө: /quest", "/quest"),
+                    l("Өдрийн даалгавар: /tasks   Өдрийн шагнал: /daily", "/tasks"),
+                    l("Агуй — босс, их шагнал: /dungeon list", "/dungeon list"),
+                    l("Бусадтай арилжих: /trade <нэр>   зоос шилжүүлэх: /pay <нэр> <тоо>", null),
+                    l("Зарцуул: /rankup (цол), Дархан (засвар, сайжруулалт), /cosmetics (гоёл)", "/rankup"))),
             new Page("class", "Анги · Classes", List.of(
                     l("Баатар — тэсвэр, ойрын тулаан (Хил / Rage)", null),
                     l("Мэргэн — нум сум, холын тулаан (Төвлөрөл / Focus)", null),
@@ -127,7 +144,7 @@ public final class CityCommands implements Listener {
                     l("/help [хуудас] — энэ гарын авлага   /rules — дүрэм", "/rules"),
                     l("/spawn — Хархорум руу   /balance — зоос   /pay <нэр> <тоо>", "/balance"),
                     l("/class /profile /exp /quest /skills — дүр ба ахиц", "/profile"),
-                    l("/menu /shop /cosmetics /rankup /lvlup /buy /tutorial /daily /tasks /mori /top", "/menu"),
+                    l("/menu /shop /cosmetics /rankup /lvlup /buy /tutorial /daily /tasks /mori /top /commands", "/menu"),
                     l("/party /dungeon /clan /cc /relic /trade — тоглоом", null),
                     l("/home /sethome /delhome /tpa /tpaccept /tpdeny /msg /r /back /warp — серверийн", null),
                     l("/suldpack — дүрс багцыг дахин ачаалах", "/suldpack"))),
@@ -322,6 +339,10 @@ public final class CityCommands implements Listener {
                 s.sendMessage(Messages.error("Профайл ачаалагдаагүй байна."));
                 return true;
             }
+            if (!a1.hasSelectedClass() || !b1.hasSelectedClass()) {
+                s.sendMessage(Messages.error("Хоёулаа анги сонгосон байх ёстой."));
+                return true;
+            }
             synchronized (CityCommands.class) { // one transfer at a time: no double spend
                 if (a1.currency() < amount) {
                     s.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + a1.currency() + ")."));
@@ -330,6 +351,9 @@ public final class CityCommands implements Listener {
                 a1.addCurrency(-amount);
                 b1.addCurrency(amount);
             }
+            services.profiles().save(a1);
+            services.profiles().save(b1);
+            plugin.getLogger().info("[audit] pay " + from.getName() + " -> " + to.getName() + " " + amount + " coins");
             from.sendMessage(Messages.success(to.getName() + "-д " + amount + " ₮ шилжүүллээ."));
             to.sendMessage(Messages.success(from.getName() + " танд " + amount + " ₮ илгээлээ."));
             return true;

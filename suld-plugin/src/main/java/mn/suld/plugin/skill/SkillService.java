@@ -67,6 +67,8 @@ public final class SkillService implements Listener {
     private final Map<String, Long> lastClickByType = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastCast = new ConcurrentHashMap<>();
     private final Map<UUID, String> notice = new ConcurrentHashMap<>();
+    /** The caster's ATK when the spell was cast: swapping weapons while it is still flying changes nothing. */
+    private final Map<UUID, Double> castAttack = new ConcurrentHashMap<>();
 
     public SkillService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
@@ -89,13 +91,15 @@ public final class SkillService implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        combos.remove(e.getPlayer().getUniqueId());
-        pools.remove(e.getPlayer().getUniqueId());
-    }
-
-    @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
-        pools.remove(e.getPlayer().getUniqueId());
+        UUID id = e.getPlayer().getUniqueId();
+        combos.remove(id);
+        lastCast.remove(id);
+        notice.remove(id);
+        castAttack.remove(id);
+        lastClickByType.keySet().removeIf(k -> k.startsWith(id.toString()));
+        CombatListener.EMPOWERED_ARROWS.remove(id);
+        CombatListener.EMPOWERED_UNTIL.remove(id);
+        // the resource pool is kept: logging out and in again must not refill Хил / Сүнс mid-fight
     }
 
     // ------------------------------------------------------------------ clicks
@@ -105,7 +109,7 @@ public final class SkillService implements Listener {
                 .map(i -> i.definitionId().startsWith("weapon.class." + c.id() + ".")).orElse(false);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;
         Action a = e.getAction();
@@ -114,17 +118,17 @@ public final class SkillService implements Listener {
     }
 
     /** A left click always swings the arm (air, block or entity); the debounce merges it with the other events. */
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSwing(org.bukkit.event.player.PlayerAnimationEvent e) {
         if (e.getAnimationType() == org.bukkit.event.player.PlayerAnimationType.ARM_SWING) click(e.getPlayer(), 'L');
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInteractEntity(PlayerInteractEntityEvent e) {
         if (e.getHand() == EquipmentSlot.HAND) click(e.getPlayer(), 'R');
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMelee(EntityDamageByEntityEvent e) {
         if (CombatListener.spellDamage) return;
         if (e.getDamager() instanceof Player p) {
@@ -162,6 +166,10 @@ public final class SkillService implements Listener {
     private void cast(Player p, Spell s) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
+        if (services.isSoul.test(p.getUniqueId())) { // a soul cannot cast
+            say(p, "§bСүнс — ид шид хэрэглэх боломжгүй");
+            return;
+        }
         if (pr.progression().level() < s.unlockLevel()) {
             say(p, "§c" + s.displayName() + " — түвшин " + s.unlockLevel());
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
@@ -176,6 +184,7 @@ public final class SkillService implements Listener {
             return;
         }
         lastCast.put(p.getUniqueId(), now);
+        castAttack.put(p.getUniqueId(), CombatListener.attackOf(services, p));
         say(p, "§e✦ " + s.displayName());
         switch (s) {
             case TENGER_TSAVCHILT -> cone(p, s, 4.5, 0.45, Particle.SWEEP_ATTACK, Sound.ENTITY_PLAYER_ATTACK_SWEEP);
@@ -217,7 +226,10 @@ public final class SkillService implements Listener {
     }
 
     private void hurt(Player p, LivingEntity target, double mult) {
-        double dmg = CombatListener.attackOf(services, p) * mult;
+        Long cast = lastCast.get(p.getUniqueId());
+        Double snap = castAttack.get(p.getUniqueId());
+        boolean fresh = cast != null && snap != null && System.currentTimeMillis() - cast < 5_000;
+        double dmg = (fresh ? snap : CombatListener.attackOf(services, p)) * mult;
         CombatListener.spellDamage = true;
         try {
             target.damage(dmg, p);
@@ -281,6 +293,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 t++;
                 if ((t > 5 && p.getLocation().clone().subtract(0, 0.2, 0).getBlock().getType().isSolid()) || t > 40 || !p.isOnline()) {
                     Location c = p.getLocation();
@@ -306,6 +322,7 @@ public final class SkillService implements Listener {
     private void wolfEye(Player p) {
         for (LivingEntity e : around(p, p.getLocation(), 24)) e.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 200, 0));
         CombatListener.EMPOWERED_ARROWS.put(p.getUniqueId(), 3);
+        CombatListener.EMPOWERED_UNTIL.put(p.getUniqueId(), System.currentTimeMillis() + 12_000);
         p.getWorld().spawnParticle(Particle.DUST, p.getEyeLocation(), 20, 0.4, 0.2, 0.4, 0, new Particle.DustOptions(Color.fromRGB(255, 220, 80), 1.2f));
         p.getWorld().playSound(p.getLocation(), Sound.ITEM_GOAT_HORN_SOUND_0, 0.5f, 1.4f);
     }
@@ -376,6 +393,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 if (!t.isValid() || n++ > 40) {
                     cancel();
                     return;
@@ -401,6 +422,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 if (!p.isOnline() || beats++ >= 3) {
                     cancel();
                     return;
@@ -433,6 +458,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 if (t++ < 20) {
                     for (int i = 0; i < 12; i++) {
                         double a = Math.PI * 2 * i / 12 + t * 0.2;
@@ -469,6 +498,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 if (!p.isOnline() || n++ >= 3) {
                     cancel();
                     return;
@@ -495,6 +528,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 if (t++ < 16) {
                     c.getWorld().spawnParticle(Particle.DUST, c.clone().add(0, 8 - t * 0.5, 0), 6, 0.4, 0.2, 0.4, 0,
                             new Particle.DustOptions(Color.fromRGB(110, 110, 120), 1.6f));
@@ -517,6 +554,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 if (!p.isOnline() || t++ > 10) {
                     cancel();
                     return;
@@ -537,6 +578,10 @@ public final class SkillService implements Listener {
 
             @Override
             public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
                 if (t++ > 20) {
                     cancel();
                     return;
@@ -594,7 +639,7 @@ public final class SkillService implements Listener {
         int hp = (int) Math.ceil(p.getHealth()), maxHp = (int) Math.round(max == null ? 20 : max.getValue());
         int filled = (int) Math.round(pool.fraction() * 10);
         TextColor rc = resourceColor(c);
-        Component bar = StyleFormat.glyph(Glyphs.ICON_HEART).append(Component.text(" " + hp + "/" + maxHp, NamedTextColor.RED, TextDecoration.BOLD))
+        Component bar = Component.empty().append(StyleFormat.glyph(Glyphs.ICON_HEART)).append(Component.text(" " + hp + "/" + maxHp, NamedTextColor.RED, TextDecoration.BOLD))
                 .append(Component.text("    " + c.resourceName().split(" ")[0] + " ", rc, TextDecoration.BOLD))
                 .append(Component.text("▰".repeat(filled), rc)).append(Component.text("▱".repeat(10 - filled), NamedTextColor.DARK_GRAY))
                 .append(Component.text(" " + pool.value(), rc, TextDecoration.BOLD));

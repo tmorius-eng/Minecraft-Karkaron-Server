@@ -73,11 +73,14 @@ public final class HorseService implements Listener, TabExecutor {
             s.sendMessage(Messages.error("Зөвхөн тоглогч ашиглана."));
             return true;
         }
-        if (horses.containsKey(p.getUniqueId())) {
+        UUID current = horses.get(p.getUniqueId());
+        Entity alive = current == null ? null : Bukkit.getEntity(current);
+        if (alive != null && alive.isValid()) {
             dismiss(p.getUniqueId());
             p.sendMessage(Messages.info("Морио тайвшрууллаа."));
             return true;
         }
+        horses.remove(p.getUniqueId()); // the horse vanished some other way: forget it and call a new one
         summon(p);
         return true;
     }
@@ -99,6 +102,10 @@ public final class HorseService implements Listener, TabExecutor {
         }
         if (services.dungeons().isInAnyRun(p.getUniqueId())) {
             p.sendMessage(Messages.error("Агуйд морь дуудах боломжгүй."));
+            return;
+        }
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа морь дуудах боломжгүй."));
             return;
         }
         if (p.isInsideVehicle() || p.isFlying() || p.isGliding() || !p.isOnGround()) {
@@ -142,6 +149,11 @@ public final class HorseService implements Listener, TabExecutor {
 
     private boolean isSteppeHorse(Entity e) {
         return e instanceof Horse && e.getPersistentDataContainer().has(key, PersistentDataType.STRING);
+    }
+
+    /** Sends the player's horse away (dungeon entry, death…). */
+    public void dismissFor(UUID rider) {
+        dismiss(rider);
     }
 
     private void dismiss(UUID rider) {
@@ -188,7 +200,7 @@ public final class HorseService implements Listener, TabExecutor {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent e) {
         if (horses.containsKey(e.getPlayer().getUniqueId()) && e.getCause() != PlayerTeleportEvent.TeleportCause.DISMOUNT) {
             dismiss(e.getPlayer().getUniqueId());

@@ -138,6 +138,18 @@ public final class QuestTracker implements Listener {
                 .append(Component.text(target.displayName() + " · " + Navigation.compass(bearing) + " · " + dist + "м", NamedTextColor.WHITE, TextDecoration.BOLD));
     }
 
+    /** Id of the wild region at the player's feet, or null (city, outside the map). */
+    public String regionIdAt(Player p) {
+        Location spawn = p.getWorld().getSpawnLocation();
+        return regions.at(p.getLocation().getX() - spawn.getX(), p.getLocation().getZ() - spawn.getZ())
+                .filter(r -> !r.safeZone()).map(RegionDefinition::id).orElse(null);
+    }
+
+    /** Plugin disable: remove every tracker bar. */
+    public void shutdown() {
+        for (Player p : Bukkit.getOnlinePlayers()) hide(p);
+    }
+
     private void hide(Player p) {
         BossBar bar = bars.remove(p.getUniqueId());
         if (bar != null) p.hideBossBar(bar);

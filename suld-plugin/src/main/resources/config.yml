@@ -116,6 +116,16 @@ chat-guard:
   allowed-domains: []
   caps-limit: 0.7
 
+# On first start SÜLD creates the LuckPerms groups (default, helper, mod, admin, developer, streamer, sponsor) with the
+# permissions listed in resources/permissions/luckperms.txt, once (marker: plugins/SULD/.permissions-applied).
+# Delete the marker to apply again; set false to manage LuckPerms yourself.
+permissions:
+  auto-setup: true
+
+# Floating guide boards in front of the arrival point (how to play, how to earn coins, commands).
+guide:
+  boards: true
+
 # Rotating chat tips: one line every interval-minutes (0 = off). messages: MiniMessage lines, empty = built-in tips.
 tips:
   interval-minutes: 6

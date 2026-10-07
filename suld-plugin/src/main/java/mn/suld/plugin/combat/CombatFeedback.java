@@ -44,9 +44,13 @@ public final class CombatFeedback implements Listener {
         this.mobs = mobs;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof LivingEntity mob) || !mobs.isSuldMob(mob)) return;
+        if (e.isCancelled()) { // cancelled after the crit was rolled: drop the flag, show nothing
+            CombatListener.CRIT_HITS.remove(mob.getUniqueId());
+            return;
+        }
         Entity damager = e.getDamager();
         if (damager instanceof Projectile p && p.getShooter() instanceof Player shooter) damager = shooter;
         boolean crit = CombatListener.CRIT_HITS.remove(mob.getUniqueId());

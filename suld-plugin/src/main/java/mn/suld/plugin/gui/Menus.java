@@ -525,15 +525,23 @@ public final class Menus {
             return;
         }
         ItemStack give = new ItemStack(sup.mat(), sup.amount());
-        if (!p.getInventory().addItem(give.clone()).isEmpty()) {
-            // roll back whatever fitted: refuse instead of half-delivering
-            p.getInventory().removeItem(give);
+        if (!fits(p, give)) { // checked on a copy first: nothing is added, so nothing of the player's own is ever removed
             p.sendMessage(Messages.error("Цүнх дүүрэн байна."));
             return;
         }
+        p.getInventory().addItem(give.clone());
         pr.addCurrency(-sup.price());
+        services.profiles().save(pr);
         p.sendMessage(Messages.success("Авлаа: " + sup.name() + " (-" + sup.price() + " ₮)"));
         shop(p);
+    }
+
+    /** Whether the whole stack fits into the player's storage, tested on a copy. */
+    private static boolean fits(Player p, ItemStack stack) {
+        org.bukkit.inventory.Inventory sim = org.bukkit.Bukkit.createInventory(null, 36);
+        ItemStack[] storage = p.getInventory().getStorageContents();
+        for (int i = 0; i < storage.length && i < 36; i++) sim.setItem(i, storage[i] == null ? null : storage[i].clone());
+        return sim.addItem(stack.clone()).isEmpty();
     }
 
     private void sellAll(Player p) {

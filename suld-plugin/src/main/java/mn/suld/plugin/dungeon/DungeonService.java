@@ -53,6 +53,9 @@ import java.util.UUID;
  */
 public final class DungeonService {
 
+    /** Scoreboard tag on every dungeon mob, so leftovers can be found after a restart or a failed run. */
+    public static final String DUNGEON_TAG = "suld_dungeon";
+
     /** Hard ceiling so a stuck run can never hold a party forever. */
     private static final long MAX_RUN_SECONDS = 20 * 60;
     private static final long TICK_PERIOD = 10L;
@@ -120,6 +123,9 @@ public final class DungeonService {
         }
         Set<UUID> members = new LinkedHashSet<>();
         for (UUID id : party.members()) {
+            if (services.isSoul.test(id)) {
+                return Messages.error("Сүнс төлөвтэй гишүүн байна — амилтал хүлээнэ үү.");
+            }
             Player p = Bukkit.getPlayer(id);
             PlayerProfile profile = p == null ? null : services.profiles().cached(id).orElse(null);
             if (p == null || profile == null) {
@@ -139,6 +145,7 @@ public final class DungeonService {
         ActiveRun ar = new ActiveRun(new DungeonRun(def.id(), party.id(), def.totalWaves()),
                 def, party, leader.getLocation().clone());
         ar.participants.addAll(members);
+        for (UUID id : members) services.dismissHorse.accept(id); // no riding an invulnerable horse through the run
         runsByParty.put(party.id(), ar);
         party.enterDungeon();
 
@@ -177,6 +184,7 @@ public final class DungeonService {
             }
             LivingEntity mob = mobs.spawn(mobDef, ringLocation(ar.origin, i, mobIds.size()));
             mob.setRemoveWhenFarAway(false);
+            mob.addScoreboardTag(DUNGEON_TAG);
             ar.waveMobs.add(mob.getUniqueId());
             runsByEntity.put(mob.getUniqueId(), ar);
         }
@@ -209,6 +217,7 @@ public final class DungeonService {
         MobDefinition bossMob = ar.def.bossDefinition().mob();
         LivingEntity boss = mobs.spawn(bossMob, ar.origin.clone());
         boss.setRemoveWhenFarAway(false);
+        boss.addScoreboardTag(DUNGEON_TAG);
         ar.bossId = boss.getUniqueId();
         runsByEntity.put(ar.bossId, ar);
         ar.phaseName = ar.def.bossDefinition().phases().get(0).phaseName();
@@ -280,6 +289,16 @@ public final class DungeonService {
         }
     }
 
+    /** A participant counts only while they are in the arena (same world, within 80 blocks of where it opened). */
+    private boolean present(ActiveRun ar, Player p) {
+        return p.getWorld().equals(ar.origin.getWorld()) && p.getLocation().distanceSquared(ar.origin) <= 80 * 80;
+    }
+
+    /** True while a living dungeon mob belongs to a run (used to sweep leftovers from before a restart or a failed run). */
+    public boolean ownsEntity(UUID entity) {
+        return runsByEntity.containsKey(entity);
+    }
+
     private void checkWipe(ActiveRun ar) {
         if (!ar.run.isActive()) {
             return;
@@ -287,7 +306,7 @@ public final class DungeonService {
         boolean anyoneAlive = false;
         for (UUID id : ar.participants) {
             Player p = Bukkit.getPlayer(id);
-            if (p != null && !ar.downed.contains(id) && !p.isDead()) {
+            if (p != null && !ar.downed.contains(id) && !p.isDead() && present(ar, p)) {
                 anyoneAlive = true;
                 break;
             }
@@ -311,6 +330,10 @@ public final class DungeonService {
             }
             if (ar.downed.contains(id)) {
                 p.sendMessage(Messages.info("Та унасан тул агуйн шагнал авсангүй."));
+                continue;
+            }
+            if (!present(ar, p)) {
+                p.sendMessage(Messages.info("Та агуйн талбарт байгаагүй тул шагнал авсангүй."));
                 continue;
             }
             int from = profile.progression().level();

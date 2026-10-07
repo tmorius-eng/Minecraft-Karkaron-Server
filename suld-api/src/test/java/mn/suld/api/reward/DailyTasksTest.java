@@ -26,6 +26,20 @@ class DailyTasksTest {
     }
 
     @Test
+    void pinnedLevelSurvivesLevelUps() {
+        UUID p = UUID.randomUUID();
+        int[] progress = {5, 0, 0};
+        String stored = DailyTasks.store(9, progress);
+        assertEquals("9|5,0,0", stored);
+        assertEquals(9, DailyTasks.pinnedLevel(stored, 20));
+        assertEquals(20, DailyTasks.pinnedLevel("", 20));
+        assertEquals(20, DailyTasks.pinnedLevel("3,0,0", 20)); // old format: not pinned
+        assertArrayEquals(progress, DailyTasks.progress(stored));
+        // rolled at the pinned level, the day's tasks never change however high the player climbs
+        assertEquals(DailyTasks.tasks(p, 20_000, 9, POOL), DailyTasks.tasks(p, 20_000, DailyTasks.pinnedLevel(stored, 25), POOL));
+    }
+
+    @Test
     void killsAdvanceAndCompleteOnce() {
         List<DailyTasks.Task> tasks = List.of(new DailyTasks.Task(POOL.get(0), 2, 10, 10), new DailyTasks.Task(POOL.get(1), 1, 10, 10),
                 new DailyTasks.Task(POOL.get(0), 1, 10, 10));

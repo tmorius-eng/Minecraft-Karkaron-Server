@@ -41,6 +41,14 @@ public final class SuldCommand implements CommandExecutor {
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
             case "coins" -> giveCoins(sender, args);
+            case "guide" -> {
+                if (!sender.hasPermission("suld.admin")) {
+                    sender.sendMessage(Messages.error("Эрх алга."));
+                } else {
+                    var gb = ((mn.suld.plugin.SuldPlugin) plugin).guide();
+                    sender.sendMessage(Messages.success("Заавар самбар: " + (gb == null ? 0 : gb.rebuild()) + " ширхэг шинэчиллээ."));
+                }
+            }
             default -> help(sender);
         }
         return true;
@@ -158,6 +166,14 @@ public final class SuldCommand implements CommandExecutor {
         sender.sendMessage(Messages.accent("SULD — Монгол Hardcore MMORPG"));
         sender.sendMessage(Messages.info("/suld info — серверийн мэдээлэл"));
         sender.sendMessage(Messages.info("/suld profile — таны дүрийн мэдээлэл"));
+        if (sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.info("/suld exp <тоглогч> <EXP> — EXP олгох"));
+            sender.sendMessage(Messages.info("/suld coins <тоглогч> <±тоо> — зоос нэмэх/хасах"));
+            sender.sendMessage(Messages.info("/suld quest <тоглогч> <1..18|reset> — эрлийн бүлэг"));
+            sender.sendMessage(Messages.info("/suld guide — заавар самбаруудыг шинэчлэх"));
+            sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
+        }
+        sender.sendMessage(Messages.info("Бүх команд: /commands"));
     }
 
     private void info(CommandSender sender) {

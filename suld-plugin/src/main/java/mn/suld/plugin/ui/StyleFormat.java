@@ -33,6 +33,16 @@ public final class StyleFormat {
     private StyleFormat() {
     }
 
+    /**
+     * Parts side by side. Always build glyph + text lines with this (or an empty root): text appended <em>to</em> a
+     * glyph component is its child and inherits the pixel font, which has no letters or digits (shown as hex boxes).
+     */
+    public static Component join(Component... parts) {
+        Component out = Component.empty();
+        for (Component part : parts) out = out.append(part);
+        return out;
+    }
+
     /** A pack glyph, untinted and without the text shadow. */
     public static Component glyph(String glyph) {
         return Component.text(glyph).font(Glyphs.FONT).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none());

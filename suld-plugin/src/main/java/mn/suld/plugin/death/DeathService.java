@@ -150,7 +150,7 @@ public final class DeathService implements Listener {
             return true;
         }
         ItemInstance ii = services.items().read(it).orElse(null);
-        return ii != null && (ii.definitionId().startsWith("weapon.class.") || ii.definitionId().startsWith("weapon.surgamj_"));
+        return ii != null && (ii.soulbound() || ii.definitionId().startsWith("weapon.class.") || ii.definitionId().startsWith("weapon.surgamj_"));
     }
 
     /** Applies death wear to a damageable item in place; true if it was worn. */
@@ -232,6 +232,16 @@ public final class DeathService implements Listener {
             if (bar != null) updateBar(p, bar, en.getValue());
             p.getWorld().spawnParticle(Particle.SOUL, p.getLocation().add(0, 1, 0), 2, 0.3, 0.5, 0.3, 0.01);
         }
+    }
+
+    /** Plugin disable: take the countdown bars off the players' screens. */
+    public void shutdown() {
+        for (Map.Entry<UUID, BossBar> en : bars.entrySet()) {
+            Player p = Bukkit.getPlayer(en.getKey());
+            if (p != null) p.hideBossBar(en.getValue());
+        }
+        bars.clear();
+        souls.clear();
     }
 
     public boolean isSoul(UUID player) {

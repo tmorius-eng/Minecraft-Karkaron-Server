@@ -78,6 +78,8 @@ public final class CombatListener implements Listener {
 
     /** Arrow damage multiplier set by spells (Чонын Нүд) — consumed per arrow. */
     public static final java.util.Map<java.util.UUID, Integer> EMPOWERED_ARROWS = new java.util.concurrent.ConcurrentHashMap<>();
+    /** When the empowered arrows run out even if unused. */
+    public static final java.util.Map<java.util.UUID, Long> EMPOWERED_UNTIL = new java.util.concurrent.ConcurrentHashMap<>();
 
     @EventHandler(ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent event) {
@@ -94,6 +96,12 @@ public final class CombatListener implements Listener {
             scale = Math.max(0.25, Math.min(1.4, event.getDamage() / 6.0));
             if (arrow.getScoreboardTags().contains("suld_volley")) scale *= 0.9;
             Integer left = EMPOWERED_ARROWS.get(p.getUniqueId());
+            Long until = EMPOWERED_UNTIL.get(p.getUniqueId());
+            if (until != null && until < System.currentTimeMillis()) {
+                EMPOWERED_ARROWS.remove(p.getUniqueId());
+                EMPOWERED_UNTIL.remove(p.getUniqueId());
+                left = null;
+            }
             if (left != null && left > 0) {
                 scale *= 1.5;
                 if (left <= 1) EMPOWERED_ARROWS.remove(p.getUniqueId());

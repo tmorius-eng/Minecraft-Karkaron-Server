@@ -45,11 +45,28 @@ public final class DailyTasks {
         return out;
     }
 
-    /** Parse stored progress ("3,0,12"); anything malformed counts as no progress. */
+    /** The level the day's tasks were rolled at ("12|3,0,12" stores 12), or {@code fallback} on a fresh day. */
+    public static int pinnedLevel(String stored, int fallback) {
+        int bar = stored == null ? -1 : stored.indexOf('|');
+        if (bar <= 0) return fallback;
+        try {
+            return Math.max(1, Integer.parseInt(stored.substring(0, bar).trim()));
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    /** Progress together with the pinned level, so levelling up mid-day never re-rolls tasks that are half done. */
+    public static String store(int pinnedLevel, int[] progress) {
+        return pinnedLevel + "|" + format(progress);
+    }
+
+    /** Parse stored progress ("12|3,0,12" or "3,0,12"); anything malformed counts as no progress. */
     public static int[] progress(String stored) {
         int[] out = new int[COUNT];
         if (stored == null || stored.isBlank()) return out;
-        String[] parts = stored.split(",");
+        int bar = stored.indexOf('|');
+        String[] parts = (bar >= 0 ? stored.substring(bar + 1) : stored).split(",");
         for (int i = 0; i < COUNT && i < parts.length; i++) {
             try {
                 out[i] = Math.max(0, Integer.parseInt(parts[i].trim()));

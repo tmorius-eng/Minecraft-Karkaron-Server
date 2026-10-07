@@ -53,16 +53,24 @@ public final class StyleService implements Listener {
         this.repository = repository;
     }
 
+    /** Styles that could not be loaded (reload while the database is down): never written, so defaults cannot overwrite. */
+    private final java.util.Set<UUID> unsafe = ConcurrentHashMap.newKeySet();
+
     public void start() {
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::flush, 20L * 60, 20L * 60);
         for (Player p : Bukkit.getOnlinePlayers()) { // plugin reload
-            cache.computeIfAbsent(p.getUniqueId(), id -> load(id));
+            cache.computeIfAbsent(p.getUniqueId(), id -> {
+                PlayerStyle loaded = tryLoad(id);
+                if (loaded != null) return loaded;
+                unsafe.add(id);
+                return new PlayerStyle(id);
+            });
         }
     }
 
     public void stop() {
         for (PlayerStyle s : cache.values()) {
-            if (s.isDirty()) {
+            if (s.isDirty() && !unsafe.contains(s.player())) {
                 try {
                     repository.save(s.snapshotAndClean()).get(5, TimeUnit.SECONDS);
                 } catch (Exception e) {
@@ -87,34 +95,80 @@ public final class StyleService implements Listener {
         save(p.getUniqueId());
     }
 
-    private PlayerStyle load(UUID id) {
+    /** The stored style, a fresh one for a player never seen, or null if storage failed (the login is then refused). */
+    private PlayerStyle tryLoad(UUID id) {
         try {
             return repository.load(id).get(5, TimeUnit.SECONDS).map(PlayerStyle::restore).orElseGet(() -> new PlayerStyle(id));
         } catch (Exception e) {
-            plugin.getLogger().warning("style load failed for " + id + " (using defaults this session): " + e.getMessage());
-            return new PlayerStyle(id);
+            plugin.getLogger().warning("style load failed for " + id + ": " + e.getMessage());
+            return null;
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPreLogin(AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
-        cache.put(e.getUniqueId(), load(e.getUniqueId()));
+        // A duplicate or quick re-login reuses the live object: its unsaved changes must not be replaced by a stale read.
+        if (cache.containsKey(e.getUniqueId())) return;
+        PlayerStyle loaded = tryLoad(e.getUniqueId());
+        if (loaded == null) {
+            e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    Component.text("Өгөгдөл ачаалж чадсангүй. Түр хүлээгээд дахин орно уу.", NamedTextColor.RED));
+            return;
+        }
+        cache.putIfAbsent(e.getUniqueId(), loaded);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
-        PlayerStyle s = cache.remove(e.getPlayer().getUniqueId());
-        if (s != null && s.isDirty()) repository.save(s.snapshotAndClean());
+        UUID id = e.getPlayer().getUniqueId();
+        PlayerStyle s = cache.get(id);
+        if (s == null) return;
+        persist(s);
+        // Keep it a moment: a duplicate login's pre-login (which runs before this quit) already relies on this object.
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (Bukkit.getPlayer(id) == null && cache.remove(id, s)) persist(s);
+        }, 40L);
     }
 
     private void flush() {
-        for (PlayerStyle s : cache.values()) if (s.isDirty()) repository.save(s.snapshotAndClean());
+        for (PlayerStyle s : cache.values()) persist(s);
     }
 
     private void save(UUID id) {
         PlayerStyle s = cache.get(id);
-        if (s != null && s.isDirty()) repository.save(s.snapshotAndClean());
+        if (s != null) persist(s);
+    }
+
+    /** Write a player's style now (e.g. together with a coin change); also used for styles no longer in the cache. */
+    public void saveNow(UUID id) {
+        save(id);
+    }
+
+    /**
+     * Snapshot and write if dirty. Taking the snapshot and queueing the write happen under one lock so snapshots are
+     * written in order, and a failed write marks the style dirty again so the next flush retries it.
+     */
+    private void persist(PlayerStyle s) {
+        if (unsafe.contains(s.player())) return;
+        java.util.concurrent.CompletableFuture<Void> write;
+        synchronized (s) {
+            if (!s.isDirty()) return;
+            write = repository.save(s.snapshotAndClean());
+        }
+        write.whenComplete((v, err) -> {
+            if (err != null) {
+                s.markDirty();
+                plugin.getLogger().warning("style save failed for " + s.player() + " (will retry): " + err.getMessage());
+            }
+        });
+    }
+
+    /** Refuse an action that would mutate a style whose stored state is unknown. */
+    private boolean blocked(Player p) {
+        if (!unsafe.contains(p.getUniqueId())) return false;
+        p.sendMessage(Messages.error("Таны өгөгдөл бүрэн ачаалагдаагүй байна — дахин нэвтэрч орно уу."));
+        return true;
     }
 
     /** The player's style (online players always have one). */
@@ -133,6 +187,7 @@ public final class StyleService implements Listener {
     /** Buy (if needed) and equip/unequip. Credit purchases complete asynchronously (atomic database spend). */
     public void buyOrEquip(Player p, Cosmetic c, Currency currency, Runnable after) {
         PlayerStyle s = of(p.getUniqueId());
+        if (blocked(p)) return;
         if (s.owns(c.id())) {
             equipToggle(p, s, c);
             after.run();
@@ -150,15 +205,28 @@ public final class StyleService implements Listener {
                 purchasing.remove(p.getUniqueId());
                 if (err != null) {
                     plugin.getLogger().warning("credit spend failed for " + p.getName() + ": " + err.getMessage());
-                    p.sendMessage(Messages.error("Кредит хасаж чадсангүй — дахин оролдоно уу."));
+                    if (p.isOnline()) p.sendMessage(Messages.error("Кредит хасаж чадсангүй — дахин оролдоно уу."));
                     return;
                 }
                 if (balance < 0) {
-                    p.sendMessage(Messages.error("Кредит хүрэлцэхгүй (" + s.credits() + "/" + cost + "). /buy"));
+                    if (p.isOnline()) p.sendMessage(Messages.error("Кредит хүрэлцэхгүй (" + s.credits() + "/" + cost + "). /buy"));
                     return;
                 }
                 s.creditsCache(balance);
+                if (s.owns(c.id())) { // became ours while the payment was in flight (e.g. a level reward): give the credits back
+                    repository.addCredits(p.getUniqueId(), cost).whenComplete((b, e2) -> {
+                        if (e2 != null) plugin.getLogger().severe("REFUND FAILED for " + p.getUniqueId() + " (" + cost + " credits): " + e2.getMessage());
+                    });
+                    if (p.isOnline()) p.sendMessage(Messages.info("Энэ зүйл танд аль хэдийн байна — кредит буцаагдлаа."));
+                    return;
+                }
+                if (!p.isOnline()) { // left during the payment: the purchase is still delivered and saved
+                    s.grant(c.id());
+                    persist(s);
+                    return;
+                }
                 granted(p, s, c);
+                persist(s); // even if the style was dropped from the cache meanwhile
                 after.run();
             }));
             return;
@@ -176,10 +244,16 @@ public final class StyleService implements Listener {
             }
             profile.addCurrency(-c.price());
             granted(p, s, c);
+            saveProfile(p);
             after.run();
         } finally {
             purchasing.remove(p.getUniqueId());
         }
+    }
+
+    /** Coins live on the profile: save it together with the style change they paid for, so a crash cannot split them. */
+    private void saveProfile(Player p) {
+        services.profiles().cached(p.getUniqueId()).ifPresent(services.profiles()::save);
     }
 
     private void granted(Player p, PlayerStyle s, Cosmetic c) {
@@ -207,6 +281,7 @@ public final class StyleService implements Listener {
 
     public Rank.Check rankUp(Player p) {
         PlayerStyle s = of(p.getUniqueId());
+        if (blocked(p)) return Rank.Check.LEVEL_TOO_LOW;
         PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (profile == null) return Rank.Check.LEVEL_TOO_LOW;
         Rank.Check check = Rank.canRankUp(s.rank(), profile.progression().level(), profile.currency());
@@ -221,6 +296,7 @@ public final class StyleService implements Listener {
                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
                 Bukkit.broadcast(Messages.accent(p.getName() + " " + next.displayName() + " цолд хүрлээ!"));
                 changed(p);
+                saveProfile(p);
             }
             case MAX_RANK -> p.sendMessage(Messages.info("Та хамгийн дээд цолтой — Хаан!"));
             case LEVEL_TOO_LOW -> p.sendMessage(Messages.error("Түвшин " + next.requiredLevel() + " хэрэгтэй (одоо "
@@ -237,7 +313,7 @@ public final class StyleService implements Listener {
         PlayerStyle s = of(p.getUniqueId());
         PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
         LevelRewards.Reward r = LevelRewards.at(level).orElse(null);
-        if (profile == null || r == null) return false;
+        if (profile == null || r == null || blocked(p)) return false;
         if (profile.progression().level() < level) {
             p.sendMessage(Messages.error("Түвшин " + level + "-д хүрээгүй байна."));
             return false;
@@ -254,6 +330,7 @@ public final class StyleService implements Listener {
         p.sendMessage(Messages.success("Түвшин " + level + " шагнал: +" + r.coins() + " ₮" + extra));
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
         changed(p);
+        saveProfile(p);
         return true;
     }
 

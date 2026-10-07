@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -53,13 +54,14 @@ class SuldConfigFactoryTest {
     }
 
     @Test
-    void unknownEnumValuesFallBackToDefaults() {
-        Map<String, Object> raw = Map.of(
-                "database", Map.of("type", "mongodb"),
-                "analytics", Map.of("sink", "carrier-pigeon"));
-        SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(raw));
-        assertEquals(StorageType.MEMORY, cfg.database().type());
+    void unknownAnalyticsSinkFallsBackButAnUnknownDatabaseStopsStartup() {
+        SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(Map.of("analytics", Map.of("sink", "carrier-pigeon"))));
         assertEquals(AnalyticsSettings.Sink.LOG, cfg.analytics().sink());
+        // silently falling back to volatile memory would lose every save, so a typo must fail loudly
+        assertThrows(IllegalArgumentException.class,
+                () -> SuldConfigFactory.load(new MapConfigView(Map.of("database", Map.of("type", "mongodb")))));
+        assertEquals(StorageType.POSTGRESQL, SuldConfigFactory.load(new MapConfigView(Map.of("database", Map.of("type", "postgres")))).database().type());
+        assertEquals(StorageType.MYSQL, SuldConfigFactory.load(new MapConfigView(Map.of("database", Map.of("type", "MariaDB")))).database().type());
     }
 
     @Test

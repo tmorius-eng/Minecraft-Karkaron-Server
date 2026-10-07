@@ -247,6 +247,13 @@ public final class SuldServices {
         return questService;
     }
 
+    /** Filled by SuldPlugin: whether a player is currently a soul (hardcore death state). */
+    public volatile java.util.function.Predicate<java.util.UUID> isSoul = id -> false;
+    /** Filled by SuldPlugin: send a player's steppe horse away (dungeon entry). */
+    public volatile java.util.function.Consumer<java.util.UUID> dismissHorse = id -> { };
+    /** Filled by SuldPlugin: id of the wild region at a player's feet, or null. */
+    public volatile java.util.function.Function<org.bukkit.entity.Player, String> regionIdAt = p -> null;
+
     public MobService mobs() {
         return mobService;
     }

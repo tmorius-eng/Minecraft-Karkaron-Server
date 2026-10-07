@@ -73,8 +73,9 @@ public final class TaskService implements Listener, TabExecutor {
         return LocalDate.now(zone).toEpochDay();
     }
 
-    private List<DailyTasks.Task> tasks(Player p, PlayerProfile pr) {
-        return DailyTasks.tasks(p.getUniqueId(), today(), pr.progression().level(), pool);
+    /** The day's tasks, rolled at the level the player had when the day's progress started (pinned). */
+    private List<DailyTasks.Task> tasks(Player p, PlayerProfile pr, String stored) {
+        return DailyTasks.tasks(p.getUniqueId(), today(), DailyTasks.pinnedLevel(stored, pr.progression().level()), pool);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -87,11 +88,13 @@ public final class TaskService implements Listener, TabExecutor {
         PlayerStyle st = services.styles().cached(killer.getUniqueId()).orElse(null);
         if (mobId == null || pr == null || st == null || !pr.hasSelectedClass()) return;
         long day = today();
-        List<DailyTasks.Task> tasks = tasks(killer, pr);
-        int[] progress = DailyTasks.progress(st.taskProgress(day));
+        String stored = st.taskProgress(day);
+        int pin = DailyTasks.pinnedLevel(stored, pr.progression().level());
+        List<DailyTasks.Task> tasks = tasks(killer, pr, stored);
+        int[] progress = DailyTasks.progress(stored);
         int done = DailyTasks.kill(tasks, progress, mobId);
         if (done == -2) return;
-        st.taskProgress(day, DailyTasks.format(progress));
+        st.taskProgress(day, DailyTasks.store(pin, progress));
         if (done >= 0) {
             DailyTasks.Task t = tasks.get(done);
             int from = pr.progression().level();
@@ -102,6 +105,8 @@ public final class TaskService implements Listener, TabExecutor {
             killer.playSound(killer.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.3f);
             if (gained.leveledUp()) Presentation.levelUp(killer, from, gained.after().level());
             services.hud().update(killer, pr);
+            services.profiles().save(pr);
+            services.styles().saveNow(killer.getUniqueId()); // coins and the "done" progress reach storage together
         } else {
             for (int i = 0; i < tasks.size(); i++) {
                 if (tasks.get(i).prey().mobId().equals(mobId) && progress[i] < tasks.get(i).count()) {
@@ -135,8 +140,9 @@ public final class TaskService implements Listener, TabExecutor {
             p.sendMessage(Messages.error("Эхлээд ангиа сонго: /class"));
             return;
         }
-        List<DailyTasks.Task> tasks = tasks(p, pr);
-        int[] progress = DailyTasks.progress(st.taskProgress(today()));
+        String stored = st.taskProgress(today());
+        List<DailyTasks.Task> tasks = tasks(p, pr, stored);
+        int[] progress = DailyTasks.progress(stored);
         int finished = 0;
         for (int i = 0; i < tasks.size(); i++) if (progress[i] >= tasks.get(i).count()) finished++;
         Menu m = new Menu(3, "Өдрийн даалгавар · " + finished + "/" + tasks.size(), null);

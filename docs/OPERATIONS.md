@@ -27,6 +27,7 @@ the README (local test server).
 
 | Command | What it does |
 |---|---|
+| `/suld guide` | Re-place the floating guide boards in front of the arrival point |
 | `/suld exp <player> <amount>` | Grant EXP (levels up and upgrades the class weapon) |
 | `/suld coins <player> <±amount>` | Add or remove SÜLD coins (audited in the log) |
 | `/suld quest <player> <1..18\|reset>` | Move a player in the storyline (support tickets, testing) |
@@ -35,11 +36,44 @@ the README (local test server).
 | `/suldevent`, `/suldpack`, `/worldbuild`, `/relic …` | World events · resource pack · city builder · relic admin |
 | `/suld auth` | Authentication mode and session state |
 
+## Permissions: who can do what
+
+`/commands` lists, for whoever types it, every command they may use (players: game commands plus the extras their
+group grants; staff: the tools their permissions unlock; the console sees all). SÜLD's own commands are open to
+everybody; what is restricted is listed below.
+
+On the first start with LuckPerms installed, SÜLD creates the groups once from
+`plugins/SULD/…/permissions/luckperms.txt` (marker file `plugins/SULD/.permissions-applied`; delete it to apply
+again, or set `permissions.auto-setup: false` to manage LuckPerms yourself). Groups inherit upwards
+(`admin > mod > helper > default`); every player is in `default`.
+
+| Group | What it adds |
+|---|---|
+| `default` (everyone) | `/home /sethome /delhome` (several homes), `/tpa /tpaccept /tpdeny /tpacancel`, `/msg /r`, `/mail`, `/ignore`, `/afk`, `/list`; plus all SÜLD game commands |
+| `helper` | Badge ТУСЛАГЧ, `/kick /mute /tp /seen /whois`, CoreProtect `inspect`/`lookup`, `suld.chat.bypass`, exempt from kick/mute/ignore |
+| `mod` | Badge МОД, `/revive`, `/tphere /vanish /socialspy /invsee /back /ban /tempban`, CoreProtect `rollback`/`restore` |
+| `admin` | Badge АДМИН, `suld.admin` (all SÜLD admin commands), `essentials.*`, `coreprotect.*`, `worldedit.*`, `worldguard.*`, `chunky.*` |
+| `developer` | Inherits `mod`; badge DEV |
+| `streamer`, `sponsor` | Cosmetic badges only |
+
+Give someone a role with `lp user <name> parent add <group>` (they stay in `default`). The owners named in
+`owners:` are OPed automatically on a verified server and show the ЭЗЭН badge.
+
+Admin-only SÜLD commands (all need `suld.admin` unless noted): `/suld exp|coins|quest|guide|auth|spawnmob`,
+`/credits give|take` (`suld.admin.credits`), `/revive` (`suld.admin.revive`), `/suldevent start|stop`
+(`suld.admin.event`), `/suldpack reload|force` (`suld.admin.pack`), `/worldbuild` (`suld.admin.world`),
+`/relic setshrine|return|give|recover|tp` (`suld.admin.relic`). `suld.admin` also lets a player look at others'
+`/profile /exp /class /quest /balance <name>`, skips the `/spawn` warm-up and may abort any dungeon.
+
+SÜLD owns these labels even where EssentialsX has the same command: `/help /rules /spawn /balance /pay /top /baltop
+/exp /rank /vote /discord`. Staff reach Essentials' own versions with the prefix, e.g. `/essentials:top`,
+`/essentials:exp`. While in a dungeon run, players cannot use `/home /tpa /back /warp /tp…` (staff excepted).
+
 ## Staff badges (LuckPerms)
 
 Badges show in chat, above heads and in TAB. Each is a permission, `default: false`:
-`suld.badge.owner|admin|developer|mod|helper|streamer|sponsor`. The owners listed under `owners:` in config.yml
-get OP and the ЭЗЭН badge automatically. Typical LuckPerms setup:
+`suld.badge.owner|admin|developer|mod|helper|streamer|sponsor`; the groups above already carry them. To do it by
+hand instead:
 
 ```
 lp creategroup admin
@@ -87,6 +121,14 @@ loses 25 % durability. They respawn as a **Сүнс** for 30 s: they cannot deal
 
 `branding.motd` takes two MiniMessage lines (empty = the built-in SÜLD lines). The bundled 64×64 icon is used
 unless the server folder has its own `server-icon.png` or `branding.server-icon: false`.
+
+## Guide for new players
+
+Five floating boards stand in front of the arrival point (start, earning coins, classes and combat, regions and
+danger, commands); they are re-placed whenever a player arrives and every 30 s, and glitter so newcomers look at
+them. A joining low-level player also gets a title pointing at them, a clickable five-step card in chat, and for
+the first 20 minutes an action-bar hint that fits their progress (no class, first hunt, loot to sell, coins to
+spend). Switch the boards off with `guide.boards: false`.
 
 ## Chat guard
 

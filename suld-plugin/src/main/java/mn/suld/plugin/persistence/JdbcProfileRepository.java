@@ -52,7 +52,10 @@ public final class JdbcProfileRepository implements ProfileRepository {
                     if (!rs.next()) {
                         return Optional.<PlayerProfile>empty();
                     }
-                    PlayerClass clazz = PlayerClass.byId(rs.getString("class_id")).orElse(null);
+                    String classId = rs.getString("class_id");
+                    // an unknown id must not load as "no class": the next save would erase the player's class
+                    PlayerClass clazz = classId == null || classId.isEmpty() ? null : PlayerClass.byId(classId)
+                            .orElseThrow(() -> new RepositoryException("Unknown class id '" + classId + "' for profile " + playerId));
                     Progression progression = new Progression(rs.getInt("level"), rs.getLong("exp_into_level"));
                     String questId = rs.getString("active_quest_id");
                     QuestState questState = (questId == null || questId.isEmpty())
@@ -122,21 +125,22 @@ public final class JdbcProfileRepository implements ProfileRepository {
     @Override
     public CompletableFuture<PlayerProfile> save(PlayerProfile profile) {
         return CompletableFuture.supplyAsync(() -> {
-            // Snapshot the version under the profile's lock so the row and the
-            // in-memory "persisted" marker agree.
-            long version = profile.version();
+            // One consistent snapshot (all fields and the version under the profile's lock): the row and the
+            // in-memory "persisted" marker agree, and a change made meanwhile stays dirty for the next save.
+            PlayerProfile.Snapshot snap = profile.snapshot();
+            long version = snap.version();
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement ps = conn.prepareStatement(dialect.profileUpsert())) {
-                bindUuid(ps, 1, profile.playerId());
-                ps.setString(2, profile.name());
-                ps.setString(3, profile.playerClass().map(PlayerClass::id).orElse(null));
-                ps.setInt(4, profile.progression().level());
-                ps.setLong(5, profile.progression().expIntoLevel());
-                ps.setLong(6, profile.createdAt().toEpochMilli());
-                ps.setLong(7, profile.lastSeenAt().toEpochMilli());
+                bindUuid(ps, 1, snap.playerId());
+                ps.setString(2, snap.name());
+                ps.setString(3, snap.playerClass() == null ? null : snap.playerClass().id());
+                ps.setInt(4, snap.progression().level());
+                ps.setLong(5, snap.progression().expIntoLevel());
+                ps.setLong(6, snap.createdAt().toEpochMilli());
+                ps.setLong(7, snap.lastSeenAt().toEpochMilli());
                 ps.setLong(8, version);
-                ps.setLong(9, profile.currency());
-                QuestState q = profile.questState();
+                ps.setLong(9, snap.currency());
+                QuestState q = snap.questState();
                 ps.setString(10, q.questId().isEmpty() ? null : q.questId());
                 ps.setInt(11, q.progress());
                 ps.setBoolean(12, q.completed());

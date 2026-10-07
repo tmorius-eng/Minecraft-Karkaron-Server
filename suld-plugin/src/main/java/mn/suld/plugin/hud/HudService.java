@@ -135,7 +135,7 @@ public final class HudService {
     }
 
     private static Component section(String icon, String label) {
-        return StyleFormat.glyph(icon).append(Component.text(" " + label, SECTION, TextDecoration.BOLD));
+        return StyleFormat.join(StyleFormat.glyph(icon), Component.text(" " + label, SECTION, TextDecoration.BOLD));
     }
 
     private static Component row(String key, Component value) {
@@ -178,8 +178,8 @@ public final class HudService {
         }
         if (services != null && lines.size() < 14) {
             boolean safe = services.inCity(player.getLocation());
-            lines.add(StyleFormat.glyph(Glyphs.ICON_PIN).append(Component.text(safe ? " Хархорум " : " Тал нутаг ", NamedTextColor.WHITE))
-                    .append(StyleFormat.glyph(safe ? Glyphs.BADGE_SAFE : Glyphs.BADGE_DANGER)));
+            lines.add(StyleFormat.join(StyleFormat.glyph(Glyphs.ICON_PIN), Component.text(safe ? " Хархорум " : " Тал нутаг ", NamedTextColor.WHITE),
+                    StyleFormat.glyph(safe ? Glyphs.BADGE_SAFE : Glyphs.BADGE_DANGER)));
         }
         lines.add(Component.text(domain(), NamedTextColor.GRAY));
         return lines;

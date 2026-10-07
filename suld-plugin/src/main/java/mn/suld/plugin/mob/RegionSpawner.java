@@ -173,6 +173,7 @@ public final class RegionSpawner {
 
     /** Keep region mobs hostile; remove them in/near the city or when no player is within 80 blocks. */
     private void careTick() {
+        lastRegion.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
         List<Player> players = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (eligible(p)) players.add(p);

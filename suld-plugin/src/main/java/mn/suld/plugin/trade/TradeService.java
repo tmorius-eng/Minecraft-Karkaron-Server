@@ -251,8 +251,23 @@ public final class TradeService implements Listener, TabExecutor {
 
     private boolean tradable(ItemStack it) {
         if (it == null || it.getType().isAir()) return false;
-        if (services.relics().items().isRelic(it)) return false;
+        if (services.relics().items().isRelic(it) || holdsRelic(it)) return false;
+        var inst = services.items().read(it).orElse(null);
+        if (inst != null && inst.soulbound()) return false; // class weapons and other soulbound gear stay with their owner
         return !(it.hasItemMeta() && it.getItemMeta().getPersistentDataContainer().has(menuKey, PersistentDataType.BYTE));
+    }
+
+    /** A relic hidden inside a shulker box or a bundle. */
+    private boolean holdsRelic(ItemStack it) {
+        if (!it.hasItemMeta()) return false;
+        var meta = it.getItemMeta();
+        if (meta instanceof org.bukkit.inventory.meta.BlockStateMeta bsm && bsm.getBlockState() instanceof org.bukkit.block.ShulkerBox box) {
+            for (ItemStack in : box.getInventory().getContents()) if (in != null && services.relics().items().isRelic(in)) return true;
+        }
+        if (meta instanceof org.bukkit.inventory.meta.BundleMeta bundle) {
+            for (ItemStack in : bundle.getItems()) if (services.relics().items().isRelic(in)) return true;
+        }
+        return false;
     }
 
     private void changed(Trade t) {
@@ -469,5 +484,14 @@ public final class TradeService implements Listener, TabExecutor {
 
     public void shutdown() {
         for (Trade t : List.copyOf(trades.values())) cancel(t, "сервер унтарч байна");
+        for (Map.Entry<UUID, List<ItemStack>> en : List.copyOf(afterRespawn.entrySet())) {
+            Player p = Bukkit.getPlayer(en.getKey());
+            if (p == null) {
+                plugin.getLogger().warning("[trade] " + en.getValue().size() + " stacks of " + en.getKey() + " were mid-trade when they died and could not be returned");
+                continue;
+            }
+            for (ItemStack it : en.getValue()) giveBack(p, it);
+        }
+        afterRespawn.clear();
     }
 }

@@ -1,0 +1,81 @@
+# LuckPerms groups SÜLD sets up once (permissions.auto-setup in config.yml; marker file plugins/SULD/.permissions-applied).
+# One console command per line (without the slash). Lines starting with # are comments.
+# Every player is in the "default" group, so its permissions are what an ordinary player can do beyond SÜLD's own
+# commands (which are open to everyone). Staff groups inherit upwards: admin > mod > helper > default.
+
+# ---- groups
+lp creategroup helper
+lp creategroup mod
+lp creategroup admin
+lp creategroup developer
+lp creategroup streamer
+lp creategroup sponsor
+lp group helper setweight 10
+lp group mod setweight 20
+lp group admin setweight 30
+lp group developer setweight 25
+lp group streamer setweight 5
+lp group sponsor setweight 5
+lp group mod parent add helper
+lp group admin parent add mod
+lp group developer parent add mod
+
+# ---- default player: homes, teleport requests, messaging, small conveniences
+lp group default permission set essentials.home true
+lp group default permission set essentials.sethome true
+lp group default permission set essentials.delhome true
+lp group default permission set essentials.sethome.multiple true
+lp group default permission set essentials.tpa true
+lp group default permission set essentials.tpaccept true
+lp group default permission set essentials.tpdeny true
+lp group default permission set essentials.tpacancel true
+lp group default permission set essentials.msg true
+lp group default permission set essentials.mail true
+lp group default permission set essentials.mail.send true
+lp group default permission set essentials.ignore true
+lp group default permission set essentials.afk true
+lp group default permission set essentials.list true
+
+# ---- helper: keeps chat clean, can look into incidents
+lp group helper permission set suld.badge.helper true
+lp group helper permission set suld.chat.bypass true
+lp group helper permission set essentials.kick true
+lp group helper permission set essentials.mute true
+lp group helper permission set essentials.tp true
+lp group helper permission set essentials.seen true
+lp group helper permission set essentials.whois true
+lp group helper permission set essentials.kick.notify true
+lp group helper permission set essentials.mute.notify true
+lp group helper permission set essentials.kick.exempt true
+lp group helper permission set essentials.mute.exempt true
+lp group helper permission set essentials.ignore.exempt true
+lp group helper permission set coreprotect.help true
+lp group helper permission set coreprotect.inspect true
+lp group helper permission set coreprotect.lookup true
+
+# ---- mod: moderation tools
+lp group mod permission set suld.badge.mod true
+lp group mod permission set suld.admin.revive true
+lp group mod permission set essentials.tphere true
+lp group mod permission set essentials.vanish true
+lp group mod permission set essentials.socialspy true
+lp group mod permission set essentials.invsee true
+lp group mod permission set essentials.back true
+lp group mod permission set essentials.ban true
+lp group mod permission set essentials.tempban true
+lp group mod permission set coreprotect.rollback true
+lp group mod permission set coreprotect.restore true
+
+# ---- admin: everything of SÜLD and the world tools
+lp group admin permission set suld.badge.admin true
+lp group admin permission set suld.admin true
+lp group admin permission set essentials.* true
+lp group admin permission set coreprotect.* true
+lp group admin permission set worldedit.* true
+lp group admin permission set worldguard.* true
+lp group admin permission set chunky.* true
+
+# ---- cosmetic roles
+lp group developer permission set suld.badge.developer true
+lp group streamer permission set suld.badge.streamer true
+lp group sponsor permission set suld.badge.sponsor true

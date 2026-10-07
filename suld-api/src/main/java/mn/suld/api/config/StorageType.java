@@ -15,7 +15,10 @@ public enum StorageType {
             return Optional.empty();
         }
         try {
-            return Optional.of(StorageType.valueOf(id.trim().toUpperCase(Locale.ROOT)));
+            String key = id.trim().toUpperCase(Locale.ROOT);
+            if (key.equals("POSTGRES")) key = "POSTGRESQL";
+            if (key.equals("MARIADB")) key = "MYSQL";
+            return Optional.of(StorageType.valueOf(key));
         } catch (IllegalArgumentException ex) {
             return Optional.empty();
         }

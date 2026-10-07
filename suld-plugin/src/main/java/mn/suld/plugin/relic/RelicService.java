@@ -354,6 +354,10 @@ public final class RelicService {
 
     /** Right-click on an altar: begin the claim ritual if the player qualifies. */
     public void beginRitual(Player player, RelicRecord record) {
+        if (services.isSoul.test(player.getUniqueId())) {
+            player.sendMessage(Messages.error("Сүнс байхдаа реликс эзэмшихгүй."));
+            return;
+        }
         RelicDefinition def = SuldContent.relicFor(record.key());
         if (!record.isAvailable()) {
             player.sendMessage(Messages.info(def.displayName() + " одоо " + record.ownerName() + "-д байна. Сүм хоосон."));

@@ -45,8 +45,8 @@ public final class Menu implements InventoryHolder {
         Component t;
         if (background != null) {
             // shift to the GUI's left edge, draw the 176 px background, come back to the title position
-            t = StyleFormat.shift(-8).append(StyleFormat.glyph(background)).append(StyleFormat.shift(-169))
-                    .append(Component.text(title, NamedTextColor.WHITE, TextDecoration.BOLD));
+            t = StyleFormat.join(StyleFormat.shift(-8), StyleFormat.glyph(background), StyleFormat.shift(-169),
+                    Component.text(title, NamedTextColor.WHITE, TextDecoration.BOLD));
         } else {
             t = Component.text(title, TextColor.fromHexString("#3A2A10"), TextDecoration.BOLD);
         }

@@ -88,6 +88,10 @@ public final class DailyService implements Listener, TabExecutor {
             p.sendMessage(Messages.error("Профайл ачаалагдаагүй байна. Түр хүлээнэ үү."));
             return;
         }
+        if (!profile.hasSelectedClass()) {
+            p.sendMessage(Messages.error("Эхлээд ангиа сонго: /class"));
+            return;
+        }
         long today = today();
         boolean ready = DailyReward.claimable(style.dailyDay(), today);
         int day = DailyReward.nextDay(style.dailyDay(), style.dailyStreak(), today);
@@ -116,7 +120,7 @@ public final class DailyService implements Listener, TabExecutor {
     private void claim(Player p) {
         PlayerStyle style = services.styles().cached(p.getUniqueId()).orElse(null);
         PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
-        if (style == null || profile == null) return;
+        if (style == null || profile == null || !profile.hasSelectedClass()) return;
         long today = today();
         int level = profile.progression().level();
         DailyReward.Claim c = DailyReward.claim(style.dailyDay(), style.dailyStreak(), today, level);
@@ -128,6 +132,7 @@ public final class DailyService implements Listener, TabExecutor {
         profile.addCurrency(c.coins());
         var gained = services.progression().grantExp(profile, c.exp(), ExpSource.OTHER);
         services.profiles().save(profile);
+        services.styles().saveNow(p.getUniqueId()); // the claim flag goes to storage together with the coins
         p.closeInventory();
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.6f);
         p.sendMessage(Messages.success("Өдрийн шагнал (" + c.day() + "/" + DailyReward.CYCLE + "-р өдөр): +"

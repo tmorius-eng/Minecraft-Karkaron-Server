@@ -29,7 +29,10 @@ public final class SuldPlugin extends JavaPlugin {
 
     private SuldServices services;
     private mn.suld.plugin.mount.HorseService horses;
+    private mn.suld.plugin.branding.GuideBoards guide;
     private mn.suld.plugin.trade.TradeService trades;
+    private mn.suld.plugin.death.DeathService deaths;
+    private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
     private mn.suld.plugin.worldbuild.PregenService pregen;
 
@@ -37,7 +40,14 @@ public final class SuldPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         migrateConfig();
-        SuldConfig config = SuldConfigFactory.load(new BukkitConfigView(getConfig()));
+        SuldConfig config;
+        try {
+            config = SuldConfigFactory.load(new BukkitConfigView(getConfig()));
+        } catch (IllegalArgumentException ex) {
+            getLogger().severe("Invalid configuration: " + ex.getMessage());
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         try {
             this.services = new SuldServices(this, config);
@@ -84,9 +94,10 @@ public final class SuldPlugin extends JavaPlugin {
         services.relics().start();
         long clanFlushTicks = TICKS_PER_SECOND * 60;
         getServer().getScheduler().runTaskTimer(this, () -> services.clans().flushDirty(), clanFlushTicks, clanFlushTicks);
-        mn.suld.plugin.death.DeathService deaths = new mn.suld.plugin.death.DeathService(this, services);
+        deaths = new mn.suld.plugin.death.DeathService(this, services);
         getServer().getPluginManager().registerEvents(deaths, this);
         deaths.start();
+        services.isSoul = deaths::isSoul;
         registerCommand("revive", new ReviveCommand(this, services, deaths));
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 
@@ -139,9 +150,11 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
         progress.menus(menus);
-        mn.suld.plugin.quest.QuestTracker tracker = new mn.suld.plugin.quest.QuestTracker(this, services);
+        tracker = new mn.suld.plugin.quest.QuestTracker(this, services);
         getServer().getPluginManager().registerEvents(tracker, this);
         tracker.start();
+        services.regionIdAt = tracker::regionIdAt;
+        services.quests().regionHere(tracker::regionIdAt);
         progress.tracker(tracker);
         registerTab("class", progress.clazz());
         registerTab("profile", progress.profile());
@@ -151,6 +164,7 @@ public final class SuldPlugin extends JavaPlugin {
         horses = new mn.suld.plugin.mount.HorseService(this, services);
         getServer().getPluginManager().registerEvents(horses, this);
         registerTab("mori", horses);
+        services.dismissHorse = horses::dismissFor;
 
         trades = new mn.suld.plugin.trade.TradeService(this, services);
         getServer().getPluginManager().registerEvents(trades, this);
@@ -167,6 +181,15 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.reward.DailyService daily = new mn.suld.plugin.reward.DailyService(this, services);
         getServer().getPluginManager().registerEvents(daily, this);
         registerTab("daily", daily);
+
+        guide = new mn.suld.plugin.branding.GuideBoards(this, worldBuild);
+        guide.start();
+        mn.suld.plugin.branding.OnboardingService onboarding = new mn.suld.plugin.branding.OnboardingService(this, services);
+        getServer().getPluginManager().registerEvents(onboarding, this);
+        onboarding.start();
+        onboarding.guide(guide);
+        registerTab("commands", new mn.suld.plugin.command.CommandCatalog());
+        new mn.suld.plugin.auth.PermissionSetup(this).start();
 
         mn.suld.plugin.branding.ServerListService serverList = new mn.suld.plugin.branding.ServerListService(this);
         serverList.start();
@@ -204,6 +227,12 @@ public final class SuldPlugin extends JavaPlugin {
         if (horses != null) {
             horses.shutdown();
         }
+        if (deaths != null) {
+            deaths.shutdown();
+        }
+        if (tracker != null) {
+            tracker.shutdown();
+        }
         if (pregen != null) {
             pregen.stop();
         }
@@ -216,10 +245,13 @@ public final class SuldPlugin extends JavaPlugin {
         if (services == null) {
             return;
         }
-        // Persist everyone still online before the pools close.
+        // Persist everyone still online — and any profile loaded for a login that never reached "join" — before the pools close.
+        java.util.Set<java.util.UUID> toSave = new java.util.LinkedHashSet<>();
+        for (Player player : getServer().getOnlinePlayers()) toSave.add(player.getUniqueId());
+        for (var profile : services.profiles().cachedProfiles()) toSave.add(profile.playerId());
         List<CompletableFuture<Void>> saves = new ArrayList<>();
-        for (Player player : getServer().getOnlinePlayers()) {
-            saves.add(services.profiles().saveAndUnload(player.getUniqueId()));
+        for (java.util.UUID id : toSave) {
+            saves.add(services.profiles().saveAndUnload(id));
         }
         try {
             CompletableFuture.allOf(saves.toArray(CompletableFuture[]::new)).get(15, TimeUnit.SECONDS);
@@ -286,6 +318,10 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand(name, executor);
         PluginCommand command = getCommand(name);
         if (command != null) command.setTabCompleter(executor);
+    }
+
+    public mn.suld.plugin.branding.GuideBoards guide() {
+        return guide;
     }
 
     /** Exposed for tests / sibling modules that need the live service container. */

@@ -30,6 +30,14 @@ public final class DungeonListener implements Listener {
         dungeons.onEntityDeath(entity);
     }
 
+    /** Dungeon mobs that no run owns any more (server restart, failed run in unloaded chunks) are removed as they load. */
+    @EventHandler
+    public void onEntitiesLoad(org.bukkit.event.world.EntitiesLoadEvent event) {
+        for (org.bukkit.entity.Entity e : event.getEntities()) {
+            if (e.getScoreboardTags().contains(DungeonService.DUNGEON_TAG) && !dungeons.ownsEntity(e.getUniqueId())) e.remove();
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerDeathEvent event) {
         dungeons.onParticipantDown(event.getEntity().getUniqueId());

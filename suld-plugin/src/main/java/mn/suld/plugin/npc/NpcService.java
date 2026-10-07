@@ -355,9 +355,13 @@ public final class NpcService implements Listener {
                             pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + TRAVEL_COST + " ₮)."));
                             return;
                         }
-                        pr.addCurrency(-TRAVEL_COST);
                         pl.closeInventory();
-                        pl.teleport(to.clone().add(1.5, 0, 1.5));
+                        if (!pl.teleport(to.clone().add(1.5, 0, 1.5))) {
+                            pl.sendMessage(Messages.error("Аялал боломжгүй боллоо — зоос хасагдсангүй."));
+                            return;
+                        }
+                        pr.addCurrency(-TRAVEL_COST);
+                        services.profiles().save(pr);
                         pl.playSound(pl.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1f);
                         pl.sendMessage(Messages.success("Өртөөгөөр " + r.getValue() + " хүрлээ (-" + TRAVEL_COST + " ₮)."));
                     });

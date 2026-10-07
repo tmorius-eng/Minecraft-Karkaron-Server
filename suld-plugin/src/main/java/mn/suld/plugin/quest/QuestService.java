@@ -92,7 +92,17 @@ public final class QuestService {
             apply(player, profile, QuestType.REACH_LEVEL, "", profile.progression().level());
         } else if (def.type() == QuestType.COLLECT_ITEM) {
             apply(player, profile, QuestType.COLLECT_ITEM, def.targetId(), count(player, def.targetId()));
+        } else if (def.type() == QuestType.DISCOVER_LOCATION && regionHere != null) {
+            String here = regionHere.apply(player);
+            if (here != null) apply(player, profile, QuestType.DISCOVER_LOCATION, here, 1);
         }
+    }
+
+    private java.util.function.Function<Player, String> regionHere;
+
+    /** The wild region id at a player's feet (so a chapter to discover where you already stand is not stuck). */
+    public void regionHere(java.util.function.Function<Player, String> resolver) {
+        this.regionHere = resolver;
     }
 
     // ---- objective events ------------------------------------------------------------------------------------

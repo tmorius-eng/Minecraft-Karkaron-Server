@@ -162,7 +162,9 @@ public final class ClassSelectionGui implements Listener {
 
         // Starter equipment.
         // the class weapon (tier follows the level: upgraded in place at 10 / 25 / 45)
-        player.getInventory().addItem(services.classWeapons().starter(clazz, profile.progression().level()));
+        for (ItemStack left : player.getInventory().addItem(services.classWeapons().starter(clazz, profile.progression().level())).values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), left); // full inventory: it lands at their feet, not in the void
+        }
 
         services.events().dispatch(new ClassSelectedEvent(player.getUniqueId(), clazz));
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CLASS_SELECTED, player.getUniqueId(),

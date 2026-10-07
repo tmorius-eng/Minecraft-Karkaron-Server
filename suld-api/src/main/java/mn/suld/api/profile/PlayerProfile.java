@@ -173,13 +173,25 @@ public final class PlayerProfile {
         return dirty;
     }
 
+    /** Everything that is stored, read under one lock so the row never mixes moments. */
+    public record Snapshot(UUID playerId, String name, PlayerClass playerClass, Progression progression, Instant createdAt,
+                           Instant lastSeenAt, long version, long currency, QuestState questState) {
+    }
+
+    public synchronized Snapshot snapshot() {
+        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState);
+    }
+
     /**
-     * Mark the profile persisted at the given version. Called by the persistence
-     * layer after a successful write.
+     * Mark the profile persisted at the given version. Called by the persistence layer after a successful write.
+     * A change made after the snapshot was taken (a higher in-memory version) keeps the profile dirty and the
+     * version where it is, so it is written by the next save instead of being forgotten.
      */
     public synchronized void markPersisted(long persistedVersion) {
-        this.version = persistedVersion;
-        this.dirty = false;
+        if (persistedVersion >= this.version) {
+            this.version = persistedVersion;
+            this.dirty = false;
+        }
     }
 
     private void touchInternal() {
