@@ -234,10 +234,15 @@ def card(img: Image.Image, art: str, label: str, x: int, y: int, w: int, h: int,
     bh = 11
     d.rectangle([x + 1, y + 1, x + w - 2, y + bh], fill=banner)
     d.line([x + 1, y + bh + 1, x + w - 2, y + bh + 1], fill=tuple(max(0, c - 60) for c in banner))
+    # a real word always beats an abbreviation: bold when it fits the banner, regular weight when it only fits that way
+    bold = True
     tw = pf.text_width(label, bold=True)
     if tw > w - 4:
-        raise SystemExit(f"card label «{label}» is {tw}px, wider than the {w - 4}px banner")
-    pf.draw_text(img, x + (w - tw) // 2, y + 3, label, WHITE, tuple(max(0, c - 90) for c in banner), bold=True)
+        bold = False
+        tw = pf.text_width(label, bold=False)
+    if tw > w - 4:
+        raise SystemExit(f"card label «{label}» is {tw}px even in regular weight, wider than the {w - 4}px banner")
+    pf.draw_text(img, x + (w - tw) // 2, y + 3, label, WHITE, tuple(max(0, c - 90) for c in banner), bold=bold)
     pic = pixel_art(os.path.join(ART, art + ".png"), (w - 2, h - bh - 3))
     img.paste(pic, (x + 1, y + bh + 2))
     ornament_border(d, x - 1, y - 1, x + w, y + h)
@@ -355,7 +360,7 @@ MAIN_MENU = [
     ("card_class", "АНГИ", (176, 40, 40)),
     ("card_quests", "ЭРЭЛ", (200, 120, 20)),
     ("card_rank", "ЦОЛ", (130, 60, 190)),
-    ("card_shop", "ЗАХ", (40, 140, 60)),
+    ("card_shop", "ДЭЛГҮҮР", (40, 140, 60)),
     ("card_help", "ЗААВАР", (30, 120, 120)),
 ]
 
@@ -363,11 +368,11 @@ COSMETICS = [
     ("card_cos_tag", "ЦОЛ", (200, 140, 30)),
     ("card_cos_name", "НЭР", (176, 40, 40)),
     ("card_cos_chat", "ЧАТ", (40, 90, 200)),
-    ("card_cos_join", "ЗАР", (130, 60, 190)),
-    ("card_cos_emoji", "ЭМО", (200, 90, 140)),
-    ("card_cos_aura", "ЦОГ", (30, 120, 120)),
+    ("card_cos_join", "ОРОЛТ", (130, 60, 190)),
+    ("card_cos_emoji", "ЭМОЖИ", (200, 90, 140)),
+    ("card_cos_aura", "ГЭРЭЛ", (30, 120, 120)),
     ("card_cos_trail", "МӨР", (40, 140, 60)),
-    ("card_cos_kill", "ЯЛА", (176, 70, 40)),
+    ("card_cos_kill", "ЯЛАЛТ", (176, 70, 40)),
 ]
 
 WELCOME = [
