@@ -92,6 +92,16 @@ public final class SuldPlugin extends JavaPlugin {
         registerCommand("cc", clanCommand);
         registerCommand("suldevent", new mn.suld.plugin.command.SuldEventCommand(services.worldEvents()));
         services.worldEvents().startTicker();
+        // the item engine: catalog (validated data files), generation, loot, inventory checks, equipment
+        mn.suld.plugin.item.ItemService itemService = new mn.suld.plugin.item.ItemService(this, services);
+        services.itemService = itemService;
+        itemService.reload();
+        mn.suld.plugin.item.EquipmentService equipment = new mn.suld.plugin.item.EquipmentService(this, services);
+        services.equipment = equipment;
+        getServer().getPluginManager().registerEvents(equipment, this);
+        equipment.start();
+        // two online players holding the same item identity: one copy is a duplicate
+        getServer().getScheduler().runTaskTimer(this, itemService::sweepOnline, TICKS_PER_SECOND * 30, TICKS_PER_SECOND * 30);
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.relic.RelicListener(this, services.relics()), this);
         registerCommand("relic", new mn.suld.plugin.command.RelicCommand(services.relics()));
@@ -164,6 +174,12 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("skills", skillCommands.skills());
         registerTab("skill", skillCommands.skill());
         registerTab("skillsadmin", skillCommands.admin());
+        mn.suld.plugin.command.ItemCommands itemCommands = new mn.suld.plugin.command.ItemCommands(services, new mn.suld.plugin.gui.ItemMenus(services));
+        registerTab("item", itemCommands.item());
+        registerTab("items", itemCommands.itemsMenu());
+        registerTab("equipment", itemCommands.equipmentMenu());
+        registerTab("loot", itemCommands.loot());
+        registerTab("itemsadmin", itemCommands.admin());
         services.quests().onChange((p, pr) -> services.hud().update(p, pr));
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);

@@ -1,7 +1,5 @@
 package mn.suld.api.dungeon;
 
-import mn.suld.api.loot.LootTable;
-
 import java.util.List;
 
 /**
@@ -17,7 +15,7 @@ import java.util.List;
  * @param waveSpawnIds   ordered list of mob ids for each wave
  *                       (each entry is a list of mob ids to spawn in that wave)
  * @param bossDefinition boss definition (non-null)
- * @param rewardTable    loot table rolled once on dungeon completion (per-player)
+ * @param rewardTableId  id of the loot table (item catalog) rolled once per player on completion
  */
 public record DungeonDefinition(
         String id,
@@ -27,7 +25,7 @@ public record DungeonDefinition(
         int maxPartySize,
         List<List<String>> waveSpawnIds,
         BossDefinition bossDefinition,
-        LootTable rewardTable) {
+        String rewardTableId) {
 
     public DungeonDefinition {
         waveSpawnIds = waveSpawnIds == null ? List.of() : List.copyOf(waveSpawnIds);

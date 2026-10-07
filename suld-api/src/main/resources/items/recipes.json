@@ -1,0 +1,55 @@
+{
+ "recipes": [
+  {
+   "id": "recipe.esgii_dugaj",
+   "result": "armor.esgii.helmet",
+   "materials": {
+    "item.chonon_arisan": 4
+   },
+   "coins": 20,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.ginjin_deel",
+   "result": "armor.ginjin.chestplate",
+   "materials": {
+    "item.tumriin_kheltarkhii": 10,
+    "item.chonon_arisan": 4
+   },
+   "coins": 80,
+   "level": 10
+  },
+  {
+   "id": "recipe.khash_bugj",
+   "result": "jewel.khash_bugj",
+   "materials": {
+    "item.altan_toos": 4,
+    "item.baavgain_arisan": 2
+   },
+   "coins": 200,
+   "level": 20,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.tengeriin_taiag",
+   "result": "weapon.tengeriin_taiag",
+   "materials": {
+    "item.tengeriin_chuluu": 3,
+    "item.mosun_chuluu": 4
+   },
+   "coins": 600,
+   "level": 26,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  }
+ ]
+}

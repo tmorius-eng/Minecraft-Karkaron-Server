@@ -1,0 +1,712 @@
+{
+ "items": [
+  {
+   "id": "armor.esgii.helmet",
+   "name": "Эсгий Малгай",
+   "material": "minecraft:leather_helmet",
+   "type": "HELMET",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.0,
+     2.0
+    ],
+    "max_health": [
+     2,
+     2.8
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 80,
+   "sell": 3,
+   "lore": "Нүүдэлчдийн эсгий хувцас."
+  },
+  {
+   "id": "armor.esgii.chestplate",
+   "name": "Эсгий Дээл",
+   "material": "minecraft:leather_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     3.0,
+     4.0
+    ],
+    "max_health": [
+     2,
+     2.8
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 80,
+   "sell": 3,
+   "lore": "Нүүдэлчдийн эсгий хувцас."
+  },
+  {
+   "id": "armor.esgii.leggings",
+   "name": "Эсгий Өмд",
+   "material": "minecraft:leather_leggings",
+   "type": "LEGGINGS",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     2.0,
+     3.0
+    ],
+    "max_health": [
+     2,
+     2.8
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 80,
+   "sell": 3,
+   "lore": "Нүүдэлчдийн эсгий хувцас."
+  },
+  {
+   "id": "armor.esgii.boots",
+   "name": "Эсгий Гутал",
+   "material": "minecraft:leather_boots",
+   "type": "BOOTS",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1.0,
+     2.0
+    ],
+    "max_health": [
+     2,
+     2.8
+    ],
+    "move_speed": [
+     1,
+     2
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 80,
+   "sell": 3,
+   "lore": "Нүүдэлчдийн эсгий хувцас."
+  },
+  {
+   "id": "armor.ginjin.helmet",
+   "name": "Гинжин Малгай",
+   "material": "minecraft:chainmail_helmet",
+   "type": "HELMET",
+   "rarity": "common",
+   "maxRarity": "epic",
+   "level": 10,
+   "stats": {
+    "armor": [
+     1.6,
+     3.2
+    ],
+    "max_health": [
+     5,
+     7.0
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 180,
+   "sell": 8,
+   "lore": "Гинжин торон хамгаалалт."
+  },
+  {
+   "id": "armor.ginjin.chestplate",
+   "name": "Гинжин Дээл",
+   "material": "minecraft:chainmail_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "common",
+   "maxRarity": "epic",
+   "level": 10,
+   "stats": {
+    "armor": [
+     4.8,
+     6.4
+    ],
+    "max_health": [
+     5,
+     7.0
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 180,
+   "sell": 8,
+   "lore": "Гинжин торон хамгаалалт."
+  },
+  {
+   "id": "armor.ginjin.leggings",
+   "name": "Гинжин Өмд",
+   "material": "minecraft:chainmail_leggings",
+   "type": "LEGGINGS",
+   "rarity": "common",
+   "maxRarity": "epic",
+   "level": 10,
+   "stats": {
+    "armor": [
+     3.2,
+     4.8
+    ],
+    "max_health": [
+     5,
+     7.0
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 180,
+   "sell": 8,
+   "lore": "Гинжин торон хамгаалалт."
+  },
+  {
+   "id": "armor.ginjin.boots",
+   "name": "Гинжин Гутал",
+   "material": "minecraft:chainmail_boots",
+   "type": "BOOTS",
+   "rarity": "common",
+   "maxRarity": "epic",
+   "level": 10,
+   "stats": {
+    "armor": [
+     1.6,
+     3.2
+    ],
+    "max_health": [
+     5,
+     7.0
+    ],
+    "move_speed": [
+     1,
+     2
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 180,
+   "sell": 8,
+   "lore": "Гинжин торон хамгаалалт."
+  },
+  {
+   "id": "armor.gan.helmet",
+   "name": "Ган Малгай",
+   "material": "minecraft:iron_helmet",
+   "type": "HELMET",
+   "rarity": "uncommon",
+   "maxRarity": "legendary",
+   "level": 20,
+   "stats": {
+    "armor": [
+     2.2,
+     4.4
+    ],
+    "max_health": [
+     9,
+     12.6
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 300,
+   "sell": 15,
+   "lore": "Хатуу ган хуяг."
+  },
+  {
+   "id": "armor.gan.chestplate",
+   "name": "Ган Дээл",
+   "material": "minecraft:iron_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "uncommon",
+   "maxRarity": "legendary",
+   "level": 20,
+   "stats": {
+    "armor": [
+     6.6,
+     8.8
+    ],
+    "max_health": [
+     9,
+     12.6
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 300,
+   "sell": 15,
+   "lore": "Хатуу ган хуяг."
+  },
+  {
+   "id": "armor.gan.leggings",
+   "name": "Ган Өмд",
+   "material": "minecraft:iron_leggings",
+   "type": "LEGGINGS",
+   "rarity": "uncommon",
+   "maxRarity": "legendary",
+   "level": 20,
+   "stats": {
+    "armor": [
+     4.4,
+     6.6
+    ],
+    "max_health": [
+     9,
+     12.6
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 300,
+   "sell": 15,
+   "lore": "Хатуу ган хуяг."
+  },
+  {
+   "id": "armor.gan.boots",
+   "name": "Ган Гутал",
+   "material": "minecraft:iron_boots",
+   "type": "BOOTS",
+   "rarity": "uncommon",
+   "maxRarity": "legendary",
+   "level": 20,
+   "stats": {
+    "armor": [
+     2.2,
+     4.4
+    ],
+    "max_health": [
+     9,
+     12.6
+    ],
+    "move_speed": [
+     1,
+     2
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 300,
+   "sell": 15,
+   "lore": "Хатуу ган хуяг."
+  },
+  {
+   "id": "armor.tengeriin.helmet",
+   "name": "Тэнгэрийн Малгай",
+   "material": "minecraft:diamond_helmet",
+   "type": "HELMET",
+   "rarity": "rare",
+   "maxRarity": "ancient",
+   "level": 35,
+   "stats": {
+    "armor": [
+     3.0,
+     6.0
+    ],
+    "max_health": [
+     15,
+     21.0
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 500,
+   "sell": 30,
+   "lore": "Тэнгэрийн чулуугаар чимсэн хуяг."
+  },
+  {
+   "id": "armor.tengeriin.chestplate",
+   "name": "Тэнгэрийн Дээл",
+   "material": "minecraft:diamond_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "rare",
+   "maxRarity": "ancient",
+   "level": 35,
+   "stats": {
+    "armor": [
+     9.0,
+     12.0
+    ],
+    "max_health": [
+     15,
+     21.0
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 500,
+   "sell": 30,
+   "lore": "Тэнгэрийн чулуугаар чимсэн хуяг."
+  },
+  {
+   "id": "armor.tengeriin.leggings",
+   "name": "Тэнгэрийн Өмд",
+   "material": "minecraft:diamond_leggings",
+   "type": "LEGGINGS",
+   "rarity": "rare",
+   "maxRarity": "ancient",
+   "level": 35,
+   "stats": {
+    "armor": [
+     6.0,
+     9.0
+    ],
+    "max_health": [
+     15,
+     21.0
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 500,
+   "sell": 30,
+   "lore": "Тэнгэрийн чулуугаар чимсэн хуяг."
+  },
+  {
+   "id": "armor.tengeriin.boots",
+   "name": "Тэнгэрийн Гутал",
+   "material": "minecraft:diamond_boots",
+   "type": "BOOTS",
+   "rarity": "rare",
+   "maxRarity": "ancient",
+   "level": 35,
+   "stats": {
+    "armor": [
+     3.0,
+     6.0
+    ],
+    "max_health": [
+     15,
+     21.0
+    ],
+    "move_speed": [
+     1,
+     2
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 500,
+   "sell": 30,
+   "lore": "Тэнгэрийн чулуугаар чимсэн хуяг."
+  },
+  {
+   "id": "armor.khaany.helmet",
+   "name": "Хааны Малгай",
+   "material": "minecraft:netherite_helmet",
+   "type": "HELMET",
+   "rarity": "epic",
+   "maxRarity": "mythic",
+   "level": 50,
+   "stats": {
+    "armor": [
+     3.6,
+     7.2
+    ],
+    "max_health": [
+     22,
+     30.8
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 800,
+   "sell": 55,
+   "lore": "Хааны гвардийн хар төмөр хуяг."
+  },
+  {
+   "id": "armor.khaany.chestplate",
+   "name": "Хааны Дээл",
+   "material": "minecraft:netherite_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "epic",
+   "maxRarity": "mythic",
+   "level": 50,
+   "stats": {
+    "armor": [
+     10.8,
+     14.4
+    ],
+    "max_health": [
+     22,
+     30.8
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 800,
+   "sell": 55,
+   "lore": "Хааны гвардийн хар төмөр хуяг."
+  },
+  {
+   "id": "armor.khaany.leggings",
+   "name": "Хааны Өмд",
+   "material": "minecraft:netherite_leggings",
+   "type": "LEGGINGS",
+   "rarity": "epic",
+   "maxRarity": "mythic",
+   "level": 50,
+   "stats": {
+    "armor": [
+     7.2,
+     10.8
+    ],
+    "max_health": [
+     22,
+     30.8
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 800,
+   "sell": 55,
+   "lore": "Хааны гвардийн хар төмөр хуяг."
+  },
+  {
+   "id": "armor.khaany.boots",
+   "name": "Хааны Гутал",
+   "material": "minecraft:netherite_boots",
+   "type": "BOOTS",
+   "rarity": "epic",
+   "maxRarity": "mythic",
+   "level": 50,
+   "stats": {
+    "armor": [
+     3.6,
+     7.2
+    ],
+    "max_health": [
+     22,
+     30.8
+    ],
+    "move_speed": [
+     1,
+     2
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 800,
+   "sell": 55,
+   "lore": "Хааны гвардийн хар төмөр хуяг."
+  },
+  {
+   "id": "armor.chingis.helmet",
+   "name": "Чингисийн Малгай",
+   "material": "minecraft:netherite_helmet",
+   "type": "HELMET",
+   "rarity": "legendary",
+   "maxRarity": "mythic",
+   "level": 45,
+   "stats": {
+    "armor": [
+     3.8,
+     7.6
+    ],
+    "max_health": [
+     24,
+     30
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.4
+   },
+   "durability": 900,
+   "sell": 80,
+   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "set": "set.chingis"
+  },
+  {
+   "id": "armor.chingis.chestplate",
+   "name": "Чингисийн Дээл",
+   "material": "minecraft:netherite_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "legendary",
+   "maxRarity": "mythic",
+   "level": 45,
+   "stats": {
+    "armor": [
+     11.4,
+     15.2
+    ],
+    "max_health": [
+     24,
+     30
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.4
+   },
+   "durability": 900,
+   "sell": 80,
+   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "set": "set.chingis"
+  },
+  {
+   "id": "armor.chingis.leggings",
+   "name": "Чингисийн Өмд",
+   "material": "minecraft:netherite_leggings",
+   "type": "LEGGINGS",
+   "rarity": "legendary",
+   "maxRarity": "mythic",
+   "level": 45,
+   "stats": {
+    "armor": [
+     7.6,
+     11.4
+    ],
+    "max_health": [
+     24,
+     30
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.4
+   },
+   "durability": 900,
+   "sell": 80,
+   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "set": "set.chingis"
+  },
+  {
+   "id": "armor.chingis.boots",
+   "name": "Чингисийн Гутал",
+   "material": "minecraft:netherite_boots",
+   "type": "BOOTS",
+   "rarity": "legendary",
+   "maxRarity": "mythic",
+   "level": 45,
+   "stats": {
+    "armor": [
+     3.8,
+     7.6
+    ],
+    "max_health": [
+     24,
+     30
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.4
+   },
+   "durability": 900,
+   "sell": 80,
+   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "set": "set.chingis"
+  },
+  {
+   "id": "armor.anchin.helmet",
+   "name": "Анчны Малгай",
+   "material": "minecraft:leather_helmet",
+   "type": "HELMET",
+   "rarity": "rare",
+   "maxRarity": "legendary",
+   "level": 15,
+   "stats": {
+    "armor": [
+     2,
+     3
+    ],
+    "max_health": [
+     8,
+     10
+    ],
+    "crit_chance": [
+     2,
+     3
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 350,
+   "sell": 25,
+   "lore": "Талын анчдын үнэгэн малгай.",
+   "set": "set.talyn_anchin"
+  },
+  {
+   "id": "armor.anchin.boots",
+   "name": "Анчны Гутал",
+   "material": "minecraft:leather_boots",
+   "type": "BOOTS",
+   "rarity": "rare",
+   "maxRarity": "legendary",
+   "level": 15,
+   "stats": {
+    "armor": [
+     2,
+     3
+    ],
+    "move_speed": [
+     4,
+     6
+    ]
+   },
+   "perLevel": {},
+   "durability": 350,
+   "sell": 25,
+   "lore": "Чимээгүй алхах гутал.",
+   "set": "set.talyn_anchin"
+  },
+  {
+   "id": "armor.booi.chestplate",
+   "name": "Бөөгийн Орой Дээл",
+   "material": "minecraft:leather_chestplate",
+   "type": "CHESTPLATE",
+   "rarity": "rare",
+   "maxRarity": "legendary",
+   "level": 18,
+   "stats": {
+    "armor": [
+     4,
+     6
+    ],
+    "max_health": [
+     10,
+     14
+    ],
+    "spell_damage": [
+     4,
+     6
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "durability": 380,
+   "sell": 30,
+   "lore": "Хэнгэргийн хүчээр сүлжсэн дээл.",
+   "set": "set.booi_yosol"
+  }
+ ]
+}

@@ -156,8 +156,13 @@ public final class DeathService implements Listener {
     /** Applies death wear to a damageable item in place; true if it was worn. */
     private boolean wear(ItemStack it, DeathSettings s) {
         int max = it.getType().getMaxDurability();
-        if (max <= 0 || !(it.getItemMeta() instanceof Damageable d) || d.isUnbreakable()) return false;
+        if (!(it.getItemMeta() instanceof Damageable d) || d.isUnbreakable()) return false;
+        boolean suld = services.items().isSuldItem(it);
+        // SÜLD gear has its own maximum (one point above it is never used: at the maximum the item is broken, not gone)
+        if (suld && d.hasMaxDamage()) max = d.getMaxDamage() - 1;
+        if (max <= 0) return false;
         int next = DeathRules.wear(d.getDamage(), max, s);
+        if (suld) next = Math.min(next, max);
         if (next == d.getDamage()) return false;
         d.setDamage(next);
         it.setItemMeta(d);

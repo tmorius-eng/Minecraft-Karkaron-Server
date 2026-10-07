@@ -83,11 +83,9 @@ public final class ClassWeapons implements Listener {
         return t;
     }
 
+    /** The catalog definition of a class weapon tier (items/weapons.json). */
     public static ItemDefinition definition(PlayerClass c, int tier) {
-        Line l = LINES.get(c);
-        return new ItemDefinition(id(c, tier), l.names()[tier - 1], l.base(), RARITY[tier], 871000 + l.index() * 10 + tier,
-                Map.of(ItemStat.ATTACK, ATTACK[tier], ItemStat.CRIT_CHANCE, l.crit() + 0.02 * (tier - 1)),
-                Map.of(), true);
+        return mn.suld.plugin.content.SuldContent.items().require(id(c, tier));
     }
 
     /** Resolve {@code weapon.class.<class>.<tier>} ids for the item registry. */
@@ -135,8 +133,14 @@ public final class ClassWeapons implements Listener {
 
     /** The starter weapon for a freshly chosen class (tier by current level, normally 1). */
     public ItemStack starter(PlayerClass c, int level) {
+        return starter(c, level, null);
+    }
+
+    /** The starter weapon, soulbound to {@code owner}. */
+    public ItemStack starter(PlayerClass c, int level, Player owner) {
         ItemDefinition d = definition(c, tierFor(level));
-        return services.items().create(d.roll(java.util.UUID.randomUUID(), level, "starter"), d);
+        ItemInstance i = services.itemService().generate(d, d.rarity(), level, owner == null ? null : owner.getUniqueId(), "starter");
+        return services.itemService().stack(i, owner, 1);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -170,7 +174,10 @@ public final class ClassWeapons implements Listener {
             }
             if (h == null || h.tier() >= want) continue;
             ItemDefinition next = definition(h.clazz(), want);
-            ItemStack up = services.items().create(next.roll(ii.uuid(), level, "upgrade"), next);
+            // the same item (identity, binding) in its next form: new name, model, stats and affixes
+            ItemInstance rolled = services.itemService().generator().generate(next, next.rarity(), level, mn.suld.api.loot.Rng.threadLocal(),
+                    "upgrade", p.getUniqueId(), ii.uuid());
+            ItemStack up = services.itemService().stack(rolled, p, 1);
             p.getInventory().setItem(i, up);
             changed = true;
             if (announce) {

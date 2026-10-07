@@ -87,7 +87,7 @@ public final class QuestTracker implements Listener {
             for (String mobId : r.mobIds()) {
                 var mob = SuldContent.mobFor(mobId);
                 LootTable t = mob == null ? null : SuldContent.lootTableFor(mob.lootTableId());
-                if (t != null && t.entries().stream().anyMatch(e -> e.definition().id().equals(itemId))) return r.id();
+                if (t != null && t.mayDrop(itemId)) return r.id();
             }
         }
         return null;

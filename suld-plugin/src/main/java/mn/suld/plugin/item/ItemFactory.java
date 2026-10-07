@@ -1,36 +1,47 @@
 package mn.suld.plugin.item;
 
+import com.google.common.collect.ImmutableMultimap;
+import mn.suld.api.item.ItemCatalog;
+import mn.suld.api.item.ItemCodec;
 import mn.suld.api.item.ItemDefinition;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.api.item.ItemRarity;
-import mn.suld.api.item.ItemStat;
+import mn.suld.api.item.ItemTooltip;
+import mn.suld.api.item.ItemType;
+import mn.suld.plugin.content.SuldContent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Builds Bukkit {@link ItemStack}s from SÜLD {@link ItemInstance}s (and reads
- * them back), writing identity/stats into the item's PersistentDataContainer so
- * the server stays authoritative over item identity (anti-dup / anti-spoof).
- * Also renders the premium MMORPG tooltip, styled by rarity.
+ * The one codec between SÜLD items and Bukkit {@link ItemStack}s. The item's identity, rarity, rolls and binding are a
+ * versioned JSON document in the stack's PersistentDataContainer ({@code suld:item}); the name and lore are rendered
+ * from it and never read back. Stacks from before the item engine (separate keys) are read and migrated.
+ *
+ * <p>Equipment shows no vanilla attribute lines; armour carries no vanilla armour points (SÜLD armour is the ARMOR
+ * stat, applied through the player's stat pipeline). Wearing items use the vanilla durability bar with the
+ * definition's maximum; an item at its last point is broken: it gives nothing until it is repaired, and never
+ * disappears.
  */
 public final class ItemFactory {
 
+    private final NamespacedKey keyItem;
     private final NamespacedKey keyId;
     private final NamespacedKey keyUuid;
     private final NamespacedKey keyRarity;
@@ -40,6 +51,7 @@ public final class ItemFactory {
     private final NamespacedKey keyUpgrade;
 
     public ItemFactory(Plugin plugin) {
+        this.keyItem = new NamespacedKey(plugin, "item");
         this.keyId = new NamespacedKey(plugin, "item_id");
         this.keyUuid = new NamespacedKey(plugin, "item_uuid");
         this.keyRarity = new NamespacedKey(plugin, "rarity");
@@ -49,72 +61,182 @@ public final class ItemFactory {
         this.keyUpgrade = new NamespacedKey(plugin, "upgrade");
     }
 
-    public ItemStack create(ItemInstance instance, ItemDefinition def) {
-        Material material = Optional.ofNullable(
-                        Material.matchMaterial(def.baseMaterial().replace("minecraft:", "")))
-                .orElse(Material.PAPER);
+    private static ItemCatalog catalog() {
+        return SuldContent.items();
+    }
+
+    /** What a stack is: the item, whether it came from the old format, and what the validator says. */
+    public record Read(ItemInstance item, boolean legacy) {
+    }
+
+    // ------------------------------------------------------------------ writing
+
+    public ItemStack create(ItemInstance instance) {
+        return create(instance, ItemTooltip.Viewer.NOBODY);
+    }
+
+    /** Kept for callers that already hold the definition. */
+    public ItemStack create(ItemInstance instance, ItemDefinition ignored) {
+        return create(instance);
+    }
+
+    /** A new stack for the item, its tooltip rendered for {@code viewer} (requirements in red when not met). */
+    public ItemStack create(ItemInstance instance, ItemTooltip.Viewer viewer) {
+        ItemDefinition def = catalog().item(instance.definitionId()).orElse(null);
+        if (def == null) throw new IllegalArgumentException("unknown item " + instance.definitionId());
+        Material material = Optional.ofNullable(Material.matchMaterial(def.material().replace("minecraft:", ""))).orElse(Material.PAPER);
         ItemStack stack = new ItemStack(material);
+        ItemInstance stored = def.stackable() ? stackForm(instance) : instance;
         ItemMeta meta = stack.getItemMeta();
-
-        TextColor color = rarityColor(instance.rarity());
-        meta.displayName(Component.text(def.displayName() + (instance.upgradeLevel() > 0 ? " +" + instance.upgradeLevel() : ""), color)
-                .decoration(TextDecoration.ITALIC, false)
-                .decoration(TextDecoration.BOLD, instance.rarity().ordinal() >= ItemRarity.LEGENDARY.ordinal()));
-
-        List<Component> lore = new ArrayList<>();
-        lore.add(line(instance.rarity().displayName() + " · Зэрэг " + instance.itemLevel(), color));
-        lore.add(Component.empty());
-        for (Map.Entry<ItemStat, Double> e : instance.stats().entrySet()) {
-            String val = e.getKey().percent()
-                    ? "+" + Math.round(e.getValue() * 100) + "%"
-                    : "+" + trim(e.getValue());
-            lore.add(line("  " + val + " " + e.getKey().label(), NamedTextColor.WHITE));
+        if (def.model() > 0) meta.setCustomModelData(def.model());
+        if (def.stackable()) meta.setMaxStackSize(def.maxStack());
+        else meta.setMaxStackSize(1);
+        int max = def.maxDurability(instance.rarity());
+        if (meta instanceof Damageable d) {
+            if (max > 0) {
+                d.setMaxDamage(max + 1); // the extra point is never used: at damage == max the item is broken, not destroyed
+                d.setUnbreakable(false);
+            } else if (def.type().equippable() && material.getMaxDurability() > 0) {
+                d.setUnbreakable(true); // items that never wear (class weapons, relics, jewellery on a tool material)
+            }
         }
-        if (instance.soulbound()) {
-            lore.add(line("✦ Сүнсэнд холбоотой (Soulbound)", NamedTextColor.GOLD));
+        if (def.type().category() == ItemType.Category.ARMOR || def.type() == ItemType.SHIELD) {
+            meta.setAttributeModifiers(ImmutableMultimap.of()); // SÜLD armour comes from the ARMOR stat, not the material
         }
-        if (instance.rarity().isServerUnique()) {
-            lore.add(line("✦ ДЭЛХИЙД ГАНЦ · 1 / 1", NamedTextColor.AQUA));
-        }
-        lore.add(Component.empty());
-        lore.add(line("SÜLD", NamedTextColor.GRAY));
-        meta.lore(lore);
-
-        if (def.customModelData() > 0) {
-            meta.setCustomModelData(def.customModelData());
-        }
-
+        if (def.equippable()) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        if (instance.rarity().atLeast(ItemRarity.LEGENDARY)) meta.setEnchantmentGlintOverride(true);
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        pdc.set(keyId, PersistentDataType.STRING, instance.definitionId());
-        pdc.set(keyUuid, PersistentDataType.STRING, instance.uuid().toString());
-        pdc.set(keyRarity, PersistentDataType.STRING, instance.rarity().id());
-        pdc.set(keyLevel, PersistentDataType.INTEGER, instance.itemLevel());
-        pdc.set(keySoulbound, PersistentDataType.INTEGER, instance.soulbound() ? 1 : 0);
-        if (instance.upgradeLevel() > 0) pdc.set(keyUpgrade, PersistentDataType.INTEGER, instance.upgradeLevel());
-        pdc.set(keyStats, PersistentDataType.STRING, encodeStats(instance.stats()));
-
+        pdc.set(keyItem, PersistentDataType.STRING, ItemCodec.encode(stored));
+        // the plain id/uuid keys stay: the relic validator and older readers look for them
+        pdc.set(keyId, PersistentDataType.STRING, stored.definitionId());
+        pdc.set(keyUuid, PersistentDataType.STRING, stored.uuid().toString());
+        for (NamespacedKey legacy : List.of(keyRarity, keyLevel, keyStats, keySoulbound, keyUpgrade)) pdc.remove(legacy);
+        render(meta, def, stored, viewer, max, max);
         stack.setItemMeta(meta);
         return stack;
     }
 
-    /** Read a SÜLD item back from a stack, if it is one. */
-    public Optional<ItemInstance> read(ItemStack stack) {
-        if (stack == null || !stack.hasItemMeta()) {
-            return Optional.empty();
+    /**
+     * Stackable items (materials) have no individual identity: every copy of the same material and rarity is the same
+     * stored document, so the game stacks them.
+     */
+    public static ItemInstance stackForm(ItemInstance i) {
+        UUID stable = UUID.nameUUIDFromBytes(("suld:" + i.definitionId() + ":" + i.rarity().id()).getBytes(StandardCharsets.UTF_8));
+        return new ItemInstance(i.definitionId(), stable, i.rarity(), 1, i.stats(), List.of(), i.soulbound(), null, 0, "stack", ItemInstance.SCHEMA_VERSION);
+    }
+
+    /** Put a changed item (bound, upgraded) back into the same stack, keeping its durability. */
+    public void rewrite(ItemStack stack, ItemInstance changed, ItemTooltip.Viewer viewer) {
+        ItemDefinition def = catalog().item(changed.definitionId()).orElse(null);
+        if (def == null || !stack.hasItemMeta()) return;
+        ItemMeta meta = stack.getItemMeta();
+        meta.getPersistentDataContainer().set(keyItem, PersistentDataType.STRING, ItemCodec.encode(changed));
+        meta.getPersistentDataContainer().set(keyUuid, PersistentDataType.STRING, changed.uuid().toString());
+        int max = def.maxDurability(changed.rarity());
+        int left = max;
+        if (meta instanceof Damageable d && max > 0) {
+            if (!d.hasMaxDamage() || d.getMaxDamage() != max + 1) d.setMaxDamage(max + 1);
+            left = Math.max(0, max - d.getDamage());
         }
+        render(meta, def, changed, viewer, left, max);
+        stack.setItemMeta(meta);
+    }
+
+    /** Re-render name and lore for a viewer (requirements, set progress) without touching the stored item. */
+    public void rerender(ItemStack stack, ItemTooltip.Viewer viewer) {
+        read(stack).ifPresent(i -> rewrite(stack, i, viewer));
+    }
+
+    private static void render(ItemMeta meta, ItemDefinition def, ItemInstance i, ItemTooltip.Viewer viewer, int left, int max) {
+        List<ItemTooltip.Line> lines = ItemTooltip.lines(catalog(), def, i, viewer, left, max, null);
+        TextColor color = rarityColor(i.rarity());
+        meta.displayName(Component.text(lines.get(0).text(), color).decoration(TextDecoration.ITALIC, false)
+                .decoration(TextDecoration.BOLD, i.rarity().atLeast(ItemRarity.LEGENDARY)));
+        List<Component> lore = new ArrayList<>();
+        for (int k = 1; k < lines.size(); k++) lore.add(component(lines.get(k), color));
+        lore.add(Component.text("SÜLD", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
+        meta.lore(lore);
+    }
+
+    /** Colour of a tooltip line (also used by the item GUIs for comparison lines). */
+    public static Component component(ItemTooltip.Line l, TextColor rarity) {
+        TextColor c = switch (l.style()) {
+            case NAME, RARITY -> rarity;
+            case TYPE, INFO -> NamedTextColor.GRAY;
+            case OK -> NamedTextColor.GREEN;
+            case FAIL, DOWN -> NamedTextColor.RED;
+            case STAT -> NamedTextColor.WHITE;
+            case AFFIX -> NamedTextColor.AQUA;
+            case UNIQUE -> NamedTextColor.GOLD;
+            case SET -> NamedTextColor.YELLOW;
+            case SET_ACTIVE -> NamedTextColor.GREEN;
+            case SET_INACTIVE -> NamedTextColor.DARK_GRAY;
+            case BINDING -> NamedTextColor.LIGHT_PURPLE;
+            case FLAVOR -> NamedTextColor.DARK_AQUA;
+            case UP -> NamedTextColor.GREEN;
+            case SAME -> NamedTextColor.GRAY;
+        };
+        return Component.text(l.text(), c).decoration(TextDecoration.ITALIC, l.style() == ItemTooltip.Style.FLAVOR);
+    }
+
+    // ------------------------------------------------------------------ reading
+
+    /** The SÜLD item in a stack (new or migrated old format), if it carries one. Not yet validated. */
+    public Optional<ItemInstance> read(ItemStack stack) {
+        return inspect(stack).map(Read::item);
+    }
+
+    public Optional<Read> inspect(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !stack.hasItemMeta()) return Optional.empty();
         PersistentDataContainer pdc = stack.getItemMeta().getPersistentDataContainer();
+        String doc = pdc.get(keyItem, PersistentDataType.STRING);
+        if (doc != null) {
+            // a document the server cannot read is reported as an unreadable item, never treated as "not SÜLD"
+            return Optional.of(ItemCodec.decode(doc).map(i -> new Read(i, false))
+                    .orElse(new Read(unreadable(pdc), false)));
+        }
         String id = pdc.get(keyId, PersistentDataType.STRING);
         String uuid = pdc.get(keyUuid, PersistentDataType.STRING);
-        if (id == null || uuid == null) {
-            return Optional.empty();
+        if (id == null || uuid == null) return Optional.empty();
+        if (pdc.has(new NamespacedKey("suld", "relic_key"), PersistentDataType.STRING) && !pdc.has(keyRarity, PersistentDataType.STRING)) {
+            // relic copies from before the item engine carried only id + uuid
+            return ItemCodec.legacy(id, uuid, "unique", 1, "", true, 0).map(i -> new Read(i, true));
         }
-        ItemRarity rarity = ItemRarity.byId(pdc.getOrDefault(keyRarity, PersistentDataType.STRING, "common"))
-                .orElse(ItemRarity.COMMON);
-        int level = pdc.getOrDefault(keyLevel, PersistentDataType.INTEGER, 1);
-        boolean soulbound = pdc.getOrDefault(keySoulbound, PersistentDataType.INTEGER, 0) == 1;
-        Map<ItemStat, Double> stats = decodeStats(pdc.getOrDefault(keyStats, PersistentDataType.STRING, ""));
-        int upgrade = pdc.getOrDefault(keyUpgrade, PersistentDataType.INTEGER, 0);
-        return Optional.of(new ItemInstance(id, UUID.fromString(uuid), rarity, level, stats, soulbound, upgrade, "stack"));
+        return ItemCodec.legacy(id, uuid, pdc.getOrDefault(keyRarity, PersistentDataType.STRING, "common"),
+                pdc.getOrDefault(keyLevel, PersistentDataType.INTEGER, 1), pdc.getOrDefault(keyStats, PersistentDataType.STRING, ""),
+                pdc.getOrDefault(keySoulbound, PersistentDataType.INTEGER, 0) == 1, pdc.getOrDefault(keyUpgrade, PersistentDataType.INTEGER, 0))
+                .map(i -> new Read(i, true));
+    }
+
+    /** A placeholder the validator always refuses (schema 0), so an unreadable document is quarantined, not ignored. */
+    private ItemInstance unreadable(PersistentDataContainer pdc) {
+        String id = pdc.getOrDefault(keyId, PersistentDataType.STRING, "unreadable.item");
+        UUID u;
+        try {
+            u = UUID.fromString(pdc.getOrDefault(keyUuid, PersistentDataType.STRING, ""));
+        } catch (IllegalArgumentException e) {
+            u = new UUID(0, 0);
+        }
+        return new ItemInstance(id, u, ItemRarity.COMMON, 1, java.util.Map.of(), List.of(), false, null, 0, "unreadable", 0);
+    }
+
+    public boolean isSuldItem(ItemStack stack) {
+        return inspect(stack).isPresent();
+    }
+
+    // ------------------------------------------------------------------ durability
+
+    /** Durability left (0 = broken) and the maximum; max 0 = the item never wears. */
+    public int[] durability(ItemStack stack, ItemInstance i) {
+        ItemDefinition def = catalog().item(i.definitionId()).orElse(null);
+        int max = def == null ? 0 : def.maxDurability(i.rarity());
+        if (max <= 0 || !(stack.getItemMeta() instanceof Damageable d)) return new int[]{0, 0};
+        return new int[]{Math.max(0, max - d.getDamage()), max};
+    }
+
+    public boolean broken(ItemStack stack, ItemInstance i) {
+        int[] d = durability(stack, i);
+        return d[1] > 0 && d[0] <= 0;
     }
 
     /**
@@ -125,60 +247,17 @@ public final class ItemFactory {
         int changed = 0;
         for (ItemStack stack : stacks) {
             if (stack == null || !stack.hasItemMeta()) continue;
+            ItemInstance i = read(stack).orElse(null);
+            if (i == null) continue;
+            ItemDefinition def = catalog().item(i.definitionId()).orElse(null);
+            if (def == null || def.model() <= 0) continue;
             ItemMeta meta = stack.getItemMeta();
-            String id = meta.getPersistentDataContainer().get(keyId, PersistentDataType.STRING);
-            if (id == null) continue;
-            ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(id);
-            if (def == null || def.customModelData() <= 0) continue;
-            if (meta.hasCustomModelData() && meta.getCustomModelData() == def.customModelData()) continue;
-            meta.setCustomModelData(def.customModelData());
+            if (meta.hasCustomModelData() && meta.getCustomModelData() == def.model()) continue;
+            meta.setCustomModelData(def.model());
             stack.setItemMeta(meta);
             changed++;
         }
         return changed;
-    }
-
-    public boolean isSuldItem(ItemStack stack) {
-        return read(stack).isPresent();
-    }
-
-    private static Component line(String text, TextColor color) {
-        return Component.text(text, color).decoration(TextDecoration.ITALIC, false);
-    }
-
-    private static String trim(double d) {
-        return d == Math.floor(d) ? String.valueOf((long) d) : String.valueOf(d);
-    }
-
-    private static String encodeStats(Map<ItemStat, Double> stats) {
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<ItemStat, Double> e : stats.entrySet()) {
-            if (sb.length() > 0) {
-                sb.append(';');
-            }
-            sb.append(e.getKey().id()).append(':').append(e.getValue());
-        }
-        return sb.toString();
-    }
-
-    private static Map<ItemStat, Double> decodeStats(String encoded) {
-        Map<ItemStat, Double> out = new EnumMap<>(ItemStat.class);
-        if (encoded == null || encoded.isEmpty()) {
-            return out;
-        }
-        for (String part : encoded.split(";")) {
-            String[] kv = part.split(":");
-            if (kv.length == 2) {
-                ItemStat.byId(kv[0]).ifPresent(stat -> {
-                    try {
-                        out.put(stat, Double.parseDouble(kv[1]));
-                    } catch (NumberFormatException ignored) {
-                        // skip malformed stat
-                    }
-                });
-            }
-        }
-        return out;
     }
 
     public static TextColor rarityColor(ItemRarity rarity) {

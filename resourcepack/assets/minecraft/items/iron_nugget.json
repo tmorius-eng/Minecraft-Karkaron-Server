@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "entries": [
+      {
+        "threshold": 872001,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/mungun_bugj"
+        }
+      },
+      {
+        "threshold": 872002,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/iron_nugget"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/iron_nugget"
+    }
+  }
+}

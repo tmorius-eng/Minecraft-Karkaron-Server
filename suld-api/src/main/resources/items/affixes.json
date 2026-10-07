@@ -1,0 +1,328 @@
+{
+ "affixes": [
+  {
+   "id": "khurts",
+   "name": "Хурц",
+   "position": "prefix",
+   "stat": "damage",
+   "min": 2,
+   "max": 4,
+   "perLevel": 0.25,
+   "minRarity": "uncommon",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 12
+  },
+  {
+   "id": "shonkhor",
+   "name": "Шонхорын",
+   "position": "suffix",
+   "stat": "crit_chance",
+   "min": 2,
+   "max": 4,
+   "perLevel": 0.02,
+   "minRarity": "uncommon",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 10
+  },
+  {
+   "id": "shiruun",
+   "name": "Ширүүн",
+   "position": "suffix",
+   "stat": "crit_damage",
+   "min": 8,
+   "max": 14,
+   "perLevel": 0.15,
+   "minRarity": "rare",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "shuurkhai",
+   "name": "Шуурхай",
+   "position": "prefix",
+   "stat": "attack_speed",
+   "min": 4,
+   "max": 8,
+   "perLevel": 0.05,
+   "minRarity": "uncommon",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "tsust",
+   "name": "Цуст",
+   "position": "suffix",
+   "stat": "lifesteal",
+   "min": 1.5,
+   "max": 3,
+   "perLevel": 0.02,
+   "minRarity": "rare",
+   "categories": [
+    "WEAPON",
+    "JEWELRY"
+   ],
+   "weight": 6
+  },
+  {
+   "id": "shidtei",
+   "name": "Шидтэй",
+   "position": "prefix",
+   "stat": "spell_damage",
+   "min": 4,
+   "max": 8,
+   "perLevel": 0.08,
+   "minRarity": "uncommon",
+   "categories": [
+    "WEAPON",
+    "OFFHAND"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "bat",
+   "name": "Бат",
+   "position": "prefix",
+   "stat": "max_health",
+   "min": 4,
+   "max": 8,
+   "perLevel": 0.4,
+   "minRarity": "uncommon",
+   "categories": [
+    "ARMOR",
+    "JEWELRY",
+    "OFFHAND"
+   ],
+   "weight": 12
+  },
+  {
+   "id": "gan",
+   "name": "Ган",
+   "position": "prefix",
+   "stat": "armor",
+   "min": 1,
+   "max": 2,
+   "perLevel": 0.05,
+   "minRarity": "uncommon",
+   "categories": [
+    "ARMOR",
+    "OFFHAND"
+   ],
+   "weight": 10
+  },
+  {
+   "id": "amidral",
+   "name": "Амьдралын",
+   "position": "suffix",
+   "stat": "health_regen",
+   "min": 0.2,
+   "max": 0.4,
+   "perLevel": 0.008,
+   "minRarity": "rare",
+   "categories": [
+    "ARMOR",
+    "OFFHAND"
+   ],
+   "weight": 6
+  },
+  {
+   "id": "salkhin",
+   "name": "Салхин",
+   "position": "suffix",
+   "stat": "dodge",
+   "min": 1,
+   "max": 3,
+   "perLevel": 0.02,
+   "minRarity": "rare",
+   "categories": [
+    "ARMOR",
+    "JEWELRY"
+   ],
+   "weight": 6
+  },
+  {
+   "id": "khurdan",
+   "name": "Хурдан",
+   "position": "suffix",
+   "stat": "move_speed",
+   "min": 2,
+   "max": 4,
+   "perLevel": 0.02,
+   "minRarity": "uncommon",
+   "categories": [
+    "ARMOR"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "tengeriin",
+   "name": "Тэнгэрийн",
+   "position": "suffix",
+   "stat": "cooldown_reduction",
+   "min": 2,
+   "max": 4,
+   "perLevel": 0.02,
+   "minRarity": "epic",
+   "categories": [
+    "ARMOR",
+    "JEWELRY",
+    "OFFHAND"
+   ],
+   "weight": 5
+  },
+  {
+   "id": "mergediin",
+   "name": "Мэргэдийн",
+   "position": "suffix",
+   "stat": "xp_gain",
+   "min": 3,
+   "max": 6,
+   "perLevel": 0.03,
+   "minRarity": "uncommon",
+   "categories": [
+    "JEWELRY"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "aziin",
+   "name": "Азын",
+   "position": "suffix",
+   "stat": "loot_chance",
+   "min": 3,
+   "max": 6,
+   "perLevel": 0.03,
+   "minRarity": "uncommon",
+   "categories": [
+    "JEWELRY"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "sunsleg",
+   "name": "Сүнслэг",
+   "position": "prefix",
+   "stat": "resource_regen",
+   "min": 0.3,
+   "max": 0.6,
+   "perLevel": 0.01,
+   "minRarity": "uncommon",
+   "categories": [
+    "JEWELRY",
+    "OFFHAND"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "guun",
+   "name": "Гүн",
+   "position": "prefix",
+   "stat": "resource_max",
+   "min": 5,
+   "max": 10,
+   "perLevel": 0.15,
+   "minRarity": "uncommon",
+   "categories": [
+    "JEWELRY",
+    "OFFHAND"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "nariin",
+   "name": "Нарийн",
+   "position": "prefix",
+   "stat": "crit_chance",
+   "min": 1,
+   "max": 3,
+   "perLevel": 0.02,
+   "minRarity": "uncommon",
+   "categories": [
+    "JEWELRY"
+   ],
+   "weight": 8
+  },
+  {
+   "id": "spell_tsavchilt",
+   "name": "Цавчилтын",
+   "position": "suffix",
+   "spell": "TENGER_TSAVCHILT",
+   "mod": "DAMAGE_PCT",
+   "min": 8,
+   "max": 14,
+   "perLevel": 0.1,
+   "minRarity": "rare",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 10
+  },
+  {
+   "id": "spell_tengeriin_sum",
+   "name": "Тэнгэрийн Сумны",
+   "position": "suffix",
+   "spell": "TENGERIIN_SUM",
+   "mod": "DAMAGE_PCT",
+   "min": 8,
+   "max": 14,
+   "perLevel": 0.1,
+   "minRarity": "rare",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 10
+  },
+  {
+   "id": "spell_khengereg",
+   "name": "Хэнгэргийн",
+   "position": "suffix",
+   "spell": "KHENGERGIIN_DUU",
+   "mod": "DAMAGE_PCT",
+   "min": 8,
+   "max": 14,
+   "perLevel": 0.1,
+   "minRarity": "rare",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 10
+  },
+  {
+   "id": "spell_galyn",
+   "name": "Галын",
+   "position": "suffix",
+   "spell": "GALYN_DAVTALT",
+   "mod": "DAMAGE_PCT",
+   "min": 8,
+   "max": 14,
+   "perLevel": 0.1,
+   "minRarity": "rare",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 10
+  },
+  {
+   "id": "spell_zhad",
+   "name": "Жадны",
+   "position": "suffix",
+   "spell": "ZHADNY_SHIDELT",
+   "mod": "DAMAGE_PCT",
+   "min": 8,
+   "max": 14,
+   "perLevel": 0.1,
+   "minRarity": "rare",
+   "categories": [
+    "WEAPON"
+   ],
+   "weight": 10
+  }
+ ]
+}

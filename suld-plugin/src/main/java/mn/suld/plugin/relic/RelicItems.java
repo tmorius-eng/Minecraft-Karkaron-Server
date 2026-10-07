@@ -43,9 +43,12 @@ public final class RelicItems {
     }
 
     public ItemStack create(RelicDefinition def, RelicRecord record) {
-        ItemDefinition idef = new ItemDefinition(def.key(), def.displayName(), def.baseMaterial(), ItemRarity.UNIQUE,
-                def.customModelData(), Map.of(), Map.of(), true);
-        ItemInstance inst = new ItemInstance(def.key(), record.itemUuid(), ItemRarity.UNIQUE, 1, Map.of(), true, 0, "relic");
+        // the relic's stats and unique effects are its item definition (items/relics.json); identity and owner are the record's
+        ItemDefinition idef = mn.suld.plugin.content.SuldContent.items().require(def.key());
+        Map<mn.suld.api.item.ItemStat, Double> stats = new java.util.EnumMap<>(mn.suld.api.item.ItemStat.class);
+        idef.stats().forEach((k, v) -> stats.put(k, v.min()));
+        ItemInstance inst = new ItemInstance(def.key(), record.itemUuid(), ItemRarity.UNIQUE, Math.max(1, idef.levelReq()), stats,
+                java.util.List.of(), true, record.owner(), 0, "relic", ItemInstance.SCHEMA_VERSION);
         ItemStack stack = items.create(inst, idef);
         ItemMeta meta = stack.getItemMeta();
         List<Component> lore = new ArrayList<>(Optional.ofNullable(meta.lore()).orElse(List.of()));

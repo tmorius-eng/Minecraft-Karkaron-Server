@@ -300,12 +300,12 @@ public final class NpcService implements Listener {
                     return;
                 }
                 mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(now.definitionId());
-                mn.suld.api.item.ItemInstance rolled = def.roll(now.uuid(), now.itemLevel() + 1, "reforge");
-                mn.suld.api.item.ItemInstance up = new mn.suld.api.item.ItemInstance(rolled.definitionId(), rolled.uuid(), rolled.rarity(),
-                        rolled.itemLevel(), rolled.stats(), rolled.soulbound(), now.upgradeLevel() + 1, "reforge");
+                mn.suld.api.item.ItemInstance up = services.itemService().generator().upgrade(now, def);
                 takeItem(pl, cost.materialId(), cost.materialCount());
                 pr.addCurrency(-cost.coins());
-                pl.getInventory().setItemInMainHand(services.items().create(up, def));
+                ItemStack upgraded = hand.clone();
+                services.items().rewrite(upgraded, up, services.itemService().viewer(pl)); // keeps durability and identity
+                pl.getInventory().setItemInMainHand(upgraded);
                 pl.playSound(pl.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1f, 1f);
                 pl.getWorld().spawnParticle(org.bukkit.Particle.ENCHANT, pl.getLocation().add(0, 1.2, 0), 40, 0.4, 0.6, 0.4, 0.4);
                 pl.sendMessage(Messages.success(def.displayName() + " → Зэрэг " + up.itemLevel() + " (+" + up.upgradeLevel() + ")"));

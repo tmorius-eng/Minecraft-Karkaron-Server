@@ -2,6 +2,7 @@ package mn.suld.api.item;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,14 +28,16 @@ class ReforgeTest {
     }
 
     @Test
-    void upgradedStatsComeFromTheDefinition() {
-        ItemDefinition d = new ItemDefinition("weapon.x", "X", "minecraft:iron_sword", ItemRarity.RARE, 0,
-                Map.of(ItemStat.ATTACK, 10.0), Map.of(ItemStat.ATTACK, 1.5), false);
-        UUID id = UUID.randomUUID();
-        ItemInstance before = d.roll(id, 4, "drop");
-        ItemInstance after = d.roll(id, before.itemLevel() + 1, "reforge");
-        assertEquals(14.5, before.stat(ItemStat.ATTACK), 1e-9);
-        assertEquals(16.0, after.stat(ItemStat.ATTACK), 1e-9);
+    void upgradeAddsTheDefinitionsGrowthAndKeepsTheItem() {
+        ItemDefinition d = Fixtures.def("weapon.x").rarity(ItemRarity.RARE, ItemRarity.RARE).stat(ItemStat.DAMAGE, 10, 10).per(ItemStat.DAMAGE, 1.5).build();
+        ItemGenerator gen = new ItemGenerator(Fixtures.catalog(List.of(d), List.of(), List.of(), List.of()));
+        ItemInstance before = gen.generate(d, ItemRarity.RARE, 4, mn.suld.api.loot.Rng.seeded(1), "drop", null);
+        ItemInstance after = gen.upgrade(before, d);
+        assertEquals(14.5, before.stat(ItemStat.DAMAGE), 1e-9);
+        assertEquals(16.0, after.stat(ItemStat.DAMAGE), 1e-9);
+        assertEquals(5, after.itemLevel());
+        assertEquals(1, after.upgradeLevel());
         assertEquals(before.uuid(), after.uuid());
+        assertEquals(before.affixes(), after.affixes());
     }
 }

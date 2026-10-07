@@ -27,6 +27,10 @@ LEGACY = {
     "rabbit_hide": {870041: "suld:item/baavgain_arisan"},
     "nether_star": {870100: "suld:item/khukh_suld", 870101: "suld:item/altan_gerege"},
     "bow": {870020: "suld:item/surgamj_num"},
+    # jewellery
+    "iron_nugget": {872001: "suld:item/mungun_bugj"},
+    "emerald": {872002: "suld:item/khash_bugj"},
+    "gold_nugget": {872003: "suld:item/altan_bugj"},
 }
 BOWS = {"bow"}
 

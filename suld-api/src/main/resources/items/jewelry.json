@@ -1,0 +1,245 @@
+{
+ "items": [
+  {
+   "id": "item.talyn_tuvshin",
+   "name": "Талын Түшиг",
+   "material": "minecraft:amethyst_shard",
+   "type": "AMULET",
+   "rarity": "uncommon",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "max_health": [
+     2,
+     3
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.5
+   },
+   "sell": 30,
+   "lore": "Тал нутгийн хамгаалах түшиг."
+  },
+  {
+   "id": "item.khasar_zurkh",
+   "name": "Хасарын Зүрх",
+   "material": "minecraft:heart_of_the_sea",
+   "type": "AMULET",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 5,
+   "stats": {
+    "max_health": [
+     10,
+     12
+    ],
+    "health_regen": [
+     0.3,
+     0.4
+    ]
+   },
+   "perLevel": {
+    "max_health": 1.0
+   },
+   "sell": 120,
+   "lore": "Агуйн эзний зүрх одоо ч цохилно.",
+   "effects": [
+    {
+     "type": "proc",
+     "event": "LOW_HP",
+     "chance": 100,
+     "kind": "HEAL",
+     "a": 6,
+     "cooldown": 60
+    }
+   ],
+   "binding": "SOULBOUND"
+  },
+  {
+   "id": "jewel.mungun_bugj",
+   "name": "Мөнгөн Бөгж",
+   "material": "minecraft:iron_nugget",
+   "type": "RING",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 5,
+   "stats": {
+    "resource_regen": [
+     0.2,
+     0.4
+    ]
+   },
+   "perLevel": {
+    "resource_regen": 0.02
+   },
+   "sell": 10,
+   "lore": "Энгийн мөнгөн бөгж.",
+   "model": 872001
+  },
+  {
+   "id": "jewel.khash_bugj",
+   "name": "Хаш Бөгж",
+   "material": "minecraft:emerald",
+   "type": "RING",
+   "rarity": "uncommon",
+   "maxRarity": "legendary",
+   "level": 20,
+   "stats": {
+    "crit_chance": [
+     2,
+     3
+    ],
+    "xp_gain": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {},
+   "sell": 35,
+   "lore": "Хаш чулуун бөгж — аз дагуулна.",
+   "model": 872002
+  },
+  {
+   "id": "jewel.altan_bugj",
+   "name": "Алтан Бөгж",
+   "material": "minecraft:gold_nugget",
+   "type": "RING",
+   "rarity": "rare",
+   "maxRarity": "mythic",
+   "level": 35,
+   "stats": {
+    "crit_damage": [
+     8,
+     12
+    ],
+    "loot_chance": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {},
+   "sell": 70,
+   "lore": "Хааны тамгатай алтан бөгж.",
+   "model": 872003
+  },
+  {
+   "id": "jewel.chonyn_soyo",
+   "name": "Чонын Соёо Зүүлт",
+   "material": "minecraft:bone",
+   "type": "AMULET",
+   "rarity": "uncommon",
+   "maxRarity": "epic",
+   "level": 15,
+   "stats": {
+    "lifesteal": [
+     1,
+     2
+    ],
+    "max_health": [
+     6,
+     8
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.3
+   },
+   "sell": 30,
+   "lore": "Чонын соёогоор хийсэн зүүлт."
+  },
+  {
+   "id": "jewel.tengeriin_sakhius",
+   "name": "Тэнгэрийн Сахиус",
+   "material": "minecraft:heart_of_the_sea",
+   "type": "AMULET",
+   "rarity": "epic",
+   "maxRarity": "mythic",
+   "level": 40,
+   "stats": {
+    "cooldown_reduction": [
+     3,
+     5
+    ],
+    "max_health": [
+     14,
+     18
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.4
+   },
+   "sell": 90,
+   "lore": "Мөнх тэнгэрийн ивээл."
+  },
+  {
+   "id": "jewel.chingis_tamga",
+   "name": "Чингисийн Тамга",
+   "material": "minecraft:nether_star",
+   "type": "AMULET",
+   "rarity": "legendary",
+   "maxRarity": "mythic",
+   "level": 45,
+   "stats": {
+    "max_health": [
+     20,
+     24
+    ],
+    "crit_chance": [
+     3,
+     4
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.4
+   },
+   "sell": 150,
+   "lore": "Их хааны тамга.",
+   "set": "set.chingis"
+  },
+  {
+   "id": "jewel.anchin_bugj",
+   "name": "Анчны Бөгж",
+   "material": "minecraft:rabbit_foot",
+   "type": "RING",
+   "rarity": "rare",
+   "maxRarity": "legendary",
+   "level": 15,
+   "stats": {
+    "crit_chance": [
+     2,
+     3
+    ],
+    "dodge": [
+     2,
+     3
+    ]
+   },
+   "perLevel": {},
+   "sell": 35,
+   "lore": "Туулайн хөлтэй анчны бөгж.",
+   "set": "set.talyn_anchin"
+  },
+  {
+   "id": "jewel.booi_khets",
+   "name": "Бөөгийн Хэц",
+   "material": "minecraft:feather",
+   "type": "AMULET",
+   "rarity": "rare",
+   "maxRarity": "legendary",
+   "level": 18,
+   "stats": {
+    "resource_regen": [
+     0.4,
+     0.6
+    ],
+    "spell_damage": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {},
+   "sell": 35,
+   "lore": "Өдтэй хэц — сүнсийг дуудна.",
+   "set": "set.booi_yosol"
+  }
+ ]
+}

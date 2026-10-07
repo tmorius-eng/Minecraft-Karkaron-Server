@@ -229,7 +229,8 @@ public final class SkillTreeLoader {
         return new RawNode(id, name, description, category, icon, x, y, cost, maxRank, level, requires, effects, tags, keystone, capstone, hidden, secret, version);
     }
 
-    private static Effect parseEffect(String file, String at, Object o, PlayerClass clazz, List<Issue> issues) {
+    /** One effect object ({@code stat}, {@code mod}, {@code proc}, ...); shared with the item catalog, whose items carry the same effects. */
+    public static Effect parseEffect(String file, String at, Object o, PlayerClass clazz, List<Issue> issues) {
         if (!(o instanceof Map<?, ?> raw)) {
             issues.add(new Issue(file, at, "must be an object"));
             return null;
@@ -284,9 +285,9 @@ public final class SkillTreeLoader {
         return result;
     }
 
-    // ------------------------------------------------------------------ field helpers
+    // ------------------------------------------------------------------ field helpers (shared with the item catalog loader)
 
-    private static String str(String file, String at, Map<String, Object> m, String key, boolean required, List<Issue> issues) {
+    public static String str(String file, String at, Map<String, Object> m, String key, boolean required, List<Issue> issues) {
         Object v = m.get(key);
         if (v == null) {
             if (required) issues.add(new Issue(file, at + "." + key, "missing"));
@@ -299,7 +300,7 @@ public final class SkillTreeLoader {
         return s;
     }
 
-    private static int intIn(String file, String at, Map<String, Object> m, String key, int min, int max, boolean required,
+    public static int intIn(String file, String at, Map<String, Object> m, String key, int min, int max, boolean required,
                              int dflt, List<Issue> issues) {
         Object v = m.get(key);
         if (v == null) {
@@ -315,7 +316,7 @@ public final class SkillTreeLoader {
         return i;
     }
 
-    private static double num(String file, String at, Map<String, Object> m, String key, double min, double max, List<Issue> issues) {
+    public static double num(String file, String at, Map<String, Object> m, String key, double min, double max, List<Issue> issues) {
         Object v = m.get(key);
         if (!(v instanceof Number n)) {
             issues.add(new Issue(file, at + "." + key, v == null ? "missing" : "must be a number"));
@@ -326,11 +327,11 @@ public final class SkillTreeLoader {
         return d;
     }
 
-    private static boolean bool(Map<String, Object> m, String key) {
+    public static boolean bool(Map<String, Object> m, String key) {
         return Boolean.TRUE.equals(m.get(key));
     }
 
-    private static <E extends Enum<E>> E enumOf(Class<E> type, String value, String file, String path, List<Issue> issues) {
+    public static <E extends Enum<E>> E enumOf(Class<E> type, String value, String file, String path, List<Issue> issues) {
         if (value == null) return null;
         try {
             return Enum.valueOf(type, value);

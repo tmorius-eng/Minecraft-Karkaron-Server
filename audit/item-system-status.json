@@ -1,0 +1,133 @@
+{
+  "generated": "2026-10-07",
+  "legend": [
+    "COMPLETE",
+    "FUNCTIONAL_BUT_INCOMPLETE",
+    "SCAFFOLD",
+    "PLACEHOLDER",
+    "BROKEN",
+    "NOT_IMPLEMENTED",
+    "MANUAL_QA_REQUIRED"
+  ],
+  "note": "COMPLETE = implemented end to end and verified by unit/integration/live-Paper tests. What a person must look at in a real client is MANUAL_QA_REQUIRED.",
+  "counts": {
+    "itemDefinitions": 89,
+    "rarities": 8,
+    "stats": 16,
+    "affixes": 22,
+    "sets": 3,
+    "equipmentSlots": 9,
+    "lootTables": 21,
+    "lootTierBands": 10,
+    "recipes": 4,
+    "uniqueItems": 2
+  },
+  "tests": {
+    "unitAndIntegration": "./gradlew clean build: 327 tests, 0 failed, 0 skipped (PostgreSQL ITs incl. JdbcEquipmentIT run against a throwaway cluster)",
+    "liveItemsSuite": "/skillsadmin qa <bot> items: 20/20 PASS (after the RESOURCE_MAX fix; first run 18/20)",
+    "liveFullRegression": "/skillsadmin qa <bot> all: 332 PASS, 0 FAIL, 1 NOT_MEASURABLE (heal radius needs a 2nd player) of 333, run in rain",
+    "liveRestartPersistence": "join -> give -> /item equip x3 -> inspect -> quit -> server restart (PostgreSQL) -> rejoin -> inspect: identical (slots, UUIDs, rarity, level, stat totals)",
+    "liveMenus": "bot: /equipment opens with 9 slots + stat/set/score panels; empty accessory -> picker -> click equips; click unequips; /items lists carried items",
+    "liveActions": "bot: sell, bind, salvage, destroy, craft with confirm; coins and inventory read back"
+  },
+  "subsystems": {
+    "item identity (definition id + UUID, PDC JSON, schema 2, no lore parsing)": {
+      "status": "COMPLETE",
+      "evidence": "ItemValidatorCodecTest, live inspect"
+    },
+    "legacy (schema 1) stack migration": {
+      "status": "COMPLETE",
+      "evidence": "ItemValidatorCodecTest.legacyItemsAreMigrated"
+    },
+    "data catalog + validator (exact file/field)": {
+      "status": "COMPLETE",
+      "evidence": "ItemCatalogLoaderTest (13 cases), live /itemsadmin validate|reload"
+    },
+    "8 rarities with mechanical differences": {
+      "status": "COMPLETE",
+      "evidence": "RarityTooltipEconomyTest, ItemGeneratorTest"
+    },
+    "16 stats wired into gameplay": {
+      "status": "COMPLETE",
+      "evidence": "live items suite: every stat measured through the game"
+    },
+    "9 equipment slots, inactive reasons, debounced recompute": {
+      "status": "COMPLETE",
+      "evidence": "EquipmentTest, live items gates, live menus"
+    },
+    "affixes (prefix/suffix, ranges, rarity, level scaling)": {
+      "status": "COMPLETE",
+      "evidence": "ItemGeneratorTest, ItemValidatorCodecTest"
+    },
+    "set items (2-5 piece bonuses)": {
+      "status": "COMPLETE",
+      "evidence": "EquipmentTest.bundledSetsGiveTheirBonusesWithRealItems, live booi_yosol 2-piece"
+    },
+    "unique items (relic system: one owner, CAS, history, recovery, audit)": {
+      "status": "COMPLETE",
+      "evidence": "existing relic tests + JdbcRelicRepositoryIT; loader refuses uniques in loot"
+    },
+    "weighted loot engine (pools, tiers, class weighting, guaranteed, rare, deterministic RNG)": {
+      "status": "COMPLETE",
+      "evidence": "LootEngineTest (11 cases, 20 000-roll distributions)"
+    },
+    "loot callers (mob kill, dungeon reward)": {
+      "status": "COMPLETE",
+      "evidence": "ContentIntegrityTest, combat suite loot checks"
+    },
+    "loot for quests / world events / chests": {
+      "status": "FUNCTIONAL_BUT_INCOMPLETE",
+      "reason": "tables loot.quest.reward, loot.world_event.*, loot.chest.steppe exist and validate, but the quest/world-event/chest code does not roll them yet"
+    },
+    "tooltips + equipped comparison": {
+      "status": "MANUAL_QA_REQUIRED",
+      "evidence": "RarityTooltipEconomyTest covers the lines; colours/layout need a client"
+    },
+    "actions: equip, unequip, compare, drop, pickup, sell, destroy, bind, inspect, salvage, craft": {
+      "status": "COMPLETE",
+      "evidence": "live bot: /item sell (+113 coins), bind (Холбогдсон), salvage (material given), destroy, craft (4 pelts + 20 coins -> helmet), each behind 'confirm'; equip/unequip/inspect live; drop/pickup through EquipmentService events + join sweep"
+    },
+    "exploit prevention (forged/impossible stats, duplicates, quarantine)": {
+      "status": "COMPLETE",
+      "evidence": "ItemValidatorCodecTest.forgeriesAreRefused, join + 30 s sweeps, quarantine restore"
+    },
+    "trade: bound items nested inside shulkers/bundles": {
+      "status": "NOT_IMPLEMENTED",
+      "reason": "trade checks offered slots for bound/untradable items; only relics are searched inside containers"
+    },
+    "persistence (accessories V11, armour/hands by the game)": {
+      "status": "COMPLETE",
+      "evidence": "JdbcEquipmentIT, live restart test"
+    },
+    "commands /item /items /equipment /loot /itemsadmin + permissions + tab completion": {
+      "status": "COMPLETE",
+      "evidence": "live commands, PluginDescriptorTest"
+    },
+    "GUI menus /items /equipment": {
+      "status": "MANUAL_QA_REQUIRED",
+      "evidence": "live bot clicks work; visual layout needs a client"
+    },
+    "resource pack: ring sprites 872001-872003": {
+      "status": "MANUAL_QA_REQUIRED",
+      "evidence": "generated, mapped in item definitions; look in a client"
+    },
+    "upgrade/repair at the smith": {
+      "status": "COMPLETE",
+      "evidence": "ReforgeTest, ItemGeneratorTest.upgrade"
+    }
+  },
+  "bugsFoundByLiveQa": [
+    {
+      "what": "RESOURCE_MAX rolled fractions (+10.1) but the resource pool is an integer: the item gave +10",
+      "fix": "ItemStat.integral(); rolls rounded down; legacy fractions count/show whole; unit test"
+    },
+    {
+      "what": "QA harness: rain extinguished burning dummies in the open-sky arena (4 BURN checks read 0)",
+      "fix": "QaKit forces clear weather during a run and restores it"
+    },
+    {
+      "what": "QA harness: volley damage check swung +-10% from vanilla critical-arrow randomness (one run read x0.997 for +20%)",
+      "fix": "measured volley arrows fly non-critical; now x1.2 exactly in most runs"
+    }
+  ]
+}

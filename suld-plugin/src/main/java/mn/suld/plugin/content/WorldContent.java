@@ -1,17 +1,11 @@
 package mn.suld.plugin.content;
 
-import mn.suld.api.item.ItemDefinition;
-import mn.suld.api.item.ItemRarity;
-import mn.suld.api.item.ItemStat;
-import mn.suld.api.loot.LootEntry;
-import mn.suld.api.loot.LootTable;
 import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.mob.MobTier;
 import mn.suld.api.region.RegionDefinition;
 import mn.suld.api.region.RegionShape;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Vertical Slice 5 world content: Kharkhorum and the four wild regions around it, each with its
@@ -24,27 +18,6 @@ public final class WorldContent {
     }
 
     private static final double WORLD_EDGE = 3000;
-
-    // ------------------------------------------------------------- items
-
-    public static final ItemDefinition SCORPION_VENOM = new ItemDefinition("item.khilentsiin_khor", "Хилэнцийн Хор",
-            "minecraft:fermented_spider_eye", ItemRarity.COMMON, 0, Map.of(), Map.of(), false);
-    public static final ItemDefinition GOBI_DAGGER = new ItemDefinition("weapon.govi_khutga", "Говийн Хутга",
-            "minecraft:iron_sword", ItemRarity.RARE, 870013,
-            Map.of(ItemStat.ATTACK, 10.0, ItemStat.CRIT_CHANCE, 0.08), Map.of(ItemStat.ATTACK, 1.5, ItemStat.CRIT_CHANCE, 0.005), false);
-    public static final ItemDefinition BEAR_PELT = new ItemDefinition("item.baavgain_arisan", "Баавгайн Арьс",
-            "minecraft:rabbit_hide", ItemRarity.UNCOMMON, 870041, Map.of(ItemStat.ARMOR, 2.0), Map.of(ItemStat.ARMOR, 0.5), false);
-    public static final ItemDefinition KHANGAI_AXE = new ItemDefinition("weapon.khangai_sukh", "Хангайн Сүх",
-            "minecraft:iron_axe", ItemRarity.RARE, 870030,
-            Map.of(ItemStat.ATTACK, 13.0, ItemStat.CRIT_DAMAGE, 0.2), Map.of(ItemStat.ATTACK, 2.0), false);
-    public static final ItemDefinition ICE_STONE = new ItemDefinition("item.mosun_chuluu", "Мөсөн Чулуу",
-            "minecraft:prismarine_crystals", ItemRarity.RARE, 0, Map.of(ItemStat.RESOURCE, 10.0), Map.of(ItemStat.RESOURCE, 2.0), false);
-    public static final ItemDefinition ALTAI_SPEAR = new ItemDefinition("weapon.altai_jad", "Алтайн Жад",
-            "minecraft:trident", ItemRarity.EPIC, 0,
-            Map.of(ItemStat.ATTACK, 16.0, ItemStat.CRIT_CHANCE, 0.1, ItemStat.CRIT_DAMAGE, 0.3),
-            Map.of(ItemStat.ATTACK, 2.5, ItemStat.CRIT_CHANCE, 0.005), false);
-
-    public static final List<ItemDefinition> ITEMS = List.of(SCORPION_VENOM, GOBI_DAGGER, BEAR_PELT, KHANGAI_AXE, ICE_STONE, ALTAI_SPEAR);
 
     // -------------------------------------------------------------- mobs
 
@@ -71,28 +44,7 @@ public final class WorldContent {
 
     // -------------------------------------------------------------- loot
 
-    public static final List<LootTable> LOOT = List.of(
-            new LootTable("loot.deeremchin", List.of(
-                    new LootEntry(SuldContent.WOLF_PELT, 0.5, 1, 1),
-                    new LootEntry(SuldContent.STEPPE_SABER, 0.15, 3, 5))),
-            new LootTable("loot.goviin_khilents", List.of(
-                    new LootEntry(SCORPION_VENOM, 0.8, 1, 1),
-                    new LootEntry(GOBI_DAGGER, 0.12, 6, 9))),
-            new LootTable("loot.elsnii_suns", List.of(
-                    new LootEntry(SCORPION_VENOM, 0.4, 1, 1),
-                    new LootEntry(GOBI_DAGGER, 0.2, 8, 11))),
-            new LootTable("loot.saaral_chono", List.of(
-                    new LootEntry(SuldContent.WOLF_PELT, 0.9, 1, 1),
-                    new LootEntry(KHANGAI_AXE, 0.1, 11, 14))),
-            new LootTable("loot.khangai_baavgai", List.of(
-                    new LootEntry(BEAR_PELT, 0.9, 12, 15),
-                    new LootEntry(KHANGAI_AXE, 0.25, 13, 16))),
-            new LootTable("loot.altai_mosun_suns", List.of(
-                    new LootEntry(ICE_STONE, 0.6, 18, 20),
-                    new LootEntry(ALTAI_SPEAR, 0.05, 18, 21))),
-            new LootTable("loot.altai_avarga", List.of(
-                    new LootEntry(ICE_STONE, 1.0, 20, 24),
-                    new LootEntry(ALTAI_SPEAR, 0.2, 21, 25))));
+    // loot tables: suld-api/src/main/resources/items/loot.json (item catalog)
 
     // ----------------------------------------------------------- regions
 

@@ -165,10 +165,18 @@ final class QaKit {
         // an open sky arena at night spawns real monsters that would kill the player and pollute every measurement
         spawnRule = world.getGameRuleValue(org.bukkit.GameRule.SPAWN_MONSTERS);
         world.setGameRule(org.bukkit.GameRule.SPAWN_MONSTERS, false);
+        // rain puts out burning entities under the open sky: every BURN measurement would read 0
+        stormWas = world.hasStorm();
+        clearWeatherWas = world.getClearWeatherDuration();
+        world.setStorm(false);
+        world.setThundering(false);
+        world.setClearWeatherDuration(20 * 60 * 60);
         purgeMonsters();
     }
 
     private Boolean spawnRule;
+    private boolean stormWas;
+    private int clearWeatherWas;
 
     /** Removes every monster (not our dummies) near the arena. */
     void purgeMonsters() {
@@ -182,6 +190,8 @@ final class QaKit {
     void clearArena() {
         CombatFeedback.quiet = false;
         if (spawnRule != null) world.setGameRule(org.bukkit.GameRule.SPAWN_MONSTERS, spawnRule);
+        world.setClearWeatherDuration(clearWeatherWas);
+        if (stormWas) world.setStorm(true);
         for (int[] t : tickets) world.removePluginChunkTicket(t[0], t[1], plugin);
         tickets.clear();
         org.bukkit.event.HandlerList.unregisterAll(counter);

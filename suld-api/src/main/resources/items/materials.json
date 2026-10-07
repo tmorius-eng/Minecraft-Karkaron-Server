@@ -1,0 +1,83 @@
+{
+ "items": [
+  {
+   "id": "item.chonon_arisan",
+   "name": "Чонын Арьс",
+   "material": "minecraft:leather",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 8,
+   "lore": "Чонын зузаан арьс — дархчдад хэрэгтэй.",
+   "model": 870040
+  },
+  {
+   "id": "item.khilentsiin_khor",
+   "name": "Хилэнцийн Хор",
+   "material": "minecraft:fermented_spider_eye",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 6,
+   "lore": "Говийн хилэнцийн хор."
+  },
+  {
+   "id": "item.baavgain_arisan",
+   "name": "Баавгайн Арьс",
+   "material": "minecraft:rabbit_hide",
+   "type": "MATERIAL",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 64,
+   "sell": 12,
+   "lore": "Хангайн баавгайн арьс.",
+   "model": 870041
+  },
+  {
+   "id": "item.mosun_chuluu",
+   "name": "Мөсөн Чулуу",
+   "material": "minecraft:prismarine_crystals",
+   "type": "MATERIAL",
+   "rarity": "rare",
+   "level": 1,
+   "stack": 64,
+   "sell": 8,
+   "lore": "Алтайн мөсөн чулуу — хэзээ ч хайлдаггүй."
+  },
+  {
+   "id": "item.tumriin_kheltarkhii",
+   "name": "Төмрийн Хэлтэрхий",
+   "material": "minecraft:iron_nugget",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 2,
+   "lore": "Задалсан зэвсгийн төмөр."
+  },
+  {
+   "id": "item.altan_toos",
+   "name": "Алтан Тоос",
+   "material": "minecraft:glowstone_dust",
+   "type": "MATERIAL",
+   "rarity": "rare",
+   "level": 1,
+   "stack": 64,
+   "sell": 5,
+   "lore": "Нандин эд зүйлийн гялалзах тоос."
+  },
+  {
+   "id": "item.tengeriin_chuluu",
+   "name": "Тэнгэрийн Чулуу",
+   "material": "minecraft:echo_shard",
+   "type": "MATERIAL",
+   "rarity": "legendary",
+   "level": 1,
+   "stack": 64,
+   "sell": 4,
+   "lore": "Алдарт зэвсгээс үлдсэн тэнгэрийн чулуу."
+  }
+ ]
+}

@@ -21,7 +21,11 @@ public enum StatKey {
     LOOT_PCT("Олзны боломж", "%", true),
     DODGE_PCT("Мултрах боломж", "%", true),
     COOLDOWN_REDUCTION("Хүлээлт, дуулал ба чадвар", "%", false),
-    MINING_SPEED_PCT("Уул уурхайн хурд", "%", true);
+    MINING_SPEED_PCT("Уул уурхайн хурд", "%", true),
+    /** Health regained every second (equipment; the tree has no node for it yet). */
+    HEALTH_REGEN("Амь сэргэлт (секундэд)", "", true),
+    /** Attack speed (equipment). */
+    ATTACK_SPEED_PCT("Довтолгооны хурд", "%", true);
 
     private final String label;
     private final String unit;

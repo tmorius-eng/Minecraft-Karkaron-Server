@@ -1,13 +1,11 @@
 package mn.suld.plugin.content;
 
-import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.dungeon.BossDefinition;
 import mn.suld.api.dungeon.BossPhase;
 import mn.suld.api.dungeon.DungeonDefinition;
 import mn.suld.api.item.ItemDefinition;
-import mn.suld.api.item.ItemRarity;
-import mn.suld.api.item.ItemStat;
-import mn.suld.api.loot.LootEntry;
+import mn.suld.api.item.ItemCatalog;
+import mn.suld.api.item.ItemCatalogLoader;
 import mn.suld.api.loot.LootTable;
 import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.mob.MobTier;
@@ -29,26 +27,10 @@ public final class SuldContent {
     private SuldContent() {
     }
 
-    // --- Items ---
-    public static final ItemDefinition WOLF_PELT = new ItemDefinition(
-            "item.chonon_arisan", "Чонын арьс", "minecraft:leather", ItemRarity.COMMON, 870040,
-            Map.of(), Map.of(), false);
-
-    public static final ItemDefinition STEPPE_SABER = new ItemDefinition(
-            "weapon.talyn_ild", "Талын Илд", "minecraft:iron_sword", ItemRarity.RARE, 870010,
-            Map.of(ItemStat.ATTACK, 8.0, ItemStat.CRIT_CHANCE, 0.05),
-            Map.of(ItemStat.ATTACK, 1.5, ItemStat.CRIT_CHANCE, 0.005), false);
-
     // --- First mob ---
     public static final MobDefinition GOVIIN_CHONO = new MobDefinition(
             "mob.goviin_chono", "Говийн Чоно", "WOLF", MobTier.NORMAL,
             2, 16.0, 4.0, 50, "loot.goviin_chono");
-
-    // --- Loot table for the first mob ---
-    public static final LootTable GOVIIN_CHONO_LOOT = new LootTable("loot.goviin_chono", List.of(
-            new LootEntry(WOLF_PELT, 0.85, 1, 1),
-            new LootEntry(STEPPE_SABER, 0.35, 2, 4)
-    ));
 
     // --- First quest ---
     public static final QuestDefinition FIRST_HUNT = new QuestDefinition(
@@ -57,20 +39,6 @@ public final class SuldContent {
             QuestType.KILL_MOB, "mob.goviin_chono", 3, 150, 20);
 
     // ===== Vertical Slice 2: Хасарын Агуй (Khasar's Den) =====
-
-    // --- Dungeon reward items ---
-    public static final ItemDefinition KHASAR_FANG = new ItemDefinition(
-            "weapon.khasar_soyo", "Хасарын Соёо", "minecraft:iron_sword", ItemRarity.EPIC, 870012,
-            Map.of(ItemStat.ATTACK, 12.0, ItemStat.CRIT_CHANCE, 0.08, ItemStat.CRIT_DAMAGE, 0.25),
-            Map.of(ItemStat.ATTACK, 2.0, ItemStat.CRIT_CHANCE, 0.005), false);
-
-    public static final ItemDefinition KHASAR_HEART = new ItemDefinition(
-            "item.khasar_zurkh", "Хасарын Зүрх", "minecraft:heart_of_the_sea", ItemRarity.LEGENDARY, 0,
-            Map.of(ItemStat.HEALTH, 10.0), Map.of(ItemStat.HEALTH, 1.0), true);
-
-    public static final ItemDefinition STEPPE_TALISMAN = new ItemDefinition(
-            "item.talyn_tuvshin", "Талын Түшиг", "minecraft:amethyst_shard", ItemRarity.UNCOMMON, 0,
-            Map.of(ItemStat.HEALTH, 2.0), Map.of(ItemStat.HEALTH, 0.5), false);
 
     // --- Dungeon mobs ---
     public static final MobDefinition ORKHON_CHONO = new MobDefinition(
@@ -87,31 +55,13 @@ public final class SuldContent {
             new BossPhase(0.6, 1.3, "Уурласан"),
             new BossPhase(0.3, 1.6, "Галзуурсан")), 180);
 
-    public static final LootTable ORKHON_CHONO_LOOT = new LootTable("loot.orkhon_chono", List.of(
-            new LootEntry(WOLF_PELT, 0.9, 1, 1),
-            new LootEntry(STEPPE_TALISMAN, 0.2, 1, 3)
-    ));
-
-    /** Boss body drop: small, the real prize is the per-player dungeon reward. */
-    public static final LootTable KHASAR_LOOT = new LootTable("loot.khasar", List.of(
-            new LootEntry(WOLF_PELT, 1.0, 3, 3)
-    ));
-
-    /** Rolled once per party member on completion. */
-    public static final LootTable KHASAR_DEN_REWARDS = new LootTable("loot.dungeon.khasar_den", List.of(
-            new LootEntry(STEPPE_TALISMAN, 1.0, 3, 5),
-            new LootEntry(STEPPE_SABER, 0.6, 4, 6),
-            new LootEntry(KHASAR_FANG, 0.25, 5, 7),
-            new LootEntry(KHASAR_HEART, 0.06, 5, 5)
-    ));
-
     public static final DungeonDefinition KHASAR_DEN = new DungeonDefinition(
             "dungeon.khasar_den", "Хасарын Агуй",
             2, 1, 4,
             List.of(
                     List.of("mob.goviin_chono", "mob.goviin_chono", "mob.goviin_chono"),
                     List.of("mob.orkhon_chono", "mob.orkhon_chono", "mob.orkhon_chono", "mob.orkhon_chono")),
-            KHASAR_BOSS, KHASAR_DEN_REWARDS);
+            KHASAR_BOSS, "loot.dungeon.khasar_den");
 
     /** Extra EXP / currency granted to every participant on dungeon completion. */
     public static final long KHASAR_DEN_COMPLETION_EXP = 400;
@@ -168,28 +118,29 @@ public final class SuldContent {
         return null;
     }
 
+    // ===== Items and loot: the item catalog (suld-api/src/main/resources/items, data-folder override) =====
+
+    private static volatile ItemCatalog catalog;
+
+    /** The live item catalog: the bundled one until the item service has loaded (and validated) the server's. */
+    public static ItemCatalog items() {
+        ItemCatalog c = catalog;
+        if (c == null) {
+            synchronized (SuldContent.class) {
+                if (catalog == null) catalog = ItemCatalogLoader.load(ItemCatalogLoader.classpath()).catalog();
+                c = catalog;
+            }
+        }
+        return c;
+    }
+
+    /** Swap in a validated catalog (item service load/reload). */
+    public static void items(ItemCatalog c) {
+        catalog = c;
+    }
+
     public static LootTable lootTableFor(String id) {
-        for (LootTable t : List.of(GOVIIN_CHONO_LOOT, ORKHON_CHONO_LOOT, KHASAR_LOOT, KHASAR_DEN_REWARDS)) {
-            if (t.id().equals(id)) {
-                return t;
-            }
-        }
-        for (LootTable t : DungeonContent.BOSS_LOOT) {
-            if (t.id().equals(id)) {
-                return t;
-            }
-        }
-        for (DungeonDefinition d : DungeonContent.ALL) {
-            if (d.rewardTable().id().equals(id)) {
-                return d.rewardTable();
-            }
-        }
-        for (LootTable t : WorldContent.LOOT) {
-            if (t.id().equals(id)) {
-                return t;
-            }
-        }
-        return null;
+        return items().lootTable(id).orElse(null);
     }
 
     public static MobDefinition mobFor(String id) {
@@ -211,31 +162,8 @@ public final class SuldContent {
         return null;
     }
 
-    /** Resolve an item definition by id (slice-1 set; later backed by a registry). */
+    /** An item definition by its permanent id. */
     public static ItemDefinition definitionFor(String id) {
-        return switch (id) {
-            case "item.chonon_arisan" -> WOLF_PELT;
-            case "weapon.talyn_ild" -> STEPPE_SABER;
-            case "weapon.surgamj_ild" -> STARTER_SABER;
-            case "weapon.surgamj_num" -> STARTER_BOW;
-            case "weapon.khasar_soyo" -> KHASAR_FANG;
-            case "item.khasar_zurkh" -> KHASAR_HEART;
-            case "item.talyn_tuvshin" -> STEPPE_TALISMAN;
-            default -> id.startsWith("weapon.class.") ? mn.suld.plugin.item.ClassWeapons.byId(id)
-                    : WorldContent.ITEMS.stream().filter(d -> d.id().equals(id)).findFirst().orElse(null);
-        };
-    }
-
-    // --- Starter equipment granted on class selection ---
-    private static final ItemDefinition STARTER_SABER = new ItemDefinition(
-            "weapon.surgamj_ild", "Сургамжийн Илд", "minecraft:iron_sword", ItemRarity.COMMON, 870011,
-            Map.of(ItemStat.ATTACK, 4.0), Map.of(), false);
-    private static final ItemDefinition STARTER_BOW = new ItemDefinition(
-            "weapon.surgamj_num", "Сургамжийн Нум", "minecraft:bow", ItemRarity.COMMON, 870020,
-            Map.of(ItemStat.ATTACK, 4.0), Map.of(), false);
-
-    /** Starter weapon granted when a class is chosen (ranged classes get a bow). */
-    public static ItemDefinition starterWeapon(PlayerClass clazz) {
-        return clazz == PlayerClass.MERGEN ? STARTER_BOW : STARTER_SABER;
+        return items().item(id).orElse(null);
     }
 }

@@ -88,7 +88,7 @@ public final class SkillQa {
         return busy;
     }
 
-    public static final List<String> SUITES = List.of("stats", "mods", "procs", "wiring", "keystones", "ultimates", "cooldowns");
+    public static final List<String> SUITES = List.of("stats", "mods", "procs", "wiring", "keystones", "ultimates", "cooldowns", "items");
 
     public void run(CommandSender out, Player target, Set<String> suites) {
         if (busy) {
@@ -119,6 +119,8 @@ public final class SkillQa {
         final Progression origProgression;
         final long origCurrency;
         final mn.suld.api.quest.QuestState origQuest;
+        final ItemStack[] origInventory;
+        final mn.suld.api.item.EquipmentState origEquipment;
         final SkillState origState;
         final Location origLocation;
         final GameMode origMode;
@@ -143,6 +145,8 @@ public final class SkillQa {
             this.origMode = p.getGameMode();
             this.origHealth = p.getHealth();
             this.origHand = p.getInventory().getItemInMainHand().clone();
+            this.origInventory = cloneAll(p.getInventory().getContents());
+            this.origEquipment = pr.equipment();
         }
 
         /** Optional "only=baatar.m2" argument: run just the nodes whose "class.node" id contains this text. */
@@ -182,6 +186,7 @@ public final class SkillQa {
             if (on("keystones")) keystones();
             if (on("ultimates")) ultimates();
             if (on("cooldowns")) cooldowns();
+            if (on("items")) items();
             k.add(this::finish);
             k.start(ex -> {
                 rec("harness.error", "harness", "a QA step threw", "exception", 0, 0, "no exception", "FAIL",
@@ -242,15 +247,42 @@ public final class SkillQa {
             return CombatListener.attackOf(services, p);
         }
 
-        /** Measures {@code m} without the node, then with it learned at its top rank; leaves the tree empty. */
-        double[] beforeAfter(PlayerClass c, SkillNode n, Supplier<Double> m) {
+        /** What a before/after check switches: a node learned at its top rank, or an item equipped. */
+        interface Toggle {
+            void on();
+
+            void off();
+        }
+
+        Toggle node(SkillNode n) {
+            return new Toggle() {
+                @Override
+                public void on() {
+                    k.learn(n);
+                }
+
+                @Override
+                public void off() {
+                    k.unlearn();
+                }
+            };
+        }
+
+        /** Measures {@code m} with the toggle off, then on; leaves it off and the tree empty. */
+        double[] beforeAfter(PlayerClass c, Toggle t, Supplier<Double> m) {
             k.setClass(c);
             k.unlearn();
+            t.off();
             double b = m.get();
-            k.learn(n);
+            t.on();
             double a = m.get();
+            t.off();
             k.unlearn();
             return new double[]{b, a};
+        }
+
+        double[] beforeAfter(PlayerClass c, SkillNode n, Supplier<Double> m) {
+            return beforeAfter(c, node(n), m);
         }
 
         String idOf(PlayerClass c, SkillNode n, String what) {
@@ -269,6 +301,7 @@ public final class SkillQa {
             pr.skillState(origState);
             pr.currency(origCurrency);
             pr.questState(origQuest);
+            pr.equipment(origEquipment);
             report();
             busy = false;
         }
@@ -289,6 +322,9 @@ public final class SkillQa {
             for (PotionEffect e : new ArrayList<>(p.getActivePotionEffects())) p.removePotionEffect(e.getType());
             p.setAbsorptionAmount(0);
             p.getInventory().setItemInMainHand(origHand);
+            p.getInventory().setContents(origInventory);
+            pr.equipment(origEquipment);
+            st.equipmentChanged(p);
             services.profiles().save(pr);
             report();
             busy = false;
@@ -464,10 +500,15 @@ public final class SkillQa {
                 pb.poolAfterCast = skills.pool(p).value();
                 pb.absorbAfterCast = p.getAbsorptionAmount();
                 if (cfg.layout().equals("volley")) {
-                    // arrows vary (critical rolls): average over several volleys
+                    // average over several volleys; vanilla critical arrows add a random amount that scales the SÜLD hit
+                    // (+-10% per run measured): the check is about the SÜLD multiplier, so the measured arrows fly
+                    // non-critical (still in flight: they are launched this tick and hit later)
                     for (int i = 0; i < 19; i++) {
                         skills.pool(p).gain(1e9);
                         skills.castDirect(p, s, true);
+                    }
+                    for (org.bukkit.entity.Entity e : p.getNearbyEntities(8, 8, 8)) {
+                        if (e instanceof org.bukkit.entity.AbstractArrow a && a.getScoreboardTags().contains("suld_volley")) a.setCritical(false);
                     }
                 }
                 PotionEffect sp = p.getPotionEffect(PotionEffectType.SPEED);
@@ -526,15 +567,190 @@ public final class SkillQa {
 
         /** Spell probe before and after the node is learned; {@code eval} compares the two. */
         void spellCompare(PlayerClass c, SkillNode n, Spell s, double hp0, boolean wantMark, BiConsumer<Probe, Probe> eval) {
+            spellCompare(c, node(n), s, hp0, wantMark, eval);
+        }
+
+        void spellCompare(PlayerClass c, Toggle t, Spell s, double hp0, boolean wantMark, BiConsumer<Probe, Probe> eval) {
             Probe[] box = new Probe[1];
             k.add(() -> {
                 k.setClass(c);
                 k.unlearn();
+                t.off();
             });
             spellRun(s, hp0, wantMark, b -> box[0] = b);
-            k.add(() -> k.learn(n));
+            k.add(t::on);
             spellRun(s, hp0, wantMark, a -> eval.accept(box[0], a));
-            k.add(k::unlearn);
+            k.add(() -> {
+                t.off();
+                k.unlearn();
+            });
+        }
+
+        // ======================================================================================== ITEMS
+
+        static ItemStack[] cloneAll(ItemStack[] in) {
+            ItemStack[] out = new ItemStack[in.length];
+            for (int i = 0; i < in.length; i++) out[i] = in[i] == null ? null : in[i].clone();
+            return out;
+        }
+
+        /** Puts one item into one equipment slot (and takes it out again), then lets the stat pipeline rebuild. */
+        final class ItemToggle implements Toggle {
+            final mn.suld.api.item.EquipSlot slot;
+            final mn.suld.api.item.ItemInstance item;
+
+            ItemToggle(mn.suld.api.item.EquipSlot slot, mn.suld.api.item.ItemInstance item) {
+                this.slot = slot;
+                this.item = item;
+            }
+
+            @Override
+            public void on() {
+                put(slot, item);
+            }
+
+            @Override
+            public void off() {
+                put(slot, null);
+            }
+        }
+
+        void put(mn.suld.api.item.EquipSlot slot, mn.suld.api.item.ItemInstance item) {
+            var inv = p.getInventory();
+            ItemStack s = item == null ? null : services.itemService().stack(item, p, 1);
+            switch (slot) {
+                case HEAD -> inv.setHelmet(s);
+                case CHEST -> inv.setChestplate(s);
+                case LEGS -> inv.setLeggings(s);
+                case FEET -> inv.setBoots(s);
+                case MAIN_HAND -> inv.setItemInMainHand(s);
+                case OFF_HAND -> inv.setItemInOffHand(s);
+                case ACCESSORY_1, ACCESSORY_2 -> pr.equipment(pr.equipment().with(slot, item));
+                default -> throw new IllegalArgumentException(slot.name());
+            }
+            st.equipmentChanged(p);
+        }
+
+        /** A genuine item of a catalog definition at its lowest rarity, without random affixes (only its own stats). */
+        mn.suld.api.item.ItemInstance testItem(String defId) {
+            var def = services.itemService().catalog().require(defId);
+            var g = services.itemService().generate(def, def.rarity(), def.levelReq(), p.getUniqueId(), "qa");
+            return new mn.suld.api.item.ItemInstance(g.definitionId(), g.uuid(), g.rarity(), g.itemLevel(), g.stats(), List.of(), g.soulbound(),
+                    g.boundTo(), 0, "qa", mn.suld.api.item.ItemInstance.SCHEMA_VERSION);
+        }
+
+        /** The equipment side of every stat: an item that has it, in its slot, measured like the skill-tree nodes. */
+        void items() {
+            record Case(mn.suld.api.item.ItemStat stat, String def, mn.suld.api.item.EquipSlot slot) {
+            }
+            List<Case> cases = List.of(
+                    new Case(mn.suld.api.item.ItemStat.MAX_HEALTH, "item.talyn_tuvshin", mn.suld.api.item.EquipSlot.ACCESSORY_1),
+                    new Case(mn.suld.api.item.ItemStat.HEALTH_REGEN, "offhand.ongon", mn.suld.api.item.EquipSlot.OFF_HAND),
+                    new Case(mn.suld.api.item.ItemStat.DAMAGE, "weapon.zevsegt_ild", mn.suld.api.item.EquipSlot.MAIN_HAND),
+                    new Case(mn.suld.api.item.ItemStat.ARMOR, "armor.esgii.chestplate", mn.suld.api.item.EquipSlot.CHEST),
+                    new Case(mn.suld.api.item.ItemStat.MOVE_SPEED, "armor.esgii.boots", mn.suld.api.item.EquipSlot.FEET),
+                    new Case(mn.suld.api.item.ItemStat.ATTACK_SPEED, "weapon.tumur_ild", mn.suld.api.item.EquipSlot.MAIN_HAND),
+                    new Case(mn.suld.api.item.ItemStat.CRIT_CHANCE, "jewel.khash_bugj", mn.suld.api.item.EquipSlot.ACCESSORY_1),
+                    new Case(mn.suld.api.item.ItemStat.CRIT_DAMAGE, "jewel.altan_bugj", mn.suld.api.item.EquipSlot.ACCESSORY_2),
+                    new Case(mn.suld.api.item.ItemStat.DODGE, "jewel.anchin_bugj", mn.suld.api.item.EquipSlot.ACCESSORY_1),
+                    new Case(mn.suld.api.item.ItemStat.LIFESTEAL, "jewel.chonyn_soyo", mn.suld.api.item.EquipSlot.ACCESSORY_2),
+                    new Case(mn.suld.api.item.ItemStat.XP_GAIN, "jewel.khash_bugj", mn.suld.api.item.EquipSlot.ACCESSORY_1),
+                    new Case(mn.suld.api.item.ItemStat.LOOT_CHANCE, "jewel.altan_bugj", mn.suld.api.item.EquipSlot.ACCESSORY_2),
+                    new Case(mn.suld.api.item.ItemStat.COOLDOWN_REDUCTION, "jewel.tengeriin_sakhius", mn.suld.api.item.EquipSlot.ACCESSORY_1),
+                    new Case(mn.suld.api.item.ItemStat.RESOURCE_REGEN, "jewel.mungun_bugj", mn.suld.api.item.EquipSlot.ACCESSORY_2),
+                    new Case(mn.suld.api.item.ItemStat.RESOURCE_MAX, "offhand.boogiin_sudar", mn.suld.api.item.EquipSlot.OFF_HAND),
+                    new Case(mn.suld.api.item.ItemStat.SPELL_DAMAGE, "offhand.boogiin_sudar", mn.suld.api.item.EquipSlot.OFF_HAND));
+            for (Case cs : cases) {
+                if (only != null && !cs.stat().name().toLowerCase(java.util.Locale.ROOT).contains(only)) continue;
+                var item = testItem(cs.def());
+                double v = mn.suld.api.item.Equipment.itemStats(services.itemService().catalog(), item).getOrDefault(cs.stat(), 0.0);
+                String id = "item." + cs.stat().id();
+                String what = cs.stat().format(v) + " " + cs.stat().label() + " (" + cs.def() + " in " + cs.slot() + ")";
+                ItemToggle t = new ItemToggle(cs.slot(), item);
+                PlayerClass c = PlayerClass.BOO; // spell damage needs a class whose probe spell is an area spell; every other check is class-free
+                switch (cs.stat()) {
+                    case DAMAGE -> k.add(() -> {
+                        single(2);
+                        k.resetDummies();
+                        double[] x = beforeAfter(c, t, () -> minHit(k.dummies.get(0), 25));
+                        check(id, "item", what, "damage of a normal hit", x[0], x[1], "+" + EffectNum.n(v) + " (flat attack)", near(x[1] - x[0], v, 0.02));
+                    });
+                    case HEALTH_REGEN -> k.add(() -> {
+                        double[] x = beforeAfter(c, t, () -> {
+                            k.resetPlayer();
+                            p.setHealth(2);
+                            for (int i = 0; i < 10; i++) skills.regenOne(p);
+                            return (p.getHealth() - 2) / 10.0;
+                        });
+                        check(id, "item", what, "health regained per second", x[0], x[1], "+" + EffectNum.n(v), near(x[0], 0, 0.001) && near(x[1] - x[0], v, 0.01));
+                    });
+                    case ATTACK_SPEED -> k.add(() -> {
+                        double[] x = beforeAfter(c, t, () -> {
+                            var inst = p.getAttribute(Attribute.ATTACK_SPEED);
+                            var mod = inst == null ? null : inst.getModifier(new org.bukkit.NamespacedKey("suld", "skill_attack_speed"));
+                            return mod == null ? 0.0 : mod.getAmount();
+                        });
+                        check(id, "item", what, "attack-speed modifier on the player (scalar)", x[0], x[1], "+" + EffectNum.n(v / 100), near(x[1] - x[0], v / 100, 0.0005));
+                    });
+                    default -> statCheck(c, t, cs.stat().statKey(), v, id, what, 0, "item");
+                }
+                k.wait(1);
+            }
+            // gates: a broken item, an item above the player's level, another class's weapon, a set bonus
+            k.add(() -> {
+                k.setClass(PlayerClass.BOO);
+                k.unlearn();
+                var chest = testItem("armor.esgii.chestplate");
+                double armor = mn.suld.api.item.Equipment.itemStats(services.itemService().catalog(), chest).get(mn.suld.api.item.ItemStat.ARMOR);
+                double base = attr(Attribute.ARMOR);
+                put(mn.suld.api.item.EquipSlot.CHEST, chest);
+                double worn = attr(Attribute.ARMOR);
+                var s = p.getInventory().getChestplate();
+                if (s != null && s.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable d) {
+                    d.setDamage(services.itemService().catalog().require(chest.definitionId()).maxDurability(chest.rarity()));
+                    s.setItemMeta(d);
+                    p.getInventory().setChestplate(s);
+                }
+                st.equipmentChanged(p);
+                double broken = attr(Attribute.ARMOR);
+                put(mn.suld.api.item.EquipSlot.CHEST, null);
+                check("item.gate.broken", "item", "a broken chestplate gives nothing", "armor without / worn / worn broken", base, broken,
+                        "worn +" + EffectNum.n(armor) + ", broken +0 (worn " + EffectNum.n(worn) + ")", near(worn - base, armor, 0.01) && near(broken, base, 0.01));
+
+                var high = testItem("armor.khaany.helmet"); // level 50
+                pr.progression(new Progression(30, 0));
+                double lowBase = attr(Attribute.MAX_HEALTH);
+                put(mn.suld.api.item.EquipSlot.HEAD, high);
+                double lowWorn = attr(Attribute.MAX_HEALTH);
+                pr.progression(new Progression(60, 0));
+                st.equipmentChanged(p);
+                double highWorn = attr(Attribute.MAX_HEALTH);
+                put(mn.suld.api.item.EquipSlot.HEAD, null);
+                double hp = mn.suld.api.item.Equipment.itemStats(services.itemService().catalog(), high).get(mn.suld.api.item.ItemStat.MAX_HEALTH);
+                check("item.gate.level", "item", "a level-50 helmet at level 30 gives nothing, at level 60 it does", "max health at 30 / at 60",
+                        lowWorn - lowBase, highWorn - lowBase, "0 / +" + EffectNum.n(hp), near(lowWorn, lowBase, 0.01) && near(highWorn - lowBase, hp, 0.01));
+
+                var foreign = testItem("weapon.class.mergen.1");
+                double atk0 = atk();
+                put(mn.suld.api.item.EquipSlot.MAIN_HAND, foreign);
+                double atkForeign = atk();
+                put(mn.suld.api.item.EquipSlot.MAIN_HAND, null);
+                check("item.gate.class", "item", "a Мэргэн weapon held by a Бөө adds no attack", "attack without / with it", atk0, atkForeign, "unchanged",
+                        near(atkForeign, atk0, 0.001));
+
+                var chestB = testItem("armor.booi.chestplate");
+                var tome = testItem("offhand.boogiin_sudar");
+                put(mn.suld.api.item.EquipSlot.CHEST, chestB);
+                double one = skills.pool(p).max();
+                put(mn.suld.api.item.EquipSlot.OFF_HAND, tome);
+                double two = skills.pool(p).max();
+                put(mn.suld.api.item.EquipSlot.OFF_HAND, null);
+                put(mn.suld.api.item.EquipSlot.CHEST, null);
+                double tomeRes = mn.suld.api.item.Equipment.itemStats(services.itemService().catalog(), tome).get(mn.suld.api.item.ItemStat.RESOURCE_MAX);
+                check("item.set.booi_yosol.2", "item", "Бөөгийн Ёслол: the 2-piece bonus (+15 resource) comes with the second piece", "resource capacity with 1 / 2 pieces",
+                        one, two, "+" + EffectNum.n(tomeRes) + " (tome) +15 (set)", near(two - one, tomeRes + 15, 0.01));
+            });
+            k.wait(1);
         }
 
         // ======================================================================================== STATS
@@ -572,59 +788,66 @@ public final class SkillQa {
             double v = e.value() * r;
             String id = idOf(c, n, e.key().name());
             String what = e.key() + " " + (v >= 0 ? "+" : "") + EffectNum.n(v) + " (" + n.name() + " rank " + r + ")";
-            switch (e.key()) {
+            // spell damage is built on the player's attack, so ATTACK_PCT on the same node scales it too
+            double atkSum = 0;
+            for (Effect other : n.effects()) if (other instanceof Effect.Stat o && o.key() == mn.suld.api.skill.tree.StatKey.ATTACK_PCT) atkSum += o.value() * r;
+            statCheck(c, node(n), e.key(), v, id, what, atkSum, "stat");
+        }
+
+        /**
+         * One stat, measured before and after the toggle: the same measurement serves skill nodes and equipment
+         * ({@code category} "stat" or "item").
+         */
+        void statCheck(PlayerClass c, Toggle t, mn.suld.api.skill.tree.StatKey key, double v, String id, String what, double atkOnNode, String category) {
+            switch (key) {
                 case HEALTH -> k.add(() -> {
-                    double[] x = beforeAfter(c, n, () -> attr(Attribute.MAX_HEALTH));
-                    check(id, "stat", what, "max health", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.01));
+                    double[] x = beforeAfter(c, t, () -> attr(Attribute.MAX_HEALTH));
+                    check(id, category, what, "max health", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.01));
                 });
                 case MOVE_PCT -> k.add(() -> {
-                    double[] x = beforeAfter(c, n, () -> attr(Attribute.MOVEMENT_SPEED));
-                    check(id, "stat", what, "movement speed", x[0], x[1], "x" + EffectNum.n(1 + v / 100), near(x[1] / x[0] - 1, v / 100, 0.002));
+                    double[] x = beforeAfter(c, t, () -> attr(Attribute.MOVEMENT_SPEED));
+                    check(id, category, what, "movement speed", x[0], x[1], "x" + EffectNum.n(1 + v / 100), near(x[1] / x[0] - 1, v / 100, 0.002));
                 });
                 case ARMOR -> k.add(() -> {
-                    double[] x = beforeAfter(c, n, () -> attr(Attribute.ARMOR));
-                    check(id, "stat", what, "armor", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.01));
+                    double[] x = beforeAfter(c, t, () -> attr(Attribute.ARMOR));
+                    check(id, category, what, "armor", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.01));
                 });
                 case KB_RESIST -> k.add(() -> {
-                    double[] x = beforeAfter(c, n, () -> attr(Attribute.KNOCKBACK_RESISTANCE));
-                    check(id, "stat", what, "knockback resistance", x[0], x[1], "+" + EffectNum.n(Math.min(1, v / 100)), near(x[1] - x[0], Math.min(1, v / 100), 0.005));
+                    double[] x = beforeAfter(c, t, () -> attr(Attribute.KNOCKBACK_RESISTANCE));
+                    check(id, category, what, "knockback resistance", x[0], x[1], "+" + EffectNum.n(Math.min(1, v / 100)), near(x[1] - x[0], Math.min(1, v / 100), 0.005));
                 });
                 case MINING_SPEED_PCT -> k.add(() -> {
                     var block = k.world.getBlockAt(k.origin.getBlockX() + 3, 199, k.origin.getBlockZ() + 3);
-                    double[] x = beforeAfter(c, n, () -> (double) block.getBreakSpeed(p));
-                    check(id, "stat", what, "break speed on stone (Block#getBreakSpeed)", x[0], x[1], "x" + EffectNum.n(1 + v / 100), nearRel(x[1] / x[0], 1 + v / 100, 0.01));
+                    double[] x = beforeAfter(c, t, () -> (double) block.getBreakSpeed(p));
+                    check(id, category, what, "break speed on stone (Block#getBreakSpeed)", x[0], x[1], "x" + EffectNum.n(1 + v / 100), nearRel(x[1] / x[0], 1 + v / 100, 0.01));
                 });
                 case ATTACK_PCT -> k.add(() -> {
                     single(2);
                     k.resetDummies();
-                    double[] x = beforeAfter(c, n, () -> minHit(k.dummies.get(0), 25));
-                    check(id, "stat", what, "damage of a normal hit", x[0], x[1], "x" + EffectNum.n(1 + v / 100), nearRel(x[1] / x[0], 1 + v / 100, 0.015));
+                    double[] x = beforeAfter(c, t, () -> minHit(k.dummies.get(0), 25));
+                    check(id, category, what, "damage of a normal hit", x[0], x[1], "x" + EffectNum.n(1 + v / 100), nearRel(x[1] / x[0], 1 + v / 100, 0.015));
                 });
                 case CRIT_CHANCE -> k.add(() -> {
                     single(2);
                     k.resetDummies();
                     int trials = 4000;
-                    double[] x = beforeAfter(c, n, () -> critFrequency(k.dummies.get(0), trials));
+                    double[] x = beforeAfter(c, t, () -> critFrequency(k.dummies.get(0), trials));
                     double sigma = Math.sqrt(2 * 0.1 * 0.9 / trials);
-                    check(id, "stat", what, "share of hits that crit (" + trials + " hits)", x[0], x[1], "+" + EffectNum.n(v / 100) + " +-" + fmt(4 * sigma),
+                    check(id, category, what, "share of hits that crit (" + trials + " hits)", x[0], x[1], "+" + EffectNum.n(v / 100) + " +-" + fmt(4 * sigma),
                             near(x[1] - x[0], v / 100, Math.max(0.02, 4 * sigma)));
                 });
                 case CRIT_DAMAGE -> k.add(() -> {
                     single(2);
                     k.resetDummies();
-                    double[] x = beforeAfter(c, n, () -> critMultiplier(k.dummies.get(0), 700));
-                    check(id, "stat", what, "crit damage / normal damage", x[0], x[1], EffectNum.n(1.5 + v / 100), near(x[1] - x[0], v / 100, 0.02) && near(x[0], 1.5, 0.02));
+                    double[] x = beforeAfter(c, t, () -> critMultiplier(k.dummies.get(0), 700));
+                    check(id, category, what, "crit damage / normal damage", x[0], x[1], EffectNum.n(1.5 + v / 100), near(x[1] - x[0], v / 100, 0.02) && near(x[0], 1.5, 0.02));
                 });
                 case SPELL_DAMAGE -> {
                     Spell s = probeSpell(c);
-                    // spell damage is built on the player's attack, so ATTACK_PCT on the same node scales it too
-                    double atkSum = 0;
-                    for (Effect other : n.effects()) if (other instanceof Effect.Stat o && o.key() == mn.suld.api.skill.tree.StatKey.ATTACK_PCT) atkSum += o.value() * r;
-                    final double atkOnNode = atkSum;
                     double want = (1 + v / 100) * (1 + atkOnNode / 100);
-                    spellCompare(c, n, s, 20, false, (b, a) -> {
+                    spellCompare(c, t, s, 20, false, (b, a) -> {
                         boolean ok = b.perApplication > 0 && near(a.perApplication / b.perApplication, want, 0.02);
-                        check(id, "stat", what, "damage per spell hit (" + s.displayName() + ")", b.perApplication, a.perApplication,
+                        check(id, category, what, "damage per spell hit (" + s.displayName() + ")", b.perApplication, a.perApplication,
                                 "x" + EffectNum.n(want) + (atkOnNode > 0 ? " (spell damage +" + EffectNum.n(v) + "% and attack +" + EffectNum.n(atkOnNode) + "% on this node)" : ""), ok,
                                 ok ? "" : "hits before/after " + b.hits + "/" + a.hits);
                     });
@@ -632,18 +855,18 @@ public final class SkillQa {
                 case DAMAGE_REDUCTION -> k.add(() -> {
                     single(2);
                     LivingEntity src = k.dummies.get(0);
-                    double[] x = beforeAfter(c, n, () -> {
+                    double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
                         return k.hurtPlayer(10, src);
                     });
                     double red = Math.min(75, v) / 100;
-                    check(id, "stat", what, "health lost from a 10 damage hit", x[0], x[1], "x" + EffectNum.n(1 - red), near(x[1] / x[0], 1 - red, 0.01));
+                    check(id, category, what, "health lost from a 10 damage hit", x[0], x[1], "x" + EffectNum.n(1 - red), near(x[1] / x[0], 1 - red, 0.01));
                 });
                 case DODGE_PCT -> k.add(() -> {
                     single(2);
                     LivingEntity src = k.dummies.get(0);
                     int trials = 3000;
-                    double[] x = beforeAfter(c, n, () -> {
+                    double[] x = beforeAfter(c, t, () -> {
                         int dodged = 0;
                         for (int i = 0; i < trials; i++) {
                             k.resetPlayer();
@@ -653,74 +876,74 @@ public final class SkillQa {
                     });
                     double pe = Math.min(40, v) / 100;
                     double sigma = Math.sqrt(pe * (1 - pe) / trials);
-                    check(id, "stat", what, "share of hits dodged (" + trials + " hits)", x[0], x[1], EffectNum.n(pe) + " +-" + fmt(4 * sigma),
+                    check(id, category, what, "share of hits dodged (" + trials + " hits)", x[0], x[1], EffectNum.n(pe) + " +-" + fmt(4 * sigma),
                             x[0] < 0.001 && near(x[1], pe, Math.max(0.01, 4 * sigma)));
                 });
                 case THORNS -> k.add(() -> {
                     single(2);
                     LivingEntity src = k.dummies.get(0);
-                    double[] x = beforeAfter(c, n, () -> {
+                    double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
                         k.reset(src);
                         double taken = k.hurtPlayer(10, src);
                         return taken <= 0 ? 0 : k.deficit(src) / taken;
                     });
-                    check(id, "stat", what, "damage returned / damage taken", x[0], x[1], EffectNum.n(v / 100), x[0] < 1e-6 && near(x[1], v / 100, 0.01));
+                    check(id, category, what, "damage returned / damage taken", x[0], x[1], EffectNum.n(v / 100), x[0] < 1e-6 && near(x[1], v / 100, 0.01));
                 });
                 case LIFESTEAL -> k.add(() -> {
                     single(2);
                     LivingEntity d = k.dummies.get(0);
-                    double[] x = beforeAfter(c, n, () -> {
+                    double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
                         p.setHealth(1);
                         double dealt = k.hit(d);
                         return dealt <= 0 ? 0 : (p.getHealth() - 1) / dealt;
                     });
-                    check(id, "stat", what, "health gained / damage dealt", x[0], x[1], EffectNum.n(v / 100), x[0] < 1e-6 && near(x[1], v / 100, 0.01));
+                    check(id, category, what, "health gained / damage dealt", x[0], x[1], EffectNum.n(v / 100), x[0] < 1e-6 && near(x[1], v / 100, 0.01));
                 });
                 case HEAL_POWER -> k.add(() -> {
-                    double[] x = beforeAfter(c, n, () -> {
+                    double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
                         p.setHealth(1);
                         st.heal(p, 4);
                         return p.getHealth() - 1;
                     });
-                    check(id, "stat", what, "health restored by a 4 point heal", x[0], x[1], "x" + EffectNum.n(1 + v / 100), near(x[1] / x[0], 1 + v / 100, 0.01));
+                    check(id, category, what, "health restored by a 4 point heal", x[0], x[1], "x" + EffectNum.n(1 + v / 100), near(x[1] / x[0], 1 + v / 100, 0.01));
                 });
                 case RESOURCE_MAX -> k.add(() -> {
-                    double[] x = beforeAfter(c, n, () -> (double) skills.pool(p).max());
-                    check(id, "stat", what, "resource capacity", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.01));
+                    double[] x = beforeAfter(c, t, () -> (double) skills.pool(p).max());
+                    check(id, category, what, "resource capacity", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.01));
                 });
                 case RESOURCE_REGEN -> k.add(() -> {
-                    double[] x = beforeAfter(c, n, () -> {
+                    double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
                         k.emptyPool();
                         for (int i = 0; i < 10; i++) skills.regenOne(p);
                         return skills.pool(p).fraction() * skills.pool(p).max() / 10.0;
                     });
-                    check(id, "stat", what, "resource regained per second", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.05));
+                    check(id, category, what, "resource regained per second", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.05));
                 });
                 case COST_REDUCTION -> {
                     Spell s = probeSpell(c);
-                    spellCompare(c, n, s, 20, false, (b, a) -> {
+                    spellCompare(c, t, s, 20, false, (b, a) -> {
                         double base = b.poolBefore - b.poolAfterCast, now = a.poolBefore - a.poolAfterCast;
                         double exp = Math.max(1, Math.round(s.cost() * Math.max(0.2, 1 - v / 100)));
-                        check(id, "stat", what, "resource spent by " + s.displayName(), base, now, EffectNum.n(exp), near(base, s.cost(), 0.01) && near(now, exp, 0.01));
+                        check(id, category, what, "resource spent by " + s.displayName(), base, now, EffectNum.n(exp), near(base, s.cost(), 0.01) && near(now, exp, 0.01));
                     });
                 }
                 case COOLDOWN_REDUCTION -> k.add(() -> {
                     Spell s = probeSpell(c);
-                    double[] x = beforeAfter(c, n, () -> {
+                    double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
                         skills.castDirect(p, s, true);
                         return skills.cooldownLeft(p, s);
                     });
                     double cdr = Math.min(60, v) / 100;
-                    check(id, "stat", what, "cooldown left right after casting " + s.displayName() + " (s)", x[0], x[1],
+                    check(id, category, what, "cooldown left right after casting " + s.displayName() + " (s)", x[0], x[1],
                             EffectNum.n(s.cooldownSeconds() * (1 - cdr)), near(x[0], s.cooldownSeconds(), 0.15) && near(x[1], s.cooldownSeconds() * (1 - cdr), 0.15));
                 });
-                case EXP_PCT -> expNode(c, n, id, what, v);
-                case LOOT_PCT -> lootNode(c, n, id, what, v);
+                case EXP_PCT -> expNode(c, t, id, what, v);
+                case LOOT_PCT -> lootNode(c, t, id, what, v);
             }
             k.wait(1);
         }
@@ -775,12 +998,12 @@ public final class SkillQa {
             return expSeen.isEmpty() ? 0 : expSeen.stream().mapToLong(Long::longValue).sum() / (double) expSeen.size();
         }
 
-        void expNode(PlayerClass c, SkillNode n, String id, String what, double v) {
+        void expNode(PlayerClass c, Toggle t, String id, String what, double v) {
             k.add(() -> {
                 pr.progression(new Progression(30, 0)); // below the cap, so experience is really granted
-                double[] x = beforeAfter(c, n, this::expPerKill);
+                double[] x = beforeAfter(c, t, this::expPerKill);
                 pr.progression(new Progression(60, 0));
-                check(id, "stat", what, "EXP per kill", x[0], x[1], "x" + EffectNum.n(1 + v / 100), x[0] > 0 && near(x[1] / x[0], 1 + v / 100, 0.02));
+                check(id, t instanceof ItemToggle ? "item" : "stat", what, "EXP per kill", x[0], x[1], "x" + EffectNum.n(1 + v / 100), x[0] > 0 && near(x[1] / x[0], 1 + v / 100, 0.02));
             });
         }
 
@@ -808,17 +1031,19 @@ public final class SkillQa {
             }
         }
 
-        void lootNode(PlayerClass c, SkillNode n, String id, String what, double v) {
+        void lootNode(PlayerClass c, Toggle t, String id, String what, double v) {
             int kills = 300; // the table always drops at least one item per roll
             double[] items = new double[2];
             k.add(() -> {
                 k.setClass(c);
                 k.unlearn();
+                t.off();
             });
             queueLoot(kills, items, 0);
-            k.add(() -> k.learn(n));
+            k.add(t::on);
             queueLoot(kills, items, 1);
             k.add(() -> {
+                t.off();
                 k.unlearn();
                 double extraRolls = items[1] - items[0];
                 double pe = v / 100;
@@ -826,7 +1051,7 @@ public final class SkillQa {
                 double perRoll = items[0] / kills;
                 double expectedExtra = items[0] * pe;
                 double sigma = Math.sqrt(kills * pe * (1 - pe)) * perRoll + 0.05 * items[0] * pe + Math.sqrt(items[0]) * pe;
-                check(id, "stat", what, "items from " + kills + " kills", items[0], items[1],
+                check(id, t instanceof ItemToggle ? "item" : "stat", what, "items from " + kills + " kills", items[0], items[1],
                         "extra rolls: " + EffectNum.n(expectedExtra) + " +-" + fmt(4 * sigma) + " (base table gives " + EffectNum.n(perRoll) + " per kill)",
                         items[0] >= kills && near(extraRolls, expectedExtra, 4 * sigma));
             });

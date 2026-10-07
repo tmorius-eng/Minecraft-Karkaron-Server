@@ -3,8 +3,6 @@ package mn.suld.plugin.content;
 import mn.suld.api.dungeon.BossDefinition;
 import mn.suld.api.dungeon.BossPhase;
 import mn.suld.api.dungeon.DungeonDefinition;
-import mn.suld.api.loot.LootEntry;
-import mn.suld.api.loot.LootTable;
 import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.mob.MobTier;
 
@@ -39,10 +37,7 @@ public final class DungeonContent {
                             WorldContent.SCORPION.id(), WorldContent.SCORPION.id()),
                     List.of(WorldContent.SAND_SPIRIT.id(), WorldContent.SAND_SPIRIT.id(), WorldContent.SAND_SPIRIT.id(), WorldContent.SAND_SPIRIT.id())),
             new BossDefinition(SAND_KHAN, phases(), 200),
-            new LootTable("loot.dungeon.govi_bulsh", List.of(
-                    new LootEntry(WorldContent.SCORPION_VENOM, 1.0, 9, 11),
-                    new LootEntry(WorldContent.GOBI_DAGGER, 0.55, 10, 13),
-                    new LootEntry(SuldContent.STEPPE_TALISMAN, 0.4, 9, 12))));
+            "loot.dungeon.govi_bulsh");
 
     // ------------------------------------------------------------------ Баавгайн Үүр (Khangai, level 14+)
 
@@ -54,10 +49,7 @@ public final class DungeonContent {
                     List.of(WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id(), WorldContent.BEAR.id()),
                     List.of(WorldContent.BEAR.id(), WorldContent.BEAR.id(), WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id())),
             new BossDefinition(FOREST_LORD, phases(), 220),
-            new LootTable("loot.dungeon.baavgain_uur", List.of(
-                    new LootEntry(WorldContent.BEAR_PELT, 1.0, 15, 17),
-                    new LootEntry(WorldContent.KHANGAI_AXE, 0.55, 16, 19),
-                    new LootEntry(SuldContent.STEPPE_TALISMAN, 0.4, 15, 18))));
+            "loot.dungeon.baavgain_uur");
 
     // ------------------------------------------------------------------ Мөсөн Оргил (Altai, level 22+)
 
@@ -69,10 +61,7 @@ public final class DungeonContent {
                     List.of(WorldContent.ICE_SPIRIT.id(), WorldContent.ICE_SPIRIT.id(), WorldContent.ICE_SPIRIT.id(), WorldContent.GIANT.id()),
                     List.of(WorldContent.GIANT.id(), WorldContent.GIANT.id(), WorldContent.ICE_SPIRIT.id(), WorldContent.ICE_SPIRIT.id())),
             new BossDefinition(ICE_KHAN, phases(), 240),
-            new LootTable("loot.dungeon.mosun_orgil", List.of(
-                    new LootEntry(WorldContent.ICE_STONE, 1.0, 23, 25),
-                    new LootEntry(WorldContent.ALTAI_SPEAR, 0.45, 24, 27),
-                    new LootEntry(SuldContent.KHASAR_HEART, 0.08, 24, 24))));
+            "loot.dungeon.mosun_orgil");
 
     // ------------------------------------------------------------------ registry
 
@@ -80,12 +69,6 @@ public final class DungeonContent {
     public static final List<DungeonDefinition> ALL = List.of(SuldContent.KHASAR_DEN, GOBI_TOMB, BEAR_LAIR, ICE_PEAK);
 
     public static final List<MobDefinition> BOSSES = List.of(SAND_KHAN, FOREST_LORD, ICE_KHAN);
-
-    /** Boss body drops (small; the real prize is the per-player completion reward). */
-    public static final List<LootTable> BOSS_LOOT = List.of(
-            new LootTable("loot.elsnii_khaan", List.of(new LootEntry(WorldContent.SCORPION_VENOM, 1.0, 10, 10))),
-            new LootTable("loot.oin_ezen", List.of(new LootEntry(WorldContent.BEAR_PELT, 1.0, 16, 16))),
-            new LootTable("loot.mosun_khaan", List.of(new LootEntry(WorldContent.ICE_STONE, 1.0, 24, 24))));
 
     private static final Map<String, Completion> COMPLETION = Map.of(
             SuldContent.KHASAR_DEN.id(), new Completion(SuldContent.KHASAR_DEN_COMPLETION_EXP, SuldContent.KHASAR_DEN_COMPLETION_CURRENCY),

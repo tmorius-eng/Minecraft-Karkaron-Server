@@ -126,6 +126,31 @@ commands:
     usage: /skillsadmin <inspect|grantpoints|unlock|reset|orb|reload|validate> ...
     aliases: [sadmin]
     permission: suld.admin.skills
+  item:
+    description: The SULD item in your hand (inspect, compare, equip, unequip, sell, destroy, bind, salvage, recipes, craft).
+    usage: /item <inspect|compare|equip [slot]|unequip <slot>|sell|destroy|bind|salvage [confirm]|recipes|craft <recipe>>
+    aliases: [ed]
+    permission: suld.items
+  items:
+    description: Every SULD item you carry, compared with what you wear; click to equip.
+    usage: /items
+    aliases: [edzuils]
+    permission: suld.items
+  equipment:
+    description: Your nine equipment slots, item stats, set progress and gear score.
+    usage: /equipment
+    aliases: [gear, khuyag]
+    permission: suld.items
+  loot:
+    description: What a loot table can drop (/loot [table]).
+    usage: /loot [table]
+    aliases: [olz]
+    permission: suld.items
+  itemsadmin:
+    description: Item administration (inspect, give, roll, validate, reload, sweep, quarantine).
+    usage: /itemsadmin <inspect|give|roll|validate|reload|sweep|quarantine> ...
+    aliases: [iadmin]
+    permission: suld.admin.items
   credits:
     description: Your SULD credits; admin/console give|take.
     usage: /credits [give|take <player|uuid> <amount>]
@@ -199,9 +224,16 @@ permissions:
       suld.admin.world: true
       suld.admin.credits: true
       suld.admin.skills: true
+      suld.admin.items: true
   suld.skills:
     description: Use the skill tree (/skills, /skill).
     default: true
+  suld.items:
+    description: Use SULD items (/item, /items, /equipment, /loot).
+    default: true
+  suld.admin.items:
+    description: Item administration (/itemsadmin) - inspect, give, roll loot, validate/reload item data, duplicate sweep, quarantine.
+    default: op
   suld.admin.skills:
     description: Skill-tree administration (/skillsadmin) - inspect, grant points, force-unlock, reset, reload data files.
     default: op

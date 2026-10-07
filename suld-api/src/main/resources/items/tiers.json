@@ -1,0 +1,48 @@
+{
+ "NORMAL": {
+  "common": 75,
+  "uncommon": 25
+ },
+ "ELITE": {
+  "uncommon": 65,
+  "rare": 35
+ },
+ "CHAMPION": {
+  "rare": 70,
+  "epic": 30
+ },
+ "MYTHIC": {
+  "epic": 75,
+  "legendary": 25
+ },
+ "BOSS": {
+  "legendary": 70,
+  "ancient": 25,
+  "mythic": 5
+ },
+ "WORLD_EVENT": {
+  "ancient": 75,
+  "mythic": 25
+ },
+ "DUNGEON": {
+  "uncommon": 40,
+  "rare": 40,
+  "epic": 17,
+  "legendary": 3
+ },
+ "QUEST": {
+  "uncommon": 60,
+  "rare": 35,
+  "epic": 5
+ },
+ "CHEST": {
+  "common": 50,
+  "uncommon": 35,
+  "rare": 15
+ },
+ "CRAFT": {
+  "uncommon": 60,
+  "rare": 30,
+  "epic": 10
+ }
+}

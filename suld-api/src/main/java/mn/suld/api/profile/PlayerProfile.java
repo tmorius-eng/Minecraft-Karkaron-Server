@@ -3,6 +3,7 @@ package mn.suld.api.profile;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.progression.Progression;
 import mn.suld.api.quest.QuestState;
+import mn.suld.api.item.EquipmentState;
 import mn.suld.api.skill.tree.SkillState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,10 +42,12 @@ public final class PlayerProfile {
     private long currency;
     private QuestState questState;
     private SkillState skillState;
+    private EquipmentState equipment;
 
     private PlayerProfile(UUID playerId, String name, PlayerClass playerClass,
                           Progression progression, Instant createdAt, Instant lastSeenAt,
-                          long version, long currency, QuestState questState, SkillState skillState) {
+                          long version, long currency, QuestState questState, SkillState skillState,
+                          EquipmentState equipment) {
         this.playerId = Objects.requireNonNull(playerId, "playerId");
         this.name = Objects.requireNonNull(name, "name");
         this.playerClass = playerClass;
@@ -55,12 +58,13 @@ public final class PlayerProfile {
         this.currency = Math.max(0, currency);
         this.questState = questState == null ? QuestState.NONE : questState;
         this.skillState = skillState == null ? SkillState.NONE : skillState;
+        this.equipment = equipment == null ? EquipmentState.NONE : equipment;
     }
 
     /** Create a brand-new profile for a first-time player (no class yet). */
     public static PlayerProfile createNew(UUID playerId, String name, Instant now) {
         Objects.requireNonNull(now, "now");
-        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L, 0L, QuestState.NONE, SkillState.NONE);
+        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L, 0L, QuestState.NONE, SkillState.NONE, EquipmentState.NONE);
     }
 
     /** Rehydrate a profile loaded from storage. Used by persistence adapters. */
@@ -68,8 +72,15 @@ public final class PlayerProfile {
                                         Progression progression, Instant createdAt, Instant lastSeenAt,
                                         long version, long currency, QuestState questState,
                                         @Nullable SkillState skillState) {
+        return restore(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState, null);
+    }
+
+    public static PlayerProfile restore(UUID playerId, String name, @Nullable PlayerClass playerClass,
+                                        Progression progression, Instant createdAt, Instant lastSeenAt,
+                                        long version, long currency, QuestState questState,
+                                        @Nullable SkillState skillState, @Nullable EquipmentState equipment) {
         return new PlayerProfile(playerId, name, playerClass, progression, createdAt, lastSeenAt,
-                version, currency, questState, skillState);
+                version, currency, questState, skillState, equipment);
     }
 
     public @NotNull UUID playerId() {
@@ -166,6 +177,16 @@ public final class PlayerProfile {
         touchInternal();
     }
 
+    /** The accessory slots (the rest of the equipment is in the player's inventory). */
+    public synchronized @NotNull EquipmentState equipment() {
+        return equipment;
+    }
+
+    public synchronized void equipment(EquipmentState equipment) {
+        this.equipment = equipment == null ? EquipmentState.NONE : equipment;
+        touchInternal();
+    }
+
     public synchronized @NotNull Instant lastSeenAt() {
         return lastSeenAt;
     }
@@ -188,11 +209,12 @@ public final class PlayerProfile {
 
     /** Everything that is stored, read under one lock so the row never mixes moments. */
     public record Snapshot(UUID playerId, String name, PlayerClass playerClass, Progression progression, Instant createdAt,
-                           Instant lastSeenAt, long version, long currency, QuestState questState, SkillState skillState) {
+                           Instant lastSeenAt, long version, long currency, QuestState questState, SkillState skillState,
+                           EquipmentState equipment) {
     }
 
     public synchronized Snapshot snapshot() {
-        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState);
+        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState, equipment);
     }
 
     /**

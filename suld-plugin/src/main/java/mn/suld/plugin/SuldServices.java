@@ -254,6 +254,19 @@ public final class SuldServices {
     /** Filled by SuldPlugin: id of the wild region at a player's feet, or null. */
     public volatile java.util.function.Function<org.bukkit.entity.Player, String> regionIdAt = p -> null;
 
+    /** Filled by SuldPlugin: the item engine (catalog, generation, loot, validation). */
+    public volatile mn.suld.plugin.item.ItemService itemService;
+    /** Filled by SuldPlugin: the nine equipment slots of every player. */
+    public volatile mn.suld.plugin.item.EquipmentService equipment;
+
+    public mn.suld.plugin.item.ItemService itemService() {
+        return itemService;
+    }
+
+    public mn.suld.plugin.item.EquipmentService equipment() {
+        return equipment;
+    }
+
     /** Filled by SuldPlugin once the skill tree has loaded; may be null very early in startup. */
     public volatile mn.suld.plugin.skill.SkillTreeService skillTree;
 

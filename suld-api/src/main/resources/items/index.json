@@ -1,0 +1,20 @@
+{
+ "version": 1,
+ "items": [
+  "weapons.json",
+  "armor.json",
+  "jewelry.json",
+  "materials.json",
+  "relics.json"
+ ],
+ "affixes": "affixes.json",
+ "sets": "sets.json",
+ "loot": "loot.json",
+ "tiers": "tiers.json",
+ "recipes": "recipes.json",
+ "salvage": [
+  "item.tumriin_kheltarkhii",
+  "item.altan_toos",
+  "item.tengeriin_chuluu"
+ ]
+}

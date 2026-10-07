@@ -253,7 +253,13 @@ public final class TradeService implements Listener, TabExecutor {
         if (it == null || it.getType().isAir()) return false;
         if (services.relics().items().isRelic(it) || holdsRelic(it)) return false;
         var inst = services.items().read(it).orElse(null);
-        if (inst != null && inst.soulbound()) return false; // class weapons and other soulbound gear stay with their owner
+        if (inst != null) {
+            if (inst.soulbound() || inst.bound()) return false; // soulbound and bound gear stays with its owner
+            var def = mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId());
+            if (def == null || !def.tradable()) return false;
+            var checked = services.itemService().check(it);
+            if (checked.verdict() == mn.suld.plugin.item.ItemService.Verdict.FORGED) return false;
+        }
         return !(it.hasItemMeta() && it.getItemMeta().getPersistentDataContainer().has(menuKey, PersistentDataType.BYTE));
     }
 

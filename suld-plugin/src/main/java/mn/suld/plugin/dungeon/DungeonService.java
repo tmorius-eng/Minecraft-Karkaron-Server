@@ -8,7 +8,6 @@ import mn.suld.api.dungeon.DungeonRunState;
 import mn.suld.api.item.ItemDefinition;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.api.item.ItemRarity;
-import mn.suld.api.loot.LootRoller;
 import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.party.Party;
 import mn.suld.api.party.PartyState;
@@ -88,7 +87,6 @@ public final class DungeonService {
     private final MobService mobs;
     private final PartyService parties;
     private final BossService bosses;
-    private final LootRoller lootRoller = new LootRoller(new Random());
 
     private final Map<UUID, ActiveRun> runsByParty = new HashMap<>();
     private final Map<UUID, ActiveRun> runsByEntity = new HashMap<>();
@@ -350,15 +348,18 @@ public final class DungeonService {
             if (exp.leveledUp()) {
                 Presentation.levelUp(p, from, exp.after().level());
             }
-            for (ItemInstance inst : lootRoller.roll(ar.def.rewardTable(), provenance)) {
-                ItemDefinition idef = SuldContent.definitionFor(inst.definitionId());
-                if (idef == null) {
-                    continue;
-                }
-                ItemStack stack = services.items().create(inst, idef);
+            mn.suld.plugin.item.ItemService items = services.itemService();
+            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(Math.max(ar.def.minLevel(), profile.progression().level()),
+                    mn.suld.api.loot.LootTier.DUNGEON, profile.playerClass().orElse(null), 0, id, provenance);
+            for (mn.suld.api.loot.LootDrop drop : items == null ? java.util.List.<mn.suld.api.loot.LootDrop>of() : items.roll(ar.def.rewardTableId(), ctx)) {
+                ItemInstance inst = drop.item();
+                ItemDefinition idef = items.catalog().require(inst.definitionId());
+                ItemStack stack = items.stack(inst, p, drop.amount());
                 p.getInventory().addItem(stack).values()
                         .forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
-                p.sendMessage(Messages.info("Шагнал: " + idef.displayName() + " [Lvl " + inst.itemLevel() + "]"));
+                p.sendMessage(Messages.info("Шагнал: " + mn.suld.api.item.ItemTooltip.name(items.catalog(), idef, inst)
+                        + (drop.amount() > 1 ? " ×" + drop.amount() : "") + " [" + inst.rarity().displayName() + ", Зэрэг " + inst.itemLevel() + "]"));
+                items.announce(p, inst);
                 if (inst.rarity().ordinal() >= ItemRarity.RARE.ordinal()) {
                     services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_RARE_ITEM, id));
                 }

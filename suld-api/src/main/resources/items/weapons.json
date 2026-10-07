@@ -1,0 +1,1048 @@
+{
+ "items": [
+  {
+   "id": "weapon.surgamj_ild",
+   "name": "Сургамжийн Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "common",
+   "maxRarity": "common",
+   "level": 1,
+   "stats": {
+    "damage": 4
+   },
+   "perLevel": {},
+   "durability": 250,
+   "sell": 2,
+   "model": 870011,
+   "lore": "Анхны сургуулийн илд.",
+   "lootable": false
+  },
+  {
+   "id": "weapon.surgamj_num",
+   "name": "Сургамжийн Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "common",
+   "maxRarity": "common",
+   "level": 1,
+   "stats": {
+    "damage": 4
+   },
+   "perLevel": {},
+   "durability": 250,
+   "sell": 2,
+   "model": 870020,
+   "lore": "Анхны сургуулийн нум.",
+   "lootable": false
+  },
+  {
+   "id": "weapon.talyn_ild",
+   "name": "Талын Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "rare",
+   "maxRarity": "epic",
+   "level": 2,
+   "stats": {
+    "damage": [
+     7,
+     9
+    ],
+    "crit_chance": [
+     4,
+     6
+    ]
+   },
+   "perLevel": {
+    "damage": 1.5,
+    "crit_chance": 0.5
+   },
+   "durability": 250,
+   "sell": 15,
+   "model": 870010,
+   "lore": "Тал нутгийн дайчдын хурц илд."
+  },
+  {
+   "id": "weapon.khasar_soyo",
+   "name": "Хасарын Соёо",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "epic",
+   "maxRarity": "legendary",
+   "level": 5,
+   "stats": {
+    "damage": [
+     11,
+     13
+    ],
+    "crit_chance": [
+     7,
+     9
+    ],
+    "crit_damage": [
+     22,
+     28
+    ]
+   },
+   "perLevel": {
+    "damage": 2,
+    "crit_chance": 0.5
+   },
+   "durability": 250,
+   "sell": 30,
+   "model": 870012,
+   "lore": "Агуйн эзэн Хасарын соёогоор хийсэн ир.",
+   "effects": [
+    {
+     "type": "proc",
+     "event": "CRIT",
+     "chance": 25,
+     "kind": "BONUS",
+     "a": 0.5,
+     "cooldown": 4
+    }
+   ]
+  },
+  {
+   "id": "weapon.govi_khutga",
+   "name": "Говийн Хутга",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "rare",
+   "maxRarity": "epic",
+   "level": 6,
+   "stats": {
+    "damage": [
+     9,
+     11
+    ],
+    "crit_chance": [
+     7,
+     9
+    ]
+   },
+   "perLevel": {
+    "damage": 1.5,
+    "crit_chance": 0.5
+   },
+   "durability": 250,
+   "sell": 18,
+   "model": 870013,
+   "lore": "Говийн дээрэмчдийн нимгэн хутга."
+  },
+  {
+   "id": "weapon.khangai_sukh",
+   "name": "Хангайн Сүх",
+   "material": "minecraft:iron_axe",
+   "type": "AXE",
+   "rarity": "rare",
+   "maxRarity": "epic",
+   "level": 11,
+   "stats": {
+    "damage": [
+     12,
+     14
+    ],
+    "crit_damage": [
+     18,
+     22
+    ]
+   },
+   "perLevel": {
+    "damage": 2
+   },
+   "durability": 250,
+   "sell": 22,
+   "model": 870030,
+   "lore": "Хангайн модчдын хүнд сүх."
+  },
+  {
+   "id": "weapon.altai_jad",
+   "name": "Алтайн Жад",
+   "material": "minecraft:trident",
+   "type": "SPEAR",
+   "rarity": "epic",
+   "maxRarity": "legendary",
+   "level": 18,
+   "stats": {
+    "damage": [
+     15,
+     17
+    ],
+    "crit_chance": [
+     9,
+     11
+    ],
+    "crit_damage": [
+     27,
+     33
+    ]
+   },
+   "perLevel": {
+    "damage": 2.5,
+    "crit_chance": 0.5
+   },
+   "durability": 250,
+   "sell": 40,
+   "lore": "Алтайн мөсөн оргилын жад."
+  },
+  {
+   "id": "weapon.zevsegt_ild",
+   "name": "Зэвсэгт Илд",
+   "material": "minecraft:stone_sword",
+   "type": "SWORD",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "damage": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {
+    "damage": 0.8
+   },
+   "durability": 150,
+   "sell": 4,
+   "lore": "Хотын дархны энгийн илд."
+  },
+  {
+   "id": "weapon.tumur_ild",
+   "name": "Төмөр Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "uncommon",
+   "maxRarity": "epic",
+   "level": 12,
+   "stats": {
+    "damage": [
+     9,
+     12
+    ],
+    "attack_speed": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {
+    "damage": 1.2
+   },
+   "durability": 250,
+   "sell": 14,
+   "lore": "Сайн хатуулсан төмөр ир."
+  },
+  {
+   "id": "weapon.khaany_ild",
+   "name": "Хааны Илд",
+   "material": "minecraft:diamond_sword",
+   "type": "SWORD",
+   "rarity": "rare",
+   "maxRarity": "mythic",
+   "level": 30,
+   "stats": {
+    "damage": [
+     22,
+     27
+    ],
+    "crit_chance": [
+     4,
+     6
+    ]
+   },
+   "perLevel": {
+    "damage": 1.8,
+    "crit_chance": 0.2
+   },
+   "durability": 600,
+   "sell": 60,
+   "lore": "Хааны торгон ордны манаачийн илд."
+  },
+  {
+   "id": "weapon.modon_sukh",
+   "name": "Модон Сүх",
+   "material": "minecraft:stone_axe",
+   "type": "AXE",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 3,
+   "stats": {
+    "damage": [
+     5,
+     7
+    ]
+   },
+   "perLevel": {
+    "damage": 1.0
+   },
+   "durability": 150,
+   "sell": 5,
+   "lore": "Мод цавчих сүх — дайнд ч болно."
+  },
+  {
+   "id": "weapon.altan_sukh",
+   "name": "Алтан Сүх",
+   "material": "minecraft:diamond_axe",
+   "type": "AXE",
+   "rarity": "rare",
+   "maxRarity": "mythic",
+   "level": 28,
+   "stats": {
+    "damage": [
+     25,
+     31
+    ],
+    "crit_damage": [
+     15,
+     25
+    ]
+   },
+   "perLevel": {
+    "damage": 2.0
+   },
+   "durability": 600,
+   "sell": 60,
+   "lore": "Алтан тамгатай хүнд сүх."
+  },
+  {
+   "id": "weapon.evertei_num",
+   "name": "Эвэр Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "uncommon",
+   "maxRarity": "epic",
+   "level": 8,
+   "stats": {
+    "damage": [
+     7,
+     9
+    ],
+    "crit_chance": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {
+    "damage": 1.2
+   },
+   "durability": 300,
+   "sell": 14,
+   "lore": "Янгирын эвэр наасан нум."
+  },
+  {
+   "id": "weapon.khurdan_num",
+   "name": "Хурдан Нум",
+   "material": "minecraft:crossbow",
+   "type": "BOW",
+   "rarity": "rare",
+   "maxRarity": "legendary",
+   "level": 22,
+   "stats": {
+    "damage": [
+     16,
+     20
+    ],
+    "attack_speed": [
+     4,
+     8
+    ]
+   },
+   "perLevel": {
+    "damage": 1.6
+   },
+   "durability": 450,
+   "sell": 40,
+   "lore": "Цэргийн шуурхай хөндлөн нум."
+  },
+  {
+   "id": "weapon.boogiin_taiag",
+   "name": "Бөөгийн Таяг",
+   "material": "minecraft:stick",
+   "type": "STAFF",
+   "rarity": "uncommon",
+   "maxRarity": "epic",
+   "level": 6,
+   "stats": {
+    "damage": [
+     5,
+     7
+    ],
+    "spell_damage": [
+     5,
+     8
+    ]
+   },
+   "perLevel": {
+    "damage": 0.9,
+    "spell_damage": 0.2
+   },
+   "durability": 250,
+   "sell": 12,
+   "lore": "Хадны модоор зассан таяг."
+  },
+  {
+   "id": "weapon.tengeriin_taiag",
+   "name": "Тэнгэрийн Таяг",
+   "material": "minecraft:end_rod",
+   "type": "STAFF",
+   "rarity": "rare",
+   "maxRarity": "mythic",
+   "level": 26,
+   "stats": {
+    "damage": [
+     14,
+     18
+    ],
+    "spell_damage": [
+     12,
+     16
+    ]
+   },
+   "perLevel": {
+    "damage": 1.4,
+    "spell_damage": 0.3
+   },
+   "durability": 500,
+   "sell": 55,
+   "lore": "Цэнхэр тэнгэрийн гэрлийг хадгалсан таяг."
+  },
+  {
+   "id": "weapon.morin_jad",
+   "name": "Морин Жад",
+   "material": "minecraft:iron_shovel",
+   "type": "SPEAR",
+   "rarity": "uncommon",
+   "maxRarity": "epic",
+   "level": 9,
+   "stats": {
+    "damage": [
+     8,
+     10
+    ],
+    "move_speed": [
+     2,
+     4
+    ]
+   },
+   "perLevel": {
+    "damage": 1.2
+   },
+   "durability": 300,
+   "sell": 15,
+   "lore": "Морин цэргийн урт жад."
+  },
+  {
+   "id": "weapon.ezen_jad",
+   "name": "Эзэн Жад",
+   "material": "minecraft:trident",
+   "type": "SPEAR",
+   "rarity": "rare",
+   "maxRarity": "mythic",
+   "level": 32,
+   "stats": {
+    "damage": [
+     24,
+     29
+    ],
+    "crit_chance": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {
+    "damage": 1.9
+   },
+   "durability": 650,
+   "sell": 65,
+   "lore": "Хүлэгийн эзний сүлдэт жад."
+  },
+  {
+   "id": "weapon.class.baatar.1",
+   "name": "Сургамжийн Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "common",
+   "maxRarity": "common",
+   "level": 1,
+   "stats": {
+    "damage": 5,
+    "crit_chance": 5
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871001,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.baatar.2",
+   "name": "Цэргийн Ган Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 10,
+   "stats": {
+    "damage": 9,
+    "crit_chance": 7
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871002,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.baatar.3",
+   "name": "Баатрын Алтан Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 25,
+   "stats": {
+    "damage": 14,
+    "crit_chance": 9
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871003,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.baatar.4",
+   "name": "Тэнгэрийн Хөх Илд",
+   "material": "minecraft:iron_sword",
+   "type": "SWORD",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 45,
+   "stats": {
+    "damage": 21,
+    "crit_chance": 11
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871004,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "baatar"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.mergen.1",
+   "name": "Сургамжийн Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "common",
+   "maxRarity": "common",
+   "level": 1,
+   "stats": {
+    "damage": 5,
+    "crit_chance": 10
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871011,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.mergen.2",
+   "name": "Эвэр Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 10,
+   "stats": {
+    "damage": 9,
+    "crit_chance": 12
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871012,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.mergen.3",
+   "name": "Мэргэний Алтан Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 25,
+   "stats": {
+    "damage": 14,
+    "crit_chance": 14
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871013,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.mergen.4",
+   "name": "Тэнгэрийн Хөх Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 45,
+   "stats": {
+    "damage": 21,
+    "crit_chance": 16
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871014,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "mergen"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.boo.1",
+   "name": "Бөөгийн Таяг",
+   "material": "minecraft:blaze_rod",
+   "type": "STAFF",
+   "rarity": "common",
+   "maxRarity": "common",
+   "level": 1,
+   "stats": {
+    "damage": 5,
+    "crit_chance": 4
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871021,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.boo.2",
+   "name": "Онгоны Таяг",
+   "material": "minecraft:blaze_rod",
+   "type": "STAFF",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 10,
+   "stats": {
+    "damage": 9,
+    "crit_chance": 6
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871022,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.boo.3",
+   "name": "Сүнсний Алтан Таяг",
+   "material": "minecraft:blaze_rod",
+   "type": "STAFF",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 25,
+   "stats": {
+    "damage": 14,
+    "crit_chance": 8
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871023,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.boo.4",
+   "name": "Тэнгэрийн Хөх Таяг",
+   "material": "minecraft:blaze_rod",
+   "type": "STAFF",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 45,
+   "stats": {
+    "damage": 21,
+    "crit_chance": 10
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871024,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "boo"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.darkhan.1",
+   "name": "Дархны Алх",
+   "material": "minecraft:iron_axe",
+   "type": "AXE",
+   "rarity": "common",
+   "maxRarity": "common",
+   "level": 1,
+   "stats": {
+    "damage": 5,
+    "crit_chance": 4
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871031,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.darkhan.2",
+   "name": "Ган Алх",
+   "material": "minecraft:iron_axe",
+   "type": "AXE",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 10,
+   "stats": {
+    "damage": 9,
+    "crit_chance": 6
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871032,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.darkhan.3",
+   "name": "Галын Алтан Алх",
+   "material": "minecraft:iron_axe",
+   "type": "AXE",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 25,
+   "stats": {
+    "damage": 14,
+    "crit_chance": 8
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871033,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.darkhan.4",
+   "name": "Тэнгэрийн Хөх Алх",
+   "material": "minecraft:iron_axe",
+   "type": "AXE",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 45,
+   "stats": {
+    "damage": 21,
+    "crit_chance": 10
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871034,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "darkhan"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.khulegchin.1",
+   "name": "Хүлэгчийн Жад",
+   "material": "minecraft:iron_sword",
+   "type": "SPEAR",
+   "rarity": "common",
+   "maxRarity": "common",
+   "level": 1,
+   "stats": {
+    "damage": 5,
+    "crit_chance": 7
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871041,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.khulegchin.2",
+   "name": "Цэргийн Жад",
+   "material": "minecraft:iron_sword",
+   "type": "SPEAR",
+   "rarity": "rare",
+   "maxRarity": "rare",
+   "level": 10,
+   "stats": {
+    "damage": 9,
+    "crit_chance": 9
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871042,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.khulegchin.3",
+   "name": "Хааны Алтан Жад",
+   "material": "minecraft:iron_sword",
+   "type": "SPEAR",
+   "rarity": "epic",
+   "maxRarity": "epic",
+   "level": 25,
+   "stats": {
+    "damage": 14,
+    "crit_chance": 11
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871043,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "weapon.class.khulegchin.4",
+   "name": "Тэнгэрийн Хөх Жад",
+   "material": "minecraft:iron_sword",
+   "type": "SPEAR",
+   "rarity": "legendary",
+   "maxRarity": "legendary",
+   "level": 45,
+   "stats": {
+    "damage": 21,
+    "crit_chance": 13
+   },
+   "perLevel": {},
+   "durability": 0,
+   "sell": 0,
+   "model": 871044,
+   "lore": "Ангийн зэвсэг — түвшин ахих тусам хамт ахина.",
+   "classes": [
+    "khulegchin"
+   ],
+   "binding": "SOULBOUND",
+   "lootable": false
+  },
+  {
+   "id": "offhand.modon_bambai",
+   "name": "Модон Бамбай",
+   "material": "minecraft:shield",
+   "type": "SHIELD",
+   "rarity": "common",
+   "maxRarity": "rare",
+   "level": 1,
+   "stats": {
+    "armor": [
+     1,
+     2
+    ],
+    "max_health": [
+     2,
+     4
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.4
+   },
+   "durability": 200,
+   "sell": 5,
+   "lore": "Шинэсэн модон бамбай."
+  },
+  {
+   "id": "offhand.gan_bambai",
+   "name": "Ган Бамбай",
+   "material": "minecraft:shield",
+   "type": "SHIELD",
+   "rarity": "uncommon",
+   "maxRarity": "legendary",
+   "level": 20,
+   "stats": {
+    "armor": [
+     3,
+     4
+    ],
+    "max_health": [
+     8,
+     12
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.6
+   },
+   "durability": 500,
+   "sell": 30,
+   "lore": "Ган хүрээтэй бамбай."
+  },
+  {
+   "id": "offhand.boogiin_sudar",
+   "name": "Бөөгийн Судар",
+   "material": "minecraft:book",
+   "type": "TOME",
+   "rarity": "uncommon",
+   "maxRarity": "legendary",
+   "level": 10,
+   "stats": {
+    "spell_damage": [
+     6,
+     9
+    ],
+    "resource_max": [
+     8,
+     12
+    ]
+   },
+   "perLevel": {
+    "spell_damage": 0.2
+   },
+   "durability": 300,
+   "sell": 25,
+   "lore": "Өвгөдийн дуудлагын судар.",
+   "set": "set.booi_yosol"
+  },
+  {
+   "id": "offhand.ongon",
+   "name": "Онгон",
+   "material": "minecraft:totem_of_undying",
+   "type": "TOTEM",
+   "rarity": "rare",
+   "maxRarity": "mythic",
+   "level": 25,
+   "stats": {
+    "health_regen": [
+     0.3,
+     0.5
+    ],
+    "max_health": [
+     10,
+     14
+    ]
+   },
+   "perLevel": {
+    "max_health": 0.5
+   },
+   "durability": 400,
+   "sell": 45,
+   "lore": "Сүнсний онгон — эзнээ сахина."
+  },
+  {
+   "id": "weapon.anchin_num",
+   "name": "Анчны Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "rare",
+   "maxRarity": "legendary",
+   "level": 15,
+   "stats": {
+    "damage": [
+     11,
+     14
+    ],
+    "crit_chance": [
+     3,
+     5
+    ]
+   },
+   "perLevel": {
+    "damage": 1.3
+   },
+   "durability": 380,
+   "sell": 30,
+   "lore": "Талын анчдын давхар муруй нум.",
+   "set": "set.talyn_anchin"
+  }
+ ]
+}

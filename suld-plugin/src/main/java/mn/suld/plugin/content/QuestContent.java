@@ -29,7 +29,7 @@ public final class QuestContent {
     public static final QuestChain STORY = new QuestChain(List.of(
             SuldContent.FIRST_HUNT,
             q("quest.wolf_pelts", "Чонын Арьс", "Анчинд 3 чонын арьс авчирч өг.",
-                    QuestType.COLLECT_ITEM, SuldContent.WOLF_PELT.id(), 3, 200, 30),
+                    QuestType.COLLECT_ITEM, "item.chonon_arisan", 3, 200, 30),
             q("quest.kherlen_bandits", "Хэрлэнгийн Дээрэмчид", "Худалдааны замыг дээрэмдэгч 5 дээрэмчнийг устга.",
                     QuestType.KILL_MOB, WorldContent.BANDIT.id(), 5, 350, 50),
             q("quest.oath_5", "Цэргийн Тангараг", "Аравтад элсэхийн тулд 5-р түвшинд хүр.",

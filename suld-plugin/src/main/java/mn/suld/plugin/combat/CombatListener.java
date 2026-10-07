@@ -3,10 +3,8 @@ package mn.suld.plugin.combat;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.combat.CombatCalculator;
 import mn.suld.api.combat.DamageResult;
-import mn.suld.api.item.ItemDefinition;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.api.item.ItemRarity;
-import mn.suld.api.item.ItemStat;
 import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.api.progression.ExpGainResult;
@@ -27,7 +25,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 
-import java.util.Random;
 
 /**
  * Applies the SÜLD combat engine to real Bukkit combat: player hits on SÜLD
@@ -43,7 +40,6 @@ public final class CombatListener implements Listener {
     private final HudService hud;
     private final ItemFactory items;
     private final CombatCalculator calculator = new CombatCalculator(50.0);
-    private final mn.suld.api.loot.LootRoller lootRoller = new mn.suld.api.loot.LootRoller(new Random());
 
     public CombatListener(SuldServices services, MobService mobs, QuestService quests,
                           HudService hud, ItemFactory items) {
@@ -57,22 +53,25 @@ public final class CombatListener implements Listener {
     /** True while SÜLD itself applies spell damage (its amount must not be replaced by the hit formula). */
     public static boolean spellDamage;
 
-    /** The SÜLD attack of a player: class base + level growth + weapon ATK (the shared hit/spell/arrow formula). */
+    /**
+     * The SÜLD attack of a player: class base + level growth + the flat damage of everything they wear (weapon,
+     * affixes, set bonuses), times the attack bonus of the skill tree (the shared hit/spell/arrow formula).
+     */
     public static double attackOf(SuldServices services, Player player) {
         PlayerProfile profile = services.profiles().cached(player.getUniqueId()).orElse(null);
         if (profile == null) return 1;
         PlayerClass clazz = profile.playerClass().orElse(PlayerClass.BAATAR);
         double attack = clazz.baseAttack() + (profile.progression().level() - 1) * 0.75;
-        ItemInstance weapon = services.items().read(player.getInventory().getItemInMainHand()).orElse(null);
-        if (weapon != null) attack += weapon.stat(ItemStat.ATTACK);
+        mn.suld.plugin.item.EquipmentService eq = services.equipment();
+        if (eq != null) attack += eq.bonus(player).flatDamage();
         mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
         return tree == null ? attack : attack * tree.attackMultiplier(player);
     }
 
+    /** 5% base, plus the crit chance of the build (skill tree and equipment are one build). */
     private double critOf(Player player) {
-        ItemInstance weapon = items.read(player.getInventory().getItemInMainHand()).orElse(null);
         mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
-        return 0.05 + (weapon == null ? 0 : weapon.stat(ItemStat.CRIT_CHANCE)) + (tree == null ? 0 : tree.critChance(player));
+        return 0.05 + (tree == null ? 0 : tree.critChance(player));
     }
 
     /** Victim id -> time of the critical hit just dealt (the skill tree's crit passives read and clear it). */
@@ -179,22 +178,25 @@ public final class CombatListener implements Listener {
 
         quests.onMobKilled(killer, profile, mobId);
 
-        java.util.List<ItemInstance> drops = new java.util.ArrayList<>(lootRoller.roll(SuldContent.lootTableFor(def.lootTableId()), "mob:" + mobId));
-        if (skillTree != null && skillTree.extraLootRoll(killer)) {
-            drops.addAll(lootRoller.roll(SuldContent.lootTableFor(def.lootTableId()), "mob:" + mobId));
-        }
-        for (ItemInstance inst : drops) {
-            ItemDefinition idef = SuldContent.definitionFor(inst.definitionId());
-            if (idef == null) {
-                continue;
-            }
-            entity.getWorld().dropItemNaturally(entity.getLocation(), items.create(inst, idef));
-            services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
-                    mn.suld.api.analytics.AnalyticsEventType.FIRST_ITEM, killer.getUniqueId()));
-            if (inst.rarity().ordinal() >= ItemRarity.RARE.ordinal()) {
+        mn.suld.plugin.item.ItemService itemService = services.itemService();
+        if (itemService != null) {
+            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(def.level(), mn.suld.api.loot.LootTier.of(def.tier()),
+                    profile.playerClass().orElse(null), 0, killer.getUniqueId(), "mob:" + mobId);
+            java.util.List<mn.suld.api.loot.LootDrop> drops = new java.util.ArrayList<>(itemService.roll(def.lootTableId(), ctx));
+            // the loot-chance stat (skill tree and equipment) is a chance of a whole extra roll
+            if (skillTree != null && skillTree.extraLootRoll(killer)) drops.addAll(itemService.roll(def.lootTableId(), ctx));
+            for (mn.suld.api.loot.LootDrop d : drops) {
+                ItemInstance inst = d.item();
+                entity.getWorld().dropItemNaturally(entity.getLocation(), itemService.stack(inst, killer, d.amount()));
+                itemService.announce(killer, inst);
                 services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
-                        mn.suld.api.analytics.AnalyticsEventType.FIRST_RARE_ITEM, killer.getUniqueId()));
-                killer.sendMessage(Messages.accent("Ховор олз: " + idef.displayName() + "!"));
+                        mn.suld.api.analytics.AnalyticsEventType.FIRST_ITEM, killer.getUniqueId()));
+                if (inst.rarity().ordinal() >= ItemRarity.RARE.ordinal()) {
+                    services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
+                            mn.suld.api.analytics.AnalyticsEventType.FIRST_RARE_ITEM, killer.getUniqueId()));
+                    killer.sendMessage(Messages.accent("Ховор олз: " + mn.suld.api.item.ItemTooltip.name(itemService.catalog(),
+                            itemService.catalog().require(inst.definitionId()), inst) + "!"));
+                }
             }
         }
 

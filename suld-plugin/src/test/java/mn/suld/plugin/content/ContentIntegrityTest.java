@@ -1,7 +1,5 @@
 package mn.suld.plugin.content;
 
-import mn.suld.api.item.ItemDefinition;
-import mn.suld.api.loot.LootEntry;
 import mn.suld.api.loot.LootTable;
 import mn.suld.api.mob.MobDefinition;
 import mn.suld.api.region.RegionDefinition;
@@ -25,9 +23,12 @@ class ContentIntegrityTest {
                 assertNotNull(mob, r.id() + " spawns unknown mob " + mobId);
                 LootTable table = SuldContent.lootTableFor(mob.lootTableId());
                 assertNotNull(table, mobId + " has unknown loot table " + mob.lootTableId());
-                for (LootEntry e : table.entries()) {
-                    assertSame(e.definition(), SuldContent.definitionFor(e.definition().id()),
-                            "dropped item " + e.definition().id() + " must be re-creatable from its id");
+                List<LootTable.Entry> all = new java.util.ArrayList<>(table.guaranteed());
+                all.addAll(table.entries());
+                table.rare().forEach(rare -> all.add(rare.entry()));
+                for (LootTable.Entry e : all) {
+                    if (e.itemId() == null) continue; // a category pool
+                    assertNotNull(SuldContent.definitionFor(e.itemId()), mob.lootTableId() + " drops unknown item " + e.itemId());
                 }
             }
         }
@@ -45,10 +46,9 @@ class ContentIntegrityTest {
 
     @Test
     void idsAreUnique() {
-        Set<String> items = new HashSet<>();
-        for (ItemDefinition d : WorldContent.ITEMS) assertTrue(items.add(d.id()), d.id());
+        // item ids live in the catalog (the loader refuses duplicates); the legacy ids still resolve
         for (String id : List.of("item.chonon_arisan", "weapon.talyn_ild", "weapon.khasar_soyo", "item.khasar_zurkh", "item.talyn_tuvshin")) {
-            assertFalse(items.contains(id), "world item reuses core id " + id);
+            assertNotNull(SuldContent.definitionFor(id), "legacy id " + id + " must keep resolving");
         }
         Set<String> mobs = new HashSet<>();
         for (MobDefinition m : WorldContent.MOBS) assertTrue(mobs.add(m.id()), m.id());

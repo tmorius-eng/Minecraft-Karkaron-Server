@@ -20,9 +20,9 @@ class ItemInstanceTest {
 
     @Test
     void copiesStatsDefensively() {
-        java.util.HashMap<ItemStat, Double> src = new java.util.HashMap<>(Map.of(ItemStat.ATTACK, 5.0));
+        java.util.HashMap<ItemStat, Double> src = new java.util.HashMap<>(Map.of(ItemStat.DAMAGE, 5.0));
         ItemInstance i = new ItemInstance("x.y", UUID.randomUUID(), ItemRarity.RARE, 2, src, false, 0, "t");
-        src.put(ItemStat.ATTACK, 999.0);
-        assertEquals(5.0, i.stat(ItemStat.ATTACK));
+        src.put(ItemStat.DAMAGE, 999.0);
+        assertEquals(5.0, i.stat(ItemStat.DAMAGE));
     }
 }

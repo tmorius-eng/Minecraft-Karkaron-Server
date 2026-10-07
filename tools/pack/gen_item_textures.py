@@ -38,6 +38,8 @@ PALETTE = {
     "a": (232, 204, 140), "A": (186, 150, 84),
     # string
     "t": (230, 226, 210),
+    # jade (хаш)
+    "j": (128, 214, 150), "J": (52, 136, 84),
 }
 OUTLINE = (26, 22, 22, 255)
 
@@ -191,6 +193,29 @@ def pelt(fill: str, shade: str) -> list[str]:
 SPRITES["chonon_arisan"] = pelt("f", "F")      # Чонын арьс — grey wolf pelt
 SPRITES["baavgain_arisan"] = pelt("u", "U")    # Баавгайн арьс — brown bear pelt
 
+
+def ring(band: str, light: str, shade: str, gem: list[str]) -> list[str]:
+    """A finger ring seen from the front: a round band (lit top-left, shaded bottom-right) and a stone on top."""
+    rows = [list("." * 16) for _ in range(16)]
+    cx, cy = 7.5, 9.5
+    for y in range(16):
+        for x in range(16):
+            d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+            if 3.6 <= d <= 5.4:
+                lit = (x - cx) + (y - cy) < -2
+                dark = (x - cx) + (y - cy) > 3
+                rows[y][x] = light if lit else shade if dark else band
+    for dy, line in enumerate(gem):          # the stone sits on the top of the band
+        for dx, ch in enumerate(line):
+            if ch != ".":
+                rows[1 + dy][6 + dx] = ch
+    return ["".join(r) for r in rows]
+
+
+SPRITES["mungun_bugj"] = ring("s", "W", "m", [".WW.", "WsmW", ".md."])      # Мөнгөн Бөгж — plain silver ring
+SPRITES["khash_bugj"] = ring("s", "W", "m", [".jj.", "jjJj", "jJJJ", ".JJ."])  # Хаш Бөгж — silver set with jade
+SPRITES["altan_bugj"] = ring("g", "Y", "G", [".BB.", "BcbB", "bbnb", ".nn."])  # Алтан Бөгж — gold set with turquoise
+
 # Bow pulling frames: the string is drawn back toward the archer (left) and an arrow appears.
 BOW_PULL = {
     "surgamj_num_pulling_0": 1,
@@ -259,7 +284,7 @@ def main() -> None:
             img.resize((256, 256), Image.NEAREST).save(os.path.join(args.preview, f"{name}.png"))
         if name.startswith("surgamj_num"):
             parent = "minecraft:item/bow"
-        elif name in ("chonon_arisan", "baavgain_arisan"):
+        elif name in ("chonon_arisan", "baavgain_arisan", "mungun_bugj", "khash_bugj", "altan_bugj"):
             parent = "minecraft:item/generated"
         else:
             parent = "minecraft:item/handheld"

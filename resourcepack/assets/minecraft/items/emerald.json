@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "entries": [
+      {
+        "threshold": 872002,
+        "model": {
+          "type": "minecraft:model",
+          "model": "suld:item/khash_bugj"
+        }
+      },
+      {
+        "threshold": 872003,
+        "model": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/emerald"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/emerald"
+    }
+  }
+}

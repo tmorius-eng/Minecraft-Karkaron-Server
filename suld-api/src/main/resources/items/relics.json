@@ -1,0 +1,69 @@
+{
+ "items": [
+  {
+   "id": "relic.khukh_suld",
+   "name": "Хөх Сүлд",
+   "material": "minecraft:nether_star",
+   "model": 870100,
+   "type": "RELIC",
+   "rarity": "unique",
+   "level": 10,
+   "stats": {
+    "max_health": 20,
+    "crit_chance": 5,
+    "cooldown_reduction": 5
+   },
+   "binding": "SOULBOUND",
+   "tradable": false,
+   "lootable": false,
+   "lore": "Мөнх тэнгэрийн хүчээр мандсан хөх сүлд — түүнийг барьсан нэгэн л тал нутгийг удирдана.",
+   "effects": [
+    {
+     "type": "proc",
+     "event": "KILL",
+     "chance": 100,
+     "kind": "HEAL",
+     "a": 4,
+     "cooldown": 5
+    },
+    {
+     "type": "proc",
+     "event": "LOW_HP",
+     "chance": 100,
+     "kind": "RESIST",
+     "a": 1,
+     "b": 6,
+     "cooldown": 45
+    }
+   ]
+  },
+  {
+   "id": "relic.altan_gerege",
+   "name": "Алтан Гэрэгэ",
+   "material": "minecraft:nether_star",
+   "model": 870101,
+   "type": "RELIC",
+   "rarity": "unique",
+   "level": 6,
+   "stats": {
+    "move_speed": 8,
+    "loot_chance": 10
+   },
+   "binding": "SOULBOUND",
+   "tradable": false,
+   "lootable": false,
+   "lore": "Хааны тамгатай алтан гэрэгэ — эзэн нь хаана ч хүндлэгдэнэ.",
+   "effects": [
+    {
+     "type": "proc",
+     "event": "DAMAGED",
+     "chance": 20,
+     "kind": "SPEED",
+     "a": 2,
+     "b": 4,
+     "cooldown": 15
+    }
+   ]
+  }
+ ]
+}

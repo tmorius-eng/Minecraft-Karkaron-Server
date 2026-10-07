@@ -279,12 +279,31 @@ public final class SkillTreeService implements Listener {
         refreshRuntime(p, pr, r);
     }
 
+    /** Item passives are indexed from here so their cooldowns never collide with the tree's node indices. */
+    public static final int ITEM_PROC_INDEX = 100_000;
+
     private void refreshRuntime(Player p, PlayerProfile pr, Runtime r) {
         r.allocation = SkillEngine.allocation(pr, r.tree);
-        r.build = r.allocation.build();
+        // one build for the combat engine: what the tree gives plus what the equipment gives
+        mn.suld.plugin.item.EquipmentService eq = services.equipment();
+        mn.suld.api.item.Equipment.Bonus gear = eq == null ? mn.suld.api.item.Equipment.Bonus.NONE : eq.compute(p);
+        r.build = r.allocation.build().plus(gear.statKeys(), gear.mods(), gear.procs(), ITEM_PROC_INDEX);
         applyAttributes(p, r.build);
         // resource pool size follows the build
         skills.rebuildPool(p);
+    }
+
+    /** The equipment changed: rebuild the stats (no save: the inventory is the game's, accessories are saved where changed). */
+    public void equipmentChanged(Player p) {
+        PlayerProfile pr = profile(p);
+        Runtime r = runtime.get(p.getUniqueId());
+        if (pr == null || r == null) {
+            mn.suld.plugin.item.EquipmentService eq = services.equipment();
+            if (eq != null) eq.compute(p); // no class yet: the bonus is kept, but there is no build to carry it
+            return;
+        }
+        refreshRuntime(p, pr, r);
+        skills.actionBar(p);
     }
 
     /** Call after any change to a player's tree: refresh derived state, save, update the HUD. */
@@ -325,6 +344,7 @@ public final class SkillTreeService implements Listener {
         setModifier(p, Attribute.ARMOR, "armor", b.stat(StatKey.ARMOR), AttributeModifier.Operation.ADD_NUMBER);
         setModifier(p, Attribute.KNOCKBACK_RESISTANCE, "knockback", Math.min(1.0, b.stat(StatKey.KB_RESIST) / 100.0), AttributeModifier.Operation.ADD_NUMBER);
         setModifier(p, Attribute.BLOCK_BREAK_SPEED, "mining", b.stat(StatKey.MINING_SPEED_PCT) / 100.0, AttributeModifier.Operation.ADD_SCALAR);
+        setModifier(p, Attribute.ATTACK_SPEED, "attack_speed", b.stat(StatKey.ATTACK_SPEED_PCT) / 100.0, AttributeModifier.Operation.ADD_SCALAR);
         AttributeInstance now = p.getAttribute(Attribute.MAX_HEALTH);
         if (now != null && p.getHealth() > now.getValue()) p.setHealth(now.getValue());
     }
@@ -335,6 +355,7 @@ public final class SkillTreeService implements Listener {
         setModifier(p, Attribute.ARMOR, "armor", 0, AttributeModifier.Operation.ADD_NUMBER);
         setModifier(p, Attribute.KNOCKBACK_RESISTANCE, "knockback", 0, AttributeModifier.Operation.ADD_NUMBER);
         setModifier(p, Attribute.BLOCK_BREAK_SPEED, "mining", 0, AttributeModifier.Operation.ADD_SCALAR);
+        setModifier(p, Attribute.ATTACK_SPEED, "attack_speed", 0, AttributeModifier.Operation.ADD_SCALAR);
         setModifier(p, Attribute.MAX_ABSORPTION, "shield", 0, AttributeModifier.Operation.ADD_NUMBER);
     }
 
@@ -676,6 +697,11 @@ public final class SkillTreeService implements Listener {
     public void healFrom(Player caster, Player target, double amount) {
         double scaled = amount * (1 + build(caster).stat(StatKey.HEAL_POWER) / 100.0);
         healRaw(target, scaled);
+    }
+
+    /** Health regeneration from equipment (once per second, with the resource regeneration). */
+    public void regenerate(Player p, double amount) {
+        if (amount > 0 && !p.isDead() && p.getHealth() > 0) healRaw(p, amount);
     }
 
     private void healRaw(Player target, double amount) {

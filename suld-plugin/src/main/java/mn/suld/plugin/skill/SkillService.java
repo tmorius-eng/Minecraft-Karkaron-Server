@@ -812,6 +812,8 @@ public final class SkillService implements Listener {
         };
         SkillBuild b = buildOf(p);
         pool(p).gain(rate + b.stat(StatKey.RESOURCE_REGEN) + (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH) ? 3 : 0));
+        double hp = b.stat(StatKey.HEALTH_REGEN);
+        if (hp > 0 && services.skillTree() != null) services.skillTree().regenerate(p, hp);
     }
 
     private static TextColor resourceColor(PlayerClass c) {

@@ -1,0 +1,115 @@
+{
+ "sets": [
+  {
+   "id": "set.chingis",
+   "name": "Чингисийн Өв",
+   "pieces": [
+    "armor.chingis.helmet",
+    "armor.chingis.chestplate",
+    "armor.chingis.leggings",
+    "armor.chingis.boots",
+    "jewel.chingis_tamga"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "max_health": 20
+     }
+    },
+    "3": {
+     "stats": {
+      "crit_chance": 5
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "stat",
+       "key": "ATTACK_PCT",
+       "value": 10
+      }
+     ]
+    },
+    "5": {
+     "effects": [
+      {
+       "type": "proc",
+       "event": "HIT",
+       "chance": 10,
+       "kind": "SMITE",
+       "a": 1.5,
+       "cooldown": 6
+      }
+     ],
+     "text": "Цохиход 10%: тэнгэрийн аянга (1.5× хүч), 6 сек хүлээлт"
+    }
+   }
+  },
+  {
+   "id": "set.talyn_anchin",
+   "name": "Талын Анчин",
+   "pieces": [
+    "armor.anchin.helmet",
+    "armor.anchin.boots",
+    "weapon.anchin_num",
+    "jewel.anchin_bugj"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "move_speed": 6
+     }
+    },
+    "3": {
+     "stats": {
+      "crit_chance": 6
+     }
+    },
+    "4": {
+     "effects": [
+      {
+       "type": "proc",
+       "event": "CRIT",
+       "chance": 100,
+       "kind": "SPEED",
+       "a": 2,
+       "b": 3,
+       "cooldown": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "set.booi_yosol",
+   "name": "Бөөгийн Ёслол",
+   "pieces": [
+    "armor.booi.chestplate",
+    "offhand.boogiin_sudar",
+    "jewel.booi_khets"
+   ],
+   "bonuses": {
+    "2": {
+     "stats": {
+      "resource_max": 15
+     }
+    },
+    "3": {
+     "stats": {
+      "spell_damage": 12
+     },
+     "effects": [
+      {
+       "type": "proc",
+       "event": "SPELL_HIT",
+       "chance": 20,
+       "kind": "HEAL",
+       "a": 2,
+       "cooldown": 4
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

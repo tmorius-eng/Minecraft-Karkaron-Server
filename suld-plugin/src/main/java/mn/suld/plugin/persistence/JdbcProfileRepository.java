@@ -29,7 +29,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     private static final String SELECT =
             "SELECT name, class_id, level, exp_into_level, created_at, last_seen_at, version, "
-                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data "
+                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data "
                     + "FROM suld_profiles WHERE player_uuid = ?";
 
     private final DataSource dataSource;
@@ -71,7 +71,8 @@ public final class JdbcProfileRepository implements ProfileRepository {
                             rs.getLong("version"),
                             rs.getLong("currency"),
                             questState,
-                            readSkills(playerId, rs.getString("skill_data")));
+                            readSkills(playerId, rs.getString("skill_data")),
+                            readEquipment(playerId, rs.getString("equipment_data")));
                     return Optional.of(profile);
                 }
             } catch (SQLException ex) {
@@ -86,6 +87,15 @@ public final class JdbcProfileRepository implements ProfileRepository {
             return mn.suld.api.skill.tree.SkillState.fromJson(json);
         } catch (IllegalArgumentException ex) {
             throw new RepositoryException("Skill data of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
+        }
+    }
+
+    /** Unreadable equipment must stop the load too: saving afterwards would erase the accessories. */
+    private static mn.suld.api.item.EquipmentState readEquipment(UUID playerId, String json) {
+        try {
+            return mn.suld.api.item.EquipmentState.fromJson(json);
+        } catch (IllegalArgumentException ex) {
+            throw new RepositoryException("Equipment data of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
         }
     }
 
@@ -155,6 +165,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 ps.setInt(11, q.progress());
                 ps.setBoolean(12, q.completed());
                 ps.setString(13, snap.skillState().toJson());
+                ps.setString(14, snap.equipment().isEmpty() ? null : snap.equipment().toJson());
                 ps.executeUpdate();
                 profile.markPersisted(version);
                 return profile;

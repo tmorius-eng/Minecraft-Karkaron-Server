@@ -542,9 +542,6 @@ public final class Menus {
             new Supply(Material.LEAD, 2, 40, "Чөдөр x2"));
 
     /** Sell prices of SÜLD loot (definition id → coins each). */
-    private static final Map<String, Long> SELL = Map.of(
-            "item.chonon_arisan", 8L, "item.baavgain_arisan", 25L, "item.khilentsiin_khor", 6L,
-            "item.mosun_chuluu", 40L, "item.talyn_tuvshin", 30L);
 
     public void shop(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
@@ -612,9 +609,13 @@ public final class Menus {
             ItemStack it = inv[i];
             if (it == null) continue;
             ItemInstance ii = services.items().read(it).orElse(null);
+            // "sell all" sells loot materials only: gear is sold one by one (/item sell), never by accident
             if (ii == null || ii.soulbound()) continue;
-            Long price = SELL.get(ii.definitionId());
-            if (price == null) continue;
+            mn.suld.api.item.ItemDefinition idef = mn.suld.plugin.content.SuldContent.definitionFor(ii.definitionId());
+            if (idef == null || idef.type() != mn.suld.api.item.ItemType.MATERIAL) continue;
+            if (services.itemService().check(it).verdict() == mn.suld.plugin.item.ItemService.Verdict.FORGED) continue;
+            long price = mn.suld.api.item.ItemEconomy.sellPrice(idef, ii);
+            if (price <= 0) continue;
             total += price * it.getAmount();
             count += it.getAmount();
             p.getInventory().setItem(i, null);
