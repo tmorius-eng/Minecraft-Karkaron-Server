@@ -131,6 +131,14 @@ chat:
 models:
   mobs: true
 
+# City NPCs talk first (a dialog with their trade and what they know); Shift + right-click skips (docs/NPC_DIALOGUE.md).
+npc:
+  dialogue: true
+
+# Dungeon halls (docs/world/DUNGEON_HALLS.md): build one hall per theme shortly after start, one at a time.
+dungeons:
+  prewarm-halls: true
+
 chat-guard:
   enabled: true
   max-messages: 4

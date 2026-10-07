@@ -93,6 +93,7 @@ public final class NpcService implements Listener {
     private final mn.suld.plugin.gui.SmithMenu smith;
 
     public NpcService(Plugin plugin, SuldServices services, WorldBuildService city, Menus menus) {
+        this.dialogue = new NpcDialogue(plugin);
         this.plugin = plugin;
         this.services = services;
         this.city = city;
@@ -222,7 +223,25 @@ public final class NpcService implements Listener {
         Player p = e.getPlayer();
         p.playSound(e.getRightClicked().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 0.8f, 1.1f);
         e.getRightClicked().getWorld().spawnParticle(Particle.HAPPY_VILLAGER, e.getRightClicked().getLocation().add(0, 2.1, 0), 5, 0.3, 0.2, 0.3);
-        act(p, id);
+        // a conversation first (docs/NPC_DIALOGUE.md); Shift + right-click goes straight to the action
+        if (!p.isSneaking() && plugin.getConfig().getBoolean("npc.dialogue", true) && dialogue.has(id)) {
+            dialogue.open(p, id, services.profiles().cached(p.getUniqueId()).orElse(null), actionLabel(id), () -> act(p, id));
+        } else {
+            act(p, id);
+        }
+    }
+
+    private final NpcDialogue dialogue;
+
+    private static String actionLabel(String id) {
+        if (id.equals("class_selection")) return "Анги сонгох";
+        if (id.equals("tutorial")) return "Заавар нээх";
+        if (id.equals("quest.first_hunt")) return "Аяны зам";
+        if (id.startsWith("merchant.")) return "Дэлгүүр";
+        if (id.equals("blacksmith")) return "Засвар · Хуяг";
+        if (id.startsWith("fast_travel.")) return "Өртөөгөөр явах";
+        if (id.equals("shrine.sky")) return "Ивээл хүсэх";
+        return "Үргэлжлүүлэх";
     }
 
     private void act(Player p, String id) {

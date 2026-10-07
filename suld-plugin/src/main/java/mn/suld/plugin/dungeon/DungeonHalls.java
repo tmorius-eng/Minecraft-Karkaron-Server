@@ -158,7 +158,31 @@ public final class DungeonHalls implements Listener {
         Bukkit.getScheduler().runTaskTimer(plugin, this::drainBuild, 1L, 1L);
         Bukkit.getScheduler().runTaskTimer(plugin, this::keepGates, 40L, 100L);
         Bukkit.getScheduler().runTaskLater(plugin, this::placeGates, 100L);
+        if (plugin.getConfig().getBoolean("dungeons.prewarm-halls", true)) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> prewarm(new ArrayDeque<>(List.of(HallTheme.values()))), 20L * 45);
+        }
         plugin.getLogger().info("Dungeon halls: world " + WORLD + " ready; built slots " + countBuilt() + ".");
+    }
+
+    /**
+     * One hall per theme is built ahead (one theme at a time, 10 s apart, only while nobody is in it), so the first
+     * party at any gate walks straight in instead of waiting for the build.
+     */
+    private void prewarm(ArrayDeque<HallTheme> todo) {
+        HallTheme t = todo.pollFirst();
+        if (t == null || !plugin.isEnabled()) return;
+        if (!built.get(t).isEmpty() || building.get(t).contains(0) || busy.get(t).contains(0)) {
+            prewarm(todo);
+            return;
+        }
+        building.get(t).add(0);
+        build(originOf(t, 0), HallBlueprint.build(t), false, () -> {
+            building.get(t).remove(0);
+            built.get(t).add(0);
+            saveState();
+            plugin.getLogger().info("Dungeon halls: pre-built " + t.key() + " slot 0.");
+            Bukkit.getScheduler().runTaskLater(plugin, () -> prewarm(todo), 200L);
+        });
     }
 
     public void shutdown() {
