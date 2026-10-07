@@ -175,7 +175,7 @@ final class Ultimates {
 
     private Location target(Player p, double range) {
         RayTraceResult r = p.getWorld().rayTraceBlocks(p.getEyeLocation(), p.getEyeLocation().getDirection(), range, FluidCollisionMode.NEVER, true);
-        return r == null ? p.getLocation().add(p.getLocation().getDirection().setY(0).normalize().multiply(10)) : r.getHitPosition().toLocation(p.getWorld());
+        return r == null ? p.getLocation().add(SkillService.flat(p).multiply(10)) : r.getHitPosition().toLocation(p.getWorld());
     }
 
     private void arrowRain(Player p) {
@@ -267,7 +267,7 @@ final class Ultimates {
                     }
                     step = 0;
                     hit.clear();
-                    p.setVelocity(p.getLocation().getDirection().setY(0).normalize().multiply(1.7).setY(0.1));
+                    p.setVelocity(SkillService.flat(p).multiply(1.7).setY(0.1));
                     p.getWorld().playSound(p.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1.3f);
                 }
                 step++;

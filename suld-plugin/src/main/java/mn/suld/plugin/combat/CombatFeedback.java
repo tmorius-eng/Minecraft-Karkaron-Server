@@ -36,6 +36,9 @@ public final class CombatFeedback implements Listener {
 
     private static final int SEGMENTS = 10;
 
+    /** The QA suite sets this while it fires thousands of test hits: no floating numbers or name bars then. */
+    public static volatile boolean quiet;
+
     private final Plugin plugin;
     private final MobService mobs;
 
@@ -48,6 +51,10 @@ public final class CombatFeedback implements Listener {
     public void onDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof LivingEntity mob) || !mobs.isSuldMob(mob)) return;
         if (e.isCancelled()) { // cancelled after the crit was rolled: drop the flag, show nothing
+            CombatListener.CRIT_HITS.remove(mob.getUniqueId());
+            return;
+        }
+        if (quiet) {
             CombatListener.CRIT_HITS.remove(mob.getUniqueId());
             return;
         }

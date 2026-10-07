@@ -159,7 +159,8 @@ public final class SuldPlugin extends JavaPlugin {
         skillMap.menus(menus);
         menus.skillMap(skillMap);
         getServer().getPluginManager().registerEvents(skillMap, this);
-        mn.suld.plugin.command.SkillCommands skillCommands = new mn.suld.plugin.command.SkillCommands(services, skillMap, menus);
+        mn.suld.plugin.command.SkillCommands skillCommands = new mn.suld.plugin.command.SkillCommands(services, skillMap, menus,
+                new mn.suld.plugin.skill.qa.SkillQa(this, services, skillTree, skills));
         registerTab("skills", skillCommands.skills());
         registerTab("skill", skillCommands.skill());
         registerTab("skillsadmin", skillCommands.admin());

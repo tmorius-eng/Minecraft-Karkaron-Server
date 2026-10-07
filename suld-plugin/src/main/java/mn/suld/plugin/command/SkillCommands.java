@@ -38,11 +38,13 @@ public final class SkillCommands {
     private final SuldServices services;
     private final SkillMapMenu map;
     private final Menus menus;
+    private final mn.suld.plugin.skill.qa.SkillQa qa;
 
-    public SkillCommands(SuldServices services, SkillMapMenu map, Menus menus) {
+    public SkillCommands(SuldServices services, SkillMapMenu map, Menus menus, mn.suld.plugin.skill.qa.SkillQa qa) {
         this.services = services;
         this.map = map;
         this.menus = menus;
+        this.qa = qa;
     }
 
     private SkillTreeService st() {
@@ -307,7 +309,7 @@ public final class SkillCommands {
                             if (issues.size() > 15) s.sendMessage(line("  … бусад алдаа консолд (сервер лог)"));
                         }
                     }
-                    case "inspect", "grantpoints", "unlock", "reset", "orb", "fire" -> player(s, a);
+                    case "inspect", "grantpoints", "unlock", "reset", "orb", "fire", "qa", "qakit" -> player(s, a);
                     default -> s.sendMessage(Messages.error("Үл мэдэгдэх дэд тушаал."));
                 }
                 return true;
@@ -365,6 +367,24 @@ public final class SkillCommands {
                         int n = st().adminFire(t, ev);
                         s.sendMessage(Messages.success(t.getName() + ": " + ev + " — " + n + " идэвхгүй шид шалгагдлаа"));
                     }
+                    case "qakit" -> {
+                        String scenario = a.length < 3 ? "" : a[2].toLowerCase(Locale.ROOT);
+                        String res = scenario.isEmpty() ? null : st().qaKit(t, scenario);
+                        s.sendMessage(res == null ? Messages.error("Хэрэглээ: /skillsadmin qakit <тоглогч> fresh|rich|states|states0") : Messages.success(t.getName() + " → " + res));
+                    }
+                    case "qa" -> {
+                        java.util.Set<String> suites = new java.util.HashSet<>();
+                        for (int i = 2; i < a.length; i++) suites.add(a[i].toLowerCase(Locale.ROOT));
+                        if (suites.isEmpty()) suites.add("all");
+                        suites.removeIf(x -> !x.equals("all") && !x.startsWith("only=") && !mn.suld.plugin.skill.qa.SkillQa.SUITES.contains(x));
+                        if (suites.stream().allMatch(x -> x.startsWith("only="))) suites.add("all");
+                        if (suites.isEmpty()) {
+                            s.sendMessage(Messages.error("Suites: all " + String.join(" ", mn.suld.plugin.skill.qa.SkillQa.SUITES)));
+                            return;
+                        }
+                        s.sendMessage(Messages.info("Combat verification suite started for " + t.getName() + ": " + suites + " — the player is moved to a sky arena and restored afterwards. Report: plugins/SULD/qa/"));
+                        qa.run(s, t, suites);
+                    }
                     case "reset" -> s.sendMessage(st().adminReset(t) ? Messages.success(t.getName() + ": мод буцаагдлаа") : Messages.info(t.getName() + ": буцаах оноо алга"));
                     case "orb" -> {
                         int n = a.length < 3 ? 1 : (parseInt(a[2]) == null ? 1 : Math.max(1, Math.min(16, parseInt(a[2]))));
@@ -379,9 +399,15 @@ public final class SkillCommands {
             @Override
             public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
                 if (!s.hasPermission("suld.admin.skills")) return List.of();
-                if (a.length == 1) return filter(List.of("inspect", "grantpoints", "unlock", "reset", "orb", "fire", "reload", "validate"), a[0]);
+                if (a.length == 1) return filter(List.of("inspect", "grantpoints", "unlock", "reset", "orb", "fire", "qa", "qakit", "reload", "validate"), a[0]);
                 if (a.length == 2 && !List.of("reload", "validate").contains(a[0].toLowerCase(Locale.ROOT))) {
                     return filter(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(), a[1]);
+                }
+                if (a.length == 3 && a[0].equalsIgnoreCase("qakit")) return filter(List.of("fresh", "rich", "states", "states0"), a[2]);
+                if (a.length >= 3 && a[0].equalsIgnoreCase("qa")) {
+                    java.util.List<String> all = new java.util.ArrayList<>(mn.suld.plugin.skill.qa.SkillQa.SUITES);
+                    all.add(0, "all");
+                    return filter(all, a[a.length - 1]);
                 }
                 if (a.length == 3 && a[0].equalsIgnoreCase("fire")) {
                     return filter(java.util.Arrays.stream(mn.suld.api.skill.tree.TriggerEvent.values()).map(Enum::name).toList(), a[2]);

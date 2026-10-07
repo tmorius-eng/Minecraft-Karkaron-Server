@@ -25,6 +25,8 @@ public final class OrbOfOblivion {
 
     private static final NamespacedKey TAG = new NamespacedKey("suld", "orb_of_oblivion");
     public static final String NAME = "Мартагдлын Бөмбөрцөг";
+    /** The pack model {@code suld:orb_oblivion} the item wears. */
+    public static final String MODEL = mn.suld.api.skill.tree.MapAssets.ORB_MODEL;
 
     private OrbOfOblivion() {
     }
@@ -36,7 +38,7 @@ public final class OrbOfOblivion {
                         Component.empty(),
                         Component.text("« Баруун товшиж ашиглана »", TextColor.fromHexString("#F2B632"), TextDecoration.BOLD)));
         ItemMeta m = it.getItemMeta();
-        m.setItemModel(new NamespacedKey("suld", "orb_oblivion"));
+        m.setItemModel(new NamespacedKey("suld", MODEL));
         m.getPersistentDataContainer().set(TAG, PersistentDataType.BYTE, (byte) 1);
         it.setItemMeta(m);
         it.setAmount(Math.max(1, Math.min(64, amount)));

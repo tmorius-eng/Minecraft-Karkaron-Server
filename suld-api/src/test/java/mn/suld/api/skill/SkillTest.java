@@ -29,6 +29,19 @@ class SkillTest {
     }
 
     @Test
+    void everySpellHasACooldownThatGrowsWithItsSlot() {
+        for (PlayerClass c : PlayerClass.values()) {
+            double previous = 0;
+            for (Spell s : Spell.of(c)) {
+                assertTrue(s.cooldownSeconds() > previous, s.name());
+                previous = s.cooldownSeconds();
+            }
+        }
+        assertEquals(1.5, Spell.TENGER_TSAVCHILT.cooldownSeconds());
+        assertEquals(10, Spell.TENGERIIN_SUM.cooldownSeconds());
+    }
+
+    @Test
     void comboStartsOnlyWithTheFirstClickAndExpires() {
         ComboTracker t = new ComboTracker(PlayerClass.BAATAR);
         assertEquals(ComboTracker.Kind.IGNORED, t.click('L', 0).kind()); // a normal attack doesn't start a combo

@@ -62,6 +62,8 @@ public final class SkillMapMenu implements Listener {
     private static final class View {
         int zoom = 1;
         int ox, oy;
+        /** The detailed view's position, kept while the overview is shown so zooming back returns to the same place. */
+        int detailOx, detailOy;
         SkillCategory filter;
         Set<String> found = new HashSet<>();
         String query = "";
@@ -213,7 +215,7 @@ public final class SkillMapMenu implements Listener {
         int slot = row * 9 + col;
         // a red link never hides a learned path: it only fills a free connector slot
         if (m.getInventory().getItem(slot) != null && color.equals("red")) return;
-        m.set(slot, Menu.model("tree_" + kind + "_" + color, tooltip == null ? null : tooltip.get(0), tooltip), null);
+        m.set(slot, Menu.model(mn.suld.api.skill.tree.MapAssets.connector(kind, color), tooltip == null ? null : tooltip.get(0), tooltip), null);
     }
 
     // ------------------------------------------------------------------ nodes
@@ -251,7 +253,12 @@ public final class SkillMapMenu implements Listener {
         TextColor color = n.keystone() && state != NodeState.LOCKED && state != NodeState.EXCLUDED ? PURPLE : stateColor(state);
         Component title = Menu.title((found ? "🔍 " : "") + prefix + n.name(), color);
         ItemStack it = Menu.item(mat, title, tooltip(p, tree, a, n, state, dim));
-        if (!dim && (state == NodeState.UNLOCKED || state == NodeState.MAXED || found) && mat != Material.GRAY_STAINED_GLASS_PANE) Menu.glow(it);
+        // the glow means "learned" (or "found by the search"): set it explicitly both ways, because some icons (experience
+        // bottle, nether star...) glow by themselves and would otherwise look learned when they are not
+        boolean glow = !dim && (state == NodeState.UNLOCKED || state == NodeState.MAXED || found) && mat != Material.GRAY_STAINED_GLASS_PANE;
+        var meta = it.getItemMeta();
+        meta.setEnchantmentGlintOverride(glow);
+        it.setItemMeta(meta);
         if (a.rank(n) > 1) it.setAmount(Math.min(64, a.rank(n)));
         return it;
     }
@@ -394,10 +401,20 @@ public final class SkillMapMenu implements Listener {
     private void zoom(Player p) {
         View v = views.get(p.getUniqueId());
         if (v == null) return;
-        int cx = v.zoom == 1 ? v.ox + 2 : v.ox + 4, cy = v.zoom == 1 ? v.oy + 1 : v.oy + 2;
-        v.zoom = v.zoom == 1 ? 2 : 1;
-        v.ox = v.zoom == 1 ? cx - 2 : 0;
-        v.oy = v.zoom == 1 ? cy - 1 : cy - 2;
+        if (v.zoom == 1) {
+            // to the overview: remember where we were, show all columns around the same rows
+            v.detailOx = v.ox;
+            v.detailOy = v.oy;
+            int cy = v.oy + 1;
+            v.zoom = 2;
+            v.ox = 0;
+            v.oy = cy - 2;
+        } else {
+            // back to the detailed view exactly where it was left
+            v.zoom = 1;
+            v.ox = v.detailOx;
+            v.oy = v.detailOy;
+        }
         redraw(p);
     }
 

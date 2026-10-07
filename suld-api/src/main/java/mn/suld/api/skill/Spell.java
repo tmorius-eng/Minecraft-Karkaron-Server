@@ -39,6 +39,9 @@ public enum Spell {
 
     public static final int[] UNLOCK_LEVEL = {0, 1, 10, 20, 35};
 
+    /** Base cooldown in seconds by slot (1..4): the stronger the spell, the longer before it can be cast again. */
+    private static final double[] COOLDOWN_SECONDS = {0, 1.5, 4, 5, 10};
+
     private final PlayerClass clazz;
     private final int slot;
     private final String displayName;
@@ -64,6 +67,8 @@ public enum Spell {
     public double damageMultiplier() { return damageMultiplier; }
     public String description() { return description; }
     public int unlockLevel() { return UNLOCK_LEVEL[slot]; }
+    /** Seconds before this spell can be cast again (before cooldown reduction). */
+    public double cooldownSeconds() { return COOLDOWN_SECONDS[slot]; }
 
     /** The combo for this spell, e.g. "RLR" (melee) or "LRL" (archer). */
     public String combo() {

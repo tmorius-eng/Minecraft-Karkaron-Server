@@ -71,6 +71,12 @@ public final class SkillService implements Listener {
     private final Map<UUID, ResourcePool> pools = new ConcurrentHashMap<>();
     private final Map<String, Long> lastClickByType = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastCast = new ConcurrentHashMap<>();
+    /** When each spell may be cast again, per player. */
+    private final Map<UUID, Map<Spell, Long>> spellReady = new ConcurrentHashMap<>();
+    /** Counts every execution of a spell body (including echoes): the QA suite measures echo chance with it. */
+    public final java.util.concurrent.atomic.AtomicInteger executions = new java.util.concurrent.atomic.AtomicInteger();
+    /** Counts enemies a spell touched (each gets the modifier riders once); the QA suite derives expected totals from it. */
+    public final java.util.concurrent.atomic.AtomicInteger riderCalls = new java.util.concurrent.atomic.AtomicInteger();
     private final Map<UUID, String> notice = new ConcurrentHashMap<>();
     /** The caster's ATK when the spell was cast: swapping weapons while it is still flying changes nothing. */
     private final Map<UUID, Double> castAttack = new ConcurrentHashMap<>();
@@ -118,6 +124,7 @@ public final class SkillService implements Listener {
         UUID id = e.getPlayer().getUniqueId();
         combos.remove(id);
         lastCast.remove(id);
+        spellReady.remove(id);
         notice.remove(id);
         castAttack.remove(id);
         lastClickByType.keySet().removeIf(k -> k.startsWith(id.toString()));
@@ -196,28 +203,60 @@ public final class SkillService implements Listener {
 
     // ------------------------------------------------------------------ casting
 
+    public enum CastResult { CAST, NO_PROFILE, SOUL, LOCKED, GAP, COOLDOWN, NO_RESOURCE }
+
     private void cast(Player p, Spell s) {
+        castDirect(p, s, false);
+    }
+
+    /** Seconds left before {@code s} can be cast again (0 = ready). */
+    public double cooldownLeft(Player p, Spell s) {
+        Map<Spell, Long> m = spellReady.get(p.getUniqueId());
+        Long at = m == null ? null : m.get(s);
+        return at == null ? 0 : Math.max(0, (at - System.currentTimeMillis()) / 1000.0);
+    }
+
+    /** The cooldown of {@code s} for this build: base seconds reduced by the cooldown-reduction stat (at most 60%). */
+    public static double cooldownSeconds(SkillBuild b, Spell s) {
+        return s.cooldownSeconds() * (1 - Math.min(60, b.stat(StatKey.COOLDOWN_REDUCTION)) / 100.0);
+    }
+
+    /**
+     * Cast {@code s} for {@code p} with all the normal rules (soul, level, anti-spam gap, cooldown, resource).
+     * {@code ignoreTiming} skips the anti-spam gap and the cooldown (used by the QA suite to cast repeatedly).
+     */
+    public CastResult castDirect(Player p, Spell s, boolean ignoreTiming) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-        if (pr == null) return;
+        if (pr == null) return CastResult.NO_PROFILE;
         if (services.isSoul.test(p.getUniqueId())) { // a soul cannot cast
             say(p, "§bСүнс — ид шид хэрэглэх боломжгүй");
-            return;
+            return CastResult.SOUL;
         }
         if (pr.progression().level() < s.unlockLevel()) {
             say(p, "§c" + s.displayName() + " — түвшин " + s.unlockLevel());
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
-            return;
+            return CastResult.LOCKED;
         }
         long now = System.currentTimeMillis();
         Long lc = lastCast.get(p.getUniqueId());
-        if (lc != null && now - lc < 400) return;
+        if (!ignoreTiming && lc != null && now - lc < 400) return CastResult.GAP;
         SkillBuild build = buildOf(p);
+        if (!ignoreTiming) {
+            double left = cooldownLeft(p, s);
+            if (left > 0) {
+                say(p, "§c" + s.displayName() + " — " + String.format(java.util.Locale.ROOT, "%.1f", left) + " сек хүлээнэ");
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
+                return CastResult.COOLDOWN;
+            }
+        }
         int cost = costOf(build, s);
         if (!pool(p).spend(cost)) {
             say(p, "§c" + s.displayName() + " — нөөц хүрэлцэхгүй (" + cost + ")");
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
-            return;
+            return CastResult.NO_RESOURCE;
         }
+        spellReady.computeIfAbsent(p.getUniqueId(), k -> new java.util.EnumMap<>(Spell.class))
+                .put(s, now + (long) (cooldownSeconds(build, s) * 1000));
         lastCast.put(p.getUniqueId(), now);
         castAttack.put(p.getUniqueId(), CombatListener.attackOf(services, p));
         say(p, "§e✦ " + s.displayName());
@@ -232,10 +271,11 @@ public final class SkillService implements Listener {
             }, 12L);
         }
         double shield = build.mod(s, ModKey.SHIELD);
-        if (shield > 0) services.skillTree().shield(p, shield, 120);
+        if (shield > 0) services.skillTree().shieldAdd(p, shield, 120);
         double haste = build.mod(s, ModKey.HASTE);
         if (haste > 0) p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) (haste * 20), 1, false, false, true));
         services.skillTree().fire(p, TriggerEvent.CAST, null);
+        return CastResult.CAST;
     }
 
     /** Mana cost after spell modifiers and cooldown/cost reduction (never below 1). */
@@ -245,6 +285,7 @@ public final class SkillService implements Listener {
     }
 
     private void run(Player p, Spell s) {
+        executions.incrementAndGet();
         switch (s) {
             case TENGER_TSAVCHILT -> cone(p, s, 4.5, 0.45, Particle.SWEEP_ATTACK, Sound.ENTITY_PLAYER_ATTACK_SWEEP);
             case DAINY_KHASHGIRAAN -> warCry(p, s);
@@ -303,9 +344,10 @@ public final class SkillService implements Listener {
 
     /** Everything a spell modifier adds to an enemy the spell touched (burn, slow, mark, pull, life, refund...). */
     public void riders(Player p, LivingEntity target, Spell s) {
+        riderCalls.incrementAndGet();
         SkillBuild b = buildOf(p);
         if (b.isEmpty() || !target.isValid()) return;
-        double burn = b.mod(s, ModKey.BURN) + (b.has(KeystoneKind.ALTAN_DOSH) && s.damageMultiplier() > 0 ? 3 : 0);
+        double burn = burnOf(b, s);
         if (burn > 0) target.setFireTicks(Math.max(target.getFireTicks(), (int) (burn * 20)));
         double slow = b.mod(s, ModKey.SLOW);
         if (slow > 0) target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, (int) (slow * 20), 1));
@@ -324,6 +366,20 @@ public final class SkillService implements Listener {
             Vector to = p.getLocation().toVector().subtract(target.getLocation().toVector()).setY(0);
             if (to.lengthSquared() > 1) target.setVelocity(to.normalize().multiply(0.5 * pull).setY(0.2));
         }
+    }
+
+    /**
+     * The horizontal direction the player faces, from the yaw only. (Taking the view vector and zeroing its height gives a
+     * zero vector, and then NaN, when the player looks straight up or down.)
+     */
+    static Vector flat(Player p) {
+        double yaw = Math.toRadians(p.getLocation().getYaw());
+        return new Vector(-Math.sin(yaw), 0, Math.cos(yaw));
+    }
+
+    private static Vector horizontal(Vector v) {
+        Vector h = v.clone().setY(0);
+        return h.lengthSquared() < 1e-6 ? new Vector(0, 0, 0) : h.normalize();
     }
 
     private double r(Player p, Spell s, double radius) {
@@ -347,6 +403,15 @@ public final class SkillService implements Listener {
         }
     }
 
+    /** Enemies whose body (the centre of their hitbox, not their feet) is within {@code r} of a point on a ray. */
+    private List<LivingEntity> aroundBody(Player p, Location c, double r) {
+        List<LivingEntity> out = new ArrayList<>();
+        for (Entity e : c.getWorld().getNearbyEntities(c, r + 1, r + 1, r + 1)) {
+            if (hostile(e, p) && e.getBoundingBox().getCenter().distanceSquared(c.toVector()) <= r * r) out.add((LivingEntity) e);
+        }
+        return out;
+    }
+
     private List<LivingEntity> around(Player p, Location c, double r) {
         List<LivingEntity> out = new ArrayList<>();
         for (Entity e : c.getWorld().getNearbyEntities(c, r, r, r)) {
@@ -366,13 +431,13 @@ public final class SkillService implements Listener {
     }
 
     private void cone(Player p, Spell s, double range, double dot, Particle fx, Sound sound) {
-        Vector dir = p.getLocation().getDirection().setY(0).normalize();
+        Vector dir = flat(p);
         Location c = p.getLocation().add(0, 1, 0);
         for (LivingEntity e : around(p, c, r(p, s, range))) {
             Vector to = e.getLocation().toVector().subtract(p.getLocation().toVector()).setY(0);
-            if (to.lengthSquared() < 0.01 || to.normalize().dot(dir) >= dot) {
+            if (to.lengthSquared() < 0.01 || horizontal(to).dot(dir) >= dot) {
                 hurt(p, e, s);
-                e.setVelocity(to.normalize().multiply(0.6).setY(0.3));
+                e.setVelocity(horizontal(to).multiply(0.6).setY(0.3));
             }
         }
         for (int i = -2; i <= 2; i++) {
@@ -398,7 +463,7 @@ public final class SkillService implements Listener {
     }
 
     private void leap(Player p, Spell s) {
-        p.setVelocity(p.getLocation().getDirection().setY(0).normalize().multiply(1.3).setY(0.65));
+        p.setVelocity(flat(p).multiply(1.3).setY(0.65));
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_GOAT_LONG_JUMP, 1f, 1f);
         new BukkitRunnable() {
             int t;
@@ -458,7 +523,7 @@ public final class SkillService implements Listener {
             e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1));
             riders(p, e, s);
         }
-        p.setVelocity(p.getLocation().getDirection().setY(0).normalize().multiply(-1.2).setY(0.45));
+        p.setVelocity(flat(p).multiply(-1.2).setY(0.45));
         p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 20, 0.5, 0.2, 0.5, 0.05);
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_JUMP, 1f, 1.2f);
     }
@@ -472,7 +537,7 @@ public final class SkillService implements Listener {
         for (double d = 0.5; d <= len; d += 0.5) {
             Location at = eye.clone().add(dir.clone().multiply(d));
             p.getWorld().spawnParticle(fx, at, 1, 0, 0, 0, 0);
-            for (LivingEntity e : around(p, at, 1.2)) if (hit.add(e.getUniqueId())) hurt(p, e, s);
+            for (LivingEntity e : aroundBody(p, at, 1.2)) if (hit.add(e.getUniqueId())) hurt(p, e, s);
         }
         p.getWorld().playSound(eye, sound, 1f, 1.2f);
     }
@@ -495,7 +560,7 @@ public final class SkillService implements Listener {
         for (LivingEntity e : around(p, p.getLocation(), 20)) {
             Vector to = e.getEyeLocation().toVector().subtract(p.getEyeLocation().toVector());
             double d = to.lengthSquared();
-            if (d < best && to.normalize().dot(dir) > 0.3) {
+            if (d > 1e-6 && d < best && to.normalize().dot(dir) > 0.3) {
                 best = d;
                 target = e;
             }
@@ -566,7 +631,7 @@ public final class SkillService implements Listener {
 
     private Location targetPoint(Player p, double range) {
         RayTraceResult r = p.getWorld().rayTraceBlocks(p.getEyeLocation(), p.getEyeLocation().getDirection(), range, FluidCollisionMode.NEVER, true);
-        return r == null ? p.getLocation().add(p.getLocation().getDirection().setY(0).normalize().multiply(8))
+        return r == null ? p.getLocation().add(flat(p).multiply(8))
                 : r.getHitPosition().toLocation(p.getWorld());
     }
 
@@ -600,11 +665,21 @@ public final class SkillService implements Listener {
         }.runTaskTimer(plugin, 0L, 1L);
     }
 
+    private static double burnOf(SkillBuild b, Spell s) {
+        return b.mod(s, ModKey.BURN) + (b.has(KeystoneKind.ALTAN_DOSH) && s.damageMultiplier() > 0 ? 3 : 0);
+    }
+
+    /** The spell's own burning (ticks) plus whatever burning the player's nodes add to it; never shortens a fire already burning. */
+    private void ignite(Player p, LivingEntity e, Spell s, int baseTicks) {
+        int extra = (int) (burnOf(buildOf(p), s) * 20);
+        e.setFireTicks(Math.max(e.getFireTicks(), baseTicks + extra));
+    }
+
     private void slam(Player p, Spell s) {
         Location c = p.getLocation();
         for (LivingEntity e : around(p, c, r(p, s, 4))) {
             hurt(p, e, s);
-            e.setFireTicks(60);
+            ignite(p, e, s, 60);
         }
         c.getWorld().spawnParticle(Particle.FLAME, c, 60, 2, 0.2, 2, 0.05);
         c.getWorld().spawnParticle(Particle.LAVA, c, 10, 1.5, 0.2, 1.5);
@@ -625,13 +700,13 @@ public final class SkillService implements Listener {
                     cancel();
                     return;
                 }
-                Vector dir = p.getLocation().getDirection().setY(0).normalize();
+                Vector dir = flat(p);
                 Location c = p.getLocation().add(0, 1, 0);
                 for (LivingEntity e : around(p, c, r(p, s, 6))) {
                     Vector to = e.getLocation().toVector().subtract(p.getLocation().toVector()).setY(0);
                     if (to.lengthSquared() > 0.01 && to.normalize().dot(dir) > 0.6) {
                         hurt(p, e, s);
-                        e.setFireTicks(40);
+                        ignite(p, e, s, 40);
                     }
                 }
                 for (double d = 1; d < 6; d += 0.5) c.getWorld().spawnParticle(Particle.FLAME, c.clone().add(dir.clone().multiply(d)), 3, 0.3 * d / 3, 0.2, 0.3 * d / 3, 0.01);
@@ -666,7 +741,7 @@ public final class SkillService implements Listener {
     }
 
     private void charge(Player p, Spell s) {
-        p.setVelocity(p.getLocation().getDirection().setY(0).normalize().multiply(1.6).setY(0.15));
+        p.setVelocity(flat(p).multiply(1.6).setY(0.15));
         Set<UUID> hit = new HashSet<>();
         new BukkitRunnable() {
             int t;
@@ -689,7 +764,7 @@ public final class SkillService implements Listener {
     }
 
     private void stampede(Player p, Spell s) {
-        Vector dir = p.getLocation().getDirection().setY(0).normalize();
+        Vector dir = flat(p);
         Location start = p.getLocation();
         Set<UUID> hit = new HashSet<>();
         new BukkitRunnable() {
@@ -721,19 +796,22 @@ public final class SkillService implements Listener {
     // ------------------------------------------------------------------ resource + action bar
 
     private void regen() {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            PlayerClass c = clazzOf(p);
-            if (c == null) continue;
-            double rate = switch (c) {
-                case BAATAR -> 2;
-                case MERGEN -> 5;
-                case BOO -> 6;
-                case DARKHAN -> 3;
-                case KHULEGCHIN -> p.isSprinting() ? 9 : 4;
-            };
-            SkillBuild b = buildOf(p);
-            pool(p).gain(rate + b.stat(StatKey.RESOURCE_REGEN) + (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH) ? 3 : 0));
-        }
+        for (Player p : Bukkit.getOnlinePlayers()) regenOne(p);
+    }
+
+    /** One second of resource regeneration for a player (also what the QA suite measures). */
+    public void regenOne(Player p) {
+        PlayerClass c = clazzOf(p);
+        if (c == null) return;
+        double rate = switch (c) {
+            case BAATAR -> 2;
+            case MERGEN -> 5;
+            case BOO -> 6;
+            case DARKHAN -> 3;
+            case KHULEGCHIN -> p.isSprinting() ? 9 : 4;
+        };
+        SkillBuild b = buildOf(p);
+        pool(p).gain(rate + b.stat(StatKey.RESOURCE_REGEN) + (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH) ? 3 : 0));
     }
 
     private static TextColor resourceColor(PlayerClass c) {

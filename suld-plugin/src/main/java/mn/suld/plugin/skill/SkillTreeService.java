@@ -11,6 +11,7 @@ import mn.suld.api.skill.tree.SkillAllocation;
 import mn.suld.api.skill.tree.SkillBuild;
 import mn.suld.api.skill.tree.SkillEngine;
 import mn.suld.api.skill.tree.SkillNode;
+import mn.suld.api.skill.tree.SkillPoints;
 import mn.suld.api.skill.tree.SkillTree;
 import mn.suld.api.skill.tree.SkillTreeLoader;
 import mn.suld.api.skill.tree.StatKey;
@@ -91,6 +92,9 @@ public final class SkillTreeService implements Listener {
     private final Map<UUID, double[]> marks = new ConcurrentHashMap<>();
     private SkillService skills;
     private Ultimates ultimates;
+    /** How many times a passive spell of each trigger actually ran (QA measures chance and wiring with it). */
+    public final Map<TriggerEvent, java.util.concurrent.atomic.AtomicInteger> activations = new EnumMap<>(TriggerEvent.class);
+
     /** True while a proc is dealing its own damage: that damage must not trigger more procs. */
     private boolean dispatching;
 
@@ -144,7 +148,9 @@ public final class SkillTreeService implements Listener {
             next.put(c, t);
         }
         trees = next;
-        issues = List.copyOf(fromDisk.issues());
+        List<SkillTreeLoader.Issue> all = new ArrayList<>(fromDisk.issues());
+        all.addAll(iconIssues(next));
+        issues = List.copyOf(all);
         for (SkillTreeLoader.Issue i : issues) plugin.getLogger().severe("[skills] " + i);
         int nodes = next.values().stream().mapToInt(t -> t.nodes().size() - 1).sum();
         plugin.getLogger().info("[skills] " + nodes + " nodes loaded for " + next.size() + " classes"
@@ -153,10 +159,31 @@ public final class SkillTreeService implements Listener {
         return issues;
     }
 
-    /** Validate the server's data files without applying them (what /skillsadmin validate reports). */
+    /** Validate the server's data files without applying them (what /skillsadmin validate reports), including node icons. */
     public List<SkillTreeLoader.Issue> validate() {
         extractDefaults();
-        return SkillTreeLoader.loadAll(SkillTreeLoader.directory(dataDir)).issues();
+        SkillTreeLoader.Result r = SkillTreeLoader.loadAll(SkillTreeLoader.directory(dataDir));
+        List<SkillTreeLoader.Issue> all = new ArrayList<>(r.issues());
+        all.addAll(iconIssues(r.trees()));
+        return all;
+    }
+
+    /** A node whose icon is not an item this server knows would silently show as paper: report it with file and field. */
+    private static List<SkillTreeLoader.Issue> iconIssues(Map<PlayerClass, SkillTree> trees) {
+        List<SkillTreeLoader.Issue> out = new ArrayList<>();
+        for (Map.Entry<PlayerClass, SkillTree> e : trees.entrySet()) {
+            int i = 0;
+            for (SkillNode n : e.getValue().nodes()) {
+                org.bukkit.Material m = org.bukkit.Material.matchMaterial(n.icon());
+                boolean universal = n.tags().contains("universal");
+                if (m == null || !m.isItem()) {
+                    out.add(new SkillTreeLoader.Issue(universal ? "universal.json" : SkillTreeLoader.fileOf(e.getKey()),
+                            "nodes[id=" + n.id() + "].icon", "'" + n.icon() + "' is not an item on this server"));
+                }
+                i++;
+            }
+        }
+        return out;
     }
 
     public List<SkillTreeLoader.Issue> issues() {
@@ -522,6 +549,92 @@ public final class SkillTreeService implements Listener {
         return r == null ? 0 : r.build.procs(event).size();
     }
 
+    // ------------------------------------------------------------------ QA support (used by SkillQa)
+
+    /** Rebuild a player's derived state from the profile without saving or normalising (the QA suite sets ranks directly). */
+    public void qaRefresh(Player p) {
+        PlayerProfile pr = profile(p);
+        if (pr == null || pr.playerClass().isEmpty()) return;
+        Runtime r = runtime.computeIfAbsent(p.getUniqueId(), k -> new Runtime());
+        r.clazz = pr.playerClass().get();
+        r.tree = trees.get(r.clazz);
+        refreshRuntime(p, pr, r);
+    }
+
+    /** Make every passive spell and the ultimate ready again. */
+    public void qaResetTimers(Player p) {
+        Runtime r = runtime.get(p.getUniqueId());
+        if (r != null) {
+            r.procReady.clear();
+            r.ultReady = 0;
+        }
+    }
+
+    /** Runs the passive spells of {@code event} at {@code target} after making them all ready. */
+    public void adminFireAt(Player p, TriggerEvent event, LivingEntity target) {
+        qaResetTimers(p);
+        fire(p, event, target);
+    }
+
+    /** Like {@link #adminFireAt} but keeps the cooldowns as they are (to observe them). */
+    public void adminFireAtNoReset(Player p, TriggerEvent event, LivingEntity target) {
+        fire(p, event, target);
+    }
+
+    /**
+     * Puts a player in a known skill-tree situation for manual or automated client QA.
+     * <ul>
+     *   <li>{@code fresh}: level 1, empty tree, no granted points (what a new player sees)</li>
+     *   <li>{@code rich}: level 60, empty tree, 60 points to click through</li>
+     *   <li>{@code states0}: like {@code states} but with no free point, so every unlearned node shows "needs points" (classes
+     *       without a cost-2 node reachable from the build, which {@code states} needs for that state)</li>
+     *   <li>{@code states}: level 14 with a build that shows every node state on the first screens: learned (2/3), maxed,
+     *       available, needs points, level locked, prerequisite missing, excluded by a red link, locked, plus a keystone</li>
+     * </ul>
+     * Returns a description, or null for an unknown scenario.
+     */
+    public String qaKit(Player p, String scenario) {
+        PlayerProfile pr = profile(p);
+        SkillTree t = tree(p);
+        if (pr == null || t == null) return null;
+        synchronized (pr) {
+            pr.skillState(pr.skillState().withRanks("").withGranted(0));
+            switch (scenario) {
+                case "fresh" -> pr.progression(new mn.suld.api.progression.Progression(1, 0));
+                case "rich" -> {
+                    pr.progression(new mn.suld.api.progression.Progression(60, 0));
+                    SkillEngine.grant(pr, 60 - total(p));
+                }
+                case "states", "states0" -> {
+                    pr.progression(new mn.suld.api.progression.Progression(14, 0));
+                    String[] path = {"l1", "l1", "m1", "m1", "m1", "l2", "l3", "l4", "l2b", "l2b", "l5b", "l6", "l7"};
+                    for (String id : path) SkillEngine.forceUnlock(pr, t, t.node(id));
+                    // exactly one free point: cost-2 nodes then need points, cost-1 nodes are available
+                    int spent = SkillEngine.spent(pr, t);
+                    int base = SkillPoints.total(14, context(p).finishedChapters(), context(p).discoveredRegions(), 0);
+                    SkillEngine.grant(pr, Math.max(0, spent + (scenario.equals("states0") ? 0 : 1) - base));
+                }
+                default -> {
+                    return null;
+                }
+            }
+        }
+        afterChange(p);
+        return scenario + ": level " + context(p).level() + ", " + available(p) + " free points, " + spent(p) + " spent";
+    }
+
+    public void qaClearMarks() {
+        marks.clear();
+    }
+
+    /** Casts the player's ultimate through the normal rules (cost, cooldown); true if it was cast. */
+    public boolean qaCastUltimate(Player p) {
+        Runtime r = runtime.get(p.getUniqueId());
+        if (r == null || r.build.ultimate() == null || System.currentTimeMillis() < r.ultReady) return false;
+        castUltimate(p, r);
+        return System.currentTimeMillis() < r.ultReady;
+    }
+
     // ------------------------------------------------------------------ stats used by the combat code
 
     public double attackMultiplier(Player p) {
@@ -587,6 +700,7 @@ public final class SkillTreeService implements Listener {
             if (ready != null && now < ready) continue;
             if (proc.chance() < 100 && ThreadLocalRandom.current().nextDouble() * 100 >= proc.chance()) continue;
             if (proc.cooldown() > 0) r.procReady.put(ip.node(), now + (long) (proc.cooldown() * 1000 * (1 - cdr)));
+            activations.computeIfAbsent(event, k -> new java.util.concurrent.atomic.AtomicInteger()).incrementAndGet();
             dispatching = true;
             try {
                 run(p, proc, target);
@@ -674,15 +788,24 @@ public final class SkillTreeService implements Listener {
         }
     }
 
+    /** Adds {@code hp} of absorption on top of what the player already has (spell modifier SHIELD); it fades after {@code ticks}. */
+    public void shieldAdd(Player p, double hp, int ticks) {
+        shield(p, hp, ticks, true);
+    }
+
     /**
      * Absorption hearts that fade after {@code ticks}; a newer shield replaces an older one. Absorption is capped by the
      * MAX_ABSORPTION attribute (0 for players), so the shield raises that cap with a temporary modifier first.
      */
     public void shield(Player p, double hp, int ticks) {
+        shield(p, hp, ticks, false);
+    }
+
+    private void shield(Player p, double hp, int ticks, boolean additive) {
         Runtime r = runtime.get(p.getUniqueId());
         long token = r == null ? 0 : ++r.shieldToken;
         setModifier(p, Attribute.MAX_ABSORPTION, "shield", hp, AttributeModifier.Operation.ADD_NUMBER);
-        p.setAbsorptionAmount(Math.max(p.getAbsorptionAmount(), hp));
+        p.setAbsorptionAmount(additive ? p.getAbsorptionAmount() + hp : Math.max(p.getAbsorptionAmount(), hp));
         p.getWorld().spawnParticle(org.bukkit.Particle.END_ROD, p.getLocation().add(0, 1, 0), 10, 0.4, 0.6, 0.4, 0.02);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             Runtime now = runtime.get(p.getUniqueId());

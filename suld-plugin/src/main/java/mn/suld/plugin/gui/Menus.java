@@ -313,6 +313,7 @@ public final class Menus {
             List<Component> info = new ArrayList<>();
             info.add(Menu.kv("Хослол:", combo, GOLD));
             info.add(Menu.kv("Нөөц:", String.valueOf(sp.cost()), SKY));
+            info.add(Menu.kv("Хүлээлт:", sp.cooldownSeconds() + " сек", SKY));
             if (sp.damageMultiplier() > 0) info.add(Menu.kv("Хүч:", "x" + sp.damageMultiplier() + " ATK", RED));
             info.add(Menu.kv("Түвшин:", String.valueOf(sp.unlockLevel()), c));
             ItemStack it = Menu.item(open ? SPELL_ICON[sp.slot() - 1] : Material.GRAY_DYE,
