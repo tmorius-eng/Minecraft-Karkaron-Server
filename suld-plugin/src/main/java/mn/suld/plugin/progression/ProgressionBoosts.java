@@ -17,7 +17,7 @@ public final class ProgressionBoosts {
     }
 
     /**
-     * Timed blessings by source (an ovoo's, docs/world/OVOO.md; a lucky shagai cast): player → source → (until
+     * Timed blessings by source (an ovoo's, docs/world/OVOO.md; others later): player → source → (until
      * millis, bonus). Different sources add up; a new blessing from the same source replaces the old one.
      */
     private final java.util.Map<UUID, java.util.Map<String, double[]>> blessings = new java.util.concurrent.ConcurrentHashMap<>();

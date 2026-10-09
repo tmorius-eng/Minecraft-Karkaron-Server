@@ -135,13 +135,6 @@ models:
 npc:
   dialogue: true
 
-# Наадам · Сур харваа (docs/world/NAADAM.md): an archery contest outside the south gate every N minutes.
-naadam:
-  every-minutes: 120
-  min-players: 2
-  # Морин уралдаан: a horse race around Kharkhorum, offset an hour from the archery.
-  race-every-minutes: 120
-
 # Dungeon halls (docs/world/DUNGEON_HALLS.md): build one hall per theme shortly after start, one at a time.
 dungeons:
   prewarm-halls: true
