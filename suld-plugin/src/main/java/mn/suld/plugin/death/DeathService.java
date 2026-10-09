@@ -89,6 +89,8 @@ public final class DeathService implements Listener {
     private static final long FOREVER = TimeUnit.DAYS.toMillis(36_500);
 
     private final Plugin plugin;
+    /** The SÜLD menu item's tag (gui/MenuListener): a soul may still open the menus with it. */
+    private final org.bukkit.NamespacedKey menuItemKey;
     private final SuldServices services;
     private final DeathRepository repo;
     private final NamespacedKey menuKey;
@@ -105,6 +107,7 @@ public final class DeathService implements Listener {
 
     public DeathService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
+        this.menuItemKey = new org.bukkit.NamespacedKey(plugin, "menu_item");
         this.services = services;
         this.repo = services.deathRepository();
         this.menuKey = new NamespacedKey(plugin, "menu_item");
@@ -553,6 +556,65 @@ public final class DeathService implements Listener {
     public void onSoulPlace(BlockPlaceEvent e) {
         if (isSoul(e.getPlayer().getUniqueId())) e.setCancelled(true);
     }
+
+    /** A soul cannot drop, throw or use things: no item may change hands or be spent while recovering. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSoulDrop(org.bukkit.event.player.PlayerDropItemEvent e) {
+        if (isSoul(e.getPlayer().getUniqueId())) e.setCancelled(true);
+    }
+
+    /**
+     * Blocks (doors, levers, beds…) and items (pearls, potions, food, buckets…) do nothing for a soul. The SÜLD menu
+     * item still opens the menus, so a soul can read its death info and revive options.
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onSoulInteract(org.bukkit.event.player.PlayerInteractEvent e) {
+        if (!isSoul(e.getPlayer().getUniqueId())) return;
+        ItemStack it = e.getItem();
+        boolean menu = it != null && it.hasItemMeta()
+                && it.getItemMeta().getPersistentDataContainer().has(menuItemKey, org.bukkit.persistence.PersistentDataType.BYTE);
+        e.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
+        if (!menu) e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSoulConsume(org.bukkit.event.player.PlayerItemConsumeEvent e) {
+        if (isSoul(e.getPlayer().getUniqueId())) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSoulLaunch(org.bukkit.event.entity.ProjectileLaunchEvent e) {
+        if (e.getEntity().getShooter() instanceof Player p && isSoul(p.getUniqueId())) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSoulEntityInteract(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+        if (isSoul(e.getPlayer().getUniqueId())) e.setCancelled(true);
+    }
+
+    /**
+     * A soul may talk, read and revive, nothing else: no teleport (/spawn, /tpa, /home, /warp…), payment, trade,
+     * dungeon, horse or shop until the lock is over. Admins are not limited.
+     */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onSoulCommand(org.bukkit.event.player.PlayerCommandPreprocessEvent e) {
+        Player p = e.getPlayer();
+        if (!isSoul(p.getUniqueId()) || p.hasPermission("suld.admin")) return;
+        String label = e.getMessage().length() > 1 ? e.getMessage().substring(1).split(" ", 2)[0].toLowerCase(java.util.Locale.ROOT) : "";
+        int colon = label.indexOf(':');
+        if (colon >= 0) label = label.substring(colon + 1);
+        org.bukkit.command.Command c = Bukkit.getCommandMap().getCommand(label);
+        String name = c == null ? label : c.getName().toLowerCase(java.util.Locale.ROOT);
+        if (SOUL_COMMANDS.contains(name) || SOUL_COMMANDS.contains(label)) return;
+        e.setCancelled(true);
+        p.sendMessage(Messages.error("Сүнс байхдаа энэ тушаалыг ашиглахгүй. Сэргэх хүртэл: " + DeathLock.format(lockRemaining(p.getUniqueId()))));
+    }
+
+    /** What a soul may still run: death and revive, chat and messages, help and reading its own state. */
+    private static final java.util.Set<String> SOUL_COMMANDS = java.util.Set.of(
+            "revive", "deathstatus", "deathinfo", "help", "rules", "commands", "menu", "tutorial", "profile", "quest",
+            "chat", "ch", "g", "l", "pc", "tr", "cc", "msg", "tell", "w", "whisper", "r", "reply", "mail",
+            "discord", "website", "vote", "top", "balance", "cosmetics", "buy", "credits");
 
     /** Containers, merchants, anvils… are closed to a soul; SÜLD menus and the player's own inventory stay open. */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

@@ -39,26 +39,28 @@ public enum SqlDialect {
     /** Upsert statement for the profiles table, keyed on player_uuid. */
     public String profileUpsert() {
         return switch (this) {
+            // a stale snapshot (lower version than the row) never overwrites a newer one; version is assigned last,
+            // because MySQL evaluates the assignments in order
             case MYSQL -> """
                     INSERT INTO suld_profiles
                         (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version,
                          currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE
-                        name = VALUES(name),
-                        class_id = VALUES(class_id),
-                        level = VALUES(level),
-                        exp_into_level = VALUES(exp_into_level),
-                        last_seen_at = VALUES(last_seen_at),
-                        version = VALUES(version),
-                        currency = VALUES(currency),
-                        active_quest_id = VALUES(active_quest_id),
-                        quest_progress = VALUES(quest_progress),
-                        quest_completed = VALUES(quest_completed),
-                        skill_data = VALUES(skill_data),
-                        equipment_data = VALUES(equipment_data),
-                        class_gear = VALUES(class_gear),
-                        active_minutes = VALUES(active_minutes)
+                        name = CASE WHEN VALUES(version) >= version THEN VALUES(name) ELSE name END,
+                        class_id = CASE WHEN VALUES(version) >= version THEN VALUES(class_id) ELSE class_id END,
+                        level = CASE WHEN VALUES(version) >= version THEN VALUES(level) ELSE level END,
+                        exp_into_level = CASE WHEN VALUES(version) >= version THEN VALUES(exp_into_level) ELSE exp_into_level END,
+                        last_seen_at = CASE WHEN VALUES(version) >= version THEN VALUES(last_seen_at) ELSE last_seen_at END,
+                        currency = CASE WHEN VALUES(version) >= version THEN VALUES(currency) ELSE currency END,
+                        active_quest_id = CASE WHEN VALUES(version) >= version THEN VALUES(active_quest_id) ELSE active_quest_id END,
+                        quest_progress = CASE WHEN VALUES(version) >= version THEN VALUES(quest_progress) ELSE quest_progress END,
+                        quest_completed = CASE WHEN VALUES(version) >= version THEN VALUES(quest_completed) ELSE quest_completed END,
+                        skill_data = CASE WHEN VALUES(version) >= version THEN VALUES(skill_data) ELSE skill_data END,
+                        equipment_data = CASE WHEN VALUES(version) >= version THEN VALUES(equipment_data) ELSE equipment_data END,
+                        class_gear = CASE WHEN VALUES(version) >= version THEN VALUES(class_gear) ELSE class_gear END,
+                        active_minutes = CASE WHEN VALUES(version) >= version THEN VALUES(active_minutes) ELSE active_minutes END,
+                        version = CASE WHEN VALUES(version) >= version THEN VALUES(version) ELSE version END
                     """;
             case POSTGRESQL -> """
                     INSERT INTO suld_profiles
@@ -80,6 +82,7 @@ public enum SqlDialect {
                         equipment_data = EXCLUDED.equipment_data,
                         class_gear = EXCLUDED.class_gear,
                         active_minutes = EXCLUDED.active_minutes
+                    WHERE suld_profiles.version <= EXCLUDED.version
                     """;
         };
     }

@@ -47,6 +47,13 @@ public final class QuestService {
     }
 
     /** Called after any quest change (HUD refresh). */
+    /** Called when a chapter completes (coins and EXP granted, collected items taken): persist both stores now. */
+    private BiConsumer<Player, PlayerProfile> onComplete = (p, pr) -> { };
+
+    public void onComplete(BiConsumer<Player, PlayerProfile> listener) {
+        this.onComplete = listener;
+    }
+
     public void onChange(BiConsumer<Player, PlayerProfile> listener) {
         this.onChange = listener;
     }
@@ -171,6 +178,7 @@ public final class QuestService {
         int from = profile.progression().level();
         var gained = progression.grantExp(profile, def.expReward(), ExpSource.QUEST);
         if (gained.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(player, from, gained.after().level());
+        onComplete.accept(player, profile);
         if (next.isPresent()) {
             announceStart(player, next.get());
             recheck(player, profile);

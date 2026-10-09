@@ -187,7 +187,12 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 ps.setString(14, snap.equipment().isEmpty() ? null : snap.equipment().toJson());
                 ps.setString(15, snap.classGear().isEmpty() ? null : snap.classGear().toJson());
                 ps.setString(16, snap.activeMinutes().isEmpty() ? null : snap.activeMinutes().toJson());
-                ps.executeUpdate();
+                int rows = ps.executeUpdate();
+                if (rows == 0 && dialect == SqlDialect.POSTGRESQL) {
+                    // the stored row is newer than this snapshot (another writer saved it): never roll it back
+                    throw new RepositoryException("Stale save of profile " + snap.playerId() + " (version " + version
+                            + ") refused: the stored row is newer");
+                }
                 profile.markPersisted(version);
                 return profile;
             } catch (SQLException ex) {

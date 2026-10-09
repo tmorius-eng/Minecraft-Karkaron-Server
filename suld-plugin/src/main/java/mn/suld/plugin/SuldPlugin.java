@@ -244,6 +244,11 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(perf, this);
         registerTab("suldperf", perf.command());
         services.quests().onChange((p, pr) -> services.hud().update(p, pr));
+        // a finished chapter pays coins and EXP (SQL) and may take collected items (player file): save both now
+        services.quests().onComplete((p, pr) -> {
+            services.profiles().save(pr);
+            mn.suld.plugin.item.PlayerDataSaves.soon(this, p);
+        });
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
         progress.menus(menus);

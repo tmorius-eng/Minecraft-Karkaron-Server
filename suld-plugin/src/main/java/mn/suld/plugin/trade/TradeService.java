@@ -405,9 +405,10 @@ public final class TradeService implements Listener, TabExecutor {
         rb.addCurrency(t.a.coins - t.b.coins);
         services.profiles().save(ra);
         services.profiles().save(rb);
-        // the coins are in SQL now: write the inventories too, so a crash before the autosave cannot undo one side only
-        pa.saveData();
-        pb.saveData();
+        // the coins are in SQL now: write the inventories soon too (off this click, batched), so a crash before the
+        // autosave cannot undo one side only
+        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, pa);
+        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, pb);
         plugin.getLogger().info("[audit] trade " + pa.getName() + " (" + offered(t.a).size() + " stacks, " + t.a.coins + " coins) <-> "
                 + pb.getName() + " (" + offered(t.b).size() + " stacks, " + t.b.coins + " coins)");
         pa.closeInventory();
