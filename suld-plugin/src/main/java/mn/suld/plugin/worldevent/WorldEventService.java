@@ -206,10 +206,42 @@ public final class WorldEventService {
 
     // --------------------------------------------------------------- finish
 
+    /** How far above the event's strongest mob its reward items may roll. */
+    static final int EVENT_REWARD_LEVEL_SPAN = 5;
+
+    /**
+     * The event's own loot table (loot.world_event.&lt;name&gt;), one roll for each rewarded defender. Items roll at
+     * the player's level, capped at the event's band (its strongest target mob + 5): a low-level wolf raid never
+     * drops endgame gear to a level-60 player.
+     */
+    private void eventLoot(Player p, PlayerProfile profile, WorldEventDefinition def, long runId) {
+        mn.suld.plugin.item.ItemService items = services.itemService();
+        if (items == null || profile.playerClass().isEmpty()) return;
+        String table = "loot.world_event." + def.id().substring(def.id().indexOf('.') + 1);
+        int band = 1;
+        for (String mobId : def.targetMobIds()) {
+            mn.suld.api.mob.MobDefinition m = mn.suld.plugin.content.SuldContent.mobFor(mobId);
+            if (m != null) band = Math.max(band, m.level());
+        }
+        int level = Math.max(1, Math.min(profile.progression().level(), band + EVENT_REWARD_LEVEL_SPAN));
+        mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(level, mn.suld.api.loot.LootTier.WORLD_EVENT,
+                profile.playerClass().get(), 0, p.getUniqueId(), "event:" + def.id() + ":" + runId);
+        List<mn.suld.api.loot.LootDrop> drops = items.filtered(p, items.roll(table, ctx)); // empty if the event has no table
+        for (mn.suld.api.loot.LootDrop d : drops) {
+            mn.suld.api.item.ItemInstance inst = d.item();
+            p.getInventory().addItem(items.stack(inst, p, d.amount())).values()
+                    .forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
+            p.sendMessage(Messages.info("Шагнал: " + mn.suld.api.item.ItemTooltip.name(items.catalog(),
+                    items.catalog().require(inst.definitionId()), inst) + " [" + inst.rarity().displayName() + ", Зэрэг " + inst.itemLevel() + "]"));
+            items.announce(p, inst);
+        }
+    }
+
     private void finish() {
         WorldEventRun run = active;
         WorldEventDefinition def = run.definition();
         boolean success = run.state() == mn.suld.api.worldevent.WorldEventState.SUCCEEDED;
+        long finishedAt = System.currentTimeMillis(); // one run's provenance for its loot
         List<EventReward> rewards = run.rewards();
         Set<UUID> rewardedClans = new HashSet<>();
         Map<UUID, UUID> clanCreditor = new HashMap<>();
@@ -229,6 +261,7 @@ public final class WorldEventService {
             if (gain.leveledUp()) {
                 Presentation.levelUp(p, from, gain.after().level());
             }
+            if (success) eventLoot(p, profile, def, finishedAt);
             services.profiles().save(profile);
             services.clans().clanOf(r.playerId()).map(Clan::id).ifPresent(cid -> {
                 if (rewardedClans.add(cid)) {

@@ -32,4 +32,17 @@ public record DungeonDefinition(
     }
 
     public int totalWaves() { return waveSpawnIds.size(); }
+
+    /** How far above its boss's level a dungeon's reward items may roll. */
+    public static final int REWARD_LEVEL_SPAN = 5;
+
+    /**
+     * The level reward items roll at for a player of {@code playerLevel}: their own level (so the reward is wearable
+     * now), but never above this dungeon's band (boss level + {@link #REWARD_LEVEL_SPAN}). A level-60 player farming
+     * the first dungeon gets that dungeon's gear, not level-60 gear.
+     */
+    public int rewardLevel(int playerLevel) {
+        int cap = Math.max(minLevel, bossDefinition.mob().level() + REWARD_LEVEL_SPAN);
+        return Math.max(1, Math.min(playerLevel, cap));
+    }
 }

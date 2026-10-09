@@ -124,8 +124,11 @@ public final class BossService implements Listener {
         escalate(boss, f, f.def.activePhaseIndex(after / max), false);
     }
 
-    /** Boss melee hits scale with the current phase (and are SÜLD-defined, not vanilla). */
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    /**
+     * Boss melee hits scale with the current phase (and are SÜLD-defined, not vanilla). NORMAL priority: this sets the
+     * base hit, and the player's reductions and dodge (SkillTreeService, HIGH) apply to it afterwards.
+     */
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onBossAttack(EntityDamageByEntityEvent event) {
         Fight f = fights.get(event.getDamager().getUniqueId());
         if (f == null || !(event.getEntity() instanceof Player) || abilityDamage) {

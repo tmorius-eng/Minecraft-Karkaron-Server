@@ -338,8 +338,52 @@ public final class DungeonService {
         p.getPersistentDataContainer().set(clearsKey, org.bukkit.persistence.PersistentDataType.STRING, s == null || s.isEmpty() ? dungeonId : s + "," + dungeonId);
     }
 
-    /** Clears of a dungeon by a player in the last {@link #FATIGUE_WINDOW_MS} (loot fatigue; in memory). */
+    /**
+     * Clears of a dungeon by a player in the last {@link #FATIGUE_WINDOW_MS} (loot fatigue). Kept in
+     * {@code plugins/SULD/dungeon-fatigue.yml} as well, so a restart does not reset it.
+     */
     private final Map<String, java.util.ArrayDeque<Long>> recentClears = new HashMap<>();
+    private boolean fatigueLoaded;
+
+    private java.io.File fatigueFile() {
+        return new java.io.File(plugin.getDataFolder(), "dungeon-fatigue.yml");
+    }
+
+    private void loadFatigue(long now) {
+        fatigueLoaded = true;
+        java.io.File f = fatigueFile();
+        if (!f.exists()) return;
+        org.bukkit.configuration.file.YamlConfiguration y = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(f);
+        for (String key : y.getKeys(false)) {
+            java.util.ArrayDeque<Long> q = new java.util.ArrayDeque<>();
+            for (long t : y.getLongList(key)) if (now - t <= FATIGUE_WINDOW_MS) q.addLast(t);
+            if (!q.isEmpty()) recentClears.put(key.replace('|', ':'), q);
+        }
+    }
+
+    /** Written off the main thread, atomically; expired entries are dropped first. */
+    private void saveFatigue(long now) {
+        org.bukkit.configuration.file.YamlConfiguration y = new org.bukkit.configuration.file.YamlConfiguration();
+        recentClears.entrySet().removeIf(en -> {
+            en.getValue().removeIf(t -> now - t > FATIGUE_WINDOW_MS);
+            return en.getValue().isEmpty();
+        });
+        recentClears.forEach((k, q) -> y.set(k.replace(':', '|'), new java.util.ArrayList<>(q)));
+        String text = y.saveToString();
+        java.nio.file.Path file = fatigueFile().toPath();
+        Runnable write = () -> {
+            try {
+                java.nio.file.Files.createDirectories(file.getParent());
+                java.nio.file.Path tmp = file.resolveSibling("dungeon-fatigue.yml.tmp");
+                java.nio.file.Files.writeString(tmp, text);
+                java.nio.file.Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.io.IOException e) {
+                plugin.getLogger().warning("dungeon-fatigue.yml: " + e.getMessage());
+            }
+        };
+        if (plugin.isEnabled()) Bukkit.getScheduler().runTaskAsynchronously(plugin, write);
+        else write.run();
+    }
     static final long FATIGUE_WINDOW_MS = 2 * 60 * 60 * 1000L;
 
     /**
@@ -347,6 +391,13 @@ public final class DungeonService {
      * ×0.5, then ×0.25 (never zero). Materials, EXP and coins are not reduced. Records this clear.
      */
     double clearFatigue(UUID player, String dungeonId, long now) {
+        if (!fatigueLoaded) loadFatigue(now);
+        double f = clearFatigue0(player, dungeonId, now);
+        saveFatigue(now);
+        return f;
+    }
+
+    private double clearFatigue0(UUID player, String dungeonId, long now) {
         java.util.ArrayDeque<Long> q = recentClears.computeIfAbsent(player + ":" + dungeonId, k -> new java.util.ArrayDeque<>());
         while (!q.isEmpty() && now - q.peekFirst() > FATIGUE_WINDOW_MS) q.pollFirst();
         int before = q.size();
@@ -468,8 +519,9 @@ public final class DungeonService {
                 Presentation.levelUp(p, from, exp.after().level());
             }
             mn.suld.plugin.item.ItemService items = services.itemService();
-            // reward items at the player's own level (the engine never rolls above it), so every reward is wearable now
-            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(profile.progression().level(),
+            // reward items at the player's own level (wearable now), capped at the dungeon's band: an over-levelled player
+            // farming an early dungeon gets that dungeon's gear (DungeonDefinition.rewardLevel)
+            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(ar.def.rewardLevel(profile.progression().level()),
                     mn.suld.api.loot.LootTier.DUNGEON, profile.playerClass().orElse(null), lootBonus(p), id, provenance);
             java.util.List<mn.suld.api.loot.LootDrop> rewards = new java.util.ArrayList<>(items == null ? java.util.List.of() : items.roll(ar.def.rewardTableId(), ctx));
             double fatigue = clearFatigue(id, ar.def.id(), System.currentTimeMillis());

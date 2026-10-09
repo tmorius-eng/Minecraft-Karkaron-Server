@@ -120,6 +120,30 @@ public final class CombatListener implements Listener {
         return s;
     }
 
+    /**
+     * A SÜLD mob hitting a player deals its designed attack (MobDefinition.scaledAttack: base × tier), melee or
+     * projectile, instead of the vanilla entity's damage, so a level-50 elite hits like one. Bosses set their own
+     * phase-scaled hit (BossService). NORMAL priority: the player's armour, reductions and dodge apply afterwards.
+     */
+    @EventHandler(priority = org.bukkit.event.EventPriority.NORMAL, ignoreCancelled = true)
+    public void onMobHitsPlayer(EntityDamageByEntityEvent event) {
+        if (spellDamage || !(event.getEntity() instanceof Player)) return;
+        org.bukkit.entity.Entity src = event.getDamager();
+        boolean projectile = false;
+        if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof org.bukkit.entity.Entity shooter) {
+            src = shooter;
+            projectile = true;
+        }
+        if (src instanceof Player || !mobs.isSuldMob(src)) return;
+        MobDefinition def = mobs.mobId(src).map(SuldContent::mobFor).orElse(null);
+        if (def == null || def.tier() == mn.suld.api.mob.MobTier.BOSS || def.tier() == mn.suld.api.mob.MobTier.WORLD_BOSS) return;
+        if (event.getCause() != org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK
+                && event.getCause() != org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK && !projectile) {
+            return; // explosions, thorns… keep their vanilla amount
+        }
+        event.setDamage(def.scaledAttack());
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent event) {
         long t = mn.suld.plugin.perf.PerfProbe.start();

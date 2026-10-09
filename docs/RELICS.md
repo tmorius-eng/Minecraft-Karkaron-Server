@@ -2,6 +2,8 @@
 
 Some items exist **exactly once on the entire server**, such as **Хөх Сүлд** (the Blue Standard) and
 **Алтан Гэрэгэ** (the Golden Paiza). Whoever bears one is famous, powerful and hunted.
+The hunt stops at Kharkhorum's walls: the city is a sanctuary for everyone, relic bearers included, so relics are
+contested in the wilderness only.
 
 The design rests on one rule:
 

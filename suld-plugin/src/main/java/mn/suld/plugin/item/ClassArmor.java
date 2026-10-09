@@ -357,8 +357,7 @@ public final class ClassArmor implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(org.bukkit.event.player.PlayerQuitEvent e) {
-        castCaps.remove(e.getPlayer().getUniqueId());
-        objectiveCaps.remove(e.getPlayer().getUniqueId());
+        // the per-minute mastery caps stay (a relog must not refill them; they hold one minute's counts at most)
         damageTaken.remove(e.getPlayer().getUniqueId());
     }
 

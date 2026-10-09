@@ -70,8 +70,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Staff with {@code suld.admin.world} edit it only in build mode ({@code /worldbuild edit}).
  * <p>Integration with the rest of SÜLD:
  * <ul>
- *   <li>PvP is off in the city, <b>except against relic bearers</b> — a relic's bearer is hunted
- *       everywhere (docs/RELICS.md), so the city is no sanctuary for them;</li>
+ *   <li>PvP is off in the city for everyone, relic bearers included: Kharkhorum is a sanctuary, and relics
+ *       are contested in the wilderness only (docs/RELICS.md);</li>
  *   <li>SÜLD's own mobs (dungeons, world events, custom spawns) are never refused or swept; dungeons and
  *       world events themselves refuse to run inside the city;</li>
  *   <li>SÜLD NPCs and the city's animals are protected; NPC clicks are handled by the NPC service.</li>
@@ -327,10 +327,9 @@ public final class CityProtectionListener implements Listener {
             if (target.equals(attacker)) return;
             boolean cityFight = in(target.getLocation()) || in(attacker.getLocation());
             if (!cityFight) return;
-            if (services.relics().borneBy(target.getUniqueId()).isPresent()) return; // relic bearers are hunted everywhere
             e.setCancelled(true);
             if (e.getDamager() instanceof AbstractArrow arrow) arrow.remove();
-            notice(attacker, "Хархорум бол аюулгүй бүс — тоглогчтой тулалдахгүй (реликс эзэмшигчээс бусад).");
+            notice(attacker, "Хархорум бол аюулгүй бүс — тоглогчтой тулалдахгүй.");
             return;
         }
         if (in(victim.getLocation()) && !builder(attacker)

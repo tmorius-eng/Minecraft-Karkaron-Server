@@ -23,7 +23,7 @@ stone. This custom is VERIFIED as a living tradition. SÜLD's ovoo and their ble
 * **The blessing «Тэнгэрийн ивээл»:**
   * +5 % EXP for 30 minutes (through `ProgressionBoosts`, kept across relogs);
   * one minute of regeneration;
-  * once per ovoo per day (UTC);
+  * once per ovoo per day (the day turns at midnight Ulaanbaatar time, like the daily rewards);
   * the first visit of each ovoo also pays 40 EXP.
 * **Cost:** every 10 ticks, distance checks of the players near loaded ovoo only.
 

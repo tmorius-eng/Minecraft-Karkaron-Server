@@ -30,7 +30,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -191,7 +190,8 @@ public final class OvooService implements Listener {
     private void bless(Player p, Ovoo o, int[] b) {
         String key = "ovoo_" + o.id();
         NamespacedKey dayKey = new NamespacedKey(plugin, key);
-        long today = LocalDate.now(ZoneOffset.UTC).toEpochDay();
+        // the day turns at midnight in Ulaanbaatar, like the daily rewards and tasks (daily.timezone)
+        long today = LocalDate.now(zone()).toEpochDay();
         Long last = p.getPersistentDataContainer().get(dayKey, PersistentDataType.LONG);
         Location top = new Location(p.getWorld(), b[0] + 0.5, b[1] + 6, b[2] + 0.5);
         p.getWorld().spawnParticle(Particle.END_ROD, top, 30, 1.2, 1.5, 1.2, 0.02);
@@ -213,6 +213,14 @@ public final class OvooService implements Listener {
         }
         p.sendMessage(Messages.success("«" + o.area().name() + "»-ийн овоог нар зөв гурвантаа тойрлоо. Тэнгэр ивээг! "
                 + "(+5% EXP 30 мин" + (last == null ? ", анхны айлчлал +" + FIRST_VISIT_EXP + " EXP" : "") + ")"));
+    }
+
+    private java.time.ZoneId zone() {
+        try {
+            return java.time.ZoneId.of(plugin.getConfig().getString("daily.timezone", "Asia/Ulaanbaatar"));
+        } catch (java.time.DateTimeException e) {
+            return java.time.ZoneId.of("Asia/Ulaanbaatar");
+        }
     }
 
     private void loadBlessing(Player p) {
