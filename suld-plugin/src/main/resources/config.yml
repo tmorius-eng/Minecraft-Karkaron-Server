@@ -250,9 +250,10 @@ ui:
 # Server owners: always operator (OP re-granted on every join). Only on a VERIFIED login
 # (online-mode=true or Velocity modern forwarding); the account UUID is pinned in
 # plugins/SULD/owners.yml on the owner's first verified join, so a later holder of the
-# same name never gets OP. Entries are Minecraft names or account UUIDs.
-owners:
-  - qeevr_
+# same name never gets OP. Entries are Minecraft names or account UUIDs. Ships EMPTY
+# (SEC-002): put your own account here. Removing a name also drops its pin on the next
+# start (SEC-001); the OP the player already holds is removed with /deop or op.sh --deop.
+owners: []
 
 auth:
   # LOCAL DEVELOPMENT ONLY — lets an offline-mode test server accept logins.

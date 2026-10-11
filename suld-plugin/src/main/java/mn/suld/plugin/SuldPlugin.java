@@ -543,7 +543,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (!getConfig().isSet("branding.domain")) getConfig().set("branding.domain", "suld.mn");
         if (!getConfig().isSet("branding.store-url")) getConfig().set("branding.store-url", "");
         if (!getConfig().isSet("ui.welcome-screen")) getConfig().set("ui.welcome-screen", true);
-        if (!getConfig().isSet("owners")) getConfig().set("owners", java.util.List.of("qeevr_"));
+        if (!getConfig().isSet("owners")) getConfig().set("owners", java.util.List.of()); // SEC-002: no shipped owner
         if (!getConfig().isSet("store.packages")) {
             getConfig().set("store.packages", java.util.List.of(
                     java.util.Map.of("credits", 100, "price", "₮5,000"), java.util.Map.of("credits", 250, "price", "₮11,000"),

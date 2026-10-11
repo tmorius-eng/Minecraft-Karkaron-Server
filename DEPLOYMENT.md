@@ -62,7 +62,7 @@ regions (e.g. Seoul, Tokyo) and test ping from Ulaanbaatar before you commit.
 
 **Decide now** (you put these in `/etc/suld/suld.env`):
 - `ACCEPT_EULA=true`. You must read and accept the [Minecraft EULA](https://aka.ms/MinecraftEULA) yourself.
-- `ADMIN_PLAYERS` defaults to `qeevr_`. These names become operator after the first boot.
+- `ADMIN_PLAYERS` is empty by default (no shipped owner, SEC-002). Put your own account name there: these names become operator after the first boot.
 - `REPO_BRANCH`. Use the branch you want live. Until the work is merged into `main`, that is
   `claude/gracious-lamport-5aaowc`.
 - `REPO_URL`. If the repository is **private**, use an SSH deploy key (see §9). Never put a token in the URL.

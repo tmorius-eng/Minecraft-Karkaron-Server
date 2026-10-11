@@ -29,6 +29,10 @@ import java.util.regex.Pattern;
  * the account UUID is pinned in {@code plugins/SULD/owners.yml}; after that only that UUID is an owner, so
  * whoever later takes the same name (after a rename) never gets OP. An entry may also be a UUID directly.
  * On an unverified (offline) server nothing is granted here: names can be spoofed there.
+ * <p>
+ * A pin counts only while its name is still configured (SEC-001): removing a name from {@code owners:} drops the
+ * pin from {@code owners.yml} on the next start, and the former owner is no longer re-opped on join. The OP they
+ * already hold is revoked by the admin ({@code /deop}, {@code op.sh --deop}); this class never takes OP away.
  */
 public final class OwnerService implements Listener {
 
@@ -58,13 +62,27 @@ public final class OwnerService implements Listener {
             else if (!o.isEmpty()) plugin.getLogger().warning("owners: ignoring invalid entry '" + o + "'");
         }
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(pinFile);
+        boolean pruned = false;
         for (String key : yml.getKeys(false)) {
+            String name = key.toLowerCase(Locale.ROOT);
+            UUID id;
             try {
-                pinned.put(key.toLowerCase(Locale.ROOT), UUID.fromString(yml.getString(key, "")));
+                id = UUID.fromString(yml.getString(key, ""));
             } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("owners.yml: bad UUID for " + key);
+                plugin.getLogger().warning("owners.yml: bad UUID for " + key + "; dropped");
+                pruned = true;
+                continue;
             }
+            if (!names.contains(name)) {
+                // SEC-001: the name was removed from owners: -> the pin no longer grants anything
+                plugin.getLogger().warning("owners: " + key + " (" + id + ") is no longer in owners:, pin dropped. "
+                        + "If the account still has OP, revoke it: /deop " + key);
+                pruned = true;
+                continue;
+            }
+            pinned.put(name, id);
         }
+        if (pruned) savePins();
     }
 
     /** Grant OP to owners already online (plugin reload). */
@@ -92,8 +110,11 @@ public final class OwnerService implements Listener {
     /** Whether this (verified) player is an owner; pins the UUID on the first match by name. */
     synchronized boolean isOwner(Player p) {
         UUID id = p.getUniqueId();
-        if (uuids.contains(id) || pinned.containsValue(id)) return true;
+        if (uuids.contains(id)) return true;
         String name = p.getName().toLowerCase(Locale.ROOT);
+        if (names.contains(name) && id.equals(pinned.get(name))) return true;
+        // renamed owner account: the pin under their old name still identifies them while that name is configured
+        if (pinned.containsValue(id)) return true;
         if (!names.contains(name)) return false;
         UUID pin = pinned.get(name);
         if (pin != null) {

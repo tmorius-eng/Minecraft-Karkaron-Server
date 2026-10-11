@@ -59,6 +59,17 @@ Generic server plumbing comes from long-established, widely trusted plugins, lis
 Only builds published for the server's Minecraft version (1.21.11) are installed, hash-verified, from
 Modrinth (or Hangar).
 
+**Pinned (OPS-002).** [`deploy/plugins/plugins.lock.json`](deploy/plugins/plugins.lock.json) names the exact build of
+every plugin (source, version id, file, SHA-512/SHA-256). Deploys and updates install exactly those files; a hash that
+upstream no longer serves, or a required plugin missing from the lock, fails the install instead of falling back to
+"latest". Upgrading is a reviewed commit:
+
+```bash
+python3 tools/plugins/fetch_plugins.py --dest /tmp/plugins --profiles core,hardening --update-lock   # then optional, dev
+python3 -I tools/plugins/test_fetch_plugins.py                                                       # lock rules + lock/manifest consistency
+git diff deploy/plugins/plugins.lock.json                                                            # review, test on the dev server, commit
+```
+
 | Profile | Plugins |
 |---|---|
 | core | LuckPerms, EssentialsX, VaultUnlocked, PlaceholderAPI, CoreProtect, WorldEdit (WorldGuard's library), WorldGuard, spark, DiscordSRV (Chunky: optional, manual only) |

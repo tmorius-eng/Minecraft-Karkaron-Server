@@ -10,7 +10,10 @@ class DailyRewardTest {
     void streakBuildsResetsAndCycles() {
         assertEquals(1, DailyReward.claim(0, 0, 20_000, 1).day()); // first claim ever
         assertEquals(2, DailyReward.claim(20_000, 1, 20_001, 1).day()); // next day
-        assertEquals(1, DailyReward.claim(20_000, 5, 20_002, 1).day()); // missed a day
+        assertEquals(4, DailyReward.claim(20_000, 5, 20_002, 1).day()); // a missed day costs one step, not the streak
+        assertEquals(6, DailyReward.claim(20_000, 7, 20_030, 1).day()); // a month away: still one step back
+        assertEquals(1, DailyReward.claim(20_000, 1, 20_002, 1).day()); // the floor is day 1
+        assertEquals(1, DailyReward.claim(20_000, 2, 20_002, 1).day());
         assertEquals(7, DailyReward.claim(20_000, 6, 20_001, 1).day());
         assertEquals(1, DailyReward.claim(20_000, 7, 20_001, 1).day()); // after day 7 the cycle restarts
     }

@@ -2,8 +2,10 @@ package mn.suld.api.reward;
 
 /**
  * The daily login reward: claimable once per calendar day; claiming on consecutive days builds a streak of up to
- * seven days (day 7 pays the most), and a missed day starts again at day 1. Pure — the plugin supplies "today" as
- * an epoch day in the server's time zone and stores {@code lastDay}/{@code streak}.
+ * seven days (day 7 pays the most). A missed day (or a longer absence) costs one step, never the whole streak:
+ * the next claim pays the day before the one reached, so a weekend away is not punished with a restart at day 1
+ * (the audit's "no streak punishment" rule). Pure — the plugin supplies "today" as an epoch day in the server's
+ * time zone and stores {@code lastDay}/{@code streak}.
  */
 public final class DailyReward {
 
@@ -16,11 +18,15 @@ public final class DailyReward {
     public record Claim(boolean allowed, int day, long coins, long exp) {
     }
 
-    /** The streak day a claim made {@code today} would pay (1..7). */
+    /**
+     * The streak day a claim made {@code today} would pay (1..7): the next day after a claim yesterday (day 7 wraps
+     * to day 1), one step back from the day reached after a gap, day 1 for a first claim.
+     */
     public static int nextDay(long lastDay, int streak, long today) {
-        if (lastDay == today) return Math.max(1, Math.min(CYCLE, streak));
-        if (lastDay == today - 1 && streak > 0) return streak % CYCLE + 1;
-        return 1;
+        int reached = Math.max(0, Math.min(CYCLE, streak));
+        if (lastDay == today) return Math.max(1, reached);
+        if (lastDay == today - 1 && reached > 0) return reached % CYCLE + 1;
+        return Math.max(1, reached - 1);
     }
 
     public static boolean claimable(long lastDay, long today) {

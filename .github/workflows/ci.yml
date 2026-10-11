@@ -1,0 +1,91 @@
+# SÜLD continuous integration (TEST-001, audit 2026-10-11 gate G2).
+#
+# One job, three layers, on every push and pull request:
+#   1. ./gradlew build      — suld-api + suld-plugin unit tests, the simulator golden tests (simTest), the shaded jar
+#   2. JDBC integration tests against a real PostgreSQL 16 (SULD_TEST_PG_URL): the same *IT classes run on H2 inside
+#      step 1; here they also run on the production dialect, as `TESTING.md` describes for a local run
+#   3. python3 tools/validation/run_all.py — the content/registry, resource pack, pack budget and world plan validators,
+#      plus the plugin-lock unit test (OPS-002)
+# The Mineflayer bot harness (tools/loadtest/) is NOT run here: it needs a Paper server with the offline dev flag and
+# Mojang downloads; it stays a local step (docs/KHURALDAI.md §9, TESTING.md).
+name: CI
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build · tests · PostgreSQL ITs · validators
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: suld_it
+          POSTGRES_USER: suld_it
+          POSTGRES_PASSWORD: suld_it
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U suld_it -d suld_it"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle (cache)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build, unit tests, simulator golden tests, shaded jar (H2 ITs)
+        run: ./gradlew build --no-daemon --stacktrace
+
+      - name: JDBC integration tests on PostgreSQL 16
+        env:
+          SULD_TEST_PG_URL: jdbc:postgresql://127.0.0.1:5432/suld_it
+          SULD_TEST_PG_USER: suld_it
+          SULD_TEST_PG_PASS: suld_it
+        run: ./gradlew :suld-plugin:test --no-daemon --tests "mn.suld.plugin.persistence.*IT" --rerun
+
+      - name: Asset and content validators
+        run: python3 tools/validation/run_all.py
+
+      - name: Plugin lock (OPS-002) unit test
+        run: python3 -I tools/plugins/test_fetch_plugins.py
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            suld-api/build/reports/tests/
+            suld-plugin/build/reports/tests/
+            suld-plugin/build/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload the plugin jar
+        if: success() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: suld-plugin-${{ github.sha }}
+          path: suld-plugin/build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 14

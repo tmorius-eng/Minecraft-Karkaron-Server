@@ -247,6 +247,8 @@ start_and_verify() {
     log "Granting operator to: $ADMIN_PLAYERS"
     # shellcheck disable=SC2086  # intentional split: space-separated names
     "$BIN_DIR/op.sh" $ADMIN_PLAYERS || warn "Could not op every admin; retry: sudo $BIN_DIR/op.sh <name>"
+  else
+    warn "ADMIN_PLAYERS is empty: nobody is operator yet. Grant yourself with: sudo $BIN_DIR/op.sh <YourName>"
   fi
 }
 

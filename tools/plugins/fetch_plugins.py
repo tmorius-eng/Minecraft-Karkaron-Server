@@ -3,13 +3,19 @@
 
     python3 tools/plugins/fetch_plugins.py --dest run/plugins --profiles core
     python3 tools/plugins/fetch_plugins.py --dest /opt/suld/server/plugins --profiles core,hardening
+    python3 tools/plugins/fetch_plugins.py --dest /tmp/plugins --profiles core,hardening --update-lock
 
-For each plugin of the selected profiles it resolves the newest *release* built for the target Minecraft
-version (default from the manifest, 1.21.11) and a Paper-compatible loader, from Modrinth first and
-Hangar second, downloads it, verifies the published hash (SHA-512 / SHA-256), and replaces any older
-file of the same plugin it installed before. Plugins with no build for the target version are reported
-and skipped, never silently replaced by an incompatible build. A lock file (dest/.suld-plugins.lock.json)
-records exactly what was installed.
+Installs are **pinned** (OPS-002): deploy/plugins/plugins.lock.json names, per plugin id, the exact build (source,
+version id, file name and its SHA-512 / SHA-256). With the lock present, every selected plugin is installed from
+its lock entry and nothing else: the hash must match, a plugin without an entry fails, and a newer upstream
+release is ignored until someone runs `--update-lock`. Two deploys a week apart install byte-identical jars, and
+a rollback of the repository rolls the plugin versions back with it.
+
+`--update-lock` resolves the newest *release* built for the target Minecraft version (default from the manifest,
+1.21.11) and a Paper-compatible loader, from Modrinth first and Hangar second, installs it into --dest, and writes
+the lock (merging with the entries of other profiles). Only builds with a published hash can be locked. Plugins with
+no build for the target version are reported and skipped, never silently replaced by an incompatible build.
+dest/.suld-plugins.lock.json is the install record of that directory (what is on disk right now).
 """
 import argparse
 import hashlib
@@ -158,6 +164,47 @@ def from_geysermc(project):
              "endpoint": f"{GEYSERMC}/{project}/versions/latest/builds/latest"}]
 
 
+def from_lock(p, entry, mc):
+    """The one candidate the lock pins for this plugin, or a RuntimeError when upstream no longer serves that exact file."""
+    algo, want = entry.get("algo", "sha512"), (entry.get("hash") or "").lower()
+    if algo not in ("sha512", "sha256") or not re.fullmatch(r"[0-9a-fA-F]{64}|[0-9a-fA-F]{128}", want):
+        raise RuntimeError(f"lock entry has no usable {algo} hash; run --update-lock")
+    src = entry.get("source")
+    if src == "modrinth":
+        endpoint = f"{MODRINTH}/version/{urllib.parse.quote(entry['version_id'])}"
+        v = get_json(endpoint)
+        if not _version_ok(v):
+            raise RuntimeError(f"Modrinth no longer serves version {entry['version_id']} ({entry.get('version')})")
+        if mc not in v["game_versions"]:
+            print(f"  .. {p['name']} {entry.get('version')} is not listed for Minecraft {mc} any more (locked build kept)")
+        files = [f for f in v["files"] if _file_ok(f) and f["hashes"]["sha512"].lower() == want]
+        if not files:
+            raise RuntimeError(f"Modrinth version {entry['version_id']} no longer has a file with the locked sha512; run --update-lock")
+        f = files[0]
+        return {"source": "modrinth", "version": v["version_number"], "version_id": v["id"], "published": v["date_published"],
+                "file": entry.get("file") or f["filename"], "url": f["url"], "size": f.get("size") if isinstance(f.get("size"), int) else -1,
+                "hash": ("sha512", want), "endpoint": endpoint}
+    if src in ("geysermc", "hangar"):
+        url = entry.get("url")
+        if not isinstance(url, str) or not url.startswith("https://"):
+            raise RuntimeError("lock entry has no https download url; run --update-lock")
+        return {"source": src, "version": entry.get("version", ""), "version_id": entry.get("version_id", ""), "file": entry["file"],
+                "url": url, "size": -1, "hash": (algo, want), "endpoint": url}
+    raise RuntimeError(f"unknown lock source {src!r}; run --update-lock")
+
+
+def lock_entry(build):
+    """What the repository lock records about an installed build; a build without a published hash is never locked."""
+    if not build.get("hash"):
+        raise RuntimeError(f"{build.get('source')} publishes no hash for {build.get('version')}; refusing to lock an unverified build")
+    algo, h = build["hash"]
+    e = {"source": build["source"], "version": build["version"], "version_id": build.get("version_id", ""), "file": build["file"],
+         "algo": algo, "hash": h.lower()}
+    if build["source"] != "modrinth":
+        e["url"] = build["url"]
+    return e
+
+
 def from_hangar(project, mc):
     owner, slug = project.split("/", 1)
     q = urllib.parse.urlencode({"platform": "PAPER", "platformVersion": mc, "limit": 5})
@@ -184,9 +231,21 @@ def main():
     ap.add_argument("--manifest", default=os.path.join(root, "deploy", "plugins", "plugins.json"))
     ap.add_argument("--mc")
     ap.add_argument("--only", help="comma-separated plugin ids")
+    ap.add_argument("--lock", help="pin file (default: plugins.lock.json beside the manifest); '' = unpinned, newest releases")
+    ap.add_argument("--update-lock", action="store_true", help="resolve the newest releases and (re)write their lock entries")
     args = ap.parse_args()
     manifest = json.load(open(args.manifest, encoding="utf-8"))
     mc = args.mc or manifest["minecraft"]
+    lock_file = os.path.join(os.path.dirname(os.path.abspath(args.manifest)), "plugins.lock.json") if args.lock is None else args.lock
+    repo_lock = {"minecraft": mc, "plugins": {}}
+    if lock_file and os.path.exists(lock_file):
+        repo_lock = json.load(open(lock_file, encoding="utf-8"))
+        if not isinstance(repo_lock.get("plugins"), dict):
+            sys.exit(f"{lock_file}: not a plugin lock (no 'plugins' object)")
+    pinned = bool(lock_file) and not args.update_lock and os.path.exists(lock_file)
+    if args.update_lock and not lock_file:
+        sys.exit("--update-lock needs a lock path (--lock FILE)")
+    print(f"plugins: {'pinned by ' + lock_file if pinned else 'resolving the newest releases' + (' and updating ' + lock_file if args.update_lock else ' (UNPINNED: no lock file)')}")
     profiles = {p.strip() for p in args.profiles.split(",") if p.strip()}
     only = {p.strip() for p in args.only.split(",")} if args.only else None
     os.makedirs(args.dest, exist_ok=True)
@@ -210,7 +269,12 @@ def main():
         managed.add(p["name"])
         try:
             candidates = []
-            if p.get("modrinth"):
+            entry = repo_lock["plugins"].get(p["id"]) if pinned else None
+            if pinned and entry is None:
+                raise RuntimeError(f"not in {os.path.basename(lock_file)}; run fetch_plugins.py --update-lock --only {p['id']}")
+            if entry is not None:
+                candidates = [from_lock(p, entry, mc)]
+            if p.get("modrinth") and not candidates:
                 try:
                     candidates += from_modrinth(p["modrinth"], mc, bool(p.get("allow_beta")))
                 except urllib.error.HTTPError as e:
@@ -259,6 +323,8 @@ def main():
                 chosen_build = res
                 fresh = True
                 break
+            if chosen_build is None and entry is not None:
+                raise RuntimeError(f"the locked build {entry.get('version')} could not be installed (see above); run --update-lock")
             if chosen_build is None:
                 if p.get("optional"):
                     optional_skipped.append(p["name"])
@@ -267,6 +333,10 @@ def main():
                     missing.append(p["name"])
                     print(f"  -- {p['name']}: no Java 21 build for Minecraft {mc} could be fetched and verified; skipped")
                 continue
+            if args.update_lock:
+                if not chosen_build.get("hash"):
+                    raise RuntimeError(f"{chosen_build['source']} publishes no hash for {chosen_build['version']}; refusing to lock an unverified build")
+                repo_lock["plugins"][p["id"]] = lock_entry(chosen_build)
             if prev.get("file") and prev["file"] != chosen_build["file"]:
                 old = os.path.join(args.dest, prev["file"])
                 if os.path.exists(old):
@@ -318,6 +388,15 @@ def main():
         json.dump(lock, fh, indent=2)
     with open(reject_path, "w", encoding="utf-8") as fh:
         json.dump(sorted(rejected), fh, indent=2)
+    if args.update_lock and not failed:
+        repo_lock["minecraft"] = mc
+        repo_lock["note"] = ("Pinned third-party plugin builds (OPS-002). fetch_plugins.py installs exactly these; "
+                             "refresh with: python3 tools/plugins/fetch_plugins.py --dest <dir> --profiles <profiles> --update-lock")
+        repo_lock["plugins"] = dict(sorted(repo_lock["plugins"].items()))
+        with open(lock_file, "w", encoding="utf-8") as fh:
+            json.dump(repo_lock, fh, indent=2, ensure_ascii=False)
+            fh.write("\n")
+        print(f"lock written: {lock_file} ({len(repo_lock['plugins'])} plugins)")
     print(f"plugins: {len(ok)} installed, {len(missing)} without a {mc} build, {len(failed)} failed"
           + (f", optional skipped: {', '.join(optional_skipped)}" if optional_skipped else ""))
     if failed:

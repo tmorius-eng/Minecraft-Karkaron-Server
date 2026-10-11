@@ -1,0 +1,182 @@
+{
+  "minecraft": "1.21.11",
+  "plugins": {
+    "axiom": {
+      "source": "modrinth",
+      "version": "6.0.1+1.21.11",
+      "version_id": "AtKpiumb",
+      "file": "AxiomPaperPlugin-6.0.1-for-MC1.21.11.jar",
+      "algo": "sha512",
+      "hash": "6df2c7ff761c87a037a726d701a45be68f28dcc7e33323dc5c9aa7f86fc7c845fcd50df23c14f249c774a3d869324639de0d88fb301d0f96ab043e32d2835261"
+    },
+    "bluemap": {
+      "source": "modrinth",
+      "version": "5.16-paper",
+      "version_id": "Vb2ZE8bR",
+      "file": "bluemap-5.16-paper.jar",
+      "algo": "sha512",
+      "hash": "4336174ede66d4c2f14d1830c068b7a8229afd0dd5e736526246486c1e3ff28eeed6c8044e74ddc81b5067a055a153189006389f5d3e70f434138fe7753628f2"
+    },
+    "chunky": {
+      "source": "modrinth",
+      "version": "1.4.40",
+      "version_id": "P3y2MXnd",
+      "file": "Chunky-Bukkit-1.4.40.jar",
+      "algo": "sha512",
+      "hash": "b017fd180141b5c14c38dfb10128d5f5a1072a68ff93ee486d4465953331f5851f09a09b4a159364837a95d192198d8e9885ce39c46eed32dacbf1fd65c6f30f"
+    },
+    "coreprotect": {
+      "source": "modrinth",
+      "version": "24.1",
+      "version_id": "3sehX6Sg",
+      "file": "CoreProtect-CE-24.1.jar",
+      "algo": "sha512",
+      "hash": "76aad727528ddb990bbee5069f8ef3fcd018ae0bcdea89b965be2485e828633eb068672e841be64e550c8474f901a24d8c15c7bd44c2bd6c96244e1e58de0c95"
+    },
+    "decentholograms": {
+      "source": "modrinth",
+      "version": "2.10.1",
+      "version_id": "Fva1FgWm",
+      "file": "DecentHolograms-2.10.1.jar",
+      "algo": "sha512",
+      "hash": "4be371d0b2258eb6d255b14155a730f8bc5998eee826e5fed54d402a1b3e315e7c03941f3b654ef648d800f74911ef25355a0d370a85e3c062eba74aad1ed678"
+    },
+    "discordsrv": {
+      "source": "modrinth",
+      "version": "1.30.5",
+      "version_id": "ATlquwiT",
+      "file": "DiscordSRV-Build-1.30.5.jar",
+      "algo": "sha512",
+      "hash": "ef31c7dd8962c7f907bc37b6d762c0ebd1b52f20ff72bb2dd35edb0e354010c03d3eb4cafa8f7acec42aa5e91988814bd0c338a5bced06095c07a6b9b366505c"
+    },
+    "essentialsx": {
+      "source": "modrinth",
+      "version": "2.22.0",
+      "version_id": "nY6VN1XH",
+      "file": "EssentialsX-2.22.0.jar",
+      "algo": "sha512",
+      "hash": "472ecf71924801723643ca6e1f9931297de5aa0874a544f8a719e2e2f7c81af81ef7bcbd38b6e43f0260a9dae6abe42c97907e70e2430e326ff8cff12ebd61cf"
+    },
+    "fastasyncworldedit": {
+      "source": "modrinth",
+      "version": "2.16.1",
+      "version_id": "A1gBu4MM",
+      "file": "FastAsyncWorldEdit-Paper-2.16.1.jar",
+      "algo": "sha512",
+      "hash": "711c7c358a5b4ec73160413a4aa08829d2cd474f75e1dc379c0ebc9b63b5b6458de8113c10bbaf3594497db558d7ae2519c7d7c37353be142a797a7eeee3ce43"
+    },
+    "geyser": {
+      "source": "modrinth",
+      "version": "2.11.3-b1251",
+      "version_id": "sRG7ppMc",
+      "file": "Geyser-Spigot.jar",
+      "algo": "sha512",
+      "hash": "d7bcfd24bd7e3236b81fcb93da2a728fe08152b9e15dfede3f84c45a56d1d42c73f99bce9d7476a0a51c46663e2a543699e58b1618ec7e93e53bcd43548489f5"
+    },
+    "grimac": {
+      "source": "modrinth",
+      "version": "2.3.73",
+      "version_id": "1FIGlM6Q",
+      "file": "grimac-bukkit-2.3.73.jar",
+      "algo": "sha512",
+      "hash": "bf9be1194eb45afe1dec6bd8e98d078dacf41539025c8aabe24d31337cbea86625774e30842568b47f34ca174472c724c7876cc30793945e7408b03609672655"
+    },
+    "gsit": {
+      "source": "modrinth",
+      "version": "3.7.0",
+      "version_id": "gnY5Flgo",
+      "file": "GSit-3.7.0.jar",
+      "algo": "sha512",
+      "hash": "7813fe99d2fde47e3a40538c09b87b88b6101c27fb4f3305e0fd9bf806809c37e4e67c726f96596caca79785cdd7aa8d8ae724b211535775db21e602f57993d5"
+    },
+    "inventoryrollbackplus": {
+      "source": "modrinth",
+      "version": "1.8.5",
+      "version_id": "eDsOfX6z",
+      "file": "InventoryRollbackPlus-1.8.5.jar",
+      "algo": "sha512",
+      "hash": "7982cbea2b067844908c1e2a2b3b5bfd83c6e1b5e1390f4a8c46c0303e9b944c807f89806e8f7c8cb48a114724e2a706a1169f75fe2074247e2f761753888206"
+    },
+    "libertybans": {
+      "source": "modrinth",
+      "version": "1.1.4",
+      "version_id": "7WLjonzv",
+      "file": "LibertyBans_Release-1.1.4.jar",
+      "algo": "sha512",
+      "hash": "1943587f73a8ad6e3f1f8ef4bab037437f381e8ccd5811474dda4ea03c029b307c367061954b2751d9c945d6742731eaeb44f1e0ad4c3f2b740319c78ccc50ec"
+    },
+    "luckperms": {
+      "source": "modrinth",
+      "version": "v5.5.71-bukkit",
+      "version_id": "b0mk8uS6",
+      "file": "LuckPerms-Bukkit-5.5.71.jar",
+      "algo": "sha512",
+      "hash": "188a91f0a543d23bfda32385fca6db63d61e49c8a422bd452a260bd9cbc6a7d7fe45071199e9fca8f3ce43c2b41ee84fd315bd15464577028ff3951a7d4fab27"
+    },
+    "placeholderapi": {
+      "source": "modrinth",
+      "version": "2.12.3",
+      "version_id": "pIvQcXW8",
+      "file": "PlaceholderAPI-2.12.3.jar",
+      "algo": "sha512",
+      "hash": "f048d55b633fd816c08e2e4472bd54a75fc4d13534682e6e7745408253d2f393706efdc389d12ca2cf28d4dc035a9afdda3eed9ecde51c7e332831391d9b6479"
+    },
+    "plan": {
+      "source": "modrinth",
+      "version": "5.8+build.3638",
+      "version_id": "h1A8YZWx",
+      "file": "Plan-5.8-build-3638.jar",
+      "algo": "sha512",
+      "hash": "29a6f30c12bba203bfe1ee013db545a8a5a9125ce2cdf6910385405b12e623c5e75a6a5cc16d3d72d24d51ab87f2d9fb05f91af3fd837dfbf0edc54b184545e8"
+    },
+    "skinsrestorer": {
+      "source": "modrinth",
+      "version": "15.12.6",
+      "version_id": "ziIzW16f",
+      "file": "SkinsRestorer.jar",
+      "algo": "sha512",
+      "hash": "0ec5070bff7db5098d3fe04b53e6bcd59d74806184b3599ada48ce5576ff4346eece020a3106ba84bdfb703bd138da6d232b7cabf625394291f7728b8dc04497"
+    },
+    "vaultunlocked": {
+      "source": "modrinth",
+      "version": "2.20.3",
+      "version_id": "qZgRzoYs",
+      "file": "VaultUnlocked-2.20.3.jar",
+      "algo": "sha512",
+      "hash": "0eedea1591459e7e327315b43afa834a173c8c2ae31b3b235586d31963df29a4a6c0ef4b8f3fdc746e15afd47ee50c1ff93584543b5c2ef7c2a80135dba1136a"
+    },
+    "viabackwards": {
+      "source": "modrinth",
+      "version": "5.12.1",
+      "version_id": "dWw67APC",
+      "file": "ViaBackwards-5.12.1.jar",
+      "algo": "sha512",
+      "hash": "65752dd113bf1266ef2c3b25a748e79e9808bb67682a3f5fbcf3e2b097d76182786d0871562175af8d491bde7ec6addfeaf97fdb23987cb11b829b0c22f6e5ff"
+    },
+    "viaversion": {
+      "source": "modrinth",
+      "version": "5.12.1",
+      "version_id": "5WgnasGG",
+      "file": "ViaVersion-5.12.1.jar",
+      "algo": "sha512",
+      "hash": "b2e5c03689e2265410613a928640076cfcd576e7a3dc7ca1276a76dbe624f2f5467348c3b3eaf8b5987ed7662afb93cc5cb9373035f4c5512884116e4bb6add9"
+    },
+    "worldedit": {
+      "source": "modrinth",
+      "version": "7.4.2",
+      "version_id": "p8T2aZ8U",
+      "file": "worldedit-bukkit-7.4.2.jar",
+      "algo": "sha512",
+      "hash": "31db909249af48881617818d7a8f3386a7453ab7ca842b3a48ba2713d56325ec996f4b5bb5b861d272ab2179d384f6416669c6b7840b1283b3bc9a75d5b18c4a"
+    },
+    "worldguard": {
+      "source": "modrinth",
+      "version": "7.0.17",
+      "version_id": "pI4UHLJL",
+      "file": "worldguard-bukkit-7.0.17.jar",
+      "algo": "sha512",
+      "hash": "5da539cf8618079f9e7f5a0ab578c62d31ebd88e35b39ca047a2f9115e397e0d4dd781a94ca373e93333fce3371f7eaf503cd0b6abb6363085e3f4968ea51e4b"
+    }
+  },
+  "note": "Pinned third-party plugin builds (OPS-002). fetch_plugins.py installs exactly these; refresh with: python3 tools/plugins/fetch_plugins.py --dest <dir> --profiles <profiles> --update-lock"
+}

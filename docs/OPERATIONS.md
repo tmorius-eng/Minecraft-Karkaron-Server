@@ -50,7 +50,7 @@ again, or set `permissions.auto-setup: false` to manage LuckPerms yourself). Gro
 
 | Group | What it adds |
 |---|---|
-| `default` (everyone) | `/home /sethome /delhome` (several homes), `/tpa /tpaccept /tpdeny /tpacancel`, `/msg /r`, `/mail`, `/ignore`, `/afk`, `/list`; plus all SÜLD game commands |
+| `default` (everyone) | `/home /sethome /delhome` (one home; no `/tpa`, travel is part of the game, GAME-001), `/msg /r`, `/mail`, `/ignore`, `/afk`, `/list`; plus all SÜLD game commands |
 | `helper` | Badge ТУСЛАГЧ, `/kick /mute /tp /seen /whois`, CoreProtect `inspect`/`lookup`, `suld.chat.bypass`, exempt from kick/mute/ignore |
 | `mod` | Badge МОД, `/revive`, `/tphere /vanish /socialspy /invsee /back /ban /tempban`, CoreProtect `rollback`/`restore` |
 | `admin` | Badge АДМИН, `suld.admin` (all SÜLD admin commands), `essentials.*`, `coreprotect.*`, `worldedit.*`, `worldguard.*`, `chunky.*` |

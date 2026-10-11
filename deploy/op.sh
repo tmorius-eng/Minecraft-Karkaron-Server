@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Grant (or revoke) server operator to Minecraft players on the running server.
-#   sudo /opt/suld/bin/op.sh qeevr_ [OtherName ...]      grant op
+#   sudo /opt/suld/bin/op.sh YourName [OtherName ...]    grant op
 #   sudo /opt/suld/bin/op.sh --deop Name                 revoke op
 # Names are validated (Minecraft names: 3-16 chars, letters/digits/_) before anything is sent
 # to the console. With online-mode=true Paper resolves the account UUID from Mojang.
