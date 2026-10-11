@@ -109,15 +109,28 @@ public final class ModelService implements Listener {
         return Set.copyOf(models.keySet());
     }
 
-    /** Attach a rig to a host; the host becomes invisible and silent (its AI, hitbox and health stay). */
+    /**
+     * Attach a rig to a host; the host becomes invisible and silent (its AI, hitbox and health stay). The host takes
+     * the rig's scale (Attribute.SCALE, at most {@code models.host-scale-max}), so the hitbox players aim at is where
+     * the model is drawn; the anticheat sizes the target box by the same attribute.
+     */
     public Optional<ModelInstance> attach(LivingEntity host, String modelId) {
         RigLoader.Model m = models.get(modelId);
         if (m == null || byHost.containsKey(host.getUniqueId())) return Optional.ofNullable(byHost.get(host.getUniqueId()));
+        scaleHost(host, m.rig().scale());
         long t = PerfProbe.start();
         ModelInstance inst = ModelInstance.spawn(plugin, host, m);
         PerfProbe.stop("model.spawn", t);
         byHost.put(host.getUniqueId(), inst);
         return Optional.of(inst);
+    }
+
+    private void scaleHost(LivingEntity host, double rigScale) {
+        double max = plugin.getConfig().getDouble("models.host-scale-max", 1.6);
+        double s = Math.max(0.5, Math.min(Math.max(1.0, max), rigScale));
+        if (Math.abs(s - 1.0) < 0.01) return;
+        org.bukkit.attribute.AttributeInstance a = host.getAttribute(org.bukkit.attribute.Attribute.SCALE);
+        if (a != null) a.setBaseValue(s);
     }
 
     public Optional<ModelInstance> of(Entity host) {

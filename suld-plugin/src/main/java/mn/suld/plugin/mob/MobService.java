@@ -49,6 +49,23 @@ public final class MobService implements org.bukkit.event.Listener {
     /** Called for every SÜLD mob right after spawning (the model renderer dresses rigged mobs here). */
     public volatile java.util.function.BiConsumer<LivingEntity, MobDefinition> onSpawn = (e, d) -> { };
 
+    /**
+     * Vanilla spawn data may make a husk or drowned host a baby (a tiny hitbox under a full-size model) or a chicken
+     * jockey, and a spider a spider jockey: a SÜLD mob is always a grown mob on its own.
+     */
+    private static void grownAlone(LivingEntity living) {
+        if (living instanceof org.bukkit.entity.Ageable a) a.setAdult();
+        Entity vehicle = living.getVehicle();
+        if (vehicle != null) {
+            vehicle.removePassenger(living);
+            if (!(vehicle instanceof org.bukkit.entity.Player)) vehicle.remove();
+        }
+        for (Entity rider : java.util.List.copyOf(living.getPassengers())) {
+            living.removePassenger(rider);
+            if (!(rider instanceof org.bukkit.entity.Player)) rider.remove();
+        }
+    }
+
     public LivingEntity spawn(MobDefinition def, Location location) {
         return spawn(def, location, def.scaledHealth());
     }
@@ -63,6 +80,7 @@ public final class MobService implements org.bukkit.event.Listener {
         }
         living.setCustomNameVisible(true);
         living.setRemoveWhenFarAway(true);
+        grownAlone(living);
 
         applyHealth(living, health);
         // Some entities (wolves) reset their max health to the vanilla value right after spawning: apply it again.

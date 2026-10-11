@@ -137,6 +137,9 @@ chat:
 # only the bosses rigged (fewer entities on a weak server); the renderer's LOD already freezes rigs nobody is near.
 models:
   mobs: true
+  # A rigged mob's real (invisible) host takes the rig's drawn scale, so hits land where the model is (and GrimAC
+  # sizes the hitbox the same way). Capped here: bigger hosts need more room to walk (corridors, caves, trees).
+  host-scale-max: 1.6
 
 # City NPCs talk first (a dialog with their trade and what they know); Shift + right-click skips (docs/NPC_DIALOGUE.md).
 npc:
