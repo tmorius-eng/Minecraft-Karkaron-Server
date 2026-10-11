@@ -1,6 +1,6 @@
-# SÜLD economy balance (proposed)
+# SÜLD economy balance
 
-Part of the proposed balance. **Not implemented yet.** Measured in `docs/PROGRESSION_SIMULATION.md` §Economy.
+Part of the proposed balance. **Status: progression v2 is in the game; see `docs/PROGRESSION_V2.md` for what is live and what is deferred.** This page keeps the full design. Measured in `docs/PROGRESSION_SIMULATION.md` §Economy.
 
 ## The problem
 

@@ -1,6 +1,6 @@
-# SÜLD dungeon progression (proposed)
+# SÜLD dungeon progression
 
-Part of the proposed balance. **Not implemented yet.** The ladder table is generated from `ProposedRules`
+Part of the proposed balance. **Status: progression v2 is in the game; see `docs/PROGRESSION_V2.md` for what is live and what is deferred.** This page keeps the full design. The ladder table is generated from `ProposedRules`
 (`./gradlew :suld-plugin:specTables`). The effects are measured in `docs/PROGRESSION_SIMULATION.md`.
 
 ## Problems this solves

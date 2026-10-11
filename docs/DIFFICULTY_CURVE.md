@@ -1,6 +1,6 @@
-# SÜLD difficulty curve (proposed)
+# SÜLD difficulty curve
 
-Part of the proposed balance (`docs/PROGRESSION_BALANCE_SPEC.md`). **Not implemented yet.** Every number in the tables
+Part of the proposed balance (`docs/PROGRESSION_BALANCE_SPEC.md`). **Status: progression v2 is in the game; see `docs/PROGRESSION_V2.md` for what is live and what is deferred.** This page keeps the full design. Every number in the tables
 is generated from `suld-plugin/src/sim/java/mn/suld/sim/ProposedRules.java` (`./gradlew :suld-plugin:specTables`).
 
 ## Why the curve has to change

@@ -1,7 +1,6 @@
-# SÜLD progression balance spec (proposed)
+# SÜLD progression balance spec
 
-**Status: SPEC + SIMULATION. Nothing here is implemented.** The owner approves these numbers before any of them enter
-the game (Stage B gate).
+**Status: progression v2 is in the game; see `docs/PROGRESSION_V2.md` for what is live and what is deferred.** This page keeps the full design.
 
 * The numbers come from `suld-plugin/src/sim/java/mn/suld/sim/ProposedRules.java`.
 * Tables between `spec:` markers are written by `./gradlew :suld-plugin:specTables`.

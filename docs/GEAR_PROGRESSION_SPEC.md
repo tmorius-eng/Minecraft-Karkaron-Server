@@ -1,6 +1,6 @@
-# SÜLD gear progression (proposed)
+# SÜLD gear progression
 
-Part of the proposed balance. **Not implemented yet.**
+Part of the proposed balance. **Status: progression v2 is in the game; see `docs/PROGRESSION_V2.md` for what is live and what is deferred.** This page keeps the full design.
 
 **The item engine stays as built** (`docs/ITEM_SYSTEM.md`): definitions, 8 rarities, 16 stats, 22 affixes, sets,
 `ItemGenerator`, `LootEngine`, `Equipment`. The proposal changes **data** (`items/loot.json`, `items/tiers.json`,
