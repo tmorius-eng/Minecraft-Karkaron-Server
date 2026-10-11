@@ -279,6 +279,9 @@ public final class HudService {
         double dx = p.getLocation().getX() - c.getX(), dz = p.getLocation().getZ() - c.getZ();
         var r = REGIONS.at(dx, dz).filter(x -> !x.safeZone()).orElse(null);
         if (r == null || !p.getWorld().equals(org.bukkit.Bukkit.getWorlds().get(0))) return null;
+        // anywhere inside the built city is Kharkhorum (safe), not the wild area around it
+        if (services != null && services.city() != null
+                && services.city().near(p.getWorld().getName(), p.getLocation().getBlockX(), p.getLocation().getBlockZ(), 8)) return null;
         var area = mn.suld.plugin.content.WorldContent.areaAt(dx, dz).filter(a -> a.regionId().equals(r.id())).orElse(null);
         String band = area != null ? area.minLevel() + "–" + area.maxLevel() : r.levelBand();
         int gap = mn.suld.plugin.content.WorldContent.localLevel(r, dx, dz) - level;
