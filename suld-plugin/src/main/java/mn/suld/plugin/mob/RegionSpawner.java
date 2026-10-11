@@ -307,13 +307,17 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
     /** Region mobs alive now (UUIDs), so care does not scan every entity of the world. */
     private final java.util.Set<java.util.UUID> regionMobs = new java.util.LinkedHashSet<>();
 
-    /** Keep region mobs hostile; remove them in/near the city or when no player is within 80 blocks. */
+    /** Keep region mobs hostile; remove them in/near the city or when no player (any mode but spectator) is within 80 blocks. */
     private void careTick() {
         lastRegion.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
         lastArea.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
         List<Player> players = new ArrayList<>();
+        // who keeps a mob alive: anyone watching, whatever the game mode (a mob must not vanish the moment its target
+        // switches to creative); only survival players are hunted and make new mobs spawn
+        List<Player> present = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (eligible(p)) players.add(p);
+            if (p.isValid() && p.getGameMode() != GameMode.SPECTATOR) present.add(p);
             announceRegion(p);
         }
         // only the mobs this spawner made (it used to scan every living entity of every world every 2 s)
@@ -332,7 +336,7 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
                     continue;
                 }
                 boolean anyone = false;
-                for (Player p : players) {
+                for (Player p : present) {
                     if (p.getWorld().equals(w) && p.getLocation().distanceSquared(l) < 80 * 80) {
                         anyone = true;
                         break;
