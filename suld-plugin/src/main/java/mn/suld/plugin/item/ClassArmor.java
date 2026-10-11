@@ -425,6 +425,9 @@ public final class ClassArmor implements Listener {
         if (!ArmorRules.canUpgrade(g, holdings(p, pr))) return Upgrade.GATES;
         pr.addCurrency(-next.coins());
         if (next.material() != null) take(p, next.material(), next.materials());
+        // the materials leave the player file before the tier is committed: a crash between the two can only cost
+        // the materials, never hand them back with the upgrade kept (PlayerDataSaves; audit 2026-10-11 PERS-001)
+        PlayerDataSaves.now(p);
         pr.classGear(g.withTier(next));
         services.profiles().save(pr);
         refresh(p);

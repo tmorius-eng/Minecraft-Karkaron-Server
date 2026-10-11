@@ -634,6 +634,8 @@ public final class SkillMapMenu implements Listener {
                     pl.closeInventory();
                     return;
                 }
+                // the orb leaves the player file before the respec is committed (PERS-001)
+                mn.suld.plugin.item.PlayerDataSaves.now(pl);
             }
             SkillTreeService.ResetResult r = st().reset(pl, category, used);
             if (used && r.outcome() != SkillTreeService.ResetOutcome.OK) {

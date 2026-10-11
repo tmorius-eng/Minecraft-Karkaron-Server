@@ -73,6 +73,12 @@ public final class PlayerLifecycleListener implements Listener {
     /** Session totals from domain events: EXP, quests completed, discoveries. */
     @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
     public void onDomain(mn.suld.plugin.event.SuldDomainBukkitEvent e) {
+        if (e.payload() instanceof mn.suld.api.event.LevelUpEvent lv) {
+            // a level is the progress a player notices losing: commit it now (async), not at the next autosave.
+            // A kill -9 nine seconds after a level-up used to lose it (audit 2026-10-11 E-09).
+            services.profiles().cached(lv.player()).ifPresent(services.profiles()::save);
+            return;
+        }
         if (!(e.payload() instanceof mn.suld.api.event.ExpGainedEvent g)) return;
         mn.suld.api.analytics.SessionTotals t = services.session(g.player());
         t.exp += g.amount();

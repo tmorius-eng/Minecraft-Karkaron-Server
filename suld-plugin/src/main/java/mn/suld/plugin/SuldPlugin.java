@@ -24,7 +24,8 @@ import java.util.concurrent.TimeUnit;
 public final class SuldPlugin extends JavaPlugin {
 
     private static final long TICKS_PER_SECOND = 20L;
-    private static final long AUTOSAVE_SECONDS = 300L;
+    /** Dirty profiles are written at least this often (async upserts). Was 300 s: a crash lost up to 5 min of EXP. */
+    static final long AUTOSAVE_SECONDS = 60L;
 
     private SuldServices services;
     private mn.suld.plugin.mount.HorseService horses;

@@ -141,6 +141,7 @@ public final class SuldCommand implements CommandExecutor {
             return;
         }
         var result = services.progression().grantExp(profile, amount, mn.suld.api.progression.ExpSource.ADMIN);
+        services.profiles().save(profile);
         services.hud().update(target, profile);
         sender.sendMessage(Messages.success(target.getName() + ": +" + amount + " EXP → түвшин " + profile.progression().level()
                 + (result.leveledUp() ? " (+" + result.levelsGained() + ")" : "")));

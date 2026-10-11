@@ -267,6 +267,7 @@ public final class HistoricSiteService {
                 if (seen.contains(p.site().id())) continue;
                 seen.add(p.site().id());
                 pl.getPersistentDataContainer().set(seenKey, PersistentDataType.STRING, String.join(",", seen));
+                mn.suld.plugin.item.PlayerDataSaves.now(pl); // the guard first, then the EXP (PERS-002)
                 discovered(pl, p.site());
             }
         }
