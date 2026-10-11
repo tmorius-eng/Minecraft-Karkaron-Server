@@ -21,7 +21,7 @@ public enum ArmorTier {
     T2("Сайжруулсан", 12, "dungeon.govi_bulsh", 2_000, "item.khilentsiin_khor", 10, 0, 0, ItemRarity.RARE),
     T3("Элчин", 24, "dungeon.mosun_orgil", 12_000, "item.mosun_chuluu", 15, 0, 1, ItemRarity.EPIC),
     T4("Хааны", 36, "dungeon.khar_khot", 45_000, "item.altan_toos", 20, 0, 3, ItemRarity.LEGENDARY),
-    T5("Тэнгэрлэг", 48, "dungeon.burkhan_aguy", 120_000, "item.altan_toos", 25, 0, 5, ItemRarity.ANCIENT),
+    T5("Тэнгэрлэг", 48, "dungeon.burkhan_agui", 120_000, "item.altan_toos", 25, 0, 5, ItemRarity.ANCIENT),
     T6("Дээдэс", 60, "dungeon.tengeriin_ordon", 300_000, "item.tengeriin_chuluu", 30, 3, 7, ItemRarity.MYTHIC);
 
     private final String displayName;

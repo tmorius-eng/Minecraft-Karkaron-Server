@@ -206,7 +206,7 @@ public class ProposedRules extends Rules {
             new DungeonSpec("dungeon.dalain_gun", "Далайн Гүн", 29, 37, 4, 20, 3),
             new DungeonSpec("dungeon.khar_khot", "Хар Хотын Балгас", 36, 44, 5, 26, 3),
             new DungeonSpec("dungeon.ulaan_khad", "Улаан Хадны Хүрээ", 42, 50, 6, 31, 4),
-            new DungeonSpec("dungeon.burkhan_aguy", "Бурхан Халдуны Агуй", 48, 56, 6, 34, 4),
+            new DungeonSpec("dungeon.burkhan_agui", "Бурхан Халдуны Агуй", 48, 56, 6, 34, 4),
             new DungeonSpec("dungeon.tengeriin_shat", "Тэнгэрийн Шат", 54, 60, 7, 38, 4),
             new DungeonSpec("dungeon.tengeriin_ordon", "Тэнгэрийн Ордон", 60, 60, 7, 41, 4));
 
@@ -632,7 +632,7 @@ public class ProposedRules extends Rules {
     /** Armour tier gates: armour level, dungeon to have cleared, coins. Tier 6 = endgame (also Ascension III). */
     public static final int[] TIER_ARMOR_LEVEL = {0, 1, 12, 24, 36, 48, 60};
     public static final String[] TIER_DUNGEON = {null, null, "dungeon.govi_bulsh", "dungeon.mosun_orgil", "dungeon.khar_khot",
-            "dungeon.burkhan_aguy", "dungeon.tengeriin_ordon"};
+            "dungeon.burkhan_agui", "dungeon.tengeriin_ordon"};
     /** Band whose material each tier upgrade takes (the band of its dungeon). */
     public static final int[] TIER_BAND = {0, 0, 1, 3, 5, 6, 7};
     public static final long[] TIER_COINS = {0, 0, 2_000, 12_000, 45_000, 120_000, 300_000};

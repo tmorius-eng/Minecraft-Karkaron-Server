@@ -44,19 +44,21 @@ class SimulationTest {
         assertEquals(18, w.story().size());
         assertEquals(25_750L, w.story().stream().mapToLong(World.Chapter::exp).sum());
         assertEquals(2_950L, w.story().stream().mapToLong(World.Chapter::coins).sum());
-        assertEquals(List.of(400L, 1200L, 2600L, 4800L), w.dungeons().stream().map(World.Dungeon::completionExp).toList());
-        assertEquals(List.of(2, 8, 14, 22), w.dungeons().stream().map(World.Dungeon::min).toList());
-        assertEquals(26, w.maxContentLevel(), "content ends at level 26 (Мөсөн Хаан)");
-        // bosses use their SÜLD attack × phases, normal mobs vanilla damage
+        assertEquals(List.of(400L, 1200L, 2600L, 4800L), w.dungeons().stream().limit(4).map(World.Dungeon::completionExp).toList());
+        assertEquals(List.of(2, 8, 14, 22, 29, 36, 42, 48, 54, 60), w.dungeons().stream().map(World.Dungeon::min).toList());
+        assertEquals(60, w.maxContentLevel(), "the dungeon ladder ends at level 60 (Тэнгэрийн Ордон)");
+        // every SÜLD mob hits with its designed attack (CombatListener.onMobHitsPlayer); bosses × their phases
         World.Mob khasar = w.dungeons().get(0).boss();
-        assertEquals(6.25 * LiveRules.phaseAverage(mn.suld.plugin.content.SuldContent.KHASAR_BOSS.phases()), khasar.dmg(), 1e-9);
-        assertEquals(6.0, w.mob("mob.goviin_chono").dmg(), 1e-9);
+        assertEquals(mn.suld.plugin.content.SuldContent.KHASAR_BOSS.mob().scaledAttack()
+                * LiveRules.phaseAverage(mn.suld.plugin.content.SuldContent.KHASAR_BOSS.phases()), khasar.dmg(), 1e-9);
+        assertEquals(mn.suld.plugin.content.SuldContent.GOVIIN_CHONO.scaledAttack(), w.mob("mob.goviin_chono").dmg(), 1e-9);
     }
 
     @Test
-    void liveDungeonLootLevelFollowsThePlayer() {
+    void liveDungeonLootLevelIsClampedToTheBand() {
         World.Dungeon den = LIVE.world().dungeons().get(0);
-        assertEquals(60, LIVE.dungeonLootLevel(den, 60), "DG-1: DungeonService.java:352");
+        assertEquals(10, LIVE.dungeonLootLevel(den, 60), "DungeonDefinition.rewardLevel: boss level + 5");
+        assertEquals(7, LIVE.dungeonLootLevel(den, 7), "below the band the player's own level");
         assertEquals(10, PROPOSED.dungeonLootLevel(PROPOSED.world().dungeons().get(0), 60), "proposed: clamped to the band");
     }
 

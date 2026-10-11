@@ -90,15 +90,19 @@ public class LiveRules extends Rules {
         Map<String, MobDefinition> m = new HashMap<>();
         for (MobDefinition d : List.of(SuldContent.GOVIIN_CHONO, SuldContent.ORKHON_CHONO, SuldContent.KHASAR)) m.put(d.id(), d);
         for (MobDefinition d : WorldContent.MOBS) m.put(d.id(), d);
+        for (MobDefinition d : mn.suld.plugin.content.LadderContent.MOBS) m.put(d.id(), d);
         for (MobDefinition d : DungeonContent.BOSSES) m.put(d.id(), d);
         return m;
     }
 
-    /** A live mob: SÜLD health; vanilla damage unless it is a boss (BossService.java:113 uses scaledAttack × phase). */
+    /**
+     * A live mob: SÜLD health and SÜLD damage (CombatListener.onMobHitsPlayer: scaledAttack per hit; bosses scaledAttack
+     * × phase, BossService); the vanilla entity still sets how often it hits.
+     */
     static World.Mob liveMob(MobDefinition d, double phaseAverage) {
         double[] v = VANILLA_HARD.getOrDefault(d.backingEntity(), new double[]{5, 1.0, 0});
         boolean boss = d.tier() == MobTier.BOSS;
-        double dmg = boss ? d.scaledAttack() * phaseAverage : v[0];
+        double dmg = boss ? d.scaledAttack() * phaseAverage : d.scaledAttack();
         double interval = boss ? 1.0 : v[1];
         return new World.Mob(d.id(), d.displayName(), d.level(), d.tier(), d.scaledHealth(), dmg, interval, v[2] > 0,
                 d.scaledExp(), d.lootTableId(), 0);
@@ -138,8 +142,11 @@ public class LiveRules extends Rules {
             }
             World.Mob boss = liveMob(d.bossDefinition().mob(), phaseAverage(d.bossDefinition().phases()));
             DungeonContent.Completion c = DungeonContent.completion(d.id());
-            dungeons.add(new World.Dungeon(d.id(), d.displayName(), d.minLevel(), 60, di++, waves, boss, c.exp(), c.coins(),
-                    d.rewardTableId(), d.bossDefinition().enrageSeconds(), -1, -1, 0, false, 0));
+            // the loot band (DungeonDefinition.rewardLevel) and the previous-dungeon gate (DungeonService.start)
+            int band = Math.max(d.minLevel(), d.bossDefinition().mob().level() + DungeonDefinition.REWARD_LEVEL_SPAN);
+            dungeons.add(new World.Dungeon(d.id(), d.displayName(), d.minLevel(), band, di, waves, boss, c.exp(), c.coins(),
+                    d.rewardTableId(), d.bossDefinition().enrageSeconds(), -1, di - 1, 0, false, 0));
+            di++;
         }
         List<World.Chapter> story = new ArrayList<>();
         World tmp = new World(zones, dungeons, List.of(), List.of());
@@ -156,6 +163,53 @@ public class LiveRules extends Rules {
         }
         List<World.Event> events = List.of(new World.Event(SuldContent.WOLF_RAID.id(), 45, 10, 300, 60, false));
         return new World(zones, dungeons, story, events);
+    }
+
+    // ------------------------------------------------------------------ live rules that moved on since Stage B
+
+    private static final mn.suld.api.config.DeathSettings DEATH = mn.suld.api.config.DeathSettings.defaults();
+
+    /** Level and the previous dungeon cleared (DungeonService.start). */
+    @Override
+    public boolean dungeonOpen(SimPlayer p, World.Dungeon d) {
+        if (p.level < d.min() || d.heroic()) return false;
+        return d.previous() < 0 || p.clears.getOrDefault(world.dungeons().get(d.previous()).id(), 0) > 0;
+    }
+
+    /** DungeonDefinition.rewardLevel: the player's level, capped at the dungeon's band. */
+    @Override
+    public int dungeonLootLevel(World.Dungeon d, int playerLevel) {
+        return Math.max(1, Math.min(playerLevel, d.max()));
+    }
+
+    @Override
+    public double deathLockMinutes(int level, int ascension) {
+        return mn.suld.api.death.DeathLock.minutes(DEATH, level, ascension);
+    }
+
+    @Override
+    public double deathBarLoss() {
+        return DEATH.expLossFraction();
+    }
+
+    @Override
+    public double woundPerDeath() {
+        return DEATH.woundPerDeath();
+    }
+
+    @Override
+    public double woundMax() {
+        return DEATH.woundMax();
+    }
+
+    @Override
+    public double woundHealHours() {
+        return DEATH.woundHealMinutes() / 60.0;
+    }
+
+    @Override
+    public double deathMaterialLoss() {
+        return DEATH.lootLossFraction();
     }
 
     /** The zone whose mobs drop a collect-quest item (the item named in a mob loot table's rare drops). */

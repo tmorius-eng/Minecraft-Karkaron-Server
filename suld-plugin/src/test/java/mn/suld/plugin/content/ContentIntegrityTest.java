@@ -73,4 +73,14 @@ class ContentIntegrityTest {
         assertEquals(WorldContent.KHERLEN, index.at(300, 0).orElseThrow(), "the first hunt's wolves live east of town");
         assertEquals(WorldContent.ALTAI, index.at(-300, 0).orElseThrow());
     }
+
+    @Test
+    void everyArmourTierGateNamesARealDungeon() {
+        Set<String> ids = new HashSet<>();
+        DungeonContent.ALL.forEach(d -> ids.add(d.id()));
+        for (mn.suld.api.classgear.ArmorTier t : mn.suld.api.classgear.ArmorTier.values()) {
+            if (t.dungeon() == null) continue;
+            assertTrue(ids.contains(t.dungeon()), t + " is gated on unknown dungeon " + t.dungeon());
+        }
+    }
 }
