@@ -181,7 +181,9 @@ public final class SuldPlugin extends JavaPlugin {
                 new mn.suld.plugin.worldbuild.CityProtectionListener(this, services, worldBuild);
         getServer().getPluginManager().registerEvents(protection, this);
         protection.start();
-        new mn.suld.plugin.mob.RegionSpawner(this, services).start();
+        mn.suld.plugin.mob.RegionSpawner regionSpawner = new mn.suld.plugin.mob.RegionSpawner(this, services);
+        getServer().getPluginManager().registerEvents(regionSpawner, this);
+        regionSpawner.start();
         getServer().getPluginManager().registerEvents(services.classWeapons(), this);
         services.classWeapons().start();
 
@@ -258,6 +260,7 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
         progress.menus(menus);
         tracker = new mn.suld.plugin.quest.QuestTracker(this, services);
+        menus.questMenu().tracker(tracker);
         getServer().getPluginManager().registerEvents(tracker, this);
         tracker.start();
         services.regionIdAt = tracker::regionIdAt;

@@ -30,8 +30,12 @@ import java.util.concurrent.ThreadLocalRandom;
  * prey of the chapter is always there to find.
  * Region mobs stay hostile (vanilla wolves calm down), are removed if they wander to the city, and despawn when
  * nobody is near.
+ * <p>
+ * Day and night alike: the themed mobs are the wild's monsters. Vanilla hostile mobs (zombies, skeletons, creepers,
+ * spiders…) no longer spawn naturally in the overworld ({@code world.vanilla-hostiles: false}, the default); at night
+ * the spawner keeps half again as many SÜLD mobs around each player instead.
  */
-public final class RegionSpawner {
+public final class RegionSpawner implements org.bukkit.event.Listener {
 
     public static final String TAG = "suld_region";
     private static final int CITY_MARGIN = 32;
@@ -77,8 +81,22 @@ public final class RegionSpawner {
                 && !services.city().near(p.getWorld().getName(), p.getLocation().getBlockX(), p.getLocation().getBlockZ(), CITY_MARGIN);
     }
 
+    /** Vanilla hostiles do not spawn naturally in the overworld: the region's SÜLD mobs are its monsters. */
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGH, ignoreCancelled = true)
+    public void onNaturalSpawn(org.bukkit.event.entity.CreatureSpawnEvent e) {
+        if (plugin.getConfig().getBoolean("world.vanilla-hostiles", false)) return;
+        org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason r = e.getSpawnReason();
+        if (r != org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL && r != org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.PATROL
+                && r != org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.REINFORCEMENTS) return;
+        if (!(e.getEntity() instanceof org.bukkit.entity.Enemy)) return;
+        if (!e.getEntity().getWorld().equals(Bukkit.getWorlds().get(0))) return;
+        e.setCancelled(true);
+    }
+
     private void spawnTick() {
-        int target = services.config().world().regionMobsPerPlayer();
+        int base = services.config().world().regionMobsPerPlayer();
+        long time = Bukkit.getWorlds().get(0).getTime();
+        int target = time >= 13000 && time <= 23000 ? base + (base + 1) / 2 : base; // night: half again as many
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!eligible(p)) continue;
             RegionDefinition region = regionAt(p.getLocation()).orElse(null);

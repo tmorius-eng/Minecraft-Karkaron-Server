@@ -416,6 +416,15 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/quests.png",
+   "height": 126,
+   "ascent": 13,
+   "chars": [
+    ""
+   ]
   }
  ]
 }

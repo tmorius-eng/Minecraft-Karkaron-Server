@@ -404,6 +404,40 @@ def gui_skillmap(preview: str | None) -> None:
         img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_skillmap.png"))
 
 
+def warp_to_slots(src: Image.Image, xs_map: list, xs_bar: list, ys: list, bar_top: int, height: int) -> Image.Image:
+    """Resample painted art onto the 176 px chest so that its wells land exactly on the slots: a separable
+    piecewise-linear map through control points (source px -> chest px) per axis, with its own x map for the toolbar
+    band (y >= bar_top), each chest pixel the average of the source area it covers. Deterministic."""
+    import numpy as np
+    a = np.asarray(src.convert("RGBA")).astype(np.float64)
+    H, W = a.shape[:2]
+    ii = np.zeros((H + 1, W + 1, 4))
+    ii[1:, 1:] = a.cumsum(0).cumsum(1)
+
+    def inv(points, v):  # chest coordinate -> source coordinate
+        dst = [d for _, d in points]
+        srcs = [s for s, _ in points]
+        return float(np.interp(v, dst, srcs))
+
+    out = Image.new("RGBA", (176, height))
+    px = out.load()
+    for y in range(height):
+        y0, y1 = inv(ys, y), inv(ys, y + 1)
+        for x in range(176):
+            xm = xs_bar if y >= bar_top else xs_map
+            x0, x1 = inv(xm, x), inv(xm, x + 1)
+            r0, r1 = int(max(0, min(H - 1, round(y0)))), int(max(1, min(H, round(y1))))
+            c0, c1 = int(max(0, min(W - 1, round(x0)))), int(max(1, min(W, round(x1))))
+            if r1 <= r0:
+                r1 = r0 + 1
+            if c1 <= c0:
+                c1 = c0 + 1
+            tot = ii[r1, c1] - ii[r0, c1] - ii[r1, c0] + ii[r0, c0]
+            v = tot / ((r1 - r0) * (c1 - c0))
+            px[x, y] = tuple(int(round(t)) for t in v[:3]) + (255,)
+    return out
+
+
 # ----------------------------------------------------------------------------------------- dungeon ladder
 
 # (row, col) of each ladder dungeon's slot, bottom to top: the stair climbs from the steppe to the sky palace.
@@ -421,6 +455,24 @@ def gui_dungeons(preview: str | None) -> None:
     import random
     rows = 6
     height = 17 + rows * 18 + 1
+    art = os.path.join(ART, "gui_dungeons.webp")
+    if os.path.exists(art):
+        # the owner's painted night-steppe ladder (assets/art/source/gui_dungeons.webp, 1672x941, its ten plinths in
+        # this layout): warped so each plinth's dark well covers its slot exactly (measured well interiors below)
+        def wells(lefts_rights, cols):
+            pts = [(0, 0)]
+            for (l, r), c in zip(lefts_rights, cols):
+                pts += [(l, 8 + 18 * c), (r, 8 + 18 * c + 16)]
+            return sorted(set(pts + [(1672, 176)]))
+        xs_map = wells([(308, 430), (464, 588), (612, 734), (934, 1056), (1240, 1362)], [1, 2, 3, 5, 7])
+        xs_bar = wells([(96, 234), (262, 400), (426, 570), (596, 736), (762, 902), (928, 1068), (1096, 1236),
+                        (1264, 1406), (1432, 1572)], range(9))
+        ys = [(0, 0), (112, 18), (230, 34), (344, 54), (458, 70), (614, 90), (728, 106), (774, 108), (904, 124), (941, height)]
+        img = warp_to_slots(Image.open(art), xs_map, xs_bar, ys, 107, height)
+        add_bitmap("GUI_DUNGEONS", img, "gui/dungeons", height, 13, f"chest background dungeons 176x{height} (dungeon ladder)")
+        if preview:
+            img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_dungeons.png"))
+        return
     img = Image.new("RGBA", (176, height), NAVY + (255,))
     px = img.load()
     rnd = random.Random(20261011)
@@ -488,6 +540,110 @@ def gui_dungeons(preview: str | None) -> None:
     add_bitmap("GUI_DUNGEONS", img, "gui/dungeons", height, 13, f"chest background dungeons 176x{height} (dungeon ladder)")
     if preview:
         img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_dungeons.png"))
+
+
+# ----------------------------------------------------------------------------------------- story map (/quest)
+
+# (row, col) of the 18 chapters, mirrored in suld-plugin gui/QuestMenu.SLOTS: a zigzag road along the bottom two
+# rows (Хэрлэн, then Говь), up the right edge, and back along the top two rows (Хангай, then Алтай).
+QUEST_SLOTS = [(4, 0), (3, 1), (4, 2), (3, 3), (4, 4), (3, 5), (4, 6), (3, 7), (4, 8),
+               (1, 8), (0, 7), (1, 6), (0, 5), (1, 4), (0, 3), (1, 2), (0, 1), (1, 0)]
+# chapter index -> region tint (Хэрлэн green steppe, Говь sand, Хангай forest, Алтай snow)
+QUEST_BANDS = [(0, 5, (126, 158, 84)), (5, 9, (214, 184, 120)), (9, 14, (78, 120, 72)), (14, 18, (200, 214, 222))]
+
+
+def gui_quests(preview: str | None) -> None:
+    """The story map: the owner's painted map when present, else (procedural) an old parchment map with four tinted lands (steppe, desert, forest, snow peaks), the
+    Kharkhorum camp in the middle row, and a red-dashed road through 18 framed chapter wells. Deterministic."""
+    import math
+    import random
+    rows = 6
+    height = 17 + rows * 18 + 1
+    art = os.path.join(ART, "gui_quests.webp")
+    if os.path.exists(art):
+        # the owner's painted story map (assets/art/source/gui_quests.webp, drawn on this very layout): box-filtered
+        # down to the chest's 176 px, its wells land on the chapter slots
+        img = Image.open(art).convert("RGBA").resize((176, height), Image.BOX)
+        add_bitmap("GUI_QUESTS", img, "gui/quests", height, 13, f"chest background quests 176x{height} (story map)")
+        if preview:
+            img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_quests.png"))
+        return
+    img = Image.new("RGBA", (176, height), LEATHER + (255,))
+    px = img.load()
+    rnd = random.Random(20261012)
+    y0, y1 = 17, 17 + 5 * 18
+
+    def centre(r: int, c: int) -> tuple[int, int]:
+        return 8 + c * 18 + 7, 18 + r * 18 + 7
+
+    # parchment with land tints: each pixel takes the tint of the nearest chapter's region (soft Voronoi)
+    pts = [(centre(r, c), i) for i, (r, c) in enumerate(QUEST_SLOTS)]
+    def band(i: int) -> tuple:
+        for a, b, col in QUEST_BANDS:
+            if a <= i < b:
+                return col
+        return PARCH
+    for y in range(y0, y1):
+        for x in range(1, 175):
+            best, bi = 1e9, 0
+            for (cx, cy), i in pts:
+                d = (cx - x) ** 2 + (cy - y) ** 2
+                if d < best:
+                    best, bi = d, i
+            t = band(bi)
+            n = rnd.randint(-6, 6)
+            edge = min(x - 1, 174 - x, y - y0, y1 - 1 - y)
+            shade = 0 if edge > 8 else (8 - edge) * 3
+            c = tuple(max(0, min(255, int(PARCH[k] * 0.55 + t[k] * 0.45) + n - shade)) for k in range(3))
+            px[x, y] = c + (255,)
+    d = ImageDraw.Draw(img)
+    # the middle row: the Orkhon valley and the Kharkhorum camp (a gold ger outline in the centre)
+    my = 18 + 2 * 18
+    for x in range(4, 172):
+        yy = int(my + 8 + 2 * math.sin(x / 9.0))
+        px[x, yy] = (84, 120, 168, 255)  # the river
+    gx, gy = 88, my + 3
+    d.ellipse([gx - 7, gy - 1, gx + 7, gy + 9], outline=GOLD_D, fill=(236, 220, 180))
+    d.polygon([(gx - 8, gy + 2), (gx, gy - 6), (gx + 8, gy + 2)], outline=GOLD_D, fill=(214, 196, 150))
+    d.rectangle([gx - 1, gy + 4, gx + 1, gy + 9], fill=(150, 60, 40))
+    # the road: a red dashed line chapter to chapter
+    for (r0, c0), (r1, c1) in zip(QUEST_SLOTS, QUEST_SLOTS[1:]):
+        (xa, ya), (xb, yb) = centre(r0, c0), centre(r1, c1)
+        n = max(abs(xb - xa), abs(yb - ya))
+        for i in range(n):
+            if (i // 2) % 2:
+                continue
+            x = xa + (xb - xa) * i // max(1, n)
+            y = ya + (yb - ya) * i // max(1, n)
+            for dx, dy in ((0, 0), (1, 0), (0, 1)):
+                px[x + dx, y + dy] = (150, 36, 30, 255)
+    # chapter wells: a bronze frame on darker parchment
+    for r, c in QUEST_SLOTS:
+        x, y = 8 + c * 18, 18 + r * 18
+        d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=PARCH_D, outline=BRONZE)
+        d.rectangle([x, y, x + 15, y + 15], outline=BRONZE_L)
+    # compass rose (left of the middle row, clear of the road)
+    cx, cy = 22, my + 4
+    for i in range(-4, 5):
+        px[cx + i, cy] = BRONZE + (255,)
+        px[cx, cy + i] = BRONZE + (255,)
+    px[cx, cy - 5] = (176, 40, 40, 255)
+    # frame, header, toolbar
+    d.rectangle([0, y0 - 1, 175, y1], outline=BRONZE)
+    d.rectangle([1, y0, 174, y1 - 1], outline=BRONZE_L)
+    d.rectangle([0, 0, 175, 16], fill=LEATHER)
+    d.line([0, 16, 175, 16], fill=GOLD)
+    for ox in (3, 164):
+        for (dx, dy) in ((1, 0), (2, 0), (0, 1), (3, 1), (1, 2), (2, 2), (0, 3), (3, 3), (1, 4), (2, 4)):
+            img.putpixel((ox + dx * 2, 4 + dy * 2), GOLD + (255,))
+    d.line([0, y1, 175, y1], fill=GOLD)
+    for c in range(9):
+        x, y = 8 + c * 18, 18 + 5 * 18
+        d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=(34, 24, 14), outline=BRONZE_L)
+    d.rectangle([0, 0, 175, height - 1], outline=BRONZE)
+    add_bitmap("GUI_QUESTS", img, "gui/quests", height, 13, f"chest background quests 176x{height} (story map)")
+    if preview:
+        img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_quests.png"))
 
 
 TREE_COLORS = {
@@ -635,7 +791,8 @@ def main() -> None:
     blank_item()
     tree_items()
     orb_item()
-    gui_dungeons(args.preview)  # last: earlier glyphs keep their code points
+    gui_dungeons(args.preview)  # appended last: earlier glyphs keep their code points
+    gui_quests(args.preview)
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)

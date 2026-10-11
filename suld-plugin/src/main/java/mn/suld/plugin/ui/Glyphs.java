@@ -130,6 +130,8 @@ public final class Glyphs {
     public static final String GUI_SKILLMAP = "\uE03A";
     /** chest background dungeons 176x126 (dungeon ladder) */
     public static final String GUI_DUNGEONS = "\uE03B";
+    /** chest background quests 176x126 (story map) */
+    public static final String GUI_QUESTS = "\uE03C";
 
     private Glyphs() {
     }

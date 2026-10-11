@@ -83,6 +83,35 @@ public final class QuestContent {
             Map.entry("quest.ice_peak", new Lore("Их Бөө", "Алтайд (баруун зүг) /dungeon enter mosun_orgil.")),
             Map.entry("quest.altai_giant", new Lore("Их Бөө", "Аваргууд бол элит — бүлэг, сайн зэвсэг хэрэгтэй.")));
 
+    /**
+     * The story of each chapter, told on its card in the story map (/quest). Places, the relay posts (өртөө), the
+     * decimal army (аравт, зуут, мянгат), caravans on the trade roads and the stone statues of the Altai are real;
+     * the creatures, the dungeons and the people are SÜLD fiction.
+     */
+    private static final Map<String, String> STORY_TEXT = Map.ofEntries(
+            Map.entry("quest.first_hunt", "Хэрлэн гол бол Их Монгол Улсын өлгий нутаг. Сүүлийн үед тал нутагт чоно олширч, малчдын хотонд халдах болжээ."),
+            Map.entry("quest.wolf_pelts", "Өвлийн хүйтэнд анчид чонын арьсаар дах, малгай оёдог. Хотын анчин таны авчрах арьсыг хүлээж байна."),
+            Map.entry("quest.kherlen_bandits", "Хэрлэнгийн дагуух худалдааны замаар Хархорум руу тэмээн жин явдаг. Дээрэмчид жинг тонож, өртөөчдийг айлгаж байна."),
+            Map.entry("quest.oath_5", "Хотын ноён: «Тал нутгийг хамгаалах хүн эхлээд өөрөө хүчтэй байх ёстой. Дайчин болж ир.»"),
+            Map.entry("quest.khasar_den", "Хасарын Агуй хэмээн домоглодог хадан агуйд араатан эзэрхэж, ойр орчмын айлууд нүүж одож байна."),
+            Map.entry("quest.gobi_road", "Говиор дамжин худалдааны их зам өнгөрдөг. Их хааны элч нар өртөө өртөөгөөр морь сольж давхидаг байв."),
+            Map.entry("quest.gobi_scorpions", "Тэмээчид шөнө хөдөлдөг: өдөр Говийн аварга хилэнцүүд элсэн дотроос гарч ирдэг."),
+            Map.entry("quest.sand_spirits", "Бөө: «Говийн гүнд эртний оршуулгын газрууд бий. Элсний сүнснүүд тэднийг сахиж, аянчдыг төөрүүлдэг.»"),
+            Map.entry("quest.gobi_tomb", "Элсэнд дарагдсан булшны эзэн Элсний Хаан сэрсэн гэнэ. Түүнийг дарахгүй бол жин Говийг гатлахгүй."),
+            Map.entry("quest.oath_12", "Мянгатын ноён: «Манай цэрэг аравт, зуут, мянгатаар зохион байгуулагддаг. Мянгатад нэгдэхийн тулд хүчээ батал.»"),
+            Map.entry("quest.khangai_forest", "Хангайн нуруунаас Орхон гол эх авдаг. Энэ хөндийд Хархорум босож, нүүдэлчдийн нийслэл болсон юм."),
+            Map.entry("quest.grey_wolves", "Малчид: «Хангайн саарал чононууд сүрэглэн бууж, адуу сүргийг тарааж байна. Туслаач!»"),
+            Map.entry("quest.khangai_bear", "Ойн баавгайг эртнээс «ойн эзэн» хэмээн хүндэлдэг. Харин зэрлэгшсэн баавгай малчдын гэрийг сүйтгэж байна."),
+            Map.entry("quest.bear_lair", "Ойн гүнд Хар Баавгайн үүр бий. Түүнийг ялсан хүн Хангайн ан агнуурыг дахин нээнэ."),
+            Map.entry("quest.altai_peaks", "Алтай бол «Алтан уул». Мөнх цаст оргилуудыг эртнээс тэнгэрт хамгийн ойр газар гэж үздэг."),
+            Map.entry("quest.ice_spirits", "Бөө: «Тэнгэр хилэгнэвэл оргилд мөсөн сүнс бууна. Тэднийг номхруулж, замаа цэвэрлэ.»"),
+            Map.entry("quest.ice_peak", "Мөсөн Оргилын сахиул Мөсөн Хаан тэнгэр өөд гарах замыг хааж байна."),
+            Map.entry("quest.altai_giant", "Алтайд эртний хүн чулуу, тахилын овоод бий. Аваргууд тэдгээрийг эзэлжээ: сэргээвэл Сүлдний зам нээгдэнэ."));
+
+    public static String story(String questId) {
+        return STORY_TEXT.getOrDefault(questId, "");
+    }
+
     public static Lore lore(String questId) {
         return LORE.getOrDefault(questId, new Lore("Хархорум", ""));
     }

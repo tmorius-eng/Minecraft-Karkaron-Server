@@ -63,8 +63,13 @@ public final class QuestTracker implements Listener {
         return false;
     }
 
+    /** Whether the tracker bar is on for {@code p} ({@code /quest track} turns it off). */
+    public boolean shown(Player p) {
+        return !hidden.contains(p.getUniqueId());
+    }
+
     /** The wild region an objective points at, if it has one. */
-    static Optional<RegionDefinition> targetRegion(QuestDefinition d) {
+    public static Optional<RegionDefinition> targetRegion(QuestDefinition d) {
         String id = switch (d.type()) {
             case DISCOVER_LOCATION -> d.targetId();
             case COMPLETE_DUNGEON -> DungeonContent.regionOf(d.targetId());

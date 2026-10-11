@@ -46,6 +46,7 @@ public final class Menus {
     private final SuldServices services;
 
     public Menus(Plugin plugin, SuldServices services) {
+        this.questMenu = new QuestMenu(services);
         this.plugin = plugin;
         this.services = services;
     }
@@ -235,52 +236,16 @@ public final class Menus {
     /** Told whenever the quest screen opens (the tutorial's step); set by the plugin. */
     public static volatile java.util.function.Consumer<Player> onQuests = p -> { };
 
+    private final QuestMenu questMenu;
+
+    public QuestMenu questMenu() {
+        return questMenu;
+    }
+
+    /** The story map (gui/QuestMenu). */
     public void quests(Player p) {
         onQuests.accept(p);
-        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-        if (pr == null) return;
-        var chain = services.quests().chain();
-        var state = pr.questState();
-        int done = chain.completedCount(state);
-        Menu m = new Menu(6, "Сүлдний Зам · " + done + "/" + chain.size(), null);
-        m.set(4, Menu.item(Material.WRITABLE_BOOK, Menu.title("Сүлдний Зам", GOLD), List.of(
-                b("Хархорумаас Алтай хүртэлх үйл явдал."),
-                b("Бүлэг бүр дуусмагц дараагийнх нь эхэлнэ."),
-                Menu.kv("Явц:", done + "/" + chain.size() + " бүлэг", GREEN))), null);
-        for (int i = 0; i < chain.size() && i < CHAPTER_SLOTS.length; i++) {
-            var def = chain.chapters().get(i);
-            var lore = mn.suld.plugin.content.QuestContent.lore(def.id());
-            boolean finished = i < done;
-            boolean active = !finished && def.id().equals(state.questId());
-            TextColor c = finished ? GREEN : active ? GOLD : NamedTextColor.GRAY;
-            List<Component> info = new ArrayList<>();
-            info.add(Menu.kv("Өгсөн:", lore.giver(), SKY));
-            if (active) info.add(Menu.kv("Явц:", state.progress() + "/" + def.requiredCount(), GOLD));
-            info.add(Menu.kv("Шагнал:", def.expReward() + " EXP · " + def.currencyReward() + " ₮", GREEN));
-            List<Component> body = new ArrayList<>();
-            body.add(b(finished || active ? def.description() : "???"));
-            if (active && !lore.hint().isEmpty()) body.add(b("➜ " + lore.hint()));
-            ItemStack it = Menu.item(finished ? Material.LIME_DYE : active ? questIcon(def.type()) : Material.GRAY_DYE,
-                    Component.text((i + 1) + ". " + (finished || active ? def.title() : "Түгжээтэй"), c, TextDecoration.BOLD),
-                    Menu.lore(c, body, info, finished ? "Дууссан ✔" : active ? "Идэвхтэй эрэл" : "Өмнөх бүлгээ дуусга"));
-            if (active) Menu.glow(it);
-            m.set(CHAPTER_SLOTS[i], it, active ? (pl, cl) -> {
-                pl.closeInventory();
-                pl.performCommand("quest info");
-            } : null);
-        }
-        m.set(45, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
-        m.set(48, Menu.item(Material.MOSSY_COBBLESTONE, Menu.title("Агуйнууд", SKY), Menu.lore(SKY,
-                List.of(b("Агуйн аян: бүлгээрээ яв."), b("Агуйн шатыг нээж хаалга руугаа зам заалга.")), List.of(), "Агуйн Шат")), (pl, c) -> {
-            pl.closeInventory();
-            pl.performCommand("dungeon");
-        });
-        m.set(50, Menu.item(Material.PLAYER_HEAD, Menu.title("Бүлэг", SKY), Menu.lore(SKY, List.of(b("/party invite <нэр>")), List.of(), "Мэдээлэл")),
-                (pl, c) -> {
-                    pl.closeInventory();
-                    pl.performCommand("party info");
-                });
-        m.open(p);
+        questMenu.open(p);
     }
 
     // ================================================================== skills

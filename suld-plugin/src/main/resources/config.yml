@@ -224,13 +224,16 @@ relics:
 # height map and rollback log in plugins/SULD/worldbuild/) and moves the spawn onto
 # the plaza. Operate it with /worldbuild (status, validate, rollback confirm, ...).
 # build-blocks-per-tick caps writes per tick (a 25 ms time budget applies too).
-# region-spawning / region-mobs-per-player: reserved, not wired yet.
+# region-spawning / region-mobs-per-player: SÜLD mobs kept around every player out in the wild (more at night).
 # ---------------------------------------------------------------------------
 world:
   kharkhorum-auto-build: true
   build-blocks-per-tick: 4000
   region-spawning: true
   region-mobs-per-player: 4
+  # false (default): zombies, skeletons, creepers… do not spawn naturally in the overworld; each region's own SÜLD
+  # mobs are the monsters, day and night (more of them at night). true: vanilla night monsters as well.
+  vanilla-hostiles: false
   # The playable overworld: Minecraft's own world border, set once and kept in level.dat (docs/world/WORLD_BORDER.md).
   # centre: "spawn" (Kharkhorum's plaza; every region ring is measured from it) or fixed "x z".
   border:

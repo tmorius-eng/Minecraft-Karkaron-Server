@@ -222,6 +222,7 @@ public final class CombatListener implements Listener {
     public void onDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
         if (!mobs.isSuldMob(entity)) {
+            vanillaKill(entity);
             return;
         }
         CRIT_AT.remove(entity.getUniqueId());
@@ -326,6 +327,26 @@ public final class CombatListener implements Listener {
     }
 
     private final java.util.Map<java.util.UUID, Long> lastKillSave = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * A vanilla hostile (one from a spawner, or any when world.vanilla-hostiles is on) is worth a quarter of a SÜLD
+     * mob of the killer's level, so no fight goes unrewarded; it gives no SÜLD loot and no quest progress.
+     */
+    private void vanillaKill(LivingEntity entity) {
+        Player killer = entity.getKiller();
+        if (killer == null || !(entity instanceof org.bukkit.entity.Enemy)) return;
+        PlayerProfile profile = services.profiles().cached(killer.getUniqueId()).orElse(null);
+        if (profile == null || profile.playerClass().isEmpty()) return;
+        int from = profile.progression().level();
+        long exp = Math.max(1, Math.round(services.boosts().apply(killer.getUniqueId(), Math.round(30 + 10.0 * from + 0.05 * from * from)) * 0.25));
+        ExpGainResult r = services.progression().grantExp(profile, exp, ExpSource.MOB_KILL);
+        killer.sendActionBar(Messages.info("+" + exp + " EXP"));
+        if (r.leveledUp()) {
+            Presentation.levelUp(killer, from, r.after().level());
+            services.profiles().save(profile);
+        }
+        hud.update(killer, profile);
+    }
 
     @EventHandler
     public void onQuitForget(org.bukkit.event.player.PlayerQuitEvent e) {

@@ -113,6 +113,16 @@ public final class MobService implements org.bukkit.event.Listener {
     }
 
     /**
+     * SÜLD mobs roam by day too: the undead hosts (stray, husk, drowned, zombie) must not catch fire in the sun.
+     * Fire from blocks or other entities (lava, a fire aspect, a spell) still burns them.
+     */
+    @org.bukkit.event.EventHandler(ignoreCancelled = true)
+    public void onSunburn(org.bukkit.event.entity.EntityCombustEvent e) {
+        if (e instanceof org.bukkit.event.entity.EntityCombustByBlockEvent || e instanceof org.bukkit.event.entity.EntityCombustByEntityEvent) return;
+        if (isSuldMob(e.getEntity())) e.setCancelled(true);
+    }
+
+    /**
      * Saved SÜLD mobs come back from disk with vanilla stats (a wolf's load logic resets its max health): restore the
      * SÜLD max health, keeping the current health.
      */

@@ -6,7 +6,8 @@ opens when **both** hold:
 2. the previous dungeon on the ladder has been cleared once (stored in the player's data, `suld:dungeon_clears`).
 
 `suld.admin.world` skips the ladder gate. `/dungeon` opens **Агуйн Шат**, the dungeon window (`gui/DungeonMenu`,
-background `gui_dungeons` in `tools/pack/gen_ui.py`): ten plinths on a stone stair climbing from the steppe to the sky
+background: the owner's painted night steppe `assets/art/source/gui_dungeons.webp`, warped by `gen_ui.py`
+`warp_to_slots` so each plinth's well sits exactly on its slot): ten plinths on a stone stair climbing from the steppe to the sky
 palace, one per dungeon (the stack count is its rung). Each tooltip shows:
 * its state: ✔ cleared (glowing), ▶ open, 🔒 locked (and why);
 * the place, level, party size, waves and boss;
