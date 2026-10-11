@@ -24,7 +24,8 @@ function join(name) {
 }
 async function pickClass(bot, slot) {
   for (let i = 0; i < 10 && !bot.currentWindow; i++) await sleep(500);
-  if (bot.currentWindow) { await bot.clickWindow(slot, 0, 0).catch(() => {}); await sleep(1200); }
+  if (bot.currentWindow) { await bot.clickWindow(slot, 0, 0).catch(() => {}); await sleep(600); }
+  if (bot.currentWindow) { await bot.clickWindow(11, 0, 0).catch(() => {}); await sleep(1200); } // «Батлах» (ONB-006 confirm page)
   if (bot.currentWindow) bot.closeWindow(bot.currentWindow);
 }
 const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));

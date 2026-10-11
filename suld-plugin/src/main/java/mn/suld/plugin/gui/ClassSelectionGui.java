@@ -41,6 +41,8 @@ import java.util.UUID;
 public final class ClassSelectionGui implements Listener {
 
     private static final int[] SLOTS = {10, 11, 12, 13, 14};
+    /** Confirm page (ONB-006): the choice is permanent, so one misclick must not decide it. */
+    private static final int CONFIRM = 11, CHOSEN = 13, BACK = 15;
     private static final Map<PlayerClass, Material> ICONS = Map.of(
             PlayerClass.BAATAR, Material.IRON_SWORD,
             PlayerClass.MERGEN, Material.BOW,
@@ -79,12 +81,41 @@ public final class ClassSelectionGui implements Listener {
         Inventory inv = org.bukkit.Bukkit.createInventory(holder, 27,
                 Component.text("Анги Сонгох — SÜLD", Messages.BRAND));
         holder.setInventory(inv);
+        showClasses(holder);
+        mustChoose.add(player.getUniqueId());
+        player.openInventory(inv);
+    }
+
+    private void showClasses(ClassSelectionHolder holder) {
+        Inventory inv = holder.getInventory();
+        inv.clear();
+        holder.pending(null);
         PlayerClass[] classes = PlayerClass.values();
         for (int i = 0; i < classes.length && i < SLOTS.length; i++) {
             inv.setItem(SLOTS[i], icon(classes[i]));
         }
-        mustChoose.add(player.getUniqueId());
-        player.openInventory(inv);
+    }
+
+    private void showConfirm(ClassSelectionHolder holder, PlayerClass clazz) {
+        Inventory inv = holder.getInventory();
+        inv.clear();
+        holder.pending(clazz);
+        inv.setItem(CHOSEN, icon(clazz));
+        inv.setItem(CONFIRM, button(Material.LIME_CONCRETE, "✔ Батлах", NamedTextColor.GREEN,
+                clazz.displayName() + " ангийг сонгоно.", "Анги сонголт байнгын: дараа солигдохгүй."));
+        inv.setItem(BACK, button(Material.RED_CONCRETE, "✖ Буцах", NamedTextColor.RED,
+                "Таван ангийг дахин харах."));
+    }
+
+    private static ItemStack button(Material material, String name, NamedTextColor color, String... text) {
+        ItemStack stack = new ItemStack(material);
+        ItemMeta meta = stack.getItemMeta();
+        meta.displayName(Component.text(name, color, TextDecoration.BOLD).decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        for (String t : text) lore.add(line(t, NamedTextColor.GRAY));
+        meta.lore(lore);
+        stack.setItemMeta(meta);
+        return stack;
     }
 
     private ItemStack icon(PlayerClass clazz) {
@@ -102,7 +133,7 @@ public final class ClassSelectionGui implements Listener {
         lore.add(Component.empty());
         lore.add(line(lore(clazz), NamedTextColor.GRAY));
         lore.add(Component.empty());
-        lore.add(line("» Сонгохын тулд дар «", NamedTextColor.GOLD));
+        lore.add(line("» Дарж сонгоод, дараа нь батална «", NamedTextColor.GOLD));
         meta.lore(lore);
         stack.setItemMeta(meta);
         return stack;
@@ -110,7 +141,7 @@ public final class ClassSelectionGui implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
-        if (!(event.getInventory().getHolder() instanceof ClassSelectionHolder)) {
+        if (!(event.getInventory().getHolder() instanceof ClassSelectionHolder holder)) {
             return;
         }
         event.setCancelled(true);
@@ -118,10 +149,16 @@ public final class ClassSelectionGui implements Listener {
             return;
         }
         int slot = event.getRawSlot();
+        PlayerClass pending = holder.pending();
+        if (pending != null) {
+            if (slot == CONFIRM) select(player, pending);
+            else if (slot == BACK) showClasses(holder);
+            return;
+        }
         PlayerClass[] classes = PlayerClass.values();
         for (int i = 0; i < SLOTS.length && i < classes.length; i++) {
             if (slot == SLOTS[i]) {
-                select(player, classes[i]);
+                showConfirm(holder, classes[i]);
                 return;
             }
         }

@@ -28,6 +28,7 @@ function join(name, idx) {
     bot.once('spawn', async () => {
       await sleep(3000);
       if (bot.currentWindow) { await bot.clickWindow(10 + (idx % 5), 0, 0).catch(() => {}); await sleep(700); }
+      if (bot.currentWindow) { await bot.clickWindow(11, 0, 0).catch(() => {}); await sleep(700); } // «Батлах»
       if (bot.currentWindow) bot.closeWindow(bot.currentWindow);
       resolve(bot);
     });

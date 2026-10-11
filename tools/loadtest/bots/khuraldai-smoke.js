@@ -28,7 +28,8 @@ function join(name) {
 }
 async function pickClass(bot, slot) {
   for (let i = 0; i < 80 && !bot.currentWindow; i++) await sleep(500); // up to 40 s: the pack gate's silence timeout is 30 s
-  if (bot.currentWindow) { await bot.clickWindow(slot, 0, 0).catch(() => {}); await sleep(1200); }
+  if (bot.currentWindow) { await bot.clickWindow(slot, 0, 0).catch(() => {}); await sleep(600); }
+  if (bot.currentWindow) { await bot.clickWindow(11, 0, 0).catch(() => {}); await sleep(1200); } // «Батлах» (ONB-006 confirm page)
   if (bot.currentWindow) bot.closeWindow(bot.currentWindow);
 }
 const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
@@ -65,6 +66,7 @@ const logged = (from, text) => lines().slice(from).some(l => l.includes(text));
 
   // ---------------------------------------------------------------- campaign
   n = lines().length;
+  cmd('khuraldai cancel'); await sleep(2500); // a clock-started campaign (any Monday–Saturday) must end before a force
   cmd('khuraldai force chonyn_ayan'); await sleep(3000);
   check('a forced campaign starts', heard(A, 'Аян эхэллээ'), A.chatLog.slice(-3).join(' | '));
   const bars = [...A.bars.values()].join(' | ');

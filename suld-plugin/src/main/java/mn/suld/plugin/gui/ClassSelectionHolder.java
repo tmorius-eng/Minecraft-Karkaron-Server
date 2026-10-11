@@ -11,6 +11,16 @@ import org.jetbrains.annotations.NotNull;
 public final class ClassSelectionHolder implements InventoryHolder {
 
     private Inventory inventory;
+    /** The class shown on the confirm page (ONB-006), or null while the five classes are shown. */
+    private mn.suld.api.clazz.PlayerClass pending;
+
+    mn.suld.api.clazz.PlayerClass pending() {
+        return pending;
+    }
+
+    void pending(mn.suld.api.clazz.PlayerClass clazz) {
+        this.pending = clazz;
+    }
 
     void setInventory(Inventory inventory) {
         this.inventory = inventory;
