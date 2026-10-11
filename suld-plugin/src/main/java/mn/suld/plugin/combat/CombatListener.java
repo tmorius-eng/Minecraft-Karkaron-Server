@@ -125,7 +125,7 @@ public final class CombatListener implements Listener {
     /**
      * A SÜLD mob hitting a player deals its designed attack (MobDefinition.scaledAttack: base × tier), melee or
      * projectile, instead of the vanilla entity's damage, so a level-50 elite hits like one, plus 8 % per level it is
-     * above the player (CombatRules.gapTaken). Bosses set their own phase-scaled hit (BossService). NORMAL priority:
+     * above the player (CombatRules.gapTaken), and less for new players (CombatRules.newbieTaken). Bosses set their own phase-scaled hit (BossService). NORMAL priority:
      * armour ({@link #onMitigate}), reductions and dodge apply afterwards.
      */
     @EventHandler(priority = org.bukkit.event.EventPriority.NORMAL, ignoreCancelled = true)
@@ -145,8 +145,10 @@ public final class CombatListener implements Listener {
             return; // explosions, thorns… keep their vanilla amount
         }
         // per hit × host swing interval / design interval: the damage per second is the design's (MobScaling.hitScale)
+        int level = levelOf((Player) event.getEntity());
         event.setDamage(def.scaledAttack() * mn.suld.api.balance.MobScaling.hitScale(def.backingEntity(), false)
-                * mn.suld.api.balance.CombatRules.gapTaken(def.level() - levelOf((Player) event.getEntity())));
+                * mn.suld.api.balance.CombatRules.gapTaken(def.level() - level)
+                * mn.suld.api.balance.CombatRules.newbieTaken(level));
     }
 
     /** The player's level (1 while the profile is loading). */

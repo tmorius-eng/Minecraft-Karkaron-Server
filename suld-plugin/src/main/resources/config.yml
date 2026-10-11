@@ -62,6 +62,8 @@ death:
     curve: GEOMETRIC            # GEOMETRIC (approved) | LINEAR | STEP | FIXED
     min-minutes: 5              # level 1   (geometric: 5 min · 288^((L−1)/59) → 31 min @20, 3.5 h @40, 24 h @60)
     max-minutes: 1440           # level 60 and Ascension
+    newbie-levels: 5            # up to this level the lock is at most newbie-minutes (0 = off)
+    newbie-minutes: 1           # a level 1–5 death costs one minute, not five
   wound:
     per-death: 0.05
     max: 0.15

@@ -15,20 +15,43 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DeathLockTest {
 
     static final DeathSettings S = DeathSettings.defaults();
+    /** The bare curve, without the new-player cap. */
+    static final DeathSettings CURVE = new DeathSettings(true, 30, 0.05, 0.25, true, 0.25, true,
+            DeathLock.Curve.GEOMETRIC, 5, 1440, 0.05, 0.15, 180, 0, 0);
 
     @Test
     void geometricCurveMatchesTheSpec() {
-        assertEquals(5, DeathLock.minutes(S, 1, 0), 1e-9);
+        assertEquals(5, DeathLock.minutes(CURVE, 1, 0), 1e-9);
         assertEquals(1440, DeathLock.minutes(S, 60, 0), 1e-6);
         assertEquals(31, DeathLock.minutes(S, 20, 0), 1.0);      // docs/DEATH_AND_RECOVERY.md: 31 min at 20
         assertEquals(3.5 * 60, DeathLock.minutes(S, 40, 0), 6);   // 3.5 h at 40
         assertEquals(1440, DeathLock.minutes(S, 30, 2), 1e-9, "Ascension = the top of the curve");
         double prev = 0;
         for (int lv = 1; lv <= 60; lv++) {
-            double m = DeathLock.minutes(S, lv, 0);
+            double m = DeathLock.minutes(CURVE, lv, 0);
             assertTrue(m > prev, "strictly growing at " + lv);
             prev = m;
         }
+    }
+
+    /** Audit 2026-10-11 ONB-002: a level-1 death locked a newcomer out for five minutes. */
+    @Test
+    void newPlayersAreLockedOneMinuteAtMost() {
+        for (int lv = 1; lv <= 5; lv++) {
+            assertEquals(1.0, DeathLock.minutes(S, lv, 0), 1e-9, "level " + lv);
+            assertEquals(60_000, DeathLock.millis(S, lv, 0));
+        }
+        assertEquals(DeathLock.minutes(CURVE, 6, 0), DeathLock.minutes(S, 6, 0), 1e-9, "level 6 is back on the curve");
+        assertTrue(DeathLock.minutes(S, 6, 0) > 5);
+        assertEquals(1440, DeathLock.minutes(S, 3, 1), 1e-9, "Ascension is never a new player");
+        double prev = 0;
+        for (int lv = 1; lv <= 60; lv++) {
+            double m = DeathLock.minutes(S, lv, 0);
+            assertTrue(m >= prev, "never shorter at a higher level: " + lv);
+            prev = m;
+        }
+        assertThrows(IllegalArgumentException.class, () -> new DeathSettings(true, 30, 0, 0, true, 0, true,
+                DeathLock.Curve.GEOMETRIC, 5, 1440, 0.05, 0.15, 180, -1, 1));
     }
 
     @Test

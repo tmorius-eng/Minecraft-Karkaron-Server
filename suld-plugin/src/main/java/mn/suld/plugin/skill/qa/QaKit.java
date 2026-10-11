@@ -409,7 +409,8 @@ final class QaKit {
     double rawHit(LivingEntity source) {
         mn.suld.api.mob.MobDefinition def = services.mobs().mobId(source).map(SuldContent::mobFor).orElseThrow();
         return def.scaledAttack() * mn.suld.api.balance.MobScaling.hitScale(def.backingEntity(), false)
-                * mn.suld.api.balance.CombatRules.gapTaken(def.level() - pr.progression().level());
+                * mn.suld.api.balance.CombatRules.gapTaken(def.level() - pr.progression().level())
+                * mn.suld.api.balance.CombatRules.newbieTaken(pr.progression().level());
     }
 
     /** Level of a dummy (the attacker level that SÜLD armour is measured against). */

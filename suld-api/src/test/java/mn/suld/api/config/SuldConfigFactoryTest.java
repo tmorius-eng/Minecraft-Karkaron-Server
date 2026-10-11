@@ -54,6 +54,16 @@ class SuldConfigFactoryTest {
     }
 
     @Test
+    void newbieDeathLockIsConfigurable() {
+        assertEquals(5, SuldConfig.defaults().death().newbieLevels());
+        assertEquals(1.0, SuldConfig.defaults().death().newbieLockMinutes());
+        SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(Map.of(
+                "death", Map.of("lock", Map.of("newbie-levels", 0, "newbie-minutes", 2.5)))));
+        assertEquals(0, cfg.death().newbieLevels(), "0 turns the cap off");
+        assertEquals(2.5, cfg.death().newbieLockMinutes());
+    }
+
+    @Test
     void unknownAnalyticsSinkFallsBackButAnUnknownDatabaseStopsStartup() {
         SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(Map.of("analytics", Map.of("sink", "carrier-pigeon"))));
         assertEquals(AnalyticsSettings.Sink.LOG, cfg.analytics().sink());

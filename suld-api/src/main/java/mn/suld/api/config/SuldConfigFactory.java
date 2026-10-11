@@ -54,7 +54,9 @@ public final class SuldConfigFactory {
                 view.getDouble("death.lock.max-minutes", dd.lockMaxMinutes()),
                 view.getDouble("death.wound.per-death", dd.woundPerDeath()),
                 view.getDouble("death.wound.max", dd.woundMax()),
-                view.getInt("death.wound.heal-minutes", dd.woundHealMinutes()));
+                view.getInt("death.wound.heal-minutes", dd.woundHealMinutes()),
+                view.getInt("death.lock.newbie-levels", dd.newbieLevels()),
+                view.getDouble("death.lock.newbie-minutes", dd.newbieLockMinutes()));
 
         AnalyticsSettings ad = d.analytics();
         AnalyticsSettings.Sink sink;

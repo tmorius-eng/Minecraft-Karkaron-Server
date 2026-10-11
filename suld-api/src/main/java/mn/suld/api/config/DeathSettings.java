@@ -20,6 +20,8 @@ package mn.suld.api.config;
  * @param woundPerDeath         effective-stat penalty of the class gear per death [0,1]
  * @param woundMax              cap of the wound [0,1]
  * @param woundHealMinutes      active minutes that heal one wound step
+ * @param newbieLevels          up to this level the lock is at most {@code newbieLockMinutes} (0 = off)
+ * @param newbieLockMinutes     the new-player lock cap (audit 2026-10-11 ONB-002: a 5-minute lock at level 1 is a quit point)
  */
 public record DeathSettings(
         boolean enabled,
@@ -34,7 +36,9 @@ public record DeathSettings(
         double lockMaxMinutes,
         double woundPerDeath,
         double woundMax,
-        int woundHealMinutes) {
+        int woundHealMinutes,
+        int newbieLevels,
+        double newbieLockMinutes) {
 
     public DeathSettings {
         expLossFraction = clamp01(expLossFraction);
@@ -49,10 +53,26 @@ public record DeathSettings(
         if (lockMinMinutes < 0 || lockMaxMinutes < lockMinMinutes) {
             throw new IllegalArgumentException("need 0 <= lock-min <= lock-max: " + lockMinMinutes + " / " + lockMaxMinutes);
         }
+        if (newbieLevels < 0 || newbieLockMinutes < 0) {
+            throw new IllegalArgumentException("newbie lock levels/minutes must be >= 0: " + newbieLevels + " / " + newbieLockMinutes);
+        }
         if (woundHealMinutes < 1) {
             throw new IllegalArgumentException("woundHealMinutes must be >= 1: " + woundHealMinutes);
         }
     }
+
+    /** Without the new-player lock levers: defaults {@link #NEWBIE_LEVELS} / {@link #NEWBIE_LOCK_MINUTES}. */
+    public DeathSettings(boolean enabled, int soulStateSeconds, double expLossFraction, double durabilityDamageFraction,
+                         boolean dropLoot, double lootLossFraction, boolean allowFreeRevive,
+                         mn.suld.api.death.DeathLock.Curve lockCurve, double lockMinMinutes, double lockMaxMinutes,
+                         double woundPerDeath, double woundMax, int woundHealMinutes) {
+        this(enabled, soulStateSeconds, expLossFraction, durabilityDamageFraction, dropLoot, lootLossFraction, allowFreeRevive,
+                lockCurve, lockMinMinutes, lockMaxMinutes, woundPerDeath, woundMax, woundHealMinutes, NEWBIE_LEVELS, NEWBIE_LOCK_MINUTES);
+    }
+
+    /** Levels 1–5 are locked at most one minute (audit roadmap P1 #4). */
+    public static final int NEWBIE_LEVELS = 5;
+    public static final double NEWBIE_LOCK_MINUTES = 1.0;
 
     /** The settings without the lock/wound levers (the death costs only); lock and wound at their defaults. */
     public DeathSettings(boolean enabled, int soulStateSeconds, double expLossFraction, double durabilityDamageFraction,
@@ -64,7 +84,7 @@ public record DeathSettings(
     /** The approved balance (docs/DEATH_AND_RECOVERY.md): geometric 5 min → 24 h lock, −5 % wound per death (max −15 %). */
     public static DeathSettings defaults() {
         return new DeathSettings(true, 30, 0.05, 0.25, true, 0.25, true,
-                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 1440, 0.05, 0.15, 180);
+                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 1440, 0.05, 0.15, 180, NEWBIE_LEVELS, NEWBIE_LOCK_MINUTES);
     }
 
     private static double clamp01(double v) {

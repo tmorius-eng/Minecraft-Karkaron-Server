@@ -90,7 +90,8 @@ public final class GuideBoards {
                     + line("Туул, Онон, Орхон, Сэлэнгэ, Говь...")
                     + line("Шинэ газрыг анх нээхэд EXP!")
                     + GAP + "<bold><red>HARDCORE:</red><white> үхвэл юмныхаа</white></bold>\n"
-                    + line("хагас, EXP-ийн 10 хувийг алдана.")
+                    + line("дөрөвний нэг, EXP-ийн 5 хувийг алдана.")
+                    + line("Сүнс: 1–5-р түвшинд 1 мин, дараа нь урт.")
                     + line("Хот аюулгүй: PvP, мангас үгүй. «/spawn»")
                     + line("Агуй (бүлгээрээ): «/dungeon»")),
             new Board(16, 4.8, -2, title("КОМАНДУУД") + GAP

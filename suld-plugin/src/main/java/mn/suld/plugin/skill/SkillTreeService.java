@@ -422,6 +422,16 @@ public final class SkillTreeService implements Listener {
         if (p.getHealth() > maxHp.getValue()) p.setHealth(maxHp.getValue());
     }
 
+    /**
+     * A new class starts at full health. {@link #applyBaseHealth} only clamps health down when the maximum shrinks,
+     * so without this a fresh character kept the vanilla ~20 HP of a 43–82 HP maximum (audit 2026-10-11, GAME-005).
+     */
+    void fillHealth(Player p) {
+        if (!p.isOnline() || p.isDead()) return;
+        AttributeInstance maxHp = p.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHp != null) p.setHealth(maxHp.getValue());
+    }
+
     private void applyAttributes(Player p, SkillBuild b) {
         applyBaseHealth(p);
         double health = b.stat(StatKey.HEALTH);
@@ -505,6 +515,9 @@ public final class SkillTreeService implements Listener {
             if (p != null) {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     attach(p);
+                    fillHealth(p);
+                    // the class armour and weapon stats land a tick later (EquipmentService): fill again after them
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> fillHealth(p), 5L);
                     p.sendMessage(Messages.accent("◆ Чадварын мод нээгдлээ: түвшин ахих бүрт, түүхийн эрэл дуусгаж, шинэ газар нээхэд оноо ирнэ."));
                     p.sendMessage(Messages.info("Оноогоо /skills (газрын зураг; эсвэл ангийн зэвсгээ барьж Shift + баруун товч) дээр зарцуулж, шид болон идэвхгүй чадвараа сонго. Улаан холбоос = зөвхөн нэгийг сонгоно."));
                 });

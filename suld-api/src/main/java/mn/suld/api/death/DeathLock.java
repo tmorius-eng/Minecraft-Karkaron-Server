@@ -15,8 +15,17 @@ public final class DeathLock {
     /** The curves the simulation compared ({@code docs/PROGRESSION_SIMULATION.md} §Death lock curves). */
     public enum Curve { GEOMETRIC, LINEAR, STEP, FIXED }
 
-    /** Lock length in minutes for a death at {@code level} (Ascension counts as the top of the curve). */
+    /**
+     * Lock length in minutes for a death at {@code level} (Ascension counts as the top of the curve). Up to
+     * {@link DeathSettings#newbieLevels()} the lock is capped at {@link DeathSettings#newbieLockMinutes()}.
+     */
     public static double minutes(DeathSettings s, int level, int ascension) {
+        double curve = curveMinutes(s, level, ascension);
+        if (ascension == 0 && level <= s.newbieLevels()) return Math.min(curve, s.newbieLockMinutes());
+        return curve;
+    }
+
+    private static double curveMinutes(DeathSettings s, int level, int ascension) {
         double min = s.lockMinMinutes(), max = s.lockMaxMinutes();
         if (ascension > 0) return max;
         double f = Math.max(0, Math.min(1, (level - 1) / 59.0));

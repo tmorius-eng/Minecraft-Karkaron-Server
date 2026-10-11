@@ -31,6 +31,15 @@ public final class CombatRules {
         return gap <= 0 ? 1.0 : 1.0 + 0.08 * gap;
     }
 
+    /**
+     * Damage a new player takes from mobs: ×0.5 at level 1, +0.1 per level, full from level 6. A fresh character has
+     * ~20 HP and no armour, while the mob curve is fitted to a par player of 51 HP / 8 armour (audit 2026-10-11,
+     * PROG-001), so the first fights would otherwise kill.
+     */
+    public static double newbieTaken(int playerLevel) {
+        return Math.min(1.0, 0.5 + 0.1 * (Math.max(1, playerLevel) - 1));
+    }
+
     /** Class base health grows 4 % per level (Баатар 40 → 134 at 60). */
     public static double classHealth(PlayerClass c, int level) {
         return c.baseHealth() * (1 + 0.04 * (Math.max(1, level) - 1));

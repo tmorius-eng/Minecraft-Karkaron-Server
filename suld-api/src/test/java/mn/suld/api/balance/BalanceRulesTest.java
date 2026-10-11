@@ -99,6 +99,12 @@ class BalanceRulesTest {
         assertEquals(0.4, CombatRules.gapDealt(30), 1e-9);
         assertEquals(1.4, CombatRules.gapTaken(5), 1e-9);
         assertEquals(1.0, CombatRules.gapTaken(-5), 1e-9);
+        // audit 2026-10-11 PROG-001: new players take half damage at level 1, full from level 6
+        assertEquals(0.5, CombatRules.newbieTaken(1), 1e-9);
+        assertEquals(0.9, CombatRules.newbieTaken(5), 1e-9);
+        assertEquals(1.0, CombatRules.newbieTaken(6), 1e-9);
+        assertEquals(1.0, CombatRules.newbieTaken(60), 1e-9);
+        assertEquals(0.5, CombatRules.newbieTaken(0), 1e-9);
         assertEquals(PlayerClass.BAATAR.baseHealth() * (1 + 0.04 * 59), CombatRules.classHealth(PlayerClass.BAATAR, 60), 1e-9);
     }
 
