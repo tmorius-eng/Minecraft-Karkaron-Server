@@ -154,6 +154,60 @@ public final class JdbcStyleRepository implements StyleRepository {
         }, executor);
     }
 
+    @Override
+    public CompletableFuture<CreditGrant> grantCredits(UUID player, long amount, String txid, String actor) {
+        if (amount <= 0) throw new IllegalArgumentException("amount must be > 0: " + amount);
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = dataSource.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    // the ledger row first: a txid already present inserts nothing, and then nothing else changes
+                    int fresh;
+                    try (PreparedStatement ps = conn.prepareStatement(switch (dialect) {
+                        case MYSQL -> "INSERT IGNORE INTO suld_credit_grants (txid, player_uuid, amount, granted_at, actor) VALUES (?, ?, ?, ?, ?)";
+                        case POSTGRESQL -> "INSERT INTO suld_credit_grants (txid, player_uuid, amount, granted_at, actor) VALUES (?, ?, ?, ?, ?) ON CONFLICT (txid) DO NOTHING";
+                    })) {
+                        ps.setString(1, txid);
+                        bindUuid(ps, 2, player);
+                        ps.setLong(3, amount);
+                        ps.setLong(4, System.currentTimeMillis());
+                        ps.setString(5, actor.length() > 64 ? actor.substring(0, 64) : actor);
+                        fresh = ps.executeUpdate();
+                    }
+                    if (fresh == 1) {
+                        try (PreparedStatement ps = conn.prepareStatement(switch (dialect) {
+                            case MYSQL -> "INSERT IGNORE INTO suld_player_style (player_uuid, updated_at) VALUES (?, ?)";
+                            case POSTGRESQL -> "INSERT INTO suld_player_style (player_uuid, updated_at) VALUES (?, ?) ON CONFLICT (player_uuid) DO NOTHING";
+                        })) {
+                            bindUuid(ps, 1, player);
+                            ps.setLong(2, System.currentTimeMillis());
+                            ps.executeUpdate();
+                        }
+                        try (PreparedStatement ps = conn.prepareStatement("UPDATE suld_player_style SET credits = credits + ? WHERE player_uuid = ?")) {
+                            ps.setLong(1, amount);
+                            bindUuid(ps, 2, player);
+                            ps.executeUpdate();
+                        }
+                    }
+                    long balance = 0;
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT credits FROM suld_player_style WHERE player_uuid = ?")) {
+                        bindUuid(ps, 1, player);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) balance = rs.getLong(1);
+                        }
+                    }
+                    conn.commit();
+                    return new CreditGrant(fresh == 1, balance);
+                } catch (SQLException e) {
+                    conn.rollback();
+                    throw e;
+                }
+            } catch (SQLException e) {
+                throw new RepositoryException("credit grant " + txid + " for " + player, e);
+            }
+        }, executor);
+    }
+
     private String upsert() {
         String cols = "(player_uuid, rank_id, tag_id, name_color_id, chat_color_id, join_message_id, claimed_levels, discovered_regions, daily_day, daily_streak, task_day, task_progress, aura_id, trail_id, kill_effect_id, updated_at) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";

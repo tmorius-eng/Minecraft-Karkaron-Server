@@ -69,8 +69,14 @@ public final class MenuCommands {
                     s.sendMessage(Messages.error("Эрх алга."));
                     return true;
                 }
-                if (a.length < 3 || !(a[0].equalsIgnoreCase("give") || a[0].equalsIgnoreCase("take"))) {
-                    s.sendMessage("/credits <give|take> <player|uuid> <amount>");
+                boolean give = a.length > 0 && a[0].equalsIgnoreCase("give");
+                if (a.length < 3 || !(give || a[0].equalsIgnoreCase("take")) || (give && a.length < 4)) {
+                    // give needs the store's transaction id: a retried or replayed delivery must not pay twice (SEC-003)
+                    s.sendMessage("/credits give <player|uuid> <amount> <txid>   |   /credits take <player|uuid> <amount>");
+                    return true;
+                }
+                if (give && !TXID.matcher(a[3]).matches()) {
+                    s.sendMessage("bad txid: 1-64 of A-Z a-z 0-9 . _ : -");
                     return true;
                 }
                 UUID id = resolve(a[1]);
@@ -84,9 +90,24 @@ public final class MenuCommands {
                     s.sendMessage("unknown player or bad amount (1..10000000)");
                     return true;
                 }
-                long delta = a[0].equalsIgnoreCase("give") ? amount : -amount;
-                Bukkit.getLogger().info("[SULD] credits " + a[0].toLowerCase(Locale.ROOT) + " " + id + " " + amount + " by " + s.getName());
-                services.styles().giveCredits(id, delta, s::sendMessage);
+                String actor = s instanceof Player p ? p.getUniqueId().toString() : s.getName();
+                long amt = amount;
+                if (give) {
+                    String txid = a[3];
+                    services.styles().grantCredits(id, amount, txid, actor, out -> {
+                        s.sendMessage(out);
+                        Bukkit.getLogger().info("[SULD] credits give " + id + " " + amt + " txid " + txid + " by " + s.getName() + ": " + out);
+                        services.audit().record(mn.suld.api.audit.AuditEvent.of(actor, "credits.give", id.toString(),
+                                "amount=" + amt + " txid=" + txid + " result=" + out));
+                    });
+                } else {
+                    services.styles().giveCredits(id, -amount, out -> {
+                        s.sendMessage(out);
+                        Bukkit.getLogger().info("[SULD] credits take " + id + " " + amt + " by " + s.getName() + ": " + out);
+                        services.audit().record(mn.suld.api.audit.AuditEvent.of(actor, "credits.take", id.toString(),
+                                "amount=" + amt + " result=" + out));
+                    });
+                }
                 return true;
             }
 
@@ -97,6 +118,8 @@ public final class MenuCommands {
             }
         };
     }
+
+    private static final java.util.regex.Pattern TXID = java.util.regex.Pattern.compile("[A-Za-z0-9._:-]{1,64}");
 
     private static UUID resolve(String who) {
         try {

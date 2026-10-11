@@ -33,7 +33,7 @@ the README (local test server).
 | `/suld coins <player> <±amount>` | Add or remove SÜLD coins (audited in the log) |
 | `/suld quest <player> <1..18\|reset>` | Move a player in the storyline (support tickets, testing) |
 | `/revive <player>` | End a player's soul state early and heal them (audited) |
-| `/credits give\|take <player\|uuid> <amount>` | Store credits; also what the web store runs from the console |
+| `/credits give <player\|uuid> <amount> <txid>` · `/credits take <player\|uuid> <amount>` | Store credits; `give` is what the web store runs from the console, with its transaction id |
 | `/suldevent`, `/suldpack`, `/worldbuild`, `/relic …` | World events · resource pack · city builder · relic admin |
 | `/suld auth` | Authentication mode and session state |
 
@@ -109,7 +109,9 @@ store item are credits-only (`cosmetics.coin-max-rarity`, default `COMMON`). Cos
   (Minecraft EULA; no pay-to-win).
 - Prices shown in `/buy` come from `store.packages` in config.yml; the link from `branding.store-url`.
 - Connect a web store (e.g. Tebex) by making each package run a **console** command, using the player's UUID:
-  `credits give {id} 250`. Refunds or chargebacks: `credits take {id} 250` (credits never go below 0).
+  `credits give {id} 250 {transaction}`. The transaction id is required: the grant and a ledger row
+  (`suld_credit_grants`, V16) commit together, so a retried or replayed command reports `duplicate` and grants nothing.
+  Every give and take writes an audit record. Refunds or chargebacks: `credits take {id} 250` (credits never go below 0).
 - Credits are changed with an atomic database update, so a purchase is never lost to a concurrent save.
 
 ## Hardcore death

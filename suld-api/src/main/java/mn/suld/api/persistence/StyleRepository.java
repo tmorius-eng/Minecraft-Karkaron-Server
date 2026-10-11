@@ -20,4 +20,14 @@ public interface StyleRepository {
      * @return the new balance, or {@code -1} if the spend was refused for lack of credits
      */
     CompletableFuture<Long> addCredits(UUID player, long delta);
+
+    /** Outcome of {@link #grantCredits}: whether this call added the credits, and the balance afterwards. */
+    record CreditGrant(boolean applied, long balance) {
+    }
+
+    /**
+     * Add {@code amount} (> 0) credits for the store transaction {@code txid}, at most once per txid: the ledger row
+     * and the balance change commit together. A txid seen before changes nothing ({@code applied == false}).
+     */
+    CompletableFuture<CreditGrant> grantCredits(UUID player, long amount, String txid, String actor);
 }

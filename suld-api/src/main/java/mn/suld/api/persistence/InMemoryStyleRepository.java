@@ -37,4 +37,15 @@ public final class InMemoryStyleRepository implements StyleRepository {
         credits.put(player, now + delta);
         return CompletableFuture.completedFuture(now + delta);
     }
+
+    private final java.util.Set<String> grants = new java.util.HashSet<>();
+
+    @Override
+    public synchronized CompletableFuture<CreditGrant> grantCredits(UUID player, long amount, String txid, String actor) {
+        if (amount <= 0) throw new IllegalArgumentException("amount must be > 0: " + amount);
+        if (!grants.add(txid)) return CompletableFuture.completedFuture(new CreditGrant(false, credits.getOrDefault(player, 0L)));
+        long now = credits.getOrDefault(player, 0L) + amount;
+        credits.put(player, now);
+        return CompletableFuture.completedFuture(new CreditGrant(true, now));
+    }
 }

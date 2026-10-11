@@ -419,6 +419,33 @@ public final class StyleService implements Listener {
      * Add credits to a player, online or not — one atomic database update, so it is safe while the player logs in
      * or buys something. Used by {@code /credits give}, which a store (e.g. Tebex) runs from the console after payment.
      */
+    /**
+     * A store delivery: add {@code amount} credits for transaction {@code txid} at most once (ledger + balance in one
+     * transaction, V16). A repeated txid changes nothing and reports {@code duplicate}. {@code done} gets the outcome
+     * text (for the audit log and the console).
+     */
+    public void grantCredits(UUID id, long amount, String txid, String actor, Consumer<String> feedback) {
+        repository.grantCredits(id, amount, txid, actor).whenComplete((g, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
+            if (err != null) {
+                feedback.accept("FAILED (nothing granted): " + err.getMessage());
+                return;
+            }
+            PlayerStyle s = cache.get(id);
+            if (s != null) s.creditsCache(g.balance());
+            if (!g.applied()) {
+                feedback.accept("duplicate: txid " + txid + " was already applied; balance " + g.balance() + " credits (unchanged)");
+                return;
+            }
+            Player p = Bukkit.getPlayer(id);
+            if (p != null) {
+                p.sendMessage(Messages.success("+" + amount + " Сүлд Кредит! Баярлалаа. (/cosmetics)"));
+                p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+                changeListeners.forEach(l -> l.accept(p));
+            }
+            feedback.accept("ok: " + id + " +" + amount + " (txid " + txid + ") balance " + g.balance() + " credits");
+        }));
+    }
+
     public void giveCredits(UUID id, long amount, Consumer<String> feedback) {
         repository.addCredits(id, amount).whenComplete((balance, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (err != null) {
