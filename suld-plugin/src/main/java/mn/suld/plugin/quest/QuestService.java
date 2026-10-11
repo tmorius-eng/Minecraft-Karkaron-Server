@@ -76,6 +76,11 @@ public final class QuestService {
         return false;
     }
 
+    /** Tell the player about the chapter they are on (giver line and hint), e.g. right after the first assignment. */
+    public void announceCurrent(Player player, PlayerProfile profile) {
+        definition(profile.questState().questId()).ifPresent(d -> announceStart(player, d));
+    }
+
     /**
      * Make sure the player stands on a valid chapter (first chapter, or the successor of a completed one) and
      * re-check objectives that depend on current state (level, held items).

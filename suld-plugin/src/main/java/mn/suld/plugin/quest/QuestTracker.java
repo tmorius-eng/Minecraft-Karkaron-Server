@@ -166,7 +166,11 @@ public final class QuestTracker implements Listener {
         Location spawn = p.getWorld().getSpawnLocation();
         double dx = l.getX() - spawn.getX(), dz = l.getZ() - spawn.getZ();
         RegionDefinition here = regions.at(dx, dz).orElse(null);
-        if (here != null && here.id().equals(target.id())) {
+        // the city's built footprint (plus the spawner's margin) spawns nothing, whatever region its streets fall in:
+        // inside it the bar keeps pointing out of town instead of saying "wait here" (audit 2026-10-11 ONB-004)
+        boolean inTown = services.city() != null
+                && services.city().near(l.getWorld().getName(), l.getBlockX(), l.getBlockZ(), mn.suld.plugin.mob.RegionSpawner.CITY_MARGIN);
+        if (here != null && here.id().equals(target.id()) && !inTown) {
             // in the right region: a kill chapter points at the nearest prey (they spawn around the player)
             if (d.type() == mn.suld.api.quest.QuestType.KILL_MOB) {
                 org.bukkit.entity.Entity prey = nearestPrey(p, d.targetId());

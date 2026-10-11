@@ -38,7 +38,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class RegionSpawner implements org.bukkit.event.Listener {
 
     public static final String TAG = "suld_region";
-    private static final int CITY_MARGIN = 32;
+    /** Blocks around the built city where nothing spawns (the quest tracker uses the same margin). */
+    public static final int CITY_MARGIN = 32;
     private static final double OUTSKIRTS = 450;
 
     private final Plugin plugin;
@@ -120,7 +121,7 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
                 String id;
                 if (wanted != null && ThreadLocalRandom.current().nextDouble() < 0.5) id = wanted;
                 else if (wanted == null && dist < OUTSKIRTS && ThreadLocalRandom.current().nextDouble() < 0.6) id = SuldContent.GOVIIN_CHONO.id();
-                else id = pickByLevel(region, at);
+                else id = pickByLevel(region, at, dist < OUTSKIRTS ? outskirtsCap(p) : Integer.MAX_VALUE);
                 MobDefinition def = SuldContent.mobFor(id);
                 if (def == null) continue;
                 LivingEntity mob = services.mobs().spawn(def, at);
@@ -144,22 +145,47 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
         return WorldContent.localLevel(region, at.getX() - c.getX(), at.getZ() - c.getZ());
     }
 
-    /** One of the region's mobs whose level fits the spot (±5 levels; elites half as often), else any of them. */
-    private String pickByLevel(RegionDefinition region, Location at) {
-        int want = localLevel(region, at);
+    /**
+     * The highest mob level the outskirts (< 450 blocks of the plaza) may send at this player: their level + 3. The
+     * main avenue leaves the city south into the Gobi, whose nearest areas are levels 5–8 (audit 2026-10-11 ONB-003).
+     */
+    private int outskirtsCap(Player p) {
+        int level = services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
+        return level + OUTSKIRTS_LEVEL_MARGIN;
+    }
+
+    static final int OUTSKIRTS_LEVEL_MARGIN = 3;
+
+    /** One of the region's mobs whose level fits the spot (±5 levels, at most {@code maxLevel}; elites half as often). */
+    private String pickByLevel(RegionDefinition region, Location at, int maxLevel) {
+        List<MobDefinition> mobs = new ArrayList<>();
+        for (String id : region.mobIds()) {
+            MobDefinition m = SuldContent.mobFor(id);
+            if (m != null) mobs.add(m);
+        }
+        String id = pickByLevel(mobs, localLevel(region, at), maxLevel, ThreadLocalRandom.current().nextDouble());
+        if (id != null) return id;
+        if (maxLevel != Integer.MAX_VALUE) return SuldContent.GOVIIN_CHONO.id(); // nothing tame enough here: the first prey
+        return region.mobIds().get(ThreadLocalRandom.current().nextInt(region.mobIds().size()));
+    }
+
+    /**
+     * Pure pick: among {@code mobs} within ±5 of {@code want} and at most {@code maxLevel} (normal mobs weight 1,
+     * elites 0.5), the one {@code roll} ∈ [0,1) lands on; null when none fits.
+     */
+    static String pickByLevel(List<MobDefinition> mobs, int want, int maxLevel, double unit) {
         List<MobDefinition> fit = new ArrayList<>();
         List<Double> w = new ArrayList<>();
         double total = 0;
-        for (String id : region.mobIds()) {
-            MobDefinition m = SuldContent.mobFor(id);
-            if (m == null || Math.abs(m.level() - want) > 5) continue;
+        for (MobDefinition m : mobs) {
+            if (Math.abs(m.level() - want) > 5 || m.level() > maxLevel) continue;
             double wt = m.tier() == mn.suld.api.mob.MobTier.NORMAL ? 1.0 : 0.5;
             fit.add(m);
             w.add(wt);
             total += wt;
         }
-        if (fit.isEmpty()) return region.mobIds().get(ThreadLocalRandom.current().nextInt(region.mobIds().size()));
-        double roll = ThreadLocalRandom.current().nextDouble(total);
+        if (fit.isEmpty()) return null;
+        double roll = unit * total;
         for (int i = 0; i < fit.size(); i++) {
             roll -= w.get(i);
             if (roll < 0) return fit.get(i).id();

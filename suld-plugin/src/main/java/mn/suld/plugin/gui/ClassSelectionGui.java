@@ -178,12 +178,13 @@ public final class ClassSelectionGui implements Listener {
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CLASS_SELECTED, player.getUniqueId(),
                 Map.of("class", clazz.id())));
 
-        quests.startFirstQuestIfNeeded(profile);
+        boolean firstQuest = quests.startFirstQuestIfNeeded(profile);
         services.profiles().save(profile);
 
         player.closeInventory();
         player.sendMessage(Messages.accent("Та " + clazz.displayName() + " ангийг сонголоо!"));
-        player.sendMessage(Messages.info("Эхний эрэл: " + SuldContent.FIRST_HUNT.title()));
+        // the chapter's giver line and its "which way" hint (audit 2026-10-11 ONB-011: it used to start silently)
+        if (firstQuest) quests.announceCurrent(player, profile);
         player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1.2f);
         hud.update(player, profile);
     }

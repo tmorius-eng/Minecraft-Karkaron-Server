@@ -99,8 +99,8 @@ public final class TutorialService implements Listener, TabExecutor {
             // first join only: begin once the welcome has been seen
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (!p.isOnline() || progress(p).state() != TutorialProgress.State.NOT_STARTED) return;
+                // no banner of its own: one onboarding voice (OnboardingService) speaks after the class pick
                 begin(p, progress(p).start());
-                Presentation.banner(p, "ИХ МОНГОЛД ТАВТАЙ МОРИЛ", "Заавар эхэллээ — дээрх самбарыг дага", NamedTextColor.GOLD);
             }, 120L);
         } else if (t.state() == TutorialProgress.State.IN_PROGRESS) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -199,7 +199,13 @@ public final class TutorialService implements Listener, TabExecutor {
                 p.sendMessage(Messages.success("Заавар дууслаа! +" + TutorialProgress.FINISH_EXP + " EXP, +" + TutorialProgress.FINISH_COINS + " ₮"));
             }
             save(p, next);
-            Presentation.banner(p, "ЗААВАР ДУУСЛАА", "Одоо Хасарын Агуйд ор — /dungeon enter khasar_den", NamedTextColor.GREEN);
+            // only send them to the first dungeon when its gates are open (audit 2026-10-11 ONB-005: the gate usually
+            // needs chapter 4, so "enter now" ended the tutorial on a refusal)
+            mn.suld.api.dungeon.DungeonDefinition den = SuldContent.KHASAR_DEN;
+            boolean open = services.dungeons() == null || services.dungeons().soloEntryRefusal(p, den) == null;
+            Presentation.banner(p, "ЗААВАР ДУУСЛАА", open
+                    ? "Одоо «" + den.displayName() + "»-д ор — /dungeon enter " + den.id().replace("dungeon.", "")
+                    : "Дараагийн зорилго: эрлээ үргэлжлүүл — /quest (агуй дараа нь нээгдэнэ)", NamedTextColor.GREEN);
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
             end(p);
             return;

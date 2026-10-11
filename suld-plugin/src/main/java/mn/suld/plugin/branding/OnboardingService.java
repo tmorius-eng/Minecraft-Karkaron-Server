@@ -73,20 +73,34 @@ public final class OnboardingService implements Listener {
         return services.profiles().cached(p.getUniqueId()).orElse(null);
     }
 
+    /**
+     * On join only the boards are refreshed. A player without a class has the class menu (after the pack prompt) and
+     * nothing else competing with it; the welcome comes once, right after the pick ({@link #onDomain}). Returning
+     * players are not shown the card again: the hint line and /help remain (audit 2026-10-11 ONB-007).
+     */
     private void intro(Player p) {
         if (!p.isOnline()) return;
         if (guide != null) guide.refresh();
-        PlayerProfile pr = profile(p);
-        if (pr == null) return;
-        boolean fresh = !pr.hasSelectedClass() || pr.progression().level() < 5;
-        if (fresh) {
+    }
+
+    /** The one welcome: after the class pick, a title that says where to go, then the short card. */
+    @EventHandler
+    public void onDomain(mn.suld.plugin.event.SuldDomainBukkitEvent e) {
+        if (!(e.payload() instanceof mn.suld.api.event.ClassSelectedEvent ev)) return;
+        Player p = Bukkit.getPlayer(ev.player());
+        if (p == null) return;
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!p.isOnline()) return;
+            PlayerProfile pr = profile(p);
+            var chapter = pr == null ? null : services.quests().definition(pr.questState().questId()).orElse(null);
+            String hint = chapter == null ? "" : mn.suld.plugin.content.QuestContent.lore(chapter.id()).hint();
             p.showTitle(Title.title(
-                    Component.text("ТАВТАЙ МОРИЛ", GOLD, TextDecoration.BOLD),
-                    Component.text("Урд байгаа хөвөгч самбаруудыг уншаарай ➜", NamedTextColor.WHITE, TextDecoration.BOLD),
-                    Title.Times.times(Duration.ofMillis(400), Duration.ofSeconds(5), Duration.ofMillis(800))));
+                    Component.text(chapter == null ? "ТАВТАЙ МОРИЛ" : chapter.title(), GOLD, TextDecoration.BOLD),
+                    Component.text(hint.isEmpty() ? "Хотын хаалгаар гараад мангас ан" : hint, NamedTextColor.WHITE, TextDecoration.BOLD),
+                    Title.Times.times(Duration.ofMillis(400), Duration.ofSeconds(6), Duration.ofMillis(800))));
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.2f);
             card(p);
-        }
+        }, 40L);
     }
 
     private static Component step(String n, String text, String command) {
@@ -98,19 +112,16 @@ public final class OnboardingService implements Listener {
         return c;
     }
 
+    /** The short card (the class is already chosen when it is shown): three steps and the help links. */
     private void card(Player p) {
         p.sendMessage(Component.text("━━━━━ ", GOLD).append(Component.text("ТОГЛОХ ЗААВАР", GOLD, TextDecoration.BOLD)).append(Component.text(" ━━━━━", GOLD)));
-        p.sendMessage(step("1.", "Ангиа сонго", "/class"));
-        p.sendMessage(step("2.", "Эрлээ ав, дага (дэлгэцийн дээд талд заагч)", "/quest"));
-        p.sendMessage(step("3.", "Хотын хаалгаар гараад мангас ан — олз, EXP, зоос унана", null));
-        p.sendMessage(step("4.", "Олзоо зарж зоос ол", "/shop"));
-        p.sendMessage(step("5.", "Өдөр бүр шагнал, даалгавар ав", "/daily"));
+        p.sendMessage(step("1.", "Эрлээ дага: дэлгэцийн дээд талын заагч", "/quest"));
+        p.sendMessage(step("2.", "Олзоо зарж зоос ол", "/shop"));
+        p.sendMessage(step("3.", "Өдөр бүр шагнал ав", "/daily"));
         p.sendMessage(Component.text(" Бүх заавар: ", NamedTextColor.WHITE, TextDecoration.BOLD)
                 .append(Component.text("[/help]", NamedTextColor.AQUA, TextDecoration.BOLD).clickEvent(ClickEvent.runCommand("/help")))
                 .append(Component.text(" ", NamedTextColor.WHITE))
-                .append(Component.text("[/tutorial]", NamedTextColor.AQUA, TextDecoration.BOLD).clickEvent(ClickEvent.runCommand("/tutorial")))
-                .append(Component.text(" ", NamedTextColor.WHITE))
-                .append(Component.text("[/commands]", NamedTextColor.AQUA, TextDecoration.BOLD).clickEvent(ClickEvent.runCommand("/commands"))));
+                .append(Component.text("[/tutorial]", NamedTextColor.AQUA, TextDecoration.BOLD).clickEvent(ClickEvent.runCommand("/tutorial"))));
     }
 
     /** The hint that fits the player's situation right now, or null when there is nothing useful to say. */

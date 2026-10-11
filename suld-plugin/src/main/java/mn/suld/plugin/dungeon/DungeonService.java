@@ -119,6 +119,21 @@ public final class DungeonService {
 
     // ---------------------------------------------------------------- entry
 
+    /**
+     * Why {@code p} could not enter {@code def} alone right now (class, level, previous rung, story/gear gates), or
+     * null when it is open. No side effects: the tutorial uses it to point at the dungeon only when it is open.
+     */
+    public Component soloEntryRefusal(Player p, DungeonDefinition def) {
+        PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (profile == null || profile.playerClass().isEmpty()) return Messages.error("Эхлээд анги сонгоно уу.");
+        if (profile.progression().level() < def.minLevel()) {
+            return Messages.error("«" + def.displayName() + "» " + def.minLevel() + "-р түвшинд нээгдэнэ.");
+        }
+        DungeonDefinition prev = mn.suld.plugin.content.DungeonContent.previous(def.id());
+        if (prev != null && !cleared(p, prev.id())) return Messages.error("Эхлээд «" + prev.displayName() + "»-г дав.");
+        return cleared(p, def.id()) ? null : v2Gate(p, def);
+    }
+
     /** @return an error message for the player, or {@code null} when the run started. */
     public Component start(Player leader, DungeonDefinition def) {
         PlayerProfile leaderProfile = services.profiles().cached(leader.getUniqueId()).orElse(null);
