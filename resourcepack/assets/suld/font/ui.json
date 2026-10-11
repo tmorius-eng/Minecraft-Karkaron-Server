@@ -24,7 +24,7 @@
   {
    "type": "bitmap",
    "file": "suld:font/logo.png",
-   "height": 24,
+   "height": 40,
    "ascent": 7,
    "chars": [
     ""

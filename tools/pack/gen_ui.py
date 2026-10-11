@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the SÜLD UI assets of the resource pack and the matching Java glyph table.
 
-Inputs:  assets/art/source/*.png (Gemini "Nano Banana" art, tools/art/gemini_image.py)
+Inputs:  assets/art/source/*.png (Gemini "Nano Banana" art, tools/art/gemini_image.py), server_icon_emblem.jpg (owner art)
 Outputs: resourcepack/assets/suld/font/ui.json            one font: spaces, logo, icons, badges, GUI backgrounds
          resourcepack/assets/suld/textures/font/**.png
          resourcepack/assets/suld/{items,models,textures}/.../blank   an invisible item model for GUI buttons
@@ -75,7 +75,8 @@ def spaces() -> None:
 
 # ----------------------------------------------------------------------------------------- logo
 
-def logo(preview: str | None) -> None:
+def _letters() -> Image.Image:
+    """The gold SÜLD letters of the wordmark art (logo_suld.png), black background removed, without the flag above."""
     src = Image.open(os.path.join(ART, "logo_suld.png")).convert("RGB")
     w, h = src.size
     rgba = Image.new("RGBA", (w, h))
@@ -87,18 +88,48 @@ def logo(preview: str | None) -> None:
             # black background -> transparent; the blue glow fades out softly
             a = 0 if m < 40 else 255 if m > 120 else int((m - 40) / 80 * 255)
             dp[x, y] = (r, g, b, a)
-    bbox = rgba.getbbox()
-    rgba = rgba.crop(bbox)
-    target_h = 24
-    target_w = round(rgba.width * target_h / rgba.height)
-    small = rgba.resize((target_w, target_h), Image.LANCZOS)
+    # the letters start below the flag: the first row band that is wider than half the art
+    top = 0
+    for y in range(h):
+        row = rgba.crop((0, y, w, y + 1)).getbbox()
+        if row and row[2] - row[0] > w // 2:
+            top = y
+            break
+    letters = rgba.crop((0, top, w, h))
+    return letters.crop(letters.getbbox())
+
+
+def _emblem() -> Image.Image:
+    """The owner's jade-and-gold emblem (server_icon_emblem.jpg), its flat background removed, colour raised."""
+    import make_server_icon as msi
+    img = Image.open(os.path.join(ART, "server_icon_emblem.jpg")).convert("RGBA")
+    bg = msi.background(img)
+    if bg is not None:
+        img = msi.cut_background(img, bg)
+    img = img.crop(img.getchannel("A").point(lambda a: 255 if a > 24 else 0).getbbox())
+    return msi.punch(img)
+
+
+def logo(preview: str | None) -> None:
+    """The SÜLD logo of the TAB list header: the emblem over the gold letters, 5 chat lines tall."""
+    letters, emblem = _letters(), _emblem()
+    target_h, letters_h, emblem_h, gap = 40, 17, 23, 0
+    lw = round(letters.width * letters_h / letters.height)
+    small_letters = letters.resize((lw * 4, letters_h * 4), Image.LANCZOS).resize((lw, letters_h), Image.BOX)
+    ew = round(emblem.width * emblem_h / emblem.height)
+    small_emblem = emblem.resize((ew * 4, emblem_h * 4), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=1.4, percent=90, threshold=2))
+    small_emblem = small_emblem.resize((ew, emblem_h), Image.BOX).filter(ImageFilter.UnsharpMask(radius=0.8, percent=110, threshold=1))
+    width = max(lw, ew)
+    small = Image.new("RGBA", (width, target_h), (0, 0, 0, 0))
+    small.alpha_composite(small_emblem, ((width - ew) // 2, 0))
+    small.alpha_composite(small_letters, ((width - lw) // 2, emblem_h + gap))
     # snap alpha so the logo stays crisp
     px = small.load()
     for y in range(small.height):
         for x in range(small.width):
             r, g, b, a = px[x, y]
             px[x, y] = (r, g, b, 0 if a < 70 else 255)
-    add_bitmap("LOGO", small, "logo", target_h, 7, f"SÜLD logo {target_w}x{target_h} (3 chat lines tall)")
+    add_bitmap("LOGO", small, "logo", target_h, 7, f"SÜLD logo {width}x{target_h}: the emblem over the letters (5 chat lines tall)")
     if preview:
         small.resize((small.width * 8, small.height * 8), Image.NEAREST).save(os.path.join(preview, "logo.png"))
 

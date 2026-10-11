@@ -302,7 +302,8 @@ public final class HudService {
 
     private void tab(Player p) {
         double tps = Math.min(20.0, Bukkit.getTPS()[0]);
-        if (tabHeader == null) tabHeader = Component.text("\n").append(StyleFormat.glyph(Glyphs.LOGO)).append(Component.text("\n\n\n"))
+        // the logo glyph is 40 px tall from 7 px above the first line: five line breaks clear it
+        if (tabHeader == null) tabHeader = Component.text("\n").append(StyleFormat.glyph(Glyphs.LOGO)).append(Component.text("\n\n\n\n\n"))
                 .append(Component.text("Монгол Hardcore MMORPG", TextColor.fromHexString("#FFE08A"), TextDecoration.BOLD))
                 .append(Component.text("\n" + domain() + "\n", NamedTextColor.GRAY));
         Component header = tabHeader;

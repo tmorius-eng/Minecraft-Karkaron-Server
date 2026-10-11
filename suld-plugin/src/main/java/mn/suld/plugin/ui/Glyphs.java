@@ -42,7 +42,7 @@ public final class Glyphs {
     public static final String NEG_128 = "\uE00E";
     /** advance +128 */
     public static final String POS_128 = "\uE00F";
-    /** SÜLD logo 56x24 (3 chat lines tall) */
+    /** SÜLD logo 60x40: the emblem over the letters (5 chat lines tall) */
     public static final String LOGO = "\uE010";
     /** 8x8 icon heart */
     public static final String ICON_HEART = "\uE011";
