@@ -42,7 +42,9 @@ import java.util.Map;
  * Kharkhorum, a deer stone and a stone man at their historic sites), placed from {@code content/props.json} (the
  * server's copy in {@code plugins/SULD/content/} wins). Each is one item display wearing {@code suld:prop/<id>},
  * scaled to its height and standing on the ground, with an interaction box that tells what it is. The displays are
- * not saved with the chunk: they appear when their chunk is loaded and go with it.
+ * not saved with the chunk: they appear when their chunk is loaded and go with it. A display has no collision of its
+ * own, so the world blocks the prop fills ({@code content/prop_shapes.json}, generated with the model) are filled with
+ * barrier blocks while it stands; only air is ever replaced, and only the barriers placed here are taken away again.
  */
 public final class PropService implements Listener {
 
@@ -65,6 +67,8 @@ public final class PropService implements Listener {
     private final Map<String, Prop> props = new LinkedHashMap<>();
     private final List<Place> places = new ArrayList<>();
     private final Map<Integer, Entity[]> live = new HashMap<>();
+    private final Map<String, List<int[]>> shapes = new HashMap<>();
+    private final Map<Integer, List<org.bukkit.block.Block>> barriers = new HashMap<>();
     private final NamespacedKey placeKey;
 
     public PropService(Plugin plugin, SuldServices services) {
@@ -115,6 +119,19 @@ public final class PropService implements Listener {
             props.put(id, new Prop(id, (String) m.get("name"), String.valueOf(m.getOrDefault("history", "INSPIRED")), height, units,
                     String.valueOf(m.getOrDefault("about", ""))));
         }
+        try (InputStream in = plugin.getResource("content/prop_shapes.json")) {
+            if (in != null) {
+                Map<String, Object> sh = Json.object(Json.object(Json.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8))).get("shapes"));
+                for (Map.Entry<String, Object> e : sh.entrySet()) {
+                    List<int[]> cells = new ArrayList<>();
+                    for (Object c : Json.array(e.getValue())) {
+                        List<Object> xyz = Json.array(c);
+                        cells.add(new int[]{Json.integer(xyz.get(0)), Json.integer(xyz.get(1)), Json.integer(xyz.get(2))});
+                    }
+                    shapes.put(e.getKey(), cells);
+                }
+            }
+        }
         int i = 0;
         for (Object o : Json.array(root.get("places"))) {
             Map<String, Object> m = Json.object(o);
@@ -158,11 +175,12 @@ public final class PropService implements Listener {
             int[] col = column(w, p);
             if (col == null || !w.isChunkLoaded(col[0] >> 4, col[1] >> 4)) continue;
             live.put(p.index(), spawn(w, p, col[0], col[1]));
+            solid(w, p, col[0], col[1]);
         }
     }
 
     private Entity[] spawn(World w, Place p, int x, int z) {
-        int y = w.getHighestBlockYAt(x, z) + 1;
+        int y = ground(w, x, z) + 1;
         Location at = new Location(w, x + 0.5, y, z + 0.5, p.yaw(), 0);
         float s = p.prop().scale();
         ItemStack it = new ItemStack(Material.PAPER);
@@ -194,6 +212,41 @@ public final class PropService implements Listener {
         return new Entity[]{d, box};
     }
 
+    /** The ground under a prop: the highest block, looking through the prop's own barriers (and the air between them). */
+    private static int ground(World w, int x, int z) {
+        int y = w.getHighestBlockYAt(x, z);
+        while (y > w.getMinHeight() && (w.getBlockAt(x, y, z).getType() == Material.BARRIER || w.getBlockAt(x, y, z).getType() == Material.AIR)) y--;
+        return y;
+    }
+
+    /**
+     * Barrier blocks in the cells the prop fills, turned with the display's yaw (90° steps): a display yaw θ turns the
+     * model's +Z towards (-sin θ, cos θ). Only air becomes a barrier; the ones placed are remembered for {@link #stop}.
+     */
+    private void solid(World w, Place p, int x, int z) {
+        List<int[]> cells = shapes.get(p.prop().id());
+        if (cells == null || barriers.containsKey(p.index())) return;
+        int y = ground(w, x, z) + 1;
+        int q = Math.floorMod(Math.round(p.yaw() / 90f), 4);
+        List<org.bukkit.block.Block> placed = new ArrayList<>();
+        for (int[] c : cells) {
+            int dx = c[0], dz = c[2];
+            for (int r = 0; r < q; r++) { // one quarter turn: (x, z) -> (-z, x)
+                int t = dx;
+                dx = -dz;
+                dz = t;
+            }
+            org.bukkit.block.Block b = w.getBlockAt(x + dx, y + c[1], z + dz);
+            if (b.getType() == Material.AIR) {
+                b.setType(Material.BARRIER, false);
+                placed.add(b);
+            } else if (b.getType() == Material.BARRIER) {
+                placed.add(b); // left by a run that did not stop cleanly: ours, taken away on stop
+            }
+        }
+        barriers.put(p.index(), placed);
+    }
+
     @EventHandler
     public void onClick(PlayerInteractEntityEvent e) {
         if (!(e.getRightClicked() instanceof Interaction box) || !box.getScoreboardTags().contains(TAG)) return;
@@ -222,5 +275,9 @@ public final class PropService implements Listener {
     public void stop() {
         for (Entity[] e : live.values()) for (Entity x : e) x.remove();
         live.clear();
+        for (List<org.bukkit.block.Block> bs : barriers.values()) {
+            for (org.bukkit.block.Block b : bs) if (b.getType() == Material.BARRIER) b.setType(Material.AIR, false);
+        }
+        barriers.clear();
     }
 }

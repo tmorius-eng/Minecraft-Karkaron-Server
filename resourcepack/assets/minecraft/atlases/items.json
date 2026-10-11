@@ -159,6 +159,11 @@
    "type": "directory",
    "source": "entity/khukh_suldiin_sakhiul",
    "prefix": "entity/khukh_suldiin_sakhiul/"
+  },
+  {
+   "type": "directory",
+   "source": "prop",
+   "prefix": "prop/"
   }
  ]
 }

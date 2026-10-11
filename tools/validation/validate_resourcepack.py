@@ -6,7 +6,9 @@
 * no model uses the legacy "overrides" list (ignored by clients since 1.21.4);
 * every item model definition (assets/<ns>/items/*.json) resolves its suld: models,
   and range_dispatch thresholds are unique;
-* every model's suld: texture references resolve to a PNG on disk;
+* every model's suld: texture references resolve to a PNG on disk, and that PNG is stitched into the block and
+  item atlases (under block/ or item/, or a directory source in assets/minecraft/atlases/{blocks,items}.json):
+  a texture outside every atlas renders as the magenta/black "missing" checkerboard in game;
 * every equipment asset (assets/<ns>/equipment/*.json) resolves each layer's suld:
   texture to textures/entity/equipment/<layer type>/<path>.png;
 * every registry asset with custom_model_data + base_item is actually mapped to its
@@ -87,8 +89,24 @@ def resolve(ref: str, kind: str) -> str:
     return os.path.join(RP, "assets", ns, sub, path + ext)
 
 
+# Vanilla's own directory sources of the block/item atlases (any namespace).
+VANILLA_ATLAS_DIRS = ("block/", "item/")
+
+
+def atlas_dirs(name: str) -> tuple[str, ...]:
+    """Texture path prefixes the pack adds to minecraft:<name> (directory sources), plus vanilla's own."""
+    path = os.path.join(RP, "assets", "minecraft", "atlases", name + ".json")
+    dirs = list(VANILLA_ATLAS_DIRS)
+    if os.path.exists(path):
+        for src in json.load(open(path, encoding="utf-8")).get("sources", []):
+            if src.get("type") in ("directory", "minecraft:directory") and src.get("source"):
+                dirs.append(src["source"].rstrip("/") + "/")
+    return tuple(dirs)
+
+
 def main() -> int:
     errors: list[str] = []
+    atlases = {name: atlas_dirs(name) for name in ("blocks", "items")}
 
     mcmeta = os.path.join(RP, "pack.mcmeta")
     if not os.path.exists(mcmeta):
@@ -155,6 +173,11 @@ def main() -> int:
                 tp = resolve(ref, "texture")
                 if not os.path.exists(tp):
                     errors.append(f"{os.path.relpath(fp, ROOT)}: texture ref '{ref}' -> missing {os.path.relpath(tp, ROOT)}")
+                tex_path = ref.split(":", 1)[1]
+                for name, dirs in atlases.items():
+                    if not tex_path.startswith(dirs):
+                        errors.append(f"{os.path.relpath(fp, ROOT)}: texture '{ref}' is in no directory source of the "
+                                      f"{name} atlas (assets/minecraft/atlases/{name}.json): it renders as missing")
 
     # Registry <-> pack: every asset that claims a custom model must really be wired up.
     mapped = 0
