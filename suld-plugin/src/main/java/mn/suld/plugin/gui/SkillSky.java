@@ -72,8 +72,9 @@ import java.util.function.Predicate;
  *   <li>the crosshair is the cursor: the node under it glows and shows its tooltip; left click learns or ranks up,
  *       right click refunds; W/A/S/D pans, the hotbar wheel zooms, Shift (dismount) closes.</li>
  * </ul>
- * Opening is refused in combat, in a dungeon run, as a soul or mid-air, and the chest map is used instead. Closing
- * (and quitting, a command, or a restart via the join hook) always returns the player to the exact spot they left.
+ * Opening is refused (with the reason told) in combat, in a dungeon run or mid-air; a soul may open it to spend points
+ * while it waits. The old chest map never opens in its place. Closing (and quitting, a command, or a restart via the
+ * join hook) always returns the player to the exact spot they left.
  */
 public final class SkillSky implements Listener {
 
@@ -167,7 +168,6 @@ public final class SkillSky implements Listener {
         if (sessions.containsKey(p.getUniqueId())) return true;
         SkillTree tree = st() == null ? null : st().tree(p);
         String why = tree == null ? "Эхлээд ангиа сонго."
-                : isSoul.test(p.getUniqueId()) ? "Сүнс байхдаа чадварын модыг нээх боломжгүй."
                 : services.dungeons().isInAnyRun(p.getUniqueId()) ? "Агуйн дотор чадварын модыг нээх боломжгүй."
                 : System.currentTimeMillis() - lastCombat.getOrDefault(p.getUniqueId(), 0L) < COMBAT_MS ? "Тулалдааны үеэр нээх боломжгүй."
                 : p.isInsideVehicle() || p.isGliding() || !p.isOnGround() && !p.isFlying() ? "Газар зогсож байхдаа нээ."

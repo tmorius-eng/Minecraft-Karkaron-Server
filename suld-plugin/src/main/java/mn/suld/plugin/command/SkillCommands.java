@@ -87,7 +87,7 @@ public final class SkillCommands {
                 String sub = a.length == 0 ? "tree" : a[0].toLowerCase(Locale.ROOT);
                 switch (sub) {
                     case "tree", "map", "gazar" -> map.open(p);
-                    case "chest", "grid" -> map.open(p, null); // the inventory map (no camera change)
+                    case "chest", "grid" -> map.open(p); // the old chest map is retired: the sky tree
                     case "spells", "shid" -> menus.skills(p);
                     case "info" -> info(p);
                     case "reset" -> reset(p, a);
@@ -224,7 +224,7 @@ public final class SkillCommands {
                         var res = st().refund(p, n);
                         s.sendMessage(res.ok() ? Messages.success("↩ «" + n.name() + "» буцаагдлаа") : Messages.error(SkillText.why(res)));
                     }
-                    case "open" -> map.open(p, n.id());
+                    case "open" -> map.open(p);
                     default -> detail(p, tree, n);
                 }
                 return true;

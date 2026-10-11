@@ -612,7 +612,7 @@ public final class DeathService implements Listener {
 
     /** What a soul may still run: death and revive, chat and messages, help and reading its own state. */
     private static final java.util.Set<String> SOUL_COMMANDS = java.util.Set.of(
-            "revive", "deathstatus", "deathinfo", "help", "rules", "commands", "menu", "tutorial", "profile", "quest",
+            "revive", "skills", "skill", "deathstatus", "deathinfo", "help", "rules", "commands", "menu", "tutorial", "profile", "quest",
             "chat", "ch", "g", "l", "pc", "tr", "cc", "msg", "tell", "w", "whisper", "r", "reply", "mail",
             "discord", "website", "vote", "top", "balance", "cosmetics", "buy", "credits");
 

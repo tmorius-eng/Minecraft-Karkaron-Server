@@ -104,9 +104,16 @@ public final class SkillMapMenu implements Listener {
     /** Told whenever the skill tree opens (the tutorial's step); set by the plugin. */
     public static volatile java.util.function.Consumer<Player> onOpen = p -> { };
 
+    /**
+     * The skill tree is the full-screen Тэнгэрийн мод (SkillSky). When it cannot open right now (in a fight, a dungeon,
+     * mid-air) the reason is told and nothing else opens: the old chest map does not come back in its place.
+     */
     public void open(Player p) {
         onOpen.accept(p);
-        if (sky != null && sky.open(p)) return;
+        if (sky != null) {
+            sky.open(p);
+            return;
+        }
         open(p, null);
     }
 
