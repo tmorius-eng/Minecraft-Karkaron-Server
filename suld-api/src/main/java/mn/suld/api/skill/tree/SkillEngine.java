@@ -62,6 +62,33 @@ public final class SkillEngine {
         }
     }
 
+    /**
+     * Unlock {@code n}; when it is not connected to the build yet, learn the cheapest connecting chain up to it
+     * ({@link SkillAllocation#pathTo}) in one go, if the player has the points for all of it. {@code amount} of a
+     * POINTS answer is the chain's whole cost. Returns the check and how many nodes were learned.
+     */
+    public record PathResult(SkillAllocation.Check check, List<SkillNode> learned) {
+    }
+
+    public static PathResult unlockPath(PlayerProfile p, SkillTree tree, SkillNode n, Context c) {
+        synchronized (p) {
+            SkillAllocation a = allocation(p, tree);
+            int avail = Math.max(0, total(p, c) - a.spent());
+            SkillAllocation.Check check = a.canUnlock(n, c.level(), avail);
+            if (check.why() != SkillAllocation.Why.NOT_CONNECTED) {
+                if (check.ok()) store(p, a.plusRank(n), "");
+                return new PathResult(check, check.ok() ? List.of(n) : List.of());
+            }
+            List<SkillNode> chain = a.pathTo(n, c.level());
+            if (chain == null) return new PathResult(check, List.of());
+            int cost = SkillAllocation.cost(chain);
+            if (cost > avail) return new PathResult(new SkillAllocation.Check(SkillAllocation.Why.POINTS, n, null, cost), List.of());
+            for (SkillNode m : chain) a = a.plusRank(m);
+            store(p, a, "");
+            return new PathResult(new SkillAllocation.Check(SkillAllocation.Why.OK, n, null, 0), chain);
+        }
+    }
+
     public static SkillAllocation.Check refund(PlayerProfile p, SkillTree tree, SkillNode n) {
         synchronized (p) {
             SkillAllocation a = allocation(p, tree);

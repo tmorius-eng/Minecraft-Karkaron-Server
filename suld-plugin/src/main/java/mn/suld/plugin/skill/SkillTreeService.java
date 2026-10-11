@@ -506,12 +506,18 @@ public final class SkillTreeService implements Listener {
         PlayerProfile pr = profile(p);
         SkillTree t = tree(p);
         if (pr == null || t == null) return new SkillAllocation.Check(SkillAllocation.Why.NOT_CONNECTED, n, null, 0);
-        SkillAllocation.Check c = SkillEngine.unlock(pr, t, n, context(p));
+        // a node not yet connected to the build learns the cheapest chain up to it in one click (SkillAllocation.pathTo)
+        SkillEngine.PathResult res = SkillEngine.unlockPath(pr, t, n, context(p));
+        SkillAllocation.Check c = res.check();
         if (c.ok()) {
             Map<String, Long> mine = recentUnlocks.computeIfAbsent(p.getUniqueId(), k -> new ConcurrentHashMap<>());
             long now = System.currentTimeMillis();
             mine.values().removeIf(t0 -> now - t0 >= REFUND_GRACE_MS); // only the grace window matters
-            mine.put(n.id(), now);
+            for (SkillNode m : res.learned()) mine.put(m.id(), now);
+            if (res.learned().size() > 1) {
+                p.sendMessage(Messages.accent("◆ Зам нээгдлээ: " + res.learned().size() + " чадвар («" + n.name() + "» хүртэл), "
+                        + SkillAllocation.cost(res.learned()) + " оноо"));
+            }
             afterChange(p);
             p.playSound(p.getLocation(), n.keystone() ? Sound.BLOCK_BEACON_ACTIVATE : Sound.ENTITY_PLAYER_LEVELUP, 0.7f, n.keystone() ? 1.2f : 1.7f);
         } else {

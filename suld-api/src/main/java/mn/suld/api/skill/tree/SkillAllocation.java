@@ -114,6 +114,63 @@ public final class SkillAllocation {
         return false;
     }
 
+    /**
+     * The cheapest chain of not-yet-learned nodes that connects {@code target} to the build, ending with
+     * {@code target} (build side first), or null when there is none the player may take now: every node on it must be
+     * allowed at {@code level}, clash with nothing learned or on the chain, and have its extra requirements met by the
+     * build or by the chain before it. Clicking a far node learns this whole chain (one rank each).
+     */
+    public List<SkillNode> pathTo(SkillNode target, int level) {
+        if (target.root() || unlocked(target) || !allowed(target, level)) return null;
+        int size = tree.nodes().size();
+        int[] dist = new int[size];
+        int[] prev = new int[size];
+        java.util.Arrays.fill(dist, Integer.MAX_VALUE);
+        java.util.Arrays.fill(prev, -1);
+        java.util.PriorityQueue<int[]> pq = new java.util.PriorityQueue<>(java.util.Comparator.comparingInt(x -> x[1]));
+        for (SkillNode n : tree.nodes()) {
+            if (!unlocked(n)) continue;
+            dist[n.index()] = 0;
+            pq.add(new int[]{n.index(), 0});
+        }
+        while (!pq.isEmpty()) {
+            int[] cur = pq.poll();
+            if (cur[1] > dist[cur[0]]) continue;
+            if (cur[0] == target.index()) break;
+            for (int nb : tree.neighbours(cur[0])) {
+                SkillNode m = tree.node(nb);
+                if (unlocked(m) || !allowed(m, level)) continue;
+                int d = cur[1] + m.cost();
+                if (d < dist[nb]) {
+                    dist[nb] = d;
+                    prev[nb] = cur[0];
+                    pq.add(new int[]{nb, d});
+                }
+            }
+        }
+        if (dist[target.index()] == Integer.MAX_VALUE) return null;
+        List<SkillNode> chain = new ArrayList<>();
+        for (int i = target.index(); i >= 0 && !unlocked(tree.node(i)); i = prev[i]) chain.add(0, tree.node(i));
+        // walk it as the player would: each step must pass the ordinary unlock rules
+        SkillAllocation a = this;
+        for (SkillNode n : chain) {
+            if (!a.canUnlock(n, level, Integer.MAX_VALUE).ok()) return null;
+            a = a.plusRank(n);
+        }
+        return chain;
+    }
+
+    /** Total point cost of a chain from {@link #pathTo}. */
+    public static int cost(List<SkillNode> chain) {
+        int c = 0;
+        for (SkillNode n : chain) c += n.cost();
+        return c;
+    }
+
+    private boolean allowed(SkillNode n, int level) {
+        return !n.root() && level >= n.effectiveLevel() && rival(n) == null;
+    }
+
     public SkillNode rival(SkillNode n) {
         for (int ex : tree.exclusives(n.index())) if (rank(ex) > 0) return tree.node(ex);
         return null;

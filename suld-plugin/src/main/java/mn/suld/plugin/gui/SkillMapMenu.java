@@ -316,12 +316,27 @@ public final class SkillMapMenu implements Listener {
             case LEVEL_LOCKED -> Component.text("⚠ Түвшин хүрэхгүй", ORANGE, TextDecoration.BOLD);
             case PREREQUISITE_MISSING -> Component.text("⚠ Шаардлага биелээгүй", ORANGE, TextDecoration.BOLD);
             case EXCLUDED -> Component.text("✖ Өөр сонголт хийсэн (улаан холбоос)", RED, TextDecoration.BOLD);
-            case LOCKED -> Component.text("🔒 Эхлээд үүнтэй шугамаар холбогдсон чадварыг нээ: " + connected(tree, a, n), GRAY, TextDecoration.BOLD);
+            case LOCKED -> lockedLine(p, a, n, lvl);
         });
         if (!n.root()) {
             out.add(Component.text("« Зүүн товш: нээх / дээшлүүлэх · Баруун товш: буцаах · Shift: дэлгэрэнгүй »", NamedTextColor.WHITE, TextDecoration.BOLD));
         }
         return out;
+    }
+
+    /**
+     * A node not connected to the build: the click learns the cheapest chain up to it (SkillAllocation.pathTo), so the
+     * tooltip says how many skills and points that is, and whether the points are there.
+     */
+    private Component lockedLine(Player viewer, SkillAllocation a, SkillNode n, int level) {
+        List<SkillNode> chain = a.pathTo(n, level);
+        if (chain == null) {
+            return Component.text("🔒 Одоогоор хүрэх зам алга: " + connected(a.tree(), a, n), GRAY, TextDecoration.BOLD);
+        }
+        int cost = SkillAllocation.cost(chain);
+        int avail = st().available(viewer);
+        return Component.text("➜ Зам: " + chain.size() + " чадвар · " + cost + " оноо" + (cost <= avail ? " — дарж бүгдийг нээ" : " (танд " + avail + ")"),
+                cost <= avail ? GREEN : ORANGE, TextDecoration.BOLD);
     }
 
     /** The names of the visible nodes a line joins to {@code n} (what the player has to learn first). */

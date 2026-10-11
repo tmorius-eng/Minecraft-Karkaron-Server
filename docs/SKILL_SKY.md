@@ -85,3 +85,14 @@ the new version is written next to it as `.json.new`.
 * The look in a real client is unverified: icon orientation, backdrop crop, text size, smoothness.
 * Satellite icons are generic stat items (apple, flint, clock...), not painted skill icons.
 * Node icons are vanilla items, not painted skill icons.
+
+## Clicking a far node (path unlock)
+
+A node is learned only next to the build (a line joins it to a learned node), so on a fresh tree only the nodes
+around the root are open. Clicking a node further out no longer just refuses: it learns the **cheapest chain** from
+the build up to it, one rank each, in one click (`SkillAllocation.pathTo`, `SkillEngine.unlockPath`). Every node
+on the chain must pass the ordinary rules at the player's level (level gate, no red-link rival, requirements met by
+the build or earlier on the chain), and the player must have the points for the whole chain. The tooltip says
+«➜ Зам: N чадвар · M оноо», green when affordable. A chain learned this way can be refunded node by node like any
+other (free for two minutes). Owner report 2026-10-11: a level-6 player with 7 points could not take a level-3
+node one step behind «Хурц Ир».
