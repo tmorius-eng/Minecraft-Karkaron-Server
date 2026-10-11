@@ -1,5 +1,5 @@
 {
-  "_comment": "Production resource-pack budget + validation limits (S\u00dcLD). Raw source meshes (GLB/FBX/OBJ) are FORBIDDEN in resourcepack/ \u2014 they live in assets/source/. Textures: 32/64/128 for ordinary items, 256 for hero items (listed), higher only with justification in `justified_large`.",
+  "_comment": "Production resource-pack budget + validation limits (SÜLD). Raw source meshes (GLB/FBX/OBJ) are FORBIDDEN in resourcepack/ — they live in assets/source/. Textures: 32/64/128 for ordinary items, 256 for hero items (listed), higher only with justification in `justified_large`.",
   "max_texture_px_ordinary": 128,
   "max_texture_px_hero": 256,
   "hero_textures": [
@@ -21,5 +21,22 @@
     ".blend",
     ".stl",
     ".usdz"
-  ]
+  ],
+  "justified_prefixes": {
+    "resourcepack/assets/suld/textures/font/hud/": "HUD glyphs (gen_hud.py): bar fills are 896/2048 px wide because one glyph is one bar length; frames and target plaques are drawn at 2x",
+    "resourcepack/assets/suld/textures/font/badge/": "name-tag/TAB badges from the owner's HD sheet (hd_art.SCALE = 4x the 9 px glyph), so they stay sharp at GUI scale 4",
+    "resourcepack/assets/suld/textures/font/gui/": "chest-screen backgrounds drawn into the container title: exactly 176 GUI px wide (quest book: 4x HD from the owner's painting)",
+    "resourcepack/assets/suld/textures/gui/sprites/tooltip/": "the suld:mongol tooltip nine-slice from the owner's painting, 4x HD",
+    "resourcepack/assets/suld/textures/entity/skytree/": "the full-screen skill tree backdrop (display entity), one 512x288 panel",
+    "resourcepack/assets/minecraft/textures/gui/sprites/": "blank sprites hiding vanilla HUD/boss bars (gen_hud.blank_sprites): sized like the vanilla sprite they replace"
+  },
+  "duplicates_allowed_under": [
+    "resourcepack/assets/minecraft/textures/gui/sprites/"
+  ],
+  "_duplicates_allowed_under_comment": "blank sprites that hide vanilla HUD elements (gen_hud.blank_sprites): identical by design",
+  "justified_large_files": {
+    "resourcepack/assets/suld/models/prop/deer_stone.json": "Meshy prop voxelised to a box model (tools/meshy); 48 KB zipped",
+    "resourcepack/assets/suld/models/prop/silver_tree.json": "Meshy prop voxelised to a box model (tools/meshy); 43 KB zipped",
+    "resourcepack/assets/suld/models/prop/stone_man.json": "Meshy prop voxelised to a box model (tools/meshy); 37 KB zipped"
+  }
 }

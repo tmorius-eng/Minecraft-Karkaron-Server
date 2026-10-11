@@ -41,7 +41,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/frame_b_l.png",
+   "file": "suld:font/hud/frame_a_l.png",
    "height": 8,
    "ascent": -27,
    "chars": [
@@ -50,7 +50,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/frame_b_r.png",
+   "file": "suld:font/hud/frame_a_r.png",
    "height": 8,
    "ascent": -27,
    "chars": [
@@ -257,7 +257,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/bi_b_heart.png",
+   "file": "suld:font/hud/bi_a_heart.png",
    "height": 6,
    "ascent": -28,
    "chars": [
@@ -275,7 +275,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/bi_b_res.png",
+   "file": "suld:font/hud/bi_a_res.png",
    "height": 6,
    "ascent": -28,
    "chars": [
@@ -293,7 +293,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/bi_b_food.png",
+   "file": "suld:font/hud/bi_a_food.png",
    "height": 6,
    "ascent": -28,
    "chars": [
@@ -311,7 +311,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/bi_b_horse.png",
+   "file": "suld:font/hud/bi_a_horse.png",
    "height": 6,
    "ascent": -28,
    "chars": [
@@ -329,7 +329,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/bi_b_air.png",
+   "file": "suld:font/hud/bi_a_air.png",
    "height": 6,
    "ascent": -28,
    "chars": [
@@ -347,7 +347,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/bi_b_exp.png",
+   "file": "suld:font/hud/bi_a_exp.png",
    "height": 6,
    "ascent": -28,
    "chars": [
@@ -662,7 +662,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/digits_row_b.png",
+   "file": "suld:font/hud/digits_row_a.png",
    "height": 6,
    "ascent": -28,
    "chars": [
@@ -671,7 +671,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/digits_slot.png",
+   "file": "suld:font/hud/digits_row_a.png",
    "height": 6,
    "ascent": -6,
    "chars": [
@@ -680,7 +680,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/digits_buff.png",
+   "file": "suld:font/hud/digits_row_a.png",
    "height": 6,
    "ascent": -5,
    "chars": [
@@ -689,7 +689,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/digits_target.png",
+   "file": "suld:font/hud/digits_row_a.png",
    "height": 6,
    "ascent": -2,
    "chars": [

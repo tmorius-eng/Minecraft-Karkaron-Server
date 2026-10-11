@@ -4,7 +4,8 @@
 FAILS the build when:
   - a raw source mesh (GLB/FBX/OBJ/…) is inside resourcepack/
   - a texture exceeds its configured pixel budget (ordinary vs hero)
-  - duplicate texture files exist (identical content)
+  - duplicate texture files exist (identical content), outside duplicates_allowed_under
+  (justified_prefixes / justified_large / justified_large_files in pack_budget.json name the exceptions and why)
   - any single file exceeds max_file_kb
   - the pack total exceeds total_budget_mb
 
@@ -75,7 +76,8 @@ def main() -> int:
 
             if ext in forbidden:
                 errors.append(f"FORBIDDEN raw source in resource pack: {rel} (move to assets/source/)")
-            if size > cfg["max_file_kb"] * 1024:
+            rel_norm = rel.replace(os.sep, "/")
+            if size > cfg["max_file_kb"] * 1024 and rel_norm not in cfg.get("justified_large_files", {}):
                 errors.append(f"file too large: {rel} = {human(size)} (> {cfg['max_file_kb']} KB)")
 
             if ext == ".png":
@@ -84,14 +86,15 @@ def main() -> int:
                 if dims:
                     limit = cfg["max_texture_px_hero"] if fp in heroes else cfg["max_texture_px_ordinary"]
                     just = cfg.get("justified_large", {})
-                    rel_norm = rel.replace(os.sep, "/")
-                    if max(dims) > limit and rel_norm not in just:
+                    justified_prefix = any(rel_norm.startswith(pre) for pre in cfg.get("justified_prefixes", {}))
+                    if max(dims) > limit and rel_norm not in just and not justified_prefix:
                         tier = "hero" if fp in heroes else "ordinary"
                         errors.append(f"texture over budget: {rel} = {dims[0]}x{dims[1]} (> {limit}px {tier})")
                 digest = hashlib.sha1(open(fp, "rb").read()).hexdigest()
-                if digest in hashes:
+                dup_ok = any(rel_norm.startswith(pre) for pre in cfg.get("duplicates_allowed_under", []))
+                if digest in hashes and not dup_ok:
                     errors.append(f"duplicate texture: {rel} == {hashes[digest]}")
-                else:
+                elif digest not in hashes:
                     hashes[digest] = rel
             elif ext == ".json":
                 model_count += 1

@@ -113,11 +113,21 @@ def cp() -> str:
     return c
 
 
+_saved_by_pixels: dict[bytes, str] = {}
+
+
 def save(img: Image.Image, rel: str) -> str:
+    """Writes the texture, or points at an earlier one with the same pixels (a glyph family that differs only in its
+    ascent, e.g. the digit rows, shares a file: the font's provider carries the ascent, not the texture)."""
+    key = img.tobytes() + bytes(str(img.size), "ascii")
+    if key in _saved_by_pixels:
+        return _saved_by_pixels[key]
     path = os.path.join(TEX, rel + ".png")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     img.save(path, optimize=False)
-    return f"suld:font/hud/{rel}.png"
+    ref = f"suld:font/hud/{rel}.png"
+    _saved_by_pixels[key] = ref
+    return ref
 
 
 def trimmed_width(img: Image.Image, x0: int, w: int, h: int) -> int:
