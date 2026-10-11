@@ -160,3 +160,34 @@ and wrong for production sheets. Concept sheets use a separate prompt file with 
 | Tooltip frames per rarity | NOT_IMPLEMENTED |
 | Concept-sheet prompt file | NOT_IMPLEMENTED |
 | Style review of existing procedural art | NOT_IMPLEMENTED |
+
+## The survival inventory (E)
+
+The source is the owner's mock-up `assets/art/source/gui_inventory.webp`. Gemini made one edit of it,
+`gui_inventory_keyed.png` (`tools/art/inventory_prompts.json`): the scene was replaced with flat magenta, and the
+player was taken out of the portrait, because the game draws the player there. `tools/pack/hd_art.inventory`
+builds three things from that edit.
+
+**The window.** It is `minecraft:textures/gui/container/inventory.png`, the vanilla 256 px sheet at 4x.
+- Every slot frame sits on its vanilla slot. The inventory and hot bar are warped column by column; the armour,
+  off-hand, crafting, result and portrait wells are pasted onto their vanilla rectangles.
+- The clouds and knots are moved into the free parts of the layout.
+
+**The empty-slot marks.** These are the helmet, chestplate, leggings, boots and shield placeholders, lifted off
+the painted wells. Next to them is a recipe button in the same style. Both are in `textures/gui/sprites/`, at 4x.
+
+**The decor around the window.** This covers the spires, the crest, the banners, the tassels and the bottom
+medallion.
+- The client draws the inventory texture only inside its 176 x 166 window, so this decor cannot go there.
+- It is one glyph of `minecraft:default` (`suld:font/gui/inventory_decor.png`), drawn through the screen title. The
+  lang key `container.crafting` in en_us, en_gb, mn_mn and ru_ru is set to white, a negative space and the glyph.
+- Inside the window the glyph is transparent, except in the 7 px margin, so it never covers an item.
+
+A crafting table uses the same lang key, so SÜLD gives crafting tables a plain title, «Урлах ширээ»
+(`MenuListener.onWorkbench`). Without that, the decor would appear around the crafting table in the wrong place.
+
+How it looks in a real client is **MANUAL_QA_REQUIRED**. Points to check:
+- GUI scale 3 and 4;
+- with the recipe book open (the left banner overlaps the book's right edge);
+- with potion effects listed beside the window;
+- in a language other than the four above (there the title shows the plain word "Crafting" and no decor).

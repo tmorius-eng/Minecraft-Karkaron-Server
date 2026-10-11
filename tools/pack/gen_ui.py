@@ -936,6 +936,84 @@ def orb_item() -> None:
 
 # ----------------------------------------------------------------------------------------- java
 
+# ------------------------------------------------------------------------------------------------ inventory (E)
+
+INV_DECOR = "\uf8f0"        # the decor glyph, in minecraft:default (the screen title is drawn in the default font)
+INV_SHIFT = "\uf8f1"        # a negative space: from the title's x to the decor's left edge
+INV_TITLE_X, INV_TITLE_Y = 97, 8   # vanilla InventoryScreen title position, relative to the window
+
+
+def gui_inventory(preview: str | None) -> None:
+    """The survival inventory (E) from the owner's mock-up (assets/art/source/gui_inventory.webp; the keyed edit
+    gui_inventory_keyed.png, tools/art/inventory_prompts.json). The window is textures/gui/container/inventory.png at
+    4x, every slot frame on its vanilla slot. The spires, crest, banners and tassels around it cannot be in that
+    texture (the client draws only its 176 x 166 window), so they are one glyph of minecraft:default drawn through
+    the screen's title: lang key container.crafting = colour reset + negative space + glyph. The crafting table uses
+    the same key, so SÜLD gives crafting tables a plain title (SuldPlugin, InventoryOpenEvent#titleOverride)."""
+    art = os.path.join(ART, "gui_inventory_keyed.png")
+    if not os.path.exists(art):
+        return
+    r = hd_art.inventory(art)
+    S = hd_art.SCALE
+    mc = os.path.join(ROOT, "resourcepack", "assets", "minecraft")
+    canvas = Image.new("RGBA", (256 * S, 256 * S), (0, 0, 0, 0))
+    canvas.alpha_composite(r["texture"], (0, 0))
+    path = os.path.join(mc, "textures", "gui", "container", "inventory.png")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    canvas.save(path, optimize=False)
+    for name, icon in r["icons"].items():
+        p = os.path.join(mc, "textures", "gui", "sprites", "container", "slot", name + ".png")
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        icon.save(p, optimize=False)
+    for name, lit in (("button", False), ("button_highlighted", True)):
+        p = os.path.join(mc, "textures", "gui", "sprites", "recipe_book", name + ".png")
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        recipe_button(lit).save(p, optimize=False)
+    left, top, w, h = r["decor_box"]
+    rel = os.path.join(FONT_TEX, "gui", "inventory_decor.png")
+    os.makedirs(os.path.dirname(rel), exist_ok=True)
+    r["decor"].save(rel, optimize=False)
+    ascent = INV_TITLE_Y + 7 - top                     # glyph top = title y + 7 - ascent
+    font = {"providers": [
+        {"type": "space", "advances": {INV_SHIFT: left - INV_TITLE_X}},
+        {"type": "bitmap", "file": "suld:font/gui/inventory_decor.png", "height": h, "ascent": ascent, "chars": [INV_DECOR]},
+    ]}
+    fp = os.path.join(mc, "font", "default.json")
+    os.makedirs(os.path.dirname(fp), exist_ok=True)
+    with open(fp, "w", encoding="utf-8") as fh:
+        json.dump(font, fh, ensure_ascii=False, indent=1)
+        fh.write("\n")
+    title = "\u00a7f" + INV_SHIFT + INV_DECOR      # white: the title colour would otherwise darken the glyph
+    for lang in ("en_us", "en_gb", "mn_mn", "ru_ru"):
+        lp = os.path.join(mc, "lang", lang + ".json")
+        os.makedirs(os.path.dirname(lp), exist_ok=True)
+        with open(lp, "w", encoding="utf-8") as fh:
+            json.dump({"container.crafting": title}, fh, ensure_ascii=False, indent=1)
+            fh.write("\n")
+    if preview:
+        r["texture"].save(os.path.join(preview, "gui_inventory.png"))
+        r["decor"].save(os.path.join(preview, "gui_inventory_decor.png"))
+
+
+def recipe_button(lit: bool) -> Image.Image:
+    """The recipe book button (20 x 18) in the window's style: navy plate, gold frame, a gold book."""
+    S = hd_art.SCALE
+    img = Image.new("RGBA", (20 * S, 18 * S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    fill = (34, 46, 84, 255) if lit else (18, 25, 48, 255)
+    gold = GOLD + (255,) if lit else (178, 132, 52, 255)
+    d.rounded_rectangle([0, 0, 20 * S - 1, 18 * S - 1], radius=2 * S, fill=GOLD_D + (255,))
+    d.rounded_rectangle([S, S, 19 * S - 1, 17 * S - 1], radius=2 * S, fill=fill, outline=gold, width=S // 2 + 1)
+    # an open book: two pages and a spine
+    d.polygon([(4 * S, 5 * S), (9.6 * S, 6 * S), (9.6 * S, 14 * S), (4 * S, 13 * S)], fill=gold)
+    d.polygon([(10.4 * S, 6 * S), (16 * S, 5 * S), (16 * S, 13 * S), (10.4 * S, 14 * S)], fill=gold)
+    for i in range(3):
+        y = (7.5 + 2 * i) * S
+        d.line([(5 * S, y), (8.6 * S, y + 0.5 * S)], fill=fill, width=max(1, S // 2))
+        d.line([(11.4 * S, y + 0.5 * S), (15 * S, y)], fill=fill, width=max(1, S // 2))
+    return img
+
+
 def write_java() -> None:
     lines = [
         "package mn.suld.plugin.ui;",
@@ -1011,6 +1089,7 @@ def main() -> None:
     quest_badges(args.preview)
     gui_questbook(args.preview)
     tooltip_style()
+    gui_inventory(args.preview)
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)

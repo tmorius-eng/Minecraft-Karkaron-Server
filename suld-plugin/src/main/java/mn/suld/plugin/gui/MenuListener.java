@@ -99,6 +99,18 @@ public final class MenuListener implements Listener {
         }, 20L);
     }
 
+    /**
+     * The resource pack draws the inventory window's decor through the lang key container.crafting (the title of the
+     * E screen, tools/pack/gen_ui.py gui_inventory). A crafting table uses the same key, so it gets a plain title
+     * here; otherwise the decor would be drawn around the crafting table at the wrong place.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onWorkbench(org.bukkit.event.inventory.InventoryOpenEvent e) {
+        if (e.getInventory().getType() == org.bukkit.event.inventory.InventoryType.WORKBENCH) {
+            e.titleOverride(net.kyori.adventure.text.Component.text("Урлах ширээ"));
+        }
+    }
+
     @EventHandler
     public void onQuitClicks(org.bukkit.event.player.PlayerQuitEvent e) {
         clicks.forget(e.getPlayer().getUniqueId());

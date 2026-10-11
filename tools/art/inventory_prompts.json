@@ -1,0 +1,15 @@
+{
+ "model": "gemini-3-pro-image",
+ "size": "2K",
+ "about": "Edits of the owner's inventory mock-up (assets/art/source/gui_inventory.webp) for tools/pack/hd_art.py: the frame isolated on flat magenta (keyed to transparency) and the portrait well without the player, who is drawn by the game.",
+ "images": [
+  {
+   "id": "gui_inventory_keyed",
+   "input": "assets/art/source/gui_inventory.webp",
+   "crop": [368, 35, 1218, 885],
+   "aspect": "1:1",
+   "style": false,
+   "prompt": "Edit this image. Keep the ornate Mongolian inventory window exactly as it is: the same frame, gold slot borders, spires, central knot crest, blue banners with tassels, fur trim, ropes and the bottom medallion, in the same positions, size and colours, pixel for pixel where possible. Make two changes only: (1) replace everything outside the window and its decorations (the sky, sunset, sun, hills, trees, grass, the Minecraft hotbar, hearts, the purple block at the bottom right) with one flat solid pure magenta colour #FF00FF, no gradient, no shadow, no glow; (2) remove the Minecraft player character standing inside the left portrait frame and paint the empty portrait background there instead (the dark navy sky with the faint circle and the misty blue mountains continuing behind where the character was). Do not add text, do not add any new objects, do not move anything."
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "providers": [
+  {
+   "type": "space",
+   "advances": {
+    "": -119
+   }
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/inventory_decor.png",
+   "height": 221,
+   "ascent": 48,
+   "chars": [
+    ""
+   ]
+  }
+ ]
+}

@@ -22,12 +22,14 @@ API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateC
 UA = "tmorius-eng/Minecraft-Karkaron-Server/1.0"
 
 
-def generate(model: str, prompt: str, aspect: str, size: str | None = None) -> bytes:
+def generate(model: str, prompt: str, aspect: str, size: str | None = None, image: str | None = None,
+             crop: list | None = None) -> bytes:
     image_config = {"aspectRatio": aspect}
     if size:
         image_config["imageSize"] = size  # "1K" / "2K" (Gemini 3 image models)
     body = {
-        "contents": [{"parts": [{"text": prompt}]}],
+        "contents": [{"parts": ([{"inlineData": {"mimeType": "image/png", "data": _png_b64(image, crop)}}] if image else [])
+                      + [{"text": prompt}]}],
         "generationConfig": {"responseModalities": ["IMAGE"], "imageConfig": image_config},
     }
     headers = {"Content-Type": "application/json", "User-Agent": UA}
@@ -53,6 +55,16 @@ def generate(model: str, prompt: str, aspect: str, size: str | None = None) -> b
     raise RuntimeError(f"no image in response: {json.dumps(data)[:300]}")
 
 
+def _png_b64(path: str, crop: list | None = None) -> str:
+    """An input image for an edit request (the owner's own art), optionally cropped [x0, y0, x1, y1], sent as PNG."""
+    import io
+    from PIL import Image
+    buf = io.BytesIO()
+    im = Image.open(path).convert("RGB")
+    (im.crop(tuple(crop)) if crop else im).save(buf, "PNG")
+    return base64.b64encode(buf.getvalue()).decode()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--prompts", required=True)
@@ -74,7 +86,8 @@ def main() -> int:
             continue
         prompt = item["prompt"] + (" " + style if item.get("style", True) else "")
         try:
-            png = generate(item.get("model", spec.get("model", "gemini-2.5-flash-image")), prompt, item.get("aspect", "1:1"), item.get("size", spec.get("size")))
+            png = generate(item.get("model", spec.get("model", "gemini-2.5-flash-image")), prompt, item.get("aspect", "1:1"), item.get("size", spec.get("size")),
+                           item.get("input"), item.get("crop"))
         except Exception as e:  # report and continue
             print(f"  !! {item['id']}: {e}")
             failed += 1

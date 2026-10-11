@@ -28,7 +28,8 @@
     "resourcepack/assets/suld/textures/font/gui/": "chest-screen backgrounds drawn into the container title: exactly 176 GUI px wide (quest book: 4x HD from the owner's painting)",
     "resourcepack/assets/suld/textures/gui/sprites/tooltip/": "the suld:mongol tooltip nine-slice from the owner's painting, 4x HD",
     "resourcepack/assets/suld/textures/entity/skytree/": "the full-screen skill tree backdrop (display entity), one 512x288 panel",
-    "resourcepack/assets/minecraft/textures/gui/sprites/": "blank sprites hiding vanilla HUD/boss bars (gen_hud.blank_sprites): sized like the vanilla sprite they replace"
+    "resourcepack/assets/minecraft/textures/gui/container/": "the survival inventory (E) from the owner's mock-up: the vanilla 256 px sheet at 4x (1024 px), sharp at GUI scale 4",
+    "resourcepack/assets/minecraft/textures/gui/sprites/": "blank sprites hiding vanilla HUD/boss bars (gen_hud.blank_sprites), and the inventory's slot placeholders and recipe button at 4x (gen_ui.gui_inventory)"
   },
   "duplicates_allowed_under": [
     "resourcepack/assets/minecraft/textures/gui/sprites/"
@@ -37,6 +38,8 @@
   "justified_large_files": {
     "resourcepack/assets/suld/models/prop/deer_stone.json": "Meshy prop voxelised to a box model (tools/meshy); 48 KB zipped",
     "resourcepack/assets/suld/models/prop/silver_tree.json": "Meshy prop voxelised to a box model (tools/meshy); 43 KB zipped",
-    "resourcepack/assets/suld/models/prop/stone_man.json": "Meshy prop voxelised to a box model (tools/meshy); 37 KB zipped"
+    "resourcepack/assets/suld/models/prop/stone_man.json": "Meshy prop voxelised to a box model (tools/meshy); 37 KB zipped",
+    "resourcepack/assets/minecraft/textures/gui/container/inventory.png": "the HD survival inventory (owner's mock-up, 4x); a painted texture, PNG cannot shrink it further without losing the art",
+    "resourcepack/assets/suld/textures/font/gui/inventory_decor.png": "the inventory's spires, crest, banners and tassels (owner's mock-up, 4x), one glyph drawn through the screen title"
   }
 }

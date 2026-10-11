@@ -15,7 +15,7 @@ Deterministic: the same sources give byte-identical PNGs.
 from __future__ import annotations
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 SCALE = 4
 
@@ -226,3 +226,190 @@ def tooltip_frame(path: str) -> Image.Image:
     rgba = np.dstack([sub, alpha * 255]).astype(np.uint8)
     w, h = TT_SIZE
     return Image.fromarray(rgba, "RGBA").resize((w * SCALE, h * SCALE), Image.BOX)
+
+
+# ------------------------------------------------------------------------------------------------ inventory (E)
+
+# gui_inventory_keyed.png (2048 px square, tools/art/inventory_prompts.json): the owner's inventory mock-up with the
+# scene keyed to magenta and the player taken out of the portrait. Source px -> vanilla inventory px (176 x 166).
+INV_PANEL = (205, 300, 1845, 1850)                     # the window's outer rim
+INV_COL_START = [278, 445, 612, 780, 948, 1119, 1287, 1457, 1625]   # wells of the 9 inventory columns
+INV_COL_END = [423, 590, 759, 927, 1098, 1265, 1435, 1603, 1770]
+INV_YS = [(300, 0), (385, 5), (1075, 81), (1103, 84), (1247, 100), (1268, 102), (1413, 118), (1434, 120),
+          (1581, 136), (1657, 142), (1805, 158), (1850, 166)]
+INV_RIM_XS = [(205, 0), (240, 3), (1815, 173), (1845, 176)]
+INV_CELL = (278, 1103, 423, 1247)                      # a clean well (row 1, column 1), reused for armour/off-hand
+INV_ARMOUR = [(281, 440, 415, 574), (281, 599, 415, 731), (281, 756, 414, 891), (281, 917, 415, 1049)]
+INV_SHIELD = (1023, 930, 1153, 1057)
+INV_PORTRAIT = (443, 410, 988, 1062)
+INV_CRAFT = (1072, 540, 1445, 900, [(1072, 96), (1096, 98), (1248, 114), (1273, 116), (1426, 132), (1445, 134)],
+             [(540, 16), (559, 18), (706, 34), (728, 36), (875, 52), (900, 54)])
+INV_RESULT = (1608, 622, 1798, 830, [(1608, 153), (1623, 154), (1782, 170), (1798, 171)],
+              [(622, 27), (637, 28), (814, 44), (830, 45)])
+INV_ARROW = ((1455, 655, 1600, 795), (134, 29, 151, 43))
+# ornaments moved into the free parts of the vanilla layout: (source box, gui box)
+INV_ORNAMENTS = [((1175, 905, 1805, 1050), (96, 60, 172, 80)),
+                 ((1590, 440, 1805, 610), (137, 6, 172, 26)),
+                 ((1030, 450, 1160, 505), (100, 8, 114, 14))]
+INV_NAVY_PATCH = (1180, 400, 1440, 520)               # plain panel cloth, tiled behind the top half
+# the decor glyph: the whole keyed sheet mapped like the rim; inside the window only these boxes (the corner
+# knots, the crest, the bottom tassels) may draw, and only in the 7 px margin around the slots
+INV_DECOR_BOXES = [(110, 210, 320, 420), (1620, 210, 1830, 420), (860, 0, 1090, 410),
+                   (130, 1790, 340, 2048), (1700, 1790, 1920, 2048), (840, 1820, 1090, 2048)]
+
+
+def _gui_of(sx: float, sy: float) -> tuple[float, float]:
+    x0, y0, x1, y1 = INV_PANEL
+    return (sx - x0) * 176 / (x1 - x0), (sy - y0) * 166 / (y1 - y0)
+
+
+def _keyed_alpha(a: np.ndarray) -> np.ndarray:
+    """Alpha of the keyed sheet: magenta (and the magenta haze Gemini left at its edges) is transparent, and the
+    bit of grass left under the bottom tassels is dropped by colour (only gold, blue cloth and dark outline stay)."""
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    m = np.minimum(r, b) - g                         # how magenta a pixel is
+    alpha = np.clip((110 - m) / 70.0, 0, 1)
+    h = a.shape[0]
+    low = np.zeros(r.shape, bool)
+    low[int(h * 1835 / 2048):] = True                # below the window's bottom rim
+    gold = (r > g + 12) & (r > b + 28) & (r > 70)
+    blue = (b > r + 25) & (b > g + 8)
+    dark = (r + g + b) < 120
+    keep = gold | blue | dark
+    alpha[low & ~keep] = 0
+    return alpha
+
+
+def _box(img: Image.Image, src_box, size) -> Image.Image:
+    return img.crop(src_box).resize(size, Image.LANCZOS)
+
+
+def _warp_box(src: Image.Image, box, xs, ys, scale: int = SCALE) -> tuple[Image.Image, tuple[int, int]]:
+    """warp() of one element: source box -> its gui rectangle given by the control points."""
+    x0, y0, x1, y1 = box
+    gx0, gy0 = xs[0][1], ys[0][1]
+    w, h = xs[-1][1] - gx0, ys[-1][1] - gy0
+    crop = src.crop(box)
+    xs_ = [(s - x0, g - gx0) for s, g in xs]
+    ys_ = [(s - y0, g - gy0) for s, g in ys]
+    return warp(crop, xs_, xs_, ys_, h + 1, w, h, scale), (gx0, gy0)
+
+
+def _cell(src: Image.Image, scale: int = SCALE) -> Image.Image:
+    """One 18 x 18 slot: a clean well with one gui pixel of its frame around."""
+    x0, y0, x1, y1 = INV_CELL
+    px = (x1 - x0) / 16.0
+    box = (round(x0 - px), round(y0 - px), round(x1 + px), round(y1 + px))
+    return _box(src, box, (18 * scale, 18 * scale))
+
+
+def _icon(src: Image.Image, box, scale: int = SCALE) -> Image.Image:
+    """An empty-slot placeholder (helmet, chestplate, leggings, boots, shield) lifted off its well: the brightness
+    above the well's own cloth becomes alpha, tinted with the icon's colour."""
+    a = np.asarray(src.crop(box).resize((16 * scale, 16 * scale), Image.LANCZOS).convert("RGB")).astype(np.float64)
+    lum = a.mean(axis=2)
+    bg = np.percentile(lum, 30)
+    top = np.percentile(lum, 98)
+    alpha = np.clip((lum - bg - 6) / max(1.0, top - bg - 6), 0, 1)
+    edge = 2 * scale                                  # the well's frame is not part of the icon
+    alpha[:edge, :] = alpha[-edge:, :] = 0
+    alpha[:, :edge] = alpha[:, -edge:] = 0
+    tint = np.array([150, 162, 196.0])
+    rgb = np.clip(a * 0.35 + tint * 0.65, 0, 255)
+    out = np.dstack([rgb, alpha * 150])              # faint, like the mock-up's empty-slot marks
+    return Image.fromarray(np.rint(out).astype(np.uint8), "RGBA")
+
+
+def inventory(path: str) -> dict:
+    """The survival inventory in SÜLD's style.
+
+    Returns ``texture`` (176 x 166 times SCALE, for textures/gui/container/inventory.png; every slot frame sits
+    exactly on the vanilla slot), ``decor`` (the spires, crest, banners and tassels around the window, a font glyph
+    drawn through the screen's title), ``decor_box`` (its gui rectangle relative to the window) and ``icons``
+    (empty armour / off-hand slot placeholders, 16 x 16 times SCALE)."""
+    sheet = Image.open(path).convert("RGB")
+    a = np.asarray(sheet).astype(np.float64)
+    alpha = _keyed_alpha(a)
+    # magenta haze off the edges: pull the colour towards the pixel's own non-magenta part
+    spill = np.clip(np.minimum(a[..., 0], a[..., 2]) - a[..., 1] - 40, 0, None)[..., None] / 1.6
+    clean = np.clip(a - np.concatenate([spill, np.zeros_like(spill), spill], axis=2), 0, 255)
+    src = Image.fromarray(clean.astype(np.uint8), "RGB")
+    S = SCALE
+
+    # 1. the window: rim everywhere, the inventory and hot bar (one warp, column by column)
+    grid_xs = [(205, 0), (240, 3)]
+    for c in range(9):
+        grid_xs += [(INV_COL_START[c], 8 + 18 * c), (INV_COL_END[c], 24 + 18 * c)]
+    grid_xs += [(1815, 173), (1845, 176)]
+    win = np.asarray(warp(src, INV_RIM_XS, grid_xs, INV_YS, 81, 176, 166)).astype(np.float64)
+
+    # 2. the top half: plain cloth, then every element on its vanilla rectangle
+    patch = np.asarray(src.crop(INV_NAVY_PATCH).resize(((INV_NAVY_PATCH[2] - INV_NAVY_PATCH[0]) * S * 18 // 160,
+                                                        (INV_NAVY_PATCH[3] - INV_NAVY_PATCH[1]) * S * 18 // 160),
+                                                       Image.LANCZOS).convert("RGBA")).astype(np.float64)
+    soft = np.asarray(Image.fromarray(patch.astype(np.uint8), "RGBA").filter(ImageFilter.GaussianBlur(3 * S))).astype(np.float64)
+    patch = patch * 0.45 + soft * 0.55                # the cloth's weave, quieter: it fills a large area
+    tile = np.concatenate([patch, patch[:, ::-1]], axis=1)
+    tile = np.concatenate([tile, tile[::-1]], axis=0)
+    x0, y0, x1, y1 = 3 * S, 5 * S, 173 * S, 81 * S
+    reps = (-(-(y1 - y0) // tile.shape[0]), -(-(x1 - x0) // tile.shape[1]), 1)
+    win[y0:y1, x0:x1] = np.tile(tile, reps)[:y1 - y0, :x1 - x0]
+    out = Image.fromarray(np.rint(win).clip(0, 255).astype(np.uint8), "RGBA")
+
+    def put(img: Image.Image, gx: float, gy: float) -> None:
+        out.alpha_composite(img.convert("RGBA"), (round(gx * S), round(gy * S)))
+
+    for (sb, gb) in INV_ORNAMENTS:
+        # the ornament with the cloth it was painted on, faded in over 3 gui px so no edge shows
+        piece = np.asarray(_box(src, sb, ((gb[2] - gb[0]) * S, (gb[3] - gb[1]) * S)).convert("RGBA")).astype(np.float64)
+        ph, pw = piece.shape[:2]
+        fy = np.clip(np.minimum(np.arange(ph), np.arange(ph)[::-1]) / (3.0 * S), 0, 1)
+        fx = np.clip(np.minimum(np.arange(pw), np.arange(pw)[::-1]) / (3.0 * S), 0, 1)
+        piece[..., 3] = 255 * np.outer(fy, fx)
+        put(Image.fromarray(np.rint(piece).astype(np.uint8), "RGBA"), gb[0], gb[1])
+    put(_box(src, INV_PORTRAIT, (51 * S, 72 * S)), 25, 7)
+    cell = _cell(src)
+    for i in range(4):
+        put(cell, 7, 7 + 18 * i)                     # armour (icons are the slot sprites)
+    put(cell, 76, 61)                                # off hand
+    craft, at = _warp_box(src, INV_CRAFT[:4], INV_CRAFT[4], INV_CRAFT[5])
+    put(craft, *at)
+    res, at = _warp_box(src, INV_RESULT[:4], INV_RESULT[4], INV_RESULT[5])
+    put(res, *at)
+    (sb, gb) = INV_ARROW
+    arrow = _box(src, sb, ((gb[2] - gb[0]) * S, (gb[3] - gb[1]) * S)).convert("RGBA")
+    aa = np.asarray(arrow).astype(np.float64)
+    aa[..., 3] = np.clip(((aa[..., 0] - aa[..., 2]) - 30) / 50.0, 0, 1) * 255
+    put(Image.fromarray(aa.astype(np.uint8), "RGBA"), gb[0], gb[1])
+    texture = out
+
+    # 3. the decor glyph: the whole sheet, mapped like the rim (one scale), transparent over the window
+    gx0, gy0 = _gui_of(0, 0)
+    gx1, gy1 = _gui_of(a.shape[1], a.shape[0])
+    left, top = int(np.floor(gx0)), int(np.floor(gy0))
+    w, h = int(np.ceil(gx1)) - left, int(np.ceil(gy1)) - top
+    px0, py0, px1, py1 = INV_PANEL
+    sx = lambda g: px0 + g * (px1 - px0) / 176
+    sy = lambda g: py0 + g * (py1 - py0) / 166
+    rgba = np.dstack([clean, alpha * 255]).astype(np.uint8)
+    full = Image.fromarray(rgba, "RGBA")
+    crop_box = (sx(left), sy(top), sx(left + w), sy(top + h))
+    decor = full.transform((w * S, h * S), Image.EXTENT, crop_box, Image.BICUBIC)
+    d = np.asarray(decor).astype(np.float64)
+    gy, gx = np.mgrid[0:h * S, 0:w * S] / S
+    gx = gx + left
+    gy = gy + top
+    inside = (gx >= 0) & (gx < 176) & (gy >= 0) & (gy < 166)
+    margin = (gx < 7) | (gx >= 169) | (gy < 7) | (gy >= 159)
+    allowed = np.zeros(inside.shape, bool)
+    for bx0, by0, bx1, by1 in INV_DECOR_BOXES:
+        ax0, ay0 = _gui_of(bx0, by0)
+        ax1, ay1 = _gui_of(bx1, by1)
+        allowed |= (gx >= ax0) & (gx < ax1) & (gy >= ay0) & (gy < ay1)
+    d[..., 3][inside & ~(allowed & margin)] = 0
+    decor = Image.fromarray(np.rint(d).clip(0, 255).astype(np.uint8), "RGBA")
+
+    names = ["helmet", "chestplate", "leggings", "boots"]
+    icons = {n: _icon(src, INV_ARMOUR[i]) for i, n in enumerate(names)}
+    icons["shield"] = _icon(src, INV_SHIELD)
+    return {"texture": texture, "decor": decor, "decor_box": (left, top, w, h), "icons": icons}
