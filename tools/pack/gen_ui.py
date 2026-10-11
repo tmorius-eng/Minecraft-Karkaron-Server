@@ -711,6 +711,104 @@ def gui_quests2(preview: str | None) -> None:
             return
     _story_map(QUEST2_SLOTS, QUEST2_BANDS, "GUI_QUESTS2", "gui/quests2", "quests act II", False, preview)
 
+# ----------------------------------------------------------------------------------------- quest book (akuma-style)
+
+QB_NAVY = (14, 22, 46)
+QB_NAVY2 = (24, 36, 74)
+QB_GOLD = (232, 182, 64)
+QB_GOLD_D = (150, 104, 30)
+QB_RED = (168, 40, 36)
+QB_TABS = ("АКТ I", "АКТ II", "ГАЗРУУД")
+
+
+def tooltip_style() -> None:
+    """The «mongol» tooltip style (item component tooltip_style suld:mongol): a deep-blue body, a double gold frame
+    and gold corner knots. 100x100 nine-slice sprites, as the client expects for tooltip/<name>_background and
+    _frame; the outer 9 px are the margin the client draws around the text box."""
+    root = os.path.join(RP, "textures", "gui", "sprites", "tooltip")
+    os.makedirs(root, exist_ok=True)
+    meta = {"gui": {"scaling": {"type": "nine_slice", "width": 100, "height": 100, "border": 9}}}
+    bg = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
+    d = ImageDraw.Draw(bg)
+    for y in range(6, 94):
+        t = (y - 6) / 88
+        c = tuple(int(QB_NAVY[k] * (1 - t) + (8, 12, 28)[k] * t) for k in range(3))
+        d.line([6, y, 93, y], fill=c + (244,))
+    bg.save(os.path.join(root, "mongol_background.png"))
+    fr = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
+    d = ImageDraw.Draw(fr)
+    d.rectangle([6, 6, 93, 93], outline=QB_GOLD + (255,))
+    d.rectangle([8, 8, 91, 91], outline=QB_GOLD_D + (255,))
+    for (cx, cy) in ((6, 6), (93, 6), (6, 93), (93, 93)):
+        # a small endless-knot corner: a gold diamond with a red heart
+        for dx in range(-3, 4):
+            for dy in range(-3, 4):
+                if abs(dx) + abs(dy) <= 3:
+                    x, y = cx + dx, cy + dy
+                    if 0 <= x < 100 and 0 <= y < 100:
+                        fr.putpixel((x, y), (QB_GOLD if abs(dx) + abs(dy) >= 2 else QB_RED) + (255,))
+    fr.save(os.path.join(root, "mongol_frame.png"))
+    for name in ("mongol_background", "mongol_frame"):
+        with open(os.path.join(root, name + ".png.mcmeta"), "w", encoding="utf-8") as fh:
+            json.dump(meta, fh, indent=1)
+            fh.write("\n")
+
+
+def quest_badges(preview: str | None) -> None:
+    """Status pills for the quest book tooltips, and a mouse icon for click hints."""
+    table = [("Q_OPEN", "НЭЭЛТТЭЙ", (40, 140, 60)), ("Q_ACTIVE", "ИДЭВХТЭЙ", (200, 140, 30)), ("Q_DONE", "ДУУССАН", (40, 120, 70)),
+             ("Q_LOCKED", "ТҮГЖЭЭТЭЙ", (170, 40, 36)), ("Q_SEEN", "ҮЗСЭН", (40, 120, 70)), ("Q_UNSEEN", "ҮЗЭЭГҮЙ", (90, 90, 110))]
+    for key, label, c in table:
+        img = pf.badge(label, c, _light(c), WHITE, _dark(c, 0.35))
+        add_bitmap("BADGE_" + key, img, "badge/" + key.lower(), 9, 8, f"quest badge «{label}»")
+    mouse = Image.new("RGBA", (7, 9), (0, 0, 0, 0))
+    d = ImageDraw.Draw(mouse)
+    d.rounded_rectangle([0, 0, 6, 8], radius=2, fill=(236, 236, 236, 255), outline=(70, 70, 70, 255))
+    d.rectangle([1, 1, 2, 3], fill=QB_GOLD + (255,))  # the left button
+    d.line([3, 0, 3, 3], fill=(70, 70, 70, 255))
+    add_bitmap("MOUSE_LEFT", mouse, "icon/mouse_left", 9, 8, "mouse, left button (click hints)")
+
+
+def gui_questbook(preview: str | None) -> None:
+    """The quest book's chest background, one per tab (akuma-style tabs): row 0 holds three tabs, the active one
+    gold; rows 1-4 a framed blue panel of item wells; row 5 the toolbar."""
+    height = 17 + 6 * 18 + 1
+    for active in range(3):
+        img = Image.new("RGBA", (176, height), LEATHER + (255,))
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, 175, 16], fill=LEATHER)
+        d.line([0, 16, 175, 16], fill=QB_GOLD)
+        # tabs: three slots wide each (54 px), drawn on row 0
+        for t in range(3):
+            x0, y0 = 7 + t * 54, 18
+            x1, y1 = x0 + 53, y0 + 16
+            on = t == active
+            d.rectangle([x0, y0, x1, y1], fill=(QB_GOLD if on else QB_NAVY2), outline=(QB_GOLD_D if on else QB_GOLD))
+            if on:
+                d.rectangle([x0 + 1, y0 + 1, x1 - 1, y1 - 1], outline=(255, 226, 140))
+            label = QB_TABS[t]
+            tw = pf.text_width(label, bold=on)
+            pf.draw_text(img, x0 + (54 - tw) // 2, y0 + 4, label, (40, 26, 8) if on else (236, 224, 196),
+                         None if on else (8, 10, 24), bold=on)
+        # the panel: rows 1-4
+        py0, py1 = 17 + 18, 17 + 5 * 18
+        d.rectangle([4, py0 - 1, 171, py1], fill=QB_NAVY, outline=QB_GOLD)
+        d.rectangle([5, py0, 170, py1 - 1], outline=QB_GOLD_D)
+        for r in range(1, 5):
+            for c in range(9):
+                x, y = 8 + c * 18, 18 + r * 18
+                d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=(8, 12, 30), outline=(46, 60, 108))
+        # toolbar
+        for c in range(9):
+            x, y = 8 + c * 18, 18 + 5 * 18
+            d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=(34, 24, 14), outline=BRONZE_L)
+        d.rectangle([0, 0, 175, height - 1], outline=BRONZE)
+        add_bitmap(f"GUI_QUESTBOOK{active + 1}", img, f"gui/questbook{active + 1}", height, 13,
+                   f"chest background quest book, tab {active + 1} active 176x{height}")
+        if preview:
+            img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, f"gui_questbook{active + 1}.png"))
+
+
 TREE_COLORS = {
     "off": ((84, 62, 36), (50, 36, 20)),
     "on": ((250, 196, 60), (150, 100, 20)),
@@ -859,6 +957,9 @@ def main() -> None:
     gui_dungeons(args.preview)  # appended last: earlier glyphs keep their code points
     gui_quests(args.preview)
     gui_quests2(args.preview)  # appended last: earlier glyphs keep their code points
+    quest_badges(args.preview)
+    gui_questbook(args.preview)
+    tooltip_style()
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)

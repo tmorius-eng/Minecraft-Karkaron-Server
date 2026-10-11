@@ -134,6 +134,26 @@ public final class Glyphs {
     public static final String GUI_QUESTS = "\uE03C";
     /** chest background quests act II 176x126 (story map) */
     public static final String GUI_QUESTS2 = "\uE03D";
+    /** quest badge «НЭЭЛТТЭЙ» */
+    public static final String BADGE_Q_OPEN = "\uE03E";
+    /** quest badge «ИДЭВХТЭЙ» */
+    public static final String BADGE_Q_ACTIVE = "\uE03F";
+    /** quest badge «ДУУССАН» */
+    public static final String BADGE_Q_DONE = "\uE040";
+    /** quest badge «ТҮГЖЭЭТЭЙ» */
+    public static final String BADGE_Q_LOCKED = "\uE041";
+    /** quest badge «ҮЗСЭН» */
+    public static final String BADGE_Q_SEEN = "\uE042";
+    /** quest badge «ҮЗЭЭГҮЙ» */
+    public static final String BADGE_Q_UNSEEN = "\uE043";
+    /** mouse, left button (click hints) */
+    public static final String MOUSE_LEFT = "\uE044";
+    /** chest background quest book, tab 1 active 176x126 */
+    public static final String GUI_QUESTBOOK1 = "\uE045";
+    /** chest background quest book, tab 2 active 176x126 */
+    public static final String GUI_QUESTBOOK2 = "\uE046";
+    /** chest background quest book, tab 3 active 176x126 */
+    public static final String GUI_QUESTBOOK3 = "\uE047";
 
     private Glyphs() {
     }

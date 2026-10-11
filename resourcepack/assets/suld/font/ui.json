@@ -434,6 +434,96 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/q_open.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/q_active.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/q_done.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/q_locked.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/q_seen.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/badge/q_unseen.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/icon/mouse_left.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/questbook1.png",
+   "height": 126,
+   "ascent": 13,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/questbook2.png",
+   "height": 126,
+   "ascent": 13,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/questbook3.png",
+   "height": 126,
+   "ascent": 13,
+   "chars": [
+    ""
+   ]
   }
  ]
 }

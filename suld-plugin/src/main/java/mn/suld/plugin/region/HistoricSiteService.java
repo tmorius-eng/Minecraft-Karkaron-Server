@@ -238,7 +238,7 @@ public final class HistoricSiteService {
         plates.put(p.site().id(), t.getUniqueId());
     }
 
-    static String label(String history) {
+    public static String label(String history) {
         return switch (history) {
             case "VERIFIED" -> "Түүхэн газар";
             case "INSPIRED" -> "Түүхийг сэдэвлэсэн";
@@ -272,7 +272,7 @@ public final class HistoricSiteService {
         }
     }
 
-    private Set<String> seen(Player p) {
+    public Set<String> seen(Player p) {
         String s = p.getPersistentDataContainer().get(seenKey, PersistentDataType.STRING);
         Set<String> out = new HashSet<>();
         if (s != null && !s.isEmpty()) for (String id : s.split(",")) out.add(id);

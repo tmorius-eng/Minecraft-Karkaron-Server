@@ -4,11 +4,17 @@ import mn.suld.api.profile.PlayerProfile;
 import mn.suld.api.quest.QuestDefinition;
 import mn.suld.api.quest.QuestState;
 import mn.suld.api.region.Navigation;
+import mn.suld.api.region.Area;
 import mn.suld.api.region.RegionDefinition;
+import mn.suld.api.world.site.HistoricSite;
+import mn.suld.api.world.site.SiteKind;
 import mn.suld.plugin.SuldServices;
 import mn.suld.plugin.content.QuestContent;
 import mn.suld.plugin.content.SuldContent;
+import mn.suld.plugin.content.Content;
 import mn.suld.plugin.quest.QuestTracker;
+import mn.suld.plugin.region.HistoricSiteService;
+import mn.suld.plugin.ui.StyleFormat;
 import mn.suld.plugin.ui.Glyphs;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -21,13 +27,15 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Сүлдний Зам, the story map ({@code /quest}). Act I: the owner's painted map of the four lands (background {@code
- * gui_quests}) with eighteen chapters on a road from the Хэрлэн steppe through the Говь, up to the Хангай and on to the
- * Алтай. Act II «Хөх Сүлдний Зам» (chapters 19–42, {@code gui_quests2}): the outer lands, the historic sites and the
- * ladder to the Тэнгэрийн Шат. It opens on the act of the current chapter; a button switches acts. Each card tells the chapter's story, what to do, where (direction and distance from the player), the
- * progress and the reward. The bottom row: menu, tracker on/off, dungeons, the journey, party, close.
+ * Сүлдний Зам ({@code /quest}), a quest book in the akuma style with the Ikh Mongol colours: three tabs on top (Act I
+ * «Сүлдний Зам» 1–18, Act II «Хөх Сүлдний Зам» 19–42, the historic sites), a grid of cards, and on every card the
+ * navy-and-gold tooltip ({@code suld:mongol}) with the story, an «Мэдээлэл» block, the reward, a click hint and a
+ * status badge. It opens on the tab of the current chapter. The painted maps of the two acts ({@code gui_quests},
+ * {@code gui_quests2}) stay one button away ({@link #openMap}). The bottom row: menu, tracker on/off, dungeons, the
+ * journey, party, map, close.
  */
 public final class QuestMenu {
 
@@ -43,6 +51,7 @@ public final class QuestMenu {
     private static final TextColor GREEN = TextColor.fromHexString("#7CE07C");
     private static final TextColor STORY = TextColor.fromHexString("#E8DCC0");
     private static final TextColor GREY = TextColor.fromHexString("#B8B8B8");
+    private static final TextColor GOLD_D = TextColor.fromHexString("#C08A2E");
 
     private final SuldServices services;
     private QuestTracker tracker;
@@ -74,7 +83,7 @@ public final class QuestMenu {
         return index < 5 ? "Хэрлэн" : index < 9 ? "Говь" : index < 14 ? "Хангай" : "Алтай";
     }
 
-    /** Opens the act of the player's current chapter. */
+    /** Opens the quest book on the act of the player's current chapter. */
     public void open(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
@@ -82,8 +91,232 @@ public final class QuestMenu {
         open(p, done >= ACT_ONE && services.quests().chain().size() > ACT_ONE ? 2 : 1);
     }
 
+    // ------------------------------------------------------------------------------------------------ the book
+
+    /** Tab 1 Act I, tab 2 Act II, tab 3 the historic sites. */
+    public void open(Player p, int tab) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        var chain = services.quests().chain();
+        QuestState state = pr.questState();
+        int done = chain.completedCount(state);
+        boolean hasTwo = chain.size() > ACT_ONE;
+        if (tab == 2 && !hasTwo) tab = 1;
+        if (tab < 1 || tab > 3) tab = 1;
+        final int shownTab = tab;
+        String title = switch (tab) {
+            case 2 -> "Хөх Сүлдний Зам · " + done + "/" + chain.size();
+            case 3 -> "Түүхэн Газрууд · " + seenCount(p) + "/" + sites().size();
+            default -> "Сүлдний Зам · " + done + "/" + chain.size();
+        };
+        Menu m = new Menu(6, title, tab == 2 ? Glyphs.GUI_QUESTBOOK2 : tab == 3 ? Glyphs.GUI_QUESTBOOK3 : Glyphs.GUI_QUESTBOOK1);
+
+        // row 0: the tabs (the background draws them; invisible buttons on top)
+        tab(m, new int[]{0, 1, 2}, "Акт I · Сүлдний Зам", "1–" + Math.min(ACT_ONE, chain.size()) + "-р бүлэг: Хархорумаас Алтай хүртэл",
+                Math.min(done, ACT_ONE) + " / " + Math.min(ACT_ONE, chain.size()) + " бүлэг", Glyphs.BADGE_Q_OPEN, 1);
+        if (hasTwo) {
+            tab(m, new int[]{3, 4, 5}, "Акт II · Хөх Сүлдний Зам", "19–" + chain.size() + "-р бүлэг: гадна нутаг, Тэнгэрийн Шат",
+                    Math.max(0, done - ACT_ONE) + " / " + (chain.size() - ACT_ONE) + " бүлэг",
+                    done >= ACT_ONE ? Glyphs.BADGE_Q_OPEN : Glyphs.BADGE_Q_LOCKED, 2);
+        }
+        tab(m, new int[]{6, 7, 8}, "Түүхэн Газрууд", "Монголын эртний дурсгалт газрууд, тэдгээр рүү зам",
+                seenCount(p) + " / " + sites().size() + " газар үзсэн", Glyphs.BADGE_Q_OPEN, 3);
+
+        // rows 1–4: the cards
+        if (tab == 3) {
+            List<HistoricSite> list = sites();
+            Set<String> seen = services.historicSites == null ? Set.of() : services.historicSites.seen(p);
+            for (int i = 0; i < list.size() && i < 36; i++) {
+                HistoricSite s = list.get(i);
+                m.set(9 + i, siteCard(p, s, seen.contains(s.id())), (pl, c) -> {
+                    String where = siteWhere(pl, s.id());
+                    pl.sendMessage(Component.text("✦ " + s.name() + (where == null ? "" : " · " + where), GOLD, TextDecoration.BOLD));
+                });
+            }
+        } else {
+            int first = tab == 2 ? ACT_ONE : 0, last = tab == 2 ? chain.size() : Math.min(ACT_ONE, chain.size());
+            for (int i = first; i < last && i - first < 36; i++) {
+                QuestDefinition def = chain.chapters().get(i);
+                boolean finished = i < done;
+                boolean active = !finished && def.id().equals(state.questId());
+                m.set(9 + i - first, bookCard(p, def, i, finished, active, state), active ? (pl, c) -> {
+                    if (tracker != null && !tracker.shown(pl)) tracker.toggle(pl);
+                    pl.closeInventory();
+                    pl.sendActionBar(Component.text("✦ Эрлийн заагч дээд талд — зүг, зайг нь дага", GOLD, TextDecoration.BOLD));
+                } : null);
+            }
+        }
+
+        // row 5: the toolbar
+        m.set(45, Menu.mongol(Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of())), (pl, c) -> pl.performCommand("menu"));
+        boolean shown = tracker == null || tracker.shown(p);
+        m.set(47, Menu.mongol(Menu.item(shown ? Material.COMPASS : Material.CLOCK, Menu.title("Эрлийн заагч: " + (shown ? "асаалттай" : "унтраалттай"), SKY),
+                Menu.lore(SKY, List.of(Menu.line("Дээд талын мөр зорилго руу зүг, зайг заана.")), List.of(), "Дарж " + (shown ? "унтраах" : "асаах")))), (pl, c) -> {
+            if (tracker != null) tracker.toggle(pl);
+            open(pl, shownTab);
+        });
+        m.set(48, Menu.mongol(Menu.item(Material.MOSSY_COBBLESTONE, Menu.title("Агуйн Шат", SKY), Menu.lore(SKY,
+                List.of(Menu.line("Арван агуй, хаалга руу нь зам заана.")), List.of(), "Нээх"))), (pl, c) -> pl.performCommand("dungeon"));
+        m.set(49, Menu.mongol(Menu.item(Material.WRITABLE_BOOK, Menu.title("Сүлдний Зам", GOLD), List.of(
+                Menu.line("Хархорумаас Тэнгэрийн Шат хүртэлх аян."),
+                Menu.line("Бүлэг бүр дуусмагц дараагийнх нь эхэлнэ."),
+                Component.empty(),
+                Menu.kv("Явц:", done + " / " + chain.size() + " бүлэг", GREEN),
+                Menu.kv("Одоо:", done < chain.size() ? land(Math.min(done, chain.size() - 1)) : "Бүх бүлэг дууссан", GOLD)))), null);
+        m.set(50, Menu.mongol(Menu.item(Material.PLAYER_HEAD, Menu.title("Бүлэг", SKY), Menu.lore(SKY,
+                List.of(Menu.line("Найзаа урих: /party invite <нэр>")), List.of(), null))), null);
+        if (tab != 3) {
+            m.set(51, Menu.mongol(Menu.item(Material.FILLED_MAP, Menu.title("Газрын зураг", GOLD), Menu.lore(GOLD,
+                    List.of(Menu.line("Энэ актын бүлгүүд зурган газрын зураг дээр.")), List.of(), "Дарж нээх"))), (pl, c) -> openMap(pl, shownTab));
+        }
+        m.set(53, Menu.mongol(Menu.item(Material.BARRIER, Menu.title("Хаах", GREY), List.of())), (pl, c) -> pl.closeInventory());
+        m.open(p);
+    }
+
+    private void tab(Menu m, int[] slots, String name, String about, String progress, String badge, int tab) {
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text(about, STORY));
+        lore.add(Component.empty());
+        lore.add(Component.text("Мэдээлэл", GOLD, TextDecoration.BOLD));
+        lore.add(info("Явц:", progress, GREEN));
+        lore.add(Component.empty());
+        lore.add(clickHint("ДАРЖ НЭЭХ"));
+        lore.add(StyleFormat.glyph(badge));
+        ItemStack it = Menu.mongol(Menu.invisible(Component.text(name, GOLD, TextDecoration.BOLD), lore));
+        for (int s : slots) m.set(s, it, (pl, c) -> open(pl, tab));
+    }
+
+    /** A chapter card: story, type, «Мэдээлэл», «Шагнал», click hint, status badge. */
+    private ItemStack bookCard(Player p, QuestDefinition def, int index, boolean finished, boolean active, QuestState state) {
+        TextColor c = finished ? GREEN : active ? GOLD : GREY;
+        List<Component> body = new ArrayList<>();
+        String badge;
+        if (finished || active) {
+            QuestContent.Lore lore = QuestContent.lore(def.id());
+            for (String line : wrap(QuestContent.story(def.id()), 38)) body.add(Component.text(line, STORY));
+            body.add(Component.empty());
+            body.add(Menu.kv("Төрөл:", kind(def.type()), c));
+            body.add(Component.empty());
+            body.add(Component.text("Мэдээлэл", c, TextDecoration.BOLD));
+            body.add(info("Юу хийх:", objective(def), NamedTextColor.WHITE));
+            String where = where(p, def);
+            if (where != null) body.add(info("Хаана:", where, SKY));
+            if (active) body.add(info("Явц:", bar(state.progress(), def.requiredCount()) + " " + state.progress() + "/" + def.requiredCount(), GOLD));
+            body.add(info("Өгсөн:", lore.giver(), SKY));
+            body.add(info("Нутаг:", land(index), SKY));
+            body.add(Component.empty());
+            body.add(Component.text("Шагнал", c, TextDecoration.BOLD));
+            body.add(info("+" + def.expReward(), "EXP", GREEN));
+            body.add(info("+" + def.currencyReward(), "₮", GOLD));
+            if (active && !lore.hint().isEmpty()) {
+                body.add(Component.empty());
+                for (String line : wrap("➜ " + lore.hint(), 38)) body.add(Component.text(line, NamedTextColor.WHITE, TextDecoration.BOLD));
+            }
+            if (active) {
+                body.add(Component.empty());
+                body.add(clickHint("ДАРЖ ЗААГЧИЙГ АСААХ"));
+            }
+            badge = finished ? Glyphs.BADGE_Q_DONE : Glyphs.BADGE_Q_ACTIVE;
+        } else {
+            body.add(Component.text("Энэ бүлэг хараахан нээгдээгүй.", GREY));
+            body.add(Component.empty());
+            body.add(Component.text("Мэдээлэл", GREY, TextDecoration.BOLD));
+            body.add(info("Нээгдэх:", index + "-р бүлгийг дуусгахад", NamedTextColor.WHITE));
+            body.add(info("Нутаг:", land(index), GREY));
+            badge = Glyphs.BADGE_Q_LOCKED;
+        }
+        body.add(Component.empty());
+        body.add(StyleFormat.glyph(badge));
+        String title = (index + 1) + ". " + (finished || active ? def.title() : "???");
+        ItemStack it = Menu.item(finished || active ? icon(def.type()) : Material.GRAY_DYE, Component.text(title, c, TextDecoration.BOLD), body);
+        it.setAmount(index >= ACT_ONE ? index - ACT_ONE + 1 : index + 1); // the chapter number within its act
+        Menu.mongol(it);
+        return active ? Menu.glow(it) : it;
+    }
+
+    /** A historic site card: kind, history label, story, area, direction, seen badge. */
+    private ItemStack siteCard(Player p, HistoricSite s, boolean seen) {
+        TextColor c = seen ? GREEN : GOLD;
+        List<Component> body = new ArrayList<>();
+        body.add(Component.text(s.kind().label() + " · " + HistoricSiteService.label(s.history()), SKY));
+        body.add(Component.empty());
+        for (String line : wrap(s.description(), 38)) body.add(Component.text(line, STORY));
+        body.add(Component.empty());
+        body.add(Component.text("Мэдээлэл", c, TextDecoration.BOLD));
+        String area = Content.pack().areas().stream().filter(a -> a.id().equals(s.areaId())).findFirst().map(Area::name).orElse(null);
+        if (area != null) body.add(info("Нутаг:", area, SKY));
+        String where = siteWhere(p, s.id());
+        if (where != null) body.add(info("Хаана:", where, SKY));
+        body.add(info("Түүх:", HistoricSiteService.label(s.history()), NamedTextColor.WHITE));
+        body.add(Component.empty());
+        body.add(clickHint("ДАРЖ ЗАМ ЗААЛГАХ"));
+        body.add(StyleFormat.glyph(seen ? Glyphs.BADGE_Q_SEEN : Glyphs.BADGE_Q_UNSEEN));
+        ItemStack it = Menu.item(siteIcon(s.kind()), Component.text(s.name(), c, TextDecoration.BOLD), body);
+        return Menu.mongol(it);
+    }
+
+    private String siteWhere(Player p, String id) {
+        if (services.historicSites == null) return null;
+        Location site = services.historicSites.where(id).orElse(null);
+        if (site == null || !site.getWorld().equals(p.getWorld())) return null;
+        double dx = site.getX() - p.getLocation().getX(), dz = site.getZ() - p.getLocation().getZ();
+        return Navigation.compass(Navigation.bearing(dx, dz)) + " · " + Math.round(Math.hypot(dx, dz)) + "м";
+    }
+
+    private static List<HistoricSite> sites() {
+        return Content.pack().historicSites();
+    }
+
+    private int seenCount(Player p) {
+        if (services.historicSites == null) return 0;
+        Set<String> seen = services.historicSites.seen(p);
+        int n = 0;
+        for (HistoricSite s : sites()) if (seen.contains(s.id())) n++;
+        return n;
+    }
+
+    /** «┃ key value», the information bar of the tooltip. */
+    private static Component info(String key, String value, TextColor color) {
+        return Component.text("┃ ", GOLD_D).append(Menu.kv(key, value, color));
+    }
+
+    /** The mouse icon and a click hint, e.g. «ДАРЖ НЭЭХ». */
+    private static Component clickHint(String text) {
+        return StyleFormat.join(StyleFormat.glyph(Glyphs.MOUSE_LEFT), Component.text(" " + text, NamedTextColor.WHITE, TextDecoration.BOLD));
+    }
+
+    private static String kind(mn.suld.api.quest.QuestType t) {
+        return switch (t) {
+            case KILL_MOB -> "Ан";
+            case REACH_LEVEL -> "Өсөлт";
+            case COLLECT_ITEM -> "Цуглуулга";
+            case DISCOVER_LOCATION -> "Аялал";
+            case COMPLETE_DUNGEON -> "Агуй";
+        };
+    }
+
+    private static Material siteIcon(SiteKind k) {
+        return switch (k) {
+            case DEER_STONES -> Material.CHISELED_STONE_BRICKS;
+            case STONE_MEN -> Material.COBBLESTONE_WALL;
+            case YAM_STATION -> Material.SADDLE;
+            case NINE_BANNERS -> Material.WHITE_BANNER;
+            case GREAT_OVOO -> Material.COBBLESTONE;
+            case ORDO_RUINS -> Material.MUD_BRICKS;
+            case RUIN_WALLS -> Material.PACKED_MUD;
+            case STELE -> Material.POLISHED_ANDESITE;
+            case BIRTH_STONE -> Material.MOSSY_COBBLESTONE;
+            case EARTH_WALL -> Material.COARSE_DIRT;
+            case PETROGLYPHS -> Material.TUFF_BRICKS;
+            case WATCHTOWER_RUIN -> Material.STONE_BRICKS;
+            case STONE_WALL_RING -> Material.STONE;
+        };
+    }
+
+    // ------------------------------------------------------------------------------------------------ the painted maps
+
     /** Act I «Сүлдний Зам» (1–18, the owner's painted map) or Act II «Хөх Сүлдний Зам» (19–42). */
-    public void open(Player p, int act) {
+    public void openMap(Player p, int act) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         var chain = services.quests().chain();
@@ -109,7 +342,7 @@ public final class QuestMenu {
         m.set(47, Menu.item(shown ? Material.COMPASS : Material.CLOCK, Menu.title("Эрлийн заагч: " + (shown ? "асаалттай" : "унтраалттай"), SKY),
                 Menu.lore(SKY, List.of(Menu.line("Дээд талын мөр зорилго руу зүг, зайг заана.")), List.of(), "Дарж " + (shown ? "унтраах" : "асаах"))), (pl, c) -> {
             if (tracker != null) tracker.toggle(pl);
-            open(pl);
+            openMap(pl, two ? 2 : 1);
         });
         m.set(48, Menu.item(Material.MOSSY_COBBLESTONE, Menu.title("Агуйн Шат", SKY), Menu.lore(SKY,
                 List.of(Menu.line("Арван агуй, хаалга руу нь зам заана.")), List.of(), "Нээх")), (pl, c) -> pl.performCommand("dungeon"));
@@ -125,8 +358,10 @@ public final class QuestMenu {
             // the other act: Act I (painted map) ⇄ Act II
             m.set(51, Menu.item(two ? Material.FILLED_MAP : Material.MAP, Menu.title(two ? "« Act I · Сүлдний Зам" : "Act II · Хөх Сүлдний Зам »", GOLD),
                     Menu.lore(GOLD, List.of(Menu.line(two ? "1–18-р бүлэг: Хархорумаас Алтай хүртэл" : "19–" + chain.size() + "-р бүлэг: гадна нутаг, Тэнгэрийн Шат")),
-                            List.of(), "Дарж нээх")), (pl, c) -> open(pl, two ? 1 : 2));
+                            List.of(), "Дарж нээх")), (pl, c) -> openMap(pl, two ? 1 : 2));
         }
+        m.set(52, Menu.item(Material.BOOK, Menu.title("« Эрлийн Ном", GOLD), Menu.lore(GOLD, List.of(Menu.line("Бүлгүүдийг картаар харах.")), List.of(), "Дарж нээх")),
+                (pl, c) -> open(pl, two ? 2 : 1));
         m.set(53, Menu.item(Material.BARRIER, Menu.title("Хаах", GREY), List.of()), (pl, c) -> pl.closeInventory());
         m.open(p);
     }

@@ -124,6 +124,16 @@ public final class Menu implements InventoryHolder {
         return it;
     }
 
+    private static final NamespacedKey MONGOL_TOOLTIP = new NamespacedKey("suld", "mongol");
+
+    /** The pack's navy-and-gold tooltip frame ({@code suld:mongol}, gen_ui.tooltip_style) on this item. */
+    public static ItemStack mongol(ItemStack it) {
+        ItemMeta m = it.getItemMeta();
+        m.setTooltipStyle(MONGOL_TOOLTIP);
+        it.setItemMeta(m);
+        return it;
+    }
+
     public static ItemStack glow(ItemStack it) {
         ItemMeta m = it.getItemMeta();
         m.setEnchantmentGlintOverride(true);

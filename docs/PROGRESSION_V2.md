@@ -22,7 +22,7 @@ Status of everything below: **MANUAL_QA_REQUIRED** (bots and simulation, not yet
 | Part | Where |
 |---|---|
 | EXP curve 242·L^2.2; old bars rescaled once, level kept (config v5 from 100·L^1.75, v6 from 190·L^2.2) | `Balance`, `CurveMigration`, `ProfileUpgrade`, `SuldPlugin.migrateConfig` |
-| The story: Act I (1–18) and Act II «Хөх Сүлдний Зам» (19–42): outer lands, historic sites, ladder dungeons 5–9 | `content/quests.json`, `QuestMenu` (two maps), `HistoricSiteService` |
+| The story: Act I (1–18) and Act II «Хөх Сүлдний Зам» (19–42): outer lands, historic sites, ladder dungeons 5–9 | `content/quests.json`, `QuestMenu` (quest book with three tabs, two painted maps), `HistoricSiteService` |
 | Level-gap EXP, party share (alive, in range), capped boosts, catch-up, farm factor | `ExpRules`, `CombatListener` kill path, `ProgressionBoosts` |
 | Rested EXP pool (offline hours, capped) | `RestedPool`, `Endgame.restedExp` |
 | Mob numbers from level and tier; host swing speed; level-gap damage both ways | `MobScaling`, `MobDefinition.designed`, `CombatRules` |

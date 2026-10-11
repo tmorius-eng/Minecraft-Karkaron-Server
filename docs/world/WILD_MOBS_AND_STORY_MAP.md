@@ -14,7 +14,33 @@
   get their mobs. A player whose chapter asks for kills of one of the region's mobs gets that mob for half the
   spawns, and the quest bar points at the nearest one («⬊ ⚔ Дээрэмчин · 18м»).
 
-## The story map (`/quest`, `gui/QuestMenu`)
+## The quest book (`/quest`, `gui/QuestMenu`)
+
+`/quest` opens a quest book in the akuma style with the Ikh Mongol colours (navy, gold, red; `gen_ui.py
+gui_questbook`). It has three tabs on top: Акт I (chapters 1–18), Акт II «Хөх Сүлдний Зам» (19–42) and Газрууд (the 16
+historic sites). Below them is a grid of cards. It opens on the act of the current chapter.
+
+Every card wears the pack tooltip frame `suld:mongol` (`gen_ui.tooltip_style`, a nine-slice navy panel with a gold
+frame). Its lines, top to bottom:
+* the story;
+* «Төрөл» (Ан, Аялал, Цуглуулга, Өсөлт, Агуй);
+* «Мэдээлэл», with ┃ bars for what to do, where (direction and distance), progress, who gave it and the land;
+* «Шагнал», the EXP and ₮;
+* a mouse-icon click hint;
+* a status badge: ИДЭВХТЭЙ, ДУУССАН or ТҮГЖЭЭТЭЙ.
+
+Locked cards show «???», the chapter that opens them and the land.
+
+A site card shows the kind, the history label, the description, the area and the direction. Its badge is ҮЗСЭН or
+ҮЗЭЭГҮЙ, and clicking it prints the way.
+
+The bottom row: menu, quest bar, dungeons, the journey, party, and «Газрын зураг», which opens the act's painted map
+below. The map's «Эрлийн Ном» button comes back.
+
+How the tooltip frame looks in a real client is **MANUAL_QA_REQUIRED**. The bots check the window, the cards, the
+`tooltip_style` component and the badges.
+
+## The story map (painted, from the book's «Газрын зураг»)
 
 The owner's painted map of the four lands (`assets/art/source/gui_quests.webp`, box-filtered to the chest by
 `gen_ui.py gui_quests`) carries the eighteen chapters on a road: Хэрлэн (1–5) and Говь (6–9) along the bottom, up the
