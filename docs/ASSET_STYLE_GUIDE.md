@@ -209,3 +209,20 @@ All of these are at 4x and use the same code points as before. Titles on painted
 right (`Menu.TITLE_INDENT`), so they clear the header's corner knot.
 
 The dungeon ladder, the quest map, the quest book and the skill map keep their own paintings.
+
+## Сүлд Цэс (main menu) and every chest screen
+
+- **Main menu.** The source is the owner's painting `assets/art/source/gui_main.webp`, warped onto the 6-row chest
+  (`hd_art.main_menu`).
+  - The title and the card labels are painted. Card 3 opens quests and dungeons, so its painted «ЭРДЭН» is painted
+    over and re-lettered «ЭРЭЛ».
+  - The bottom bar sits on the chest screen's own "Inventory" label row, so the glyph is 138 px tall. The bar's
+    corner knots are cleared where that label is drawn.
+  - `Menus.main` draws no title text, because the title is painted.
+- **Every chest screen.** `minecraft:textures/gui/container/generic_54.png` (`hd_art.chest`) uses the same
+  style: navy cloth and a gold well on every chest slot. The player inventory and hot bar are the survival
+  inventory's own, moved 56 px down.
+  - This covers SÜLD menus and world chests, double chests, ender chests and barrels.
+  - The screen's labels (`container.inventory`, `container.chest`, `chestDouble`, `enderchest`, `barrel`) are gold,
+    because the vanilla dark grey does not read on navy. The same gold "Inventory" label also appears on vanilla
+    grey screens such as the furnace.

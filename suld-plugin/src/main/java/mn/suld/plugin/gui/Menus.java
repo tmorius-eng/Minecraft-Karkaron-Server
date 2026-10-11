@@ -66,7 +66,8 @@ public final class Menus {
     // ================================================================== main / welcome
 
     public void main(Player p) {
-        Menu m = new Menu(6, "Сүлд Цэс", Glyphs.GUI_MAIN);
+        // the title is painted into the background (resource pack gui/main.png): no text on top of it
+        Menu m = new Menu(6, net.kyori.adventure.text.Component.empty(), Glyphs.GUI_MAIN, 0);
         m.area(Menu.card(0), Menu.title("Дүр", SKY), Menu.lore(SKY, List.of(b("Түвшин, ур чадвар, шагнал, статистик.")),
                 List.of(), "Дарж нээх"), (pl, c) -> profile(pl));
         m.area(Menu.card(1), Menu.title("Анги", RED), Menu.lore(RED, List.of(b("Таван баатрын зам — ангиа сонго.")),

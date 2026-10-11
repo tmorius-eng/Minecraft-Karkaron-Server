@@ -118,7 +118,7 @@ public final class Glyphs {
     public static final String BADGE_SAFE = "\uE034";
     /** badge «АЮУЛТАЙ» */
     public static final String BADGE_DANGER = "\uE035";
-    /** chest background main 176x126 (HD) */
+    /** chest background main 176x138 (HD, owner's painting) */
     public static final String GUI_MAIN = "\uE036";
     /** chest background welcome 176x72 (HD) */
     public static final String GUI_WELCOME = "\uE037";

@@ -312,21 +312,22 @@ def header(img: Image.Image, title_width_hint: int = 0) -> None:
 WELCOME_ART = os.path.join(ART, "gui_welcome.webp")
 
 
-def _hd_labels(img: Image.Image, labels: list) -> Image.Image:
+def _hd_labels(img: Image.Image, labels: list, px: int | None = None) -> Image.Image:
     """Pixel-font card labels centred on their banners (chest px boxes). Each font pixel is 4 HD px (the game's own
     GUI scale); a label too wide for its banner is drawn regular weight, then at 3 HD px per font pixel. Enlarged
     without smoothing, so it stays crisp."""
     S = hd_art.SCALE
     for (x0, y0, x1, y1), text, room in labels:
-        for px, bold in ((S, True), (S, False), (3, True), (3, False)):
+        sizes = ((px, True),) if px else ((S, True), (S, False), (3, True), (3, False))
+        for size, bold in sizes:
             tw = pf.text_width(text, bold=bold)
-            if tw * px / S <= room or (px, bold) == (3, False):
+            if tw * size / S <= room or (size, bold) == sizes[-1]:
                 break
         layer = Image.new("RGBA", (tw + 2, 10), (0, 0, 0, 0))
         pf.draw_text(layer, 0, 1, text, WHITE, SHADOW, bold=bold)
-        big = layer.resize((layer.width * px, layer.height * px), Image.NEAREST)
+        big = layer.resize((layer.width * size, layer.height * size), Image.NEAREST)
         cx, cy = (x0 + x1) / 2 * S, (y0 + y1) / 2 * S
-        img.alpha_composite(big, (round(cx - tw * px / 2), round(cy - 5 * px)))
+        img.alpha_composite(big, (round(cx - tw * size / 2), round(cy - 5 * size)))
     return img
 
 
@@ -368,6 +369,16 @@ def gui_menu(name: str, cards: list[tuple[str, str, tuple]], preview: str | None
     (assets/art/source/gui_welcome.webp) it is HD: the welcome screen is that painting itself, the other card menus
     are built from its pieces (header, gem-cornered card frame, knotted banner) around the card paintings."""
     height = 17 + rows * 18 + 1
+    main_art = os.path.join(ART, "gui_main.webp")
+    if name == "main" and os.path.exists(main_art):
+        # the owner's Сүлд Цэс painting: title and labels painted, card 3 re-lettered (it opens quests and dungeons)
+        img, box = hd_art.main_menu(main_art)
+        img = _hd_labels(img, [(box, "ЭРЭЛ", 0)], px=3)
+        height = hd_art.MM_HEIGHT                     # the bottom bar sits on the screen's "Inventory" label row
+        add_bitmap(f"GUI_{name.upper()}", img, f"gui/{name}", height, 13, f"chest background {name} 176x{height} (HD, owner's painting)")
+        if preview:
+            img.save(os.path.join(preview, f"gui_{name}.png"))
+        return
     if os.path.exists(WELCOME_ART):
         if name == "welcome" and rows == 3:
             img = hd_art.welcome(WELCOME_ART)
@@ -1032,6 +1043,17 @@ def orb_item() -> None:
 INV_DECOR = "\uf8f0"        # the decor glyph, in minecraft:default (the screen title is drawn in the default font)
 INV_SHIFT = "\uf8f1"        # a negative space: from the title's x to the decor's left edge
 INV_TITLE_X, INV_TITLE_Y = 97, 8   # vanilla InventoryScreen title position, relative to the window
+# the labels drawn on the chest screen (generic_54), per language
+CONTAINER_NAMES = {
+    "en_us": {"container.inventory": "Inventory", "container.chest": "Chest", "container.chestDouble": "Large Chest",
+              "container.enderchest": "Ender Chest", "container.barrel": "Barrel"},
+    "en_gb": {"container.inventory": "Inventory", "container.chest": "Chest", "container.chestDouble": "Large Chest",
+              "container.enderchest": "Ender Chest", "container.barrel": "Barrel"},
+    "mn_mn": {"container.inventory": "Цүнх", "container.chest": "Авдар", "container.chestDouble": "Том авдар",
+              "container.enderchest": "Эндэр авдар", "container.barrel": "Торх"},
+    "ru_ru": {"container.inventory": "Инвентарь", "container.chest": "Сундук", "container.chestDouble": "Большой сундук",
+              "container.enderchest": "Сундук Края", "container.barrel": "Бочка"},
+}
 
 
 def gui_inventory(preview: str | None) -> None:
@@ -1052,6 +1074,9 @@ def gui_inventory(preview: str | None) -> None:
     path = os.path.join(mc, "textures", "gui", "container", "inventory.png")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     canvas.save(path, optimize=False)
+    chest = Image.new("RGBA", (256 * S, 256 * S), (0, 0, 0, 0))
+    chest.alpha_composite(hd_art.chest(art), (0, 0))
+    chest.save(os.path.join(mc, "textures", "gui", "container", "generic_54.png"), optimize=False)
     for name, icon in r["icons"].items():
         p = os.path.join(mc, "textures", "gui", "sprites", "container", "slot", name + ".png")
         os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -1075,11 +1100,14 @@ def gui_inventory(preview: str | None) -> None:
         json.dump(font, fh, ensure_ascii=False, indent=1)
         fh.write("\n")
     title = "\u00a7f" + INV_SHIFT + INV_DECOR      # white: the title colour would otherwise darken the glyph
-    for lang in ("en_us", "en_gb", "mn_mn", "ru_ru"):
+    for lang, names in CONTAINER_NAMES.items():
         lp = os.path.join(mc, "lang", lang + ".json")
         os.makedirs(os.path.dirname(lp), exist_ok=True)
+        entries = {"container.crafting": title}
+        # the chest screen is navy now: its labels in gold (the vanilla dark grey would not read on it)
+        entries.update({k: "\u00a76" + v for k, v in names.items()})
         with open(lp, "w", encoding="utf-8") as fh:
-            json.dump({"container.crafting": title}, fh, ensure_ascii=False, indent=1)
+            json.dump(entries, fh, ensure_ascii=False, indent=1)
             fh.write("\n")
     if preview:
         r["texture"].save(os.path.join(preview, "gui_inventory.png"))

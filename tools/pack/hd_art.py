@@ -348,6 +348,8 @@ def inventory(path: str) -> dict:
         grid_xs += [(INV_COL_START[c], 8 + 18 * c), (INV_COL_END[c], 24 + 18 * c)]
     grid_xs += [(1815, 173), (1845, 176)]
     win = np.asarray(warp(src, INV_RIM_XS, grid_xs, INV_YS, 81, 176, 166)).astype(np.float64)
+    # the very top row samples the keyed magenta just above the rim: take the row under it instead
+    win[0] = win[1]
 
     # 2. the top half: plain cloth, then every element on its vanilla rectangle
     patch = np.asarray(src.crop(INV_NAVY_PATCH).resize(((INV_NAVY_PATCH[2] - INV_NAVY_PATCH[0]) * S * 18 // 160,
@@ -360,6 +362,8 @@ def inventory(path: str) -> dict:
     x0, y0, x1, y1 = 3 * S, 5 * S, 173 * S, 81 * S
     reps = (-(-(y1 - y0) // tile.shape[0]), -(-(x1 - x0) // tile.shape[1]), 1)
     win[y0:y1, x0:x1] = np.tile(tile, reps)[:y1 - y0, :x1 - x0]
+    big = (-(-166 * S // tile.shape[0]), -(-176 * S // tile.shape[1]), 1)
+    cloth = Image.fromarray(np.rint(np.tile(tile, big)[:166 * S, :176 * S]).clip(0, 255).astype(np.uint8), "RGBA")
     out = Image.fromarray(np.rint(win).clip(0, 255).astype(np.uint8), "RGBA")
 
     def put(img: Image.Image, gx: float, gy: float) -> None:
@@ -418,7 +422,78 @@ def inventory(path: str) -> dict:
     names = ["helmet", "chestplate", "leggings", "boots"]
     icons = {n: _icon(src, INV_ARMOUR[i]) for i, n in enumerate(names)}
     icons["shield"] = _icon(src, INV_SHIELD)
-    return {"texture": texture, "decor": decor, "decor_box": (left, top, w, h), "icons": icons}
+    return {"texture": texture, "decor": decor, "decor_box": (left, top, w, h), "icons": icons, "cloth": cloth}
+
+
+def chest(path: str) -> Image.Image:
+    """minecraft:textures/gui/container/generic_54.png in the inventory's style (176 x 222 times SCALE): the chest
+    rows (y 0..125) with a gold well on every slot, the player's inventory and hot bar (y 126..222) taken from the
+    survival inventory, whose rows sit exactly 56 px higher (84 -> 140, 142 -> 198)."""
+    r = inventory(path)
+    S = SCALE
+    inv, cloth = r["texture"], r["cloth"]
+    out = Image.new("RGBA", (176 * S, 222 * S), (0, 0, 0, 0))
+    out.paste(cloth, (0, 0))
+    out.paste(cloth.crop((0, 0, 176 * S, 56 * S)), (0, 166 * S))
+    # the rim: the survival inventory's top band (its corners, and a plain stretch of it between the corner and the
+    # crest stretched across) and a plain stretch of its side strips (beside the inventory rows) over the chest rows
+    band = inv.crop((0, 0, 176 * S, 5 * S))
+    out.alpha_composite(band.crop((0, 0, 7 * S, 5 * S)), (0, 0))
+    out.alpha_composite(band.crop((30 * S, 0, 60 * S, 5 * S)).resize((162 * S, 5 * S), Image.LANCZOS), (7 * S, 0))
+    out.alpha_composite(band.crop((169 * S, 0, 176 * S, 5 * S)), (169 * S, 0))
+    for x0 in (0, 169):
+        side = inv.crop((x0 * S, 100 * S, (x0 + 7) * S, 130 * S)).resize((7 * S, 132 * S), Image.LANCZOS)
+        out.alpha_composite(side, (x0 * S, 5 * S))
+    # player inventory, hot bar and bottom rim: the survival inventory's lower part, 56 px down
+    out.alpha_composite(inv.crop((0, 81 * S, 176 * S, 166 * S)), (0, 137 * S))
+    cell = inventory_cell(path, S)
+    for row in range(6):
+        for c in range(9):
+            out.alpha_composite(cell, ((7 + 18 * c) * S, (17 + 18 * row) * S))
+    rule = Image.new("RGBA", (162 * S, max(1, S // 2)), (232, 182, 64, 255))
+    out.alpha_composite(rule, (7 * S, 136 * S))      # under the "Inventory" label
+    return out
+
+
+# ------------------------------------------------------------------------------------------------ main menu
+
+# gui_main.webp (1492x1054): the owner's Сүлд Цэс: painted title, six cards with painted labels, a bar at the bottom.
+# Source px -> chest px of a 6-row chest; the bar (below the cards) lands on the screen's "Inventory" label row.
+MM_XS = [(20, 0), (38, 7), (504, 61), (996, 115), (1452, 169), (1472, 176)]
+MM_YS = [(12, 0), (135, 16), (151, 18), (557, 72), (958, 126), (1045, 138)]
+MM_HEIGHT = 138
+MM_RELETTER = (1120, 176, 1365, 242)      # card 3's painted word (ЭРДЭН): painted over with the banner's cloth
+MM_CLEAN = (1074, 176, 1116, 242)         # a clean strip of that banner between its left knot and the word
+MM_BANNER3 = (1010, 168, 1450, 252)
+MM_BAR = (972, 1027)                      # the bottom bar's cloth rows (between its gold lines)
+MM_BAR_CLEAN = (600, 760)                 # a plain stretch of it
+MM_BAR_KNOTS = [(24, 140), (1350, 1468)]  # its corner knots: under the screen's "Inventory" label, so cleared
+
+
+def main_menu(path: str) -> tuple[Image.Image, tuple[float, float, float, float]]:
+    """The owner's main menu on a 6-row chest (176 x 138 chest px times SCALE) and card 3's banner in chest px, where
+    the label is re-lettered (the card opens quests and dungeons: ЭРЭЛ, not the painted ЭРДЭН)."""
+    a = np.asarray(Image.open(path).convert("RGB")).astype(np.float64)
+    x0, y0, x1, y1 = MM_RELETTER
+    cx0, cy0, cx1, cy1 = MM_CLEAN
+    strip = a[cy0:cy1, cx0:cx1]
+    reps = -(-(x1 - x0) // strip.shape[1])
+    tiles = np.concatenate([strip if i % 2 == 0 else strip[:, ::-1] for i in range(reps)], axis=1)
+    a[y0:y1, x0:x1] = tiles[:, :x1 - x0]
+    by0, by1 = MM_BAR
+    plain = a[by0:by1, MM_BAR_CLEAN[0]:MM_BAR_CLEAN[1]]
+    for kx0, kx1 in MM_BAR_KNOTS:
+        a[by0:by1, kx0:kx1] = np.concatenate([plain] * (-(-(kx1 - kx0) // plain.shape[1])), axis=1)[:, :kx1 - kx0]
+    src = Image.fromarray(a.astype(np.uint8), "RGB")
+    img = warp(src, MM_XS, MM_XS, MM_YS, MM_HEIGHT + 1, 176, MM_HEIGHT)
+
+    def gx(v):
+        return float(np.interp(v, [p for p, _ in MM_XS], [g for _, g in MM_XS]))
+
+    def gy(v):
+        return float(np.interp(v, [p for p, _ in MM_YS], [g for _, g in MM_YS]))
+    bx0, by0, bx1, by1 = MM_BANNER3
+    return img, (gx(bx0), gy(by0), gx(bx1), gy(by1))
 
 
 # ------------------------------------------------------------------------------------------------ card menus

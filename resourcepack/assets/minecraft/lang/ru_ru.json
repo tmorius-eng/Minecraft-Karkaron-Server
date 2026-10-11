@@ -1,3 +1,8 @@
 {
- "container.crafting": "§f"
+ "container.crafting": "§f",
+ "container.inventory": "§6Инвентарь",
+ "container.chest": "§6Сундук",
+ "container.chestDouble": "§6Большой сундук",
+ "container.enderchest": "§6Сундук Края",
+ "container.barrel": "§6Бочка"
 }

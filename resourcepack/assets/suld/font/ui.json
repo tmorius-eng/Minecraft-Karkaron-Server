@@ -366,7 +366,7 @@
   {
    "type": "bitmap",
    "file": "suld:font/gui/main.png",
-   "height": 126,
+   "height": 138,
    "ascent": 13,
    "chars": [
     ""
