@@ -26,6 +26,7 @@ import java.util.Set;
  * @param chapters    the story, with the EXP the rules give each chapter already filled in
  * @param sites         the dungeon gates (dungeons.json)
  * @param historicSites the historical places in the wild (content/sites.json)
+ * @param campaigns     the Их Хуралдай campaigns (content/campaigns.json)
  */
 public record ContentPack(
         Map<String, MobDefinition> mobs,
@@ -47,7 +48,8 @@ public record ContentPack(
         List<WorldEventDefinition> worldEvents,
         Map<String, String> eventAliases,
         List<RelicDefinition> relics,
-        List<mn.suld.api.world.site.HistoricSite> historicSites) {
+        List<mn.suld.api.world.site.HistoricSite> historicSites,
+        List<mn.suld.api.campaign.CampaignDefinition> campaigns) {
 
     public ContentPack {
         mobs = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(mobs)); // keeps the file order
@@ -68,6 +70,13 @@ public record ContentPack(
         eventAliases = Map.copyOf(eventAliases);
         relics = List.copyOf(relics);
         historicSites = List.copyOf(historicSites);
+        campaigns = List.copyOf(campaigns);
+    }
+
+    /** A Хуралдай campaign by id, or null. */
+    public mn.suld.api.campaign.CampaignDefinition campaign(String id) {
+        for (mn.suld.api.campaign.CampaignDefinition c : campaigns) if (c.id().equals(id)) return c;
+        return null;
     }
 
     /** The mobs of a role, in file order. */

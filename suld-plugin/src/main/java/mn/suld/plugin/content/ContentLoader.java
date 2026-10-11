@@ -45,7 +45,7 @@ import static mn.suld.api.skill.tree.SkillTreeLoader.str;
 public final class ContentLoader {
 
     public static final int FORMAT_VERSION = 1;
-    public static final List<String> FILES = List.of("mobs.json", "world.json", "dungeons.json", "quests.json", "events.json", "sites.json");
+    public static final List<String> FILES = List.of("mobs.json", "world.json", "dungeons.json", "quests.json", "events.json", "sites.json", "campaigns.json");
 
     /** Ids the code names directly (tutorial, first dungeon, boss brains, story constants): they must exist. */
     public static final Set<String> REQUIRED = Set.of(
@@ -434,6 +434,95 @@ public final class ContentLoader {
             }
         }
 
+        // ------------------------------------------------------------------------------------------- campaigns
+        f = "campaigns.json";
+        List<mn.suld.api.campaign.CampaignDefinition> campaigns = new ArrayList<>();
+        List<Object> campaignList = list(f, "", files.get(f), "campaigns", issues);
+        for (int i = 0; i < campaignList.size(); i++) {
+            String at = "campaigns[" + i + "]";
+            Map<String, Object> c = obj(f, at, campaignList.get(i), issues);
+            if (c == null) continue;
+            String id = str(f, at, c, "id", true, issues);
+            Map<String, Object> g = obj(f, at + ".goal", c.get("goal"), issues);
+            mn.suld.api.campaign.CampaignGoal goal = null;
+            if (g != null) {
+                String typeText = str(f, at + ".goal", g, "type", true, issues);
+                List<String> targets = strings(f, at + ".goal", g, "targets", issues);
+                mn.suld.api.campaign.CampaignGoal.Type type = null;
+                try {
+                    if (typeText != null) type = mn.suld.api.campaign.CampaignGoal.Type.parse(typeText);
+                } catch (IllegalArgumentException ex) {
+                    issues.add(new Issue(f, at + ".goal.type", ex.getMessage()));
+                }
+                if (type != null) for (String t : targets) {
+                    String problem = switch (type) {
+                        case KILL_MOBS -> mobs.containsKey(t) ? null : "no mob " + t + " in mobs.json";
+                        case CLEAR_DUNGEON -> dungeons.stream().anyMatch(d -> d.id().equals(t)) ? null : "no dungeon " + t + " in dungeons.json";
+                        case DISCOVER_SITES -> historic.stream().anyMatch(x -> x.id().equals(t)) ? null : "no site " + t + " in sites.json";
+                        case DELIVER_ITEMS -> itemExists != null && !itemExists.test(t) ? "no item " + t + " in the item catalog" : null;
+                    };
+                    if (problem != null) issues.add(new Issue(f, at + ".goal.targets", problem));
+                }
+                try {
+                    if (type != null) goal = new mn.suld.api.campaign.CampaignGoal(type, new LinkedHashSet<>(targets),
+                            intIn(f, at + ".goal", g, "target", 1, 10_000_000, true, 1, issues));
+                } catch (IllegalArgumentException ex) {
+                    issues.add(new Issue(f, at + ".goal", ex.getMessage()));
+                }
+            }
+            int[] tiers = new int[mn.suld.api.campaign.CampaignDefinition.TIERS];
+            List<Object> tierList = list(f, at, c, "tiers", issues);
+            for (int t = 0; t < tiers.length; t++) tiers[t] = t < tierList.size() && tierList.get(t) instanceof Number n ? n.intValue() : 0;
+            List<mn.suld.api.campaign.CampaignDefinition.TierReward> rewards = new ArrayList<>();
+            List<Object> rewardList = list(f, at, c, "tierRewards", issues);
+            for (int t = 0; t < rewardList.size(); t++) {
+                Map<String, Object> rw = obj(f, at + ".tierRewards[" + t + "]", rewardList.get(t), issues);
+                if (rw != null) rewards.add(new mn.suld.api.campaign.CampaignDefinition.TierReward(
+                        intIn(f, at + ".tierRewards[" + t + "]", rw, "exp", 0, 10_000_000, true, 0, issues),
+                        intIn(f, at + ".tierRewards[" + t + "]", rw, "coins", 0, 10_000_000, true, 0, issues)));
+            }
+            double[] podium = {1.5, 1.3, 1.2};
+            if (c.get("podium") instanceof List<?> pl && pl.size() == 3) {
+                for (int t = 0; t < 3; t++) podium[t] = pl.get(t) instanceof Number n ? n.doubleValue() : 1.0;
+            }
+            mn.suld.api.campaign.WorldEffect effect = null;
+            if (c.get("effect") != null) {
+                Map<String, Object> e = obj(f, at + ".effect", c.get("effect"), issues);
+                if (e != null) {
+                    try {
+                        mn.suld.api.campaign.WorldEffect.Type et = mn.suld.api.campaign.WorldEffect.Type.valueOf(
+                                String.valueOf(str(f, at + ".effect", e, "type", true, issues)).toUpperCase(java.util.Locale.ROOT));
+                        String ref = str(f, at + ".effect", e, "ref", true, issues);
+                        String anchor = e.get("anchor") instanceof String a ? a : "";
+                        if (et == mn.suld.api.campaign.WorldEffect.Type.UNLOCK_EVENT && ref != null && events.stream().noneMatch(x -> x.id().equals(ref)))
+                            issues.add(new Issue(f, at + ".effect.ref", "no world event " + ref + " in events.json"));
+                        if (et == mn.suld.api.campaign.WorldEffect.Type.PROP && historic.stream().noneMatch(x -> x.id().equals(anchor)))
+                            issues.add(new Issue(f, at + ".effect.anchor", "no site " + anchor + " in sites.json"));
+                        if (ref != null) effect = new mn.suld.api.campaign.WorldEffect(et, ref, anchor,
+                                intIn(f, at + ".effect", e, "dx", -64, 64, false, 0, issues), intIn(f, at + ".effect", e, "dz", -64, 64, false, 0, issues),
+                                e.get("yaw") instanceof Number yaw ? yaw.floatValue() : 0f);
+                    } catch (IllegalArgumentException ex) {
+                        issues.add(new Issue(f, at + ".effect", ex.getMessage()));
+                    }
+                }
+            }
+            if (id == null || goal == null) continue;
+            try {
+                campaigns.add(new mn.suld.api.campaign.CampaignDefinition(id, str(f, at, c, "name", true, issues),
+                        c.get("description") instanceof String d ? d : "", goal, tiers, rewards, podium,
+                        intIn(f, at, c, "clanExpPerUnit", 0, 100_000, false, 0, issues), intIn(f, at, c, "clanSuccessBonus", 0, 10_000_000, false, 0, issues),
+                        effect, intIn(f, at, c, "cooldownCycles", 0, 12, false, 1, issues)));
+            } catch (IllegalArgumentException ex) {
+                issues.add(new Issue(f, at, ex.getMessage()));
+            }
+        }
+        if (!campaignList.isEmpty() && campaigns.size() < 2) issues.add(new Issue(f, "campaigns", "Их Хуралдай needs at least 2 valid campaigns"));
+        for (int i = 0; i < campaigns.size(); i++) {
+            for (int j = i + 1; j < campaigns.size(); j++) {
+                if (campaigns.get(i).id().equals(campaigns.get(j).id())) issues.add(new Issue(f, "campaigns[" + j + "].id", "duplicate id " + campaigns.get(j).id()));
+            }
+        }
+
         // --------------------------------------------------------------------------------- names the code uses
         Set<String> known = new HashSet<>(mobs.keySet());
         regions.forEach(r -> known.add(r.id()));
@@ -450,7 +539,7 @@ public final class ContentLoader {
         }
         if (!issues.isEmpty()) return new Result(null, issues, overridden);
         return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, outer, areas, dungeons, sites, completions,
-                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic), issues, overridden);
+                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns), issues, overridden);
     }
 
     private static String fileFor(String id) {
@@ -458,6 +547,7 @@ public final class ContentLoader {
         if (id.startsWith("region.")) return "world.json";
         if (id.startsWith("dungeon.")) return "dungeons.json";
         if (id.startsWith("quest.")) return "quests.json";
+        if (id.startsWith("campaign.")) return "campaigns.json";
         return "events.json";
     }
 

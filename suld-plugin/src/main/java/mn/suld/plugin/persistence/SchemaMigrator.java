@@ -48,7 +48,9 @@ public final class SchemaMigrator {
             new Migration(14, "sessions", "V14__sessions.sql"),
             new Migration(15, "endgame", "V15__endgame.sql"),
             new Migration(16, "credit_grants", "V16__credit_grants.sql"),
-            new Migration(17, "player_marks", "V17__player_marks.sql")
+            new Migration(17, "player_marks", "V17__player_marks.sql"),
+            new Migration(18, "campaigns", "V18__campaigns.sql"),
+            new Migration(19, "chronicle", "V19__chronicle.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */
