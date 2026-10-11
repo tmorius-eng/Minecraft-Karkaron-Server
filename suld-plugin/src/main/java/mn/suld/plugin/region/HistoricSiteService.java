@@ -268,6 +268,7 @@ public final class HistoricSiteService {
                 seen.add(p.site().id());
                 pl.getPersistentDataContainer().set(seenKey, PersistentDataType.STRING, String.join(",", seen));
                 mn.suld.plugin.item.PlayerDataSaves.now(pl); // the guard first, then the EXP (PERS-002)
+                services.marks().record(pl.getUniqueId(), mn.suld.api.progress.MarkKind.SITE_SEEN, p.site().id(), System.currentTimeMillis()); // V17 mirror
                 discovered(pl, p.site());
             }
         }

@@ -228,6 +228,18 @@ public final class SuldServices {
                 : new mn.suld.plugin.persistence.JdbcDeathRepository(dataSource,
                         SqlDialect.forStorage(config.database().type()), deathExecutor);
         this.classWeapons = new mn.suld.plugin.item.ClassWeapons(plugin, this);
+        // Progress marks (V17): the database mirror of the player file's clears / sites / ovoo days. Upserts, so the
+        // shared pool is fine (order does not matter).
+        this.marks = new mn.suld.plugin.progress.PlayerMarks(plugin, dataSource == null
+                ? new mn.suld.api.persistence.InMemoryMarksRepository()
+                : new mn.suld.plugin.persistence.JdbcMarksRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
+    }
+
+    private final mn.suld.plugin.progress.PlayerMarks marks;
+
+    /** Per-player progress marks (dungeon clears, sites, ovoo days) mirrored to the database. */
+    public mn.suld.plugin.progress.PlayerMarks marks() {
+        return marks;
     }
 
     /** The shared "never leaves the owner" guard of soulbound items. */

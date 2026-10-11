@@ -392,6 +392,7 @@ public final class DungeonService {
         if (cleared(p, dungeonId)) return;
         String s = p.getPersistentDataContainer().get(clearsKey, org.bukkit.persistence.PersistentDataType.STRING);
         p.getPersistentDataContainer().set(clearsKey, org.bukkit.persistence.PersistentDataType.STRING, s == null || s.isEmpty() ? dungeonId : s + "," + dungeonId);
+        services.marks().record(p.getUniqueId(), mn.suld.api.progress.MarkKind.DUNGEON_CLEAR, dungeonId, System.currentTimeMillis()); // V17 mirror
     }
 
     /**

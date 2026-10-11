@@ -212,6 +212,7 @@ public final class OvooService implements Listener {
         p.getPersistentDataContainer().set(dayKey, PersistentDataType.LONG, today);
         // the "visited" guard reaches disk before the EXP is committed, so a crash cannot pay the first visit twice (PERS-002)
         mn.suld.plugin.item.PlayerDataSaves.now(p);
+        services.marks().record(p.getUniqueId(), mn.suld.api.progress.MarkKind.OVOO_DAY, o.id(), today); // V17 mirror
         long until = System.currentTimeMillis() + BLESS_MS;
         services.boosts().bless(p.getUniqueId(), until, BLESS_EXP);
         p.getPersistentDataContainer().set(blessKey, PersistentDataType.LONG, until);

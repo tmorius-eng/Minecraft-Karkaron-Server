@@ -52,6 +52,7 @@ public final class PlayerLifecycleListener implements Listener {
         org.bukkit.inventory.ItemStack[] ender = player.getEnderChest().getContents();
         if (services.items().refreshModels(ender) > 0) player.getEnderChest().setContents(ender);
         services.relics().scheduleTease(player, profile);
+        services.marks().backfill(player); // V17: the player file's clears / sites / ovoo days into the database, once
         player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "! — SÜLD"));
         if (!profile.hasSelectedClass()) {
             player.sendMessage(Messages.info("Анхны алхам: ангиа сонгоно уу."));
