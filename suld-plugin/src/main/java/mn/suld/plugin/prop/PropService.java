@@ -69,6 +69,7 @@ public final class PropService implements Listener {
     private final Map<Integer, Entity[]> live = new HashMap<>();
     private final Map<String, List<int[]>> shapes = new HashMap<>();
     private final Map<Integer, List<org.bukkit.block.Block>> barriers = new HashMap<>();
+    private final java.util.Set<Integer> solidDone = new java.util.HashSet<>();
     private final NamespacedKey placeKey;
 
     public PropService(Plugin plugin, SuldServices services) {
@@ -167,7 +168,13 @@ public final class PropService implements Listener {
         World w = Bukkit.getWorlds().get(0);
         for (Place p : places) {
             Entity[] e = live.get(p.index());
-            if (e != null && e[0].isValid()) continue;
+            if (e != null && e[0].isValid()) {
+                if (!solidDone.contains(p.index())) {
+                    int[] col = column(w, p);
+                    if (col != null) solid(w, p, col[0], col[1]); // cells a player stood in last time
+                }
+                continue;
+            }
             if (e != null) {
                 for (Entity x : e) x.remove();
                 live.remove(p.index());
@@ -204,12 +211,29 @@ public final class PropService implements Listener {
         Interaction box = w.spawn(at, Interaction.class, e -> {
             e.setPersistent(false);
             e.addScoreboardTag(TAG);
-            e.setInteractionWidth((float) Math.min(4.0, Math.max(1.0, p.prop().height() * 0.6)));
+            e.setInteractionWidth((float) footprint(p.prop()));
             e.setInteractionHeight((float) p.prop().height());
             e.setResponsive(true);
             e.getPersistentDataContainer().set(placeKey, org.bukkit.persistence.PersistentDataType.STRING, p.prop().id());
         });
         return new Entity[]{d, box};
+    }
+
+    /**
+     * Width of the click box: the prop's own collision footprint (at most 4), so the box never reaches past the
+     * barriers and swallows hits meant for a mob standing beside the statue.
+     */
+    private double footprint(Prop prop) {
+        List<int[]> cells = shapes.get(prop.id());
+        if (cells == null || cells.isEmpty()) return Math.min(4.0, Math.max(1.0, prop.height() * 0.6));
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+        for (int[] c : cells) {
+            minX = Math.min(minX, c[0]);
+            maxX = Math.max(maxX, c[0]);
+            minZ = Math.min(minZ, c[2]);
+            maxZ = Math.max(maxZ, c[2]);
+        }
+        return Math.min(4.0, Math.max(1.0, Math.min(maxX - minX + 1, maxZ - minZ + 1)));
     }
 
     /** The ground under a prop: the highest block, looking through the prop's own barriers (and the air between them). */
@@ -225,10 +249,11 @@ public final class PropService implements Listener {
      */
     private void solid(World w, Place p, int x, int z) {
         List<int[]> cells = shapes.get(p.prop().id());
-        if (cells == null || barriers.containsKey(p.index())) return;
+        if (cells == null || solidDone.contains(p.index())) return;
         int y = ground(w, x, z) + 1;
         int q = Math.floorMod(Math.round(p.yaw() / 90f), 4);
-        List<org.bukkit.block.Block> placed = new ArrayList<>();
+        List<org.bukkit.block.Block> placed = barriers.computeIfAbsent(p.index(), k -> new ArrayList<>());
+        boolean skipped = false;
         for (int[] c : cells) {
             int dx = c[0], dz = c[2];
             for (int r = 0; r < q; r++) { // one quarter turn: (x, z) -> (-z, x)
@@ -237,14 +262,27 @@ public final class PropService implements Listener {
                 dz = t;
             }
             org.bukkit.block.Block b = w.getBlockAt(x + dx, y + c[1], z + dz);
+            if (b.getType() == Material.AIR && occupied(b)) {
+                skipped = true; // never fill a block a player stands in: retried on the next pass
+                continue;
+            }
             if (b.getType() == Material.AIR) {
                 b.setType(Material.BARRIER, false);
                 placed.add(b);
-            } else if (b.getType() == Material.BARRIER) {
+            } else if (b.getType() == Material.BARRIER && !placed.contains(b)) {
                 placed.add(b); // left by a run that did not stop cleanly: ours, taken away on stop
             }
         }
-        barriers.put(p.index(), placed);
+        if (!skipped) solidDone.add(p.index());
+    }
+
+    /** A player's box overlaps this block. */
+    private static boolean occupied(org.bukkit.block.Block b) {
+        org.bukkit.util.BoundingBox box = org.bukkit.util.BoundingBox.of(b);
+        for (org.bukkit.entity.Player pl : b.getWorld().getNearbyPlayers(b.getLocation().add(0.5, 0.5, 0.5), 2.5)) {
+            if (pl.getBoundingBox().overlaps(box)) return true;
+        }
+        return false;
     }
 
     @EventHandler
@@ -259,16 +297,44 @@ public final class PropService implements Listener {
         if (!p.about().isEmpty()) e.getPlayer().sendMessage(Component.text(p.about(), STORY));
     }
 
-    /** Staff overview: every place, where it stands and whether it is shown. */
-    public List<String> describe() {
+    /**
+     * Staff overview: every place, where it stands and whether it is shown. A prop appears only while a player is near
+     * (its chunk is loaded), so a far one says how far it is from {@code from} (null: console).
+     */
+    public List<String> describe(Location from) {
         World w = Bukkit.getWorlds().get(0);
         List<String> out = new ArrayList<>();
         for (Place p : places) {
             int[] col = column(w, p);
             Entity[] e = live.get(p.index());
-            out.add(p.prop().id() + " @ " + (col == null ? "?" : col[0] + " " + col[1]) + (e != null && e[0].isValid() ? " — харагдаж байна" : " — ачаалаагүй"));
+            String state;
+            if (e != null && e[0].isValid()) state = " — харагдаж байна";
+            else if (col == null) state = " — байршил тодорхойгүй";
+            else if (from != null && from.getWorld() == w) {
+                long d = Math.round(Math.hypot(from.getX() - col[0], from.getZ() - col[1]));
+                state = " — хол (" + d + " м), ойртоход гарч ирнэ";
+            } else state = " — ойртоход гарч ирнэ";
+            out.add(p.prop().id() + " @ " + (col == null ? "?" : col[0] + " " + col[1]) + state);
         }
         return out;
+    }
+
+    /** Where the first place of this prop stands (for /suld props tp), or null. */
+    public Location where(String id) {
+        World w = Bukkit.getWorlds().get(0);
+        for (Place p : places) {
+            if (!p.prop().id().equals(id)) continue;
+            int[] col = column(w, p);
+            if (col == null) return null;
+            // beside the prop, on the ground, facing it
+            int x = col[0] + 3, z = col[1];
+            return new Location(w, x + 0.5, ground(w, x, z) + 1, z + 0.5, 90f, 0f);
+        }
+        return null;
+    }
+
+    public java.util.Set<String> ids() {
+        return java.util.Collections.unmodifiableSet(props.keySet());
     }
 
     /** Removes every prop entity (plugin disable). */
@@ -279,5 +345,6 @@ public final class PropService implements Listener {
             for (org.bukkit.block.Block b : bs) if (b.getType() == Material.BARRIER) b.setType(Material.AIR, false);
         }
         barriers.clear();
+        solidDone.clear();
     }
 }

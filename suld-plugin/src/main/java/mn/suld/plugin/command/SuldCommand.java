@@ -49,7 +49,17 @@ public final class SuldCommand implements CommandExecutor {
                     sender.sendMessage(Messages.error("Эрх алга."));
                 } else {
                     var ps = ((mn.suld.plugin.SuldPlugin) plugin).props();
-                    if (ps != null) for (String line : ps.describe()) sender.sendMessage(Messages.info(line));
+                    if (ps != null && args.length >= 3 && args[1].equalsIgnoreCase("tp") && sender instanceof Player pl) {
+                        org.bukkit.Location at = ps.where(args[2].toLowerCase(java.util.Locale.ROOT));
+                        if (at == null) {
+                            sender.sendMessage(Messages.error("Тийм prop алга: " + String.join(", ", ps.ids())));
+                        } else {
+                            pl.teleportAsync(at);
+                            sender.sendMessage(Messages.success(args[2] + " руу явлаа."));
+                        }
+                    } else if (ps != null) {
+                        for (String line : ps.describe(sender instanceof Player pl ? pl.getLocation() : null)) sender.sendMessage(Messages.info(line));
+                    }
                 }
             }
             case "setrank" -> setRank(sender, args);
@@ -263,7 +273,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld endgame <тоглогч> rank|points|palace <тоо> — Тэнгэрийн Зэрэг (QA)"));
             sender.sendMessage(Messages.info("/suld badge <тоглогч> <owner|admin|developer|mod|helper|streamer|sponsor|none> — ажилтан/дэмжигчийн тэмдэг"));
             sender.sendMessage(Messages.info("/suld setrank <тоглогч> <ard|tsereg|aravt|zuut|myangat|tumen|noyon|khaan> — цол"));
-            sender.sendMessage(Messages.info("/suld props — 3D дурсгалууд хаана байгаа"));
+            sender.sendMessage(Messages.info("/suld props [tp <id>] — 3D дурсгалууд хаана байгаа / тийш очих"));
             sender.sendMessage(Messages.info("/suld grim [reset] — GrimAC: SÜLD хөдөлгөөнд уучилсан flag-ууд"));
             sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
         }
