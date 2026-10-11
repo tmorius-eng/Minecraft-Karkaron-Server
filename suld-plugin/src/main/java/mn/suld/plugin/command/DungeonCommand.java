@@ -17,15 +17,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-/** {@code /dungeon list|enter [id]|status|leave|abort}. */
+/** {@code /dungeon} opens the dungeon window ({@link mn.suld.plugin.gui.DungeonMenu}); {@code enter [id]|status|leave|abort}. */
 public final class DungeonCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SUBS = List.of("list", "enter", "status", "leave", "abort");
 
     private final SuldServices services;
+    private final mn.suld.plugin.gui.DungeonMenu menu;
 
-    public DungeonCommand(SuldServices services) {
+    public DungeonCommand(SuldServices services, mn.suld.plugin.gui.DungeonMenu menu) {
         this.services = services;
+        this.menu = menu;
     }
 
     @Override
@@ -58,7 +60,7 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
         }
         String sub = args.length == 0 ? "list" : args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
-            case "list" -> list(player);
+            case "list", "menu" -> menu.open(player);
             case "enter" -> enter(player, args.length > 1 ? args[1] : "khasar_den");
             case "status" -> status(player);
             case "leave" -> services.parties().leave(player, true);
@@ -68,43 +70,16 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(Messages.error("Зогсоох агуй алга (эсвэл та ахлагч биш)."));
                 }
             }
-            default -> player.sendMessage(Messages.info("/dungeon <list|enter|status|leave|abort>"));
+            default -> menu.open(player);
         }
         return true;
-    }
-
-    private void list(Player player) {
-        player.sendMessage(Messages.accent("Агуйнууд — хаалга дээр нь очиж орно"));
-        int level = services.profiles().cached(player.getUniqueId()).map(p -> p.progression().level()).orElse(1);
-        var halls = services.dungeons().halls().orElse(null);
-        for (DungeonDefinition d : mn.suld.plugin.content.DungeonContent.ALL) {
-            DungeonDefinition prev = mn.suld.plugin.content.DungeonContent.previous(d.id());
-            boolean done = services.dungeons().cleared(player, d.id());
-            boolean open = level >= d.minLevel() && (prev == null || services.dungeons().cleared(player, prev.id()));
-            String mark = done ? "✔ " : open ? "▶ " : "🔒 ";
-            String gate = "";
-            if (halls != null) {
-                var site = halls.site(d.id()).orElse(null);
-                if (site != null) {
-                    int[] xz = halls.gateXZ(site);
-                    double b = mn.suld.api.region.Navigation.bearing(xz[0] - player.getLocation().getX(), xz[1] - player.getLocation().getZ());
-                    int dist = (int) Math.hypot(xz[0] - player.getLocation().getX(), xz[1] - player.getLocation().getZ());
-                    gate = " · хаалга " + xz[0] + ", " + xz[1] + " (" + mn.suld.api.region.Navigation.compass(b) + ", " + dist + " блок)";
-                }
-            }
-            String lock = open || done ? "" : level < d.minLevel() ? " · түвшин " + d.minLevel() + " хэрэгтэй" : " · эхлээд «" + prev.displayName() + "»";
-            player.sendMessage(Messages.info(mark + shortId(d) + " — " + d.displayName() + " · " + mn.suld.plugin.content.DungeonContent.where(d.id())
-                    + " (түвшин " + d.minLevel() + "+, " + d.minPartySize() + "–" + d.maxPartySize() + " тоглогч, "
-                    + d.totalWaves() + " давалгаа + босс)" + gate + lock));
-        }
-        player.sendMessage(Messages.info("Хаалгыг дарах эсвэл хаалган дээр /dungeon enter <нэр>"));
     }
 
     private void enter(Player player, String rawId) {
         String id = rawId.startsWith("dungeon.") ? rawId : "dungeon." + rawId;
         DungeonDefinition def = SuldContent.dungeonFor(id);
         if (def == null) {
-            player.sendMessage(Messages.error("Ийм агуй олдсонгүй. /dungeon list"));
+            player.sendMessage(Messages.error("Ийм агуй олдсонгүй — /dungeon цонхноос сонго."));
             return;
         }
         Component error = services.dungeons().start(player, def);

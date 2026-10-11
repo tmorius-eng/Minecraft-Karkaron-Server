@@ -34,6 +34,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.death.DeathService deaths;
     private mn.suld.plugin.gui.SkillSky skillSky;
     private mn.suld.plugin.quest.QuestTracker tracker;
+    private mn.suld.plugin.dungeon.DungeonGuide dungeonGuide;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
     private mn.suld.plugin.worldbuild.PregenService pregen;
     private mn.suld.plugin.combat.CombatFeel combatFeel;
@@ -77,7 +78,10 @@ public final class SuldPlugin extends JavaPlugin {
                 new mn.suld.plugin.dungeon.DungeonListener(services.dungeons(), services.parties()), this);
         registerCommand("suld", new SuldCommand(this, services));
         registerCommand("party", new mn.suld.plugin.command.PartyCommand(services.parties()));
-        registerCommand("dungeon", new mn.suld.plugin.command.DungeonCommand(services));
+        dungeonGuide = new mn.suld.plugin.dungeon.DungeonGuide(this, services);
+        getServer().getPluginManager().registerEvents(dungeonGuide, this);
+        dungeonGuide.start();
+        registerCommand("dungeon", new mn.suld.plugin.command.DungeonCommand(services, new mn.suld.plugin.gui.DungeonMenu(services, dungeonGuide)));
         getServer().getPluginManager().registerEvents(services.styles(), this);
         services.styles().start();
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.clan.ChatGuardListener(this), this);
@@ -372,6 +376,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (deaths != null) {
             deaths.shutdown();
         }
+        if (dungeonGuide != null) dungeonGuide.shutdown();
         if (tracker != null) {
             tracker.shutdown();
         }

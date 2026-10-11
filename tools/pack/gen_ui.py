@@ -404,6 +404,92 @@ def gui_skillmap(preview: str | None) -> None:
         img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_skillmap.png"))
 
 
+# ----------------------------------------------------------------------------------------- dungeon ladder
+
+# (row, col) of each ladder dungeon's slot, bottom to top: the stair climbs from the steppe to the sky palace.
+# Mirrored in suld-plugin gui/DungeonMenu.SLOTS.
+DUNGEON_SLOTS = [(4, 1), (4, 3), (4, 5), (4, 7), (2, 7), (2, 5), (2, 3), (2, 1), (0, 2), (0, 5)]
+STONE = (118, 110, 98)
+STONE_D = (70, 64, 58)
+STONE_L = (168, 158, 140)
+
+
+def gui_dungeons(preview: str | None) -> None:
+    """The dungeon ladder: a night sky over layered mountains, a gold-edged stone stair winding through ten slot
+    plinths from the steppe (bottom) to the sky palace (top), and a toolbar row. Procedural and deterministic."""
+    import math
+    import random
+    rows = 6
+    height = 17 + rows * 18 + 1
+    img = Image.new("RGBA", (176, height), NAVY + (255,))
+    px = img.load()
+    rnd = random.Random(20261011)
+    y0, y1 = 17, 17 + 5 * 18
+    # sky: deep navy at the top fading to a dusk teal at the horizon
+    for y in range(y0, y1):
+        t = (y - y0) / (y1 - y0)
+        c = (int(14 + 20 * t), int(20 + 40 * t), int(46 + 30 * t))
+        for x in range(1, 175):
+            px[x, y] = c + (255,)
+    for _ in range(70):
+        x, y = rnd.randint(3, 172), rnd.randint(y0 + 2, y0 + 50)
+        b = rnd.randint(150, 255)
+        px[x, y] = (b, b, min(255, b + 20), 255)
+    # eternal-sky sun disc (top right)
+    cx, cy = 156, y0 + 10
+    for y in range(cy - 6, cy + 7):
+        for x in range(cx - 6, cx + 7):
+            if (x - cx) ** 2 + (y - cy) ** 2 <= 36:
+                px[x, y] = (250, 214, 110, 255)
+    # three mountain layers, darker towards the front
+    for k, (base, amp, col) in enumerate(((y0 + 58, 14, (40, 56, 84)), (y0 + 70, 11, (30, 42, 64)), (y0 + 82, 7, (22, 30, 46)))):
+        ph = rnd.random() * 6.28
+        for x in range(1, 175):
+            top = int(base - amp * abs(math.sin(x / (19.0 - 4 * k) + ph)) - 3 * math.sin(x / 7.0 + ph * 2))
+            for y in range(max(y0, top), y1):
+                px[x, y] = col + (255,)
+            if k == 0 and top < y1 and top - 1 >= y0:
+                px[x, top] = (210, 224, 236, 255)  # snow line on the far range
+    d = ImageDraw.Draw(img)
+
+    def centre(r: int, c: int) -> tuple[int, int]:
+        return 8 + c * 18 + 7, 18 + r * 18 + 7
+
+    # the stair: a 5 px stone path with a gold edge between consecutive plinths (horizontal, then vertical)
+    for (r0, c0), (r1, c1) in zip(DUNGEON_SLOTS, DUNGEON_SLOTS[1:]):
+        (xa, ya), (xb, yb) = centre(r0, c0), centre(r1, c1)
+        pts = [(xa, ya), (xb, ya), (xb, yb)] if r0 == r1 else [(xa, ya), (xa, yb), (xb, yb)]
+        for (p0, p1) in zip(pts, pts[1:]):
+            d.line([p0, p1], fill=GOLD_D, width=7)
+            d.line([p0, p1], fill=STONE, width=5)
+        for (p0, p1) in zip(pts, pts[1:]):  # step marks every 4 px
+            n = max(abs(p1[0] - p0[0]), abs(p1[1] - p0[1]))
+            for i in range(0, n, 4):
+                x = p0[0] + (p1[0] - p0[0]) * i // max(1, n)
+                y = p0[1] + (p1[1] - p0[1]) * i // max(1, n)
+                px[x, y] = STONE_D + (255,)
+    # plinths: a stone well with a gold frame under every dungeon slot
+    for r, c in DUNGEON_SLOTS:
+        x, y = 8 + c * 18, 18 + r * 18
+        d.rectangle([x - 2, y - 2, x + 17, y + 17], fill=GOLD_D)
+        d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=STONE_D, outline=GOLD)
+    # header and toolbar row
+    d.rectangle([0, 0, 175, 16], fill=NAVY2)
+    d.line([0, 16, 175, 16], fill=GOLD)
+    for ox in (3, 164):
+        for (dx, dy) in ((1, 0), (2, 0), (0, 1), (3, 1), (1, 2), (2, 2), (0, 3), (3, 3), (1, 4), (2, 4)):
+            img.putpixel((ox + dx * 2, 4 + dy * 2), GOLD + (255,))
+    d.line([0, y1, 175, y1], fill=GOLD)
+    d.rectangle([1, y1 + 1, 174, height - 2], fill=NAVY)
+    for c in range(9):
+        x, y = 8 + c * 18, 18 + 5 * 18
+        d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=NAVY2, outline=GOLD_D)
+    d.rectangle([0, 0, 175, height - 1], outline=GOLD_D)
+    add_bitmap("GUI_DUNGEONS", img, "gui/dungeons", height, 13, f"chest background dungeons 176x{height} (dungeon ladder)")
+    if preview:
+        img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_dungeons.png"))
+
+
 TREE_COLORS = {
     "off": ((84, 62, 36), (50, 36, 20)),
     "on": ((250, 196, 60), (150, 100, 20)),
@@ -549,6 +635,7 @@ def main() -> None:
     blank_item()
     tree_items()
     orb_item()
+    gui_dungeons(args.preview)  # last: earlier glyphs keep their code points
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)

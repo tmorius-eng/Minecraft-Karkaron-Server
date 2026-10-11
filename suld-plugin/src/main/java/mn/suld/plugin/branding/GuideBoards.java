@@ -67,7 +67,7 @@ public final class GuideBoards {
                     + bullet("• Эрэл дуусга", "— бүлэг бүр зоос өгнө")
                     + bullet("• Өдрийн даалгавар:", "«/tasks»")
                     + bullet("• Өдрийн шагнал:", "«/daily»")
-                    + bullet("• Агуй:", "«/dungeon list» — их шагнал")
+                    + bullet("• Агуй:", "«/dungeon» — их шагнал")
                     + bullet("• Арилжаа:", "«/trade»  «/pay»")
                     + GAP + line("Зарцуул: «/rankup»  «/cosmetics»  Дархан")),
             new Board(0, 5.6, -9, title("АНГИ БА ТУЛАА") + GAP
@@ -92,7 +92,7 @@ public final class GuideBoards {
                     + GAP + "<bold><red>HARDCORE:</red><white> үхвэл юмныхаа</white></bold>\n"
                     + line("хагас, EXP-ийн 10 хувийг алдана.")
                     + line("Хот аюулгүй: PvP, мангас үгүй. «/spawn»")
-                    + line("Агуй (бүлгээрээ): «/dungeon list»")),
+                    + line("Агуй (бүлгээрээ): «/dungeon»")),
             new Board(16, 4.8, -2, title("КОМАНДУУД") + GAP
                     + line("«/menu» «/help» «/tutorial»")
                     + line("«/quest» «/tasks» «/daily»")

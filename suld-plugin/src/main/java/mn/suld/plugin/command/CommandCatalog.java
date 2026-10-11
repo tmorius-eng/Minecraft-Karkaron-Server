@@ -70,7 +70,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/trade <нэр>", "Тоглогчтой аюулгүй арилжаа", null),
             e(Group.GAME, "/mori", "Өөрийн морь (5-р түвшнээс)", null),
             e(Group.GAME, "/party …", "Бүлэг: invite, accept, leave, kick…", null),
-            e(Group.GAME, "/dungeon list|enter|status|leave", "Агуйн аян (4 агуй)", null),
+            e(Group.GAME, "/dungeon", "Агуйн Шат: 10 агуйн цонх, хаалга руу зам заана", null),
             e(Group.GAME, "/clan …", "Овог: create, invite, top, info…", null),
             e(Group.GAME, "/cc <мессеж>", "Овгийн чат", null),
             e(Group.GAME, "/relic list|info|hint|history", "Дэлхийд ганц реликс", null),

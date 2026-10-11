@@ -25,7 +25,7 @@ public final class TipsService {
             "<white><bold>Өдөр бүр 3 шинэ анчны даалгавар: <aqua><click:run_command:'/tasks'>/tasks</click></aqua></bold></white>",
             "<white><bold>Шинэ нутаг нээх бүрт EXP — Говь, Хангай, Алтайг судал!</bold></white>",
             "<white><bold>Үхвэл юмныхаа хагасыг алдана. Үнэт зүйлээ хотод хадгал!</bold></white>",
-            "<white><bold>Бүлэг байгуулж агуйд яв: <aqua>/party invite</aqua> <gray>→</gray> <aqua>/dungeon list</aqua></bold></white>",
+            "<white><bold>Бүлэг байгуулж агуйд яв: <aqua>/party invite</aqua> <gray>→</gray> <aqua>/dungeon</aqua></bold></white>",
             "<white><bold>Цолоо ахиул: <aqua><click:run_command:'/rankup'>/rankup</click></aqua> · Түвшний шагнал: <aqua><click:run_command:'/lvlup'>/lvlup</click></aqua></bold></white>",
             "<white><bold>Гоёл, таг, өнгө: <aqua><click:run_command:'/cosmetics'>/cosmetics</click></aqua> · Дэлгүүр: <aqua><click:run_command:'/buy'>/buy</click></aqua></bold></white>");
 

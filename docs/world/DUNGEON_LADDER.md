@@ -5,9 +5,17 @@ opens when **both** hold:
 1. the player's level is at least the dungeon's minimum;
 2. the previous dungeon on the ladder has been cleared once (stored in the player's data, `suld:dungeon_clears`).
 
-`suld.admin.world` skips the ladder gate. `/dungeon list` shows for each dungeon:
-* its state: ✔ cleared, ▶ open, 🔒 locked (and why);
-* the gate's coordinates, compass direction and distance.
+`suld.admin.world` skips the ladder gate. `/dungeon` opens **Агуйн Шат**, the dungeon window (`gui/DungeonMenu`,
+background `gui_dungeons` in `tools/pack/gen_ui.py`): ten plinths on a stone stair climbing from the steppe to the sky
+palace, one per dungeon (the stack count is its rung). Each tooltip shows:
+* its state: ✔ cleared (glowing), ▶ open, 🔒 locked (and why);
+* the place, level, party size, waves and boss;
+* the gate's compass direction and distance.
+
+A click within 16 blocks of the gate enters. Anywhere else it starts a purple way-finder bar to the gate
+(`dungeon/DungeonGuide`: arrow, direction, distance; it ends at the gate, on entering a run or after 30 minutes).
+The bottom row has the main menu, the party, the player's progress (cleared x/10), leave-the-run or stop-the-guide,
+and close. The chat list is gone.
 
 | # | Dungeon | Level | Party | Gate (bearing / distance from the spawn) | Hall | Waves | Boss |
 |---|---|---|---|---|---|---|---|

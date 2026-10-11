@@ -15,7 +15,7 @@ the README (local test server).
 | `/quest` | Storyline board (18 chapters); `/quest info` prints the active chapter; `/quest track` toggles the tracker (boss bar with arrow and distance to the objective's region) |
 | `/rankup`, `/lvlup` | Rank ladder (Ард → Хаан, costs ₮) · level rewards |
 | `/shop`, `/cosmetics`, `/buy` | Supplies and selling loot · tags/colours/join messages/emojis · credit store |
-| `/party`, `/dungeon`, `/clan`, `/cc` | Groups, the four dungeons (`/dungeon list`), clans and clan chat |
+| `/party`, `/dungeon`, `/clan`, `/cc` | Groups, the dungeon window (`/dungeon`: the ten-dungeon ladder, a way-finder to each gate), clans and clan chat |
 | `/mori` | Personal steppe horse from level 5 (faster, finer coat with rank); disappears when you get off |
 | `/trade <player>` | Safe trade window with a player within 24 blocks: items and coins, both confirm (relics and the menu clock cannot be traded; audited in the log) |
 | `/discord`, `/website`, `/vote` | Clickable links from `branding.discord`, `branding.domain`, `branding.vote-url` |

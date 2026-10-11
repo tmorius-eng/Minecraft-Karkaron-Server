@@ -52,8 +52,8 @@ commands:
     usage: /party <invite|accept|leave|kick|promote|disband|info>
     aliases: [p]
   dungeon:
-    description: SULD dungeons (list, enter, status, leave, abort).
-    usage: /dungeon <list|enter|status|leave|abort>
+    description: SULD dungeons (opens the dungeon window; enter, status, leave, abort).
+    usage: /dungeon [enter|status|leave|abort]
     aliases: [agui]
   clan:
     description: SULD clans (create, invite, accept, leave, kick, promote, demote, transfer, disband, info, top, chat).

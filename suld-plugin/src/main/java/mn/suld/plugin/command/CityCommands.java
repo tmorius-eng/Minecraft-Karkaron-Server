@@ -105,7 +105,7 @@ public final class CityCommands implements Listener {
                     l("Мангас ан — олз (арьс, зэвсэг) унана; захын худалдаачинд зарна: /shop", "/shop"),
                     l("Эрэл дуусга — «Сүлдний Зам»-ын бүлэг бүр зоос, EXP өгнө: /quest", "/quest"),
                     l("Өдрийн даалгавар: /tasks   Өдрийн шагнал: /daily", "/tasks"),
-                    l("Агуй — босс, их шагнал: /dungeon list", "/dungeon list"),
+                    l("Агуй — босс, их шагнал: /dungeon", "/dungeon"),
                     l("Бусадтай арилжих: /trade <нэр>   зоос шилжүүлэх: /pay <нэр> <тоо>", null),
                     l("Зарцуул: /rankup (цол), Дархан (засвар, сайжруулалт), /cosmetics (гоёл)", "/rankup"))),
             new Page("class", "Анги · Classes", List.of(
@@ -127,7 +127,7 @@ public final class CityCommands implements Listener {
                     l("Их Ордон — хойд дэнж: хааны танхим.", null))),
             new Page("dungeon", "Агуй ба бүлэг · Dungeons and parties", List.of(
                     l("Бүлэг байгуулах: /party invite <нэр>   хүлээн авах: /party accept", "/party info"),
-                    l("Агуйн аян: /dungeon list → тал нутагт /dungeon enter", "/dungeon list"),
+                    l("Агуйн аян: /dungeon → агуйгаа сонгож хаалга руу нь яв", "/dungeon"),
                     l("Агуй хотын дотор эхлэхгүй — хаалгаар гар.", null),
                     l("Төлөв: /dungeon status   гарах: /dungeon leave", "/dungeon status"))),
             new Page("clan", "Овог · Clans", List.of(

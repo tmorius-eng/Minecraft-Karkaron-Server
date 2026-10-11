@@ -105,7 +105,7 @@ public final class Menus {
             new Step(Material.LEATHER, "4. Олз ба зоос", GREEN, List.of("Чонын арьс, баавгайн арьсаа", "дэлгүүрт зарж зоос ол."), "/shop"),
             new Step(Material.EXPERIENCE_BOTTLE, "5. Түвшин ба шагнал", GREEN, List.of("EXP цуглуулж түвшин ахи.", "Түвшин бүрийн шагналаа /lvlup-аар ав.", "Өдөр бүр /daily — өдрийн шагнал."), "/lvlup"),
             new Step(Material.GOLDEN_HELMET, "6. Цол ахиулах", PURPLE, List.of("Ард → Цэрэг → Аравт → ... → Хаан.", "Түвшин + зоос шаардлагатай."), "/rankup"),
-            new Step(Material.MOSSY_COBBLESTONE, "7. Агуй ба бүлэг", NamedTextColor.GRAY, List.of("Бүлэг байгуулж агуйн аянд яв.", "/party invite <нэр>, /dungeon list"), "/dungeon list"),
+            new Step(Material.MOSSY_COBBLESTONE, "7. Агуй ба бүлэг", NamedTextColor.GRAY, List.of("Бүлэг байгуулж агуйн аянд яв.", "/party invite <нэр>, /dungeon"), "/dungeon"),
             new Step(Material.WHITE_BANNER, "8. Овог", NamedTextColor.AQUA, List.of("Овог байгуулж эсвэл нэгдэж", "EXP нэмэгдэл ав."), "/clan top"),
             new Step(Material.NETHER_STAR, "9. Реликс", GOLD, List.of("Дэлхийд ганц домогт эд зүйлс.", "Эзэмшигч хаана ч халдлагад өртөнө!"), "/relic hint"));
 
@@ -271,9 +271,9 @@ public final class Menus {
         }
         m.set(45, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
         m.set(48, Menu.item(Material.MOSSY_COBBLESTONE, Menu.title("Агуйнууд", SKY), Menu.lore(SKY,
-                List.of(b("Агуйн аян: бүлгээрээ яв."), b("Тал нутагт /dungeon enter.")), List.of(), "Жагсаалт")), (pl, c) -> {
+                List.of(b("Агуйн аян: бүлгээрээ яв."), b("Агуйн шатыг нээж хаалга руугаа зам заалга.")), List.of(), "Агуйн Шат")), (pl, c) -> {
             pl.closeInventory();
-            pl.performCommand("dungeon list");
+            pl.performCommand("dungeon");
         });
         m.set(50, Menu.item(Material.PLAYER_HEAD, Menu.title("Бүлэг", SKY), Menu.lore(SKY, List.of(b("/party invite <нэр>")), List.of(), "Мэдээлэл")),
                 (pl, c) -> {

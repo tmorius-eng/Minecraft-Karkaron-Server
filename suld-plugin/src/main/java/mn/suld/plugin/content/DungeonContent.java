@@ -115,7 +115,7 @@ public final class DungeonContent {
         };
     }
 
-    /** Where to run it (shown in /dungeon list). */
+    /** Where to run it (shown in the /dungeon window). */
     public static String where(String dungeonId) {
         return switch (dungeonId) {
             case "dungeon.govi_bulsh" -> "Говь (өмнө)";

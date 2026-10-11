@@ -128,6 +128,8 @@ public final class Glyphs {
     public static final String GUI_FRAME = "\uE039";
     /** chest background skillmap 176x126 (parchment map, toolbar row) */
     public static final String GUI_SKILLMAP = "\uE03A";
+    /** chest background dungeons 176x126 (dungeon ladder) */
+    public static final String GUI_DUNGEONS = "\uE03B";
 
     private Glyphs() {
     }
