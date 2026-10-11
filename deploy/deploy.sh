@@ -94,7 +94,7 @@ install_packages() {
   log "Installing packages"
   run env DEBIAN_FRONTEND=noninteractive apt-get update -y
   run env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      ca-certificates curl git unzip zip tmux nginx postgresql postgresql-client ufw fail2ban \
+      ca-certificates curl git unzip zip tmux nginx postgresql postgresql-client ufw fail2ban rsync \
       python3 openssl iproute2 "$JAVA_PACKAGE"
   if [[ "$DRY_RUN" != "1" ]]; then
     java -version 2>&1 | grep -q 'version "21' || die "Java 21 not active ($(java -version 2>&1 | head -1)); check JAVA_PACKAGE"

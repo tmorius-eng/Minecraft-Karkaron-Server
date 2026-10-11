@@ -216,7 +216,10 @@ sudo cp "$SERVER_DIR".broken-*/paper.jar "$SERVER_DIR"/ && sudo chown suld:suld 
 sudo /opt/suld/bin/start.sh && sudo /opt/suld/bin/health-check.sh
 ```
 
-The database restore path (a dump from an online backup into a fresh database) was exercised in the dev sandbox.
+The full path (backup.sh with `/suld flush` → off-host copy → checksum → restore into a fresh database and directory →
+boot) was drilled at schema V16 in the dev container on 2026-10-11: `docs/operations/RESTORE_DRILL.md`. It still has to
+be repeated on the VPS with a real remote target. Set `BACKUP_REMOTE` in `/etc/suld/suld.env`; without it every backup
+lives only on the server's own disk.
 
 ---
 
@@ -287,5 +290,6 @@ The database restore path (a dump from an online backup into a fresh database) w
 | `health-check.sh` | same live server: ping, plugin on PostgreSQL (schema v2), pack SHA-1 over HTTP | ✅ (systemd check fails off-VPS, as expected) |
 | `backup.sh` online + rotation + checksums | 3 runs, keep=2, save-off/save-on seen in log | ✅ |
 | Restore of the DB dump into a fresh database | 6 tables, schema v2 | ✅ |
+| backup.sh (flush, dump, archive, off-host copy) + restore + boot | schema V16, dev container, `docs/operations/RESTORE_DRILL.md` | ✅ (VPS drill ⏳) |
 | `op.sh` op/deop + name validation | live server (`qeevr_`) | ✅ |
 | apt installs, nginx, ufw, fail2ban, systemd lifecycle, `update.sh` end to end | needs a real Ubuntu 24.04 VM | ⏳ first real deploy |

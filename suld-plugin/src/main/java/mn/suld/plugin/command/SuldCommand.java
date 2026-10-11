@@ -37,6 +37,7 @@ public final class SuldCommand implements CommandExecutor {
             case "info" -> info(sender);
             case "profile" -> profile(sender);
             case "spawnmob" -> spawnMob(sender, args);
+            case "flush" -> flush(sender);
             case "auth" -> authStatus(sender);
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
@@ -90,6 +91,45 @@ public final class SuldCommand implements CommandExecutor {
     }
 
     /** Admin: {@code /suld spawnmob [player] [mobId] [count]} — SÜLD mobs at a player (console too; QA of mob rewards). */
+    /**
+     * Admin/console: {@code /suld flush}. Writes every cached profile and every dirty style and clan now, then writes
+     * {@code plugins/SULD/flush.done} ("ok <epochMs> …" or "error <epochMs> …") once all writes completed, so
+     * deploy/backup.sh can take the database dump only after SÜLD's in-memory state is on disk (audit OPS-001).
+     * The writes are the normal async saves: nothing blocks the main thread.
+     */
+    private void flush(CommandSender sender) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        long started = System.currentTimeMillis();
+        java.util.List<java.util.concurrent.CompletableFuture<?>> writes = new java.util.ArrayList<>();
+        int profiles = 0;
+        for (mn.suld.api.profile.PlayerProfile pr : services.profiles().cachedProfiles()) {
+            writes.add(services.profiles().save(pr));
+            profiles++;
+        }
+        writes.add(services.styles().stop());
+        writes.add(services.clans().shutdown());
+        int n = profiles;
+        java.nio.file.Path marker = plugin.getDataFolder().toPath().resolve("flush.done");
+        java.util.concurrent.CompletableFuture.allOf(writes.toArray(new java.util.concurrent.CompletableFuture[0]))
+                .orTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .whenComplete((v, err) -> {
+                    String line = (err == null ? "ok " : "error ") + started + " profiles=" + n + " ms=" + (System.currentTimeMillis() - started)
+                            + (err == null ? "" : " " + err);
+                    try {
+                        java.nio.file.Files.writeString(marker, line + "\n");
+                    } catch (java.io.IOException io) {
+                        plugin.getLogger().severe("flush: cannot write " + marker + ": " + io.getMessage());
+                    }
+                    plugin.getLogger().info("[SULD] flush " + line);
+                    Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(err == null
+                            ? Messages.success("Хадгаллаа: " + n + " профайл, стиль, овог (" + (System.currentTimeMillis() - started) + " ms)")
+                            : Messages.error("Хадгалалт бүтсэнгүй: " + err.getMessage())));
+                });
+    }
+
     private void spawnMob(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
             sender.sendMessage(Messages.error("Эрх алга."));
