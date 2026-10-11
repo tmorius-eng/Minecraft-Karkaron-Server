@@ -181,6 +181,7 @@ public final class HudComposer {
             case 2 -> HudGlyphs.NUM_II;
             case 3 -> HudGlyphs.NUM_III;
             case 4 -> HudGlyphs.NUM_IV;
+            case 5 -> HudGlyphs.NUM_V;
             default -> HudGlyphs.NUM_ULT;
         };
     }

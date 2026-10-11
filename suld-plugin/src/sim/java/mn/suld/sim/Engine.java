@@ -1,5 +1,9 @@
 package mn.suld.sim;
 
+import mn.suld.api.balance.CombatRules;
+
+import mn.suld.api.skill.Spell;
+
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.item.EquipSlot;
 import mn.suld.api.item.ItemCatalog;
@@ -290,7 +294,18 @@ public final class Engine {
         double cc = Math.min(1, 0.05 + p.stat(StatKey.CRIT_CHANCE) / 100.0);
         double cm = 1.5 + p.stat(StatKey.CRIT_DAMAGE) / 100.0;
         double speed = 1 + p.stat(StatKey.ATTACK_SPEED_PCT) / 100.0;
-        return attack() * r.hitsPerSecond(p.clazz) * speed * (1 + cc * (cm - 1)) * 1.2; // ×1.2 spells between hits
+        return attack() * r.hitsPerSecond(p.clazz) * speed * (1 + cc * (cm - 1)) * (1 + spells());
+    }
+
+    /**
+     * Spells between hits, as a share of the basic attack's damage: 0.2 (0.23 once the fifth spell opens at 50),
+     * scaled like the live spell damage (SkillTreeService.spellDamageMultiplier: the SPELL_DAMAGE stat of gear and
+     * tree, the class passive) and by the spell rank (II at 40, III at 55).
+     */
+    double spells() {
+        double share = p.level >= Spell.UNLOCK_LEVEL[Spell.SHIFT_F_SLOT] ? 0.23 : 0.2;
+        double power = 1 + p.stat(StatKey.SPELL_DAMAGE) / 100.0 + CombatRules.spellPassive(p.clazz);
+        return share * power * Spell.rankPower(Spell.TENGER_TSAVCHILT.rankAt(p.level));
     }
 
     double maxHp() {

@@ -35,4 +35,12 @@ public final class CombatRules {
     public static double classHealth(PlayerClass c, int level) {
         return c.baseHealth() * (1 + 0.04 * (Math.max(1, level) - 1));
     }
+
+    /**
+     * The class's own spell power on top of the SPELL_DAMAGE stat: Бөө, the caster, adds 25 % («Тэнгэрийн хүч»); the
+     * others 0. Live in SkillTreeService.spellDamageMultiplier, measured by the simulator.
+     */
+    public static double spellPassive(PlayerClass c) {
+        return c == PlayerClass.BOO ? 0.25 : 0.0;
+    }
 }
