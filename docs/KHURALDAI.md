@@ -127,6 +127,12 @@ entering a dungeon leaves the board.
 * `./gradlew build`: `WeeklyCycleTest`, `CampaignRunTest`, `VoteAndRotationTest`, `ChronicleTest`, `PartyFinderTest`,
   `InMemoryCampaignRepositoryTest`, `SuldConfigFactoryTest`, `ContentDataTest`, `CulturalNamingTest`;
   `JdbcCampaignRepositoryIT` and `JdbcChronicleRepositoryIT` (H2 always, PostgreSQL with `SULD_TEST_PG_URL`).
-* Bot smoke: `tools/loadtest/khuraldai-smoke.md` lists the admin sequence (open → vote → close → force → kills →
-  restart → resolve → chronicle) and what each step must print.
+* Bot smoke, run 2026-10-11 on a local Paper 1.21.11 + PostgreSQL 16 with the dev offline flag:
+  `tools/loadtest/bots/khuraldai-smoke.js` **22/22** (ballot opens and stays open outside the window, a level-1 and a
+  day-old character are refused, one vote per player, close with the quorum rule, forced campaign with its boss bar,
+  party finder recruit/find/join/role, resolve, chronicle, `/chronicle` and `/chronicle mine` screens, a PvP hit without
+  consent does no damage) and `tools/loadtest/bots/campaign-deliver.js` **7/7** (60 deliveries → SUCCEEDED → gold tier
+  +450 EXP / +45 coins → `UNLOCK_EVENT` applied and stored in `suld_world_state` → chronicle). A stop/start mid-campaign
+  logged `[campaign] restored … 0/60` and `[campaign] world effects: 1 live`.
+* Not yet bot-exercised: the kill and dungeon-clear contribution hooks, PROP and NPC effects in the world.
 * Real client (owner): `/khuraldai` GUI voting, the Аян card, `/chronicle mine`, the boss bar text at GUI scale 2–4.
