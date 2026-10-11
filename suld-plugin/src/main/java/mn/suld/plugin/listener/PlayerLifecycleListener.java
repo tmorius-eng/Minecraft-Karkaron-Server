@@ -55,7 +55,12 @@ public final class PlayerLifecycleListener implements Listener {
         player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "! — SÜLD"));
         if (!profile.hasSelectedClass()) {
             player.sendMessage(Messages.info("Анхны алхам: ангиа сонгоно уу."));
-            services.classSelectionGui().open(player);
+            // not in the same tick as the pack prompt: the menu would replace it and the pack would be lost (ONB-001)
+            services.resourcePacks().afterPack(player, () -> {
+                if (!player.isOnline()) return;
+                PlayerProfile now = services.profiles().cached(id).orElse(null);
+                if (now != null && !now.hasSelectedClass()) services.classSelectionGui().open(player);
+            });
         } else {
             services.quests().ensure(player, profile);
             player.sendMessage(Messages.info("Анги: "

@@ -7,8 +7,10 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,6 +51,14 @@ public final class ResourcePackService implements Listener {
     private String bundledSha1 = "";
     private HttpServer server;
     private ExecutorService httpPool;
+    /** First-join screens wait here until the pack prompt is answered (ONB-001). */
+    private final PackGate gate = new PackGate(PROMPT_WAIT_MS, DOWNLOAD_WAIT_MS);
+    private BukkitTask gateTicker;
+
+    /** No answer yet: the prompt may still be on screen. Give the player this long to read it. */
+    static final long PROMPT_WAIT_MS = 30_000;
+    /** Accepted: the download is running; wait at most this long for "loaded" / "failed". */
+    static final long DOWNLOAD_WAIT_MS = 90_000;
 
     public ResourcePackService(Plugin plugin, ResourcePackSettings settings) {
         this.plugin = plugin;
@@ -110,6 +120,8 @@ public final class ResourcePackService implements Listener {
     }
 
     public void stop() {
+        if (gateTicker != null) gateTicker.cancel();
+        gateTicker = null;
         if (server != null) server.stop(0);
         if (httpPool != null) httpPool.shutdownNow();
         server = null;
@@ -165,18 +177,66 @@ public final class ResourcePackService implements Listener {
         return status.get(player);
     }
 
+    /**
+     * Run {@code action} (on the main thread) once this player's pack prompt is settled: loaded, declined or failed,
+     * or after a bounded wait when the client stays silent. Opening an inventory while the vanilla pack prompt is on
+     * screen replaces the prompt and the pack request is lost, so first-join screens go through here.
+     * Runs at once when no pack is sent or the player already answered this session.
+     */
+    public void afterPack(Player player, Runnable action) {
+        PlayerResourcePackStatusEvent.Status known = status.get(player.getUniqueId());
+        if (!enabled() || (known != null && answer(known) == PackGate.Answer.TERMINAL)) {
+            action.run();
+            return;
+        }
+        gate.await(player.getUniqueId(), System.currentTimeMillis(), action);
+        if (gateTicker == null) {
+            gateTicker = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+                for (Runnable r : gate.due(System.currentTimeMillis())) run(r);
+            }, 20L, 20L);
+        }
+    }
+
+    static PackGate.Answer answer(PlayerResourcePackStatusEvent.Status s) {
+        return switch (s) {
+            case SUCCESSFULLY_LOADED, DECLINED, FAILED_DOWNLOAD, INVALID_URL, FAILED_RELOAD, DISCARDED -> PackGate.Answer.TERMINAL;
+            case ACCEPTED, DOWNLOADED -> PackGate.Answer.IN_PROGRESS;
+        };
+    }
+
+    private void run(Runnable r) {
+        try {
+            r.run();
+        } catch (RuntimeException ex) {
+            plugin.getLogger().warning("Resource pack: a deferred join action failed: " + ex);
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        UUID id = event.getPlayer().getUniqueId();
+        gate.forget(id);
+        status.remove(id);
+    }
+
     @EventHandler
     public void onStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
         status.put(player.getUniqueId(), event.getStatus());
+        Runnable ready = gate.answer(player.getUniqueId(), answer(event.getStatus()), System.currentTimeMillis());
         switch (event.getStatus()) {
             case SUCCESSFULLY_LOADED -> player.sendMessage(Messages.success("Дүрс багц амжилттай ачаалагдлаа."));
             case DECLINED -> player.sendMessage(Messages.info("Дүрс багцгүйгээр тоглож байна. (Server list → Edit → Server Resource Packs: Enabled)"));
             case FAILED_DOWNLOAD, INVALID_URL, FAILED_RELOAD -> player.sendMessage(Messages.error(
-                    "Дүрс багц татаж чадсангүй (" + event.getStatus() + "). /suldpack force дахин оролдоно уу."));
+                    "Дүрс багц татаж чадсангүй (" + event.getStatus() + "). Дахин оролдох: /suldpack"));
             default -> {
                 // ACCEPTED / DOWNLOADED / other intermediate states: no message.
             }
+        }
+        if (ready != null) {
+            // the status event can arrive off the main thread; screens must open on it
+            if (plugin.getServer().isPrimaryThread()) run(ready);
+            else plugin.getServer().getScheduler().runTask(plugin, () -> run(ready));
         }
     }
 

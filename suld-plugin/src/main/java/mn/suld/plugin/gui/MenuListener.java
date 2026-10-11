@@ -148,9 +148,10 @@ public final class MenuListener implements Listener {
         // first join: the class choice opens instead (PlayerLifecycleListener); afterwards a welcome screen
         boolean hasClass = services.profiles().cached(p.getUniqueId()).map(pr -> pr.hasSelectedClass()).orElse(false);
         if (hasClass && plugin.getConfig().getBoolean("ui.welcome-screen", true)) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            // after the pack prompt is answered: a screen opened over the prompt replaces it (ONB-001)
+            services.resourcePacks().afterPack(p, () -> Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (p.isOnline() && !(p.getOpenInventory().getTopInventory().getHolder() instanceof Menu)) menus.welcome(p);
-            }, 40L);
+            }, 40L));
         }
     }
 
