@@ -36,8 +36,15 @@ public final class SoulboundGuard implements Listener {
 
     private final ItemFactory factory;
 
+    private java.util.function.Consumer<Player> restorer = p -> { };
+
     public SoulboundGuard(ItemFactory factory) {
         this.factory = factory;
+    }
+
+    /** What rebuilds a player's missing class gear (weapon and armour, same identities); wired by the plugin. */
+    public void restorer(java.util.function.Consumer<Player> restorer) {
+        this.restorer = restorer;
     }
 
     /** True for a soulbound SÜLD item. */
@@ -118,14 +125,25 @@ public final class SoulboundGuard implements Listener {
         }
     }
 
-    /** Closing the inventory with a bound item on the cursor would drop it: put it back into the bag instead. */
+    /**
+     * Closing the inventory with a bound item on the cursor would drop it: put it back into the bag instead. In
+     * creative mode the client owns the inventory screen (a piece dropped on the "destroy" slot never reaches the
+     * server), so on close whatever class gear is missing is rebuilt.
+     */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onClose(org.bukkit.event.inventory.InventoryCloseEvent e) {
         if (!(e.getPlayer() instanceof Player p)) return;
+        if (p.getGameMode() == org.bukkit.GameMode.CREATIVE) restorer.accept(p);
         ItemStack cursor = p.getItemOnCursor();
         if (!bound(cursor)) return;
         p.setItemOnCursor(null);
         giveBack(p, cursor);
+    }
+
+    /** Leaving creative mode: the same reconcile, in case the inventory was never closed. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onGameMode(org.bukkit.event.player.PlayerGameModeChangeEvent e) {
+        if (e.getPlayer().getGameMode() == org.bukkit.GameMode.CREATIVE) restorer.accept(e.getPlayer());
     }
 
     /**
@@ -147,7 +165,15 @@ public final class SoulboundGuard implements Listener {
                 break;
             }
         }
-        if (owner != null) giveBack(owner, it.clone());
+        // already rebuilt (creative reconcile): the dropped copy would be a duplicate of the same identity
+        if (owner != null && (i == null || !carries(owner, i.uuid()))) giveBack(owner, it.clone());
+    }
+
+    private boolean carries(Player p, java.util.UUID id) {
+        for (ItemStack in : p.getInventory().getContents()) {
+            if (in != null && factory.read(in).map(x -> x.uuid().equals(id)).orElse(false)) return true;
+        }
+        return false;
     }
 
     /** Into the bag; if it is full, the bound item takes a hotbar/bag slot of an unbound item, which drops instead. */

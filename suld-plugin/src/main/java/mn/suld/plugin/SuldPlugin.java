@@ -155,6 +155,17 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.item.ClassArmor classArmor = new mn.suld.plugin.item.ClassArmor(this, services);
         services.classArmor = classArmor;
         getServer().getPluginManager().registerEvents(classArmor, this);
+        // creative mode: the client owns that inventory, so a class piece dropped on the "destroy" slot is simply gone;
+        // when the creative inventory closes, whatever is missing comes back with the same identity
+        services.soulbound().restorer(pl -> getServer().getScheduler().runTask(this, () -> {
+            if (!pl.isOnline() || services.isSoul.test(pl.getUniqueId())) return;
+            boolean weapon = services.classWeapons().recover(pl) == mn.suld.plugin.item.ClassWeapons.Recovery.RESTORED;
+            mn.suld.plugin.item.ClassArmor.Recovered a = classArmor.recover(pl);
+            if (weapon || a.restored() > 0) {
+                services.equipment().dirty(pl);
+                pl.sendMessage(mn.suld.plugin.ui.Messages.info("Ангийн эд таны сүнстэй холбоотой — устгах боломжгүй, буцааж өглөө."));
+            }
+        }));
         mn.suld.plugin.activity.ActivePlaytimeService activity = new mn.suld.plugin.activity.ActivePlaytimeService(this, services);
         services.activity = activity;
         getServer().getPluginManager().registerEvents(activity, this);
