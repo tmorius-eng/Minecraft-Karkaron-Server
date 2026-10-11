@@ -205,14 +205,19 @@ public final class OvooService implements Listener {
         services.boosts().bless(p.getUniqueId(), until, BLESS_EXP);
         p.getPersistentDataContainer().set(blessKey, PersistentDataType.LONG, until);
         p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 60, 0, true, true));
+        long first = 0;
         if (last == null) {
-            services.profiles().cached(p.getUniqueId()).ifPresent(pr -> {
-                services.progression().grantExp(pr, FIRST_VISIT_EXP, ExpSource.DISCOVERY);
+            var pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+            if (pr != null) {
+                // a landmark (progression v2, Rewards.landmarkExp): 2 % of a level at the area's level × the gap
+                first = Math.max(FIRST_VISIT_EXP, mn.suld.api.balance.Rewards.landmarkExp(services.progression().engine().curve(),
+                        (o.area().minLevel() + o.area().maxLevel()) / 2, pr.progression().level()));
+                services.progression().grantExp(pr, first, ExpSource.DISCOVERY);
                 services.profiles().save(pr);
-            });
+            }
         }
         p.sendMessage(Messages.success("«" + o.area().name() + "»-ийн овоог нар зөв гурвантаа тойрлоо. Тэнгэр ивээг! "
-                + "(+5% EXP 30 мин" + (last == null ? ", анхны айлчлал +" + FIRST_VISIT_EXP + " EXP" : "") + ")"));
+                + "(+5% EXP 30 мин" + (first > 0 ? ", анхны айлчлал +" + first + " EXP" : "") + ")"));
     }
 
     private java.time.ZoneId zone() {

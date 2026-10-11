@@ -51,6 +51,13 @@ public final class BossService implements Listener {
 
     private final Map<UUID, Fight> fights = new HashMap<>();
 
+    /** A player's level (for the level-gap damage); 1 until set. */
+    private java.util.function.ToIntFunction<Player> levelOf = p -> 1;
+
+    public void levelOf(java.util.function.ToIntFunction<Player> f) {
+        this.levelOf = f;
+    }
+
     /** Abilities per boss mob id (registered by content; a boss without one fights with phases only). */
     private final Map<String, java.util.function.Function<LivingEntity, BossBrain>> brains = new HashMap<>();
 
@@ -135,7 +142,10 @@ public final class BossService implements Listener {
             return;
         }
         BossPhase phase = f.def.phases().get(f.phaseIndex);
-        event.setDamage(f.def.mob().scaledAttack() * phase.attackMultiplier() * (f.enraged ? ENRAGE_MULTIPLIER : 1.0));
+        int gap = f.def.mob().level() - levelOf.applyAsInt((Player) event.getEntity());
+        event.setDamage(f.def.mob().scaledAttack() * phase.attackMultiplier() * (f.enraged ? ENRAGE_MULTIPLIER : 1.0)
+                * mn.suld.api.balance.MobScaling.hitScale(f.def.mob().backingEntity(), true)
+                * mn.suld.api.balance.CombatRules.gapTaken(gap));
     }
 
     /** Enrage (the fight ran past its time limit) hits this much harder on top of the phase, in any phase. */

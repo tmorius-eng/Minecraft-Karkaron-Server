@@ -122,8 +122,9 @@ public final class CombatListener implements Listener {
 
     /**
      * A SÜLD mob hitting a player deals its designed attack (MobDefinition.scaledAttack: base × tier), melee or
-     * projectile, instead of the vanilla entity's damage, so a level-50 elite hits like one. Bosses set their own
-     * phase-scaled hit (BossService). NORMAL priority: the player's armour, reductions and dodge apply afterwards.
+     * projectile, instead of the vanilla entity's damage, so a level-50 elite hits like one, plus 8 % per level it is
+     * above the player (CombatRules.gapTaken). Bosses set their own phase-scaled hit (BossService). NORMAL priority:
+     * armour ({@link #onMitigate}), reductions and dodge apply afterwards.
      */
     @EventHandler(priority = org.bukkit.event.EventPriority.NORMAL, ignoreCancelled = true)
     public void onMobHitsPlayer(EntityDamageByEntityEvent event) {
@@ -141,7 +142,39 @@ public final class CombatListener implements Listener {
                 && event.getCause() != org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK && !projectile) {
             return; // explosions, thorns… keep their vanilla amount
         }
-        event.setDamage(def.scaledAttack());
+        // per hit × host swing interval / design interval: the damage per second is the design's (MobScaling.hitScale)
+        event.setDamage(def.scaledAttack() * mn.suld.api.balance.MobScaling.hitScale(def.backingEntity(), false)
+                * mn.suld.api.balance.CombatRules.gapTaken(def.level() - levelOf((Player) event.getEntity())));
+    }
+
+    /** The player's level (1 while the profile is loading). */
+    private int levelOf(Player p) {
+        return services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
+    }
+
+    /** Level of whatever hit a player: a SÜLD mob's own level, else (vanilla mobs, the world) the player's. */
+    private int attackerLevel(org.bukkit.entity.Entity damager, Player victim) {
+        org.bukkit.entity.Entity src = damager;
+        if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof org.bukkit.entity.Entity shooter) src = shooter;
+        MobDefinition def = mobs.mobId(src).map(SuldContent::mobFor).orElse(null);
+        return def != null ? def.level() : levelOf(victim);
+    }
+
+    /**
+     * SÜLD armour (the ARMOR stat of gear and tree): a hit from any mob loses a / (a + 10 + 2.5 · attacker level), at
+     * most 75 % (CombatRules.mitigation). Old armour stops being enough as the mobs get stronger. Vanilla armour points
+     * are off for players (SkillTreeService), so this is the only armour there is. HIGH: after the base hit is set.
+     */
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGH, ignoreCancelled = true)
+    public void onMitigate(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player victim)) return;
+        org.bukkit.entity.Entity src = event.getDamager();
+        if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof Player) return;
+        if (src instanceof Player) return;
+        mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
+        double armor = tree == null ? 0 : tree.build(victim).stat(mn.suld.api.skill.tree.StatKey.ARMOR);
+        if (armor <= 0) return;
+        event.setDamage(event.getDamage() * (1 - mn.suld.api.balance.CombatRules.mitigation(armor, attackerLevel(src, victim))));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -200,6 +233,9 @@ public final class CombatListener implements Listener {
             return;
         }
         mn.suld.plugin.skill.SkillTreeService skillTree = services.skillTree();
+        // level suppression: −4 % per level the mob is above the player (floor 40 %)
+        MobDefinition target = mobs.mobId(event.getEntity()).map(SuldContent::mobFor).orElse(null);
+        if (target != null) scale *= mn.suld.api.balance.CombatRules.gapDealt(target.level() - levelOf(player));
         DamageResult result = calculator.compute(attackOf(services, player) * scale, critOf(player),
                 skillTree == null ? 1.5 : skillTree.critMultiplier(player), 0.0, ThreadLocalRandomRoll());
         event.setDamage(result.finalDamage());
@@ -262,12 +298,32 @@ public final class CombatListener implements Listener {
         // (the boss too: its run pays gear once, at completion, to every participant)
         boolean dungeonTrash = entity.getScoreboardTags().contains(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG);
         if (summoned) farm = Math.min(farm, 0.2);
-        long expAmount = services.boosts().apply(killer.getUniqueId(), def.scaledExp());
-        if (skillTree != null) expAmount = Math.round(expAmount * skillTree.expMultiplier(killer));
-        if (farm < 1) expAmount = Math.max(1, Math.round(expAmount * farm));
+        int gap = def.level() - fromLevel;
+        // a party shares the kill: every member within 48 blocks gets (1 + 0.15·(n−1)) / n, each with their own gap
+        java.util.List<Player> sharers = sharers(killer, entity.getLocation());
+        double share = mn.suld.api.balance.ExpRules.partyShare(sharers.size() + 1);
+        long[] gain = killExp(killer, profile, def, share, farm);
+        long expAmount = gain[0];
         ExpGainResult exp = services.progression().grantExp(profile, expAmount, ExpSource.MOB_KILL);
-        killer.sendMessage(Messages.info("+" + expAmount + " EXP (" + def.displayName() + ")"
+        long coins = summoned ? 0 : Math.max(0, Math.round(def.coins() * farm));
+        if (coins > 0) profile.addCurrency(coins);
+        killer.sendMessage(Messages.info("+" + expAmount + " EXP" + (gain[1] > 0 ? " (амарсан +" + gain[1] + ")" : "")
+                + (coins > 0 ? " · +" + coins + " ₮" : "") + " (" + def.displayName() + ")"
+                + (gap <= -5 ? " · хэт сул мангас: EXP бага" : "")
                 + (farm < 1 ? " · нэг газарт хэт олон агнасан ×" + Math.round(farm * 100) / 100.0 + " — өөр газар оч" : "")));
+        for (Player m : sharers) {
+            PlayerProfile mp = services.profiles().cached(m.getUniqueId()).orElse(null);
+            if (mp == null) continue;
+            int mFrom = mp.progression().level();
+            long[] mg = killExp(m, mp, def, share, summoned ? 0.2 : 1.0);
+            ExpGainResult mr = services.progression().grantExp(mp, mg[0], ExpSource.MOB_KILL);
+            m.sendActionBar(Messages.info("+" + mg[0] + " EXP · бүлэг (" + def.displayName() + ")"));
+            if (mr.leveledUp()) {
+                Presentation.levelUp(m, mFrom, mr.after().level());
+                services.profiles().save(mp);
+            }
+            hud.update(m, mp);
+        }
         if (services.classArmor != null) services.classArmor.mobKilled(killer, entity, def, farm);
         services.clans().contribute(killer.getUniqueId(), Math.round(SuldContent.CLAN_EXP_PER_MOB_KILL * farm)); // fatigued and summoned kills level the clan less too
         if (exp.leveledUp()) {
@@ -290,6 +346,8 @@ public final class CombatListener implements Listener {
                 drops.removeIf(d -> java.util.concurrent.ThreadLocalRandom.current().nextDouble() >= keep);
             }
             if (summoned) drops.clear();
+            // 10+ levels below the player: no gear, materials only (progression v2, ExpRules.allowsGear)
+            else if (!mn.suld.api.balance.ExpRules.allowsGear(gap)) drops.removeIf(d -> !itemService.catalog().require(d.item().definitionId()).stackable());
             else if (dungeonTrash) drops.removeIf(d -> !itemService.catalog().require(d.item().definitionId()).stackable());
             drops = itemService.filtered(killer, drops);
             for (mn.suld.api.loot.LootDrop d : drops) {
@@ -346,6 +404,43 @@ public final class CombatListener implements Listener {
             services.profiles().save(profile);
         }
         hud.update(killer, profile);
+    }
+
+    /** Party members (not the killer) alive within 48 blocks of the kill in the same world. */
+    private java.util.List<Player> sharers(Player killer, org.bukkit.Location at) {
+        java.util.List<Player> out = new java.util.ArrayList<>();
+        var party = services.parties().partyOf(killer.getUniqueId()).orElse(null);
+        if (party == null) return out;
+        double r2 = mn.suld.api.balance.ExpRules.PARTY_RANGE * mn.suld.api.balance.ExpRules.PARTY_RANGE;
+        for (java.util.UUID id : party.members()) {
+            if (id.equals(killer.getUniqueId())) continue;
+            Player m = Bukkit.getPlayer(id);
+            if (m == null || m.isDead() || !m.getWorld().equals(at.getWorld()) || m.getLocation().distanceSquared(at) > r2) continue;
+            if (services.isSoul.test(id)) continue;
+            out.add(m);
+        }
+        return out;
+    }
+
+    /**
+     * EXP of one kill for one player (progression v2): the mob's EXP × the level-gap factor × the party share, then
+     * the capped bonuses (clan, relic, blessings, gear and tree EXP %: at most +50 %), catch-up, the farming factor,
+     * and the rested pool doubling it while it lasts. Returns {total, of which rested}; spends the rested EXP.
+     */
+    private long[] killExp(Player p, PlayerProfile pr, MobDefinition def, double share, double farm) {
+        int level = pr.progression().level();
+        double base = def.scaledExp() * mn.suld.api.balance.ExpRules.gapFactor(def.level() - level) * share;
+        mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
+        double gearPct = tree == null ? 0 : tree.expMultiplier(p) - 1;
+        long amount = services.boosts().apply(p.getUniqueId(), Math.round(base), gearPct);
+        amount = Math.round(amount * mn.suld.api.balance.ExpRules.catchUp(level, services.boosts().serverLevel()));
+        if (farm < 1) amount = Math.round(amount * farm);
+        amount = Math.max(1, amount);
+        mn.suld.api.profile.Endgame eg = pr.endgame();
+        long rested = level >= services.progression().engine().curve().maxLevel() ? 0
+                : mn.suld.api.balance.RestedPool.bonus(eg.restedExp(), amount);
+        if (rested > 0) pr.endgame(eg.withRested(eg.restedExp() - rested));
+        return new long[]{amount + rested, rested};
     }
 
     @EventHandler

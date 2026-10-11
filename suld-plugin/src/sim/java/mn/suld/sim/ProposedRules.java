@@ -41,7 +41,7 @@ public class ProposedRules extends Rules {
 
     /** EXP to go from L to L+1 = round(CURVE_BASE · L^CURVE_EXP) — plain config for PolynomialLevelCurve. */
     public static final double CURVE_EXP = mn.suld.api.balance.Balance.CURVE_EXP;
-    public static final double DEFAULT_CURVE_BASE = mn.suld.api.balance.Balance.CURVE_BASE;
+    public static final double DEFAULT_CURVE_BASE = mn.suld.api.balance.Balance.DESIGN_BASE;
 
     /** Death lock candidates evaluated by the simulation (minutes of real time, by level). */
     public enum LockCurve { NONE_30S, LINEAR, STEP, GEOMETRIC, LOG }
@@ -60,12 +60,17 @@ public class ProposedRules extends Rules {
     }
 
     public ProposedRules(double curveBase, LockCurve lockCurve) {
+        this(curveBase, lockCurve, true);
+    }
+
+    /** For {@link LiveRules}: the proposed rules without building the proposed world (live brings its own). */
+    protected ProposedRules(double curveBase, LockCurve lockCurve, boolean proposedWorld) {
         this.curveBase = curveBase;
         this.lockCurve = lockCurve;
         this.curve = new PolynomialLevelCurve(curveBase, CURVE_EXP, 60);
-        this.world = buildWorld();
-        this.catalog = catalog(LiveRules.liveCatalog(), world);
-        this.loot = new Loot(catalog);
+        this.world = proposedWorld ? buildWorld() : null;
+        this.catalog = proposedWorld ? catalog(LiveRules.liveCatalog(), world) : null;
+        this.loot = proposedWorld ? new Loot(catalog) : null;
     }
 
     public ProposedRules withLock(LockCurve c) {

@@ -28,10 +28,9 @@ public final class DungeonContent {
 
     // ------------------------------------------------------------------ Говийн Булш (Gobi, level 8+)
 
-    public static final MobDefinition SAND_KHAN = new MobDefinition("mob.elsnii_khaan", "Элсний Хаан — Булшны Эзэн", "HUSK",
-            MobTier.BOSS, 12, 16.0, 0.36, 90, "loot.elsnii_khaan");
+    public static final MobDefinition SAND_KHAN = MobDefinition.designed("mob.elsnii_khaan", "Элсний Хаан — Булшны Эзэн", "HUSK", MobTier.BOSS, 14, "loot.elsnii_khaan");
 
-    public static final DungeonDefinition GOBI_TOMB = new DungeonDefinition("dungeon.govi_bulsh", "Говийн Булш", 8, 1, 4,
+    public static final DungeonDefinition GOBI_TOMB = new DungeonDefinition("dungeon.govi_bulsh", "Говийн Булш", 9, 1, 4,
             List.of(List.of(WorldContent.SCORPION.id(), WorldContent.SCORPION.id(), WorldContent.SCORPION.id(), WorldContent.SCORPION.id()),
                     List.of(WorldContent.SAND_SPIRIT.id(), WorldContent.SAND_SPIRIT.id(), WorldContent.SAND_SPIRIT.id(),
                             WorldContent.SCORPION.id(), WorldContent.SCORPION.id()),
@@ -41,10 +40,9 @@ public final class DungeonContent {
 
     // ------------------------------------------------------------------ Баавгайн Үүр (Khangai, level 14+)
 
-    public static final MobDefinition FOREST_LORD = new MobDefinition("mob.oin_ezen", "Хар Баавгай — Ойн Эзэн", "POLAR_BEAR",
-            MobTier.BOSS, 18, 26.0, 0.48, 130, "loot.oin_ezen");
+    public static final MobDefinition FOREST_LORD = MobDefinition.designed("mob.oin_ezen", "Хар Баавгай — Ойн Эзэн", "POLAR_BEAR", MobTier.BOSS, 20, "loot.oin_ezen");
 
-    public static final DungeonDefinition BEAR_LAIR = new DungeonDefinition("dungeon.baavgain_uur", "Баавгайн Үүр", 14, 1, 4,
+    public static final DungeonDefinition BEAR_LAIR = new DungeonDefinition("dungeon.baavgain_uur", "Баавгайн Үүр", 15, 1, 4,
             List.of(List.of(WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id()),
                     List.of(WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id(), WorldContent.BEAR.id()),
                     List.of(WorldContent.BEAR.id(), WorldContent.BEAR.id(), WorldContent.GREY_WOLF.id(), WorldContent.GREY_WOLF.id())),
@@ -53,8 +51,7 @@ public final class DungeonContent {
 
     // ------------------------------------------------------------------ Мөсөн Оргил (Altai, level 22+)
 
-    public static final MobDefinition ICE_KHAN = new MobDefinition("mob.mosun_khaan", "Мөсөн Хаан — Оргилын Сахиул", "STRAY",
-            MobTier.BOSS, 26, 40.0, 0.6, 200, "loot.mosun_khaan");
+    public static final MobDefinition ICE_KHAN = MobDefinition.designed("mob.mosun_khaan", "Мөсөн Хаан — Оргилын Сахиул", "STRAY", MobTier.BOSS, 27, "loot.mosun_khaan");
 
     public static final DungeonDefinition ICE_PEAK = new DungeonDefinition("dungeon.mosun_orgil", "Мөсөн Оргил", 22, 1, 4,
             List.of(List.of(WorldContent.ICE_SPIRIT.id(), WorldContent.ICE_SPIRIT.id(), WorldContent.ICE_SPIRIT.id(), WorldContent.ICE_SPIRIT.id()),

@@ -26,8 +26,9 @@ public final class LadderContent {
         return List.of(new BossPhase(1.0, 1.0, "Сэрсэн"), new BossPhase(0.6, 1.3, "Уурласан"), new BossPhase(0.3, 1.6, "Галзуурсан"));
     }
 
+    /** Numbers follow from level and tier (progression v2, MobScaling); hp/dmg/exp are the retired hand-set values. */
     private static MobDefinition mob(String id, String name, String host, MobTier tier, int level, double hp, double dmg, long exp) {
-        return new MobDefinition(id, name, host, tier, level, hp, dmg, exp, "loot." + id.substring("mob.".length()));
+        return MobDefinition.designed(id, name, host, tier, level, "loot." + id.substring("mob.".length()));
     }
 
     // ------------------------------------------------------------------ 5. Далайн Гүн (29+): under Хөвсгөл

@@ -26,7 +26,7 @@ public final class QuestContent {
         return new QuestDefinition(id, title, desc, type, target, count, exp, coins);
     }
 
-    public static final QuestChain STORY = new QuestChain(List.of(
+    public static final QuestChain STORY = new QuestChain(v2(List.of(
             SuldContent.FIRST_HUNT,
             q("quest.wolf_pelts", "Чонын Арьс", "Анчинд 3 чонын арьс авчирч өг.",
                     QuestType.COLLECT_ITEM, "item.chonon_arisan", 3, 200, 30),
@@ -61,7 +61,39 @@ public final class QuestContent {
             q("quest.ice_peak", "Мөсөн Оргил", "Оргилын сахиул Мөсөн Хааныг ялж замаа нээ.",
                     QuestType.COMPLETE_DUNGEON, DungeonContent.ICE_PEAK.id(), 1, 4500, 420),
             q("quest.altai_giant", "Алтайн Аварга", "Тэнгэрийн шүтээнийг эзэлсэн 3 аваргыг ялж Сүлдийг сэргээ.",
-                    QuestType.KILL_MOB, WorldContent.GIANT.id(), 3, 5000, 600)));
+                    QuestType.KILL_MOB, WorldContent.GIANT.id(), 3, 5000, 600))));
+
+    /**
+     * Progression v2 rewards (Rewards.chapterExp): each chapter pays 35 % of a level at the chapter's level, coins
+     * ×2.5. The chapter's level: the level goal itself, the dungeon's minimum + 2, the region's minimum, the target
+     * mob's level, and level 2 for the first pelts.
+     */
+    private static List<QuestDefinition> v2(List<QuestDefinition> chapters) {
+        var curve = mn.suld.api.balance.Balance.curve();
+        java.util.List<QuestDefinition> out = new java.util.ArrayList<>();
+        for (QuestDefinition d : chapters) {
+            int lv = switch (d.type()) {
+                case REACH_LEVEL -> d.requiredCount();
+                case COMPLETE_DUNGEON -> {
+                    var dg = SuldContent.dungeonFor(d.targetId());
+                    yield dg == null ? 1 : dg.minLevel() + 2;
+                }
+                case DISCOVER_LOCATION -> {
+                    int m = 1;
+                    for (var r : WorldContent.REGIONS) if (r.id().equals(d.targetId())) m = r.minLevel();
+                    yield m;
+                }
+                case KILL_MOB -> {
+                    var mob = SuldContent.mobFor(d.targetId());
+                    yield mob == null ? 1 : mob.level();
+                }
+                case COLLECT_ITEM -> 2;
+            };
+            out.add(new QuestDefinition(d.id(), d.title(), d.description(), d.type(), d.targetId(), d.requiredCount(),
+                    mn.suld.api.balance.Rewards.chapterExp(curve, lv), Math.round(d.currencyReward() * 2.5)));
+        }
+        return out;
+    }
 
     private static final Map<String, Lore> LORE = Map.ofEntries(
             Map.entry("quest.first_hunt", new Lore("Анчин", "Хотын хаалгаар гараад зүүн зүгийн тал руу яв (Хэрлэн).")),

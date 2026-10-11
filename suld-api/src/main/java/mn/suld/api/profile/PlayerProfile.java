@@ -45,12 +45,13 @@ public final class PlayerProfile {
     private EquipmentState equipment;
     private mn.suld.api.classgear.ClassGear classGear;
     private mn.suld.api.activity.ActiveMinutes activeMinutes;
+    private Endgame endgame;
 
     private PlayerProfile(UUID playerId, String name, PlayerClass playerClass,
                           Progression progression, Instant createdAt, Instant lastSeenAt,
                           long version, long currency, QuestState questState, SkillState skillState,
                           EquipmentState equipment, mn.suld.api.classgear.ClassGear classGear,
-                          mn.suld.api.activity.ActiveMinutes activeMinutes) {
+                          mn.suld.api.activity.ActiveMinutes activeMinutes, Endgame endgame) {
         this.playerId = Objects.requireNonNull(playerId, "playerId");
         this.name = Objects.requireNonNull(name, "name");
         this.playerClass = playerClass;
@@ -64,12 +65,13 @@ public final class PlayerProfile {
         this.equipment = equipment == null ? EquipmentState.NONE : equipment;
         this.classGear = classGear == null ? mn.suld.api.classgear.ClassGear.NONE : classGear;
         this.activeMinutes = activeMinutes == null ? mn.suld.api.activity.ActiveMinutes.NONE : activeMinutes;
+        this.endgame = endgame == null ? Endgame.LEGACY : endgame;
     }
 
     /** Create a brand-new profile for a first-time player (no class yet). */
     public static PlayerProfile createNew(UUID playerId, String name, Instant now) {
         Objects.requireNonNull(now, "now");
-        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L, 0L, QuestState.NONE, SkillState.NONE, EquipmentState.NONE, null, null);
+        return new PlayerProfile(playerId, name, null, Progression.initial(), now, now, 0L, 0L, QuestState.NONE, SkillState.NONE, EquipmentState.NONE, null, null, Endgame.FRESH);
     }
 
     /** Rehydrate a profile loaded from storage. Used by persistence adapters. */
@@ -93,8 +95,19 @@ public final class PlayerProfile {
                                         @Nullable SkillState skillState, @Nullable EquipmentState equipment,
                                         mn.suld.api.classgear.@Nullable ClassGear classGear,
                                         mn.suld.api.activity.@Nullable ActiveMinutes activeMinutes) {
+        return restore(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState,
+                equipment, classGear, activeMinutes, null);
+    }
+
+    /** @param endgame null = a row from before progression v2 ({@link Endgame#LEGACY}) */
+    public static PlayerProfile restore(UUID playerId, String name, @Nullable PlayerClass playerClass,
+                                        Progression progression, Instant createdAt, Instant lastSeenAt,
+                                        long version, long currency, QuestState questState,
+                                        @Nullable SkillState skillState, @Nullable EquipmentState equipment,
+                                        mn.suld.api.classgear.@Nullable ClassGear classGear,
+                                        mn.suld.api.activity.@Nullable ActiveMinutes activeMinutes, @Nullable Endgame endgame) {
         return new PlayerProfile(playerId, name, playerClass, progression, createdAt, lastSeenAt,
-                version, currency, questState, skillState, equipment, classGear, activeMinutes);
+                version, currency, questState, skillState, equipment, classGear, activeMinutes, endgame);
     }
 
     public @NotNull UUID playerId() {
@@ -221,6 +234,21 @@ public final class PlayerProfile {
         touchInternal();
     }
 
+    public synchronized @NotNull Endgame endgame() {
+        return endgame;
+    }
+
+    public synchronized void endgame(Endgame endgame) {
+        if (endgame == null || endgame.equals(this.endgame)) return;
+        this.endgame = endgame;
+        touchInternal();
+    }
+
+    /** Ascension rank (Тэнгэрийн Зэрэг). */
+    public synchronized int ascension() {
+        return endgame.ascension();
+    }
+
     public synchronized @NotNull Instant lastSeenAt() {
         return lastSeenAt;
     }
@@ -245,11 +273,11 @@ public final class PlayerProfile {
     public record Snapshot(UUID playerId, String name, PlayerClass playerClass, Progression progression, Instant createdAt,
                            Instant lastSeenAt, long version, long currency, QuestState questState, SkillState skillState,
                            EquipmentState equipment, mn.suld.api.classgear.ClassGear classGear,
-                           mn.suld.api.activity.ActiveMinutes activeMinutes) {
+                           mn.suld.api.activity.ActiveMinutes activeMinutes, Endgame endgame) {
     }
 
     public synchronized Snapshot snapshot() {
-        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState, equipment, classGear, activeMinutes);
+        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState, equipment, classGear, activeMinutes, endgame);
     }
 
     /**

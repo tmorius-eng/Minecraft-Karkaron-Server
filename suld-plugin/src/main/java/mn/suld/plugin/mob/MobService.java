@@ -26,6 +26,7 @@ public final class MobService implements org.bukkit.event.Listener {
 
     private final NamespacedKey keyMobId;
     private final NamespacedKey keyMobLevel;
+    private final NamespacedKey keyMaxHp;
 
     private final Plugin plugin;
 
@@ -33,12 +34,18 @@ public final class MobService implements org.bukkit.event.Listener {
         this.plugin = plugin;
         this.keyMobId = new NamespacedKey(plugin, "mob_id");
         this.keyMobLevel = new NamespacedKey(plugin, "mob_level");
+        this.keyMaxHp = new NamespacedKey(plugin, "mob_max_hp");
     }
 
     /** Called for every SÜLD mob right after spawning (the model renderer dresses rigged mobs here). */
     public volatile java.util.function.BiConsumer<LivingEntity, MobDefinition> onSpawn = (e, d) -> { };
 
     public LivingEntity spawn(MobDefinition def, Location location) {
+        return spawn(def, location, def.scaledHealth());
+    }
+
+    /** Spawn with a max health other than the definition's (a boss sized for its dungeon's party). */
+    public LivingEntity spawn(MobDefinition def, Location location, double health) {
         EntityType type = EntityType.valueOf(def.backingEntity());
         Entity entity = location.getWorld().spawnEntity(location, type);
         if (!(entity instanceof LivingEntity living)) {
@@ -48,15 +55,16 @@ public final class MobService implements org.bukkit.event.Listener {
         living.setCustomNameVisible(true);
         living.setRemoveWhenFarAway(true);
 
-        applyHealth(living, def.scaledHealth());
+        applyHealth(living, health);
         // Some entities (wolves) reset their max health to the vanilla value right after spawning: apply it again.
         org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-            if (living.isValid() && maxHealth(living) != def.scaledHealth()) applyHealth(living, def.scaledHealth());
+            if (living.isValid() && maxHealth(living) != health) applyHealth(living, health);
         });
 
         living.getPersistentDataContainer().set(keyMobId, PersistentDataType.STRING, def.id());
         nameplate(living, def, maxHealth(living), maxHealth(living));
         living.getPersistentDataContainer().set(keyMobLevel, PersistentDataType.INTEGER, def.level());
+        living.getPersistentDataContainer().set(keyMaxHp, PersistentDataType.DOUBLE, health);
         onSpawn.accept(living, def);
         return living;
     }
@@ -172,11 +180,12 @@ public final class MobService implements org.bukkit.event.Listener {
             MobDefinition def = id == null ? null : mn.suld.plugin.content.SuldContent.mobFor(id);
             if (def == null) continue;
             AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
-            if (maxHealth != null && maxHealth.getBaseValue() != def.scaledHealth()) {
+            double want = living.getPersistentDataContainer().getOrDefault(keyMaxHp, PersistentDataType.DOUBLE, def.scaledHealth());
+            if (maxHealth != null && maxHealth.getBaseValue() != want) {
                 double hp = living.getHealth();
-                maxHealth.setBaseValue(def.scaledHealth());
-                living.setHealth(Math.min(def.scaledHealth(), Math.max(1, hp)));
-                nameplate(living, def, living.getHealth(), def.scaledHealth());
+                maxHealth.setBaseValue(want);
+                living.setHealth(Math.min(want, Math.max(1, hp)));
+                nameplate(living, def, living.getHealth(), want);
             }
         }
     }

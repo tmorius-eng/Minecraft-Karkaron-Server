@@ -19,8 +19,10 @@ class BalanceRulesTest {
 
     @Test
     void curveTotalsAboutTwoHundredHours() {
-        assertEquals(46_943_870L, CurveMigration.totalTo(V2, 60));
-        assertEquals(315, V2.expForLevel(1));
+        LevelCurve design = new PolynomialLevelCurve(Balance.DESIGN_BASE, Balance.CURVE_EXP, 60);
+        assertEquals(46_943_870L, CurveMigration.totalTo(design, 60), "the full design (ProposedRules)");
+        assertEquals(28_315_352L, CurveMigration.totalTo(V2, 60), 5, "live, tuned to today's content");
+        assertEquals(190, V2.expForLevel(1));
         assertEquals(0, V2.expForLevel(60));
     }
 
@@ -135,9 +137,10 @@ class BalanceRulesTest {
 
     @Test
     void ascensionCostsAndGates() {
-        assertEquals(1_487_086L, Ascension.cost(V2, 0), 1);
-        assertEquals(2_974_172L, Ascension.cost(V2, 1), 1);
-        assertEquals(4_461_259L, Ascension.cost(V2, 2), 1);
+        long n59 = V2.expForLevel(59);
+        assertEquals(Math.round(0.6 * n59), Ascension.cost(V2, 0));
+        assertEquals(Math.round(0.6 * n59 * 2), Ascension.cost(V2, 1));
+        assertEquals(Math.round(0.6 * n59 * 3), Ascension.cost(V2, 2));
         assertEquals(75_000, Ascension.riteCoins(2));
         double gp = GearPower.par(60);
         Ascension.Inputs ready = new Ascension.Inputs(60, 10, 10, 4, gp, 42, 42, 7);

@@ -67,6 +67,32 @@ public final class MobScaling {
         return baseDamage(level) * tier.damageMultiplier();
     }
 
+    /**
+     * Seconds between a vanilla host's hits (difficulty hard): melee mobs swing about once a second, a stray's bow
+     * every 2 s, a pillager's crossbow every 2.5 s.
+     */
+    public static double hostInterval(String entityType) {
+        return switch (entityType == null ? "" : entityType) {
+            case "STRAY", "SKELETON" -> 2.0;
+            case "PILLAGER" -> 2.5;
+            case "RAVAGER" -> 1.5;
+            default -> 1.0;
+        };
+    }
+
+    public static boolean rangedHost(String entityType) {
+        return "STRAY".equals(entityType) || "SKELETON".equals(entityType) || "PILLAGER".equals(entityType);
+    }
+
+    /**
+     * The designed damage per hit assumes a hit every 1.5 s (2 s ranged, 2 s for bosses). Scaling each real hit by
+     * host interval / design interval keeps the damage per second the design's whatever the host's swing speed.
+     */
+    public static double hitScale(String entityType, boolean boss) {
+        double design = boss || rangedHost(entityType) ? 2.0 : INTERVAL;
+        return hostInterval(entityType) / design;
+    }
+
     /** Boss health is sized for the dungeon's recommended party: ×0.44 for a solo dungeon … ×1.0 for four. */
     public static double bossPartyScale(int recommendedParty) {
         return 0.25 + 0.75 * Math.max(1, Math.min(4, recommendedParty)) / 4.0;

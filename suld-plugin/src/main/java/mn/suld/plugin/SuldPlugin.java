@@ -56,6 +56,12 @@ public final class SuldPlugin extends JavaPlugin {
 
         try {
             this.services = new SuldServices(this, config);
+            // progression v2: rescale bars still on the old curve once, fill the rested pool from offline time
+            mn.suld.api.progression.LevelCurve legacyCurve = new mn.suld.api.progression.PolynomialLevelCurve(
+                    getConfig().getDouble("progression.legacy-curve.base", 100.0),
+                    getConfig().getDouble("progression.legacy-curve.exponent", 1.75), config.progression().maxLevel());
+            mn.suld.api.progression.LevelCurve currentCurve = config.progression().toCurve();
+            services.profiles().onLoad(pr -> mn.suld.api.balance.ProfileUpgrade.onLoad(pr, legacyCurve, currentCurve, java.time.Instant.now()));
         } catch (Exception ex) {
             getLogger().severe("Failed to initialise SULD services: " + ex.getMessage());
             getServer().getPluginManager().disablePlugin(this);
@@ -72,6 +78,7 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(services.resourcePacks(), this);
         services.resourcePacks().start();
         getServer().getPluginManager().registerEvents(services.bosses(), this);
+        services.bosses().levelOf(pl -> services.profiles().cached(pl.getUniqueId()).map(pr -> pr.progression().level()).orElse(1));
         getServer().getPluginManager().registerEvents(services.mobs(), this);
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.combat.CombatFeedback(this, services.mobs()), this);
         getServer().getPluginManager().registerEvents(
@@ -429,7 +436,33 @@ public final class SuldPlugin extends JavaPlugin {
      * v2 — the resource pack is now self-hosted, so the old "enabled: false, no url" default is switched on.
      */
     private void migrateConfig() {
-        int version = getConfig().getInt("config-version", 1);
+        migrateToV4(getConfig().getInt("config-version", 1));
+        if (getConfig().getInt("config-version", 1) < 5) migrateCurve();
+    }
+
+    /**
+     * v5, progression v2: the shipped 100·L^1.75 curve (≈10 h to level 60) becomes 315·L^2.2 (≈200 h). A server that
+     * set its own curve keeps it. The old curve is kept as {@code progression.legacy-curve}: each profile still on it
+     * is rescaled once when it next loads (level kept, the same fraction of the bar; nobody loses a level).
+     */
+    private void migrateCurve() {
+        double base = getConfig().getDouble("progression.curve.base", 100.0);
+        double exp = getConfig().getDouble("progression.curve.exponent", 1.75);
+        if (!getConfig().isSet("progression.legacy-curve.base")) {
+            getConfig().set("progression.legacy-curve.base", base);
+            getConfig().set("progression.legacy-curve.exponent", exp);
+        }
+        if (base == 100.0 && exp == 1.75) {
+            getConfig().set("progression.curve.base", mn.suld.api.balance.Balance.CURVE_BASE);
+            getConfig().set("progression.curve.exponent", mn.suld.api.balance.Balance.CURVE_EXP);
+            getLogger().warning("config.yml migrated to v5: level curve 100*L^1.75 -> " + mn.suld.api.balance.Balance.CURVE_BASE + "*L^2.2 (progression v2). "
+                    + "Existing players keep their level; their bar is rescaled on their next login.");
+        }
+        getConfig().set("config-version", 5);
+        saveConfig();
+    }
+
+    private void migrateToV4(int version) {
         if (version >= 4) return;
         if (version == 3) {
             migrateStorage();

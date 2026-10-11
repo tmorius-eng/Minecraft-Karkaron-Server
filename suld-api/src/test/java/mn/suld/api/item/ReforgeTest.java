@@ -16,7 +16,8 @@ class ReforgeTest {
         assertEquals("item.khilentsiin_khor", Reforge.cost(8).materialId());
         assertEquals("item.baavgain_arisan", Reforge.cost(20).materialId());
         assertEquals("item.mosun_chuluu", Reforge.cost(30).materialId());
-        assertEquals(50, Reforge.cost(1).coins());
+        assertEquals(51, Reforge.cost(1).coins(), "0.6 + 25 + 25, rounded");
+        assertEquals(Math.round(0.6 * 900 + 25 * 30 + 25), Reforge.cost(30).coins());
         assertEquals(2, Reforge.cost(5).materialCount());
     }
 

@@ -29,7 +29,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     private static final String SELECT =
             "SELECT name, class_id, level, exp_into_level, created_at, last_seen_at, version, "
-                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes "
+                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes, endgame "
                     + "FROM suld_profiles WHERE player_uuid = ?";
 
     private final DataSource dataSource;
@@ -74,7 +74,8 @@ public final class JdbcProfileRepository implements ProfileRepository {
                             readSkills(playerId, rs.getString("skill_data")),
                             readEquipment(playerId, rs.getString("equipment_data")),
                             readClassGear(playerId, rs.getString("class_gear")),
-                            readActive(playerId, rs.getString("active_minutes")));
+                            readActive(playerId, rs.getString("active_minutes")),
+                            readEndgame(playerId, rs.getString("endgame")));
                     return Optional.of(profile);
                 }
             } catch (SQLException ex) {
@@ -107,6 +108,15 @@ public final class JdbcProfileRepository implements ProfileRepository {
             return mn.suld.api.classgear.ClassGear.fromJson(json);
         } catch (IllegalArgumentException ex) {
             throw new RepositoryException("Class gear of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
+        }
+    }
+
+    /** Unreadable endgame data must stop the load: saving afterwards would erase the Ascension rank and оноо. */
+    private static mn.suld.api.profile.Endgame readEndgame(UUID playerId, String json) {
+        try {
+            return mn.suld.api.profile.Endgame.fromJson(json);
+        } catch (IllegalArgumentException ex) {
+            throw new RepositoryException("Endgame data of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
         }
     }
 
@@ -187,6 +197,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 ps.setString(14, snap.equipment().isEmpty() ? null : snap.equipment().toJson());
                 ps.setString(15, snap.classGear().isEmpty() ? null : snap.classGear().toJson());
                 ps.setString(16, snap.activeMinutes().isEmpty() ? null : snap.activeMinutes().toJson());
+                ps.setString(17, snap.endgame().toJson());
                 int rows = ps.executeUpdate();
                 if (rows == 0 && dialect == SqlDialect.POSTGRESQL) {
                     // the stored row is newer than this snapshot (another writer saved it): never roll it back

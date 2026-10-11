@@ -25,7 +25,8 @@ public final class Reforge {
     }
 
     public static Cost cost(int itemLevel) {
-        return new Cost(25L * itemLevel + 25, material(itemLevel), MATERIAL_COUNT);
+        // progression v2 (Economy.reforgeCoins): 0.6·L² + 25·L + 25, the square makes high levels the real sink
+        return new Cost(mn.suld.api.balance.Economy.reforgeCoins(itemLevel), material(itemLevel), MATERIAL_COUNT);
     }
 
     /** Why an upgrade is not possible, or null when it is. */

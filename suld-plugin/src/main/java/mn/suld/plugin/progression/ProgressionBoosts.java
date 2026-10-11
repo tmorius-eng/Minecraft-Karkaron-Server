@@ -5,8 +5,9 @@ import mn.suld.plugin.SuldServices;
 import java.util.UUID;
 
 /**
- * The single place personal EXP bonuses are combined (clan level + borne relic). Bonuses add
- * up rather than multiply, so stacking stays predictable: base × (1 + clan + relic).
+ * The single place personal EXP bonuses are combined (clan level + borne relic + blessings, and on kills the EXP % of
+ * gear and tree). Bonuses add up rather than multiply, and together they give at most +50 % (progression v2,
+ * {@link mn.suld.api.balance.ExpRules#BOOST_CAP}): base × (1 + min(0.5, clan + relic + blessings + gear)).
  */
 public final class ProgressionBoosts {
 
@@ -44,11 +45,42 @@ public final class ProgressionBoosts {
         return sum;
     }
 
-    public double bonus(UUID player) {
+    /** Clan + relic + blessings, uncapped (the cap applies to the total, gear included). */
+    public double rawBonus(UUID player) {
         return services.clans().expBonus(player) + services.relics().expBonus(player) + blessing(player);
     }
 
+    public double bonus(UUID player) {
+        return mn.suld.api.balance.ExpRules.capBoost(rawBonus(player));
+    }
+
+    private int serverLevel;
+    private long serverLevelAt;
+
+    /**
+     * The server's median level for catch-up EXP ({@link mn.suld.api.balance.ExpRules#catchUp}): the median level of
+     * the players online, recomputed at most once a minute; 0 (no catch-up) with fewer than 3 online. Main thread.
+     */
+    public int serverLevel() {
+        long now = System.currentTimeMillis();
+        if (now - serverLevelAt > 60_000) {
+            serverLevelAt = now;
+            java.util.List<Integer> levels = new java.util.ArrayList<>();
+            for (org.bukkit.entity.Player p : org.bukkit.Bukkit.getOnlinePlayers()) {
+                services.profiles().cached(p.getUniqueId()).ifPresent(pr -> levels.add(pr.progression().level()));
+            }
+            java.util.Collections.sort(levels);
+            serverLevel = levels.size() < 3 ? 0 : levels.get(levels.size() / 2);
+        }
+        return serverLevel;
+    }
+
     public long apply(UUID player, long baseExp) {
-        return Math.round(baseExp * (1.0 + bonus(player)));
+        return apply(player, baseExp, 0);
+    }
+
+    /** With {@code extra} more bonus (gear and tree EXP %, as a fraction) counted under the same cap. */
+    public long apply(UUID player, long baseExp, double extra) {
+        return Math.round(baseExp * (1.0 + mn.suld.api.balance.ExpRules.capBoost(rawBonus(player) + extra)));
     }
 }

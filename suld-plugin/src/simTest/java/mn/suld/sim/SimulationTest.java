@@ -31,7 +31,7 @@ class SimulationTest {
     void liveCurveIsTheConfiguredOne() {
         long total = 0;
         for (int lv = 1; lv < 60; lv++) total += LIVE.curve().expForLevel(lv);
-        assertEquals(2_757_813L, total);
+        assertEquals(28_315_352L, total, 5, "progression v2: 190·L^2.2 (Balance)");
         ExpGainResult r = new ProgressionEngine(LIVE.curve()).grant(new Progression(1, 0), total);
         assertEquals(60, r.after().level());
         assertEquals(0, r.wastedExp());
@@ -40,18 +40,25 @@ class SimulationTest {
     @Test
     void liveWorldMirrorsTheContentClasses() {
         World w = LIVE.world();
-        assertEquals(4, w.zones().size(), "4 wild regions (Kharkhorum is a safe zone)");
+        assertEquals(4 + 4 * 3, w.zones().size(), "4 home regions + 4 outer lands in three level thirds");
         assertEquals(18, w.story().size());
-        assertEquals(25_750L, w.story().stream().mapToLong(World.Chapter::exp).sum());
-        assertEquals(2_950L, w.story().stream().mapToLong(World.Chapter::coins).sum());
-        assertEquals(List.of(400L, 1200L, 2600L, 4800L), w.dungeons().stream().limit(4).map(World.Dungeon::completionExp).toList());
-        assertEquals(List.of(2, 8, 14, 22, 29, 36, 42, 48, 54, 60), w.dungeons().stream().map(World.Dungeon::min).toList());
+        for (int i = 0; i < 18; i++) {
+            assertEquals(mn.suld.plugin.content.QuestContent.STORY.chapters().get(i).expReward(), w.story().get(i).exp(), "chapter " + i);
+        }
+        for (World.Dungeon d : w.dungeons()) {
+            var rung = mn.suld.api.balance.DungeonLadder.rung(d.id());
+            assertEquals(mn.suld.api.balance.Rewards.dungeonExp(LIVE.curve(), rung.contentLevel()), d.completionExp(), d.id());
+            assertEquals(rung.max(), d.max(), d.id());
+        }
+        assertEquals(List.of(3, 9, 15, 22, 29, 36, 42, 48, 54, 60), w.dungeons().stream().map(World.Dungeon::min).toList());
         assertEquals(60, w.maxContentLevel(), "the dungeon ladder ends at level 60 (Тэнгэрийн Ордон)");
         // every SÜLD mob hits with its designed attack (CombatListener.onMobHitsPlayer); bosses × their phases
         World.Mob khasar = w.dungeons().get(0).boss();
-        assertEquals(mn.suld.plugin.content.SuldContent.KHASAR_BOSS.mob().scaledAttack()
-                * LiveRules.phaseAverage(mn.suld.plugin.content.SuldContent.KHASAR_BOSS.phases()), khasar.dmg(), 1e-9);
-        assertEquals(mn.suld.plugin.content.SuldContent.GOVIIN_CHONO.scaledAttack(), w.mob("mob.goviin_chono").dmg(), 1e-9);
+        var kb = mn.suld.plugin.content.SuldContent.KHASAR_BOSS;
+        assertEquals(kb.mob().scaledAttack() * mn.suld.api.balance.MobScaling.hitScale(kb.mob().backingEntity(), true)
+                * LiveRules.phaseAverage(kb.phases()), khasar.dmg(), 1e-9);
+        var wolf = mn.suld.plugin.content.SuldContent.GOVIIN_CHONO;
+        assertEquals(wolf.scaledAttack() * mn.suld.api.balance.MobScaling.hitScale("WOLF", false), w.mob("mob.goviin_chono").dmg(), 1e-9);
     }
 
     @Test
@@ -107,14 +114,14 @@ class SimulationTest {
     }
 
     @Test
-    void proposedHasNoDeadLevelsAndLiveDoes() {
+    void neitherHasDeadLevels() {
         int deadLive = 0, deadProposed = 0;
         for (int lv = 1; lv <= 60; lv++) {
             if (!covered(LIVE.world(), lv)) deadLive++;
             if (!covered(PROPOSED.world(), lv)) deadProposed++;
         }
         assertEquals(0, deadProposed);
-        assertTrue(deadLive >= 30, "live content ends at 26: " + deadLive);
+        assertEquals(0, deadLive, "the outer lands carry live to 60");
     }
 
     static boolean covered(World w, int lv) {
@@ -134,9 +141,9 @@ class SimulationTest {
     }
 
     @Test
-    void liveHardcoreFinishesInDays() {
+    void liveIsNoLongerConsumedInDays() {
         Engine.Result r = Engine.run(LIVE, Profile.hardcore(), PlayerClass.BAATAR, 5, 3);
-        assertEquals(60, r.player().level, "the live game is consumed within 3 days of hardcore play");
+        assertTrue(r.player().level < 40, "three hardcore days no longer finish live (progression v2): " + r.player().level);
     }
 
     @Test

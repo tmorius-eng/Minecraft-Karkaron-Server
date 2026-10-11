@@ -120,7 +120,9 @@ class RarityTooltipEconomyTest {
     void economy() {
         ItemDefinition d = CAT.require("weapon.khaany_ild"); // sell 60
         ItemInstance rare = new ItemInstance(d.id(), UUID.randomUUID(), ItemRarity.RARE, 30, Map.of(), false, 0, "t");
-        assertEquals(Math.round(60 * 5 * 4.0), ItemEconomy.sellPrice(d, rare));
+        assertEquals(Math.round(60 * Math.min(5, ItemRarity.RARE.sellMultiplier()) * (1 + 30 / 30.0)), ItemEconomy.sellPrice(d, rare));
+        ItemInstance leg = new ItemInstance(d.id(), UUID.randomUUID(), ItemRarity.LEGENDARY, 30, Map.of(), false, 0, "t");
+        assertEquals(0, ItemEconomy.sellPrice(d, leg), "legendary and above: salvage only");
         ItemInstance sb = new ItemInstance(d.id(), UUID.randomUUID(), ItemRarity.RARE, 30, Map.of(), true, 0, "t");
         assertEquals(0, ItemEconomy.sellPrice(d, sb), "soulbound items are not bought");
         Map<String, Integer> salvage = ItemEconomy.salvage(CAT, d, rare);

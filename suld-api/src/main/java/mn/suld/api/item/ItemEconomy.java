@@ -9,10 +9,12 @@ public final class ItemEconomy {
     private ItemEconomy() {
     }
 
-    /** What a merchant pays: base value × rarity × (1 + level/10). Soulbound and unique items are not bought. */
+    /**
+     * What a merchant pays (progression v2, {@link mn.suld.api.balance.Economy#sellPrice}): base value × rarity (at most
+     * ×5) × (1 + level/30). Legendary and above, soulbound and unique items are not bought: salvage them.
+     */
     public static long sellPrice(ItemDefinition def, ItemInstance i) {
-        if (def.sellValue() <= 0 || i.soulbound() || i.rarity() == ItemRarity.UNIQUE) return 0;
-        return Math.round(def.sellValue() * i.rarity().sellMultiplier() * (1 + i.itemLevel() / 10.0));
+        return mn.suld.api.balance.Economy.sellPrice(def, i);
     }
 
     /** Salvage materials: the rarity's yield plus one per 10 item levels, of the rarity band's material. */

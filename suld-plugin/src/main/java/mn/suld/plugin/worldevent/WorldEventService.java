@@ -253,7 +253,9 @@ public final class WorldEventService {
                 continue; // offline at payout: hardcore rule, no mail-in rewards
             }
             int from = profile.progression().level();
-            long exp = services.boosts().apply(r.playerId(), r.exp());
+            // progression v2: at least 2 % of the participant's level (Rewards.worldEventExp), the ranked share on top
+            long base = Math.max(r.exp(), mn.suld.api.balance.Rewards.worldEventExp(services.progression().engine().curve(), from));
+            long exp = services.boosts().apply(r.playerId(), base);
             ExpGainResult gain = services.progression().grantExp(profile, exp, ExpSource.WORLD_EVENT);
             profile.addCurrency(r.currency());
             p.sendMessage(Messages.success("#" + r.rank() + " (" + r.contribution() + " чоно): +" + exp + " EXP, +"

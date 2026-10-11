@@ -38,8 +38,9 @@ public final class DailyTasks {
             if (bag.isEmpty()) bag.addAll(fit);
             Prey p = bag.remove(r.nextInt(bag.size()));
             int count = 5 + r.nextInt(8); // 5..12
-            long coins = 15L * count + 4L * p.mobLevel() * count;
-            long exp = Math.max(10, p.mobExp() * count / 2);
+            // progression v2 (Rewards): 4 % of the (pinned) level and 40 + 8·L coins per task
+            long coins = mn.suld.api.balance.Rewards.dailyTaskCoins(level);
+            long exp = mn.suld.api.balance.Rewards.dailyTaskExp(mn.suld.api.balance.Balance.curve(), level);
             out.add(new Task(p, count, coins, exp));
         }
         return out;

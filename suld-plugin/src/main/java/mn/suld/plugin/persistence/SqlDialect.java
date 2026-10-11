@@ -44,8 +44,8 @@ public enum SqlDialect {
             case MYSQL -> """
                     INSERT INTO suld_profiles
                         (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version,
-                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes, endgame)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE
                         name = CASE WHEN VALUES(version) >= version THEN VALUES(name) ELSE name END,
                         class_id = CASE WHEN VALUES(version) >= version THEN VALUES(class_id) ELSE class_id END,
@@ -60,13 +60,14 @@ public enum SqlDialect {
                         equipment_data = CASE WHEN VALUES(version) >= version THEN VALUES(equipment_data) ELSE equipment_data END,
                         class_gear = CASE WHEN VALUES(version) >= version THEN VALUES(class_gear) ELSE class_gear END,
                         active_minutes = CASE WHEN VALUES(version) >= version THEN VALUES(active_minutes) ELSE active_minutes END,
+                        endgame = CASE WHEN VALUES(version) >= version THEN VALUES(endgame) ELSE endgame END,
                         version = CASE WHEN VALUES(version) >= version THEN VALUES(version) ELSE version END
                     """;
             case POSTGRESQL -> """
                     INSERT INTO suld_profiles
                         (player_uuid, name, class_id, level, exp_into_level, created_at, last_seen_at, version,
-                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes, endgame)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT (player_uuid) DO UPDATE SET
                         name = EXCLUDED.name,
                         class_id = EXCLUDED.class_id,
@@ -81,7 +82,8 @@ public enum SqlDialect {
                         skill_data = EXCLUDED.skill_data,
                         equipment_data = EXCLUDED.equipment_data,
                         class_gear = EXCLUDED.class_gear,
-                        active_minutes = EXCLUDED.active_minutes
+                        active_minutes = EXCLUDED.active_minutes,
+                        endgame = EXCLUDED.endgame
                     WHERE suld_profiles.version <= EXCLUDED.version
                     """;
         };

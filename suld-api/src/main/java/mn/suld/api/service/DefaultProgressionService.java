@@ -43,6 +43,11 @@ public final class DefaultProgressionService implements ProgressionService {
         Progression before = profile.progression();
         ExpGainResult result = engine.grant(before, amount);
         profile.progression(result.after());
+        // progression v2: EXP earned at the cap is not lost, it becomes Тэнгэрийн оноо (spent on Ascension ranks)
+        if (result.wastedExp() > 0) {
+            mn.suld.api.profile.Endgame eg = profile.endgame();
+            profile.endgame(eg.withPoints(eg.tengeriPoints() + result.wastedExp()));
+        }
 
         events.dispatch(new ExpGainedEvent(profile.playerId(), amount, source, result));
         analytics.record(AnalyticsEvent.of(AnalyticsEventType.EXP_GAIN, profile.playerId(),

@@ -27,12 +27,13 @@ class DailyRewardTest {
     void rewardsGrowWithDayAndLevel() {
         assertEquals(40, DailyReward.coins(1));
         assertEquals(480, DailyReward.coins(7)); // 280 + day-7 bonus
-        assertEquals(50, DailyReward.exp(1, 1));
-        assertEquals(100, DailyReward.exp(1, 6));
+        assertEquals(25, DailyReward.exp(1, 1), "floor: 25 per streak day");
+        long need30 = mn.suld.api.balance.Balance.curve().expForLevel(30);
+        assertEquals(Math.round(0.02 * 7 * need30 / 7.0), DailyReward.exp(7, 30), "2 % of the level on day 7");
         DailyReward.Claim c = DailyReward.claim(19_999, 2, 20_000, 1);
         assertTrue(c.allowed());
         assertEquals(3, c.day());
         assertEquals(120, c.coins());
-        assertEquals(150, c.exp());
+        assertEquals(75, c.exp());
     }
 }

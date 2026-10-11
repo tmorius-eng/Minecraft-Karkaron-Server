@@ -28,8 +28,17 @@ public final class DefaultProfileService implements ProfileService {
     private final ConcurrentHashMap<UUID, PlayerProfile> cache = new ConcurrentHashMap<>();
     private final KeyedSequencer<UUID> sequencer = new KeyedSequencer<>();
 
+    /** Runs on every profile read from storage, before it is cached (curve migration, rested EXP). Off-thread. */
+    private volatile java.util.function.Consumer<PlayerProfile> onLoad = p -> {
+    };
+
     public DefaultProfileService(ProfileRepository repository) {
         this.repository = repository;
+    }
+
+    public void onLoad(java.util.function.Consumer<PlayerProfile> hook) {
+        this.onLoad = hook == null ? p -> {
+        } : hook;
     }
 
     @Override
@@ -45,6 +54,7 @@ public final class DefaultProfileService implements ProfileService {
             return repository.find(id).thenCompose(found -> {
                 if (found.isPresent()) {
                     PlayerProfile profile = found.get();
+                    onLoad.accept(profile);
                     PlayerProfile winner = cache.putIfAbsent(id, profile);
                     return CompletableFuture.completedFuture(
                             adopt(winner != null ? winner : profile, identity, now, false));

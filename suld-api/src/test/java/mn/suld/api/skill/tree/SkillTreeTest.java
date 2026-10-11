@@ -81,13 +81,14 @@ class SkillTreeTest {
         assertEquals(0, SkillPoints.forLevel(1));
         assertEquals(1, SkillPoints.forLevel(2));
         assertEquals(29, SkillPoints.forLevel(30));
-        assertEquals(30, SkillPoints.forLevel(32));
-        assertEquals(44, SkillPoints.forLevel(60));
+        assertEquals(31, SkillPoints.forLevel(32));
+        assertEquals(59, SkillPoints.forLevel(60));
         assertEquals(0, SkillPoints.forChapters(2));
-        assertEquals(5, SkillPoints.forChapters(15));
-        assertEquals(5, SkillPoints.forChapters(99));
+        assertEquals(6, SkillPoints.forChapters(18));
+        assertEquals(14, SkillPoints.forChapters(99));
+        assertEquals(2, SkillPoints.forDiscovery(4));
         assertEquals(4, SkillPoints.forDiscovery(500));
-        assertEquals(44 + 5 + 4 + 3, SkillPoints.total(60, 15, 20, 3));
+        assertEquals(59 + 6 + 2 + 3, SkillPoints.total(60, 18, 4, 3));
         assertEquals(0, SkillPoints.total(1, 0, 0, -5));
     }
 

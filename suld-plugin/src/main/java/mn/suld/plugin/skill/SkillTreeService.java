@@ -406,7 +406,21 @@ public final class SkillTreeService implements Listener {
         if (amount != 0) inst.addTransientModifier(new AttributeModifier(k, amount, op));
     }
 
+    /**
+     * Class health (progression v2, CombatRules.classHealth): the class's base health growing 4 % per level, set as the
+     * player's base max health (gear and tree health add on top). Called on every rebuild and on level-up.
+     */
+    public void applyBaseHealth(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        AttributeInstance maxHp = p.getAttribute(Attribute.MAX_HEALTH);
+        if (pr == null || maxHp == null || pr.playerClass().isEmpty()) return;
+        double base = Math.round(mn.suld.api.balance.CombatRules.classHealth(pr.playerClass().get(), pr.progression().level()));
+        if (maxHp.getBaseValue() != base) maxHp.setBaseValue(base);
+        if (p.getHealth() > maxHp.getValue()) p.setHealth(maxHp.getValue());
+    }
+
     private void applyAttributes(Player p, SkillBuild b) {
+        applyBaseHealth(p);
         double health = b.stat(StatKey.HEALTH);
         AttributeInstance maxHp = p.getAttribute(Attribute.MAX_HEALTH);
         double base = maxHp == null ? 20 : maxHp.getBaseValue();
@@ -415,7 +429,8 @@ public final class SkillTreeService implements Listener {
         double move = b.stat(StatKey.MOVE_PCT) / 100.0;
         if (b.has(KeystoneKind.TALYN_SALKHI)) move -= 0.10;
         setModifier(p, Attribute.MOVEMENT_SPEED, "move", move, AttributeModifier.Operation.ADD_SCALAR);
-        setModifier(p, Attribute.ARMOR, "armor", b.stat(StatKey.ARMOR), AttributeModifier.Operation.ADD_NUMBER);
+        // SÜLD armour is applied by CombatListener.onMitigate (a/(a+K) by attacker level); vanilla armour points are off
+        setModifier(p, Attribute.ARMOR, "armor", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
         setModifier(p, Attribute.KNOCKBACK_RESISTANCE, "knockback", Math.min(1.0, b.stat(StatKey.KB_RESIST) / 100.0), AttributeModifier.Operation.ADD_NUMBER);
         setModifier(p, Attribute.BLOCK_BREAK_SPEED, "mining", b.stat(StatKey.MINING_SPEED_PCT) / 100.0, AttributeModifier.Operation.ADD_SCALAR);
         setModifier(p, Attribute.ATTACK_SPEED, "attack_speed", b.stat(StatKey.ATTACK_SPEED_PCT) / 100.0, AttributeModifier.Operation.ADD_SCALAR);
@@ -424,6 +439,8 @@ public final class SkillTreeService implements Listener {
     }
 
     private void clearAttributes(Player p) {
+        AttributeInstance baseHp = p.getAttribute(Attribute.MAX_HEALTH);
+        if (baseHp != null && baseHp.getBaseValue() != 20) baseHp.setBaseValue(20);
         setModifier(p, Attribute.MAX_HEALTH, "health", 0, AttributeModifier.Operation.ADD_NUMBER);
         setModifier(p, Attribute.MOVEMENT_SPEED, "move", 0, AttributeModifier.Operation.ADD_SCALAR);
         setModifier(p, Attribute.ARMOR, "armor", 0, AttributeModifier.Operation.ADD_NUMBER);
@@ -490,6 +507,7 @@ public final class SkillTreeService implements Listener {
             Player p = Bukkit.getPlayer(ev.player());
             if (p == null) return;
             Bukkit.getScheduler().runTask(plugin, () -> {
+                if (p.isOnline()) applyBaseHealth(p);
                 int gained = mn.suld.api.skill.tree.SkillPoints.forLevel(ev.toLevel()) - mn.suld.api.skill.tree.SkillPoints.forLevel(ev.fromLevel());
                 if (gained > 0 && tree(p) != null) {
                     p.sendMessage(Messages.accent("◆ +" + gained + " чадварын оноо! (нийт " + available(p) + " зарцуулаагүй) — /skills"));

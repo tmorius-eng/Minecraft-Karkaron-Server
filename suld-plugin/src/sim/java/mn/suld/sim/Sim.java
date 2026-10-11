@@ -48,7 +48,8 @@ public final class Sim {
         String outJson = arg(args, "--out", "audit/progression-balance.json");
         String doc = arg(args, "--doc", "docs/PROGRESSION_SIMULATION.md");
         if (Arrays.asList(args).contains("--tune")) {
-            tune();
+            if (java.util.Arrays.asList(args).contains("--live")) tuneLive();
+            else tune();
             return;
         }
         long t0 = System.nanoTime();
@@ -720,6 +721,20 @@ public final class Sim {
     // ===================================================================================================== tune
 
     /** Finds the curve base for which the hardcore p50 reaches 60 in 200 active hours (bisection on the base). */
+    /** Bisects the live curve base for ~200 efficient hours to level 60 with the content live has today. */
+    static void tuneLive() {
+        double lo = 100, hi = 400;
+        for (int it = 0; it < 7; it++) {
+            double mid = (lo + hi) / 2;
+            LiveRules r = new LiveRules(mid);
+            Sim s = new Sim(true, new ProposedRules());
+            List<Engine.Result> rs = s.run(new Cell("tune-live", r, Profile.hardcore(), 50, 3));
+            double h = pct(col(rs, x -> hoursTo(x, 60)), 0.5);
+            System.out.printf("live base %.1f -> %.1f h (reached %.0f %%)%n", mid, h, 100 * reached(col(rs, x -> hoursTo(x, 60))));
+            if (Double.isNaN(h) || h > 200) hi = mid; else lo = mid;
+        }
+    }
+
     static void tune() {
         double lo = 150, hi = 900;
         for (int it = 0; it < 7; it++) {

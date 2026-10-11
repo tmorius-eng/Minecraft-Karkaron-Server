@@ -73,20 +73,20 @@ analytics log) is the first step of the implementation phase — `MANUAL_QA_REQU
 <!-- sim:begin curve -->
 | Level | Live EXP to next | Live cumulative | Proposed EXP to next | Proposed cumulative |
 |---|---|---|---|---|
-| 1 | 100 | 0 | 315 | 0 |
-| 5 | 1672 | 2251 | 10865 | 11944 |
-| 10 | 5623 | 17717 | 49924 | 131967 |
-| 15 | 11433 | 56754 | 121818 | 511603 |
-| 20 | 18915 | 128241 | 229391 | 1321103 |
-| 25 | 27951 | 240285 | 374782 | 2743342 |
-| 30 | 38456 | 400477 | 559728 | 4971011 |
-| 35 | 50364 | 616023 | 785706 | 8204926 |
-| 40 | 63622 | 893828 | 1054005 | 12652888 |
-| 45 | 78185 | 1240549 | 1365772 | 18528844 |
-| 50 | 94015 | 1662634 | 1722045 | 26052250 |
-| 55 | 111080 | 2166351 | 2123775 | 35447573 |
-| 59 | 125600 | 2632213 | 2478477 | 44465393 |
-| 60 | 0 | 2757813 | 0 | 46943870 |
+| 1 | 190 | 0 | 315 | 0 |
+| 5 | 6554 | 7204 | 10865 | 11944 |
+| 10 | 30113 | 79599 | 49924 | 131967 |
+| 15 | 73477 | 308586 | 121818 | 511603 |
+| 20 | 138363 | 796855 | 229391 | 1321103 |
+| 25 | 226059 | 1654714 | 374782 | 2743342 |
+| 30 | 337614 | 2998388 | 559728 | 4971011 |
+| 35 | 473918 | 4949005 | 785706 | 8204926 |
+| 40 | 635749 | 7631902 | 1054005 | 12652888 |
+| 45 | 823799 | 11176128 | 1365772 | 18528844 |
+| 50 | 1038694 | 15714056 | 1722045 | 26052250 |
+| 55 | 1281007 | 21381077 | 2123775 | 35447573 |
+| 59 | 1494955 | 26820397 | 2478477 | 44465393 |
+| 60 | 0 | 28315352 | 0 | 46943870 |
 <!-- sim:end curve -->
 
 ## Player progression table (directive §38)
@@ -96,39 +96,39 @@ analytics log) is the first step of the implementation phase — `MANUAL_QA_REQU
 
 | Player | Day | Level | Gear power (×par) · rarity | Dungeons cleared / open (+ heroic) | Bosses | Story | Regions | Mastery | Ascension | Armour lvl/tier | Endgame % |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| casual 2h | 7 | 16.6 | 143 (1.2) · rare/rare | 3 / 3 of 10 | 3 | 33 % | 3/8 | 12 | 0 | 15 / T2 | 5 |
-| casual 2h | 14 | 22.1 | 213 (1.1) · rare/legendary | 3 / 3 of 10 | 3 | 33 % | 4/8 | 17 | 0 | 21 / T2 | 7 |
-| casual 2h | 30 | 31.1 | 328 (1.1) · epic/legendary | 4 / 4 of 10 | 4 | 43 % | 5/8 | 24 | 0 | 28 / T3 | 11 |
-| casual 2h | 60 | 46.6 | 544 (1.2) · legendary/legendary | 6 / 6 of 10 | 6 | 71 % | 7/8 | 31 | 0 | 42 / T4 | 16 |
-| casual 2h | 90 | 60.0 | 770 (1.2) · ancient/ancient | 9 / 9 of 10 | 9 | 100 % | 8/8 | 39 | 0 | 53 / T5 | 21 |
-| active 5h | 7 | 26.4 | 258 (1.1) · epic/legendary | 4 / 4 of 10 | 4 | 43 % | 4/8 | 19 | 0 | 24 / T3 | 9 |
-| active 5h | 14 | 38.1 | 394 (1.1) · epic/epic | 5 / 5 of 10 | 5 | 62 % | 6/8 | 26 | 0 | 34 / T3 | 12 |
-| active 5h | 30 | 58.2 | 731 (1.2) · ancient/ancient | 9 / 9 of 10 | 9 | 100 % | 8/8 | 36 | 0 | 51 / T5 | 20 |
-| active 5h | 60 | 60.0 | 892 (1.3) · ancient/ancient | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 49 | 3 | 60 / T5 | 47 |
-| active 5h | 90 | 60.0 | 899 (1.3) · ancient/ancient | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 54 | 4 | 60 / T5 | 54 |
-| hardcore 10h | 7 | 35.1 | 376 (1.2) · epic/legendary | 5 / 5 of 10 | 5 | 57 % | 5/8 | 26 | 0 | 32 / T3 | 12 |
-| hardcore 10h | 14 | 50.7 | 608 (1.2) · legendary/legendary | 7 / 8 of 10 | 7 | 95 % | 8/8 | 35 | 0 | 46 / T4 | 17 |
-| hardcore 10h | 30 | 60.0 | 886 (1.3) · ancient/ancient | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 48 | 2 | 60 / T5 | 41 |
-| hardcore 10h | 60 | 60.0 | 908 (1.4) · ancient/ancient | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 58 | 4 | 60 / T5 | 57 |
+| casual 2h | 7 | 17.1 | 145 (1.2) · rare/epic | 3 / 3 of 10 | 3 | 33 % | 3/8 | 11 | 0 | 16 / T2 | 5 |
+| casual 2h | 14 | 21.3 | 221 (1.2) · rare/legendary | 3 / 3 of 10 | 3 | 33 % | 3/8 | 17 | 0 | 21 / T2 | 7 |
+| casual 2h | 30 | 30.7 | 327 (1.2) · epic/legendary | 4 / 4 of 10 | 4 | 43 % | 5/8 | 23 | 0 | 28 / T3 | 10 |
+| casual 2h | 60 | 46.0 | 538 (1.2) · legendary/legendary | 6 / 6 of 10 | 6 | 71 % | 7/8 | 30 | 0 | 42 / T4 | 15 |
+| casual 2h | 90 | 60.0 | 783 (1.2) · ancient/ancient | 9 / 10 of 10 (+7 H) | 16 | 100 % | 8/8 | 39 | 0 | 54 / T5 | 22 |
+| active 5h | 7 | 26.3 | 261 (1.1) · epic/legendary | 4 / 4 of 10 | 4 | 43 % | 4/8 | 20 | 0 | 24 / T3 | 9 |
+| active 5h | 14 | 38.2 | 386 (1.1) · epic/epic | 5 / 6 of 10 | 5 | 64 % | 6/8 | 25 | 0 | 34 / T3 | 12 |
+| active 5h | 30 | 58.0 | 752 (1.3) · ancient/ancient | 9 / 9 of 10 | 9 | 100 % | 8/8 | 36 | 0 | 52 / T5 | 20 |
+| active 5h | 60 | 60.0 | 901 (1.3) · ancient/ancient | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 49 | 3 | 60 / T5 | 48 |
+| active 5h | 90 | 60.0 | 905 (1.3) · ancient/mythic | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 55 | 4 | 60 / T5 | 56 |
+| hardcore 10h | 7 | 34.8 | 364 (1.2) · epic/legendary | 5 / 5 of 10 | 5 | 57 % | 5/8 | 25 | 0 | 32 / T3 | 11 |
+| hardcore 10h | 14 | 51.6 | 630 (1.2) · legendary/ancient | 8 / 8 of 10 | 8 | 95 % | 8/8 | 36 | 0 | 47 / T4 | 18 |
+| hardcore 10h | 30 | 60.0 | 889 (1.3) · ancient/ancient | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 49 | 2 | 60 / T5 | 43 |
+| hardcore 10h | 60 | 60.0 | 911 (1.4) · ancient/mythic | 10 / 10 of 10 (+9 H) | 19 | 100 % | 8/8 | 59 | 4 | 60 / T5 | 60 |
 
 **Live rules (the game today)** — p50 of 5 runs per row (all five classes), mid calibration
 
 | Player | Day | Level | Gear power (×par) · rarity | Dungeons cleared / open (+ heroic) | Bosses | Story | Regions | Mastery | Ascension | Armour lvl/tier | Endgame % |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| casual 2h | 7 | 60.0 | 713 (1.1) · legendary/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| casual 2h | 14 | 60.0 | 807 (1.2) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| casual 2h | 30 | 60.0 | 835 (1.2) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| casual 2h | 60 | 60.0 | 858 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| casual 2h | 90 | 60.0 | 878 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| active 5h | 7 | 60.0 | 813 (1.2) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| active 5h | 14 | 60.0 | 853 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| active 5h | 30 | 60.0 | 861 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| active 5h | 60 | 60.0 | 876 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| active 5h | 90 | 60.0 | 880 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| hardcore 10h | 7 | 60.0 | 837 (1.2) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| hardcore 10h | 14 | 60.0 | 873 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| hardcore 10h | 30 | 60.0 | 875 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
-| hardcore 10h | 60 | 60.0 | 884 (1.3) · mythic/mythic | 10 / 10 of 10 | 10 | 100 % | 4/4 | 0 | 0 | — | — (none exists) |
+| casual 2h | 7 | 19.1 | 167 (1.1) · rare/legendary | 3 / 3 of 10 | 3 | 78 % | 3/16 | 10 | 0 | — | — (none exists) |
+| casual 2h | 14 | 27.3 | 247 (1.1) · rare/legendary | 4 / 4 of 10 | 4 | 100 % | 4/16 | 16 | 0 | — | — (none exists) |
+| casual 2h | 30 | 37.3 | 408 (1.2) · epic/legendary | 5 / 6 of 10 | 5 | 100 % | 5/16 | 22 | 0 | — | — (none exists) |
+| casual 2h | 60 | 49.3 | 614 (1.2) · legendary/ancient | 7 / 8 of 10 | 7 | 100 % | 7/16 | 30 | 0 | — | — (none exists) |
+| casual 2h | 90 | 60.0 | 805 (1.2) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 34 | 0 | — | — (none exists) |
+| active 5h | 7 | 31.0 | 313 (1.1) · epic/legendary | 4 / 5 of 10 | 4 | 100 % | 5/16 | 16 | 0 | — | — (none exists) |
+| active 5h | 14 | 43.1 | 466 (1.1) · legendary/legendary | 6 / 7 of 10 | 6 | 100 % | 6/16 | 22 | 0 | — | — (none exists) |
+| active 5h | 30 | 58.4 | 799 (1.3) · ancient/ancient | 9 / 9 of 10 | 9 | 100 % | 8/16 | 33 | 0 | — | — (none exists) |
+| active 5h | 60 | 60.0 | 911 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 40 | 1 | — | — (none exists) |
+| active 5h | 90 | 60.0 | 932 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 46 | 1 | — | — (none exists) |
+| hardcore 10h | 7 | 39.0 | 406 (1.2) · epic/legendary | 5 / 6 of 10 | 5 | 100 % | 6/16 | 22 | 0 | — | — (none exists) |
+| hardcore 10h | 14 | 50.3 | 635 (1.3) · legendary/ancient | 7 / 8 of 10 | 7 | 100 % | 7/16 | 31 | 0 | — | — (none exists) |
+| hardcore 10h | 30 | 60.0 | 912 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 41 | 1 | — | — (none exists) |
+| hardcore 10h | 60 | 60.0 | 938 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 50 | 1 | — | — (none exists) |
 <!-- sim:end player-table -->
 
 ## The first 7 days (directive §25)
@@ -136,27 +136,27 @@ analytics log) is the first step of the implementation phase — `MANUAL_QA_REQU
 <!-- sim:begin seven-day -->
 | Player | Day | Level (p10–p90) | Gear power | Highest rarity | Dungeons cleared | Story | Regions | Armour tier | Milestones that day |
 |---|---|---|---|---|---|---|---|---|---|
-| casual | 1 | 6.7 (6.2–8.7) | 49 | rare | 1 | 12 % | 1 | T1 | 23 |
-| casual | 2 | 8.1 (8.0–10.4) | 67 | rare | 1 | 12 % | 1 | T1 | 8 |
-| casual | 3 | 10.7 (10.0–12.3) | 83 | rare | 2 | 21 % | 2 | T1 | 10 |
-| casual | 4 | 11.8 (11.2–14.0) | 89 | rare | 2 | 21 % | 2 | T1 | 4 |
-| casual | 5 | 13.1 (12.4–15.2) | 108 | rare | 2 | 24 % | 3 | T2 | 8 |
-| casual | 6 | 15.5 (14.1–16.8) | 125 | rare | 2 | 31 % | 3 | T2 | 12 |
-| casual | 7 | 16.6 (15.7–17.9) | 143 | rare | 3 | 33 % | 3 | T2 | 6 |
-| active | 1 | 11.0 (10.9–11.0) | 84 | rare | 1 | 19 % | 2 | T1 | 39 |
-| active | 2 | 15.2 (14.0–15.8) | 127 | rare | 2 | 31 % | 3 | T2 | 23 |
-| active | 3 | 18.1 (17.6–18.4) | 159 | rare | 3 | 33 % | 3 | T2 | 14 |
-| active | 4 | 19.9 (19.5–20.4) | 182 | rare | 3 | 33 % | 3 | T2 | 7 |
-| active | 5 | 22.0 (20.9–23.1) | 209 | epic | 3 | 38 % | 4 | T2 | 9 |
-| active | 6 | 24.6 (22.5–25.3) | 233 | legendary | 4 | 43 % | 4 | T2 | 8 |
-| active | 7 | 26.4 (23.8–28.0) | 258 | legendary | 4 | 43 % | 4 | T3 | 4 |
-| hardcore | 1 | 15.1 (14.2–15.8) | 131 | rare | 2 | 31 % | 3 | T2 | 63 |
-| hardcore | 2 | 19.7 (19.2–20.0) | 185 | rare | 3 | 33 % | 3 | T2 | 21 |
-| hardcore | 3 | 22.5 (21.6–24.0) | 222 | legendary | 3 | 33 % | 4 | T2 | 10 |
-| hardcore | 4 | 27.1 (24.7–28.2) | 277 | legendary | 4 | 43 % | 4 | T3 | 21 |
-| hardcore | 5 | 29.3 (26.6–31.9) | 304 | legendary | 4 | 45 % | 5 | T3 | 8 |
-| hardcore | 6 | 32.6 (28.8–34.4) | 343 | legendary | 5 | 57 % | 5 | T3 | 10 |
-| hardcore | 7 | 35.1 (31.5–37.8) | 376 | legendary | 5 | 57 % | 5 | T3 | 14 |
+| casual | 1 | 6.8 (6.3–8.7) | 49 | rare | 1 | 12 % | 1 | T1 | 23 |
+| casual | 2 | 8.0 (7.8–10.5) | 60 | rare | 1 | 12 % | 1 | T1 | 5 |
+| casual | 3 | 10.6 (9.7–12.2) | 82 | rare | 1 | 19 % | 2 | T1 | 9 |
+| casual | 4 | 11.8 (11.3–13.6) | 86 | rare | 2 | 21 % | 2 | T1 | 7 |
+| casual | 5 | 14.2 (13.1–15.0) | 121 | rare | 2 | 31 % | 3 | T2 | 11 |
+| casual | 6 | 16.0 (14.6–16.1) | 133 | rare | 2 | 31 % | 3 | T2 | 8 |
+| casual | 7 | 17.1 (16.2–17.2) | 145 | epic | 3 | 33 % | 3 | T2 | 4 |
+| active | 1 | 11.0 (10.9–11.3) | 84 | rare | 1 | 19 % | 2 | T1 | 39 |
+| active | 2 | 16.0 (13.2–16.3) | 134 | rare | 2 | 31 % | 3 | T2 | 23 |
+| active | 3 | 18.5 (17.2–18.8) | 161 | rare | 3 | 33 % | 3 | T2 | 12 |
+| active | 4 | 20.0 (19.3–20.4) | 190 | rare | 3 | 33 % | 3 | T2 | 8 |
+| active | 5 | 22.5 (20.8–23.2) | 206 | legendary | 3 | 38 % | 4 | T2 | 8 |
+| active | 6 | 24.6 (22.1–25.5) | 226 | legendary | 4 | 43 % | 4 | T2 | 8 |
+| active | 7 | 26.3 (23.4–28.6) | 261 | legendary | 4 | 43 % | 4 | T3 | 11 |
+| hardcore | 1 | 15.3 (13.1–15.9) | 135 | rare | 2 | 31 % | 3 | T2 | 64 |
+| hardcore | 2 | 19.5 (18.7–20.1) | 179 | epic | 3 | 33 % | 3 | T2 | 19 |
+| hardcore | 3 | 22.7 (21.3–24.5) | 225 | epic | 3 | 38 % | 4 | T2 | 15 |
+| hardcore | 4 | 26.5 (24.1–29.2) | 281 | legendary | 4 | 43 % | 4 | T3 | 19 |
+| hardcore | 5 | 28.8 (25.8–33.2) | 302 | legendary | 4 | 43 % | 4 | T3 | 9 |
+| hardcore | 6 | 31.7 (28.0–35.3) | 329 | legendary | 5 | 55 % | 5 | T3 | 10 |
+| hardcore | 7 | 34.8 (30.9–37.4) | 364 | legendary | 5 | 57 % | 5 | T3 | 10 |
 <!-- sim:end seven-day -->
 
 ## Time to milestones (directive §28)
@@ -164,12 +164,12 @@ analytics log) is the first step of the implementation phase — `MANUAL_QA_REQU
 <!-- sim:begin time-to -->
 | Rules | Player | L10 | L20 | L30 | L40 | L50 | L60 (h · day) | Reached 60 | 1st legendary | 1st ancient | 1st mythic | Asc I | Asc V | Asc X |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| live | casual | 1.0 h | 2.7 h | 5.2 h | 7.8 h | 10.2 h | 12.5 h · d7 | 100 % | 2.3 h | 8.5 h | 13.8 h | — h | — h | — h |
-| live | active | 0.7 h | 2.2 h | 3.8 h | 6.0 h | 8.1 h | 10.0 h · d2 | 100 % | 3.8 h | 8.5 h | 14.6 h | — h | — h | — h |
-| live | hardcore | 0.7 h | 2.2 h | 3.8 h | 6.0 h | 8.0 h | 10.0 h · d1 | 100 % | 3.9 h | 7.5 h | 18.9 h | — h | — h | — h |
-| proposed | casual | 5.1 h | 21.1 h | 55.5 h | 94.0 h | 137.3 h | 172.0 h · d88 | 40 % | 5.1 h | 127.5 h | — h | 170 h | — h | — h |
-| proposed | active | 3.6 h | 19.5 h | 45.9 h | 73.5 h | 98.0 h | 159.5 h · d34 | 100 % | 21.5 h | 91.0 h | 299.2 h | 164 h | — h | — h |
-| proposed | hardcore | 3.7 h | 20.3 h | 51.7 h | 82.9 h | 132.3 h | 203.9 h · d21 | 100 % | 13.6 h | 119.8 h | 229.5 h | 207 h | — h | — h |
+| live | casual | 2.5 h | 14.8 h | 34.4 h | 64.4 h | 115.4 h | 163.0 h · d84 | 60 % | 7.3 h | 69.0 h | 124.1 h | 162 h | — h | — h |
+| live | active | 2.0 h | 12.2 h | 29.6 h | 58.2 h | 97.7 h | 149.0 h · d31 | 100 % | 3.9 h | 72.2 h | 155.1 h | 152 h | — h | — h |
+| live | hardcore | 2.0 h | 13.6 h | 33.1 h | 69.1 h | 127.9 h | 207.0 h · d23 | 100 % | 8.0 h | 72.7 h | 118.8 h | 211 h | — h | — h |
+| proposed | casual | 5.2 h | 20.2 h | 54.4 h | 93.8 h | 134.0 h | 175.2 h · d90 | 80 % | 9.7 h | 106.9 h | 175.2 h | — h | — h | — h |
+| proposed | active | 3.6 h | 19.4 h | 42.3 h | 70.8 h | 102.5 h | 159.2 h · d34 | 100 % | 12.4 h | 95.3 h | 165.8 h | 162 h | — h | — h |
+| proposed | hardcore | 3.7 h | 20.3 h | 50.5 h | 82.9 h | 116.0 h | 196.4 h · d22 | 100 % | 16.4 h | 105.1 h | 334.1 h | 199 h | — h | — h |
 
 Hours are active play hours (p50). "—" = not reached within the simulated horizon by half of the runs.
 <!-- sim:end time-to -->
@@ -192,16 +192,16 @@ Hours are active play hours (p50). "—" = not reached within the simulated hori
 <!-- sim:begin classes -->
 | Rules | Class | Hours to L30 | Hours to L60 | Day-7 level (hardcore) | Deaths per 100 h | DPS at 60 | HP at 60 |
 |---|---|---|---|---|---|---|---|
-| live | Баатар | 3.9 | 10.0 | 60.0 | 1.1 | 478 | 469 |
-| live | Мэргэн | 3.8 | 10.1 | 60.0 | 2.0 | 172 | 551 |
-| live | Бөө | 3.8 | 9.9 | 60.0 | 1.3 | 390 | 577 |
-| live | Дархан | 3.9 | 10.0 | 60.0 | 2.5 | 348 | 548 |
-| live | Хүлэгчин | 3.3 | 9.5 | 60.0 | 1.3 | 346 | 585 |
-| proposed | Баатар | 53.8 | 203.9 | 34.0 | 1.0 | 1520 | 1006 |
-| proposed | Мэргэн | 44.1 | 198.0 | 36.9 | 1.0 | 1028 | 808 |
-| proposed | Бөө | 68.2 | 219.6 | 29.8 | 2.2 | 768 | 942 |
-| proposed | Дархан | 51.7 | 226.3 | 35.1 | 2.6 | 1242 | 957 |
-| proposed | Хүлэгчин | 39.3 | 186.7 | 38.4 | 2.0 | 1390 | 1116 |
+| live | Баатар | 35.8 | 207.3 | 36.2 | 2.7 | 1338 | 860 |
+| live | Мэргэн | 31.0 | 198.1 | 39.0 | 2.6 | 1038 | 907 |
+| live | Бөө | 40.9 | 209.2 | 37.9 | 2.6 | 813 | 980 |
+| live | Дархан | 33.1 | 207.0 | 39.3 | 1.0 | 1225 | 1078 |
+| live | Хүлэгчин | 27.5 | 183.3 | 45.8 | 0.9 | 1255 | 904 |
+| proposed | Баатар | 50.6 | 200.7 | 34.4 | 1.6 | 1388 | 1095 |
+| proposed | Мэргэн | 44.0 | 196.4 | 37.4 | 0.9 | 1008 | 809 |
+| proposed | Бөө | 63.8 | 224.8 | 28.6 | 3.0 | 793 | 964 |
+| proposed | Дархан | 50.5 | 193.7 | 34.8 | 1.9 | 1375 | 1073 |
+| proposed | Хүлэгчин | 35.2 | 186.9 | 37.4 | 2.3 | 1361 | 985 |
 <!-- sim:end classes -->
 
 ## Playstyles (directive §29)
@@ -209,18 +209,18 @@ Hours are active play hours (p50). "—" = not reached within the simulated hori
 <!-- sim:begin styles -->
 | Rules | Playstyle | Hours to L30 | Hours to L60 | Day-30 level | Day-30 gear power | Day-30 mastery | Top EXP source (share) |
 |---|---|---|---|---|---|---|---|
-| live | GENERALIST | 3.8 | 10.0 | 60.0 | 878 | 0 | dungeon (87 %) |
-| live | QUEST_FARMER | 3.7 | 10.0 | 60.0 | 878 | 0 | dungeon (88 %) |
-| live | DUNGEON_FARMER | 3.6 | 9.7 | 60.0 | 875 | 0 | dungeon (93 %) |
-| live | EXPLORER | 3.8 | 10.0 | 60.0 | 873 | 0 | dungeon (85 %) |
-| live | BOSS_FARMER | 3.6 | 9.8 | 60.0 | 864 | 0 | dungeon (92 %) |
-| live | CRAFTER | 3.8 | 9.9 | 60.0 | 815 | 0 | dungeon (87 %) |
-| proposed | GENERALIST | 49.3 | 194.6 | 60.0 | 888 | 49 | dungeon (26 %) |
-| proposed | QUEST_FARMER | 45.2 | 196.1 | 60.0 | 891 | 48 | dungeon (27 %) |
-| proposed | DUNGEON_FARMER | 57.4 | 266.8 | 60.0 | 839 | 45 | dungeon (46 %) |
-| proposed | EXPLORER | 50.9 | 178.3 | 60.0 | 897 | 49 | kill (33 %) |
-| proposed | BOSS_FARMER | 52.8 | 258.1 | 60.0 | 861 | 47 | dungeon (41 %) |
-| proposed | CRAFTER | 45.0 | 196.5 | 60.0 | 858 | 50 | dungeon (26 %) |
+| live | GENERALIST | 33.7 | 212.2 | 60.0 | 915 | 41 | kill (47 %) |
+| live | QUEST_FARMER | 33.2 | 207.9 | 60.0 | 903 | 41 | kill (45 %) |
+| live | DUNGEON_FARMER | 37.6 | 227.0 | 60.0 | 878 | 40 | dungeon (45 %) |
+| live | EXPLORER | 36.1 | 197.9 | 60.0 | 916 | 41 | kill (51 %) |
+| live | BOSS_FARMER | 35.4 | 231.4 | 60.0 | 899 | 40 | dungeon (39 %) |
+| live | CRAFTER | 36.9 | 202.8 | 60.0 | 908 | 43 | kill (49 %) |
+| proposed | GENERALIST | 48.3 | 197.9 | 60.0 | 897 | 49 | dungeon (26 %) |
+| proposed | QUEST_FARMER | 46.3 | 196.2 | 60.0 | 888 | 49 | dungeon (29 %) |
+| proposed | DUNGEON_FARMER | 52.8 | 244.8 | 58.8 | 815 | 42 | dungeon (47 %) |
+| proposed | EXPLORER | 48.5 | 179.4 | 60.0 | 899 | 48 | kill (33 %) |
+| proposed | BOSS_FARMER | 54.0 | 248.4 | 60.0 | 883 | 45 | dungeon (39 %) |
+| proposed | CRAFTER | 43.3 | 197.5 | 60.0 | 862 | 51 | dungeon (28 %) |
 <!-- sim:end styles -->
 
 ## Exploit scenarios (directive §5, §9, §33)
@@ -232,17 +232,17 @@ option for 70 hours; E5 `AFK` idles with an auto-clicker in one spot.
 <!-- sim:begin exploits -->
 | Rules | Scenario | Day-7 level p50 / p90 | Hours to L60 | EXP per online hour (day 7) | Armour level day 7 |
 |---|---|---|---|---|---|
-| live | NONE | 60.0 / 60.0 | 10.0 | 39632 | — |
-| live | LOW_DUNGEON_FARM | 46.1 / 46.3 | — | 19108 | — |
-| live | ZONE_RUSH | 60.0 / 60.0 | 16.9 | 47962 | — |
-| live | CARRY | 60.0 / 60.0 | 25.5 | 47688 | — |
-| live | SINGLE_ACTIVITY | 60.0 / 60.0 | 9.4 | 45964 | — |
-| live | AFK | 60.0 / 60.0 | 26.7 | 54251 | — |
-| proposed | NONE | 34.3 / 38.1 | — | 121020 | 32 |
-| proposed | LOW_DUNGEON_FARM | 18.5 / 19.0 | — | 15391 | 18 |
+| live | NONE | 37.1 / 41.6 | — | 91275 | 33 |
+| live | LOW_DUNGEON_FARM | 16.7 / 19.6 | — | 6354 | 16 |
+| live | ZONE_RUSH | 11.4 / 12.0 | — | 33612 | 11 |
+| live | CARRY | 19.1 / 19.4 | — | 10136 | 19 |
+| live | SINGLE_ACTIVITY | 38.6 / 41.2 | — | 103357 | 35 |
+| live | AFK | 14.4 / 16.3 | — | 17625 | 1 |
+| proposed | NONE | 35.7 / 38.9 | — | 130949 | 32 |
+| proposed | LOW_DUNGEON_FARM | 18.7 / 19.0 | — | 15546 | 18 |
 | proposed | ZONE_RUSH | 6.3 / 7.4 | — | 21881 | 6 |
 | proposed | CARRY | 18.7 / 19.6 | — | 15655 | 18 |
-| proposed | SINGLE_ACTIVITY | 33.3 / 34.5 | — | 101008 | 31 |
+| proposed | SINGLE_ACTIVITY | 33.5 / 35.4 | — | 105473 | 31 |
 | proposed | AFK | 12.4 / 12.4 | — | 12923 | 1 |
 <!-- sim:end exploits -->
 
@@ -251,12 +251,12 @@ option for 70 hours; E5 `AFK` idles with an auto-clicker in one spot.
 <!-- sim:begin calibration -->
 | Calibration | Player | Day-7 level p50 / p90 | Hours to L60 p50 | Deaths per 100 h |
 |---|---|---|---|---|
-| low | casual | 16.1 / 17.1 | — | 6.8 |
-| low | active | 23.6 / 25.4 | — | 4.8 |
-| low | hardcore | 32.2 / 33.7 | 245.0 | 2.5 |
-| high | casual | 18.2 / 19.2 | — | 3.4 |
-| high | active | 28.7 / 29.2 | 122.5 | 7.2 |
-| high | hardcore | 39.7 / 41.8 | 150.9 | 2.8 |
+| low | casual | 16.3 / 17.5 | — | 6.7 |
+| low | active | 22.8 / 24.3 | — | 5.0 |
+| low | hardcore | 30.9 / 34.0 | 235.5 | 3.6 |
+| high | casual | 18.4 / 19.2 | — | 5.0 |
+| high | active | 28.9 / 31.6 | 120.0 | 6.0 |
+| high | hardcore | 39.8 / 41.2 | 148.8 | 2.1 |
 <!-- sim:end calibration -->
 
 ## Sensitivity and breakpoints (directive §28)
@@ -264,15 +264,15 @@ option for 70 hours; E5 `AFK` idles with an auto-clicker in one spot.
 <!-- sim:begin sensitivity -->
 | Variation (hardcore 10 h/day) | Day-7 level p50 / p90 | Hours to L60 p50 | Δ vs baseline | Day-7 gear power | 1st mythic (h) | Reaches 60 in 7 days |
 |---|---|---|---|---|---|---|
-| baseline | 35.2 / 38.3 | 178.8 | 0 % | 367 | — | 0 of 5 |
-| XP/hour +20 % | 36.0 / 39.6 | 164.9 | -8 % | 365 | — | 0 of 5 |
-| dungeon clear time −20 % | 35.7 / 37.7 | 184.2 | 3 % | 367 | 191.7 | 0 of 5 |
-| loot drop rate ×2 | 35.0 / 38.5 | 176.7 | -1 % | 372 | 177.2 | 0 of 5 |
-| build 15 % stronger | 37.5 / 38.2 | 180.9 | 1 % | 368 | 181.9 | 0 of 5 |
-| XP/hour ×1.5 | 38.5 / 44.7 | 150.9 | -16 % | 398 | 160.9 | 0 of 5 |
-| XP/hour ×2 | 44.3 / 45.9 | 117.4 | -34 % | 489 | 128.1 | 0 of 5 |
-| XP/hour ×3 | 47.6 / 52.5 | 86.3 | -52 % | 487 | 138.9 | 0 of 5 |
-| XP/hour ×4 | 55.8 / 58.6 | 78.5 | -56 % | 547 | 129.0 | 1 of 5 |
+| baseline | 36.1 / 36.7 | 190.6 | 0 % | 373 | 194.0 | 0 of 5 |
+| XP/hour +20 % | 39.3 / 40.2 | 171.5 | -10 % | 398 | 173.9 | 0 of 5 |
+| dungeon clear time −20 % | 36.4 / 38.3 | 191.1 | 0 % | 360 | 194.4 | 0 of 5 |
+| loot drop rate ×2 | 35.8 / 39.0 | 190.5 | 0 % | 382 | 181.5 | 0 of 5 |
+| build 15 % stronger | 36.0 / 39.3 | 175.2 | -8 % | 393 | 181.7 | 0 of 5 |
+| XP/hour ×1.5 | 41.0 / 43.5 | 141.5 | -26 % | 472 | 177.3 | 0 of 5 |
+| XP/hour ×2 | 43.1 / 47.8 | 112.7 | -41 % | 483 | 125.2 | 0 of 5 |
+| XP/hour ×3 | 51.1 / 53.5 | 84.7 | -56 % | 518 | 94.6 | 0 of 5 |
+| XP/hour ×4 | 55.1 / 57.1 | 78.0 | -59 % | 545 | 107.2 | 0 of 5 |
 <!-- sim:end sensitivity -->
 
 ## Death lock curves (death directive §13)
@@ -294,21 +294,21 @@ Effect on players (90 days):
 <!-- sim:begin death-lock -->
 | Lock curve | Player | Deaths per 100 h | Play time lost to locks | Longest run of fully locked days (p90) | Day-30 level | Day-90 level |
 |---|---|---|---|---|---|---|
-| NONE_30S | casual | 3.3 | 0.0 % | 0 | 31.2 | — |
-| NONE_30S | active | 16.7 | 0.1 % | 0 | 60.0 | — |
-| NONE_30S | hardcore | 7.0 | 0.1 % | 0 | 60.0 | — |
-| LINEAR | casual | 3.4 | 2.0 % | 0 | 29.9 | — |
-| LINEAR | active | 3.7 | 10.1 % | 0 | 53.6 | — |
-| LINEAR | hardcore | 1.8 | 7.2 % | 0 | 60.0 | — |
-| STEP | casual | 1.7 | 1.7 % | 0 | 31.1 | — |
-| STEP | active | 4.9 | 5.3 % | 0 | 58.5 | — |
-| STEP | hardcore | 2.4 | 7.2 % | 0 | 60.0 | — |
-| GEOMETRIC | casual | 6.8 | 1.7 % | 0 | 30.4 | — |
-| GEOMETRIC | active | 4.3 | 5.5 % | 0 | 56.7 | — |
-| GEOMETRIC | hardcore | 2.1 | 3.7 % | 0 | 60.0 | — |
-| LOG | casual | 7.2 | 8.0 % | 0 | 30.0 | — |
-| LOG | active | 3.7 | 10.3 % | 0 | 52.6 | — |
-| LOG | hardcore | 2.6 | 15.8 % | 0 | 59.7 | — |
+| NONE_30S | casual | 5.0 | 0.0 % | 0 | 31.0 | — |
+| NONE_30S | active | 13.3 | 0.1 % | 0 | 60.0 | — |
+| NONE_30S | hardcore | 7.7 | 0.1 % | 0 | 60.0 | — |
+| LINEAR | casual | 3.4 | 2.5 % | 0 | 30.6 | — |
+| LINEAR | active | 5.4 | 13.7 % | 0 | 55.1 | — |
+| LINEAR | hardcore | 2.2 | 10.0 % | 0 | 60.0 | — |
+| STEP | casual | 6.7 | 3.9 % | 0 | 32.1 | — |
+| STEP | active | 5.0 | 6.8 % | 0 | 58.1 | — |
+| STEP | hardcore | 2.1 | 8.5 % | 0 | 60.0 | — |
+| GEOMETRIC | casual | 5.0 | 1.7 % | 0 | 30.3 | — |
+| GEOMETRIC | active | 5.0 | 6.5 % | 0 | 58.3 | — |
+| GEOMETRIC | hardcore | 4.0 | 9.0 % | 0 | 60.0 | — |
+| LOG | casual | 11.6 | 14.0 % | 0 | 29.6 | — |
+| LOG | active | 2.9 | 8.4 % | 0 | 53.7 | — |
+| LOG | hardcore | 1.9 | 11.8 % | 0 | 58.3 | — |
 <!-- sim:end death-lock -->
 
 ## Class armour progression
@@ -316,18 +316,18 @@ Effect on players (90 days):
 <!-- sim:begin armor -->
 | Player | Day | Player level | Armour level | Armour tier | Max armour (AL 60, tier 6)? |
 |---|---|---|---|---|---|
-| casual | 7 | 16.6 | 15 | T2 | 0 of 5 |
-| casual | 14 | 22.1 | 21 | T2 | 0 of 5 |
-| casual | 30 | 31.1 | 28 | T3 | 0 of 5 |
-| casual | 60 | 46.6 | 42 | T4 | 0 of 5 |
-| casual | 90 | 60.0 | 53 | T5 | 0 of 5 |
-| active | 7 | 26.4 | 24 | T3 | 0 of 5 |
-| active | 14 | 38.1 | 34 | T3 | 0 of 5 |
-| active | 30 | 58.2 | 51 | T5 | 0 of 5 |
+| casual | 7 | 17.1 | 16 | T2 | 0 of 5 |
+| casual | 14 | 21.3 | 21 | T2 | 0 of 5 |
+| casual | 30 | 30.7 | 28 | T3 | 0 of 5 |
+| casual | 60 | 46.0 | 42 | T4 | 0 of 5 |
+| casual | 90 | 60.0 | 54 | T5 | 0 of 5 |
+| active | 7 | 26.3 | 24 | T3 | 0 of 5 |
+| active | 14 | 38.2 | 34 | T3 | 0 of 5 |
+| active | 30 | 58.0 | 52 | T5 | 0 of 5 |
 | active | 60 | 60.0 | 60 | T5 | 0 of 5 |
 | active | 90 | 60.0 | 60 | T5 | 0 of 5 |
-| hardcore | 7 | 35.1 | 32 | T3 | 0 of 5 |
-| hardcore | 14 | 50.7 | 46 | T4 | 0 of 5 |
+| hardcore | 7 | 34.8 | 32 | T3 | 0 of 5 |
+| hardcore | 14 | 51.6 | 47 | T4 | 0 of 5 |
 | hardcore | 30 | 60.0 | 60 | T5 | 0 of 5 |
 | hardcore | 60 | 60.0 | 60 | T5 | 0 of 5 |
 <!-- sim:end armor -->
@@ -337,22 +337,22 @@ Effect on players (90 days):
 <!-- sim:begin economy -->
 | Rules | Player | Day | Coins earned | Coins spent | Sink ratio | Balance |
 |---|---|---|---|---|---|---|
-| live | casual | 7 | 637338 | 59290 | 9.3 % | 578048 |
-| live | casual | 30 | 5911697 | 60085 | 1.0 % | 5851612 |
-| live | casual | 90 | 19759415 | 62215 | 0.3 % | 19697170 |
-| live | active | 7 | 3017234 | 59650 | 2.0 % | 2957584 |
-| live | active | 30 | 15731844 | 61600 | 0.4 % | 15670244 |
-| live | active | 90 | 51093953 | 66625 | 0.1 % | 51027208 |
-| live | hardcore | 7 | 7236466 | 60250 | 0.8 % | 7176156 |
-| live | hardcore | 30 | 29432517 | 63880 | 0.2 % | 29368892 |
-| proposed | casual | 7 | 23232 | 15419 | 66.4 % | 8781 |
-| proposed | casual | 30 | 133977 | 91773 | 68.5 % | 43476 |
-| proposed | casual | 90 | 592509 | 543474 | 91.7 % | 63714 |
-| proposed | active | 7 | 94755 | 72317 | 76.3 % | 26976 |
-| proposed | active | 30 | 519682 | 474213 | 91.3 % | 47720 |
-| proposed | active | 90 | 1580080 | 1548141 | 98.0 % | 97987 |
-| proposed | hardcore | 7 | 190850 | 98021 | 51.4 % | 98306 |
-| proposed | hardcore | 30 | 896717 | 826395 | 92.2 % | 17789 |
+| live | casual | 7 | 26492 | 16850 | 63.6 % | 9833 |
+| live | casual | 30 | 155850 | 102222 | 65.6 % | 54449 |
+| live | casual | 90 | 572286 | 528497 | 92.3 % | 53287 |
+| live | active | 7 | 102211 | 76146 | 74.5 % | 27149 |
+| live | active | 30 | 551732 | 490199 | 88.8 % | 59196 |
+| live | active | 90 | 1475555 | 1345776 | 91.2 % | 92252 |
+| live | hardcore | 7 | 221680 | 103693 | 46.8 % | 98902 |
+| live | hardcore | 30 | 939458 | 861582 | 91.7 % | 76221 |
+| proposed | casual | 7 | 30317 | 18162 | 59.9 % | 8211 |
+| proposed | casual | 30 | 128410 | 88194 | 68.7 % | 39130 |
+| proposed | casual | 90 | 631194 | 580108 | 91.9 % | 23744 |
+| proposed | active | 7 | 98396 | 70274 | 71.4 % | 28122 |
+| proposed | active | 30 | 537368 | 475885 | 88.6 % | 66805 |
+| proposed | active | 90 | 1516795 | 1425345 | 94.0 % | 55125 |
+| proposed | hardcore | 7 | 207937 | 94787 | 45.6 % | 113880 |
+| proposed | hardcore | 30 | 857743 | 823301 | 96.0 % | 36267 |
 <!-- sim:end economy -->
 
 ## Group play
@@ -360,10 +360,10 @@ Effect on players (90 days):
 <!-- sim:begin party -->
 | Rules | Group | Hours to L30 | Hours to L60 | Deaths per 100 h |
 |---|---|---|---|---|
-| live | solo | 3.9 | 10.2 | 1.4 |
-| live | party of 4 | 3.9 | 14.3 | 1.1 |
-| proposed | solo | 48.5 | 205.1 | 2.8 |
-| proposed | party of 4 | 37.6 | 179.1 | 3.5 |
+| live | solo | 35.5 | 204.0 | 5.0 |
+| live | party of 4 | 19.8 | 173.5 | 3.1 |
+| proposed | solo | 45.9 | 198.1 | 3.4 |
+| proposed | party of 4 | 40.1 | 176.4 | 3.7 |
 <!-- sim:end party -->
 
 ## Compliance
@@ -371,17 +371,17 @@ Effect on players (90 days):
 <!-- sim:begin compliance -->
 | # | Criterion | Result | Value |
 |---|---|---|---|
-| C1 | efficient (hardcore, optimal policy) active hours to level 60 within 180–220 h (p50, mid calibration) | **PASS** | 203.9 h (live: 10.0 h) |
-| C2 | 10 h/day × 7 days does not reach level 60 / max gear / full endgame (p90; mid, high calibration, every exploit) | **PASS** | day-7 p90 level 37.8 (high cal 41.8), max-gear 28 %, endgame 12 %; live day-7 p90 level 60.0 |
-| C3 | no dead zone: every level 1–60 has normal mobs within ±3 levels | **PASS** | 0 dead levels  (live: 38 dead levels) |
+| C1 | efficient (hardcore, optimal policy) active hours to level 60 within 180–220 h (p50, mid calibration) | **PASS** | 196.4 h (live: 207.0 h) |
+| C2 | 10 h/day × 7 days does not reach level 60 / max gear / full endgame (p90; mid, high calibration, every exploit) | **PASS** | day-7 p90 level 37.4 (high cal 41.2), max-gear 29 %, endgame 12 %; live day-7 p90 level 43.2 |
+| C3 | no dead zone: every level 1–60 has normal mobs within ±3 levels | **PASS** | 0 dead levels  (live: 0 dead levels) |
 | C4 | dungeon loot level never exceeds the dungeon's band (a level-60 farming dungeon I gets band-I loot) | **PASS** | proposed max(min, min(max, L)); live 10 for Хасарын Агуй at L60 |
-| C5 | economy: sinks absorb ≥ 60 % of coin income over 90 days (active, hardcore p50) | **PASS** | active 94 %, hardcore 96 % |
-| C6 | AFK: no armour progression from idle time and AFK EXP/hour ≤ 30 % of active play | **PASS** | AFK armour level 1, AFK EXP/h 12923 vs active 121020 |
-| C7 | death lock (GEOMETRIC): ≤ 20 % of play time lost and ≤ 2 fully locked days in a row (p90) for every archetype | **PASS** | casual 2 % lost, streak 0; active 5 % lost, streak 0; hardcore 4 % lost, streak 0;  |
+| C5 | economy: sinks absorb ≥ 60 % of coin income over 90 days (active, hardcore p50) | **PASS** | active 96 %, hardcore 93 % |
+| C6 | AFK: no armour progression from idle time and AFK EXP/hour ≤ 30 % of active play | **PASS** | AFK armour level 1, AFK EXP/h 12923 vs active 130949 |
+| C7 | death lock (GEOMETRIC): ≤ 20 % of play time lost and ≤ 2 fully locked days in a row (p90) for every archetype | **PASS** | casual 2 % lost, streak 0; active 7 % lost, streak 0; hardcore 9 % lost, streak 0;  |
 | C8 | post-60 depth: Ascension X needs ≥ 300 active hours after level 60 (hardcore p50) | **PASS** | not reached in the horizon (median rank 4 at the last day) |
-| C9 | every session matters: ≥ 90 % of the first 30 days bring a milestone (level, chapter, first clear, armour level/tier, mastery rank, +5 % gear power) or ≥ 20 % of a level (p50) | **PASS** | casual 100 %; active 100 %; hardcore 97 %;  |
+| C9 | every session matters: ≥ 90 % of the first 30 days bring a milestone (level, chapter, first clear, armour level/tier, mastery rank, +5 % gear power) or ≥ 20 % of a level (p50) | **PASS** | casual 100 %; active 97 %; hardcore 90 %;  |
 | C10 | level 20 reaches at most 40 % of the dungeon ladder | **PASS** | 3 of 10 open, 3 clearable (live: 3 of 10) |
-| C11 | no single activity dominates: no playstyle reaches L30 > 25 % faster than the generalist; no source > 50 % of the generalist's EXP to 60 | **PASS** | generalist 49.3 h, fastest CRAFTER 45.0 h, largest source share 26 % |
-| C12 | no exploit beats normal optimal play by more than ×1.25 in EXP per online hour | **PASS** | SINGLE_ACTIVITY 101008 vs optimal 121020 EXP/h |
+| C11 | no single activity dominates: no playstyle reaches L30 > 25 % faster than the generalist; no source > 50 % of the generalist's EXP to 60 | **PASS** | generalist 48.3 h, fastest CRAFTER 43.3 h, largest source share 26 % |
+| C12 | no exploit beats normal optimal play by more than ×1.25 in EXP per online hour | **PASS** | SINGLE_ACTIVITY 105473 vs optimal 130949 EXP/h |
 | C13 | 10 h/day × 7 days: no run reaches maximum armour power (AL 60 + T6 + enhancement 5 + mastery 10), every exploit included | **PASS** | 0 runs at max; armour mastery day 7 p90 = 5.0 |
 <!-- sim:end compliance -->

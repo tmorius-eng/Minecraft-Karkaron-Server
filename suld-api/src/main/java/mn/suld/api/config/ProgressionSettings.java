@@ -16,7 +16,7 @@ public record ProgressionSettings(int maxLevel, double base, double exponent) {
     }
 
     public static ProgressionSettings defaults() {
-        return new ProgressionSettings(60, 100.0, 1.75);
+        return new ProgressionSettings(60, mn.suld.api.balance.Balance.CURVE_BASE, mn.suld.api.balance.Balance.CURVE_EXP);
     }
 
     public LevelCurve toCurve() {

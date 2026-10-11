@@ -150,6 +150,10 @@ public final class DungeonService {
             if (prev != null && !cleared(p, prev.id()) && !leader.hasPermission("suld.admin.world")) {
                 return Messages.error(p.getName() + " эхлээд «" + prev.displayName() + "»-г нэг удаа давах ёстой.");
             }
+            // progression v2 gates (DungeonLadder): the story chapter before it and, from the fifth rung, gear power.
+            // A dungeon already cleared once stays open whatever changed since.
+            Component gate = v2Gate(p, def);
+            if (gate != null && !cleared(p, def.id()) && !leader.hasPermission("suld.admin.world")) return gate;
             members.add(id);
         }
 
@@ -278,7 +282,9 @@ public final class DungeonService {
     private void spawnBoss(ActiveRun ar) {
         ar.run.enterBoss();
         MobDefinition bossMob = ar.def.bossDefinition().mob();
-        LivingEntity boss = mobs.spawn(bossMob, ar.hall == null ? ar.origin.clone() : ar.hall.at(mn.suld.api.dungeon.hall.HallBlueprint.BOSS_SPAWN));
+        // boss health is tuned for the dungeon's recommended party (×0.44 solo dungeon … ×1.0 for four)
+        double bossHp = bossMob.scaledHealth() * mn.suld.api.balance.MobScaling.bossPartyScale(ar.def.recommendedParty());
+        LivingEntity boss = mobs.spawn(bossMob, ar.hall == null ? ar.origin.clone() : ar.hall.at(mn.suld.api.dungeon.hall.HallBlueprint.BOSS_SPAWN), bossHp);
         boss.setRemoveWhenFarAway(false);
         boss.addScoreboardTag(DUNGEON_TAG);
         ar.bossId = boss.getUniqueId();
@@ -322,6 +328,40 @@ public final class DungeonService {
     private final org.bukkit.NamespacedKey clearsKey = new org.bukkit.NamespacedKey("suld", "dungeon_clears");
 
     /** True once {@code p} has cleared the dungeon (kept in the player's data; opens the next one on the ladder). */
+    /** Why {@code p} may not enter {@code def} yet under the ladder's chapter and gear-power gates, or null. */
+    Component v2Gate(Player p, DungeonDefinition def) {
+        mn.suld.api.balance.DungeonLadder.Rung rung = mn.suld.api.balance.DungeonLadder.rung(def.id());
+        if (rung == null) return null;
+        int story = services.quests().chain().size();
+        int need = Math.min(rung.chapterGate() + 1, story);
+        int done = services.skillTree() == null ? story : services.skillTree().context(p).finishedChapters();
+        if (done < need) {
+            return Messages.error(p.getName() + ": «" + def.displayName() + "» — түүхийн " + need + "-р бүлгийг дуусгасны дараа нээгдэнэ (одоо "
+                    + done + "). /quest");
+        }
+        if (mn.suld.api.balance.DungeonLadder.index(def.id()) >= 4) {
+            double gp = gearPower(p), min = 0.75 * mn.suld.api.balance.GearPower.par(rung.min());
+            if (gp < min) {
+                return Messages.error(p.getName() + ": тоног хэрэгслийн хүч " + Math.round(gp) + " / " + Math.round(min)
+                        + " — илүү сайн, өндөр түвшний хуяг зэвсэг өмс.");
+            }
+        }
+        return null;
+    }
+
+    /** Gear power of what {@code p} wears (GearPower: item level × rarity × roll quality). */
+    double gearPower(Player p) {
+        mn.suld.plugin.item.EquipmentService eq = services.equipment();
+        mn.suld.plugin.item.ItemService items = services.itemService();
+        if (eq == null || items == null) return Double.MAX_VALUE;
+        double gp = 0;
+        for (ItemInstance i : eq.worn(p).values()) {
+            ItemDefinition d = items.catalog().item(i.definitionId()).orElse(null);
+            if (d != null) gp += mn.suld.api.balance.GearPower.item(d, i);
+        }
+        return gp;
+    }
+
     public boolean cleared(Player p, String dungeonId) {
         String s = p.getPersistentDataContainer().get(clearsKey, org.bukkit.persistence.PersistentDataType.STRING);
         return s != null && java.util.Arrays.asList(s.split(",")).contains(dungeonId);
@@ -505,7 +545,7 @@ public final class DungeonService {
             int from = profile.progression().level();
             services.session(id).dungeonClears++;
             services.session(id).bossesDefeated++;
-            var bonus = mn.suld.plugin.content.DungeonContent.completion(ar.def.id());
+            var bonus = completionReward(ar, profile);
             long completionExp = services.boosts().apply(id, bonus.exp());
             ExpGainResult exp = services.progression().grantExp(profile, completionExp, ExpSource.DUNGEON);
             services.clans().contribute(id, SuldContent.CLAN_EXP_PER_DUNGEON_CLEAR);
@@ -553,6 +593,24 @@ public final class DungeonService {
             services.profiles().save(profile);
         }
         cleanup(ar);
+    }
+
+    /**
+     * Completion EXP and coins (progression v2): 4 % of a level at the dungeon's content level and 60 + 12·that level
+     * coins (Rewards), × the repeat factor (−15 % per clear of it among the last 8 clears, floor 25 %) × the carry
+     * factor (above the dungeon's max level ×0.1; 10+ levels below the party's best ×0.5). Off the ladder: the table.
+     */
+    private mn.suld.plugin.content.DungeonContent.Completion completionReward(ActiveRun ar, PlayerProfile profile) {
+        mn.suld.api.balance.DungeonLadder.Rung rung = mn.suld.api.balance.DungeonLadder.rung(ar.def.id());
+        if (rung == null) return mn.suld.plugin.content.DungeonContent.completion(ar.def.id());
+        int top = 1;
+        for (UUID m : ar.participants) top = Math.max(top, services.profiles().cached(m).map(x -> x.progression().level()).orElse(1));
+        double f = mn.suld.api.balance.DungeonRules.repeatFactor(profile.classGear().recent(), ar.def.id())
+                * mn.suld.api.balance.DungeonRules.carryFactor(profile.progression().level(), top, rung.max());
+        var curve = services.progression().engine().curve();
+        return new mn.suld.plugin.content.DungeonContent.Completion(
+                Math.max(1, Math.round(mn.suld.api.balance.Rewards.dungeonExp(curve, rung.contentLevel()) * f)),
+                Math.max(1, Math.round(mn.suld.api.balance.Rewards.dungeonCoins(rung.contentLevel()) * f)));
     }
 
     private double lootBonus(Player p) {

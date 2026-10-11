@@ -32,9 +32,10 @@ public final class DailyReward {
         return 40L * day + (day == CYCLE ? 200 : 0);
     }
 
-    /** EXP for a streak day, growing with the player's level so it stays worth claiming. */
+    /** EXP for a streak day: 2 % of the player's level per streak day / 7 on the progression v2 curve (Rewards). */
     public static long exp(int day, int level) {
-        return 50L * day * Math.max(1, (level + 4) / 5);
+        // at least 25 EXP per streak day, so the first levels' claims are not a single digit
+        return Math.max(25L * day, mn.suld.api.balance.Rewards.loginExp(mn.suld.api.balance.Balance.curve(), day, level));
     }
 
     public static Claim claim(long lastDay, int streak, long today, int level) {

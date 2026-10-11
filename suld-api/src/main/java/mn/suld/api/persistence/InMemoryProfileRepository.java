@@ -76,6 +76,7 @@ public final class InMemoryProfileRepository implements ProfileRepository {
                 source.skillState(),
                 source.equipment(),
                 source.classGear(),
-                source.activeMinutes());
+                source.activeMinutes(),
+                source.endgame());
     }
 }

@@ -10,22 +10,22 @@ public final class SkillPoints {
     private SkillPoints() {
     }
 
-    /** One point per level up to 30, then one per two levels. Level 1 has none. */
+    // progression v2 (mn.suld.api.balance.Economy.skillPoints): 59 from levels at 60, up to 14 from the story, 4 from
+    // the regions; every part only grows, so no build learned under the old formula loses a point.
+
+    /** One point per level. Level 1 has none. */
     public static int forLevel(int level) {
-        if (level <= 1) return 0;
-        int early = Math.min(level, 30) - 1;
-        int late = level > 30 ? (level - 30) / 2 : 0;
-        return early + late;
+        return Math.max(0, level - 1);
     }
 
-    /** One point for every three finished story chapters (the 15-chapter story pays 5). */
+    /** One point for every three finished story chapters, at most 14. */
     public static int forChapters(int finishedChapters) {
-        return Math.max(0, Math.min(5, finishedChapters / 3));
+        return Math.max(0, Math.min(14, finishedChapters / 3));
     }
 
-    /** One point for every five discovered regions, at most four. */
+    /** One point for every two discovered regions, at most four. */
     public static int forDiscovery(int discoveredRegions) {
-        return Math.max(0, Math.min(4, discoveredRegions / 5));
+        return Math.max(0, Math.min(4, discoveredRegions / 2));
     }
 
     public static int total(int level, int finishedChapters, int discoveredRegions, int granted) {

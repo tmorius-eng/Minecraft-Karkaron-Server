@@ -43,6 +43,7 @@ class AreaContentTest {
     void theEastIsNoLongerOneEndlessSteppe() {
         long east = WorldContent.AREAS.stream().filter(a -> a.regionId().equals("region.kherlen")).count();
         assertEquals(6, east);
-        assertEquals(24, WorldContent.AREAS.size());
+        assertEquals(24 + 16, WorldContent.AREAS.size(), "24 home areas + 16 in the outer lands");
+        assertTrue(WorldContent.AREAS.stream().allMatch(a -> a.index() <= 63), "area discovery bits 16..63");
     }
 }

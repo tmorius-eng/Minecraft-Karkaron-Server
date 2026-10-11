@@ -15,6 +15,9 @@ package mn.suld.api.mob;
  * @param baseAttack    base attack power (before tier scaling)
  * @param baseExp       base EXP reward (before tier scaling)
  * @param lootTableId   id of the loot table rolled on death
+ *
+ * <p>Progression v2: {@link #designed} takes health, attack and EXP from {@link mn.suld.api.balance.MobScaling}, and the
+ * tier multiplies health and attack separately ({@link MobTier#healthMultiplier()}, {@link MobTier#damageMultiplier()}).
  */
 public record MobDefinition(
         String id,
@@ -27,12 +30,23 @@ public record MobDefinition(
         long baseExp,
         String lootTableId) {
 
+    /** A mob whose numbers all follow from its level and tier (progression v2). */
+    public static MobDefinition designed(String id, String displayName, String backingEntity, MobTier tier, int level, String lootTableId) {
+        return new MobDefinition(id, displayName, backingEntity, tier, level, mn.suld.api.balance.MobScaling.baseHealth(level),
+                mn.suld.api.balance.MobScaling.baseDamage(level), mn.suld.api.balance.MobScaling.baseExp(level), lootTableId);
+    }
+
     public double scaledHealth() {
-        return baseHealth * tier.statMultiplier();
+        return baseHealth * tier.healthMultiplier();
     }
 
     public double scaledAttack() {
-        return baseAttack * tier.statMultiplier();
+        return baseAttack * tier.damageMultiplier();
+    }
+
+    /** Coins dropped on a kill. */
+    public long coins() {
+        return mn.suld.api.balance.MobScaling.coins(level, tier);
     }
 
     public long scaledExp() {

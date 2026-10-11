@@ -28,9 +28,7 @@ public final class SuldContent {
     }
 
     // --- First mob ---
-    public static final MobDefinition GOVIIN_CHONO = new MobDefinition(
-            "mob.goviin_chono", "Говийн Чоно", "WOLF", MobTier.NORMAL,
-            2, 16.0, 4.0, 50, "loot.goviin_chono");
+    public static final MobDefinition GOVIIN_CHONO = MobDefinition.designed("mob.goviin_chono", "Говийн Чоно", "WOLF", MobTier.NORMAL, 2, "loot.goviin_chono");
 
     // --- First quest ---
     public static final QuestDefinition FIRST_HUNT = new QuestDefinition(
@@ -41,14 +39,10 @@ public final class SuldContent {
     // ===== Vertical Slice 2: Хасарын Агуй (Khasar's Den) =====
 
     // --- Dungeon mobs ---
-    public static final MobDefinition ORKHON_CHONO = new MobDefinition(
-            "mob.orkhon_chono", "Орхоны Чоно", "WOLF", MobTier.NORMAL,
-            3, 24.0, 5.0, 70, "loot.orkhon_chono");
+    public static final MobDefinition ORKHON_CHONO = MobDefinition.designed("mob.orkhon_chono", "Орхоны Чоно", "WOLF", MobTier.NORMAL, 3, "loot.orkhon_chono");
 
     /** Boss base stats are multiplied by the BOSS tier (health x25, EXP x10). */
-    public static final MobDefinition KHASAR = new MobDefinition(
-            "mob.khasar", "Хасар — Агуйн Эзэн", "RAVAGER", MobTier.BOSS,
-            5, 8.0, 0.25, 60, "loot.khasar");
+    public static final MobDefinition KHASAR = MobDefinition.designed("mob.khasar", "Хасар — Агуйн Эзэн", "RAVAGER", MobTier.BOSS, 8, "loot.khasar");
 
     public static final BossDefinition KHASAR_BOSS = new BossDefinition(KHASAR, List.of(
             new BossPhase(1.0, 1.0, "Сэрсэн"),
@@ -57,7 +51,7 @@ public final class SuldContent {
 
     public static final DungeonDefinition KHASAR_DEN = new DungeonDefinition(
             "dungeon.khasar_den", "Хасарын Агуй",
-            2, 1, 4,
+            3, 1, 4,
             List.of(
                     List.of("mob.goviin_chono", "mob.goviin_chono", "mob.goviin_chono"),
                     List.of("mob.orkhon_chono", "mob.orkhon_chono", "mob.orkhon_chono", "mob.orkhon_chono")),

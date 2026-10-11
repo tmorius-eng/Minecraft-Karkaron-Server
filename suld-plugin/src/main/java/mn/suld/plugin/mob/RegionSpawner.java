@@ -113,7 +113,7 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
                 String id;
                 if (wanted != null && ThreadLocalRandom.current().nextDouble() < 0.5) id = wanted;
                 else if (wanted == null && dist < OUTSKIRTS && ThreadLocalRandom.current().nextDouble() < 0.6) id = SuldContent.GOVIIN_CHONO.id();
-                else id = region.mobIds().get(ThreadLocalRandom.current().nextInt(region.mobIds().size()));
+                else id = pickByLevel(region, at);
                 MobDefinition def = SuldContent.mobFor(id);
                 if (def == null) continue;
                 LivingEntity mob = services.mobs().spawn(def, at);
@@ -126,6 +126,38 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
                 }
             }
         }
+    }
+
+    /**
+     * The level the wild has at a spot: in the outer lands it grows with the distance from Kharkhorum (27 at 2600
+     * blocks, 60 at the world edge); in a home region it is the middle of the named area's band (or the region's).
+     */
+    int localLevel(RegionDefinition region, Location at) {
+        Location c = at.getWorld().getSpawnLocation();
+        return WorldContent.localLevel(region, at.getX() - c.getX(), at.getZ() - c.getZ());
+    }
+
+    /** One of the region's mobs whose level fits the spot (±5 levels; elites half as often), else any of them. */
+    private String pickByLevel(RegionDefinition region, Location at) {
+        int want = localLevel(region, at);
+        List<MobDefinition> fit = new ArrayList<>();
+        List<Double> w = new ArrayList<>();
+        double total = 0;
+        for (String id : region.mobIds()) {
+            MobDefinition m = SuldContent.mobFor(id);
+            if (m == null || Math.abs(m.level() - want) > 5) continue;
+            double wt = m.tier() == mn.suld.api.mob.MobTier.NORMAL ? 1.0 : 0.5;
+            fit.add(m);
+            w.add(wt);
+            total += wt;
+        }
+        if (fit.isEmpty()) return region.mobIds().get(ThreadLocalRandom.current().nextInt(region.mobIds().size()));
+        double roll = ThreadLocalRandom.current().nextDouble(total);
+        for (int i = 0; i < fit.size(); i++) {
+            roll -= w.get(i);
+            if (roll < 0) return fit.get(i).id();
+        }
+        return fit.get(fit.size() - 1).id();
     }
 
     /** The mob the player's active story chapter asks to kill, if this region spawns it; else null. */
@@ -218,16 +250,19 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
         var style = services.styles().cached(p.getUniqueId()).orElse(null);
         if (style == null || !style.discover(a.index())) return false;
         int from = pr.progression().level();
-        var exp = services.progression().grantExp(pr, a.discoveryExp(), mn.suld.api.progression.ExpSource.DISCOVERY);
+        // progression v2: 2 % of a level at the area's level, × the level-gap factor (Rewards.landmarkExp)
+        long reward = Math.max(1, mn.suld.api.balance.Rewards.landmarkExp(services.progression().engine().curve(),
+                (a.minLevel() + a.maxLevel()) / 2, from));
+        var exp = services.progression().grantExp(pr, reward, mn.suld.api.progression.ExpSource.DISCOVERY);
         p.showTitle(net.kyori.adventure.title.Title.title(
                 net.kyori.adventure.text.Component.text("ШИНЭ ГАЗАР: " + a.name(), net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),
                         net.kyori.adventure.text.format.TextDecoration.BOLD),
-                net.kyori.adventure.text.Component.text(a.description() + " · +" + a.discoveryExp() + " EXP",
+                net.kyori.adventure.text.Component.text(a.description() + " · +" + reward + " EXP",
                         net.kyori.adventure.text.format.NamedTextColor.WHITE, net.kyori.adventure.text.format.TextDecoration.BOLD),
                 net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
                         java.time.Duration.ofMillis(700))));
         p.sendMessage(mn.suld.plugin.ui.Messages.success("Шинэ газар нээлээ: " + a.name() + " (" + regionName(a.regionId()) + ", түвшин "
-                + a.levelBand() + ") +" + a.discoveryExp() + " EXP"));
+                + a.levelBand() + ") +" + reward + " EXP"));
         p.playSound(p.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.4f);
         if (exp.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(p, from, exp.after().level());
         services.hud().update(p, pr);
@@ -249,17 +284,19 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
     private boolean discover(Player p, mn.suld.api.profile.PlayerProfile pr, RegionDefinition r) {
         int index = WorldContent.REGIONS.indexOf(r);
         var style = services.styles().cached(p.getUniqueId()).orElse(null);
-        if (index < 0 || style == null || r.discoveryExp() <= 0 || !style.discover(index)) return false;
+        if (index < 0 || style == null || !style.discover(index)) return false;
         int from = pr.progression().level();
-        var exp = services.progression().grantExp(pr, r.discoveryExp(), mn.suld.api.progression.ExpSource.DISCOVERY);
+        // progression v2: 5 % of a level at the region's minimum (Rewards.regionDiscoveryExp)
+        long reward = Math.max(1, mn.suld.api.balance.Rewards.regionDiscoveryExp(services.progression().engine().curve(), r.minLevel()));
+        var exp = services.progression().grantExp(pr, reward, mn.suld.api.progression.ExpSource.DISCOVERY);
         p.showTitle(net.kyori.adventure.title.Title.title(
                 net.kyori.adventure.text.Component.text("ШИНЭ НУТАГ", net.kyori.adventure.text.format.TextColor.fromHexString("#FFD24A"),
                         net.kyori.adventure.text.format.TextDecoration.BOLD),
-                net.kyori.adventure.text.Component.text(r.displayName() + " · +" + r.discoveryExp() + " EXP",
+                net.kyori.adventure.text.Component.text(r.displayName() + " · +" + reward + " EXP",
                         net.kyori.adventure.text.format.NamedTextColor.WHITE, net.kyori.adventure.text.format.TextDecoration.BOLD),
                 net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(300), java.time.Duration.ofSeconds(3),
                         java.time.Duration.ofMillis(700))));
-        p.sendMessage(mn.suld.plugin.ui.Messages.success("Шинэ нутаг нээлээ: " + r.displayName() + " (+" + r.discoveryExp() + " EXP)"));
+        p.sendMessage(mn.suld.plugin.ui.Messages.success("Шинэ нутаг нээлээ: " + r.displayName() + " (+" + reward + " EXP)"));
         if (danger(p, r)) p.sendMessage(mn.suld.plugin.ui.Messages.error("⚠ Аюултай нутаг — Түвшин " + r.levelBand() + " зөвлөнө."));
         p.playSound(p.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
         if (exp.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(p, from, exp.after().level());

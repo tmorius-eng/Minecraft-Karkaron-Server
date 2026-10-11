@@ -5,16 +5,23 @@
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
 # Schema version of this file (SULD migrates older files on start; do not edit).
-config-version: 4
+config-version: 5
 locale: mn
 
 # ---------------------------------------------------------------------------
 # Character progression (level / EXP curve).
 # EXP to go from level L to L+1 = round(base * L^exponent).
+# Progression v2 (docs/PROGRESSION_BALANCE_SPEC.md): 190 * L^2.2, about 200 active hours to level 60 with today's
+# content (tuned by the simulation; the full design with Act II and the world boss uses 315).
+# legacy-curve: the curve stored bars were earned on before v2; a profile still on it is rescaled once on its next
+# load (level kept, the same fraction of the bar).
 # ---------------------------------------------------------------------------
 progression:
   max-level: 60
   curve:
+    base: 190.0
+    exponent: 2.2
+  legacy-curve:
     base: 100.0
     exponent: 1.75
 
