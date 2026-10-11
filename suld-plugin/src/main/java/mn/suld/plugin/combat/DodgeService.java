@@ -54,7 +54,7 @@ public final class DodgeService implements Listener {
         Vector move = e.getTo().toVector().subtract(e.getFrom().toVector()).setY(0);
         if (move.lengthSquared() < 1.0e-4) move = p.getLocation().getDirection().setY(0).multiply(-1);
         if (move.lengthSquared() < 1.0e-4) move = new Vector(0, 0, 1);
-        p.setVelocity(move.normalize().multiply(1.05).setY(0.22));
+        services.movement.launch(p, move.normalize().multiply(1.05).setY(0.22), "dodge");
         p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation().add(0, 0.3, 0), 10, 0.3, 0.05, 0.3, 0.03);
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_PHANTOM_FLAP, 0.6f, 1.6f);
     }

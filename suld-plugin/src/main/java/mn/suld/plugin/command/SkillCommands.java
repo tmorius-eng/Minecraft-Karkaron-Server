@@ -310,7 +310,7 @@ public final class SkillCommands {
                             if (issues.size() > 15) s.sendMessage(line("  … бусад алдаа консолд (сервер лог)"));
                         }
                     }
-                    case "inspect", "grantpoints", "unlock", "reset", "orb", "fire", "qa", "qakit" -> player(s, a);
+                    case "inspect", "grantpoints", "unlock", "reset", "orb", "fire", "qa", "qakit", "cast" -> player(s, a);
                     default -> s.sendMessage(Messages.error("Үл мэдэгдэх дэд тушаал."));
                 }
                 return true;
@@ -368,6 +368,21 @@ public final class SkillCommands {
                         int n = st().adminFire(t, ev);
                         s.sendMessage(Messages.success(t.getName() + ": " + ev + " — " + n + " идэвхгүй шид шалгагдлаа"));
                     }
+                    case "cast" -> {
+                        mn.suld.api.skill.Spell sp = null;
+                        if (a.length >= 3) {
+                            try {
+                                sp = mn.suld.api.skill.Spell.valueOf(a[2].toUpperCase(Locale.ROOT));
+                            } catch (IllegalArgumentException ignored) {
+                                // reported below
+                            }
+                        }
+                        if (sp == null) {
+                            s.sendMessage(Messages.error("Хэрэглээ: /skillsadmin cast <тоглогч> <SPELL>"));
+                            return;
+                        }
+                        s.sendMessage(Messages.info(t.getName() + ": " + sp + " → " + qa.castNow(t, sp)));
+                    }
                     case "qakit" -> {
                         String scenario = a.length < 3 ? "" : a[2].toLowerCase(Locale.ROOT);
                         String res = scenario.isEmpty() ? null : st().qaKit(t, scenario);
@@ -400,11 +415,14 @@ public final class SkillCommands {
             @Override
             public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
                 if (!s.hasPermission("suld.admin.skills")) return List.of();
-                if (a.length == 1) return filter(List.of("inspect", "grantpoints", "unlock", "reset", "orb", "fire", "qa", "qakit", "reload", "validate"), a[0]);
+                if (a.length == 1) return filter(List.of("inspect", "grantpoints", "unlock", "reset", "orb", "fire", "qa", "qakit", "cast", "reload", "validate"), a[0]);
                 if (a.length == 2 && !List.of("reload", "validate").contains(a[0].toLowerCase(Locale.ROOT))) {
                     return filter(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(), a[1]);
                 }
                 if (a.length == 3 && a[0].equalsIgnoreCase("qakit")) return filter(List.of("fresh", "rich", "states", "states0"), a[2]);
+                if (a.length == 3 && a[0].equalsIgnoreCase("cast")) {
+                    return filter(java.util.Arrays.stream(mn.suld.api.skill.Spell.values()).map(Enum::name).toList(), a[2].toUpperCase(Locale.ROOT));
+                }
                 if (a.length >= 3 && a[0].equalsIgnoreCase("qa")) {
                     java.util.List<String> all = new java.util.ArrayList<>(mn.suld.plugin.skill.qa.SkillQa.SUITES);
                     all.add(0, "all");

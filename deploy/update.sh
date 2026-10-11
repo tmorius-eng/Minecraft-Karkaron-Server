@@ -148,6 +148,7 @@ activate_release() {
   fi
   install -o "$SULD_USER" -g "$SULD_USER" -m 644 "$RELEASES_DIR/$JAR" "$SERVER_DIR/plugins/SULD.jar" || return 1
   install_plugins
+  install_grim_config
   if [[ -n "$PACK_FILE" && -f "$PACK_DIR/$PACK_FILE" ]]; then
     apply_pack_config "$PACK_FILE" "$PACK_SHA1"
   else

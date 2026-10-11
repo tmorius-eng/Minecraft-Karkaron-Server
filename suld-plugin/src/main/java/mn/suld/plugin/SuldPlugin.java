@@ -115,6 +115,8 @@ public final class SuldPlugin extends JavaPlugin {
         combatFeel.start();
         services.hud().lockOn(combatFeel::target);
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.combat.DodgeService(services), this);
+        grim = new mn.suld.plugin.anticheat.GrimBridge(this, services.movement);
+        grim.start();
         services.styles().onChange(p -> services.hud().teamChanged(p));
         effects = new mn.suld.plugin.style.CosmeticEffects(this, services);
         getServer().getPluginManager().registerEvents(effects, this);
@@ -586,6 +588,12 @@ public final class SuldPlugin extends JavaPlugin {
     }
 
     private mn.suld.plugin.prop.PropService props;
+    private mn.suld.plugin.anticheat.GrimBridge grim;
+
+    /** The GrimAC bridge (inactive when GrimAC is not installed). */
+    public mn.suld.plugin.anticheat.GrimBridge grim() {
+        return grim;
+    }
 
     /** The 3D props (Meshy models) placed in the world. */
     public mn.suld.plugin.prop.PropService props() {

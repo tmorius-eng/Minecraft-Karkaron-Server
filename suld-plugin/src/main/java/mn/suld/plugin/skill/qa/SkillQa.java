@@ -77,6 +77,11 @@ public final class SkillQa {
     private final SkillService skills;
     private volatile boolean busy;
 
+    /** Admin {@code /skillsadmin cast}: one spell now, ignoring combo timing (cooldown and resource still apply). */
+    public SkillService.CastResult castNow(Player p, mn.suld.api.skill.Spell s) {
+        return skills.castDirect(p, s, true);
+    }
+
     public SkillQa(Plugin plugin, SuldServices services, SkillTreeService st, SkillService skills) {
         this.plugin = plugin;
         this.services = services;

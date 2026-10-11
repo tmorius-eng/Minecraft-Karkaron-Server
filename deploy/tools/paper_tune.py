@@ -6,7 +6,8 @@
 
 Only keys that already exist are changed (a typo, or a key the installed Paper version does not have, fails with
 exit 1 instead of silently writing a setting Paper ignores). Comments, order and every other line are preserved.
-Values are written verbatim (numbers, booleans, `default`). The profile format is one `file: a.b.c=value` per line;
+Values are written verbatim (numbers, booleans, `default`); a list key takes a flow list `[a, b]`, which replaces the
+old `- item` lines. The profile format is one `file: a.b.c=value` per line;
 `#` starts a comment. Dependency-free (no PyYAML on the server).
 """
 import os
@@ -60,6 +61,16 @@ def set_keys(path, edits):
         if rest == "" and found + 1 < len(lines) and LINE.match(lines[found + 1]) and \
                 len(LINE.match(lines[found + 1]).group("indent")) > len(m.group("indent")):
             missing.append(dotted + " (is a section, not a value)")
+            continue
+        if value.startswith("["):
+            # a flow list replaces a block list: drop the old "- item" lines under the key
+            j = found + 1
+            while j < len(lines) and re.match(r"^ *- ", lines[j]) and \
+                    len(lines[j]) - len(lines[j].lstrip(" ")) >= len(m.group("indent")):
+                j += 1
+            del lines[found + 1:j]
+        elif found + 1 < len(lines) and re.match(r"^ *- ", lines[found + 1]):
+            missing.append(dotted + " (is a list: give [a, b, ...])")
             continue
         lines[found] = m.group("indent") + m.group("key") + ": " + value
     if missing:

@@ -292,3 +292,13 @@ shutdown:
 # as credits; rarer ones (and every store-only one) need Сүлд Кредит. COMMON | RARE | EPIC | LEGENDARY.
 cosmetics:
   coin-max-rarity: COMMON
+
+# Anticheat (docs/ANTICHEAT.md). GrimAC runs as its own plugin and judges every player; SÜLD only tells it which
+# movements SÜLD itself made: for a short window after a SÜLD dash/leap/dodge (40 ticks), while seated on the sky skill
+# tree, and 10 ticks after a lock-on camera turn, a flag from one of exempt-checks is cancelled. Movement checks only:
+# never list combat (Reach, Hitboxes, Aim*, KillAura...), packet (BadPackets*, PacketOrder*, Crash*, Timer) or world
+# (FastBreak, Scaffold/place) checks. /suld grim shows what was forgiven; /suld grim reset clears the counts.
+anticheat:
+  grim:
+    enabled: true
+    exempt-checks: [Simulation, GroundSpoof, NoFall, Phase]

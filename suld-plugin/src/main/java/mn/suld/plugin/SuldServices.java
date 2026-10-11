@@ -308,6 +308,8 @@ public final class SuldServices {
 
     /** Filled by SuldPlugin: whether a player is currently a soul (hardcore death state). */
     public volatile java.util.function.Predicate<java.util.UUID> isSoul = id -> false;
+    /** SÜLD-made movement windows the anticheat bridge forgives (dashes, leaps, the sky tree seat). */
+    public final mn.suld.plugin.anticheat.MovementExemptions movement = new mn.suld.plugin.anticheat.MovementExemptions();
     /** Multiplier of a player's class-gear stats (below 1 while a death wound is open; set by the DeathService). */
     public volatile java.util.function.ToDoubleFunction<java.util.UUID> woundFactor = id -> 1.0;
     /** Filled by SuldPlugin: send a player's steppe horse away (dungeon entry). */

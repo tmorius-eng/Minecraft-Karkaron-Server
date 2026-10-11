@@ -275,3 +275,15 @@ install_plugins() {
   as_suld python3 "$REPO_DIR/tools/plugins/fetch_plugins.py" --dest "$SERVER_DIR/plugins" --profiles "$profiles" \
     || die "Plugin install failed (see above). Fix the network or set PLUGIN_PROFILES."
 }
+
+# SÜLD's GrimAC punishments (deploy/grim/punishments.yml, docs/ANTICHEAT.md) whenever GrimAC is installed. Grim keeps
+# an existing punishments.yml on first boot and reads it again on every start, so the next (re)start applies it.
+install_grim_config() {
+  local src="$REPO_DIR/deploy/grim/punishments.yml"
+  compgen -G "$SERVER_DIR/plugins/grimac*.jar" >/dev/null || compgen -G "$SERVER_DIR/plugins/GrimAC*.jar" >/dev/null \
+    || { ok "GrimAC not installed — no anticheat punishments"; return 0; }
+  [[ -f "$src" ]] || return 0
+  run install -d -o "$SULD_USER" -g "$SULD_USER" -m 755 "$SERVER_DIR/plugins/GrimAC"
+  install_text "$SERVER_DIR/plugins/GrimAC/punishments.yml" 644 "$SULD_USER:$SULD_USER" < "$src"
+  ok "GrimAC punishments: deploy/grim/punishments.yml"
+}

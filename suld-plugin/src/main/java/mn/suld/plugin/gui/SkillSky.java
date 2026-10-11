@@ -185,6 +185,7 @@ public final class SkillSky implements Listener {
         Location stage = new Location(w, Math.floor(o.getX()) + 0.5, w.getMaxHeight() + 48, Math.floor(o.getZ()) + 0.5, 0f, 0f);
         p.setInvulnerable(true);
         p.setFallDistance(0);
+        services.movement.hold(p.getUniqueId(), "sky tree seat");
         p.teleport(stage);
         s.seat = w.spawn(stage, ItemDisplay.class, d -> {
             hidden(d);
@@ -212,6 +213,8 @@ public final class SkillSky implements Listener {
         p.teleport(s.origin);
         p.setFallDistance(0);
         p.setInvulnerable(s.invulnerable);
+        services.movement.release(p.getUniqueId(), "sky tree seat");
+        services.movement.exempt(p.getUniqueId(), 20, "sky tree return"); // the return teleport settles
         p.getPersistentDataContainer().remove(RETURN);
     }
 

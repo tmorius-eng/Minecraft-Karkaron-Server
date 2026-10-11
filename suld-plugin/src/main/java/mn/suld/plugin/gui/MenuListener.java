@@ -62,6 +62,10 @@ public final class MenuListener implements Listener {
         if (e.getView().getTopInventory().getHolder() instanceof Menu menu) {
             e.setCancelled(true);
             if (e.getWhoClicked() instanceof Player p && e.getClickedInventory() == e.getView().getTopInventory()) {
+                if (!clicks.allow(p.getUniqueId(), System.currentTimeMillis())) {
+                    reportFastClicks(p);
+                    return;
+                }
                 menu.click(p, e.getSlot(), e.getClick());
             }
             return;
@@ -73,6 +77,32 @@ public final class MenuListener implements Listener {
                 Bukkit.getScheduler().runTask(plugin, () -> menus.main(p));
             }
         }
+    }
+
+    /** Menu clicks faster than a person (ChestStealer, AutoShop, InventoryCleaner): dropped; staff hear it once a minute. */
+    private final mn.suld.plugin.anticheat.ClickRate clicks = new mn.suld.plugin.anticheat.ClickRate(10, 10);
+    private final java.util.Map<java.util.UUID, Long> clickReported = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private void reportFastClicks(Player p) {
+        long now = System.currentTimeMillis();
+        Long last = clickReported.get(p.getUniqueId());
+        if (last != null && now - last < 60_000) return;
+        clickReported.put(p.getUniqueId(), now);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            int n = clicks.takeDropped(p.getUniqueId());
+            if (n <= 0) return;
+            String line = "[anticheat] " + p.getName() + ": " + n + " SÜLD menu click(s) faster than a person dropped (ChestStealer/AutoShop?)";
+            plugin.getLogger().warning(line);
+            for (Player staff : Bukkit.getOnlinePlayers()) {
+                if (staff.hasPermission("suld.anticheat.alerts")) staff.sendMessage(mn.suld.plugin.ui.Messages.error(line.substring(12)));
+            }
+        }, 20L);
+    }
+
+    @EventHandler
+    public void onQuitClicks(org.bukkit.event.player.PlayerQuitEvent e) {
+        clicks.forget(e.getPlayer().getUniqueId());
+        clickReported.remove(e.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

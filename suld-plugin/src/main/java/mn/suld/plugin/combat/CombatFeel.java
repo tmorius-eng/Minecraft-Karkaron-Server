@@ -237,6 +237,7 @@ public final class CombatFeel implements Listener {
                     } else {
                         Vector next = cur.clone().multiply(1 - EASE).add(want.clone().multiply(EASE));
                         Vector at = eye.toVector().add(next.normalize().multiply(8));
+                        services.movement.exempt(p.getUniqueId(), 10, "lock-on");
                         p.lookAt(at.getX(), at.getY(), at.getZ(), LookAnchor.EYES);
                     }
                 }

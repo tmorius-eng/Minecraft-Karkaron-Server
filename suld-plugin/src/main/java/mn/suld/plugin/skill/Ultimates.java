@@ -267,7 +267,7 @@ final class Ultimates {
                     }
                     step = 0;
                     hit.clear();
-                    p.setVelocity(SkillService.flat(p).multiply(1.7).setY(0.1));
+                    services.movement.launch(p, SkillService.flat(p).multiply(1.7).setY(0.1), "ultimate dash");
                     p.getWorld().playSound(p.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1.3f);
                 }
                 step++;

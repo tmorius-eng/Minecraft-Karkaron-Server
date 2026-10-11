@@ -53,6 +53,19 @@ public final class SuldCommand implements CommandExecutor {
                 }
             }
             case "setrank" -> setRank(sender, args);
+            case "grim" -> {
+                if (!sender.hasPermission("suld.admin")) {
+                    sender.sendMessage(Messages.error("Эрх алга."));
+                } else {
+                    var g = ((mn.suld.plugin.SuldPlugin) plugin).grim();
+                    if (g != null && args.length > 1 && args[1].equalsIgnoreCase("reset")) {
+                        g.reset();
+                        sender.sendMessage(Messages.success("Grim тоолуур тэглэгдлээ."));
+                    } else if (g != null) {
+                        for (String line : g.describe()) sender.sendMessage(Messages.info(line));
+                    }
+                }
+            }
             case "guide" -> {
                 if (!sender.hasPermission("suld.admin")) {
                     sender.sendMessage(Messages.error("Эрх алга."));
@@ -251,6 +264,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld badge <тоглогч> <owner|admin|developer|mod|helper|streamer|sponsor|none> — ажилтан/дэмжигчийн тэмдэг"));
             sender.sendMessage(Messages.info("/suld setrank <тоглогч> <ard|tsereg|aravt|zuut|myangat|tumen|noyon|khaan> — цол"));
             sender.sendMessage(Messages.info("/suld props — 3D дурсгалууд хаана байгаа"));
+            sender.sendMessage(Messages.info("/suld grim [reset] — GrimAC: SÜLD хөдөлгөөнд уучилсан flag-ууд"));
             sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));
