@@ -19,6 +19,7 @@ credits re-creating identical tasks.
 Usage:
   meshy_client.py balance
   meshy_client.py text3d --prompt "..." [--art-style realistic] [--no-remesh]
+  meshy_client.py refine <preview_task_id> [--texture-prompt "..."]
   meshy_client.py poll <task_id> [--download-dir DIR] [--timeout 600]
 """
 from __future__ import annotations
@@ -68,6 +69,48 @@ def text3d(prompt: str, art_style: str, remesh: bool) -> int:
     return 0
 
 
+def refine_task(preview_task_id: str, texture_prompt: str | None = None) -> str:
+    """Start the texturing (refine) of a finished preview; cached like the previews. Returns the refine task id."""
+    os.makedirs(CACHE, exist_ok=True)
+    key = hashlib.sha1(f"refine|{preview_task_id}|{texture_prompt}".encode()).hexdigest()[:16]
+    cache_file = os.path.join(CACHE, f"refine_{key}.json")
+    if os.path.exists(cache_file):
+        return json.load(open(cache_file))["task_id"]
+    body = {"mode": "refine", "preview_task_id": preview_task_id, "enable_pbr": False, "ai_model": "meshy-7.1"}
+    if texture_prompt:
+        body["texture_prompt"] = texture_prompt
+    task_id = _request("POST", "/v2/text-to-3d", body).get("result")
+    json.dump({"task_id": task_id, "preview_task_id": preview_task_id, "texture_prompt": texture_prompt},
+              open(cache_file, "w"), indent=2, ensure_ascii=False)
+    return task_id
+
+
+def preview_task(prompt: str, art_style: str = "realistic", remesh: bool = True) -> str:
+    """Start (or reuse from the cache) a text-to-3D preview. Returns its task id."""
+    os.makedirs(CACHE, exist_ok=True)
+    key = hashlib.sha1(f"{prompt}|{art_style}|{remesh}".encode()).hexdigest()[:16]
+    cache_file = os.path.join(CACHE, f"text3d_{key}.json")
+    if os.path.exists(cache_file):
+        return json.load(open(cache_file))["task_id"]
+    task_id = _request("POST", "/v2/text-to-3d", {
+        "mode": "preview", "prompt": prompt, "art_style": art_style, "should_remesh": remesh,
+    }).get("result")
+    json.dump({"task_id": task_id, "prompt": prompt, "art_style": art_style}, open(cache_file, "w"), indent=2, ensure_ascii=False)
+    return task_id
+
+
+def wait(task_id: str, timeout: float = 900.0) -> dict:
+    """Poll a text-to-3D task until it ends; returns its final record."""
+    deadline = time.time() + timeout
+    info: dict = {}
+    while time.time() < deadline:
+        info = _request("GET", f"/v2/text-to-3d/{task_id}")
+        if info.get("status") in ("SUCCEEDED", "FAILED", "CANCELED", "EXPIRED"):
+            return info
+        time.sleep(10)
+    return info
+
+
 def poll(task_id: str, download_dir: str | None, timeout: float) -> int:
     deadline = time.time() + timeout
     status = None
@@ -113,6 +156,9 @@ def main() -> int:
     t.add_argument("--prompt", required=True)
     t.add_argument("--art-style", default="realistic")
     t.add_argument("--no-remesh", action="store_true")
+    r = sub.add_parser("refine")
+    r.add_argument("preview_task_id")
+    r.add_argument("--texture-prompt", default=None)
     p = sub.add_parser("poll")
     p.add_argument("task_id")
     p.add_argument("--download-dir", default=None)
@@ -122,6 +168,9 @@ def main() -> int:
         return balance()
     if args.cmd == "text3d":
         return text3d(args.prompt, args.art_style, not args.no_remesh)
+    if args.cmd == "refine":
+        print(json.dumps({"task_id": refine_task(args.preview_task_id, args.texture_prompt)}))
+        return 0
     if args.cmd == "poll":
         return poll(args.task_id, args.download_dir, args.timeout)
     return 2

@@ -12,6 +12,11 @@ public interface CityZone {
     /** Inside the city or within {@code margin} blocks of it. */
     boolean near(String world, int x, int z, int margin);
 
+    /** The world block {x, z} of the city plan's origin (its layout coordinates are relative to it), if built. */
+    default java.util.Optional<int[]> origin(String world) {
+        return java.util.Optional.empty();
+    }
+
     CityZone NONE = new CityZone() {
         public boolean contains(String world, int x, int z) { return false; }
         public boolean near(String world, int x, int z, int margin) { return false; }

@@ -355,6 +355,18 @@ public final class StyleService implements Listener {
         return check;
     }
 
+    /** Admin: set a player's rank directly (no level or coin check), e.g. {@code /suld setrank}. */
+    public void setRank(Player p, Rank rank) {
+        of(p.getUniqueId()).rank(rank);
+        changed(p);
+        saveProfile(p);
+    }
+
+    /** Admin: the badge refresh after {@code /suld badge} (name tags, TAB, chat). */
+    public void badgeChanged(Player p) {
+        changeListeners.forEach(l -> l.accept(p));
+    }
+
     // ------------------------------------------------------------------ level rewards
 
     /** Claim one reached reward. Returns false if not reached or already claimed. */

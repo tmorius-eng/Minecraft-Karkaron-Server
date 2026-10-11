@@ -42,3 +42,5 @@ assets/sources/*.obj
 # Real deployment config (contains the DB password) — only the .example is tracked
 deploy/*.env
 __pycache__/
+# Meshy prop sources (tools/meshy/generate_props.py): big GLBs and thumbnails, regenerable from the task cache
+assets/sources/props/

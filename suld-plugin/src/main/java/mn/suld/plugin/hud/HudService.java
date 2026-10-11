@@ -325,7 +325,7 @@ public final class HudService {
         Integer seenLevel = lastListLevel.get(p.getUniqueId());
         if (seenLevel == null || seenLevel != level || listDirty.remove(p.getUniqueId())) {
             lastListLevel.put(p.getUniqueId(), level);
-            Component listName = StyleFormat.badges(p, s, true).append(StyleFormat.name(p, s))
+            Component listName = StyleFormat.badges(p, s, true).append(StyleFormat.name(p, s)).append(afterName(p))
                     .append(Component.text(" " + level, TextColor.fromHexString("#8C96A8")));
             if (!listName.equals(lastListName.put(p.getUniqueId(), listName))) p.playerListName(listName);
         }
@@ -351,10 +351,29 @@ public final class HudService {
     private final Map<UUID, TeamSpec> specs = new ConcurrentHashMap<>();
     private long lastFullReconcile;
 
+    /**
+     * The badges after a player's name (TAB and the name tag above the head): the class badge and the clan badge with
+     * its tag, each switched by config {@code ui.badges.class} / {@code ui.badges.clan}.
+     */
+    private Component afterName(Player p) {
+        Component out = Component.empty();
+        boolean cls = plugin == null || plugin.getConfig().getBoolean("ui.badges.class", true);
+        boolean clan = plugin == null || plugin.getConfig().getBoolean("ui.badges.clan", true);
+        if (cls) {
+            var c = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
+            if (c != null) out = out.append(Component.text(" ")).append(StyleFormat.classBadge(c, true));
+        }
+        if (clan && services.clans() != null) {
+            var tag = services.clans().tagOf(p.getUniqueId()).orElse(null);
+            if (tag != null) out = out.append(Component.text(" ")).append(StyleFormat.clanBadge(tag, true));
+        }
+        return out;
+    }
+
     private TeamSpec specOf(Player p) {
         PlayerStyle s = services.styles().of(p.getUniqueId());
         Component prefix = StyleFormat.badges(p, s, true);
-        Component suffix = StyleFormat.tag(s).map(t -> Component.text(" ").append(t)).orElse(Component.empty());
+        Component suffix = afterName(p).append(StyleFormat.tag(s).map(t -> Component.text(" ").append(t)).orElse(Component.empty()));
         return new TeamSpec(teamName(p, s), p.getName(), prefix, suffix);
     }
 
@@ -441,7 +460,10 @@ public final class HudService {
     public void refreshTeams() {
         if (services == null) return;
         List<Player> online = new ArrayList<>(Bukkit.getOnlinePlayers());
-        for (Player p : online) specs.put(p.getUniqueId(), specOf(p));
+        for (Player p : online) {
+            specs.put(p.getUniqueId(), specOf(p));
+            listDirty.add(p.getUniqueId()); // the TAB name carries the same badges
+        }
         for (Player viewer : online) {
             Scoreboard board = board(viewer);
             Set<String> wanted = new HashSet<>();

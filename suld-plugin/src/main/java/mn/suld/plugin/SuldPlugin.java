@@ -378,6 +378,8 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.region.HistoricSiteService historicSites = new mn.suld.plugin.region.HistoricSiteService(this, services);
         historicSites.start();
         services.historicSites = historicSites;
+        props = new mn.suld.plugin.prop.PropService(this, services);
+        props.start();
         worldCommand.sites(historicSites);
         pregen.start();
 
@@ -402,6 +404,7 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (props != null) props.stop();
         if (combatFeel != null) combatFeel.shutdown();
         if (halls != null) halls.shutdown();
         if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood
@@ -576,6 +579,13 @@ public final class SuldPlugin extends JavaPlugin {
 
     public mn.suld.plugin.style.CosmeticEffects effects() {
         return effects;
+    }
+
+    private mn.suld.plugin.prop.PropService props;
+
+    /** The 3D props (Meshy models) placed in the world. */
+    public mn.suld.plugin.prop.PropService props() {
+        return props;
     }
 
     public mn.suld.plugin.branding.GuideBoards guide() {

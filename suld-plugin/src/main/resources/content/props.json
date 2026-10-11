@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "about": "Static 3D props (Meshy text-to-3D, voxelised into box models by tools/meshy; docs/world/PROPS_3D.md). height is in blocks, units the model's height in model units (16 per block at scale 1). history labels the object like content/sites.json. A place is either in the city (city: [x, z] in the city plan's layout coordinates) or at a historic site (site: id, offset [dx, dz] from its centre). yaw: 0 = the model faces south. Edit plugins/SULD/content/props.json on a server to move or add props (read at start).",
+  "props": [
+    {"id": "stone_turtle", "name": "Хархорумын Чулуун Мэлхий", "history": "VERIFIED", "height": 1.6, "units": 18,
+     "about": "Хархорумын туурьт өнөөг хүртэл буй боржин чулуун мэлхий хөшөөг сэдэвлэсэн. Нуруун дээрх нүхэнд гэрэлт хөшөө суулгадаг байжээ."},
+    {"id": "silver_tree", "name": "Мөнгөн Мод", "history": "INSPIRED", "height": 6.0, "units": 41,
+     "about": "Мөнх хааны ордонд Парисын урчу Гийом Бушье хийсэн мөнгөн модон усан оргилуурыг Рубрук тэмдэглэжээ. Энэ нь түүний бичсэнээр сэргээсэн тоглоомын хувилбар."},
+    {"id": "deer_stone", "name": "Буган Хөшөө", "history": "VERIFIED", "height": 3.4, "units": 48,
+     "about": "Хүрэл зэвсгийн үеийн буган хөшөөний төрлийг сэдэвлэсэн. Тодорхой нэг хөшөөг хуулаагүй, хялбаршуулсан."},
+    {"id": "stone_man", "name": "Хүн Чулуу", "history": "VERIFIED", "height": 2.6, "units": 44,
+     "about": "Түрэгийн үеийн, аяга барьсан хүн чулууны төрлийг сэдэвлэсэн. Тодорхой нэг хөшөөг хуулаагүй."}
+  ],
+  "places": [
+    {"prop": "stone_turtle", "city": [-26, 60], "yaw": 90},
+    {"prop": "stone_turtle", "city": [26, 60], "yaw": -90},
+    {"prop": "silver_tree", "city": [-20, -77], "yaw": 0},
+    {"prop": "deer_stone", "site": "site.uushig", "offset": [0, -10], "yaw": 0},
+    {"prop": "stone_man", "site": "site.dariganga", "offset": [8, 0], "yaw": -90}
+  ]
+}

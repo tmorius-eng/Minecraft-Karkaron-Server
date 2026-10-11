@@ -43,6 +43,16 @@ public final class SuldCommand implements CommandExecutor {
             case "coins" -> giveCoins(sender, args);
             case "content" -> content(sender, args);
             case "endgame" -> endgame(sender, args);
+            case "badge" -> badge(sender, args);
+            case "props" -> {
+                if (!sender.hasPermission("suld.admin")) {
+                    sender.sendMessage(Messages.error("Эрх алга."));
+                } else {
+                    var ps = ((mn.suld.plugin.SuldPlugin) plugin).props();
+                    if (ps != null) for (String line : ps.describe()) sender.sendMessage(Messages.info(line));
+                }
+            }
+            case "setrank" -> setRank(sender, args);
             case "guide" -> {
                 if (!sender.hasPermission("suld.admin")) {
                     sender.sendMessage(Messages.error("Эрх алга."));
@@ -138,6 +148,53 @@ public final class SuldCommand implements CommandExecutor {
         sender.sendMessage(Messages.success(target.getName() + ": " + (amount > 0 ? "+" : "") + amount + " ₮ → " + now + " ₮"));
     }
 
+    /**
+     * Admin/console: {@code /suld badge <player> <id|none>} — give (or take) a staff/supporter badge. Kept in the
+     * player's data, so it survives restarts; a LuckPerms permission {@code suld.badge.<id>} on a group still wins
+     * (that is the way for offline players and whole groups).
+     */
+    private void badge(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player target = args.length < 3 ? null : Bukkit.getPlayerExact(args[1]);
+        String id = args.length < 3 ? "" : args[2].toLowerCase(java.util.Locale.ROOT);
+        mn.suld.api.style.StaffBadge badge = null;
+        for (mn.suld.api.style.StaffBadge b : mn.suld.api.style.StaffBadge.values()) if (b.id().equals(id)) badge = b;
+        if (target == null || (badge == null && !id.equals("none"))) {
+            sender.sendMessage(Messages.info("/suld badge <онлайн тоглогч> <owner|admin|developer|mod|helper|streamer|sponsor|none>"));
+            return;
+        }
+        var pdc = target.getPersistentDataContainer();
+        if (badge == null) pdc.remove(mn.suld.plugin.ui.StyleFormat.BADGE_KEY);
+        else pdc.set(mn.suld.plugin.ui.StyleFormat.BADGE_KEY, org.bukkit.persistence.PersistentDataType.STRING, badge.id());
+        services.styles().badgeChanged(target);
+        plugin.getLogger().info("[audit] badge " + id + " target=" + target.getName() + " by=" + sender.getName());
+        sender.sendMessage(Messages.success(target.getName() + ": " + (badge == null ? "тэмдэг хасагдлаа" : badge.displayName() + " тэмдэг олгогдлоо")));
+        if (badge != null) target.sendMessage(Messages.success("Танд «" + badge.displayName() + "» тэмдэг олгогдлоо!"));
+    }
+
+    /** Admin/console: {@code /suld setrank <player> <rank>} — set a rank directly (events, staff, tests). */
+    private void setRank(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player target = args.length < 3 ? null : Bukkit.getPlayerExact(args[1]);
+        mn.suld.api.style.Rank rank = null;
+        if (args.length >= 3) {
+            for (mn.suld.api.style.Rank r : mn.suld.api.style.Rank.values()) if (r.id().equalsIgnoreCase(args[2])) rank = r;
+        }
+        if (target == null || rank == null) {
+            sender.sendMessage(Messages.info("/suld setrank <онлайн тоглогч> <ard|tsereg|aravt|zuut|myangat|tumen|noyon|khaan>"));
+            return;
+        }
+        services.styles().setRank(target, rank);
+        plugin.getLogger().info("[audit] setrank " + rank.id() + " target=" + target.getName() + " by=" + sender.getName());
+        sender.sendMessage(Messages.success(target.getName() + ": цол → " + rank.displayName()));
+    }
+
     /** Admin/console: {@code /suld quest <player> <chapter 1..N | reset>} — move a player in the storyline. */
     private void setQuest(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
@@ -191,6 +248,9 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld guide — заавар самбаруудыг шинэчлэх"));
             sender.sendMessage(Messages.info("/suld content validate|export — тоглоомын агуулгын файлууд (моб, бүс, dungeon, эрэл)"));
             sender.sendMessage(Messages.info("/suld endgame <тоглогч> rank|points|palace <тоо> — Тэнгэрийн Зэрэг (QA)"));
+            sender.sendMessage(Messages.info("/suld badge <тоглогч> <owner|admin|developer|mod|helper|streamer|sponsor|none> — ажилтан/дэмжигчийн тэмдэг"));
+            sender.sendMessage(Messages.info("/suld setrank <тоглогч> <ard|tsereg|aravt|zuut|myangat|tumen|noyon|khaan> — цол"));
+            sender.sendMessage(Messages.info("/suld props — 3D дурсгалууд хаана байгаа"));
             sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));

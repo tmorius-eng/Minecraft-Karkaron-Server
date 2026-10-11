@@ -1,0 +1,63 @@
+{
+  "about": "Static 3D props made with Meshy (text to 3D), voxelised into box models by tools/meshy/voxelize.py. history labels the object, as in content/sites.json: VERIFIED (a known kind of object), INSPIRED (a reconstruction from written sources). Each prop is a simplified game version, never a copy of a particular monument.",
+  "props": [
+    {
+      "id": "stone_turtle",
+      "name": "Хархорумын Чулуун Мэлхий",
+      "history": "VERIFIED",
+      "size": 3.0,
+      "prompt": "ancient carved grey granite turtle statue, Mongol Empire Karakorum style, a large stone tortoise with a rectangular socket on its back, weathered stone surface, sitting flat on the ground, one solid object, no base plate",
+      "texture": "weathered grey granite, lichen spots, carved shell plates, no paint",
+      "voxel": {
+        "res": 40,
+        "unit": 1,
+        "colors": 24
+      }
+    },
+    {
+      "id": "silver_tree",
+      "name": "Мөнгөн Мод",
+      "history": "INSPIRED",
+      "size": 6.0,
+      "prompt": "the silver tree fountain of the Mongol palace at Karakorum: a large silver tree with silver branches and leaves, gilded serpents coiling down the trunk, a winged figure blowing a trumpet on top, four silver lions around the base, ornate metalwork, one solid object",
+      "texture": "polished silver tree and lions, gold serpents, aged metal, no plastic",
+      "voxel": {
+        "res": 48,
+        "unit": 1,
+        "colors": 20
+      }
+    },
+    {
+      "id": "deer_stone",
+      "name": "Буган Хөшөө",
+      "history": "VERIFIED",
+      "size": 3.5,
+      "prompt": "bronze age Mongolian deer stone, a tall rectangular granite stele carved with stylized flying deer with long antlers, a ring band near the top, belt and dagger carvings near the bottom, weathered, standing upright, one solid object",
+      "texture": "grey granite with shallow carved deer, weathered, orange lichen",
+      "voxel": {
+        "res": 96,
+        "unit": 0.5,
+        "colors": 20
+      }
+    },
+    {
+      "id": "stone_man",
+      "name": "Хүн Чулуу",
+      "history": "VERIFIED",
+      "size": 2.4,
+      "prompt": "Turkic era stone statue from the Mongolian steppe: a standing man carved from one granite pillar, round flat face with a thin moustache, both hands holding a cup in front of his chest, a belt with a small hanging pouch, simple robe, weathered stone, no beard, no hat, no chinese style, one solid object",
+      "texture": "weathered grey granite, simple carved face and belt, orange lichen spots, no paint",
+      "voxel": {
+        "res": 88,
+        "unit": 0.5,
+        "colors": 24
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "id": "white_banner",
+      "why": "Meshy kept making a cloth banner (once with a sun-like emblem), not the horsehair tug; not shipped"
+    }
+  ]
+}

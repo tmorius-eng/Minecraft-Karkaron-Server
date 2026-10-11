@@ -159,6 +159,7 @@ public final class ClassSelectionGui implements Listener {
             return;
         }
         mustChoose.remove(player.getUniqueId());
+        if (services.hud() != null) services.hud().teamChanged(player); // the class badge on the name tag and TAB
 
         // Starter equipment.
         // the class weapon (tier follows the level: upgraded in place at 10 / 25 / 45)

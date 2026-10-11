@@ -787,6 +787,13 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
         return lx >= b.minX() - margin && lx <= b.maxX() + margin && lz >= b.minZ() - margin && lz <= b.maxZ() + margin;
     }
 
+    @Override
+    public java.util.Optional<int[]> origin(String world) {
+        BuildState s = state;
+        if (s == null || !isBuilt() || !s.world.equals(world)) return java.util.Optional.empty();
+        return java.util.Optional.of(new int[]{s.anchorX, s.anchorZ});
+    }
+
     /** Staff build mode: lets a {@code suld.admin.world} player change the protected city. */
     public boolean toggleEditor(java.util.UUID player) {
         if (!editors.remove(player)) {

@@ -71,6 +71,11 @@ public final class ClanService {
         }
     }
 
+    /** Clan membership shows on the name tags and TAB (ОВОГ badge + tag): redraw them after a change. */
+    private void refreshTags() {
+        if (services.hud() != null) org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> services.hud().refreshTeams());
+    }
+
     public ClanRegistry registry() {
         return registry;
     }
@@ -134,6 +139,7 @@ public final class ClanService {
             return;
         }
         ClanRegistry.Action a = registry.create(player.getUniqueId(), player.getName(), name, tag);
+        refreshTags();
         if (a.result() != ClanResult.CREATED) {
             player.sendMessage(Messages.error(describe(a.result())));
             return;
@@ -160,6 +166,7 @@ public final class ClanService {
 
     public void accept(Player player) {
         ClanRegistry.Action a = registry.accept(player.getUniqueId(), player.getName());
+        refreshTags();
         if (a.result() != ClanResult.JOINED) {
             player.sendMessage(Messages.error(describe(a.result())));
             return;
@@ -173,6 +180,7 @@ public final class ClanService {
 
     public void leave(Player player) {
         ClanRegistry.Action a = registry.leave(player.getUniqueId());
+        refreshTags();
         switch (a.result()) {
             case LEFT -> {
                 tagCache.remove(player.getUniqueId());
@@ -193,6 +201,7 @@ public final class ClanService {
             return;
         }
         ClanRegistry.Action a = registry.kick(actor.getUniqueId(), target);
+        refreshTags();
         if (a.result() != ClanResult.KICKED) {
             actor.sendMessage(Messages.error(describe(a.result())));
             return;
@@ -229,6 +238,7 @@ public final class ClanService {
 
     public void disband(Player actor) {
         ClanRegistry.Action a = registry.disband(actor.getUniqueId());
+        refreshTags();
         if (a.result() != ClanResult.DISBANDED) {
             actor.sendMessage(Messages.error(describe(a.result())));
             return;

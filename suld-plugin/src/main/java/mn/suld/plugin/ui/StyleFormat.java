@@ -79,12 +79,20 @@ public final class StyleFormat {
         return c == null ? NamedTextColor.WHITE : c;
     }
 
+    /** The staff/supporter badge an admin gave with {@code /suld badge} (kept in the player's data). */
+    public static final org.bukkit.NamespacedKey BADGE_KEY = new org.bukkit.NamespacedKey("suld", "staff_badge");
+
     /**
      * The highest staff/supporter badge the player has: permission {@code suld.badge.<id>} (default false, so
-     * operators do not inherit every badge); an operator without one shows ADMIN.
+     * operators do not inherit every badge, e.g. a LuckPerms group), else the badge given with {@code /suld badge};
+     * an operator without either shows ADMIN.
      */
     public static Optional<StaffBadge> staffOf(Player p) {
         for (StaffBadge b : StaffBadge.values()) if (p.hasPermission(b.permission())) return Optional.of(b);
+        String given = p.getPersistentDataContainer().get(BADGE_KEY, org.bukkit.persistence.PersistentDataType.STRING);
+        if (given != null) {
+            for (StaffBadge b : StaffBadge.values()) if (b.id().equals(given)) return Optional.of(b);
+        }
         return p.isOp() ? Optional.of(StaffBadge.ADMIN) : Optional.empty();
     }
 
@@ -116,6 +124,12 @@ public final class StyleFormat {
 
     public static Component classBadge(PlayerClass c, boolean pack) {
         return pack ? glyph(CLASS_GLYPH.get(c)) : Component.text(c.displayName().toUpperCase(Locale.ROOT), NamedTextColor.GRAY);
+    }
+
+    /** The clan badge (ОВОГ) with the clan's tag after it. */
+    public static Component clanBadge(String tag, boolean pack) {
+        Component t = Component.text(" " + tag, TextColor.fromHexString("#5FD2D2"), TextDecoration.BOLD);
+        return pack ? join(glyph(Glyphs.BADGE_CLAN), t) : join(Component.text("ОВОГ", TextColor.fromHexString("#1E7878"), TextDecoration.BOLD), t);
     }
 
     /** {@code [staff] [rank] } — always ends with a space. */

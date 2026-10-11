@@ -318,15 +318,73 @@ public final class Menus {
             info.add(Menu.kv("Түвшин:", String.valueOf(r.requiredLevel()), pr.progression().level() >= r.requiredLevel() ? GREEN : RED));
             info.add(Menu.kv("Үнэ:", fmt(r.cost()) + " ₮", pr.currency() >= r.cost() ? GREEN : RED));
             String hint = have ? "Танд байгаа ✔" : next ? "Дарж цол ахиулах" : "Өмнөх цолоо ав";
+            // the rank's badge (the one shown before the name in TAB, chat and above the head)
+            List<Component> body = List.of(StyleFormat.rankBadge(r, true), Component.empty(), b(r.lore()));
             ItemStack it = Menu.item(icons[r.ordinal()], Component.text(r.displayName(), c, TextDecoration.BOLD),
-                    Menu.lore(c, List.of(b(r.lore())), info, hint));
+                    Menu.lore(c, body, info, hint));
             if (have || next) Menu.glow(it);
             m.set(slots[r.ordinal()], it, next ? (pl, ct) -> {
                 if (styles().rankUp(pl) == Rank.Check.OK) rankup(pl);
             } : null);
         }
+        m.set(4, Menu.item(Material.NAME_TAG, Menu.title("Таны цол", StyleFormat.hex(s.rank().color())), List.of(
+                StyleFormat.rankBadge(s.rank(), true), Component.empty(),
+                b("Энэ тэмдэг нэрийн өмнө TAB, чат,"), b("толгой дээрх нэрэнд харагдана."))), null);
         m.set(27, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
+        m.set(31, Menu.item(Material.PAPER, Menu.title("Бүх тэмдэг", GOLD), List.of(b("Тэмдэг бүр, яаж авах вэ."))), (pl, c) -> badgeBook(pl));
         m.open(p);
+    }
+
+    // ================================================================== badges
+
+    /**
+     * Every badge (the owner's HD sheet) and how to get it: ranks with /rankup, staff and supporter badges from an
+     * admin (/suld badge or LuckPerms suld.badge.<id>), the class badge with /class, ОВОГ with a clan, and the
+     * city/wild badges the HUD shows by itself.
+     */
+    public void badgeBook(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        PlayerStyle s = styles().of(p.getUniqueId());
+        Menu m = new Menu(6, "Тэмдгүүд · Badges", Glyphs.GUI_FRAME);
+        int slot = 0;
+        for (Rank r : Rank.LADDER) {
+            boolean have = r.ordinal() <= s.rank().ordinal();
+            m.set(slot++, badgeItem(StyleFormat.rankBadge(r, true), r.displayName(), StyleFormat.hex(r.color()), have,
+                    List.of(b("Цол: /rankup"), Menu.kv("Түвшин:", String.valueOf(r.requiredLevel()), SKY), Menu.kv("Үнэ:", fmt(r.cost()) + " ₮", GOLD))), null);
+        }
+        slot = 9;
+        var staff = StyleFormat.staffOf(p).orElse(null);
+        for (mn.suld.api.style.StaffBadge sb : mn.suld.api.style.StaffBadge.values()) {
+            m.set(slot++, badgeItem(StyleFormat.staffBadge(sb, true), sb.displayName(), StyleFormat.hex(sb.color()), staff == sb,
+                    List.of(b(sb.staff() ? "Серверийн ажилтан." : "Серверийг дэмжигч."), b("Админ олгоно: /suld badge"))), null);
+        }
+        slot = 18;
+        var mine = pr == null ? null : pr.playerClass().orElse(null);
+        for (mn.suld.api.clazz.PlayerClass c : mn.suld.api.clazz.PlayerClass.values()) {
+            m.set(slot++, badgeItem(StyleFormat.classBadge(c, true), c.displayName(), GOLD, c == mine,
+                    List.of(b("Таны анги: /class"), b("Нэрийн дараа харагдана."))), null);
+        }
+        boolean clan = services.clans() != null && services.clans().tagOf(p.getUniqueId()).isPresent();
+        m.set(27, badgeItem(StyleFormat.glyph(Glyphs.BADGE_CLAN), "Овог", SKY, clan,
+                List.of(b("Овогт элсэх: /clan accept"), b("Овог байгуулах: /clan create"), b("Нэрийн дараа овгийн тагтай."))), null);
+        m.set(28, badgeItem(StyleFormat.glyph(Glyphs.BADGE_SAFE), "Аюулгүй", GREEN, false,
+                List.of(b("Хархорум хотод HUD дээр."))), null);
+        m.set(29, badgeItem(StyleFormat.glyph(Glyphs.BADGE_DANGER), "Аюултай", RED, false,
+                List.of(b("Хотоос гадна HUD дээр."))), null);
+        m.set(45, Menu.item(Material.ARROW, Menu.title("« Буцах", GOLD), List.of()), (pl, c) -> cosmetics(pl));
+        m.set(49, Menu.item(Material.NAME_TAG, Menu.title("Цол ахиулах · /rankup", GOLD), List.of()), (pl, c) -> rankup(pl));
+        m.open(p);
+    }
+
+    private ItemStack badgeItem(Component badge, String name, TextColor color, boolean have, List<Component> how) {
+        List<Component> lore = new ArrayList<>();
+        lore.add(badge);
+        lore.add(Component.empty());
+        lore.addAll(how);
+        lore.add(Component.empty());
+        lore.add(have ? Component.text("Танд байгаа ✔", GREEN, TextDecoration.BOLD) : Component.text("Танд алга", NamedTextColor.GRAY));
+        ItemStack it = Menu.item(have ? Material.NAME_TAG : Material.PAPER, Component.text(name, color, TextDecoration.BOLD), lore);
+        return have ? Menu.glow(it) : it;
     }
 
     // ================================================================== level rewards
@@ -400,6 +458,8 @@ public final class Menus {
         m.set(26, Menu.item(Material.EMERALD, Menu.title("Кредит · /buy", SKY), Menu.lore(SKY,
                 List.of(b("Сүлд Кредитээр гоёл авна.")), List.of(), "Дарж нээх")), (pl, c) -> buy(pl));
         m.set(35, Menu.item(Material.CHEST, Menu.title("Дэлгүүр · /shop", GREEN), List.of()), (pl, c) -> shop(pl));
+        m.set(53, Menu.item(Material.NAME_TAG, Menu.title("Тэмдгүүд", GOLD), Menu.lore(GOLD, List.of(
+                b("Цол, анги, овог, ажилтны тэмдэг."), StyleFormat.rankBadge(s.rank(), true)), List.of(), "Дарж үзэх")), (pl, c) -> badgeBook(pl));
         m.set(44, Menu.item(Material.BARRIER, Menu.title("Бүгдийг тайлах", RED), List.of(b("Зүүсэн бүх гоёлыг тайлна."))), (pl, c) -> {
             PlayerStyle st = styles().of(pl.getUniqueId());
             for (Cosmetic.Category cat : Cosmetic.Category.values()) st.equip(cat, null);
