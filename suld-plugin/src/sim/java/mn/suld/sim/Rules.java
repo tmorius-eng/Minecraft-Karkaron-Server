@@ -216,20 +216,9 @@ public abstract class Rules {
         return false;
     }
 
-    /** The gear power the game expects at a level (proposed spec; live uses it for reporting only). */
+    /** The gear power the game expects at a level (suld-api GearPower; live uses it for reporting only). */
     public double parGearPower(int level) {
-        double r = level < 10 ? 0.5 : level < 20 ? 1.2 : level < 30 ? 2.0 : level < 40 ? 2.5 : level < 50 ? 3.0 : level < 60 ? 3.5 : 4.0;
-        double mult = rarityStatMultiplierAt(r);
-        return 8 * level * mult * 0.875;
-    }
-
-    /** Interpolated rarity stat multiplier for a fractional rarity ordinal. */
-    static double rarityStatMultiplierAt(double ordinal) {
-        ItemRarity[] rs = ItemRarity.values();
-        int lo = (int) Math.floor(ordinal);
-        int hi = Math.min(lo + 1, 6);
-        double f = ordinal - lo;
-        return rs[lo].statMultiplier() * (1 - f) + rs[hi].statMultiplier() * f;
+        return mn.suld.api.balance.GearPower.par(level);
     }
 
     /** Dungeon boss rarity band override (proposed); null keeps the loot table's own tier. */

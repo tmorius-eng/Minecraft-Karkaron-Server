@@ -1,5 +1,15 @@
 package mn.suld.sim;
 
+import mn.suld.api.balance.Ascension;
+import mn.suld.api.balance.Balance;
+import mn.suld.api.balance.CombatRules;
+import mn.suld.api.balance.DungeonRules;
+import mn.suld.api.balance.Economy;
+import mn.suld.api.balance.ExpRules;
+import mn.suld.api.balance.GearPower;
+import mn.suld.api.balance.MobScaling;
+import mn.suld.api.balance.RestedPool;
+import mn.suld.api.balance.Rewards;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.item.ItemCatalog;
 import mn.suld.api.item.ItemRarity;
@@ -30,8 +40,8 @@ public class ProposedRules extends Rules {
     // ------------------------------------------------------------------------------------------- tunable constants
 
     /** EXP to go from L to L+1 = round(CURVE_BASE · L^CURVE_EXP) — plain config for PolynomialLevelCurve. */
-    public static final double CURVE_EXP = 2.2;
-    public static final double DEFAULT_CURVE_BASE = 315;
+    public static final double CURVE_EXP = mn.suld.api.balance.Balance.CURVE_EXP;
+    public static final double DEFAULT_CURVE_BASE = mn.suld.api.balance.Balance.CURVE_BASE;
 
     /** Death lock candidates evaluated by the simulation (minutes of real time, by level). */
     public enum LockCurve { NONE_30S, LINEAR, STEP, GEOMETRIC, LOG }
@@ -100,82 +110,45 @@ public class ProposedRules extends Rules {
 
     // ------------------------------------------------------------------------------------------------ mob formulas
 
-    /** Base EXP of a mob before its tier multiplier: close to the live values up to level 26. */
+    // Mob numbers come from suld-api (mn.suld.api.balance.MobScaling), the same functions the game uses.
+
     public static long mobBaseExp(int level) {
-        return Math.round(30 + 10.0 * level + 0.05 * level * level);
+        return MobScaling.baseExp(level);
     }
 
-    // The difficulty curve is derived from the median ("par") player the simulation produces under these rules
-    // (Calibrate: hardcore, all five classes), so a fight at par always reads the same: a NORMAL mob dies in
-    // ~2.5 s and one fight costs ~15 % of max health. docs/DIFFICULTY_CURVE.md prints the tables.
-
-    /** Par damage per second at a level (fit of the median player: 10 + 2.75·L^1.36). */
     public static double parDps(int level) {
-        return 10 + 2.75 * Math.pow(level, 1.36);
+        return MobScaling.parDps(level);
     }
 
-    /** Par max health (fit: 46.5 + 4.5·L + 0.113·L²). */
     public static double parHp(int level) {
-        return 46.5 + 4.5 * level + 0.113 * level * level;
+        return MobScaling.parHp(level);
     }
 
-    /** Par armour (fit: 7 + 0.97·L). */
     public static double parArmor(int level) {
-        return 7 + 0.97 * level;
+        return MobScaling.parArmor(level);
     }
 
     public static double parRegen(int level) {
-        return 0.3 + 0.05 * level;
+        return MobScaling.parRegen(level);
     }
 
-    /** Armour constant of the SÜLD mitigation a/(a+K): K grows with the attacker's level. */
     public static double armorK(int mobLevel) {
-        return 10 + 2.5 * mobLevel;
+        return CombatRules.armorK(mobLevel);
     }
 
-    static final double TTK_NORMAL = 2.5, DANGER_NORMAL = 0.15, SHARE = 0.5, ENGAGED = 1.2, INTERVAL = 1.5;
-
-    /** Health of a NORMAL mob; tiers multiply. */
     public static double mobHealth(int level) {
-        return Math.round(TTK_NORMAL * parDps(level));
+        return MobScaling.baseHealth(level);
     }
 
-    /** Damage per hit of a NORMAL mob, from the danger target at par. */
     public static double mobDamage(int level) {
-        double inc = (DANGER_NORMAL * parHp(level) / TTK_NORMAL + parRegen(level)) / ENGAGED;
-        double mit = parArmor(level) / (parArmor(level) + armorK(level));
-        return Math.round(inc * INTERVAL / ((1 - mit) * SHARE) * 10) / 10.0;
-    }
-
-    static double tierDamage(MobTier t) {
-        return switch (t) {
-            case NORMAL -> 1.0;
-            case ELITE -> 1.3;
-            case CHAMPION -> 1.6;
-            case MYTHIC -> 2.0;
-            case BOSS -> 1.0;
-            case WORLD_BOSS -> 1.2;
-        };
-    }
-
-    static double tierHealth(MobTier t) {
-        return switch (t) {
-            case NORMAL -> 1.0;
-            case ELITE -> 2.5;
-            case CHAMPION -> 5.0;
-            case MYTHIC -> 10.0;
-            case BOSS -> 40.0;
-            case WORLD_BOSS -> 200.0;
-        };
+        return MobScaling.baseDamage(level);
     }
 
     static World.Mob mob(String id, String name, int level, MobTier tier, boolean ranged, String table) {
-        double hp = mobHealth(level) * tierHealth(tier);
-        double dmg = mobDamage(level) * tierDamage(tier) * (tier == MobTier.BOSS || tier == MobTier.WORLD_BOSS ? 1.27 : 1.0);
-        long exp = Math.round(mobBaseExp(level) * tier.rewardMultiplier());
-        long coins = Math.round((1 + 0.4 * level) * (tier == MobTier.NORMAL ? 1 : tier.rewardMultiplier()));
-        boolean boss = tier == MobTier.BOSS || tier == MobTier.WORLD_BOSS;
-        return new World.Mob(id, name, level, tier, hp, dmg, boss || ranged ? 2.0 : INTERVAL, ranged, exp, table, coins);
+        double hp = MobScaling.health(level, tier);
+        double dmg = MobScaling.damage(level, tier);
+        return new World.Mob(id, name, level, tier, hp, dmg, tier.boss() || ranged ? 2.0 : 1.5, ranged,
+                MobScaling.exp(level, tier), table, MobScaling.coins(level, tier));
     }
 
     // ---------------------------------------------------------------------------------------------- the world model
@@ -231,7 +204,7 @@ public class ProposedRules extends Rules {
             }
             double[] weights = new double[w.size()];
             for (int i = 0; i < weights.length; i++) weights[i] = w.get(i);
-            long discovery = Math.round(0.05 * curve.expForLevel(Math.max(1, s.min())));
+            long discovery = Rewards.regionDiscoveryExp(curve, s.min());
             zones.add(new World.Zone(s.id(), s.name(), s.min(), s.max(), mobs, weights, discovery, 12, b)); // 8 landmarks + 4 hidden places
         }
         List<World.Dungeon> dungeons = new ArrayList<>();
@@ -264,14 +237,14 @@ public class ProposedRules extends Rules {
         int bossLevel = heroic ? 60 : Math.min(60, d.min() + 5);
         World.Mob b0 = mob(d.id() + ".boss", d.name() + " — эзэн", bossLevel, MobTier.BOSS, false, "loot.p.boss." + index);
         // boss health is sized for the dungeon's recommended party: ×0.44 for a solo dungeon … ×1.0 for four
-        double partyScale = 0.25 + 0.75 * d.party() / 4.0;
+        double partyScale = MobScaling.bossPartyScale(d.party());
         World.Mob boss = new World.Mob(b0.id(), b0.name(), b0.level(), b0.tier(), Math.round(b0.hp() * partyScale), b0.dmg(), b0.interval(),
                 b0.ranged(), b0.exp(), b0.lootTable(), b0.coins());
-        long completion = Math.round(0.04 * curve.expForLevel(Math.min(59, lv)));
-        long coins = 60 + 12L * lv;
+        long completion = Rewards.dungeonExp(curve, lv);
+        long coins = Rewards.dungeonCoins(lv);
         int previous = heroic ? -1 : index > 0 ? index - 1 : -1;
-        double gpMin = heroic ? 0.9 * parGearPower(60) : 0.75 * parGearPower(d.min());
-        double enrage = 180 + 15 * Math.min(index, 9);
+        double gpMin = heroic ? 0.9 * GearPower.par(60) : 0.75 * GearPower.par(d.min());
+        double enrage = DungeonRules.enrageSeconds(index);
         return new World.Dungeon(d.id(), d.name(), heroic ? 60 : d.min(), d.max(), index, waves, boss, completion, coins,
                 "loot.p.chest." + (heroic ? "heroic" : String.valueOf(index)), enrage, d.chapterGate(), previous, gpMin, heroic, mythic);
     }
@@ -285,7 +258,7 @@ public class ProposedRules extends Rules {
         World live = new LiveRules().world();
         for (World.Chapter c : live.story()) {
             int lv = chapterLevel(c, live);
-            long exp = Math.round(0.35 * curve.expForLevel(Math.max(1, Math.min(59, lv))));
+            long exp = Rewards.chapterExp(curve, lv);
             String target = c.target();
             int zone = c.zone();
             if (c.type() == QuestType.KILL_MOB || c.type() == QuestType.COLLECT_ITEM) {
@@ -300,7 +273,7 @@ public class ProposedRules extends Rules {
             World.Zone z = zones.get(b);
             for (int k = 0; k < 6; k++) {
                 int lv = z.min() + (z.max() - z.min()) * k / 6;
-                long exp = Math.round(0.35 * curve.expForLevel(Math.min(59, lv)));
+                long exp = Rewards.chapterExp(curve, lv);
                 String kind = kinds[k];
                 QuestType type = switch (kind) {
                     case "boss" -> QuestType.COMPLETE_DUNGEON;
@@ -396,66 +369,61 @@ public class ProposedRules extends Rules {
      */
     @Override
     public double gapExpFactor(int gap) {
-        if (gap >= 8) return 1.20;
-        if (gap > 0) return 1.0 + 0.025 * gap;
-        if (gap >= -4) return 1.0;
-        if (gap > -10) return 1.0 - 0.15 * (-gap - 4);
-        return 0.10;
+        return ExpRules.gapFactor(gap);
     }
 
     @Override
     public boolean gapAllowsGear(int gap) {
-        return gap > -10;
+        return ExpRules.allowsGear(gap);
     }
 
     /** Level suppression: −4 % damage dealt per level above you (floor 40 %), +8 % damage taken per level. */
     @Override
     public double gapDamageDealt(int gap) {
-        return gap <= 0 ? 1.0 : Math.max(0.4, 1.0 - 0.04 * gap);
+        return CombatRules.gapDealt(gap);
     }
 
     @Override
     public double mitigation(double armor, double dmg, int mobLevel) {
-        double a = Math.max(0, armor);
-        return Math.min(0.75, a / (a + armorK(mobLevel)));
+        return CombatRules.mitigation(armor, mobLevel);
     }
 
     @Override
     public double gapDamageTaken(int gap) {
-        return gap <= 0 ? 1.0 : 1.0 + 0.08 * gap;
+        return CombatRules.gapTaken(gap);
     }
 
     @Override
     public double boostCap() {
-        return 0.5; // clan + relic + items together at most +50 %
+        return ExpRules.BOOST_CAP; // clan + relic + items together at most +50 %
     }
 
     /** Party share: every member within range gets (1 + 0.15·(n−1)) / n of each kill. */
     @Override
     public double partyKillShare(int n) {
-        return (1.0 + 0.15 * (n - 1)) / n;
+        return ExpRules.partyShare(n);
     }
 
     @Override
     public long loginExp(int day, int level) {
-        return Math.round(0.02 * day * curve.expForLevel(Math.max(1, Math.min(59, level))) / 7.0);
+        return Rewards.loginExp(curve, day, level);
     }
 
     @Override
     public long loginCoins(int day) {
-        return 40L * day + (day == 7 ? 200 : 0);
+        return Rewards.loginCoins(day);
     }
 
     /** Rested EXP: 1.5 % of the current level per offline hour, pool capped at 1.5 levels, doubles kill EXP. */
     @Override
     public double restedPerOfflineHour(int level) {
-        return 0.015 * curve.expForLevel(Math.max(1, Math.min(59, level)));
+        return RestedPool.PER_HOUR * Balance.need(curve, level);
     }
 
     /** Catch-up: +50 % EXP while more than 10 levels behind the server's median active level. */
     @Override
     public double catchUpFactor(int level, int serverLevel) {
-        return level < serverLevel - 10 ? 1.5 : 1.0;
+        return ExpRules.catchUp(level, serverLevel);
     }
 
     @Override
@@ -466,7 +434,7 @@ public class ProposedRules extends Rules {
     /** Class base health finally applied, growing 4 % per level (Баатар 40 → 134 at 60). */
     @Override
     public double baseHealth(PlayerClass c, int level) {
-        return c.baseHealth() * (1 + 0.04 * (level - 1));
+        return CombatRules.classHealth(c, level);
     }
 
     /** The attack-cooldown charge is respected: heavy weapons swing slower but harder. */
@@ -505,22 +473,19 @@ public class ProposedRules extends Rules {
 
     @Override
     public int dungeonLootLevel(World.Dungeon d, int playerLevel) {
-        return Math.max(d.min(), Math.min(d.max(), playerLevel));
+        return DungeonRules.lootLevel(d.min(), d.max(), playerLevel);
     }
 
     /** Repeat fatigue: −15 % per clear of the same dungeon among the player's last 8 clears (floor 25 %). */
     @Override
     public double repeatFactor(SimPlayer p, World.Dungeon d) {
-        int same = 0;
-        for (String s : p.recentClears) if (s.equals(d.id())) same++;
-        return Math.max(0.25, 1.0 - 0.15 * same);
+        return DungeonRules.repeatFactor(new ArrayList<>(p.recentClears), d.id());
     }
 
     /** Carried: above the dungeon's max level nothing but materials; 10+ below the party's top → ×0.5. */
     @Override
     public double carryFactor(int memberLevel, int partyMax, World.Dungeon d) {
-        if (memberLevel > d.max()) return 0.1;
-        return partyMax - memberLevel > 10 ? 0.5 : 1.0;
+        return DungeonRules.carryFactor(memberLevel, partyMax, d.max());
     }
 
     @Override
@@ -576,7 +541,7 @@ public class ProposedRules extends Rules {
      */
     @Override
     public int skillPoints(int level, int chapters, int regions, int ascension) {
-        return Math.max(0, level - 1) + Math.min(14, chapters / 3) + Math.min(4, regions / 2) + ascension;
+        return Economy.skillPoints(level, chapters, regions, ascension);
     }
 
     // ---------------------------------------------------------------------------------------------------- economy
@@ -588,7 +553,7 @@ public class ProposedRules extends Rules {
 
     @Override
     public double repairPerHour(int level) {
-        return 15 + 4.0 * level;
+        return Economy.repairPerHour(level);
     }
 
     /**
@@ -597,14 +562,13 @@ public class ProposedRules extends Rules {
      */
     @Override
     public long sellPrice(mn.suld.api.item.ItemDefinition def, mn.suld.api.item.ItemInstance i) {
-        if (def.sellValue() <= 0 || i.soulbound() || i.rarity().ordinal() >= ItemRarity.LEGENDARY.ordinal()) return 0;
-        return Math.round(def.sellValue() * Math.min(5, i.rarity().sellMultiplier()) * (1 + i.itemLevel() / 30.0));
+        return Economy.sellPrice(def, i);
     }
 
     /** Reforge cost grows with the square of the item level (was linear). */
     @Override
     public long reforgeCost(int itemLevel) {
-        return Math.round(0.6 * itemLevel * itemLevel + 25 * itemLevel + 25);
+        return Economy.reforgeCoins(itemLevel);
     }
 
     @Override
@@ -652,7 +616,7 @@ public class ProposedRules extends Rules {
 
     /** Coins of the Ascension rite for rank r → r+1 (endgame sink). */
     public static long ascensionCoins(int r) {
-        return 25_000L * (r + 1);
+        return Ascension.riteCoins(r);
     }
 
     /** Coins to temper all worn gear from t to t+1 (plus 3·(t+1) Тэнгэрийн чулуу). */

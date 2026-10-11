@@ -105,22 +105,11 @@ public final class Gear {
      * 1.0 at the top). Quality is read from the real rolled stats against the definition's ranges.
      */
     public static double itemPower(ItemDefinition def, ItemInstance i) {
-        double q = quality(def, i);
-        return Math.max(1, i.itemLevel()) * i.rarity().statMultiplier() * (0.75 + 0.25 * q);
+        return mn.suld.api.balance.GearPower.item(def, i);
     }
 
     /** Average position of each rolled stat inside its range for the item's rarity and level, 0..1. */
     public static double quality(ItemDefinition def, ItemInstance i) {
-        double sum = 0;
-        int n = 0;
-        for (Map.Entry<ItemStat, StatRange> e : def.stats().entrySet()) {
-            double lo = def.minStat(e.getKey(), i.rarity(), i.itemLevel());
-            double hi = def.maxStat(e.getKey(), i.rarity(), i.itemLevel());
-            if (hi - lo < 1e-9) continue;
-            double v = i.stat(e.getKey());
-            sum += Math.max(0, Math.min(1, (v - lo) / (hi - lo)));
-            n++;
-        }
-        return n == 0 ? 0.5 : sum / n;
+        return mn.suld.api.balance.GearPower.quality(def, i);
     }
 }
