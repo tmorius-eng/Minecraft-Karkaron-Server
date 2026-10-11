@@ -18,6 +18,7 @@ CATS = OrderedDict([
     ("keystone", "Keystones"),
     ("ultimate", "Ultimates"),
     ("cooldown", "Cooldowns"),
+    ("item", "Equipment (item stats and gates)"),
     ("harness", "Harness errors"),
 ])
 

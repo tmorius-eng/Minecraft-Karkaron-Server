@@ -105,6 +105,12 @@ public final class SkillQa {
             out.sendMessage("QA needs a player with a class");
             return;
         }
+        // a soul can neither hit nor cast, and a death wound scales the class gear: every reading would be off
+        if (services.isSoul.test(target.getUniqueId()) || services.woundFactor.applyAsDouble(target.getUniqueId()) < 1.0) {
+            out.sendMessage("QA needs a living, unwounded player: " + target.getName() + " is a soul or has a death wound (/deathreset "
+                    + target.getName() + " first)");
+            return;
+        }
         busy = true;
         new Run(out, target, pr, suites).go();
     }
@@ -131,6 +137,7 @@ public final class SkillQa {
         final GameMode origMode;
         final double origHealth;
         final ItemStack origHand;
+        final mn.suld.api.profile.Endgame origEndgame;
 
         static final int N_DUMMIES = 34; // 33 on layouts + 1 control parked away
 
@@ -152,6 +159,7 @@ public final class SkillQa {
             this.origHand = p.getInventory().getItemInMainHand().clone();
             this.origInventory = cloneAll(p.getInventory().getContents());
             this.origEquipment = pr.equipment();
+            this.origEndgame = pr.endgame();
         }
 
         /** Optional "only=baatar.m2" argument: run just the nodes whose "class.node" id contains this text. */
@@ -172,6 +180,10 @@ public final class SkillQa {
 
         void go() {
             Bukkit.getPluginManager().registerEvents(this, plugin);
+            // the rested pool doubles kill EXP while it lasts: off for the run, restored afterwards
+            pr.endgame(origEndgame.withRested(0));
+            k.onLethal = what -> rec("harness.death", "harness", "a hit would have killed the QA player (cancelled; a dead player becomes a soul)",
+                    "lethal hit", 0, 0, "never", "FAIL", what);
             k.add(() -> {
                 p.setGameMode(GameMode.SURVIVAL);
                 k.buildArena();
@@ -231,6 +243,15 @@ public final class SkillQa {
 
         String fmt(double v) {
             return String.format(Locale.ROOT, "%.4g", v);
+        }
+
+        /** Sum of the player's add-to-base-share modifiers of an attribute (what a further share is added to). */
+        double scalarSum(Attribute a) {
+            var inst = p.getAttribute(a);
+            if (inst == null) return 0;
+            double sum = 0;
+            for (var m : inst.getModifiers()) if (m.getOperation() == org.bukkit.attribute.AttributeModifier.Operation.ADD_SCALAR) sum += m.getAmount();
+            return sum;
         }
 
         double attr(Attribute a) {
@@ -307,6 +328,7 @@ public final class SkillQa {
             pr.currency(origCurrency);
             pr.questState(origQuest);
             pr.equipment(origEquipment);
+            pr.endgame(origEndgame);
             report();
             busy = false;
         }
@@ -319,6 +341,7 @@ public final class SkillQa {
             pr.skillState(origState);
             pr.currency(origCurrency);
             pr.questState(origQuest);
+            pr.endgame(origEndgame);
             st.attach(p);
             skills.rebuildPool(p);
             p.setGameMode(origMode);
@@ -449,10 +472,11 @@ public final class SkillQa {
                 case KHURDAN_DOVTOLGOO -> new Cfg("lateral", 3, 4, 25, true, 0, false);
                 case ZHADNY_SHIDELT -> new Cfg("forward", 12, 0, 6, false, 0, false);
                 case KHULGIIN_DAIRALT -> new Cfg("lateral", 7, 5, 35, true, 0, false);
-                // the fifth spells (Shift+F): the area ones land 8 blocks ahead when the ray finds no block
-                case SULDIIN_TSOKHILT -> new Cfg("forward", 4, 0, 6, false, 0, false);
-                case SUMNY_BOROO -> new Cfg("twoSide", 8, 3, 70, false, 8, false);
-                case KHAR_SALKHI -> new Cfg("twoSide", 8, 3, 75, false, 8, false);
+                // the fifth spells (Shift+F): the area ones land 8 blocks ahead when the ray finds no block; the layouts
+                // reach well past the radius, or a larger radius (RADIUS_PCT) would read as the layout's own edge
+                case SULDIIN_TSOKHILT -> new Cfg("forward", 9, 0, 6, false, 0, false);
+                case SUMNY_BOROO -> new Cfg("twoSide", 8, 6, 70, false, 8, false);
+                case KHAR_SALKHI -> new Cfg("twoSide", 8, 6, 75, false, 8, false);
                 case GALT_UUL -> new Cfg("twoSide", 8, 3, 30, false, 8, false);
                 case KHIIMORIIN_DAVKHILT -> new Cfg("lateral", 5, 4, 30, true, 0, false);
                 default -> new Cfg("single", 6, 0, 6, false, 0, false);
@@ -713,9 +737,11 @@ public final class SkillQa {
                 k.unlearn();
                 var chest = testItem("armor.esgii.chestplate");
                 double armor = mn.suld.api.item.Equipment.itemStats(services.itemService().catalog(), chest).get(mn.suld.api.item.ItemStat.ARMOR);
-                double base = attr(Attribute.ARMOR);
+                single(2);
+                LivingEntity src = k.dummies.get(0);
+                double base = impliedArmor(src);
                 put(mn.suld.api.item.EquipSlot.CHEST, chest);
-                double worn = attr(Attribute.ARMOR);
+                double worn = impliedArmor(src);
                 var s = p.getInventory().getChestplate();
                 if (s != null && s.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable d) {
                     d.setDamage(services.itemService().catalog().require(chest.definitionId()).maxDurability(chest.rarity()));
@@ -723,13 +749,15 @@ public final class SkillQa {
                     p.getInventory().setChestplate(s);
                 }
                 st.equipmentChanged(p);
-                double broken = attr(Attribute.ARMOR);
+                double broken = impliedArmor(src);
                 put(mn.suld.api.item.EquipSlot.CHEST, null);
-                check("item.gate.broken", "item", "a broken chestplate gives nothing", "armor without / worn / worn broken", base, broken,
-                        "worn +" + EffectNum.n(armor) + ", broken +0 (worn " + EffectNum.n(worn) + ")", near(worn - base, armor, 0.01) && near(broken, base, 0.01));
+                check("item.gate.broken", "item", "a broken chestplate gives nothing", "SÜLD armour (read back from a dummy hit) without / worn broken", base, broken,
+                        "worn +" + EffectNum.n(armor) + ", broken +0 (worn " + EffectNum.n(worn) + ")", near(worn - base, armor, 0.05) && near(broken, base, 0.05));
 
                 var high = testItem("armor.khaany.helmet"); // level 50
+                // class health grows with the level (CombatRules.classHealth): compare with and without the helmet at each level
                 pr.progression(new Progression(30, 0));
+                st.equipmentChanged(p);
                 double lowBase = attr(Attribute.MAX_HEALTH);
                 put(mn.suld.api.item.EquipSlot.HEAD, high);
                 double lowWorn = attr(Attribute.MAX_HEALTH);
@@ -737,9 +765,10 @@ public final class SkillQa {
                 st.equipmentChanged(p);
                 double highWorn = attr(Attribute.MAX_HEALTH);
                 put(mn.suld.api.item.EquipSlot.HEAD, null);
+                double highBase = attr(Attribute.MAX_HEALTH);
                 double hp = mn.suld.api.item.Equipment.itemStats(services.itemService().catalog(), high).get(mn.suld.api.item.ItemStat.MAX_HEALTH);
-                check("item.gate.level", "item", "a level-50 helmet at level 30 gives nothing, at level 60 it does", "max health at 30 / at 60",
-                        lowWorn - lowBase, highWorn - lowBase, "0 / +" + EffectNum.n(hp), near(lowWorn, lowBase, 0.01) && near(highWorn - lowBase, hp, 0.01));
+                check("item.gate.level", "item", "a level-50 helmet at level 30 gives nothing, at level 60 it does", "max health it adds at 30 / at 60",
+                        lowWorn - lowBase, highWorn - highBase, "0 / +" + EffectNum.n(hp), near(lowWorn, lowBase, 0.01) && near(highWorn - highBase, hp, 0.01));
 
                 var foreign = testItem("weapon.class.mergen.1");
                 double atk0 = atk();
@@ -817,11 +846,16 @@ public final class SkillQa {
                 });
                 case MOVE_PCT -> k.add(() -> {
                     double[] x = beforeAfter(c, t, () -> attr(Attribute.MOVEMENT_SPEED));
-                    check(id, category, what, "movement speed", x[0], x[1], "x" + EffectNum.n(1 + v / 100), near(x[1] / x[0] - 1, v / 100, 0.002));
+                    // speed bonuses add up as shares of the base (gear may already give some): x (1 + a + v) / (1 + a)
+                    double a = scalarSum(Attribute.MOVEMENT_SPEED); // beforeAfter leaves the toggle off: the "before" state
+                    double want = (1 + a + v / 100) / (1 + a);
+                    check(id, category, what, "movement speed", x[0], x[1], "x" + EffectNum.n(want), near(x[1] / x[0], want, 0.002));
                 });
                 case ARMOR -> k.add(() -> {
-                    double[] x = beforeAfter(c, t, () -> attr(Attribute.ARMOR));
-                    check(id, category, what, "armor", x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.01));
+                    single(2);
+                    LivingEntity src = k.dummies.get(0);
+                    double[] x = beforeAfter(c, t, () -> impliedArmor(src));
+                    check(id, category, what, armorMetric(src), x[0], x[1], "+" + EffectNum.n(v), near(x[1] - x[0], v, 0.05));
                 });
                 case KB_RESIST -> k.add(() -> {
                     double[] x = beforeAfter(c, t, () -> attr(Attribute.KNOCKBACK_RESISTANCE));
@@ -855,8 +889,17 @@ public final class SkillQa {
                 });
                 case SPELL_DAMAGE -> {
                     Spell s = probeSpell(c);
-                    double want = (1 + v / 100) * (1 + atkOnNode / 100);
+                    // spell damage adds to one multiplier with the class's own bonus (Бөө +25 %, CombatRules.spellPassive)
+                    // and the player's gear: the node raises that sum by v %, so the hit grows by (m0 + v/100) / m0
+                    double[] m0 = new double[1];
+                    k.add(() -> {
+                        k.setClass(c);
+                        k.unlearn();
+                        t.off();
+                        m0[0] = st.spellDamageMultiplier(p);
+                    });
                     spellCompare(c, t, s, 20, false, (b, a) -> {
+                        double want = (m0[0] + v / 100) / m0[0] * (1 + atkOnNode / 100);
                         boolean ok = b.perApplication > 0 && near(a.perApplication / b.perApplication, want, 0.02);
                         check(id, category, what, "damage per spell hit (" + s.displayName() + ")", b.perApplication, a.perApplication,
                                 "x" + EffectNum.n(want) + (atkOnNode > 0 ? " (spell damage +" + EffectNum.n(v) + "% and attack +" + EffectNum.n(atkOnNode) + "% on this node)" : ""), ok,
@@ -868,10 +911,10 @@ public final class SkillQa {
                     LivingEntity src = k.dummies.get(0);
                     double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
-                        return k.hurtPlayer(10, src);
+                        return k.hurtPlayer(src);
                     });
                     double red = Math.min(75, v) / 100;
-                    check(id, category, what, "health lost from a 10 damage hit", x[0], x[1], "x" + EffectNum.n(1 - red), near(x[1] / x[0], 1 - red, 0.01));
+                    check(id, category, what, "health lost from a dummy hit (raw " + fmt(k.rawHit(src)) + ")", x[0], x[1], "x" + EffectNum.n(1 - red), near(x[1] / x[0], 1 - red, 0.01));
                 });
                 case DODGE_PCT -> k.add(() -> {
                     single(2);
@@ -881,7 +924,7 @@ public final class SkillQa {
                         int dodged = 0;
                         for (int i = 0; i < trials; i++) {
                             k.resetPlayer();
-                            if (k.hurtPlayer(1, src) < 1e-9) dodged++;
+                            if (k.hurtPlayer(src) < 1e-9) dodged++;
                         }
                         return dodged / (double) trials;
                     });
@@ -896,7 +939,7 @@ public final class SkillQa {
                     double[] x = beforeAfter(c, t, () -> {
                         k.resetPlayer();
                         k.reset(src);
-                        double taken = k.hurtPlayer(10, src);
+                        double taken = k.hurtPlayer(src);
                         return taken <= 0 ? 0 : k.deficit(src) / taken;
                     });
                     check(id, category, what, "damage returned / damage taken", x[0], x[1], EffectNum.n(v / 100), x[0] < 1e-6 && near(x[1], v / 100, 0.01));
@@ -998,11 +1041,24 @@ public final class SkillQa {
 
         // ---- experience and loot (real kills)
 
+        /**
+         * A real kill of a mob at the QA player's level, so the level gap leaves the EXP whole (ExpRules.gapFactor), tagged
+         * as dungeon trash so the open-world farming fatigue (ActivityTracker) does not thin the kills of a long run. The
+         * EXP itself is the normal kill path (CombatListener.killExp).
+         */
+        LivingEntity killable(String mobId, Location at) {
+            LivingEntity m = services.mobs().spawn(SuldContent.mobFor(mobId), at);
+            m.addScoreboardTag(mn.suld.plugin.dungeon.DungeonService.DUNGEON_TAG);
+            return m;
+        }
+
+        static final String EXP_MOB = "mob.usny_lus"; // level 30, the level expNode puts the player at
+
         double expPerKill() {
             expSeen.clear();
             int kills = 6;
             for (int i = 0; i < kills; i++) {
-                LivingEntity m = services.mobs().spawn(SuldContent.ORKHON_CHONO, k.origin.clone().add(20, 0, 20));
+                LivingEntity m = killable(EXP_MOB, k.origin.clone().add(20, 0, 20));
                 m.setAI(false);
                 m.setHealth(1);
                 m.damage(5, p);
@@ -1015,24 +1071,45 @@ public final class SkillQa {
                 pr.progression(new Progression(30, 0)); // below the cap, so experience is really granted
                 double[] x = beforeAfter(c, t, this::expPerKill);
                 pr.progression(new Progression(60, 0));
-                check(id, t instanceof ItemToggle ? "item" : "stat", what, "EXP per kill", x[0], x[1], "x" + EffectNum.n(1 + v / 100), x[0] > 0 && near(x[1] / x[0], 1 + v / 100, 0.02));
+                check(id, t instanceof ItemToggle ? "item" : "stat", what, "EXP per kill of a level-30 mob at level 30", x[0], x[1], "x" + EffectNum.n(1 + v / 100), x[0] > 0 && near(x[1] / x[0], 1 + v / 100, 0.02));
             });
         }
 
-        /** Queues {@code kills} real boss kills in batches (so no tick is long) and stores the item total in {@code out[idx]}. */
+        /** The loot check's mob: level 4, one stackable rare entry (Чонын Арьс, 50 %) that the level-gap gear rule keeps. */
+        static final String LOOT_MOB = "mob.deeremchin";
+        static final String LOOT_RARE = "item.chonon_arisan";
+
+        /** Base chance of the loot mob's rare entry, from the data. */
+        double rareChance() {
+            var def = SuldContent.mobFor(LOOT_MOB);
+            return services.itemService().catalog().lootTable(def.lootTableId()).orElseThrow().rare().stream()
+                    .filter(r -> LOOT_RARE.equals(r.entry().itemId())).mapToDouble(mn.suld.api.loot.LootTable.Rare::chance).findFirst().orElseThrow();
+        }
+
+        /** Rolls the loot mob's table {@code n} times with the context a real kill builds (CombatListener.onDeath); adds the rare drops. */
+        void rollLoot(int n, double[] out, int idx) {
+            var def = SuldContent.mobFor(LOOT_MOB);
+            var ctx = new mn.suld.api.loot.LootContext(def.level(), mn.suld.api.loot.LootTier.of(def.tier()), pr.playerClass().orElse(null),
+                    st.lootPct(p), p.getUniqueId(), "mob:" + def.id());
+            for (int i = 0; i < n; i++) {
+                for (var d : services.itemService().roll(def.lootTableId(), ctx)) if (LOOT_RARE.equals(d.item().definitionId())) out[idx] += d.amount();
+            }
+        }
+
+        /** Queues {@code kills} real kills of the loot mob in batches (so no tick is long) and adds the items they dropped to {@code out[idx]}. */
         void queueLoot(int kills, double[] out, int idx) {
-            int batch = 20;
-            k.add(() -> out[idx] = 0);
+            int batch = 100;
+            Location at = k.origin.clone().add(25, 0, 25);
             for (int done = 0; done < kills; done += batch) {
                 int count = Math.min(batch, kills - done);
                 k.add(() -> {
                     for (int i = 0; i < count; i++) {
-                        LivingEntity m = services.mobs().spawn(SuldContent.KHASAR, k.origin.clone().add(25, 0, 25));
+                        LivingEntity m = killable(LOOT_MOB, at);
                         m.setAI(false);
                         m.setHealth(1);
                         m.damage(5, p);
                     }
-                    for (var e : k.world.getNearbyEntities(k.origin.clone().add(25, 0, 25), 8, 8, 8)) {
+                    for (var e : k.world.getNearbyEntities(at, 8, 8, 8)) {
                         if (e instanceof Item it) {
                             out[idx] += it.getItemStack().getAmount();
                             it.remove();
@@ -1043,8 +1120,59 @@ public final class SkillQa {
             }
         }
 
+        /** Trials so that 4 sigma of the before/after difference is at most half the expected effect (it cannot pass when absent). */
+        static int trialsFor(double p0, double p1) {
+            double diff = Math.abs(p1 - p0);
+            return diff <= 0 ? 0 : (int) Math.ceil(64 * (p0 * (1 - p0) + p1 * (1 - p1)) / (diff * diff));
+        }
+
+        /**
+         * The loot-chance stat multiplies the rare-drop chances (LootEngine: chance x (1 + loot % / 100)). Measured twice:
+         * the share of rolls of the mob's table with the rare drop, with the context a kill builds (enough rolls for any
+         * stat value), and, when the effect is large enough for a real number of kills, the items dropped by real kills
+         * through the whole kill path. Kills are tagged as dungeon trash so farming fatigue does not thin them.
+         */
         void lootNode(PlayerClass c, Toggle t, String id, String what, double v) {
-            int kills = 300; // the table always drops at least one item per roll
+            String cat = t instanceof ItemToggle ? "item" : "stat";
+            double q = rareChance();
+            double[] base = new double[1];
+            double[] rolls = new double[2];
+            int[] n = new int[1];
+            k.add(() -> {
+                k.setClass(c);
+                k.unlearn();
+                t.off();
+                base[0] = st.lootPct(p); // the player may already have some
+                double p0 = Math.min(1, q * (1 + base[0] / 100)), p1 = Math.min(1, q * (1 + (base[0] + v) / 100));
+                n[0] = Math.max(2000, trialsFor(p0, p1));
+            });
+            int chunk = 20_000;
+            for (int phase = 0; phase < 2; phase++) {
+                final int ph = phase;
+                if (ph == 1) k.add(t::on);
+                k.add(() -> {
+                    // queued lazily: the roll count is known only once the base loot stat has been read
+                    for (int done = 0; done < n[0]; done += chunk) {
+                        int count = Math.min(chunk, n[0] - done);
+                        rollLoot(count, rolls, ph);
+                    }
+                });
+                k.wait(1);
+            }
+            k.add(() -> {
+                t.off();
+                double p0 = Math.min(1, q * (1 + base[0] / 100)), p1 = Math.min(1, q * (1 + (base[0] + v) / 100));
+                double r0 = rolls[0] / n[0], r1 = rolls[1] / n[0];
+                double s = Math.sqrt(p0 * (1 - p0) / n[0] + p1 * (1 - p1) / n[0]), s0 = Math.sqrt(p0 * (1 - p0) / n[0]);
+                check(id + ".rolls", cat, what, "share of " + LOOT_MOB + " loot rolls with its rare drop (" + n[0] + " rolls each, the context of a real kill)", r0, r1,
+                        EffectNum.n(p1) + " (before " + EffectNum.n(p0) + ") +-" + fmt(4 * s), near(r0, p0, 4 * s0) && near(r1 - r0, p1 - p0, 4 * s));
+            });
+            if (t instanceof ItemToggle) {
+                k.wait(1);
+                return; // the kill path reads the same loot stat (checked with real kills on the universal node)
+            }
+            double p0n = Math.min(1, q * (1 + 0 / 100.0)), p1n = Math.min(1, q * (1 + v / 100));
+            int kills = trialsFor(p0n, p1n);
             double[] items = new double[2];
             k.add(() -> {
                 k.setClass(c);
@@ -1057,15 +1185,11 @@ public final class SkillQa {
             k.add(() -> {
                 t.off();
                 k.unlearn();
-                double extraRolls = items[1] - items[0];
-                double pe = v / 100;
-                // the table can drop more than one item per roll (bonus entries), so an extra roll is worth the table's own mean
-                double perRoll = items[0] / kills;
-                double expectedExtra = items[0] * pe;
-                double sigma = Math.sqrt(kills * pe * (1 - pe)) * perRoll + 0.05 * items[0] * pe + Math.sqrt(items[0]) * pe;
-                check(id, t instanceof ItemToggle ? "item" : "stat", what, "items from " + kills + " kills", items[0], items[1],
-                        "extra rolls: " + EffectNum.n(expectedExtra) + " +-" + fmt(4 * sigma) + " (base table gives " + EffectNum.n(perRoll) + " per kill)",
-                        items[0] >= kills && near(extraRolls, expectedExtra, 4 * sigma));
+                double p0 = Math.min(1, q * (1 + base[0] / 100)), p1 = Math.min(1, q * (1 + (base[0] + v) / 100));
+                double s = Math.sqrt(kills * (p0 * (1 - p0) + p1 * (1 - p1))), s0 = Math.sqrt(kills * p0 * (1 - p0));
+                check(id + ".kills", cat, what, "rare drops (" + LOOT_RARE + ") from " + kills + " real kills of " + LOOT_MOB, items[0], items[1],
+                        "+" + EffectNum.n(kills * (p1 - p0)) + " +-" + fmt(4 * s) + " (before " + EffectNum.n(kills * p0) + ")",
+                        near(items[0], kills * p0, 4 * s0) && near(items[1] - items[0], kills * (p1 - p0), 4 * s));
             });
         }
 
@@ -1433,7 +1557,7 @@ public final class SkillQa {
                 for (int i = 0; i < 40; i++) {
                     k.resetPlayer();
                     st.qaResetTimers(p);
-                    k.hurtPlayer(1, k.dummies.get(0));
+                    k.hurtPlayer(k.dummies.get(0));
                     shielded += p.getAbsorptionAmount() > 0 ? 1 : 0;
                 }
                 return shielded;
@@ -1442,12 +1566,12 @@ public final class SkillQa {
             wire(PlayerClass.BAATAR, "l4", TriggerEvent.LOW_HP, "a real hit that leaves 35% health or less (and none at full health)", () -> {
                 k.resetPlayer();
                 st.qaResetTimers(p);
-                k.hurtPlayer(1, k.dummies.get(0));
+                double loss = k.hurtPlayer(k.dummies.get(0)); // the mob's own hit (the amount cannot be chosen)
                 boolean atFull = p.getAbsorptionAmount() > 0;
                 k.resetPlayer();
                 st.qaResetTimers(p);
-                p.setHealth(4);
-                k.hurtPlayer(1, k.dummies.get(0));
+                p.setHealth(Math.min(k.maxHealth(), loss + 0.25 * k.maxHealth())); // the same hit now leaves 25 %, never 0
+                k.hurtPlayer(k.dummies.get(0));
                 boolean low = p.getAbsorptionAmount() > 0;
                 return !atFull && low ? 1 : 0;
             }, v -> v == 1);
@@ -1565,11 +1689,11 @@ public final class SkillQa {
                     double[] low = beforeAfter(c, n, () -> {
                         k.resetPlayer();
                         p.setHealth(k.maxHealth() * 0.25);
-                        return k.hurtPlayer(2, src);
+                        return k.hurtPlayer(src);
                     });
                     double[] high = beforeAfter(c, n, () -> {
                         k.resetPlayer();
-                        return k.hurtPlayer(2, src);
+                        return k.hurtPlayer(src);
                     });
                     double[] heal = beforeAfter(c, n, () -> {
                         k.resetPlayer();
@@ -1578,8 +1702,8 @@ public final class SkillQa {
                         return p.getHealth() - 5;
                     });
                     double lowRatio = drRatio(35); // the reductions add up: the player may already have some
-                    check(id + ".resist-low", "keystone", what, "health lost from a 2 damage hit at 25% health", low[0], low[1], "x" + EffectNum.n(lowRatio), near(low[1] / low[0], lowRatio, 0.01));
-                    check(id + ".no-resist-high", "keystone", what, "health lost from a 2 damage hit at full health", high[0], high[1], "x1.0 (no change above 30%)", near(high[1] / high[0], 1.0, 0.01));
+                    check(id + ".resist-low", "keystone", what, "health lost from a dummy hit at 25% health", low[0], low[1], "x" + EffectNum.n(lowRatio), near(low[1] / low[0], lowRatio, 0.01));
+                    check(id + ".no-resist-high", "keystone", what, "health lost from a dummy hit at full health", high[0], high[1], "x1.0 (no change above 30%)", near(high[1] / high[0], 1.0, 0.01));
                     check(id + ".healing", "keystone", what, "health restored by a 4 point heal", heal[0], heal[1], "x0.5", near(heal[1] / heal[0], 0.5, 0.01));
                 });
                 case TENGERTEI_KHOLBOGDOKH -> k.add(() -> {
@@ -1656,13 +1780,13 @@ public final class SkillQa {
                     LivingEntity src = k.dummies.get(0);
                     double[] hit = beforeAfter(c, n, () -> {
                         k.resetPlayer();
-                        return k.hurtPlayer(2, src);
+                        return k.hurtPlayer(src);
                     });
                     double[] walk = beforeAfter(c, n, () -> attr(Attribute.MOVEMENT_SPEED));
                     double hitRatio = drRatio(15);
                     var ms = p.getAttribute(Attribute.MOVEMENT_SPEED);
                     double base = ms == null ? 0.1 : ms.getBaseValue(); // speed modifiers add up as shares of the base
-                    check(id + ".resist", "keystone", what, "health lost from a 2 damage hit", hit[0], hit[1], "x" + EffectNum.n(hitRatio), near(hit[1] / hit[0], hitRatio, 0.01));
+                    check(id + ".resist", "keystone", what, "health lost from a dummy hit", hit[0], hit[1], "x" + EffectNum.n(hitRatio), near(hit[1] / hit[0], hitRatio, 0.01));
                     check(id + ".walking", "keystone", what, "walking speed", walk[0], walk[1], "-12% of the base", near(walk[1] - walk[0], -0.12 * base, 0.0005));
                 });
                 case SALKHINY_KHUU -> k.add(() -> {
@@ -1683,6 +1807,30 @@ public final class SkillQa {
                 });
             }
             k.wait(1);
+        }
+
+        /**
+         * The player's SÜLD armour as the game applies it: one dummy hit, and the damage that arrived read back through
+         * the mitigation a / (a + K) (CombatRules.mitigation, K from the attacker's level). Vanilla armour points are
+         * forced to 0 for players (SkillTreeService), so the hit is the only place armour shows. NaN at the 75 % cap.
+         */
+        double impliedArmor(LivingEntity src) {
+            var b = mn.suld.plugin.skill.SkillTreeService.build(services, p);
+            double dr = b.stat(mn.suld.api.skill.tree.StatKey.DAMAGE_REDUCTION) + (b.has(KeystoneKind.TUMRIIN_BIYE) ? 15 : 0);
+            double beforeArmor = k.rawHit(src) * (1 - Math.min(75, dr) / 100.0);
+            for (int i = 0; i < 50; i++) { // a dodged hit measures nothing: hit again
+                k.resetPlayer();
+                k.hurtPlayer(src);
+                if (k.lastHitOnPlayer <= 0) continue;
+                double mit = Math.max(0, 1 - k.lastHitOnPlayer / beforeArmor);
+                if (mit >= 0.75 - 1e-9) return Double.NaN;
+                return mn.suld.api.balance.CombatRules.armorK(k.levelOf(src)) * mit / (1 - mit);
+            }
+            return Double.NaN;
+        }
+
+        String armorMetric(LivingEntity src) {
+            return "SÜLD armour read back from a dummy hit (raw " + fmt(k.rawHit(src)) + ", mitigation a/(a+" + EffectNum.n(mn.suld.api.balance.CombatRules.armorK(k.levelOf(src))) + "))";
         }
 
         /** Damage taken with {@code extra} % more reduction over what the player already has (they add, capped at 75). */
@@ -1950,7 +2098,7 @@ public final class SkillQa {
                         LivingEntity src = k.dummies.get(0);
                         k.reset(src);
                         p.setAbsorptionAmount(0);
-                        double taken = k.hurtPlayer(10, src);
+                        double taken = k.hurtPlayer(src);
                         check(id + ".thorns", "ultimate", what, "damage returned to the attacker / damage taken", 0, taken > 0 ? k.deficit(src) / taken : 0, "0.30",
                                 taken > 0 && near(k.deficit(src) / taken, 0.30, 0.02));
                         k.unlearn();
