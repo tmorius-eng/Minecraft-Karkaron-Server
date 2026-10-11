@@ -246,11 +246,42 @@ public final class HudService {
         }
         if (services != null && lines.size() < 14) {
             boolean safe = services.inCity(player.getLocation());
-            lines.add(StyleFormat.join(StyleFormat.glyph(Glyphs.ICON_PIN), Component.text(safe ? " Хархорум " : " Тал нутаг ", NamedTextColor.WHITE),
+            var danger = safe ? null : danger(player, profile.progression().level());
+            lines.add(StyleFormat.join(StyleFormat.glyph(Glyphs.ICON_PIN),
+                    Component.text(" " + (safe ? "Хархорум" : danger == null ? "Тал нутаг" : danger.place()) + " ", NamedTextColor.WHITE),
                     StyleFormat.glyph(safe ? Glyphs.BADGE_SAFE : Glyphs.BADGE_DANGER)));
+            if (danger != null && lines.size() < 14) {
+                lines.add(Component.text("  Lv " + danger.band() + " · Аюул: ", NamedTextColor.GRAY)
+                        .append(Component.text(danger.rating(), danger.color())));
+            }
         }
         lines.add(Component.text(domain(), NamedTextColor.GRAY));
         return lines;
+    }
+
+    /** Where the player stands in the wild and how dangerous it is for their level. */
+    record Danger(String place, String band, String rating, net.kyori.adventure.text.format.TextColor color) {
+    }
+
+    private static final mn.suld.api.region.RegionIndex REGIONS = new mn.suld.api.region.RegionIndex(mn.suld.plugin.content.WorldContent.REGIONS);
+
+    /**
+     * The danger of the spot against the player's level: the wild's level here (the area's band, WorldContent.localLevel)
+     * minus the player's. ≤ −6 Хялбар, −5…−2 Бага, −1…+2 Тохиромжтой, +3…+5 Өндөр, ≥ +6 Үхлийн.
+     */
+    Danger danger(Player p, int level) {
+        org.bukkit.Location c = p.getWorld().getSpawnLocation();
+        double dx = p.getLocation().getX() - c.getX(), dz = p.getLocation().getZ() - c.getZ();
+        var r = REGIONS.at(dx, dz).filter(x -> !x.safeZone()).orElse(null);
+        if (r == null || !p.getWorld().equals(org.bukkit.Bukkit.getWorlds().get(0))) return null;
+        var area = mn.suld.plugin.content.WorldContent.areaAt(dx, dz).filter(a -> a.regionId().equals(r.id())).orElse(null);
+        String band = area != null ? area.minLevel() + "–" + area.maxLevel() : r.levelBand();
+        int gap = mn.suld.plugin.content.WorldContent.localLevel(r, dx, dz) - level;
+        if (gap <= -6) return new Danger(area != null ? area.name() : r.displayName(), band, "Хялбар", NamedTextColor.GRAY);
+        if (gap <= -2) return new Danger(area != null ? area.name() : r.displayName(), band, "Бага", NamedTextColor.GREEN);
+        if (gap <= 2) return new Danger(area != null ? area.name() : r.displayName(), band, "Тохиромжтой", NamedTextColor.YELLOW);
+        if (gap <= 5) return new Danger(area != null ? area.name() : r.displayName(), band, "Өндөр", NamedTextColor.GOLD);
+        return new Danger(area != null ? area.name() : r.displayName(), band, "Үхлийн!", NamedTextColor.RED);
     }
 
     private String domain() {

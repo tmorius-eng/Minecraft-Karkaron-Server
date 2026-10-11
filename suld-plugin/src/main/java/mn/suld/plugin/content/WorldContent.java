@@ -102,4 +102,18 @@ public final class WorldContent {
             new Area(37, "area.otgontenger", "Отгонтэнгэр", "region.altai", 700, 1500, 225, 270, 22, 26, 120, "Хангайн хамгийн өндөр цаст оргил", "VERIFIED"),
             new Area(38, "area.kharkhiraa", "Хархираа Уул", "region.altai", 1500, WORLD_EDGE, 270, 315, 26, 30, 200, "Увсын мөсөн оргилууд", "VERIFIED"),
             new Area(39, "area.naiman", "Найманы Нутаг", "region.altai", 1500, WORLD_EDGE, 225, 270, 26, 30, 200, "Найман аймгийн байсан Алтайн нутаг", "INSPIRED"));
+
+    /** The named area at an offset from Kharkhorum's plaza, if any. */
+    public static java.util.Optional<Area> areaAt(double dx, double dz) {
+        return Area.at(AREAS, dx, dz);
+    }
+
+    /**
+     * The level the wild has at an offset from the plaza: the middle of the named area's band, else the region's.
+     * The region spawner fits its mobs to it and the HUD rates the danger against it.
+     */
+    public static int localLevel(RegionDefinition r, double dx, double dz) {
+        return areaAt(dx, dz).filter(a -> a.regionId().equals(r.id())).map(a -> (a.minLevel() + a.maxLevel()) / 2)
+                .orElse((r.minLevel() + r.maxLevel()) / 2);
+    }
 }

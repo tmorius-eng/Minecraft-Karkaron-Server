@@ -517,14 +517,73 @@ public final class DungeonHalls implements Listener {
 
     // ------------------------------------------------------------------ protection and stray players
 
+    /**
+     * Inside a gate's footprint in the open world: the entrance blueprint's square (±{@link EntranceBlueprint#HALF},
+     * plus a 2-block apron) from its foundation to above its arch. Players cannot break, build, pour or blow it up.
+     */
+    public boolean atGate(Location l) {
+        if (l == null) return false;
+        for (Location g : gates.values()) {
+            if (!g.getWorld().equals(l.getWorld())) continue;
+            int r = EntranceBlueprint.HALF + 2;
+            if (Math.abs(l.getBlockX() - g.getBlockX()) <= r && Math.abs(l.getBlockZ() - g.getBlockZ()) <= r
+                    && l.getBlockY() >= g.getBlockY() - EntranceBlueprint.FOUNDATION && l.getBlockY() <= g.getBlockY() + EntranceBlueprint.CLEAR + 4) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean guarded(Location l) {
+        return inHalls(l) || atGate(l);
+    }
+
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent e) {
-        if (inHalls(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("suld.admin.world")) e.setCancelled(true);
+        if (guarded(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("suld.admin.world")) {
+            e.setCancelled(true);
+            e.getPlayer().sendActionBar(mn.suld.plugin.ui.Messages.error("Агуйн хаалга, танхим хамгаалалттай."));
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent e) {
-        if (inHalls(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("suld.admin.world")) e.setCancelled(true);
+        if (guarded(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("suld.admin.world")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBucket(org.bukkit.event.player.PlayerBucketEmptyEvent e) {
+        if (guarded(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("suld.admin.world")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBucketFill(org.bukkit.event.player.PlayerBucketFillEvent e) {
+        if (guarded(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("suld.admin.world")) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityExplode(org.bukkit.event.entity.EntityExplodeEvent e) {
+        e.blockList().removeIf(b -> guarded(b.getLocation()));
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockExplode(org.bukkit.event.block.BlockExplodeEvent e) {
+        e.blockList().removeIf(b -> guarded(b.getLocation()));
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBurn(org.bukkit.event.block.BlockBurnEvent e) {
+        if (guarded(e.getBlock().getLocation())) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPiston(org.bukkit.event.block.BlockPistonExtendEvent e) {
+        for (org.bukkit.block.Block b : e.getBlocks()) if (guarded(b.getLocation()) || guarded(b.getRelative(e.getDirection()).getLocation())) e.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPistonPull(org.bukkit.event.block.BlockPistonRetractEvent e) {
+        for (org.bukkit.block.Block b : e.getBlocks()) if (guarded(b.getLocation())) e.setCancelled(true);
     }
 
     /** The way out for anyone in the halls without a run (DungeonService decides who has one). */

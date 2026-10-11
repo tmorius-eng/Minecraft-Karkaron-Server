@@ -24,3 +24,21 @@ relay posts, the decimal army, the caravan roads, the Altai's stone statues; the
 fiction), what to do, where (direction and distance from the player), the progress bar, who gave it and the reward.
 Locked chapters show only their land. Clicking the active chapter turns the quest bar on. Bottom row: menu, quest
 bar on/off, the dungeon window, the journey (x/18, current land), party, close.
+
+## Protection
+
+* **Dungeon gates** (`DungeonHalls.atGate`): the entrance's square (±8 blocks around the gate, from its foundation to
+  above the arch) cannot be broken, built on, poured into, burned, pushed by pistons or blown up; the halls world
+  never could. `suld.admin.world` bypasses.
+* **Villages** (`worldbuild/VillageProtection`): in the overworld nobody can hurt a villager or a wandering trader
+  (players, mobs, fire, falls; only the void and /kill), zombies cannot turn them, and the blocks inside every
+  generated village's bounding box cannot be broken, built over, flooded, burned, griefed by mobs or blown up.
+  Trading, doors and crops work as usual.
+
+## Name tags and danger
+
+* Every SÜLD mob carries «Lv 12 Хангайн Саарал Чоно ❤ 140/180» (`MobService.nameplate`): grey level, the name in its
+  tier's colour (white normal, gold elite, orange champion, red boss), the hearts green → yellow → red with the
+  health left, redrawn after every hit and heal. 3D-model mobs keep it too.
+* The sidebar names the place (the area, else the region) and its level band, and rates the danger against the
+  player's level: Хялбар (≤ −6), Бага (−5…−2), Тохиромжтой (−1…+2), Өндөр (+3…+5), Үхлийн! (≥ +6).

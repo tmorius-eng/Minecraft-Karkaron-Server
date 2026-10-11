@@ -181,6 +181,7 @@ public final class SuldPlugin extends JavaPlugin {
                 new mn.suld.plugin.worldbuild.CityProtectionListener(this, services, worldBuild);
         getServer().getPluginManager().registerEvents(protection, this);
         protection.start();
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.worldbuild.VillageProtection(), this);
         mn.suld.plugin.mob.RegionSpawner regionSpawner = new mn.suld.plugin.mob.RegionSpawner(this, services);
         getServer().getPluginManager().registerEvents(regionSpawner, this);
         regionSpawner.start();

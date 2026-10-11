@@ -45,8 +45,6 @@ public final class MobService implements org.bukkit.event.Listener {
             entity.remove();
             throw new IllegalArgumentException("Backing entity is not living: " + def.backingEntity());
         }
-        living.customName(Component.text(def.displayName(), Messages.BRAND)
-                .append(Component.text(" [Lvl " + def.level() + "]", NamedTextColor.WHITE)));
         living.setCustomNameVisible(true);
         living.setRemoveWhenFarAway(true);
 
@@ -57,9 +55,49 @@ public final class MobService implements org.bukkit.event.Listener {
         });
 
         living.getPersistentDataContainer().set(keyMobId, PersistentDataType.STRING, def.id());
+        nameplate(living, def, maxHealth(living), maxHealth(living));
         living.getPersistentDataContainer().set(keyMobLevel, PersistentDataType.INTEGER, def.level());
         onSpawn.accept(living, def);
         return living;
+    }
+
+    /**
+     * The name tag over every SÜLD mob: «Lv 12 Хангайн Саарал Чоно ❤ 140/180». The name's colour is the tier (white
+     * normal, gold elite, orange champion, red boss), the hearts go from green to red with the health left. Updated
+     * after every hit and heal.
+     */
+    public static void nameplate(LivingEntity living, MobDefinition def, double hp, double max) {
+        net.kyori.adventure.text.format.TextColor tier = switch (def.tier()) {
+            case NORMAL -> NamedTextColor.WHITE;
+            case ELITE -> NamedTextColor.GOLD;
+            case CHAMPION, MYTHIC -> net.kyori.adventure.text.format.TextColor.fromHexString("#FF8C3A");
+            case BOSS, WORLD_BOSS -> NamedTextColor.RED;
+        };
+        double f = max <= 0 ? 0 : Math.max(0, Math.min(1, hp / max));
+        NamedTextColor hc = f > 0.6 ? NamedTextColor.GREEN : f > 0.3 ? NamedTextColor.YELLOW : NamedTextColor.RED;
+        living.customName(Component.text("Lv " + def.level() + " ", NamedTextColor.GRAY)
+                .append(Component.text(def.displayName(), tier))
+                .append(Component.text("  ❤ " + (int) Math.ceil(hp) + "/" + (int) Math.round(max), hc)));
+    }
+
+    /** Redraw the name tag a tick after a hit or a heal (the health has changed by then). */
+    private void refreshSoon(Entity e) {
+        if (!(e instanceof LivingEntity living) || !isSuldMob(e)) return;
+        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!living.isValid() || living.isDead()) return;
+            MobDefinition def = mobId(living).map(mn.suld.plugin.content.SuldContent::mobFor).orElse(null);
+            if (def != null) nameplate(living, def, living.getHealth(), maxHealth(living));
+        });
+    }
+
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHurtPlate(org.bukkit.event.entity.EntityDamageEvent e) {
+        refreshSoon(e.getEntity());
+    }
+
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHealPlate(org.bukkit.event.entity.EntityRegainHealthEvent e) {
+        refreshSoon(e.getEntity());
     }
 
     public Optional<String> mobId(Entity entity) {
@@ -138,6 +176,7 @@ public final class MobService implements org.bukkit.event.Listener {
                 double hp = living.getHealth();
                 maxHealth.setBaseValue(def.scaledHealth());
                 living.setHealth(Math.min(def.scaledHealth(), Math.max(1, hp)));
+                nameplate(living, def, living.getHealth(), def.scaledHealth());
             }
         }
     }

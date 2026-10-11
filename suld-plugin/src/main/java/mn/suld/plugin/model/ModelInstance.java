@@ -80,7 +80,7 @@ public final class ModelInstance {
         Rig rig = model.rig();
         host.setInvisible(true);
         host.setSilent(true);
-        host.setCustomNameVisible(false);
+        host.setCustomNameVisible(true); // the name tag (MobService.nameplate: level, name, health) stays over the model
         host.addScoreboardTag(ModelService.HOST_TAG);
         Location at = host.getLocation();
         Location flat = at.clone();
