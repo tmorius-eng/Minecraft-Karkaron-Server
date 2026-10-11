@@ -467,10 +467,11 @@ public final class SkillQa {
                 case KHURDAN_DOVTOLGOO -> new Cfg("lateral", 3, 4, 25, true, 0, false);
                 case ZHADNY_SHIDELT -> new Cfg("forward", 12, 0, 6, false, 0, false);
                 case KHULGIIN_DAIRALT -> new Cfg("lateral", 7, 5, 35, true, 0, false);
-                // the fifth spells (Shift+F): the area ones land 8 blocks ahead when the ray finds no block
-                case SULDIIN_TSOKHILT -> new Cfg("forward", 4, 0, 6, false, 0, false);
-                case SUMNY_BOROO -> new Cfg("twoSide", 8, 3, 70, false, 8, false);
-                case KHAR_SALKHI -> new Cfg("twoSide", 8, 3, 75, false, 8, false);
+                // the fifth spells (Shift+F): the area ones land 8 blocks ahead when the ray finds no block; the layouts
+                // reach well past the radius, or a larger radius (RADIUS_PCT) would read as the layout's own edge
+                case SULDIIN_TSOKHILT -> new Cfg("forward", 9, 0, 6, false, 0, false);
+                case SUMNY_BOROO -> new Cfg("twoSide", 8, 6, 70, false, 8, false);
+                case KHAR_SALKHI -> new Cfg("twoSide", 8, 6, 75, false, 8, false);
                 case GALT_UUL -> new Cfg("twoSide", 8, 3, 30, false, 8, false);
                 case KHIIMORIIN_DAVKHILT -> new Cfg("lateral", 5, 4, 30, true, 0, false);
                 default -> new Cfg("single", 6, 0, 6, false, 0, false);
