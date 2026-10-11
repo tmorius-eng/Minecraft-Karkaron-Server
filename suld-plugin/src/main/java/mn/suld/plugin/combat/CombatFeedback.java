@@ -60,7 +60,7 @@ public final class CombatFeedback implements Listener {
         Entity damager = e.getDamager();
         if (damager instanceof Projectile p && p.getShooter() instanceof Player shooter) damager = shooter;
         boolean crit = CombatListener.CRIT_HITS.remove(mob.getUniqueId());
-        if (damager instanceof Player player) number(player, mob, e.getFinalDamage(), crit);
+        if (damager instanceof Player player) number(player, mob, MobService.trueDamage(e), crit);
         queueBar(mob);
     }
 

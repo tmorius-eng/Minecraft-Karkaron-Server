@@ -418,8 +418,9 @@ final class HudPanel implements Listener {
             return;
         }
         var ma = le.getAttribute(Attribute.MAX_HEALTH);
-        double max = ma == null ? Math.max(1, le.getHealth()) : ma.getValue();
-        double hp = Math.min(le.getHealth(), max);
+        double scale = mn.suld.plugin.mob.MobService.hpScale(le); // design numbers for a mob above the HP ceiling
+        double max = (ma == null ? Math.max(1, le.getHealth()) : ma.getValue()) * scale;
+        double hp = Math.min(le.getHealth() * scale, max);
         HudComposer.Target info = describe(le, hp, max, t.chip.update(hp, now));
         BossBar bar = targetBars.computeIfAbsent(p.getUniqueId(), k -> {
             BossBar b = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
@@ -498,7 +499,7 @@ final class HudPanel implements Listener {
             } else {
                 t.until = now + TARGET_HOLD_MS;
             }
-            t.chip.hit(victim.getHealth(), now);
+            t.chip.hit(mn.suld.plugin.mob.MobService.trueHealth(victim), now);
             refresh(attacker);
         }
         if (e.getEntity() instanceof Player victim && damager instanceof LivingEntity attacker && targetable(victim, attacker)) {

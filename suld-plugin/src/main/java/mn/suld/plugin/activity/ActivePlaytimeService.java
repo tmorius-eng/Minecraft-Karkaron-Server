@@ -134,7 +134,7 @@ public final class ActivePlaytimeService implements Listener {
         Entity d = e.getDamager();
         if (d instanceof Projectile pr && pr.getShooter() instanceof Entity shooter) d = shooter;
         if (d instanceof Player p && !(e.getEntity() instanceof Player) && e.getEntity() instanceof LivingEntity) {
-            services.session(p.getUniqueId()).damageDealt += e.getFinalDamage();
+            services.session(p.getUniqueId()).damageDealt += mn.suld.plugin.mob.MobService.trueDamage(e);
             ActivityTracker t = trackers.get(p.getUniqueId());
             if (t != null) {
                 if (e.getDamager() instanceof Projectile) t.signal(ActivitySignal.DAMAGE_DEALT);

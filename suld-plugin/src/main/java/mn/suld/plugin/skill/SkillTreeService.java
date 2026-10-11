@@ -1079,7 +1079,7 @@ public final class SkillTreeService implements Listener {
         if (r == null || r.build.isEmpty()) return;
         LivingEntity victim = (LivingEntity) e.getEntity();
         double steal = r.build.stat(StatKey.LIFESTEAL);
-        if (steal > 0) healRaw(p, e.getFinalDamage() * steal / 100.0);
+        if (steal > 0) healRaw(p, mn.suld.plugin.mob.MobService.trueDamage(e) * steal / 100.0);
         if (e.getDamager() instanceof AbstractArrow arrow && arrow.getScoreboardTags().contains("suld_volley")) {
             skills.riders(p, victim, mn.suld.api.skill.Spell.OLON_SUM);
         }

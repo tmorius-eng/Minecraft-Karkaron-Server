@@ -327,7 +327,6 @@ public final class DungeonService {
 
     private final org.bukkit.NamespacedKey clearsKey = new org.bukkit.NamespacedKey("suld", "dungeon_clears");
 
-    /** True once {@code p} has cleared the dungeon (kept in the player's data; opens the next one on the ladder). */
     /** Why {@code p} may not enter {@code def} yet under the ladder's chapter and gear-power gates, or null. */
     Component v2Gate(Player p, DungeonDefinition def) {
         mn.suld.api.balance.DungeonLadder.Rung rung = mn.suld.api.balance.DungeonLadder.rung(def.id());

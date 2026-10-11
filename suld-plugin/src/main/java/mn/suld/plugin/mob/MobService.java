@@ -30,6 +30,15 @@ public final class MobService implements org.bukkit.event.Listener {
 
     private final Plugin plugin;
 
+    /**
+     * The server's max-health ceiling (spigot.yml {@code settings.attribute.maxHealth.max}, 1024 by default). A mob
+     * sized above it — a dungeon boss for a party of four, a level-60 champion — gets the ceiling as its real max
+     * health and every hit on it is divided by {@link #hpScale}: it takes as many hits as its design says, and its name
+     * tag and the HUD show the design numbers.
+     */
+    public static final double HP_CAP = 1024.0;
+    private static final NamespacedKey KEY_HP_SCALE = new NamespacedKey("suld", "mob_hp_scale");
+
     public MobService(Plugin plugin) {
         this.plugin = plugin;
         this.keyMobId = new NamespacedKey(plugin, "mob_id");
@@ -58,7 +67,7 @@ public final class MobService implements org.bukkit.event.Listener {
         applyHealth(living, health);
         // Some entities (wolves) reset their max health to the vanilla value right after spawning: apply it again.
         org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-            if (living.isValid() && maxHealth(living) != health) applyHealth(living, health);
+            if (living.isValid() && maxHealth(living) != Math.min(health, HP_CAP)) applyHealth(living, health);
         });
 
         living.getPersistentDataContainer().set(keyMobId, PersistentDataType.STRING, def.id());
@@ -81,6 +90,9 @@ public final class MobService implements org.bukkit.event.Listener {
             case CHAMPION, MYTHIC -> net.kyori.adventure.text.format.TextColor.fromHexString("#FF8C3A");
             case BOSS, WORLD_BOSS -> NamedTextColor.RED;
         };
+        double scale = hpScale(living);
+        hp *= scale;
+        max *= scale;
         double f = max <= 0 ? 0 : Math.max(0, Math.min(1, hp / max));
         NamedTextColor hc = f > 0.6 ? NamedTextColor.GREEN : f > 0.3 ? NamedTextColor.YELLOW : NamedTextColor.RED;
         living.customName(Component.text("Lv " + def.level() + " ", NamedTextColor.GRAY)
@@ -180,11 +192,13 @@ public final class MobService implements org.bukkit.event.Listener {
             MobDefinition def = id == null ? null : mn.suld.plugin.content.SuldContent.mobFor(id);
             if (def == null) continue;
             AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
-            double want = living.getPersistentDataContainer().getOrDefault(keyMaxHp, PersistentDataType.DOUBLE, def.scaledHealth());
+            double design = living.getPersistentDataContainer().getOrDefault(keyMaxHp, PersistentDataType.DOUBLE, def.scaledHealth());
+            double want = Math.min(design, HP_CAP);
             if (maxHealth != null && maxHealth.getBaseValue() != want) {
                 double hp = living.getHealth();
                 maxHealth.setBaseValue(want);
                 living.setHealth(Math.min(want, Math.max(1, hp)));
+                markScale(living, design / want);
                 nameplate(living, def, living.getHealth(), want);
             }
         }
@@ -193,9 +207,51 @@ public final class MobService implements org.bukkit.event.Listener {
     private static void applyHealth(LivingEntity living, double health) {
         AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
         if (maxHealth != null) {
-            maxHealth.setBaseValue(health);
-            living.setHealth(health);
+            double real = Math.min(health, HP_CAP);
+            maxHealth.setBaseValue(real);
+            living.setHealth(real);
+            markScale(living, health / real);
         }
+    }
+
+    private static void markScale(LivingEntity living, double scale) {
+        if (scale > 1.0001) living.getPersistentDataContainer().set(KEY_HP_SCALE, PersistentDataType.DOUBLE, scale);
+        else living.getPersistentDataContainer().remove(KEY_HP_SCALE);
+    }
+
+    /** Design health ÷ real health: 1 for every mob under {@link #HP_CAP}. */
+    public static double hpScale(Entity entity) {
+        if (entity == null) return 1;
+        Double s = entity.getPersistentDataContainer().get(KEY_HP_SCALE, PersistentDataType.DOUBLE);
+        return s == null || s < 1 ? 1 : s;
+    }
+
+    /** Health in design units (what the name tag and the HUD show). */
+    public static double trueHealth(LivingEntity entity) {
+        return entity.getHealth() * hpScale(entity);
+    }
+
+    /** Max health in design units. */
+    public static double trueMaxHealth(LivingEntity entity) {
+        return maxHealth(entity) * hpScale(entity);
+    }
+
+    /** The damage of a hit in design units, for readers at MONITOR (damage numbers, lifesteal, statistics). */
+    public static double trueDamage(org.bukkit.event.entity.EntityDamageEvent e) {
+        return e.getFinalDamage() * hpScale(e.getEntity());
+    }
+
+    /**
+     * A hit on a mob above the ceiling, after every SÜLD modifier: divided by its scale. /kill and the void still
+     * kill outright.
+     */
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onScaledHit(org.bukkit.event.entity.EntityDamageEvent e) {
+        double scale = hpScale(e.getEntity());
+        if (scale <= 1) return;
+        var cause = e.getCause();
+        if (cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.KILL || cause == org.bukkit.event.entity.EntityDamageEvent.DamageCause.VOID) return;
+        e.setDamage(e.getDamage() / scale);
     }
 
     /** Current max health of a living entity (0 if the attribute is unavailable). */
