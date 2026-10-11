@@ -23,7 +23,7 @@ public final class ServerListService implements Listener {
 
     private static final List<String> DEFAULT_MOTD = List.of(
             "<bold><gradient:#FFD24A:#FF9E2C>ᠰ SÜLD</gradient></bold> <white><bold>· Монгол Hardcore MMORPG</bold></white>",
-            "<white><bold>Хархорум</bold></white> <#FFD24A>·</#FFD24A> <white><bold>5 анги</bold></white> <#FFD24A>·</#FFD24A> <white><bold>18 бүлэг эрэл</bold></white> <#FFD24A>·</#FFD24A> <white><bold>4 агуй</bold></white>");
+            "<white><bold>Хархорум</bold></white> <#FFD24A>·</#FFD24A> <white><bold>5 анги</bold></white> <#FFD24A>·</#FFD24A> <white><bold>{chapters} бүлэг эрэл</bold></white> <#FFD24A>·</#FFD24A> <white><bold>{dungeons} агуй</bold></white>");
 
     private final Plugin plugin;
     private Component motd;
@@ -41,7 +41,7 @@ public final class ServerListService implements Listener {
         for (int i = 0; i < Math.min(2, lines.size()); i++) {
             if (i > 0) c = c.append(Component.newline());
             try {
-                c = c.append(mm.deserialize(lines.get(i)));
+                c = c.append(mm.deserialize(ContentCounts.fill(lines.get(i))));
             } catch (RuntimeException ex) {
                 plugin.getLogger().warning("branding.motd line " + (i + 1) + " is not valid MiniMessage: " + ex.getMessage());
             }

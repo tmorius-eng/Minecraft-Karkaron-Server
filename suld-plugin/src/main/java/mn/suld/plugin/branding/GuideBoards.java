@@ -54,7 +54,7 @@ public final class GuideBoards {
     private static final List<Board> BOARDS = List.of(
             new Board(-16, 4.8, -2, title("ТАВТАЙ МОРИЛ") + sub("SÜLD — Монгол Hardcore MMORPG")
                     + bullet("1.", "Ангиа сонго: «/class»")
-                    + bullet("2.", "Эрлээ ав: «/quest» (18 бүлэг)")
+                    + bullet("2.", "Эрлээ ав: «/quest» ({chapters} бүлэг)")
                     + bullet("3.", "Хотын хаалгаар гараад")
                     + line("    тал нутагт мангас ан")
                     + bullet("4.", "Олзоо зарж зоос ол: «/shop»")
@@ -86,7 +86,7 @@ public final class GuideBoards {
                     + bullet("➜ Өмнө", "Говь (5–15)")
                     + bullet("➜ Хойд", "Хангай (10–20)")
                     + bullet("➜ Баруун", "Алтай (18–30)")
-                    + line("Нутаг бүр 6 газартай (24 газар):")
+                    + line("{regions} нутаг, {areas} газар, түүхэн {sites} дурсгал:")
                     + line("Туул, Онон, Орхон, Сэлэнгэ, Говь...")
                     + line("Шинэ газрыг анх нээхэд EXP!")
                     + GAP + "<bold><red>HARDCORE:</red><white> үхвэл юмныхаа</white></bold>\n"
@@ -205,7 +205,7 @@ public final class GuideBoards {
             if (existing != null && existing.isValid()) continue;
             Location at = place(base, b);
             if (at == null || !at.isChunkLoaded()) continue;
-            Component text = MM.deserialize(b.text());
+            Component text = MM.deserialize(ContentCounts.fill(b.text()));
             TextDisplay d = base.getWorld().spawn(at, TextDisplay.class, t -> {
                 t.text(text);
                 t.setBillboard(Display.Billboard.CENTER);

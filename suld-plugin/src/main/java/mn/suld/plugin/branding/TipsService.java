@@ -19,7 +19,7 @@ public final class TipsService {
 
     private static final List<String> DEFAULT_TIPS = List.of(
             "<white><bold>Өдөр бүр <aqua><click:run_command:'/daily'>/daily</click></aqua> — 7 хоногийн дараалсан шагнал!</bold></white>",
-            "<white><bold>«Сүлдний Зам» эрэл: <aqua><click:run_command:'/quest'>/quest</click></aqua> — 18 бүлэг, 4 агуй.</bold></white>",
+            "<white><bold>«Сүлдний Зам» эрэл: <aqua><click:run_command:'/quest'>/quest</click></aqua> — {chapters} бүлэг, {dungeons} агуй.</bold></white>",
             "<white><bold>Ангийн зэвсгээ барьж 3 товшилтоор ид шид: <aqua><click:run_command:'/skills'>/skills</click></aqua></bold></white>",
             "<white><bold>5-р түвшнээс өөрийн Монгол морьтой: <aqua><click:run_command:'/mori'>/mori</click></aqua> — цол ахих тусам хурдан!</bold></white>",
             "<white><bold>Өдөр бүр 3 шинэ анчны даалгавар: <aqua><click:run_command:'/tasks'>/tasks</click></aqua></bold></white>",
@@ -46,7 +46,7 @@ public final class TipsService {
         Component prefix = Component.text("✦ Зөвлөгөө › ", TextColor.fromHexString("#FFD24A"), TextDecoration.BOLD);
         for (String line : lines) {
             try {
-                tips.add(prefix.append(mm.deserialize(line)));
+                tips.add(prefix.append(mm.deserialize(ContentCounts.fill(line))));
             } catch (RuntimeException ex) {
                 plugin.getLogger().warning("tips.messages: skipping a line that is not valid MiniMessage: " + ex.getMessage());
             }
