@@ -192,6 +192,13 @@ public final class SuldPlugin extends JavaPlugin {
         activity.onMinute(classArmor::activeMinute);
         activity.start();
         registerTab("classgear", new mn.suld.plugin.command.ClassGearCommand(services));
+        // Тэнгэрийн Зэрэг (Ascension I-III): /ascend and the Тэнгэрийн Тахилч in Kharkhorum
+        services.ascension = new mn.suld.plugin.gui.AscensionMenu(services);
+        registerCommand("ascend", (sender, cmd, label, args) -> {
+            if (sender instanceof org.bukkit.entity.Player pl) services.ascension.open(pl);
+            else sender.sendMessage("/ascend: in game only");
+            return true;
+        });
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));
 
         worldBuild = new mn.suld.plugin.worldbuild.WorldBuildService(this, config.world());

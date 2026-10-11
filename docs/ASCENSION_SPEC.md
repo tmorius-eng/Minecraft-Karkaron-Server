@@ -1,7 +1,40 @@
-# SÜLD Ascension — Тэнгэрийн Зэрэг I–X (proposed)
+# SÜLD Ascension — Тэнгэрийн Зэрэг
 
-Part of the proposed balance. **Not implemented yet.** Requirements are in `Engine.ascensionReady`, costs in
-`ProposedRules`.
+**Ranks I–III are in the game** (status: MANUAL_QA_REQUIRED, see below). Ranks IV–X are the proposed design and wait
+for their content (heroic and mythic modes, mastery tracks, a world boss).
+
+## In the game: ranks I–III
+
+* **Where:** `/ascend` (also `/zereg`, `/ascension`; `/ascend` is routed to SÜLD even with WorldEdit installed), or the
+  Тэнгэрийн Тахилч in Kharkhorum once a character is level 60 (sneak + click still gives the blessing).
+* **Тэнгэрийн оноо:** every EXP point earned at level 60 is added to the character's оноо
+  (`DefaultProgressionService`); they are kept in `suld_profiles.endgame`.
+* **The rite** (`Ascension.rite`, all-or-nothing): every gate met, then the оноо cost and the coin fee are spent
+  together. Two clicks on the same button. Audited (`ascension.rite`), announced to the server.
+* **Gates** (`Ascension.gates`, the checklist in the window). The heroic, world-boss and other mastery tracks do not
+  exist yet, so the live game uses stand-ins:
+
+| Rank | Gates |
+|---|---|
+| I | level 60 · 9 different dungeons cleared · every story chapter · gear power ≥ 90 % of par 60 |
+| II | level 60 · the whole ladder cleared · Тэнгэрийн Ордон cleared 2 times · armour mastery 5 |
+| III | level 60 · Тэнгэрийн Ордон cleared 4 times · gear power ≥ par 60 · armour mastery 7 |
+
+* **What a rank gives:** +1 skill point (`SkillEngine.total`), +1 % attack for hits, spells and arrows
+  (`CombatListener.attackOf`); rank III opens T6 class armour (`ClassArmor.holdings`).
+* **What it costs in hardcore:** an ascended character's death lock is the longest one (`DeathLock`, `DeathService`).
+* **Shown:** the sidebar's «Зэрэг» row at the cap (rank and оноо); the /ascend window.
+* **Counting:** Тэнгэрийн Ордон clears are counted per character at completion (`Endgame.palaceClears`, an optional
+  field of the version-1 endgame JSON, so older rows read as 0).
+* **Staff/QA:** `/suld endgame <player> rank|points|palace <n>` (audited).
+* **Simulator:** `Engine.ascensionReady` uses the same `Ascension.blocked` for the live rules.
+
+Client QA to do: open /ascend below and at 60, check the checklist and the two-click rite, the priest at level 60,
+the sidebar row, +1 skill point in /skills, and that T6 shows as open at rank III.
+
+## The full design (ranks I–X, proposed)
+
+Requirements are in `Engine.ascensionReady`, costs in `ProposedRules`.
 
 ## Design
 

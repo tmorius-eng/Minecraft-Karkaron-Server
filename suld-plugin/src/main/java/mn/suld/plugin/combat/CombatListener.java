@@ -60,7 +60,8 @@ public final class CombatListener implements Listener {
 
     /**
      * The SÜLD attack of a player: class base + level growth + the flat damage of everything they wear (weapon,
-     * affixes, set bonuses), times the attack bonus of the skill tree (the shared hit/spell/arrow formula).
+     * affixes, set bonuses), times the attack bonus of the skill tree and +1 % per Тэнгэрийн Зэрэг rank (the shared
+     * hit/spell/arrow formula).
      */
     public static double attackOf(SuldServices services, Player player) {
         PlayerProfile profile = services.profiles().cached(player.getUniqueId()).orElse(null);
@@ -70,6 +71,7 @@ public final class CombatListener implements Listener {
         mn.suld.plugin.item.EquipmentService eq = services.equipment();
         if (eq != null) attack += eq.bonus(player).flatDamage();
         mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
+        attack *= 1 + mn.suld.api.balance.Ascension.powerBonus(profile.ascension());
         return tree == null ? attack : attack * tree.attackMultiplier(player);
     }
 

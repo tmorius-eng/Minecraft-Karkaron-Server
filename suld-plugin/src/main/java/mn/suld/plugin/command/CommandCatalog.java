@@ -52,6 +52,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/classgear", "Ангийн хуяг: түвшин, зэрэг, дараагийн зэргийн шаардлага", "suld.classgear"),
             e(Group.GAME, "/classgear upgrade|enhance", "Хуягийн зэрэг ахиулах / сайжруулах", "suld.classgear"),
             e(Group.GAME, "/classgear recover", "Алдсан ангийн зэвсэг, хуягаа сэргээх (10 мин тутам)", "suld.classgear"),
+            e(Group.GAME, "/ascend", "Тэнгэрийн Зэрэг (60-р түвшний дараа): оноо, нөхцөл, ёслол", null),
             e(Group.GAME, "/profile", "Дүрийн мэдээлэл", null),
             e(Group.GAME, "/exp", "Түвшин, EXP", null),
             e(Group.GAME, "/skills", "Чадварын мод: оноо зарцуулж шид, идэвхгүй чадвар нээх", null),

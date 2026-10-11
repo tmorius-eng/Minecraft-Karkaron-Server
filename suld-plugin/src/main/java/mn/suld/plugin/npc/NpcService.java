@@ -64,7 +64,7 @@ public final class NpcService implements Listener {
         if (id.startsWith("merchant.")) return new Role("merchant", "Худалдаачин", "Хангамж · Олз зарах", NamedTextColor.GREEN);
         if (id.equals("blacksmith")) return new Role("blacksmith", "Дархан", "Засвар · Сайжруулалт", NamedTextColor.RED);
         if (id.startsWith("fast_travel.")) return new Role("rider", "Өртөөчин", "Хурдан аялал", NamedTextColor.YELLOW);
-        if (id.equals("shrine.sky")) return new Role("lama", "Тэнгэрийн Тахилч", "Тэнгэрийн ивээл", NamedTextColor.WHITE);
+        if (id.equals("shrine.sky")) return new Role("lama", "Тэнгэрийн Тахилч", "Ивээл · Тэнгэрийн Зэрэг", NamedTextColor.WHITE);
         return null;
     }
 
@@ -249,7 +249,7 @@ public final class NpcService implements Listener {
         if (id.startsWith("merchant.")) return "Дэлгүүр";
         if (id.equals("blacksmith")) return "Засвар · Хуяг";
         if (id.startsWith("fast_travel.")) return "Өртөөгөөр явах";
-        if (id.equals("shrine.sky")) return "Ивээл хүсэх";
+        if (id.equals("shrine.sky")) return "Ивээл · Тэнгэрийн Зэрэг (60+)";
         return "Үргэлжлүүлэх";
     }
 
@@ -275,7 +275,13 @@ public final class NpcService implements Listener {
         } else if (id.startsWith("fast_travel.")) {
             travel(p, id);
         } else if (id.equals("shrine.sky")) {
-            bless(p, pr);
+            // at the level cap the priest leads the Тэнгэрийн Зэрэг rite; below it, the blessing
+            if ((pr.progression().level() >= mn.suld.api.balance.Balance.MAX_LEVEL || pr.ascension() > 0) && services.ascension != null) {
+                if (p.isSneaking()) bless(p, pr);
+                else services.ascension.open(p);
+            } else {
+                bless(p, pr);
+            }
         }
     }
 

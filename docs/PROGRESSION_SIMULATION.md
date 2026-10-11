@@ -119,16 +119,16 @@ analytics log) is the first step of the implementation phase — `MANUAL_QA_REQU
 | casual 2h | 14 | 27.3 | 247 (1.1) · rare/legendary | 4 / 4 of 10 | 4 | 100 % | 4/16 | 16 | 0 | — | — (none exists) |
 | casual 2h | 30 | 37.3 | 408 (1.2) · epic/legendary | 5 / 6 of 10 | 5 | 100 % | 5/16 | 22 | 0 | — | — (none exists) |
 | casual 2h | 60 | 49.3 | 614 (1.2) · legendary/ancient | 7 / 8 of 10 | 7 | 100 % | 7/16 | 30 | 0 | — | — (none exists) |
-| casual 2h | 90 | 60.0 | 805 (1.2) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 34 | 0 | — | — (none exists) |
+| casual 2h | 90 | 60.0 | 805 (1.2) · ancient/ancient | 10 / 10 of 10 | 10 | 100 % | 8/16 | 34 | 0 | — | — (none exists) |
 | active 5h | 7 | 31.0 | 313 (1.1) · epic/legendary | 4 / 5 of 10 | 4 | 100 % | 5/16 | 16 | 0 | — | — (none exists) |
 | active 5h | 14 | 43.1 | 466 (1.1) · legendary/legendary | 6 / 7 of 10 | 6 | 100 % | 6/16 | 22 | 0 | — | — (none exists) |
 | active 5h | 30 | 58.4 | 799 (1.3) · ancient/ancient | 9 / 9 of 10 | 9 | 100 % | 8/16 | 33 | 0 | — | — (none exists) |
-| active 5h | 60 | 60.0 | 911 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 40 | 1 | — | — (none exists) |
-| active 5h | 90 | 60.0 | 932 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 46 | 1 | — | — (none exists) |
+| active 5h | 60 | 60.0 | 911 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 41 | 3 | — | — (none exists) |
+| active 5h | 90 | 60.0 | 918 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 46 | 3 | — | — (none exists) |
 | hardcore 10h | 7 | 39.0 | 406 (1.2) · epic/legendary | 5 / 6 of 10 | 5 | 100 % | 6/16 | 22 | 0 | — | — (none exists) |
 | hardcore 10h | 14 | 50.3 | 635 (1.3) · legendary/ancient | 7 / 8 of 10 | 7 | 100 % | 7/16 | 31 | 0 | — | — (none exists) |
-| hardcore 10h | 30 | 60.0 | 912 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 41 | 1 | — | — (none exists) |
-| hardcore 10h | 60 | 60.0 | 938 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 50 | 1 | — | — (none exists) |
+| hardcore 10h | 30 | 60.0 | 912 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 41 | 2 | — | — (none exists) |
+| hardcore 10h | 60 | 60.0 | 935 (1.4) · ancient/mythic | 10 / 10 of 10 | 10 | 100 % | 8/16 | 50 | 3 | — | — (none exists) |
 <!-- sim:end player-table -->
 
 ## The first 7 days (directive §25)
@@ -192,11 +192,11 @@ Hours are active play hours (p50). "—" = not reached within the simulated hori
 <!-- sim:begin classes -->
 | Rules | Class | Hours to L30 | Hours to L60 | Day-7 level (hardcore) | Deaths per 100 h | DPS at 60 | HP at 60 |
 |---|---|---|---|---|---|---|---|
-| live | Баатар | 35.8 | 207.3 | 36.2 | 2.7 | 1338 | 860 |
-| live | Мэргэн | 31.0 | 198.1 | 39.0 | 2.6 | 1038 | 907 |
-| live | Бөө | 40.9 | 209.2 | 37.9 | 2.6 | 813 | 980 |
-| live | Дархан | 33.1 | 207.0 | 39.3 | 1.0 | 1225 | 1078 |
-| live | Хүлэгчин | 27.5 | 183.3 | 45.8 | 0.9 | 1255 | 904 |
+| live | Баатар | 35.8 | 207.3 | 36.2 | 2.7 | 1337 | 877 |
+| live | Мэргэн | 31.0 | 198.1 | 39.0 | 2.6 | 1043 | 903 |
+| live | Бөө | 40.9 | 209.2 | 37.9 | 2.6 | 836 | 999 |
+| live | Дархан | 33.1 | 207.0 | 39.3 | 1.0 | 1259 | 1098 |
+| live | Хүлэгчин | 27.5 | 183.3 | 45.8 | 0.9 | 1290 | 922 |
 | proposed | Баатар | 50.6 | 200.7 | 34.4 | 1.6 | 1388 | 1095 |
 | proposed | Мэргэн | 44.0 | 196.4 | 37.4 | 0.9 | 1008 | 809 |
 | proposed | Бөө | 63.8 | 224.8 | 28.6 | 3.0 | 793 | 964 |
@@ -209,7 +209,7 @@ Hours are active play hours (p50). "—" = not reached within the simulated hori
 <!-- sim:begin styles -->
 | Rules | Playstyle | Hours to L30 | Hours to L60 | Day-30 level | Day-30 gear power | Day-30 mastery | Top EXP source (share) |
 |---|---|---|---|---|---|---|---|
-| live | GENERALIST | 33.7 | 212.2 | 60.0 | 915 | 41 | kill (47 %) |
+| live | GENERALIST | 33.7 | 212.2 | 60.0 | 912 | 41 | kill (47 %) |
 | live | QUEST_FARMER | 33.2 | 207.9 | 60.0 | 903 | 41 | kill (45 %) |
 | live | DUNGEON_FARMER | 37.6 | 227.0 | 60.0 | 878 | 40 | dungeon (45 %) |
 | live | EXPLORER | 36.1 | 197.9 | 60.0 | 916 | 41 | kill (51 %) |
@@ -339,12 +339,12 @@ Effect on players (90 days):
 |---|---|---|---|---|---|---|
 | live | casual | 7 | 26492 | 16850 | 63.6 % | 9833 |
 | live | casual | 30 | 155850 | 102222 | 65.6 % | 54449 |
-| live | casual | 90 | 572286 | 528497 | 92.3 % | 53287 |
+| live | casual | 90 | 572286 | 528497 | 92.3 % | 46529 |
 | live | active | 7 | 102211 | 76146 | 74.5 % | 27149 |
 | live | active | 30 | 551732 | 490199 | 88.8 % | 59196 |
-| live | active | 90 | 1475555 | 1345776 | 91.2 % | 92252 |
+| live | active | 90 | 1470712 | 1344278 | 91.4 % | 116732 |
 | live | hardcore | 7 | 221680 | 103693 | 46.8 % | 98902 |
-| live | hardcore | 30 | 939458 | 861582 | 91.7 % | 76221 |
+| live | hardcore | 30 | 951987 | 901397 | 94.7 % | 41007 |
 | proposed | casual | 7 | 30317 | 18162 | 59.9 % | 8211 |
 | proposed | casual | 30 | 128410 | 88194 | 68.7 % | 39130 |
 | proposed | casual | 90 | 631194 | 580108 | 91.9 % | 23744 |
@@ -361,7 +361,7 @@ Effect on players (90 days):
 | Rules | Group | Hours to L30 | Hours to L60 | Deaths per 100 h |
 |---|---|---|---|---|
 | live | solo | 35.5 | 204.0 | 5.0 |
-| live | party of 4 | 19.8 | 173.5 | 3.1 |
+| live | party of 4 | 19.8 | 173.5 | 2.8 |
 | proposed | solo | 45.9 | 198.1 | 3.4 |
 | proposed | party of 4 | 40.1 | 176.4 | 3.7 |
 <!-- sim:end party -->

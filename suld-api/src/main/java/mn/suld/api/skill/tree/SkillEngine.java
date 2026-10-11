@@ -35,7 +35,8 @@ public final class SkillEngine {
     }
 
     public static int total(PlayerProfile p, Context c) {
-        return SkillPoints.total(c.level(), c.finishedChapters(), c.discoveredRegions(), p.skillState().granted());
+        // + 1 per Тэнгэрийн Зэрэг rank (Ascension, progression v2)
+        return SkillPoints.total(c.level(), c.finishedChapters(), c.discoveredRegions(), p.skillState().granted()) + p.ascension();
     }
 
     public static int spent(PlayerProfile p, SkillTree tree) {

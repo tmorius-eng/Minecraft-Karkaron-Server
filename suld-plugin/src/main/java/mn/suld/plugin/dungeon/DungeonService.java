@@ -54,6 +54,8 @@ public final class DungeonService {
 
     /** Scoreboard tag on every dungeon mob, so leftovers can be found after a restart or a failed run. */
     public static final String DUNGEON_TAG = "suld_dungeon";
+    /** Тэнгэрийн Ордон, the top of the ladder: its clears are counted for Ascension. */
+    public static final String LAST_RUNG = "dungeon.tengeriin_ordon";
 
     /** Hard ceiling so a stuck run can never hold a party forever. */
     private static final long MAX_RUN_SECONDS = 20 * 60;
@@ -349,7 +351,7 @@ public final class DungeonService {
     }
 
     /** Gear power of what {@code p} wears (GearPower: item level × rarity × roll quality). */
-    double gearPower(Player p) {
+    public double gearPower(Player p) {
         mn.suld.plugin.item.EquipmentService eq = services.equipment();
         mn.suld.plugin.item.ItemService items = services.itemService();
         if (eq == null || items == null) return Double.MAX_VALUE;
@@ -549,6 +551,8 @@ public final class DungeonService {
             ExpGainResult exp = services.progression().grantExp(profile, completionExp, ExpSource.DUNGEON);
             services.clans().contribute(id, SuldContent.CLAN_EXP_PER_DUNGEON_CLEAR);
             profile.addCurrency(bonus.coins());
+            // the last rung counts towards Тэнгэрийн Зэрэг II and III (Ascension gates)
+            if (ar.def.id().equals(LAST_RUNG)) profile.endgame(profile.endgame().withPalaceClear());
             Presentation.banner(p, "АГУЙ ДУУСЛАА", ar.def.displayName() + " · " + formatTime(seconds),
                     NamedTextColor.GREEN);
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);

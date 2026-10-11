@@ -153,4 +153,47 @@ class BalanceRulesTest {
         assertNotNull(Ascension.blocked(1, new Ascension.Inputs(60, 10, 10, 1, gp, 42, 42, 7)));
         assertNotNull(Ascension.blocked(2, new Ascension.Inputs(60, 10, 10, 4, gp * 0.95, 42, 42, 7)));
     }
+
+    @Test
+    void theRiteSpendsPointsAndCoinsOnlyWhenEveryGateIsMet() {
+        double gp = GearPower.par(60);
+        Ascension.Inputs ready = new Ascension.Inputs(60, 10, 10, 4, gp, 18, 18, 7);
+        long cost = Ascension.cost(V2, 0);
+        Ascension.Rite ok = Ascension.rite(V2, 0, cost + 5, 30_000, ready);
+        assertEquals(Ascension.Outcome.DONE, ok.outcome());
+        assertEquals(1, ok.rank());
+        assertEquals(5, ok.points());
+        assertEquals(5_000, ok.coins());
+        Ascension.Rite poor = Ascension.rite(V2, 0, cost - 1, 30_000, ready);
+        assertEquals(Ascension.Outcome.NOT_ENOUGH_POINTS, poor.outcome());
+        assertEquals(cost - 1, poor.points(), "nothing is spent on a refusal");
+        assertEquals(Ascension.Outcome.NOT_ENOUGH_COINS, Ascension.rite(V2, 0, cost, 24_999, ready).outcome());
+        Ascension.Rite gated = Ascension.rite(V2, 1, Long.MAX_VALUE / 4, 1_000_000, new Ascension.Inputs(60, 10, 10, 1, gp, 18, 18, 7));
+        assertEquals(Ascension.Outcome.GATED, gated.outcome());
+        assertTrue(gated.reason().contains("Тэнгэрийн Ордныг 2"), gated.reason());
+        assertEquals(Ascension.Outcome.MAX_RANK, Ascension.rite(V2, 3, Long.MAX_VALUE / 4, 1_000_000, ready).outcome());
+    }
+
+    @Test
+    void theChecklistShowsEveryGateWithItsProgress() {
+        var gates = Ascension.gates(0, new Ascension.Inputs(60, 5, 10, 0, 0, 18, 18, 0));
+        assertEquals(4, gates.size());
+        assertTrue(gates.get(0).met(), "level 60");
+        assertFalse(gates.get(1).met());
+        assertTrue(gates.get(1).label().contains("(5/9)"), gates.get(1).label());
+        assertTrue(gates.get(2).met(), "the story is done");
+        assertFalse(gates.get(3).met(), "gear power");
+        assertTrue(Ascension.gates(3, new Ascension.Inputs(60, 10, 10, 9, 0, 18, 18, 9)).isEmpty());
+    }
+
+    @Test
+    void endgameKeepsPalaceClearsAndReadsOlderDocuments() {
+        var e = mn.suld.api.profile.Endgame.FRESH.withPalaceClear().withPalaceClear().withAscension(2);
+        var back = mn.suld.api.profile.Endgame.fromJson(e.toJson());
+        assertEquals(e, back);
+        assertEquals(2, back.palaceClears());
+        var old = mn.suld.api.profile.Endgame.fromJson("{\"v\":1,\"asc\":1,\"pts\":10,\"rest\":0,\"curve\":2}");
+        assertEquals(0, old.palaceClears());
+        assertEquals(1, old.ascension());
+    }
 }

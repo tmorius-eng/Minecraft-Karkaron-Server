@@ -42,27 +42,68 @@ public final class Ascension {
                          int chapters, int storySize, int armorMastery) {
     }
 
+    /** One content gate of a rank, and whether it is met. */
+    public record Gate(String label, boolean met) {
+    }
+
+    /** The content gates of rank {@code rank} → {@code rank + 1}, in order (the /ascend checklist). */
+    public static java.util.List<Gate> gates(int rank, Inputs in) {
+        java.util.List<Gate> g = new java.util.ArrayList<>();
+        if (rank >= MAX_RANK) return g;
+        g.add(new Gate("60-р түвшинд хүр", in.level() >= Balance.MAX_LEVEL));
+        switch (rank) {
+            case 0 -> {
+                int need = Math.min(9, in.ladderSize());
+                g.add(new Gate(need + " өөр шорон давах (" + Math.min(in.distinctClears(), need) + "/" + need + ")", in.distinctClears() >= need));
+                g.add(new Gate("Түүхийн бүх бүлгийг дуусгах (" + Math.min(in.chapters(), in.storySize()) + "/" + in.storySize() + ")", in.chapters() >= in.storySize()));
+                g.add(new Gate("Тоног хэрэгслийн хүч ≥ " + Math.round(0.9 * GearPower.par(60)) + " (" + Math.round(in.gearPower()) + ")", in.gearPower() >= 0.9 * GearPower.par(60)));
+            }
+            case 1 -> {
+                g.add(new Gate("Шатны бүх шоронг давах (" + Math.min(in.distinctClears(), in.ladderSize()) + "/" + in.ladderSize() + ")", in.distinctClears() >= in.ladderSize()));
+                g.add(new Gate("Тэнгэрийн Ордныг 2 удаа давах (" + Math.min(in.palaceClears(), 2) + "/2)", in.palaceClears() >= 2));
+                g.add(new Gate("Хуягны ур чадвар 5-р зэрэг (" + Math.min(in.armorMastery(), 5) + "/5)", in.armorMastery() >= 5));
+            }
+            default -> {
+                g.add(new Gate("Тэнгэрийн Ордныг 4 удаа давах (" + Math.min(in.palaceClears(), 4) + "/4)", in.palaceClears() >= 4));
+                g.add(new Gate("Тоног хэрэгслийн хүч ≥ " + Math.round(GearPower.par(60)) + " (" + Math.round(in.gearPower()) + ")", in.gearPower() >= GearPower.par(60)));
+                g.add(new Gate("Хуягны ур чадвар 7-р зэрэг (" + Math.min(in.armorMastery(), 7) + "/7)", in.armorMastery() >= 7));
+            }
+        }
+        return g;
+    }
+
     /** Why rank {@code rank} → {@code rank + 1} is not open yet, or null when only the оноо and coins remain. */
     public static String blocked(int rank, Inputs in) {
         if (rank >= MAX_RANK) return "Тэнгэрийн Зэргийн дээд шат.";
-        if (in.level() < Balance.MAX_LEVEL) return "60-р түвшинд хүр.";
-        switch (rank) {
-            case 0 -> {
-                if (in.distinctClears() < Math.min(9, in.ladderSize())) return "9 өөр шорон нэг удаа давах.";
-                if (in.chapters() < in.storySize()) return "Түүхийн бүх бүлгийг дуусга.";
-                if (in.gearPower() < 0.9 * GearPower.par(60)) return "Тоног хэрэгслийн хүч хангалтгүй.";
-            }
-            case 1 -> {
-                if (in.distinctClears() < in.ladderSize()) return "Шатны бүх шоронг дав.";
-                if (in.palaceClears() < 2) return "Тэнгэрийн Ордныг 2 удаа дав.";
-                if (in.armorMastery() < 5) return "Хуягны ур чадвар 5-р зэрэгт хүр.";
-            }
-            default -> {
-                if (in.palaceClears() < 4) return "Тэнгэрийн Ордныг 4 удаа дав.";
-                if (in.gearPower() < GearPower.par(60)) return "Тоног хэрэгслийн хүч хангалтгүй.";
-                if (in.armorMastery() < 7) return "Хуягны ур чадвар 7-р зэрэгт хүр.";
-            }
-        }
+        for (Gate g : gates(rank, in)) if (!g.met()) return g.label() + ".";
         return null;
+    }
+
+    public enum Outcome { DONE, MAX_RANK, GATED, NOT_ENOUGH_POINTS, NOT_ENOUGH_COINS }
+
+    /** The rite's result: the new rank, оноо and coins (unchanged unless {@link Outcome#DONE}). */
+    public record Rite(Outcome outcome, int rank, long points, long coins, String reason) {
+    }
+
+    /** The rite of rank {@code rank} → {@code rank + 1}: gates first, then the оноо and the coin fee are spent. */
+    public static Rite rite(LevelCurve c, int rank, long points, long coins, Inputs in) {
+        if (rank >= MAX_RANK) return new Rite(Outcome.MAX_RANK, rank, points, coins, "Тэнгэрийн Зэргийн дээд шат.");
+        String why = blocked(rank, in);
+        if (why != null) return new Rite(Outcome.GATED, rank, points, coins, why);
+        long cost = cost(c, rank);
+        if (points < cost) return new Rite(Outcome.NOT_ENOUGH_POINTS, rank, points, coins, "Тэнгэрийн оноо хүрэлцэхгүй (" + points + "/" + cost + ").");
+        long fee = riteCoins(rank);
+        if (coins < fee) return new Rite(Outcome.NOT_ENOUGH_COINS, rank, points, coins, "Ёслолын зоос хүрэлцэхгүй (" + coins + "/" + fee + " ₮).");
+        return new Rite(Outcome.DONE, rank + 1, points - cost, coins - fee, null);
+    }
+
+    /** Roman numeral of a rank (I–III), "—" for none. */
+    public static String roman(int rank) {
+        return switch (rank) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            default -> "—";
+        };
     }
 }

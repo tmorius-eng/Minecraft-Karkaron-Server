@@ -127,6 +127,7 @@ public final class SuldServices {
             this.analytics = new LoggingAnalyticsSink(plugin.getLogger());
         }
         ProgressionEngine engine = new ProgressionEngine(config.progression().toCurve());
+        this.curve = engine.curve();
         this.progressionService = new DefaultProgressionService(engine, events, analytics);
 
         // Authentication + audit (identity = authenticated UUID; fail closed when unverified).
@@ -240,6 +241,13 @@ public final class SuldServices {
         return profileService;
     }
 
+    /** The live level curve (config.yml progression.curve). */
+    public mn.suld.api.progression.LevelCurve curve() {
+        return curve;
+    }
+
+    private final mn.suld.api.progression.LevelCurve curve;
+
     public ProgressionService progression() {
         return progressionService;
     }
@@ -317,6 +325,8 @@ public final class SuldServices {
     public volatile mn.suld.plugin.activity.ActivePlaytimeService activity;
     /** The class armour (null until the plugin enabled it). */
     public volatile mn.suld.plugin.item.ClassArmor classArmor;
+    /** Тэнгэрийн Зэрэг window and rite (set by SuldPlugin). */
+    public volatile mn.suld.plugin.gui.AscensionMenu ascension;
 
     public mn.suld.plugin.item.ItemService itemService() {
         return itemService;

@@ -78,6 +78,14 @@ class SkillEngineTest {
     }
 
     @Test
+    void eachAscensionRankAddsAPoint() {
+        PlayerProfile p = newProfile();
+        int before = SkillEngine.total(p, new SkillEngine.Context(60, 18, 8));
+        p.endgame(p.endgame().withAscension(2));
+        assertEquals(before + 2, SkillEngine.total(p, new SkillEngine.Context(60, 18, 8)));
+    }
+
+    @Test
     void refundGivesPointsBackButKeepsThePathValid() {
         PlayerProfile p = newProfile();
         SkillEngine.grant(p, 20);

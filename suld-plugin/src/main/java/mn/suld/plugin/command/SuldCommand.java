@@ -42,6 +42,7 @@ public final class SuldCommand implements CommandExecutor {
             case "quest" -> setQuest(sender, args);
             case "coins" -> giveCoins(sender, args);
             case "content" -> content(sender, args);
+            case "endgame" -> endgame(sender, args);
             case "guide" -> {
                 if (!sender.hasPermission("suld.admin")) {
                     sender.sendMessage(Messages.error("Эрх алга."));
@@ -189,6 +190,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld quest <тоглогч> <1..18|reset> — эрлийн бүлэг"));
             sender.sendMessage(Messages.info("/suld guide — заавар самбаруудыг шинэчлэх"));
             sender.sendMessage(Messages.info("/suld content validate|export — тоглоомын агуулгын файлууд (моб, бүс, dungeon, эрэл)"));
+            sender.sendMessage(Messages.info("/suld endgame <тоглогч> rank|points|palace <тоо> — Тэнгэрийн Зэрэг (QA)"));
             sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));
@@ -237,6 +239,41 @@ public final class SuldCommand implements CommandExecutor {
             if (r.issues().size() > 15) sender.sendMessage(Messages.info(" … дахиад " + (r.issues().size() - 15) + " (консолд бүгд)"));
             r.issues().forEach(i -> plugin.getLogger().warning("[content] " + i));
         }
+    }
+
+    /** Staff/QA: set a player's Тэнгэрийн Зэрэг rank, Тэнгэрийн оноо or Тэнгэрийн Ордон clears. Audited. */
+    private void endgame(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        org.bukkit.entity.Player t = args.length > 1 ? org.bukkit.Bukkit.getPlayerExact(args[1]) : null;
+        mn.suld.api.profile.PlayerProfile pr = t == null ? null : services.profiles().cached(t.getUniqueId()).orElse(null);
+        long n;
+        try {
+            n = args.length > 3 ? Long.parseLong(args[3]) : -1;
+        } catch (NumberFormatException e) {
+            n = -1;
+        }
+        if (pr == null || n < 0) {
+            sender.sendMessage(Messages.error("/suld endgame <онлайн тоглогч> rank|points|palace <тоо>"));
+            return;
+        }
+        var e = pr.endgame();
+        switch (args[2].toLowerCase(java.util.Locale.ROOT)) {
+            case "rank" -> e = e.withAscension((int) Math.min(mn.suld.api.balance.Ascension.MAX_RANK, n));
+            case "points" -> e = e.withPoints(n);
+            case "palace" -> e = new mn.suld.api.profile.Endgame(e.ascension(), e.tengeriPoints(), e.restedExp(), e.curveVersion(), (int) Math.min(1000, n));
+            default -> {
+                sender.sendMessage(Messages.error("rank|points|palace"));
+                return;
+            }
+        }
+        pr.endgame(e);
+        services.profiles().save(pr);
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(sender instanceof org.bukkit.entity.Player p ? p.getUniqueId().toString() : "console",
+                "admin.endgame", t.getUniqueId().toString(), args[2] + "=" + n));
+        sender.sendMessage(Messages.success(t.getName() + ": " + e.toJson()));
     }
 
     private void info(CommandSender sender) {

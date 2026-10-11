@@ -223,6 +223,10 @@ commands:
   daily:
     description: The daily login reward (7-day streak; coins and EXP).
     aliases: [odor, bonus]
+  ascend:
+    description: Тэнгэрийн Зэрэг (Ascension I-III) after level 60 - points, gates and the rite.
+    usage: /ascend
+    aliases: [zereg, tengeriinzereg, ascension]
   worldbuild:
     description: WorldBuilder (status, build, pause, resume, validate, dump, rollback, approve, lock, unlock, tp).
     usage: /worldbuild <status|build|pause|resume|validate|dump|rollback|approve|lock|unlock|tp>

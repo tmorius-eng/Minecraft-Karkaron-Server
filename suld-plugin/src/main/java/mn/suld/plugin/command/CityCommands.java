@@ -43,7 +43,7 @@ public final class CityCommands implements Listener {
     private static final Set<String> OWNED = Set.of("help", "?", "tuslamj", "zaavar", "rules", "juram",
             "spawn", "hot", "balance", "bal", "money", "zoos", "pay", "tuluh",
             "class", "angi", "profile", "stats", "dur", "exp", "level", "lvl", "tuvshin", "quest", "quests", "erel",
-            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits", "skills", "spells", "daily", "mori", "top", "baltop", "trade", "discord", "website", "vote", "tasks", "commands", "cmds");
+            "menu", "tutorial", "guide", "cosmetics", "shop", "buy", "store", "rankup", "rank", "lvlup", "credits", "skills", "spells", "daily", "ascend", "ascension", "zereg", "tengeriinzereg", "mori", "top", "baltop", "trade", "discord", "website", "vote", "tasks", "commands", "cmds");
     private static final Set<String> NO_TELEPORT_IN_DUNGEON = Set.of("home", "homes", "tpa", "tpahere", "tpaccept", "tpyes",
             "back", "return", "warp", "warps", "tp", "tpo", "tphere", "tppos", "tpr", "tpaall", "tpall", "etp", "etpa", "ewarp", "ehome");
     private static final int SPAWN_WARMUP_SECONDS = 3;

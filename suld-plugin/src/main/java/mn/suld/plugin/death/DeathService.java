@@ -231,9 +231,10 @@ public final class DeathService implements Listener {
         }
 
         long now = System.currentTimeMillis();
-        long lockMs = s.allowFreeRevive() ? Math.max(s.soulStateSeconds() * 1000L, DeathLock.millis(s, level, 0)) : FOREVER;
+        int ascension = profile == null ? 0 : profile.ascension(); // an ascended character's lock is the longest
+        long lockMs = s.allowFreeRevive() ? Math.max(s.soulStateSeconds() * 1000L, DeathLock.millis(s, level, ascension)) : FOREVER;
         long until = now + lockMs;
-        lock(p, level, now, until, cause(p));
+        lock(p, level, ascension, now, until, cause(p));
 
         int droppedItems = dropped.stream().mapToInt(ItemStack::getAmount).sum();
         Wound next = wound(p.getUniqueId()).add(s);
@@ -265,11 +266,11 @@ public final class DeathService implements Listener {
     }
 
     /** Store the lock (async, ordered); the in-memory state is authoritative for this server right away. */
-    private void lock(Player p, int level, long now, long until, String cause) {
+    private void lock(Player p, int level, int ascension, long now, long until, String cause) {
         UUID id = p.getUniqueId();
         Location l = p.getLocation();
         DeathRecord rec = new DeathRecord(UUID.randomUUID(), id, 0, now, until, l.getWorld() == null ? "" : l.getWorld().getName(),
-                l.getBlockX(), l.getBlockY(), l.getBlockZ(), cause, level, 0, wound(id).stacks(), DeathRecord.State.LOCKED, null, 0);
+                l.getBlockX(), l.getBlockY(), l.getBlockZ(), cause, level, ascension, wound(id).stacks(), DeathRecord.State.LOCKED, null, 0);
         CompletableFuture<DeathRecord> prev = locks.get(id);
         CompletableFuture<DeathRecord> stored = (prev == null ? CompletableFuture.<DeathRecord>completedFuture(null) : prev
                 .exceptionally(ex -> null)

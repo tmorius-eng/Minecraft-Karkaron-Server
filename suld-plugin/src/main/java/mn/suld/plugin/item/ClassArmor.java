@@ -409,7 +409,7 @@ public final class ClassArmor implements Listener {
     public ArmorRules.Holdings holdings(Player p, PlayerProfile pr) {
         ArmorTier next = pr.classGear().tier().next().orElse(null);
         int mats = next == null || next.material() == null ? 0 : held(p, next.material());
-        return new ArmorRules.Holdings(pr.currency(), mats, 0); // Тэнгэрийн Зэрэг (Ascension) is not in the game yet
+        return new ArmorRules.Holdings(pr.currency(), mats, pr.ascension()); // T6 needs Тэнгэрийн Зэрэг III
     }
 
     public enum Upgrade { DONE, MAX, GATES, NO_CLASS, SOUL }

@@ -1197,6 +1197,15 @@ public final class Engine {
     /** Ascension rank requirements (docs/ASCENSION_SPEC.md); each rank also spends Тэнгэрийн оноо. */
     boolean ascensionReady(int rank) {
         double gp = p.gear.gearPower(), par = r.parGearPower(60);
+        if (r instanceof LiveRules) {
+            // the live game: ranks I–III with its gates and stand-ins (mn.suld.api.balance.Ascension): palace clears for
+            // the heroic and world-boss gates, the class (armour) mastery track for the others
+            if (rank > mn.suld.api.balance.Ascension.MAX_RANK) return false;
+            var in = new mn.suld.api.balance.Ascension.Inputs(p.level, p.distinctClears(), w.dungeons().size(),
+                    p.clears.getOrDefault("dungeon.tengeriin_ordon", 0), gp, p.chapters, w.story().size(), p.mastery[SimPlayer.M_CLASS]);
+            return mn.suld.api.balance.Ascension.blocked(rank - 1, in) == null
+                    && p.overflowExp >= pr.ascensionCost(rank - 1) && p.coins >= ProposedRules.ascensionCoins(rank - 1);
+        }
         boolean ok = switch (rank) {
             case 1 -> p.level >= 60 && p.chapters >= w.story().size() && p.distinctClears() >= 9 && gp >= 0.9 * par;
             case 2 -> p.distinctClears() >= 10 + 1 && p.masteryTotal() >= 20;
