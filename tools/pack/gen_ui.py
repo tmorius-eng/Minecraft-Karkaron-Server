@@ -309,9 +309,76 @@ def header(img: Image.Image, title_width_hint: int = 0) -> None:
             img.putpixel((ox + dx * 2, 4 + dy * 2), GOLD + (255,))
 
 
+WELCOME_ART = os.path.join(ART, "gui_welcome.webp")
+
+
+def _hd_labels(img: Image.Image, labels: list) -> Image.Image:
+    """Pixel-font card labels centred on their banners (chest px boxes). Each font pixel is 4 HD px (the game's own
+    GUI scale); a label too wide for its banner is drawn regular weight, then at 3 HD px per font pixel. Enlarged
+    without smoothing, so it stays crisp."""
+    S = hd_art.SCALE
+    for (x0, y0, x1, y1), text, room in labels:
+        for px, bold in ((S, True), (S, False), (3, True), (3, False)):
+            tw = pf.text_width(text, bold=bold)
+            if tw * px / S <= room or (px, bold) == (3, False):
+                break
+        layer = Image.new("RGBA", (tw + 2, 10), (0, 0, 0, 0))
+        pf.draw_text(layer, 0, 1, text, WHITE, SHADOW, bold=bold)
+        big = layer.resize((layer.width * px, layer.height * px), Image.NEAREST)
+        cx, cy = (x0 + x1) / 2 * S, (y0 + y1) / 2 * S
+        img.alpha_composite(big, (round(cx - tw * px / 2), round(cy - 5 * px)))
+    return img
+
+
+def _hd_card_menu(cards, cols: int, cw: int, ch: int, height: int, wells: bool) -> Image.Image:
+    """A card menu in the welcome window's style: header, frame, cards cw x ch chest px from x 7, y 18."""
+    S = hd_art.SCALE
+    kit = hd_art.CardKit(WELCOME_ART)
+    base = hd_art.welcome(WELCOME_ART)                 # its outer frame strips
+    img = Image.new("RGBA", (176 * S, height * S), (24, 18, 12, 255))
+    left = base.crop((0, 16 * S, 7 * S, 70 * S)).resize((7 * S, (height - 18) * S), Image.LANCZOS)
+    right = base.crop((169 * S, 16 * S, 176 * S, 70 * S)).resize((7 * S, (height - 18) * S), Image.LANCZOS)
+    # the bottom rim: its corner gems kept, the middle from a stretch between two card gems (no gem fragments)
+    strip = base.crop((0, 70 * S, 176 * S, 72 * S))
+    bottom = Image.new("RGBA", strip.size)
+    bottom.paste(strip.crop((0, 0, 7 * S, 2 * S)), (0, 0))
+    bottom.paste(strip.crop((20 * S, 0, 50 * S, 2 * S)).resize((162 * S, 2 * S), Image.LANCZOS), (7 * S, 0))
+    bottom.paste(strip.crop((169 * S, 0, 176 * S, 2 * S)), (169 * S, 0))
+    img.alpha_composite(left, (0, 16 * S))
+    img.alpha_composite(right, (169 * S, 16 * S))
+    img.alpha_composite(bottom, (0, (height - 2) * S))
+    img.alpha_composite(kit.header(), (0, 0))
+    labels = []
+    for i, (art, label, banner) in enumerate(cards):
+        col, row = i % cols, i // cols
+        x, y = 7 + col * cw, 18 + row * ch
+        knots = pf.text_width(label, bold=False) <= kit.label_room(cw, True)
+        img.alpha_composite(kit.card_image(cw, ch, os.path.join(ART, art + ".png"), banner, knots), (x * S, y * S))
+        bx0, by0, bx1, by1 = kit.banner_box(cw, ch)
+        labels.append(((x + bx0, y + by0, x + bx1, y + by1), label, kit.label_room(cw, knots)))
+    if wells and os.path.exists(os.path.join(ART, "gui_inventory_keyed.png")):
+        cell = hd_art.inventory_cell(os.path.join(ART, "gui_inventory_keyed.png"))
+        for r in range((height - 18) // 18):
+            img.alpha_composite(cell, ((7 + 8 * 18) * S, (17 + r * 18) * S))
+    return _hd_labels(img, labels)
+
+
 def gui_menu(name: str, cards: list[tuple[str, str, tuple]], preview: str | None, rows: int = 6) -> None:
-    """A rows-row chest background with 3x(rows/3) cards; card i covers 3x3 slots."""
+    """A rows-row chest background with 3x(rows/3) cards; card i covers 3x3 slots. With the owner's welcome window
+    (assets/art/source/gui_welcome.webp) it is HD: the welcome screen is that painting itself, the other card menus
+    are built from its pieces (header, gem-cornered card frame, knotted banner) around the card paintings."""
     height = 17 + rows * 18 + 1
+    if os.path.exists(WELCOME_ART):
+        if name == "welcome" and rows == 3:
+            img = hd_art.welcome(WELCOME_ART)
+            labels = [(box, label, (box[2] - box[0]) - 2 * 6.0) for box, (_, label, _) in zip(hd_art.welcome_banners(), cards)]
+            img = _hd_labels(img, labels)
+        else:
+            img = _hd_card_menu(cards, 3, 54, 54, height, False)
+        add_bitmap(f"GUI_{name.upper()}", img, f"gui/{name}", height, 13, f"chest background {name} 176x{height} (HD)")
+        if preview:
+            img.save(os.path.join(preview, f"gui_{name}.png"))
+        return
     img = Image.new("RGBA", (176, height), NAVY + (255,))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, 175, height - 1], outline=GOLD_D)
@@ -330,6 +397,12 @@ def gui_grid(name: str, cards: list[tuple[str, str, tuple]], preview: str | None
     """A 6-row chest with 4x2 portrait cards, each 2 slots wide and 3 tall; the 9th slot column holds buttons."""
     rows = 6
     height = 17 + rows * 18 + 1
+    if os.path.exists(WELCOME_ART):
+        img = _hd_card_menu(cards, 4, 36, 54, height, True)
+        add_bitmap(f"GUI_{name.upper()}", img, f"gui/{name}", height, 13, f"chest background {name} 176x{height} (4x2 cards, HD)")
+        if preview:
+            img.save(os.path.join(preview, f"gui_{name}.png"))
+        return
     img = Image.new("RGBA", (176, height), NAVY + (255,))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, 175, height - 1], outline=GOLD_D)
@@ -347,9 +420,27 @@ def gui_grid(name: str, cards: list[tuple[str, str, tuple]], preview: str | None
 
 
 def gui_frame(name: str, preview: str | None) -> None:
-    """A 6-row chest with a framed 9x5 item area and a separate bottom row for navigation."""
+    """A 6-row chest with a framed 9x5 item area and a separate bottom row for navigation. HD in the welcome and
+    inventory style when the owner's art is there: the welcome header and frame, the inventory's gold wells."""
     rows = 6
     height = 17 + rows * 18 + 1
+    inv = os.path.join(ART, "gui_inventory_keyed.png")
+    if os.path.exists(WELCOME_ART) and os.path.exists(inv):
+        img = _hd_card_menu([], 3, 54, 54, height, False)
+        S = hd_art.SCALE
+        cell = hd_art.inventory_cell(inv)
+        for r in range(rows):
+            for c in range(9):
+                img.alpha_composite(cell, ((7 + c * 18) * S, (17 + r * 18) * S))
+        # the navigation row sits apart: a gold rule above it, its wells dimmed
+        gold_rule = Image.new("RGBA", (170 * S, S // 2 + 1), GOLD + (255,))
+        img.alpha_composite(gold_rule, (3 * S, (17 + 5 * 18) * S - S // 4))
+        dim = Image.new("RGBA", (162 * S, 18 * S), (0, 0, 0, 90))
+        img.alpha_composite(dim, (7 * S, (17 + 5 * 18) * S))
+        add_bitmap(f"GUI_{name.upper()}", img, f"gui/{name}", height, 13, f"chest background {name} 176x{height} (framed slots, HD)")
+        if preview:
+            img.save(os.path.join(preview, f"gui_{name}.png"))
+        return
     img = Image.new("RGBA", (176, height), NAVY + (255,))
     d = ImageDraw.Draw(img)
     d.rectangle([0, 0, 175, height - 1], outline=GOLD_D)

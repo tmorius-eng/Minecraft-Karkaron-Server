@@ -118,13 +118,13 @@ public final class Glyphs {
     public static final String BADGE_SAFE = "\uE034";
     /** badge «АЮУЛТАЙ» */
     public static final String BADGE_DANGER = "\uE035";
-    /** chest background main 176x126 */
+    /** chest background main 176x126 (HD) */
     public static final String GUI_MAIN = "\uE036";
-    /** chest background welcome 176x72 */
+    /** chest background welcome 176x72 (HD) */
     public static final String GUI_WELCOME = "\uE037";
-    /** chest background cosmetics 176x126 (4x2 cards) */
+    /** chest background cosmetics 176x126 (4x2 cards, HD) */
     public static final String GUI_COSMETICS = "\uE038";
-    /** chest background frame 176x126 (framed slots) */
+    /** chest background frame 176x126 (framed slots, HD) */
     public static final String GUI_FRAME = "\uE039";
     /** chest background skillmap 176x126 (parchment map, toolbar row) */
     public static final String GUI_SKILLMAP = "\uE03A";

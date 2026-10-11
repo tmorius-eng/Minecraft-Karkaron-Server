@@ -41,11 +41,15 @@ public final class Menu implements InventoryHolder {
      * @param title      title text (white, bold)
      * @param background a {@code Glyphs.GUI_*} glyph or null for the vanilla chest look
      */
+    /** Chest px the title starts right of the vanilla spot on a painted background (the header's corner knot). */
+    static final int TITLE_INDENT = 10;
+
     public Menu(int rows, String title, String background) {
         Component t;
         if (background != null) {
-            // shift to the GUI's left edge, draw the 176 px background, come back to the title position
-            t = StyleFormat.join(StyleFormat.shift(-8), StyleFormat.glyph(background), StyleFormat.shift(-169),
+            // shift to the GUI's left edge, draw the 176 px background, come back to the title position, past the
+            // knot painted in the header's left corner
+            t = StyleFormat.join(StyleFormat.shift(-8), StyleFormat.glyph(background), StyleFormat.shift(-169 + TITLE_INDENT),
                     Component.text(title, NamedTextColor.WHITE, TextDecoration.BOLD));
         } else {
             t = Component.text(title, TextColor.fromHexString("#3A2A10"), TextDecoration.BOLD);

@@ -191,3 +191,21 @@ How it looks in a real client is **MANUAL_QA_REQUIRED**. Points to check:
 - with the recipe book open (the left banner overlaps the book's right edge);
 - with potion effects listed beside the window;
 - in a language other than the four above (there the title shows the plain word "Crafting" and no decor).
+
+## Card menus (welcome, main menu, cosmetics, list menus)
+
+The source is the owner's welcome window, `assets/art/source/gui_welcome.webp`. It has a header bar and three cards;
+each card is a coloured banner over a painting, framed in gold with gems at the corners.
+
+- **Welcome:** this is the painting itself, warped so each card sits on its 3x3 slot block (`hd_art.welcome`). The
+  labels are pixel-font text on the banners.
+- **Main menu (six cards) and cosmetics (eight portrait cards):** these are built from the painting's pieces
+  (`hd_art.CardKit`): the header, the gem-cornered card frame as a 9-slice, and the knotted banner. A banner is
+  recoloured per card. If a label does not fit, the banner drops its knots, or the label is drawn at a smaller pixel
+  size. The paintings are the existing `card_*.png`, cropped to fill.
+- **Generic list menu (`frame`):** the same header and rim, with the inventory's gold wells.
+
+All of these are at 4x and use the same code points as before. Titles on painted backgrounds start 10 px further
+right (`Menu.TITLE_INDENT`), so they clear the header's corner knot.
+
+The dungeon ladder, the quest map, the quest book and the skill map keep their own paintings.

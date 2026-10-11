@@ -303,6 +303,12 @@ def _cell(src: Image.Image, scale: int = SCALE) -> Image.Image:
     return _box(src, box, (18 * scale, 18 * scale))
 
 
+def inventory_cell(path: str, scale: int = SCALE) -> Image.Image:
+    """One gold-framed slot well (18 x 18 chest px times SCALE) from the keyed inventory art, for other menus."""
+    a = np.asarray(Image.open(path).convert("RGB")).astype(np.float64)
+    return _cell(Image.fromarray(a.astype(np.uint8), "RGB"), scale).convert("RGBA")
+
+
 def _icon(src: Image.Image, box, scale: int = SCALE) -> Image.Image:
     """An empty-slot placeholder (helmet, chestplate, leggings, boots, shield) lifted off its well: the brightness
     above the well's own cloth becomes alpha, tinted with the icon's colour."""
@@ -413,3 +419,154 @@ def inventory(path: str) -> dict:
     icons = {n: _icon(src, INV_ARMOUR[i]) for i, n in enumerate(names)}
     icons["shield"] = _icon(src, INV_SHIELD)
     return {"texture": texture, "decor": decor, "decor_box": (left, top, w, h), "icons": icons}
+
+
+# ------------------------------------------------------------------------------------------------ card menus
+
+# gui_welcome.webp (1961x802): the owner's welcome window: a header bar and three framed cards, each a coloured
+# banner over a painting. Source px -> chest px of a 3-row chest (176 x 72): the cards land on their 3x3 slot blocks.
+WC_XS = [(14, 0), (40, 7), (648, 61), (1304, 115), (1918, 169), (1944, 176)]
+WC_YS = [(14, 0), (128, 16), (150, 18), (256, 28), (762, 70.5), (787, 72)]
+WC_CARD = (18, 138, 668, 778)          # card 1 with the gems on its corners: the 9-slice template of every card
+WC_CARD_BORDER = (30, 26, 34, 24)      # its frame (left, top, right, bottom) in source px
+WC_BANNER = (46, 158, 630, 257)        # card 1's banner, knots at both ends: 3-slice template
+WC_BANNER_CAP = 90                     # source px of each banner end (the knot) kept unstretched
+WC_PICTURE_TOP = 258                   # where the painting starts under the banner
+WC_HEADER = (14, 14, 1944, 136)        # the header bar with its corner knots (above the cards' gems)
+
+
+def welcome(path: str) -> Image.Image:
+    """The owner's welcome window on a 3-row chest (176 x 72 chest px times SCALE)."""
+    src = Image.open(path).convert("RGB")
+    return warp(src, WC_XS, WC_XS, WC_YS, 73, 176, 72)
+
+
+def welcome_banners() -> list[tuple[float, float, float, float]]:
+    """The three banners of welcome() in chest px (x0, y0, x1, y1), for the labels."""
+    def gx(s):
+        return float(np.interp(s, [p for p, _ in WC_XS], [g for _, g in WC_XS]))
+
+    def gy(s):
+        return float(np.interp(s, [p for p, _ in WC_YS], [g for _, g in WC_YS]))
+    lefts = [WC_BANNER[0], WC_BANNER[0] + (666 - 40), WC_BANNER[0] + (1322 - 40)]
+    width = WC_BANNER[2] - WC_BANNER[0]
+    return [(gx(l), gy(WC_BANNER[1]), gx(l + width), gy(WC_BANNER[3])) for l in lefts]
+
+
+def _nine(img: Image.Image, border: tuple[int, int, int, int], size: tuple[int, int], scale_border: float) -> Image.Image:
+    """9-slice resize: the corners keep their look (scaled by ``scale_border``), the edges and the centre stretch."""
+    l, t, r, b = border
+    W, H = img.size
+    w, h = size
+    L, T, R, B = (max(1, round(v * scale_border)) for v in (l, t, r, b))
+    out = Image.new("RGBA", size, (0, 0, 0, 0))
+    xs_src = [0, l, W - r, W]
+    ys_src = [0, t, H - b, H]
+    xs_dst = [0, L, w - R, w]
+    ys_dst = [0, T, h - B, h]
+    for i in range(3):
+        for j in range(3):
+            box = (xs_src[i], ys_src[j], xs_src[i + 1], ys_src[j + 1])
+            dw, dh = xs_dst[i + 1] - xs_dst[i], ys_dst[j + 1] - ys_dst[j]
+            if dw <= 0 or dh <= 0 or box[2] <= box[0] or box[3] <= box[1]:
+                continue
+            out.paste(img.crop(box).resize((dw, dh), Image.LANCZOS), (xs_dst[i], ys_dst[j]))
+    return out
+
+
+def _cover(path: str, size: tuple[int, int]) -> Image.Image:
+    """A painting cropped to fill ``size`` (centre crop to the aspect), downscaled smoothly."""
+    im = Image.open(path).convert("RGB")
+    tw, th = size
+    w, h = im.size
+    if w / h > tw / th:
+        nw = int(h * tw / th)
+        im = im.crop(((w - nw) // 2, 0, (w - nw) // 2 + nw, h))
+    else:
+        nh = int(w * th / tw)
+        im = im.crop((0, (h - nh) // 2, w, (h - nh) // 2 + nh))
+    return im.resize(size, Image.LANCZOS).convert("RGBA")
+
+
+def _recolour(img: Image.Image, colour: tuple[int, int, int]) -> Image.Image:
+    """The banner in another colour: its cloth takes ``colour`` (shading kept), its gold knots and trim stay."""
+    a = np.asarray(img.convert("RGBA")).astype(np.float64)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    gold = (r > 120) & (r > b + 50) & (g > 80)
+    lum = (0.3 * r + 0.59 * g + 0.11 * b)
+    cloth = ~gold
+    m = lum[cloth].mean() if cloth.any() else 1.0
+    k = np.clip(lum / max(1.0, m), 0.35, 1.8)[..., None]
+    tinted = np.clip(np.array(colour, float)[None, None, :] * k, 0, 255)
+    a[..., :3] = np.where(cloth[..., None], tinted, a[..., :3])
+    return Image.fromarray(np.rint(a).astype(np.uint8), "RGBA")
+
+
+class CardKit:
+    """Pieces of the owner's welcome window to build any card menu in the same style, at SCALE."""
+
+    def __init__(self, path: str, scale: int = SCALE):
+        self.src = Image.open(path).convert("RGBA")
+        self.S = scale
+        # source px per chest px of the welcome cards (~11.3): the frame keeps that thickness on every card
+        self.k = scale * 54 / (648 - 40)
+        self.card = self.src.crop(WC_CARD)
+        self.banner = self.src.crop(WC_BANNER)
+
+    def header(self, width: int = 176) -> Image.Image:
+        """The header bar (width x 17 chest px): its corner knots kept, the bar between them stretched."""
+        h = self.src.crop(WC_HEADER)
+        cap = 200
+        return _nine(h, (cap, 4, cap, 4), (width * self.S, 17 * self.S), self.k)
+
+    def frame(self, w: int, h: int) -> Image.Image:
+        """A card frame w x h chest px, the inside transparent (the painting goes under it)."""
+        f = _nine(self.card, WC_CARD_BORDER, (w * self.S, h * self.S), self.k)
+        a = np.asarray(f).astype(np.float64)
+        l, t, r, b = (round(v * self.k) for v in WC_CARD_BORDER)
+        a[t:a.shape[0] - b, l:a.shape[1] - r, 3] = 0
+        return Image.fromarray(np.rint(a).astype(np.uint8), "RGBA")
+
+    def inner(self, w: int, h: int) -> tuple[int, int, int, int]:
+        """The inside of a frame of w x h chest px, in HD px (x0, y0, x1, y1)."""
+        l, t, r, b = (round(v * self.k) for v in WC_CARD_BORDER)
+        return l, t, w * self.S - r, h * self.S - b
+
+    def banner_strip(self, width_px: int, colour=None, knots: bool = True) -> Image.Image:
+        """A banner width_px HD px wide (knots at both ends unless ``knots`` is False), optionally recoloured."""
+        bh = round((WC_BANNER[3] - WC_BANNER[1]) * self.k)
+        cap = WC_BANNER_CAP
+        if knots:
+            img = _nine(self.banner, (cap, 0, cap, 0), (width_px, bh), self.k)
+        else:
+            # the plain middle of the banner with its own trim ends (12 source px), no knot
+            mid = self.banner.crop((cap, 0, self.banner.width - cap, self.banner.height))
+            ends = Image.new("RGBA", (mid.width + 24, mid.height))
+            ends.paste(self.banner.crop((0, 0, 12, self.banner.height)), (0, 0))
+            ends.paste(mid, (12, 0))
+            ends.paste(self.banner.crop((self.banner.width - 12, 0, self.banner.width, self.banner.height)), (12 + mid.width, 0))
+            img = _nine(ends, (12, 0, 12, 0), (width_px, bh), self.k)
+        return _recolour(img, colour) if colour else img
+
+    def label_room(self, w: int, knots: bool = True) -> float:
+        """Chest px free for a label on the banner of a w px card."""
+        x0, _, x1, _ = self.inner(w, 54)
+        free = (x1 - x0) / self.S
+        return free - (2 * 80 * self.k / self.S if knots else 2.0)
+
+    def card_image(self, w: int, h: int, art: str, colour, knots: bool = True) -> Image.Image:
+        """A whole card: frame, banner and the painting, w x h chest px times SCALE."""
+        out = Image.new("RGBA", (w * self.S, h * self.S), (24, 18, 12, 255))
+        x0, y0, x1, y1 = self.inner(w, h)
+        strip = self.banner_strip(x1 - x0, colour, knots)
+        out.alpha_composite(strip, (x0, y0))
+        top = y0 + strip.height
+        out.alpha_composite(_cover(art, (x1 - x0, y1 - top)), (x0, top))
+        out.alpha_composite(self.frame(w, h), (0, 0))
+        return out
+
+    def banner_box(self, w: int, h: int) -> tuple[float, float, float, float]:
+        """Where the label goes on card_image(w, h), in chest px relative to the card."""
+        x0, y0, x1, y1 = self.inner(w, h)
+        bh = round((WC_BANNER[3] - WC_BANNER[1]) * self.k)
+        return x0 / self.S, y0 / self.S, x1 / self.S, (y0 + bh) / self.S

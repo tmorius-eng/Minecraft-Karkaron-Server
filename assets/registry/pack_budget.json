@@ -40,6 +40,7 @@
     "resourcepack/assets/suld/models/prop/silver_tree.json": "Meshy prop voxelised to a box model (tools/meshy); 43 KB zipped",
     "resourcepack/assets/suld/models/prop/stone_man.json": "Meshy prop voxelised to a box model (tools/meshy); 37 KB zipped",
     "resourcepack/assets/minecraft/textures/gui/container/inventory.png": "the HD survival inventory (owner's mock-up, 4x); a painted texture, PNG cannot shrink it further without losing the art",
-    "resourcepack/assets/suld/textures/font/gui/inventory_decor.png": "the inventory's spires, crest, banners and tassels (owner's mock-up, 4x), one glyph drawn through the screen title"
+    "resourcepack/assets/suld/textures/font/gui/inventory_decor.png": "the inventory's spires, crest, banners and tassels (owner's mock-up, 4x), one glyph drawn through the screen title",
+    "resourcepack/assets/suld/textures/font/gui/main.png": "the main menu's six HD cards in the owner's welcome-window style (4x, 176x126 GUI px)"
   }
 }
