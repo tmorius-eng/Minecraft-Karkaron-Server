@@ -57,7 +57,7 @@ class ContentDataTest {
         assertEquals(40, p.areas().size());
         assertEquals(10, p.dungeons().size());
         assertEquals(10, p.sites().size());
-        assertEquals(18, p.chapters().size());
+        assertEquals(42, p.chapters().size(), "Act I (18) + Act II (24)");
         assertEquals("khasar", p.models().get("mob.khasar"));
         assertEquals("dungeon.khasar_den", p.dungeons().get(0).id(), "the ladder starts at Хасарын Агуй");
     }
@@ -143,7 +143,7 @@ class ContentDataTest {
         assertTrue(r.ok(), r.issues()::toString);
         assertEquals(List.of("mobs.json"), overridden);
         assertEquals("Говийн Саарал Чоно", r.pack().mob("mob.goviin_chono").displayName());
-        assertEquals(18, r.pack().chapters().size(), "the other files are the bundled ones");
+        assertEquals(42, r.pack().chapters().size(), "the other files are the bundled ones");
     }
 
     @Test
@@ -187,5 +187,23 @@ class ContentDataTest {
         assertTrue(has(r, "sites.json", "is outside area.kherlen"), r.issues()::toString);
         ContentLoader.Result k = load(edited("sites.json", root -> list(root, "sites").get(1).put("kind", "CASTLE")));
         assertTrue(has(k, "sites.json", "sites[1].kind unknown value 'CASTLE'"), k.issues()::toString);
+    }
+
+    /** Every ladder dungeon's chapter comes right after its chapter gate, so no rung can lock its own chapter. */
+    @Test
+    void dungeonChaptersSitRightAfterTheirLadderGates() {
+        var chapters = Content.bundled().chapters();
+        for (var rung : mn.suld.api.balance.DungeonLadder.RUNGS) {
+            int at = -1;
+            for (int i = 0; i < chapters.size(); i++) {
+                if (chapters.get(i).type() == mn.suld.api.quest.QuestType.COMPLETE_DUNGEON && chapters.get(i).targetId().equals(rung.id())) at = i;
+            }
+            if (at < 0) {
+                assertEquals("dungeon.tengeriin_ordon", rung.id(), rung.id() + " has no chapter (only the raid after the story may)");
+                assertEquals(chapters.size() - 1, rung.chapterGate(), "the raid opens when the whole story is done");
+                continue;
+            }
+            assertEquals(rung.chapterGate() + 1, at, rung.id() + ": its chapter must come right after its gate (chapters done = gate + 1)");
+        }
     }
 }

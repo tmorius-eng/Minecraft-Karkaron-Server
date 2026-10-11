@@ -109,6 +109,16 @@ public final class HistoricSiteService {
         return out;
     }
 
+    /** Where a site stands (its x, z, and the base height once built), for the quest tracker. */
+    public java.util.Optional<Location> where(String id) {
+        for (Placed p : sites) {
+            if (!p.site().id().equals(id)) continue;
+            int[] b = built.get(id);
+            return java.util.Optional.of(new Location(Bukkit.getWorlds().get(0), p.x() + 0.5, b == null ? 80 : b[1], p.z() + 0.5));
+        }
+        return java.util.Optional.empty();
+    }
+
     /** The location of a site by its id (short or full), for staff teleports. */
     public Location location(String id) {
         for (Placed p : sites) {
@@ -247,6 +257,12 @@ public final class HistoricSiteService {
                 double reach = p.site().kind().radius() + 6;
                 Location l = pl.getLocation();
                 if (Math.abs(l.getX() - p.x()) > reach || Math.abs(l.getZ() - p.z()) > reach || Math.abs(l.getY() - b[1]) > 16) continue;
+                // a story chapter that sends the player here (Act II: DISCOVER_LOCATION with a site id) is done
+                var prof = services.profiles().cached(pl.getUniqueId()).orElse(null);
+                if (prof != null && p.site().id().equals(prof.questState().questId() == null ? null : services.quests()
+                        .definition(prof.questState().questId()).map(mn.suld.api.quest.QuestDefinition::targetId).orElse(null))) {
+                    services.quests().onRegion(pl, prof, p.site().id());
+                }
                 Set<String> seen = seen(pl);
                 if (seen.contains(p.site().id())) continue;
                 seen.add(p.site().id());

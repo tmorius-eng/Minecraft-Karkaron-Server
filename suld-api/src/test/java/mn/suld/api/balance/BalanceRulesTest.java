@@ -21,8 +21,8 @@ class BalanceRulesTest {
     void curveTotalsAboutTwoHundredHours() {
         LevelCurve design = new PolynomialLevelCurve(Balance.DESIGN_BASE, Balance.CURVE_EXP, 60);
         assertEquals(46_943_870L, CurveMigration.totalTo(design, 60), "the full design (ProposedRules)");
-        assertEquals(28_315_352L, CurveMigration.totalTo(V2, 60), 5, "live, tuned to today's content");
-        assertEquals(190, V2.expForLevel(1));
+        assertEquals(36_064_813L, CurveMigration.totalTo(V2, 60), 5, "live since Act II, tuned to today's content");
+        assertEquals(242, V2.expForLevel(1));
         assertEquals(0, V2.expForLevel(60));
     }
 

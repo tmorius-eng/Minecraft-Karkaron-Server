@@ -9,9 +9,9 @@ Status of everything below: **MANUAL_QA_REQUIRED** (bots and simulation, not yet
 
 ## Measured (quick simulate, `./gradlew :suld-plugin:simulate -Pquick`)
 
-* Live hardcore p50: **207 active hours to level 60**, against 196 h for the proposed design (5 % apart; L1 needs
-  180–220 h and ≤ 10 %). The live curve base is 190 (`Balance.CURVE_BASE`) because the live game has 18 story chapters
-  where the design has 42; Act II will move it back towards 315 (`Balance.DESIGN_BASE`).
+* Live hardcore p50: **201 active hours to level 60**, against 218 h for the proposed design (8 % apart; L1 needs
+  180–220 h and ≤ 10 %). With Act II (42 chapters) the live curve base is 242 (`Balance.CURVE_BASE`, curve version 3);
+  Act I alone used 190. The design's 315 (`Balance.DESIGN_BASE`) also counts band raids and a world boss.
 * Every proposed criterion C1–C13 passes, and every live criterion L1–L10 (`Sim.liveChecks`) passes: no dead levels,
   loot clamped to the band, coin sinks ≥ 60 %, a milestone on ≥ 90 % of the first 30 days, at most 40 % of the ladder
   at level 20, Ascension I reachable.
@@ -21,7 +21,8 @@ Status of everything below: **MANUAL_QA_REQUIRED** (bots and simulation, not yet
 
 | Part | Where |
 |---|---|
-| EXP curve 190·L^2.2, fair migration of old bars (config v5, `progression.legacy-curve`) | `Balance`, `CurveMigration`, `ProfileUpgrade`, `SuldPlugin.migrateConfig` |
+| EXP curve 242·L^2.2; old bars rescaled once, level kept (config v5 from 100·L^1.75, v6 from 190·L^2.2) | `Balance`, `CurveMigration`, `ProfileUpgrade`, `SuldPlugin.migrateConfig` |
+| The story: Act I (1–18) and Act II «Хөх Сүлдний Зам» (19–42): outer lands, historic sites, ladder dungeons 5–9 | `content/quests.json`, `QuestMenu` (two maps), `HistoricSiteService` |
 | Level-gap EXP, party share (alive, in range), capped boosts, catch-up, farm factor | `ExpRules`, `CombatListener` kill path, `ProgressionBoosts` |
 | Rested EXP pool (offline hours, capped) | `RestedPool`, `Endgame.restedExp` |
 | Mob numbers from level and tier; host swing speed; level-gap damage both ways | `MobScaling`, `MobDefinition.designed`, `CombatRules` |
@@ -44,7 +45,6 @@ Status of everything below: **MANUAL_QA_REQUIRED** (bots and simulation, not yet
 
 | Part | Why it waits | Stand-in today |
 |---|---|---|
-| Act II story (chapters 19–42) | content to write and build | 18 chapters; curve base 190 instead of 315 |
 | Heroic dungeon mode | needs the re-statted runs and their rewards | Тэнгэрийн Ордон clears count for the Ascension gates |
 | World boss | needs the world event, the arena and the boss | Ордон clears (Ascension III) |
 | Mastery tracks other than armour (combat, dungeon, boss, explore, craft, collect) | new trackers and storage | armour mastery stands in for the Ascension gates |

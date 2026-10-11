@@ -71,7 +71,7 @@ public final class QuestTracker implements Listener {
     /** The wild region an objective points at, if it has one. */
     public static Optional<RegionDefinition> targetRegion(QuestDefinition d) {
         String id = switch (d.type()) {
-            case DISCOVER_LOCATION -> d.targetId();
+            case DISCOVER_LOCATION -> d.targetId().startsWith("site.") ? siteRegion(d.targetId()) : d.targetId();
             case COMPLETE_DUNGEON -> DungeonContent.regionOf(d.targetId());
             case KILL_MOB -> regionWithMob(d.targetId());
             case COLLECT_ITEM -> regionDropping(d.targetId());
@@ -80,6 +80,13 @@ public final class QuestTracker implements Listener {
         if (id == null) return Optional.empty();
         for (RegionDefinition r : WorldContent.REGIONS) if (r.id().equals(id)) return Optional.of(r);
         return Optional.empty();
+    }
+
+    /** The region of a historic site's area. */
+    private static String siteRegion(String siteId) {
+        return mn.suld.plugin.content.Content.pack().historicSites().stream().filter(x -> x.id().equals(siteId)).findFirst()
+                .flatMap(x -> WorldContent.AREAS.stream().filter(a -> a.id().equals(x.areaId())).findFirst())
+                .map(mn.suld.api.region.Area::regionId).orElse(null);
     }
 
     private static String regionWithMob(String mobId) {
@@ -139,6 +146,19 @@ public final class QuestTracker implements Listener {
                 double gb = Navigation.bearing(gx, gz);
                 return head.append(Component.text("  " + Navigation.arrow(gb, Navigation.facing(l.getYaw())) + " ", NamedTextColor.AQUA, TextDecoration.BOLD))
                         .append(Component.text("⚔ " + name + " · " + Navigation.compass(gb) + " · " + gd + "м", NamedTextColor.WHITE, TextDecoration.BOLD));
+            }
+        }
+        if (d.type() == mn.suld.api.quest.QuestType.DISCOVER_LOCATION && d.targetId().startsWith("site.") && services.historicSites != null) {
+            // a historic-site chapter points at the site itself (docs/world/HISTORIC_SITES.md)
+            Location site = services.historicSites.where(d.targetId()).orElse(null);
+            if (site != null && site.getWorld().equals(l.getWorld())) {
+                double sx = site.getX() - l.getX(), sz = site.getZ() - l.getZ();
+                long sd = Math.round(Math.hypot(sx, sz));
+                String name = mn.suld.plugin.content.Content.pack().historicSites().stream().filter(x -> x.id().equals(d.targetId()))
+                        .findFirst().map(mn.suld.api.world.site.HistoricSite::name).orElse("Түүхэн газар");
+                double sb = Navigation.bearing(sx, sz);
+                return head.append(Component.text("  " + Navigation.arrow(sb, Navigation.facing(l.getYaw())) + " ", NamedTextColor.GOLD, TextDecoration.BOLD))
+                        .append(Component.text("✦ " + name + " · " + Navigation.compass(sb) + " · " + sd + "м", NamedTextColor.WHITE, TextDecoration.BOLD));
             }
         }
         RegionDefinition target = targetRegion(d).orElse(null);

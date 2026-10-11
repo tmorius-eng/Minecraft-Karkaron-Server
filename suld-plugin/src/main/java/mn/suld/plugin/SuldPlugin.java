@@ -377,6 +377,7 @@ public final class SuldPlugin extends JavaPlugin {
         // the historical places of the Mongol lands in the wild (content/sites.json, docs/world/HISTORIC_SITES.md)
         mn.suld.plugin.region.HistoricSiteService historicSites = new mn.suld.plugin.region.HistoricSiteService(this, services);
         historicSites.start();
+        services.historicSites = historicSites;
         worldCommand.sites(historicSites);
         pregen.start();
 
@@ -459,6 +460,7 @@ public final class SuldPlugin extends JavaPlugin {
     private void migrateConfig() {
         migrateToV4(getConfig().getInt("config-version", 1));
         if (getConfig().getInt("config-version", 1) < 5) migrateCurve();
+        if (getConfig().getInt("config-version", 1) < 6) migrateActTwoCurve();
     }
 
     /**
@@ -480,6 +482,23 @@ public final class SuldPlugin extends JavaPlugin {
                     + "Existing players keep their level; their bar is rescaled on their next login.");
         }
         getConfig().set("config-version", 5);
+        saveConfig();
+    }
+
+    /**
+     * v6, Act II: the live curve 190·L^2.2 becomes {@link mn.suld.api.balance.Balance#CURVE_BASE}·L^2.2 (the story grew
+     * from 18 to 42 chapters; the simulation keeps ≈ 200 h to level 60). A server that set its own curve keeps it.
+     * Stored bars on the 190 curve (curve version 2) are rescaled once when they next load.
+     */
+    private void migrateActTwoCurve() {
+        double base = getConfig().getDouble("progression.curve.base", mn.suld.api.balance.Balance.CURVE_V2_BASE);
+        double exp = getConfig().getDouble("progression.curve.exponent", mn.suld.api.balance.Balance.CURVE_EXP);
+        if (base == mn.suld.api.balance.Balance.CURVE_V2_BASE && exp == mn.suld.api.balance.Balance.CURVE_EXP) {
+            getConfig().set("progression.curve.base", mn.suld.api.balance.Balance.CURVE_BASE);
+            getLogger().warning("config.yml migrated to v6: level curve " + mn.suld.api.balance.Balance.CURVE_V2_BASE + "*L^2.2 -> "
+                    + mn.suld.api.balance.Balance.CURVE_BASE + "*L^2.2 (Act II). Existing players keep their level; their bar is rescaled on their next login.");
+        }
+        getConfig().set("config-version", 6);
         saveConfig();
     }
 

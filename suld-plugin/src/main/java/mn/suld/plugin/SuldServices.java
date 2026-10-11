@@ -327,6 +327,8 @@ public final class SuldServices {
     public volatile mn.suld.plugin.item.ClassArmor classArmor;
     /** Тэнгэрийн Зэрэг window and rite (set by SuldPlugin). */
     public volatile mn.suld.plugin.gui.AscensionMenu ascension;
+    /** The historic sites (set by SuldPlugin). */
+    public volatile mn.suld.plugin.region.HistoricSiteService historicSites;
 
     public mn.suld.plugin.item.ItemService itemService() {
         return itemService;

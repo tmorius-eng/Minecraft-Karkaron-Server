@@ -12,18 +12,23 @@ import java.util.Map;
  * @param ascension     Тэнгэрийн Зэрэг rank, 0..{@link mn.suld.api.balance.Ascension#MAX_RANK}
  * @param tengeriPoints Тэнгэрийн оноо: EXP earned at the level cap, spent on Ascension ranks
  * @param restedExp     rested-EXP pool (offline hours fill it, kills spend it)
- * @param curveVersion  the level curve the stored bar belongs to (1 = the old 100·L^1.75 curve, 2 = progression v2)
+ * @param curveVersion  the level curve the stored bar belongs to (1 = the old 100·L^1.75 curve, 2 = progression v2 at
+ *                      base 190, 3 = base 242 since Act II)
  * @param palaceClears  Тэнгэрийн Ордон clears (the Ascension II and III gates; absent in documents written before it)
  */
 public record Endgame(int ascension, long tengeriPoints, long restedExp, int curveVersion, int palaceClears) {
 
     public static final int VERSION = 1;
     public static final int CURVE_V2 = 2;
+    /** Act II: the live curve base 242 (Balance.CURVE_BASE). */
+    public static final int CURVE_V3 = 3;
+    /** The curve version of a bar earned today. */
+    public static final int CURVE_CURRENT = CURVE_V3;
 
     /** A row written before progression v2 (NULL column): its bar is on the old curve. */
     public static final Endgame LEGACY = new Endgame(0, 0, 0, 1, 0);
     /** A brand-new character. */
-    public static final Endgame FRESH = new Endgame(0, 0, 0, CURVE_V2, 0);
+    public static final Endgame FRESH = new Endgame(0, 0, 0, CURVE_CURRENT, 0);
 
     public Endgame {
         ascension = Math.max(0, Math.min(mn.suld.api.balance.Ascension.MAX_RANK, ascension));

@@ -310,6 +310,37 @@ public final class ContentLoader {
             dungeons.add(new DungeonDefinition(id, name, intIn(f, at, d, "minLevel", 1, 100, true, 1, issues), minParty, maxParty, waves, boss, loot));
         }
 
+        // ----------------------------------------------------------------------------------------------- sites
+        f = "sites.json";
+        List<mn.suld.api.world.site.HistoricSite> historic = new ArrayList<>();
+        List<Object> siteList = list(f, "", files.get(f), "sites", issues);
+        for (int i = 0; i < siteList.size(); i++) {
+            String at = "sites[" + i + "]";
+            Map<String, Object> st = obj(f, at, siteList.get(i), issues);
+            if (st == null) continue;
+            String id = str(f, at, st, "id", true, issues);
+            String name = str(f, at, st, "name", true, issues);
+            mn.suld.api.world.site.SiteKind kind = SkillTreeLoader.enumOf(mn.suld.api.world.site.SiteKind.class, str(f, at, st, "kind", true, issues), f, at + ".kind", issues);
+            String areaId = str(f, at, st, "area", true, issues);
+            String history = str(f, at, st, "history", true, issues);
+            double bearing = SkillTreeLoader.num(f, at, st, "bearing", 0, 360, issues);
+            double radius = SkillTreeLoader.num(f, at, st, "radius", 120, 4900, issues);
+            if (history != null && !HISTORY.contains(history)) issues.add(new Issue(f, at + ".history", "one of " + HISTORY));
+            if (id != null && historic.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
+            Area area = areaId == null ? null : areas.stream().filter(a -> a.id().equals(areaId)).findFirst().orElse(null);
+            if (areaId != null && area == null) issues.add(new Issue(f, at + ".area", "no area " + areaId + " in world.json"));
+            if (id == null || name == null || kind == null || area == null) continue;
+            try {
+                var site = new mn.suld.api.world.site.HistoricSite(id, name, kind, areaId, bearing, radius, history,
+                        st.get("description") instanceof String d ? d : "");
+                int[] o = site.offset();
+                if (!area.contains(o[0], o[1])) issues.add(new Issue(f, at, "bearing " + bearing + " / radius " + radius + " is outside " + areaId));
+                historic.add(site);
+            } catch (IllegalArgumentException e) {
+                issues.add(new Issue(f, at, e.getMessage()));
+            }
+        }
+
         // ---------------------------------------------------------------------------------------------- quests
         f = "quests.json";
         List<QuestDefinition> chapters = new ArrayList<>();
@@ -332,7 +363,10 @@ public final class ContentLoader {
             String missing = switch (type) {
                 case KILL_MOB -> mobs.containsKey(target) ? null : "no mob " + target + " in mobs.json";
                 case COMPLETE_DUNGEON -> dungeons.stream().anyMatch(x -> x.id().equals(target)) ? null : "no dungeon " + target + " in dungeons.json";
-                case DISCOVER_LOCATION -> regions.stream().anyMatch(x -> x.id().equals(target)) ? null : "no region " + target + " in world.json";
+                // a region (entering it) or a historic site (coming to it)
+                case DISCOVER_LOCATION -> target.startsWith("site.")
+                        ? historic.stream().anyMatch(x -> x.id().equals(target)) ? null : "no site " + target + " in sites.json"
+                        : regions.stream().anyMatch(x -> x.id().equals(target)) ? null : "no region " + target + " in world.json";
                 case COLLECT_ITEM -> itemExists == null || itemExists.test(target) ? null : "no item " + target + " in the item catalog";
                 case REACH_LEVEL -> count <= 100 ? null : "level " + count + " is above 100";
             };
@@ -341,7 +375,11 @@ public final class ContentLoader {
             int lv = switch (type) {
                 case REACH_LEVEL -> count;
                 case COMPLETE_DUNGEON -> dungeons.stream().filter(x -> x.id().equals(target)).findFirst().map(x -> x.minLevel() + 2).orElse(1);
-                case DISCOVER_LOCATION -> regions.stream().filter(x -> x.id().equals(target)).findFirst().map(RegionDefinition::minLevel).orElse(1);
+                case DISCOVER_LOCATION -> target.startsWith("site.")
+                        ? historic.stream().filter(x -> x.id().equals(target)).findFirst()
+                                .flatMap(x -> areas.stream().filter(a -> a.id().equals(x.areaId())).findFirst())
+                                .map(a -> (a.minLevel() + a.maxLevel()) / 2).orElse(1)
+                        : regions.stream().filter(x -> x.id().equals(target)).findFirst().map(RegionDefinition::minLevel).orElse(1);
                 case KILL_MOB -> mobs.containsKey(target) ? mobs.get(target).level() : 1;
                 case COLLECT_ITEM -> 2;
             };
@@ -393,37 +431,6 @@ public final class ContentLoader {
                         SkillTreeLoader.num(f, at, r, "expBonus", 0, 10, issues)));
             } catch (IllegalArgumentException | NullPointerException ex) {
                 issues.add(new Issue(f, at, String.valueOf(ex.getMessage())));
-            }
-        }
-
-        // ----------------------------------------------------------------------------------------------- sites
-        f = "sites.json";
-        List<mn.suld.api.world.site.HistoricSite> historic = new ArrayList<>();
-        List<Object> siteList = list(f, "", files.get(f), "sites", issues);
-        for (int i = 0; i < siteList.size(); i++) {
-            String at = "sites[" + i + "]";
-            Map<String, Object> st = obj(f, at, siteList.get(i), issues);
-            if (st == null) continue;
-            String id = str(f, at, st, "id", true, issues);
-            String name = str(f, at, st, "name", true, issues);
-            mn.suld.api.world.site.SiteKind kind = SkillTreeLoader.enumOf(mn.suld.api.world.site.SiteKind.class, str(f, at, st, "kind", true, issues), f, at + ".kind", issues);
-            String areaId = str(f, at, st, "area", true, issues);
-            String history = str(f, at, st, "history", true, issues);
-            double bearing = SkillTreeLoader.num(f, at, st, "bearing", 0, 360, issues);
-            double radius = SkillTreeLoader.num(f, at, st, "radius", 120, 4900, issues);
-            if (history != null && !HISTORY.contains(history)) issues.add(new Issue(f, at + ".history", "one of " + HISTORY));
-            if (id != null && historic.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
-            Area area = areaId == null ? null : areas.stream().filter(a -> a.id().equals(areaId)).findFirst().orElse(null);
-            if (areaId != null && area == null) issues.add(new Issue(f, at + ".area", "no area " + areaId + " in world.json"));
-            if (id == null || name == null || kind == null || area == null) continue;
-            try {
-                var site = new mn.suld.api.world.site.HistoricSite(id, name, kind, areaId, bearing, radius, history,
-                        st.get("description") instanceof String d ? d : "");
-                int[] o = site.offset();
-                if (!area.contains(o[0], o[1])) issues.add(new Issue(f, at, "bearing " + bearing + " / radius " + radius + " is outside " + areaId));
-                historic.add(site);
-            } catch (IllegalArgumentException e) {
-                issues.add(new Issue(f, at, e.getMessage()));
             }
         }
 

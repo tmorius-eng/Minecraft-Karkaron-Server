@@ -599,18 +599,28 @@ def gui_quests(preview: str | None) -> None:
         if preview:
             img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_quests.png"))
         return
+    _story_map(QUEST_SLOTS, QUEST_BANDS, "GUI_QUESTS", "gui/quests", "quests", True, preview)
+
+
+def _story_map(slots, bands, glyph: str, rel: str, title: str, camp: bool, preview: str | None) -> None:
+    """A procedural parchment story map: tinted lands around the chapter wells (soft Voronoi), a red-dashed road
+    chapter to chapter, bronze wells, a compass rose; the Kharkhorum camp in the middle row when {camp}."""
+    import math
+    import random
+    rows = 6
+    height = 17 + rows * 18 + 1
+    y0, y1 = 17, 17 + 5 * 18
     img = Image.new("RGBA", (176, height), LEATHER + (255,))
     px = img.load()
     rnd = random.Random(20261012)
-    y0, y1 = 17, 17 + 5 * 18
 
     def centre(r: int, c: int) -> tuple[int, int]:
         return 8 + c * 18 + 7, 18 + r * 18 + 7
 
     # parchment with land tints: each pixel takes the tint of the nearest chapter's region (soft Voronoi)
-    pts = [(centre(r, c), i) for i, (r, c) in enumerate(QUEST_SLOTS)]
+    pts = [(centre(r, c), i) for i, (r, c) in enumerate(slots)]
     def band(i: int) -> tuple:
-        for a, b, col in QUEST_BANDS:
+        for a, b, col in bands:
             if a <= i < b:
                 return col
         return PARCH
@@ -630,15 +640,16 @@ def gui_quests(preview: str | None) -> None:
     d = ImageDraw.Draw(img)
     # the middle row: the Orkhon valley and the Kharkhorum camp (a gold ger outline in the centre)
     my = 18 + 2 * 18
-    for x in range(4, 172):
+    for x in (range(4, 172) if camp else ()):
         yy = int(my + 8 + 2 * math.sin(x / 9.0))
         px[x, yy] = (84, 120, 168, 255)  # the river
     gx, gy = 88, my + 3
-    d.ellipse([gx - 7, gy - 1, gx + 7, gy + 9], outline=GOLD_D, fill=(236, 220, 180))
-    d.polygon([(gx - 8, gy + 2), (gx, gy - 6), (gx + 8, gy + 2)], outline=GOLD_D, fill=(214, 196, 150))
-    d.rectangle([gx - 1, gy + 4, gx + 1, gy + 9], fill=(150, 60, 40))
+    if camp:
+        d.ellipse([gx - 7, gy - 1, gx + 7, gy + 9], outline=GOLD_D, fill=(236, 220, 180))
+        d.polygon([(gx - 8, gy + 2), (gx, gy - 6), (gx + 8, gy + 2)], outline=GOLD_D, fill=(214, 196, 150))
+        d.rectangle([gx - 1, gy + 4, gx + 1, gy + 9], fill=(150, 60, 40))
     # the road: a red dashed line chapter to chapter
-    for (r0, c0), (r1, c1) in zip(QUEST_SLOTS, QUEST_SLOTS[1:]):
+    for (r0, c0), (r1, c1) in zip(slots, slots[1:]):
         (xa, ya), (xb, yb) = centre(r0, c0), centre(r1, c1)
         n = max(abs(xb - xa), abs(yb - ya))
         for i in range(n):
@@ -649,12 +660,12 @@ def gui_quests(preview: str | None) -> None:
             for dx, dy in ((0, 0), (1, 0), (0, 1)):
                 px[x + dx, y + dy] = (150, 36, 30, 255)
     # chapter wells: a bronze frame on darker parchment
-    for r, c in QUEST_SLOTS:
+    for r, c in slots:
         x, y = 8 + c * 18, 18 + r * 18
         d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=PARCH_D, outline=BRONZE)
         d.rectangle([x, y, x + 15, y + 15], outline=BRONZE_L)
     # compass rose (left of the middle row, clear of the road)
-    cx, cy = 22, my + 4
+    cx, cy = (22, my + 4) if camp else (8 + 7 * 18 + 7, 18 + 7)
     for i in range(-4, 5):
         px[cx + i, cy] = BRONZE + (255,)
         px[cx, cy + i] = BRONZE + (255,)
@@ -672,10 +683,33 @@ def gui_quests(preview: str | None) -> None:
         x, y = 8 + c * 18, 18 + 5 * 18
         d.rectangle([x - 1, y - 1, x + 16, y + 16], fill=(34, 24, 14), outline=BRONZE_L)
     d.rectangle([0, 0, 175, height - 1], outline=BRONZE)
-    add_bitmap("GUI_QUESTS", img, "gui/quests", height, 13, f"chest background quests 176x{height} (story map)")
+    add_bitmap(glyph, img, rel, height, 13, f"chest background {title} 176x{height} (story map)")
     if preview:
-        img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_quests.png"))
+        img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, rel.replace("/", "_") + ".png"))
 
+
+# Act II «Хөх Сүлдний Зам» (chapters 19-42): rows 4/3 east to west... a snake through the five rows
+QUEST2_SLOTS = [(4, 0), (3, 1), (4, 2), (3, 3), (4, 4), (3, 5), (4, 6), (3, 7), (4, 8),
+                (2, 8), (1, 7), (2, 6), (1, 5), (2, 4), (1, 3), (2, 2), (1, 1), (2, 0),
+                (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+# Хөвсгөл taiga, Зүүнгар sand, the far eastern steppe, Хэнтий forest, Алтай snow, the sacred finale (gold)
+QUEST2_BANDS = [(0, 4, (70, 110, 100)), (4, 10, (210, 176, 110)), (10, 15, (150, 170, 90)), (15, 18, (70, 100, 60)),
+                (18, 22, (200, 214, 222)), (22, 24, (226, 196, 112))]
+
+
+def gui_quests2(preview: str | None) -> None:
+    """Act II's story map: the owner's painted map (assets/art/source/gui_quests2.png or .webp, drawn on the QUEST2_SLOTS
+    layout) when present, else the procedural parchment."""
+    for name in ("gui_quests2.png", "gui_quests2.webp"):
+        art = os.path.join(ART, name)
+        if os.path.exists(art):
+            height = 17 + 6 * 18 + 1
+            img = Image.open(art).convert("RGBA").resize((176, height), Image.BOX)
+            add_bitmap("GUI_QUESTS2", img, "gui/quests2", height, 13, f"chest background quests act II 176x{height} (story map)")
+            if preview:
+                img.resize((176 * 4, height * 4), Image.NEAREST).save(os.path.join(preview, "gui_quests2.png"))
+            return
+    _story_map(QUEST2_SLOTS, QUEST2_BANDS, "GUI_QUESTS2", "gui/quests2", "quests act II", False, preview)
 
 TREE_COLORS = {
     "off": ((84, 62, 36), (50, 36, 20)),
@@ -824,6 +858,7 @@ def main() -> None:
     orb_item()
     gui_dungeons(args.preview)  # appended last: earlier glyphs keep their code points
     gui_quests(args.preview)
+    gui_quests2(args.preview)  # appended last: earlier glyphs keep their code points
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)

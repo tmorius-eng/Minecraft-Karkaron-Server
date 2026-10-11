@@ -37,6 +37,9 @@ direction from Kharkhorum (the map is compressed). Data: `suld-plugin/src/main/r
 * **Name plate** over each site (not saved with the chunk; respawned).
 * **First visit:** a title, the place's story and its label in chat, and a landmark's EXP
   (`Rewards.landmarkExp`, at least 60).
+* **Story:** Act II chapters send the player to sites (`DISCOVER_LOCATION` with a site id): the deer stones, the
+  Tangut tower, Дарьганга, Өглөгчийн Хэрэм, the Altai petroglyphs and the great ovoo of Бурхан Халдун; the tracker
+  points at the site and coming within reach finishes the chapter.
 * **Staff:** `/suldworld sites` lists them with coordinates and build state; `/suldworld site <id>` teleports.
 
 ## Protected ground in the overworld (VillageProtection)

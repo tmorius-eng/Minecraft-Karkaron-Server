@@ -31,10 +31,26 @@ class ProfileUpgradeTest {
         ProfileUpgrade.onLoad(p, OLD, NEW, now);
         assertEquals(30, p.progression().level());
         assertEquals(NEW.expForLevel(30) / 4.0, p.progression().expIntoLevel(), NEW.expForLevel(30) * 0.001);
-        assertEquals(Endgame.CURVE_V2, p.endgame().curveVersion());
+        assertEquals(Endgame.CURVE_CURRENT, p.endgame().curveVersion());
         long after = p.progression().expIntoLevel();
         ProfileUpgrade.onLoad(p, OLD, NEW, now); // a second load does not rescale again
         assertEquals(after, p.progression().expIntoLevel());
+    }
+
+    /** Act II: a bar on the 190 curve (version 2) is rescaled once to the current curve, level kept. */
+    @Test
+    void anActOneBarIsRescaledToTheActTwoCurveOnce() {
+        Instant now = Instant.parse("2026-10-11T00:00:00Z");
+        LevelCurve v2 = Balance.curveV2();
+        PlayerProfile p = stored(new Progression(45, v2.expForLevel(45) / 2), new Endgame(0, 0, 0, Endgame.CURVE_V2), now);
+        ProfileUpgrade.onLoad(p, OLD, NEW, now);
+        assertEquals(45, p.progression().level());
+        assertEquals(NEW.expForLevel(45) / 2.0, p.progression().expIntoLevel(), NEW.expForLevel(45) * 0.001);
+        assertEquals(Endgame.CURVE_V3, p.endgame().curveVersion());
+        assertTrue(NEW.expForLevel(45) > v2.expForLevel(45), "the Act II curve is longer");
+        long after = p.progression().expIntoLevel();
+        ProfileUpgrade.onLoad(p, OLD, NEW, now);
+        assertEquals(after, p.progression().expIntoLevel(), "only once");
     }
 
     @Test
