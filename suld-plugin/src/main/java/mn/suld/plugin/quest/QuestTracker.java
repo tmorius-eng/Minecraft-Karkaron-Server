@@ -142,6 +142,19 @@ public final class QuestTracker implements Listener {
         double dx = l.getX() - spawn.getX(), dz = l.getZ() - spawn.getZ();
         RegionDefinition here = regions.at(dx, dz).orElse(null);
         if (here != null && here.id().equals(target.id())) {
+            // in the right region: a kill chapter points at the nearest prey (they spawn around the player)
+            if (d.type() == mn.suld.api.quest.QuestType.KILL_MOB) {
+                org.bukkit.entity.Entity prey = nearestPrey(p, d.targetId());
+                var def = SuldContent.mobFor(d.targetId());
+                String name = def == null ? "Бай" : def.displayName();
+                if (prey != null) {
+                    double px = prey.getLocation().getX() - l.getX(), pz = prey.getLocation().getZ() - l.getZ();
+                    double pb = Navigation.bearing(px, pz);
+                    return head.append(Component.text("  " + Navigation.arrow(pb, Navigation.facing(l.getYaw())) + " ", NamedTextColor.RED, TextDecoration.BOLD))
+                            .append(Component.text("⚔ " + name + " · " + Math.round(Math.hypot(px, pz)) + "м", NamedTextColor.WHITE, TextDecoration.BOLD));
+                }
+                return head.append(Component.text("  ✔ " + target.displayName() + " — " + name + " ойролцоо гарч ирнэ, хүлээ", NamedTextColor.GREEN, TextDecoration.BOLD));
+            }
             return head.append(Component.text("  ✔ " + target.displayName() + " — энд байна", NamedTextColor.GREEN, TextDecoration.BOLD));
         }
         double[] w = Navigation.waypoint(target.shape());
@@ -150,6 +163,22 @@ public final class QuestTracker implements Listener {
         long dist = Math.round(Math.hypot(tx, tz));
         return head.append(Component.text("  " + Navigation.arrow(bearing, Navigation.facing(l.getYaw())) + " ", NamedTextColor.AQUA, TextDecoration.BOLD))
                 .append(Component.text(target.displayName() + " · " + Navigation.compass(bearing) + " · " + dist + "м", NamedTextColor.WHITE, TextDecoration.BOLD));
+    }
+
+    /** The closest living SÜLD mob of {@code mobId} within 64 blocks, or null. */
+    private org.bukkit.entity.Entity nearestPrey(Player p, String mobId) {
+        org.bukkit.entity.Entity best = null;
+        double bd = Double.MAX_VALUE;
+        for (org.bukkit.entity.Entity e : p.getNearbyEntities(64, 32, 64)) {
+            if (!(e instanceof org.bukkit.entity.LivingEntity le) || le.isDead()) continue;
+            if (!mobId.equals(services.mobs().mobId(e).orElse(null))) continue;
+            double dd = e.getLocation().distanceSquared(p.getLocation());
+            if (dd < bd) {
+                bd = dd;
+                best = e;
+            }
+        }
+        return best;
     }
 
     /** Id of the wild region at the player's feet, or null (city, outside the map). */

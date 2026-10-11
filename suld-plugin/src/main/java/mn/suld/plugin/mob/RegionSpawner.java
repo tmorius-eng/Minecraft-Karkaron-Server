@@ -26,6 +26,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * steppe gets mobs of the region they stand in, up to {@code world.region-mobs-per-player}, 18–34 blocks away on
  * the surface. Never inside or next to the city, never for players in a dungeon run or in creative/spectator.
  * Within 450 blocks of the plaza most spawns are level-2 Govi wolves (the first quest's prey) in every direction.
+ * A player whose story chapter asks for kills of one of the region's mobs gets that mob for half the spawns, so the
+ * prey of the chapter is always there to find.
  * Region mobs stay hostile (vanilla wolves calm down), are removed if they wander to the city, and despawn when
  * nobody is near.
  */
@@ -89,9 +91,11 @@ public final class RegionSpawner {
                 // so new players find level-appropriate mobs whatever the world's terrain is.
                 Location c = at.getWorld().getSpawnLocation();
                 double dist = Math.hypot(at.getX() - c.getX(), at.getZ() - c.getZ());
-                String id = dist < OUTSKIRTS && ThreadLocalRandom.current().nextDouble() < 0.6
-                        ? SuldContent.GOVIIN_CHONO.id()
-                        : region.mobIds().get(ThreadLocalRandom.current().nextInt(region.mobIds().size()));
+                String wanted = questPrey(p, region);
+                String id;
+                if (wanted != null && ThreadLocalRandom.current().nextDouble() < 0.5) id = wanted;
+                else if (wanted == null && dist < OUTSKIRTS && ThreadLocalRandom.current().nextDouble() < 0.6) id = SuldContent.GOVIIN_CHONO.id();
+                else id = region.mobIds().get(ThreadLocalRandom.current().nextInt(region.mobIds().size()));
                 MobDefinition def = SuldContent.mobFor(id);
                 if (def == null) continue;
                 LivingEntity mob = services.mobs().spawn(def, at);
@@ -106,17 +110,30 @@ public final class RegionSpawner {
         }
     }
 
-    /** A surface spot 18–34 blocks from the player, in a loaded chunk, on solid dry ground, away from the city. */
+    /** The mob the player's active story chapter asks to kill, if this region spawns it; else null. */
+    private String questPrey(Player p, RegionDefinition region) {
+        var pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null || !pr.questState().active()) return null;
+        var d = services.quests().definition(pr.questState().questId()).orElse(null);
+        if (d == null || d.type() != mn.suld.api.quest.QuestType.KILL_MOB) return null;
+        return region.mobIds().contains(d.targetId()) ? d.targetId() : null;
+    }
+
+    /**
+     * A surface spot 18–34 blocks from the player, in a loaded chunk, on solid dry ground, away from the city. The
+     * ground is the highest block ignoring leaves: in a forest the old top-block search put mobs on the canopy (or
+     * found no spot at all), so a chapter's prey never showed up under the trees.
+     */
     private Location spot(Player p) {
         ThreadLocalRandom r = ThreadLocalRandom.current();
         World w = p.getWorld();
-        for (int attempt = 0; attempt < 6; attempt++) {
+        for (int attempt = 0; attempt < 14; attempt++) { // rivers and lakes: more tries before giving up
             double a = r.nextDouble(Math.PI * 2), d = 18 + r.nextDouble(16);
             int x = (int) Math.floor(p.getLocation().getX() + Math.cos(a) * d);
             int z = (int) Math.floor(p.getLocation().getZ() + Math.sin(a) * d);
             if (!w.isChunkLoaded(x >> 4, z >> 4)) continue;
             if (services.city().near(w.getName(), x, z, CITY_MARGIN)) continue;
-            Block ground = w.getHighestBlockAt(x, z);
+            Block ground = w.getHighestBlockAt(x, z, org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES);
             if (!ground.getType().isSolid() || ground.isLiquid()) continue;
             Block feet = ground.getRelative(0, 1, 0), head = ground.getRelative(0, 2, 0);
             if (!feet.isPassable() || !head.isPassable() || feet.isLiquid()) continue;
