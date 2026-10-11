@@ -74,8 +74,14 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
         return regions.at(l.getX() - c.getX(), l.getZ() - c.getZ());
     }
 
+    /**
+     * Players the wild leaves alone for now: the combat verification suite (SkillQa) measures on a sky arena that lies
+     * in the outer lands, where a level-50 mob would otherwise spawn next to the player under test.
+     */
+    public static final java.util.Set<java.util.UUID> SUPPRESSED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     private boolean eligible(Player p) {
-        return p.isValid() && !p.isDead() && (p.getGameMode() == GameMode.SURVIVAL || p.getGameMode() == GameMode.ADVENTURE)
+        return p.isValid() && !SUPPRESSED.contains(p.getUniqueId()) && !p.isDead() && (p.getGameMode() == GameMode.SURVIVAL || p.getGameMode() == GameMode.ADVENTURE)
                 && p.getWorld().equals(Bukkit.getWorlds().get(0)) // the overworld only: not the dungeon halls
                 && !services.dungeons().isInAnyRun(p.getUniqueId())
                 && !services.city().near(p.getWorld().getName(), p.getLocation().getBlockX(), p.getLocation().getBlockZ(), CITY_MARGIN);

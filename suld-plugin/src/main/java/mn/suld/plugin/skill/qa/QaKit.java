@@ -74,6 +74,49 @@ final class QaKit {
 
     final java.util.Set<UUID> dummyIds = new java.util.HashSet<>();
     final DamageCounter counter = new DamageCounter();
+    final PlayerGuard guard = new PlayerGuard();
+    /** Told when a hit would have killed the QA player (the hit is cancelled instead; the run records a failure). */
+    java.util.function.Consumer<String> onLethal = msg -> { };
+    /** Damage of the last dummy hit on the player before absorption: what arrived after every SÜLD modifier. */
+    double lastHitOnPlayer;
+
+    /**
+     * Keeps the QA player a measurable, living character. Only our dummies may hurt them: a stray wild mob, fire or a
+     * fall is no measurement. A hit that would kill is cancelled and reported, because a dead player becomes a soul
+     * (DeathService) who can neither hit nor cast, and every later check would read 0.
+     */
+    final class PlayerGuard implements Listener {
+        @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+        public void onAnyDamage(EntityDamageEvent e) {
+            if (!e.getEntity().getUniqueId().equals(p.getUniqueId())) return;
+            if (!fromDummy(e)) e.setCancelled(true);
+        }
+
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        public void onLethal(EntityDamageEvent e) {
+            if (!e.getEntity().getUniqueId().equals(p.getUniqueId())) return;
+            if (e.getFinalDamage() >= p.getHealth()) {
+                e.setCancelled(true);
+                onLethal.accept(e.getCause() + " hit of " + String.format(java.util.Locale.ROOT, "%.2f", e.getFinalDamage())
+                        + " at " + String.format(java.util.Locale.ROOT, "%.2f", p.getHealth()) + " health");
+            }
+        }
+
+        @SuppressWarnings("deprecation") // the ABSORPTION modifier is the only way to read what absorption soaked
+        @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+        public void onTaken(EntityDamageEvent e) {
+            if (!e.getEntity().getUniqueId().equals(p.getUniqueId())) return;
+            double absorbed = e.isApplicable(EntityDamageEvent.DamageModifier.ABSORPTION) ? e.getDamage(EntityDamageEvent.DamageModifier.ABSORPTION) : 0;
+            lastHitOnPlayer = e.getFinalDamage() - absorbed;
+        }
+
+        private boolean fromDummy(EntityDamageEvent e) {
+            if (!(e instanceof org.bukkit.event.entity.EntityDamageByEntityEvent ev)) return false;
+            org.bukkit.entity.Entity src = ev.getDamager();
+            if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof org.bukkit.entity.Entity shooter) src = shooter;
+            return dummyIds.contains(src.getUniqueId());
+        }
+    }
     final double[][] slot;       // where each dummy stands (x, z relative to the origin)
     private final Deque<Object> steps = new ArrayDeque<>();
     private int waiting;
@@ -91,6 +134,7 @@ final class QaKit {
         this.origin = new Location(world, 3000.5, 200, 3000.5, 0f, 0f);
         this.slot = new double[dummyCount][2];
         Bukkit.getPluginManager().registerEvents(counter, plugin);
+        Bukkit.getPluginManager().registerEvents(guard, plugin);
     }
 
     // ------------------------------------------------------------------ sequencer
@@ -108,8 +152,11 @@ final class QaKit {
         this.whenDone = done;
         running = true;
         new BukkitRunnable() {
+            int ticks;
+
             @Override
             public void run() {
+                if (++ticks % 100 == 0) purgeMonsters(); // a wild mob that walked or spawned in since the last sweep
                 if (!p.isOnline()) {
                     steps.clear();
                     cancel();
@@ -162,6 +209,8 @@ final class QaKit {
             }
         }
         CombatFeedback.quiet = true;
+        // the arena lies in the outer lands (progression v2): the region spawner would bring level-50 mobs to the player
+        mn.suld.plugin.mob.RegionSpawner.SUPPRESSED.add(p.getUniqueId());
         // an open sky arena at night spawns real monsters that would kill the player and pollute every measurement
         spawnRule = world.getGameRuleValue(org.bukkit.GameRule.SPAWN_MONSTERS);
         world.setGameRule(org.bukkit.GameRule.SPAWN_MONSTERS, false);
@@ -178,10 +227,11 @@ final class QaKit {
     private boolean stormWas;
     private int clearWeatherWas;
 
-    /** Removes every monster (not our dummies) near the arena. */
+    /** Removes every monster and every SÜLD mob (a world event's raiders are wolves) near the arena, except our dummies. */
     void purgeMonsters() {
         for (var e : world.getNearbyEntities(origin, 80, 40, 80)) {
-            if (e instanceof org.bukkit.entity.Monster m && !dummyIds.contains(m.getUniqueId())) m.remove();
+            if (!(e instanceof LivingEntity le) || e instanceof Player || dummyIds.contains(e.getUniqueId())) continue;
+            if (le instanceof org.bukkit.entity.Monster || services.mobs().isSuldMob(le)) le.remove();
         }
     }
 
@@ -189,6 +239,8 @@ final class QaKit {
 
     void clearArena() {
         CombatFeedback.quiet = false;
+        mn.suld.plugin.mob.RegionSpawner.SUPPRESSED.remove(p.getUniqueId());
+        org.bukkit.event.HandlerList.unregisterAll(guard);
         if (spawnRule != null) world.setGameRule(org.bukkit.GameRule.SPAWN_MONSTERS, spawnRule);
         world.setClearWeatherDuration(clearWeatherWas);
         if (stormWas) world.setStorm(true);
@@ -340,11 +392,28 @@ final class QaKit {
         return deficit(d) - before;
     }
 
-    /** One hit on the player from a mob, through the normal damage pipeline; returns the health lost. */
-    double hurtPlayer(double amount, LivingEntity source) {
+    /**
+     * One hit on the player from a dummy, through the normal damage pipeline; returns the health (and absorption) lost.
+     * The amount is the mob's own: CombatListener replaces whatever a SÜLD mob's hit asks for with its designed attack
+     * ({@link #rawHit}), so there is no amount to pass.
+     */
+    double hurtPlayer(LivingEntity source) {
         p.setNoDamageTicks(0);
+        lastHitOnPlayer = 0;
         double before = p.getHealth() + p.getAbsorptionAmount();
-        p.damage(amount, source);
+        p.damage(1.0, source);
         return before - (p.getHealth() + p.getAbsorptionAmount());
+    }
+
+    /** What a SÜLD mob's melee hit on the QA player is before any defence (CombatListener.onMobHitsPlayer). */
+    double rawHit(LivingEntity source) {
+        mn.suld.api.mob.MobDefinition def = services.mobs().mobId(source).map(SuldContent::mobFor).orElseThrow();
+        return def.scaledAttack() * mn.suld.api.balance.MobScaling.hitScale(def.backingEntity(), false)
+                * mn.suld.api.balance.CombatRules.gapTaken(def.level() - pr.progression().level());
+    }
+
+    /** Level of a dummy (the attacker level that SÜLD armour is measured against). */
+    int levelOf(LivingEntity source) {
+        return services.mobs().mobId(source).map(SuldContent::mobFor).orElseThrow().level();
     }
 }
