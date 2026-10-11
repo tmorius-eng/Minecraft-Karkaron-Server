@@ -94,6 +94,7 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(combatFeel, this);
         combatFeel.start();
         services.hud().lockOn(combatFeel::target);
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.combat.DodgeService(services), this);
         services.styles().onChange(p -> services.hud().teamChanged(p));
         effects = new mn.suld.plugin.style.CosmeticEffects(this, services);
         getServer().getPluginManager().registerEvents(effects, this);
