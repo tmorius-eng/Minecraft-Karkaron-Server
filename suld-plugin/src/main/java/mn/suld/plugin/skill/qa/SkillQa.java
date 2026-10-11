@@ -240,6 +240,15 @@ public final class SkillQa {
             return String.format(Locale.ROOT, "%.4g", v);
         }
 
+        /** Sum of the player's add-to-base-share modifiers of an attribute (what a further share is added to). */
+        double scalarSum(Attribute a) {
+            var inst = p.getAttribute(a);
+            if (inst == null) return 0;
+            double sum = 0;
+            for (var m : inst.getModifiers()) if (m.getOperation() == org.bukkit.attribute.AttributeModifier.Operation.ADD_SCALAR) sum += m.getAmount();
+            return sum;
+        }
+
         double attr(Attribute a) {
             var inst = p.getAttribute(a);
             return inst == null ? 0 : inst.getValue();
@@ -740,7 +749,9 @@ public final class SkillQa {
                         "worn +" + EffectNum.n(armor) + ", broken +0 (worn " + EffectNum.n(worn) + ")", near(worn - base, armor, 0.05) && near(broken, base, 0.05));
 
                 var high = testItem("armor.khaany.helmet"); // level 50
+                // class health grows with the level (CombatRules.classHealth): compare with and without the helmet at each level
                 pr.progression(new Progression(30, 0));
+                st.equipmentChanged(p);
                 double lowBase = attr(Attribute.MAX_HEALTH);
                 put(mn.suld.api.item.EquipSlot.HEAD, high);
                 double lowWorn = attr(Attribute.MAX_HEALTH);
@@ -748,9 +759,10 @@ public final class SkillQa {
                 st.equipmentChanged(p);
                 double highWorn = attr(Attribute.MAX_HEALTH);
                 put(mn.suld.api.item.EquipSlot.HEAD, null);
+                double highBase = attr(Attribute.MAX_HEALTH);
                 double hp = mn.suld.api.item.Equipment.itemStats(services.itemService().catalog(), high).get(mn.suld.api.item.ItemStat.MAX_HEALTH);
-                check("item.gate.level", "item", "a level-50 helmet at level 30 gives nothing, at level 60 it does", "max health at 30 / at 60",
-                        lowWorn - lowBase, highWorn - lowBase, "0 / +" + EffectNum.n(hp), near(lowWorn, lowBase, 0.01) && near(highWorn - lowBase, hp, 0.01));
+                check("item.gate.level", "item", "a level-50 helmet at level 30 gives nothing, at level 60 it does", "max health it adds at 30 / at 60",
+                        lowWorn - lowBase, highWorn - highBase, "0 / +" + EffectNum.n(hp), near(lowWorn, lowBase, 0.01) && near(highWorn - highBase, hp, 0.01));
 
                 var foreign = testItem("weapon.class.mergen.1");
                 double atk0 = atk();
@@ -828,7 +840,10 @@ public final class SkillQa {
                 });
                 case MOVE_PCT -> k.add(() -> {
                     double[] x = beforeAfter(c, t, () -> attr(Attribute.MOVEMENT_SPEED));
-                    check(id, category, what, "movement speed", x[0], x[1], "x" + EffectNum.n(1 + v / 100), near(x[1] / x[0] - 1, v / 100, 0.002));
+                    // speed bonuses add up as shares of the base (gear may already give some): x (1 + a + v) / (1 + a)
+                    double a = scalarSum(Attribute.MOVEMENT_SPEED); // beforeAfter leaves the toggle off: the "before" state
+                    double want = (1 + a + v / 100) / (1 + a);
+                    check(id, category, what, "movement speed", x[0], x[1], "x" + EffectNum.n(want), near(x[1] / x[0], want, 0.002));
                 });
                 case ARMOR -> k.add(() -> {
                     single(2);
@@ -868,8 +883,17 @@ public final class SkillQa {
                 });
                 case SPELL_DAMAGE -> {
                     Spell s = probeSpell(c);
-                    double want = (1 + v / 100) * (1 + atkOnNode / 100);
+                    // spell damage adds to one multiplier with the class's own bonus (Бөө +25 %, CombatRules.spellPassive)
+                    // and the player's gear: the node raises that sum by v %, so the hit grows by (m0 + v/100) / m0
+                    double[] m0 = new double[1];
+                    k.add(() -> {
+                        k.setClass(c);
+                        k.unlearn();
+                        t.off();
+                        m0[0] = st.spellDamageMultiplier(p);
+                    });
                     spellCompare(c, t, s, 20, false, (b, a) -> {
+                        double want = (m0[0] + v / 100) / m0[0] * (1 + atkOnNode / 100);
                         boolean ok = b.perApplication > 0 && near(a.perApplication / b.perApplication, want, 0.02);
                         check(id, category, what, "damage per spell hit (" + s.displayName() + ")", b.perApplication, a.perApplication,
                                 "x" + EffectNum.n(want) + (atkOnNode > 0 ? " (spell damage +" + EffectNum.n(v) + "% and attack +" + EffectNum.n(atkOnNode) + "% on this node)" : ""), ok,
