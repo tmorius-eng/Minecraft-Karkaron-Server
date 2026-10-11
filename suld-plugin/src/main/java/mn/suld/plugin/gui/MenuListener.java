@@ -80,7 +80,7 @@ public final class MenuListener implements Listener {
     }
 
     /** Menu clicks faster than a person (ChestStealer, AutoShop, InventoryCleaner): dropped; staff hear it once a minute. */
-    private final mn.suld.plugin.anticheat.ClickRate clicks = new mn.suld.plugin.anticheat.ClickRate(10, 10);
+    private final mn.suld.plugin.anticheat.TokenBucket clicks = new mn.suld.plugin.anticheat.TokenBucket(10, 10);
     private final java.util.Map<java.util.UUID, Long> clickReported = new java.util.concurrent.ConcurrentHashMap<>();
 
     private void reportFastClicks(Player p) {

@@ -141,7 +141,13 @@ public final class HorseService implements Listener, TabExecutor {
             horse.getPersistentDataContainer().set(key, PersistentDataType.STRING, p.getUniqueId().toString());
         });
         horses.put(p.getUniqueId(), h.getUniqueId());
-        h.addPassenger(p);
+        // seat the rider a tick later: a vehicle that appears and carries the player in the same tick reaches the
+        // client (and the anticheat's vehicle prediction) out of order
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!h.isValid() || !p.isOnline() || p.isInsideVehicle() || !h.getUniqueId().equals(horses.get(p.getUniqueId()))) return;
+            services.movement.exempt(p, 20, "horse mount", mn.suld.plugin.anticheat.MovementExemptions.Kind.MOUNT);
+            h.addPassenger(p);
+        }, 1L);
         p.playSound(p.getLocation(), Sound.ENTITY_HORSE_AMBIENT, 1f, 1f);
         p.getWorld().spawnParticle(Particle.CLOUD, h.getLocation().add(0, 1, 0), 20, 0.5, 0.4, 0.5, 0.02);
         services.hud().toast(p, Component.text("Монгол морь · " + rank.displayName() + " · /mori — буух", TextColor.fromHexString("#FFD24A")));
@@ -161,8 +167,16 @@ public final class HorseService implements Listener, TabExecutor {
         if (hid == null) return;
         Entity e = Bukkit.getEntity(hid);
         if (e != null) {
+            // the rider gets off first and the horse goes a tick later: removing a vehicle under its rider is a
+            // dismount the client learns about only after it already moved with the horse
+            Player p = Bukkit.getPlayer(rider);
+            if (p != null && e.getPassengers().contains(p)) {
+                services.movement.exempt(p, 20, "horse dismount", mn.suld.plugin.anticheat.MovementExemptions.Kind.MOUNT);
+                e.removePassenger(p);
+            }
             e.getWorld().spawnParticle(Particle.CLOUD, e.getLocation().add(0, 1, 0), 15, 0.5, 0.4, 0.5, 0.02);
-            e.remove();
+            if (plugin.isEnabled()) Bukkit.getScheduler().runTaskLater(plugin, e::remove, 1L);
+            else e.remove();
         }
     }
 
@@ -173,6 +187,7 @@ public final class HorseService implements Listener, TabExecutor {
     @EventHandler
     public void onDismount(EntityDismountEvent e) {
         if (e.getEntity() instanceof Player p && isSteppeHorse(e.getDismounted())) {
+            services.movement.exempt(p, 20, "horse dismount", mn.suld.plugin.anticheat.MovementExemptions.Kind.MOUNT);
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (!p.isInsideVehicle()) dismiss(p.getUniqueId());
             }, 20L);

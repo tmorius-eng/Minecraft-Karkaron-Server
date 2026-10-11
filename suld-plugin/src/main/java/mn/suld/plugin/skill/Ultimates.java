@@ -267,7 +267,7 @@ final class Ultimates {
                     }
                     step = 0;
                     hit.clear();
-                    services.movement.launch(p, SkillService.flat(p).multiply(1.7).setY(0.1), "ultimate dash");
+                    services.movement.launch(p, SkillService.flat(p).multiply(1.7).setY(0.1), "ultimate dash", mn.suld.plugin.anticheat.MovementExemptions.DASH_TICKS);
                     p.getWorld().playSound(p.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1.3f);
                 }
                 step++;

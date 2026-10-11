@@ -5,18 +5,22 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A token bucket per player for clicks in SÜLD menus (shops, cosmetics, the skill tree). Grim does not time inventory
- * clicks, and the cheat clients' ChestStealer / InventoryCleaner / AutoShop / ItemScroller modules click a whole menu
- * within a tick. A person clicks a few times a second: {@code burst} clicks pass at once, then {@code perSecond};
- * anything faster is dropped (the click is already cancelled, so nothing in the menu happens).
+ * A token bucket per player: {@code burst} at once, then {@code perSecond}. Used twice:
+ * <ul>
+ *   <li>clicks in SÜLD menus (shops, cosmetics, the skill tree). Grim does not time inventory clicks, and the cheat
+ *       clients' ChestStealer / InventoryCleaner / AutoShop / ItemScroller modules click a whole menu within a tick;
+ *       a person clicks a few times a second, anything faster is dropped;</li>
+ *   <li>the anticheat bridge's forgiveness budget ({@link GrimBridge}): however often a player triggers SÜLD
+ *       movement, only so many Grim flags are forgiven, so a cheat cannot hide inside back-to-back SÜLD windows.</li>
+ * </ul>
  */
-public final class ClickRate {
+public final class TokenBucket {
 
     private final double burst;
     private final double perSecond;
     private final Map<UUID, double[]> buckets = new ConcurrentHashMap<>(); // {tokens, last millis, dropped}
 
-    public ClickRate(double burst, double perSecond) {
+    public TokenBucket(double burst, double perSecond) {
         this.burst = burst;
         this.perSecond = perSecond;
     }

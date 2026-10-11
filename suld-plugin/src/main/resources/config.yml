@@ -294,11 +294,20 @@ cosmetics:
   coin-max-rarity: COMMON
 
 # Anticheat (docs/ANTICHEAT.md). GrimAC runs as its own plugin and judges every player; SÜLD only tells it which
-# movements SÜLD itself made: for a short window after a SÜLD dash/leap/dodge (40 ticks), while seated on the sky skill
-# tree, and 10 ticks after a lock-on camera turn, a flag from one of exempt-checks is cancelled. Movement checks only:
-# never list combat (Reach, Hitboxes, Aim*, KillAura...), packet (BadPackets*, PacketOrder*, Crash*, Timer) or world
+# movements SÜLD itself made: for a short window after a SÜLD dash/leap/dodge (40 ticks + two pings), while seated on
+# the sky skill tree, a flag from one of exempt-checks is cancelled; the lock-on and horse lists below work the same
+# way for their own windows. Movement checks only (and the two aim heuristics during lock-on):
+# never list combat (Reach, Hitboxes, Interact, other Aim checks), packet (BadPackets*, PacketOrder*, Crash*, Timer) or world
 # (FastBreak, Scaffold/place) checks. /suld grim shows what was forgiven; /suld grim reset clears the counts.
 anticheat:
   grim:
     enabled: true
     exempt-checks: [Simulation, GroundSpoof, NoFall, Phase]
+    # While lock-on turns the camera (Player#setRotation, 10 ticks): the server aims, so aim heuristics mean nothing.
+    lock-on-exempt-checks: [AimModulo360, AimDuplicateLook]
+    # 20 ticks after getting on or off a SÜLD horse (the vehicle appears or goes away under the rider).
+    mount-exempt-checks: [Simulation, GroundSpoof, NoFall, VehicleA, VehicleB, VehicleC]
+    # Forgiveness budget per player: at most budget-burst flags at once, then budget-per-second. An honest dash costs a
+    # handful; a Fly/Speed client that keeps casting SÜLD movement to hide inside the windows runs dry in seconds.
+    budget-burst: 60
+    budget-per-second: 6

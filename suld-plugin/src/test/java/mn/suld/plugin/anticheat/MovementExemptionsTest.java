@@ -53,6 +53,39 @@ class MovementExemptionsTest {
     }
 
     @Test
+    void eachKindHasItsOwnWindow() {
+        AtomicLong now = new AtomicLong();
+        MovementExemptions m = new MovementExemptions(now::get);
+        UUID a = UUID.randomUUID();
+        m.exempt(a, 40, "leap");
+        m.exempt(a, 10, "lock-on", MovementExemptions.Kind.LOCKON);
+        now.addAndGet(5 * TICK);
+        assertEquals("leap", m.window(a, MovementExemptions.Kind.MOVE).reason());
+        assertEquals("lock-on", m.window(a, MovementExemptions.Kind.LOCKON).reason()); // a leap does not hide the lock-on
+        assertNull(m.window(a, MovementExemptions.Kind.MOUNT));
+        now.addAndGet(10 * TICK);
+        assertNull(m.window(a, MovementExemptions.Kind.LOCKON));
+        assertEquals("leap", m.active(a));
+    }
+
+    @Test
+    void theSeatHoldIsAMoveWindowOnly() {
+        MovementExemptions m = new MovementExemptions(() -> 0L);
+        UUID a = UUID.randomUUID();
+        m.hold(a, "sky tree seat");
+        assertEquals("sky tree seat", m.window(a, MovementExemptions.Kind.MOVE).reason());
+        assertNull(m.window(a, MovementExemptions.Kind.LOCKON));
+    }
+
+    @Test
+    void windowsGrowWithPingUpToTheCap() {
+        assertEquals(40, MovementExemptions.withPing(40, 0));
+        assertEquals(44, MovementExemptions.withPing(40, 100));   // two pings of 100 ms = 4 ticks
+        assertEquals(80, MovementExemptions.withPing(40, 5_000)); // capped at +40
+        assertEquals(10, MovementExemptions.withPing(10, -1));
+    }
+
+    @Test
     void forgetDropsEverything() {
         MovementExemptions m = new MovementExemptions(() -> 0L);
         UUID a = UUID.randomUUID();

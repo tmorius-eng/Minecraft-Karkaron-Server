@@ -402,6 +402,9 @@ public final class SkillTreeService implements Listener {
         if (inst == null) return;
         NamespacedKey k = key(id);
         AttributeModifier old = inst.getModifier(k);
+        // unchanged: leave it (a re-add sends an attribute update to the client on every hotbar scroll, and the
+        // anticheat then re-syncs the player's speed mid-sprint for nothing)
+        if (old == null ? amount == 0 : old.getAmount() == amount && old.getOperation() == op) return;
         if (old != null) inst.removeModifier(old);
         if (amount != 0) inst.addTransientModifier(new AttributeModifier(k, amount, op));
     }
@@ -1131,8 +1134,21 @@ public final class SkillTreeService implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onMount(EntityMountEvent e) {
         if (!(e.getEntity() instanceof Player p) || !(e.getMount() instanceof AbstractHorse horse)) return;
-        if (!build(p).has(KeystoneKind.TALYN_SALKHI)) return;
-        setModifier2(horse, 0.60);
+        if (build(p).has(KeystoneKind.TALYN_SALKHI)) setModifier2(horse, 0.60);
+        else clearSteppeWind(horse); // left by an earlier rider who had the keystone
+    }
+
+    /** The bonus belongs to the rider, not the horse: it goes when the rider gets off. */
+    @EventHandler
+    public void onDismount(org.bukkit.event.entity.EntityDismountEvent e) {
+        if (e.getEntity() instanceof Player && e.getDismounted() instanceof AbstractHorse horse) clearSteppeWind(horse);
+    }
+
+    private static void clearSteppeWind(AbstractHorse horse) {
+        AttributeInstance inst = horse.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (inst == null) return;
+        AttributeModifier old = inst.getModifier(key("steppe_wind"));
+        if (old != null) inst.removeModifier(old);
     }
 
     private static void setModifier2(AbstractHorse horse, double amount) {

@@ -2,7 +2,6 @@ package mn.suld.plugin.combat;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
-import io.papermc.paper.entity.LookAnchor;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.plugin.SuldServices;
@@ -235,10 +234,13 @@ public final class CombatFeel implements Listener {
                     if (cur.angle(want) < Math.toRadians(2)) {
                         l.steer = 0;
                     } else {
-                        Vector next = cur.clone().multiply(1 - EASE).add(want.clone().multiply(EASE));
-                        Vector at = eye.toVector().add(next.normalize().multiply(8));
-                        services.movement.exempt(p.getUniqueId(), 10, "lock-on");
-                        p.lookAt(at.getX(), at.getY(), at.getZ(), LookAnchor.EYES);
+                        Vector next = cur.clone().multiply(1 - EASE).add(want.clone().multiply(EASE)).normalize();
+                        // setRotation sends the rotation packet the anticheat expects from the server (lookAt sends a
+                        // look-at packet GrimAC cannot see, so the turn looked like the player's own aim snap)
+                        float yaw = (float) Math.toDegrees(Math.atan2(-next.getX(), next.getZ()));
+                        float pitch = (float) Math.toDegrees(-Math.asin(Math.max(-1, Math.min(1, next.getY()))));
+                        services.movement.exempt(p, 10, "lock-on", mn.suld.plugin.anticheat.MovementExemptions.Kind.LOCKON);
+                        p.setRotation(yaw, pitch);
                     }
                 }
             }

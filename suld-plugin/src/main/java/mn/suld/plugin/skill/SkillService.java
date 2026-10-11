@@ -511,7 +511,7 @@ public final class SkillService implements Listener {
 
     /** Хүлэгчин: the wind horse rises; a long charge strikes everything on the way, then 6 s of speed. */
     private void windHorse(Player p, Spell s) {
-        services.movement.launch(p, flat(p).multiply(2.1).setY(0.2), "windHorse");
+        services.movement.launch(p, flat(p).multiply(2.1).setY(0.2), "windHorse", mn.suld.plugin.anticheat.MovementExemptions.WINDHORSE_TICKS);
         Set<UUID> hit = new HashSet<>();
         new BukkitRunnable() {
             int t;
@@ -522,7 +522,7 @@ public final class SkillService implements Listener {
                     cancel();
                     return;
                 }
-                if (t == 6) services.movement.launch(p, flat(p).multiply(1.6).setY(0.1), "windHorse");
+                if (t == 6) services.movement.launch(p, flat(p).multiply(1.6).setY(0.1), "windHorse", mn.suld.plugin.anticheat.MovementExemptions.WINDHORSE_TICKS);
                 for (LivingEntity e : around(p, p.getLocation(), r(p, s, 2.4))) if (hit.add(e.getUniqueId())) {
                     hurt(p, e, s);
                     e.setVelocity(flat(p).multiply(0.6).setY(0.5));
@@ -705,7 +705,7 @@ public final class SkillService implements Listener {
     }
 
     private void leap(Player p, Spell s) {
-        services.movement.launch(p, flat(p).multiply(1.3).setY(0.65), "leap");
+        services.movement.launch(p, flat(p).multiply(1.3).setY(0.65), "leap", mn.suld.plugin.anticheat.MovementExemptions.LEAP_TICKS);
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_GOAT_LONG_JUMP, 1f, 1f);
         new BukkitRunnable() {
             int t;
@@ -765,7 +765,7 @@ public final class SkillService implements Listener {
             e.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1));
             riders(p, e, s);
         }
-        services.movement.launch(p, flat(p).multiply(-1.2).setY(0.45), "disengage");
+        services.movement.launch(p, flat(p).multiply(-1.2).setY(0.45), "disengage", mn.suld.plugin.anticheat.MovementExemptions.DISENGAGE_TICKS);
         p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 20, 0.5, 0.2, 0.5, 0.05);
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_JUMP, 1f, 1.2f);
     }
@@ -983,7 +983,7 @@ public final class SkillService implements Listener {
     }
 
     private void charge(Player p, Spell s) {
-        services.movement.launch(p, flat(p).multiply(1.6).setY(0.15), "charge");
+        services.movement.launch(p, flat(p).multiply(1.6).setY(0.15), "charge", mn.suld.plugin.anticheat.MovementExemptions.CHARGE_TICKS);
         Set<UUID> hit = new HashSet<>();
         new BukkitRunnable() {
             int t;

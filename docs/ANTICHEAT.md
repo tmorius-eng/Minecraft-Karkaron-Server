@@ -46,40 +46,80 @@ repositories in October 2026; only module names were read, no code. Grim check n
 Grim checks that are still *experimental* are off by default (`experimental-checks: false` in Grim's config.yml).
 Turn them on only on a test server first, after watching their false positives.
 
-## The SÜLD → Grim bridge
+## Grim works against every cheat client, not just these three
 
-SÜLD moves players itself:
-- the Баатар leap, the Харваач disengage, the Хүлэгчин charge and Хийморийн Давхилт;
-- the ultimate dash and the sneak-jump dodge;
-- the sky skill-tree seat, a camera on an entity high above the world;
-- the lock-on camera turn.
+Grim does not look for a particular client. It re-simulates every move, hit, block action and packet from vanilla
+physics and rules. Whatever produced an impossible move fails the same check: Meteor, Wurst, LiquidBounce, any
+other client, a modified one or a private one. The table above is only a map from those clients' module names to
+the checks that catch them.
 
-A cheat-detecting anticheat can mistake these for a cheat. `anticheat/MovementExemptions` opens a short window for
-every such movement:
+The SÜLD side never weakens that:
+- **Windows are kind-specific and short.** Only movement checks are forgiven, and only for as long as the SÜLD
+  movement really lasts.
+- **Every player has a forgiveness budget.** At most 60 flags at once, then 6 a second
+  (`anticheat.grim.budget-burst` / `budget-per-second`). A client that keeps triggering SÜLD movement to hide a
+  Fly or Speed cheat inside the windows runs dry within seconds. After that Grim judges every flag, and
+  `/suld grim` counts them as "over budget".
+- **Combat, packet and world checks are never forgiven:** Reach, Hitboxes, BadPackets, PacketOrder, Timer, Crash,
+  FastBreak, the place checks and the Aim checks outside lock-on.
 
-| SÜLD movement | Window |
-|---|---|
-| leap, disengage, charge, windHorse, ultimate dash, dodge (`MovementExemptions.launch`) | 40 ticks (2 s) |
-| sky skill-tree seat | while seated, then 20 ticks after the return teleport |
-| lock-on camera turn | 10 ticks |
+## Every SÜLD feature against Grim
+
+The behaviour on the Grim side was read from Grim's source at f5bbe9c, the installed 2.3.74 build. The SÜLD side
+comes from a full audit of `suld-plugin`.
+
+| SÜLD feature | What Grim does with it | SÜLD handling |
+|---|---|---|
+| leap, disengage, charge, windHorse, ultimate dash, dodge (server velocity on the caster) | predicted, but the client's answer can lag | MOVE window per movement: leap 40, disengage and windHorse 30, charge, ultimate dash and dodge 20 ticks, plus two pings (at most +40) |
+| boss knockback, push, pull and slam (ArchetypeBrain, KhasarBrain) | any size, several per tick, each predicted with transactions | nothing needed; AntiKB still catches a Velocity cheat |
+| spells on mobs (pulls, knock-ups, shoves) | not players: spells never move other players | — |
+| teleports (dungeon in/out, relay, /spawn, world border, sky tree) | handled natively (teleport transactions) | sky-tree return: 20-tick MOVE window |
+| sky skill-tree seat (riding an ItemDisplay that the server moves) | non-horse vehicles are never simulated; no Reach/Hitboxes while riding | MOVE hold while seated (backup) |
+| lock-on camera turn | `Player#lookAt` sends a look-at packet Grim cannot see, so a wound-up yaw read as an AimModulo360 snap | **fixed**: lock-on now uses `Player#setRotation`, the rotation packet Grim treats as server-set; a 10-tick LOCKON window forgives AimModulo360 and AimDuplicateLook as a backup |
+| /mori steppe horse | vehicle-simulated (VehicleA/B/C) | **fixed**: the rider is seated a tick after the horse spawns and gets off before the horse is removed; a 20-tick MOUNT window on mount and dismount |
+| Талын Салхи keystone (+60 % horse speed) | horse movement_speed is modeled | **fixed** (gameplay bug): the bonus left the horse fast for every later rider; it now goes when the rider dismounts |
+| movement-speed stats (items, tree, keystones), potions (speed, slowness, jump, blindness) | attributes and effects are modeled | the speed attribute is only re-sent when it changes, no longer on every hotbar scroll |
+| props, dungeon gate, sky-tree nodes (Interaction boxes), NPC Mannequins | Reach and Hitboxes only check living targets; Mannequin has its own box | prop click box shrunk to the prop's footprint, so it no longer swallows hits on mobs beside a statue |
+| rigged mobs and bosses (3D models over an invisible host) | target box = vanilla size × the host's SCALE attribute | **fixed**: the host takes the rig's scale (at most `models.host-scale-max`, 1.6), so the box players aim at is where the model is drawn; hosts are always adult and never jockeys |
+| prop barriers (collision) | real blocks, seen like any block | never placed into a standing player; retried later |
+| souls (right-click denied), sky-tree scroll, the Q key for lock-on | server cancels; low risk | watched with `/suld grim` |
+| GSit `/sit` and `/lay` | ride seats that Grim does not simulate | — |
+| GSit `/crawl` (client-side fake blocks) | could flag | crawl is op-only by default (`GSit.Crawl.*: op`) and no player is granted it |
 
 `anticheat/GrimBridge` listens to Grim's `FlagEvent`. It registers the event by name, so SÜLD runs unchanged without
-Grim, and loads with `softdepend: [GrimAC]`. A flag is cancelled only when both conditions hold:
+Grim, and loads with `softdepend: [GrimAC]`. A flag is cancelled only when all three conditions hold:
 - the player is inside a window;
-- the check is in `anticheat.grim.exempt-checks`. The default is `[Simulation, GroundSpoof, NoFall, Phase]`:
-  movement only, never combat, packet or world checks.
+- the check is listed for that window's kind (`exempt-checks`, `lock-on-exempt-checks`, `mount-exempt-checks`);
+- the player still has budget.
 
-A cancelled flag counts no violation and causes no setback. Every flag outside a window, and every check not in the
-list, is left to Grim.
+A cancelled flag counts no violation and causes no setback (Grim's `Check.recordFlag`).
 
-`/suld grim` shows, per check, how many flags fell:
+`/suld grim` shows per check:
 - outside a window;
-- inside a window and were forgiven;
-- inside a window but were not forgiven because the check is not listed.
+- forgiven;
+- inside a window but not forgiven;
+- over budget.
 
-`/suld grim reset` clears the counts. If a listed check never shows a forgiven flag on the live server, remove it.
+`/suld grim reset` clears the counts.
 
 ## Measurement (dev server, mineflayer bot, 2026-10-11)
+
+### Run 2: everything else
+
+| Step | Result |
+|---|---|
+| sky tree | the seat hold opened; no movement flags |
+| charge ×3 | 12 Simulation and 3 GroundSpoof forgiven, none outside the window |
+| charge spammed every 0.7 s | mana stopped it (NO_RESOURCE); 24 Simulation and 6 GroundSpoof forgiven, under budget |
+| /mori, ride, /mori | MOUNT window opened, no Vehicle flags |
+| big boss (khangai_savdag) | host SCALE = 1.6 (capped from 2.3) |
+| dodge, lock-on | not triggered by the bot (mineflayer's sneak and yaw handling). The bot's own wrapped yaw was flagged AimModulo360 outside any window, which is right. The lock-on fix is verified from Grim's source. **MANUAL_QA_REQUIRED** |
+
+Budget arithmetic (unit test `TokenBucketTest`):
+- a flag every tick for 10 s gets at most 121 of 200 forgiven, and Grim judges the rest;
+- a dash every 5 s costing 25 flags is always forgiven whole.
+
+### Run 1: the dashes
 
 The measurement used `skillsadmin cast <player> <SPELL>`, an admin command that casts one spell now. Counts are
 flags per step, shown as (outside a window, forgiven, in a window but kept). They were counted by the bridge, one
