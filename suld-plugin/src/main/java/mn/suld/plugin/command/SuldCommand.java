@@ -41,6 +41,7 @@ public final class SuldCommand implements CommandExecutor {
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
             case "coins" -> giveCoins(sender, args);
+            case "content" -> content(sender, args);
             case "guide" -> {
                 if (!sender.hasPermission("suld.admin")) {
                     sender.sendMessage(Messages.error("Эрх алга."));
@@ -187,9 +188,55 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld coins <тоглогч> <±тоо> — зоос нэмэх/хасах"));
             sender.sendMessage(Messages.info("/suld quest <тоглогч> <1..18|reset> — эрлийн бүлэг"));
             sender.sendMessage(Messages.info("/suld guide — заавар самбаруудыг шинэчлэх"));
+            sender.sendMessage(Messages.info("/suld content validate|export — тоглоомын агуулгын файлууд (моб, бүс, dungeon, эрэл)"));
             sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));
+    }
+
+    /**
+     * {@code /suld content validate}: check the server's content files (plugins/SULD/content) without using them;
+     * {@code /suld content export}: write the bundled files there to start editing (an existing file is kept).
+     * Edited content takes effect on the next restart (docs/CONTENT_DATA.md).
+     */
+    private void content(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        java.nio.file.Path dir = plugin.getDataFolder().toPath().resolve("content");
+        String what = args.length > 1 ? args[1].toLowerCase(java.util.Locale.ROOT) : "validate";
+        if (what.equals("export")) {
+            int wrote = 0;
+            try {
+                java.nio.file.Files.createDirectories(dir);
+                for (String f : mn.suld.plugin.content.ContentLoader.FILES) {
+                    java.nio.file.Path out = dir.resolve(f);
+                    if (java.nio.file.Files.exists(out)) continue;
+                    java.nio.file.Files.writeString(out, mn.suld.plugin.content.ContentLoader.classpath().read(f), java.nio.charset.StandardCharsets.UTF_8);
+                    wrote++;
+                }
+            } catch (java.io.IOException e) {
+                sender.sendMessage(Messages.error("Бичиж чадсангүй: " + e.getMessage()));
+                return;
+            }
+            sender.sendMessage(Messages.success(wrote + " файл бичлээ: plugins/SULD/content/ (байсан файлыг хөндөөгүй). Засаад /suld content validate, дараа нь серверээ дахин асаа."));
+            return;
+        }
+        java.util.List<String> overridden = new java.util.ArrayList<>();
+        var catalog = mn.suld.plugin.content.SuldContent.items();
+        var r = mn.suld.plugin.content.ContentLoader.load(mn.suld.plugin.content.ContentLoader.serverOrBundled(dir, overridden),
+                id -> catalog.lootTable(id).isPresent(), id -> catalog.item(id).isPresent(), overridden);
+        String files = overridden.isEmpty() ? "серверийн файл алга — jar доторхыг шалгалаа" : String.join(", ", overridden);
+        if (r.ok()) {
+            sender.sendMessage(Messages.success("Агуулга зөв (" + files + "): " + r.pack().mobs().size() + " моб, " + r.pack().regions().size() + " бүс, "
+                    + r.pack().areas().size() + " газар, " + r.pack().dungeons().size() + " dungeon, " + r.pack().chapters().size() + " бүлэг. Дахин асаахад хэрэгжинэ."));
+        } else {
+            sender.sendMessage(Messages.error("Агуулгад " + r.issues().size() + " алдаа (" + files + ") — засах хүртэл jar доторх агуулга ажиллана:"));
+            r.issues().stream().limit(15).forEach(i -> sender.sendMessage(Messages.info(" • " + i)));
+            if (r.issues().size() > 15) sender.sendMessage(Messages.info(" … дахиад " + (r.issues().size() - 15) + " (консолд бүгд)"));
+            r.issues().forEach(i -> plugin.getLogger().warning("[content] " + i));
+        }
     }
 
     private void info(CommandSender sender) {

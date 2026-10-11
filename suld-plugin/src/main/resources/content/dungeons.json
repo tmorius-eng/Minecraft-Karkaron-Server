@@ -1,0 +1,266 @@
+{
+  "format": 1,
+  "about": "The dungeon ladder, in order: each dungeon needs the one before it cleared. site = where the gate stands (bearing, distance from the spawn) and the hall's theme; completion = bonus EXP/coins per participant.",
+  "dungeons": [
+    {
+      "id": "dungeon.khasar_den",
+      "name": "Хасарын Агуй",
+      "minLevel": 3,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.kherlen",
+      "where": "Хэрлэнгийн тал",
+      "site": {"theme": "DEN", "bearing": 75, "radius": 380},
+      "completion": {"exp": 400, "coins": 75},
+      "loot": "loot.dungeon.khasar_den",
+      "boss": {
+        "mob": "mob.khasar",
+        "enrageSeconds": 180,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.goviin_chono", "mob.goviin_chono", "mob.goviin_chono"],
+        ["mob.orkhon_chono", "mob.orkhon_chono", "mob.orkhon_chono", "mob.orkhon_chono"]
+      ]
+    },
+    {
+      "id": "dungeon.govi_bulsh",
+      "name": "Говийн Булш",
+      "minLevel": 9,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.gobi",
+      "where": "Говь (өмнө)",
+      "site": {"theme": "TOMB", "bearing": 165, "radius": 650},
+      "completion": {"exp": 1200, "coins": 160},
+      "loot": "loot.dungeon.govi_bulsh",
+      "boss": {
+        "mob": "mob.elsnii_khaan",
+        "enrageSeconds": 200,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.goviin_khilents", "mob.goviin_khilents", "mob.goviin_khilents", "mob.goviin_khilents"],
+        ["mob.elsnii_suns", "mob.elsnii_suns", "mob.elsnii_suns", "mob.goviin_khilents", "mob.goviin_khilents"],
+        ["mob.elsnii_suns", "mob.elsnii_suns", "mob.elsnii_suns", "mob.elsnii_suns"]
+      ]
+    },
+    {
+      "id": "dungeon.baavgain_uur",
+      "name": "Баавгайн Үүр",
+      "minLevel": 15,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.khangai",
+      "where": "Хангай (хойд)",
+      "site": {"theme": "LAIR", "bearing": 20, "radius": 1000},
+      "completion": {"exp": 2600, "coins": 260},
+      "loot": "loot.dungeon.baavgain_uur",
+      "boss": {
+        "mob": "mob.oin_ezen",
+        "enrageSeconds": 220,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.saaral_chono", "mob.saaral_chono", "mob.saaral_chono", "mob.saaral_chono"],
+        ["mob.saaral_chono", "mob.saaral_chono", "mob.saaral_chono", "mob.khangai_baavgai"],
+        ["mob.khangai_baavgai", "mob.khangai_baavgai", "mob.saaral_chono", "mob.saaral_chono"]
+      ]
+    },
+    {
+      "id": "dungeon.mosun_orgil",
+      "name": "Мөсөн Оргил",
+      "minLevel": 22,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.altai",
+      "where": "Алтай (баруун)",
+      "site": {"theme": "PEAK", "bearing": 255, "radius": 1400},
+      "completion": {"exp": 4800, "coins": 420},
+      "loot": "loot.dungeon.mosun_orgil",
+      "boss": {
+        "mob": "mob.mosun_khaan",
+        "enrageSeconds": 240,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.altai_mosun_suns", "mob.altai_mosun_suns", "mob.altai_mosun_suns", "mob.altai_mosun_suns"],
+        ["mob.altai_mosun_suns", "mob.altai_mosun_suns", "mob.altai_mosun_suns", "mob.altai_avarga"],
+        ["mob.altai_avarga", "mob.altai_avarga", "mob.altai_mosun_suns", "mob.altai_mosun_suns"]
+      ]
+    },
+    {
+      "id": "dungeon.dalain_gun",
+      "name": "Далайн Гүн",
+      "minLevel": 29,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.khangai",
+      "where": "Хөвсгөл (баруун хойд)",
+      "site": {"theme": "DEEP", "bearing": 335, "radius": 2600},
+      "completion": {"exp": 8000, "coins": 560},
+      "loot": "loot.dungeon.dalain_gun",
+      "boss": {
+        "mob": "mob.lusyn_khaan",
+        "enrageSeconds": 255,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.usny_lus", "mob.usny_lus", "mob.usny_lus", "mob.usny_lus"],
+        ["mob.usny_lus", "mob.usny_lus", "mob.dalain_chono", "mob.dalain_chono"],
+        ["mob.dalain_chono", "mob.dalain_chono", "mob.usny_lus", "mob.usny_lus", "mob.usny_lus"]
+      ]
+    },
+    {
+      "id": "dungeon.khar_khot",
+      "name": "Хар Хотын Балгас",
+      "minLevel": 36,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.gobi",
+      "where": "Тангудын хил (өмнө)",
+      "site": {"theme": "RUIN", "bearing": 200, "radius": 3000},
+      "completion": {"exp": 12500, "coins": 700},
+      "loot": "loot.dungeon.khar_khot",
+      "boss": {
+        "mob": "mob.khar_janjin",
+        "enrageSeconds": 270,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.tangud_suns", "mob.tangud_suns", "mob.tangud_suns", "mob.tangud_suns"],
+        ["mob.balgasny_khilents", "mob.balgasny_khilents", "mob.tangud_suns", "mob.tangud_suns"],
+        ["mob.tangud_suns", "mob.tangud_suns", "mob.tangud_suns", "mob.balgasny_khilents", "mob.balgasny_khilents"]
+      ]
+    },
+    {
+      "id": "dungeon.ulaan_khad",
+      "name": "Улаан Хадны Хүрээ",
+      "minLevel": 42,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.kherlen",
+      "where": "Алс зүүн тал",
+      "site": {"theme": "REDROCK", "bearing": 110, "radius": 3300},
+      "completion": {"exp": 18000, "coins": 840},
+      "loot": "loot.dungeon.ulaan_khad",
+      "boss": {
+        "mob": "mob.ulaan_khadny_noyon",
+        "enrageSeconds": 285,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.khureenii_kharuul", "mob.khureenii_kharuul", "mob.khureenii_kharuul", "mob.dainy_chono"],
+        ["mob.khureenii_kharuul", "mob.khureenii_kharuul", "mob.dainy_chono", "mob.dainy_chono"],
+        ["mob.khureenii_kharuul", "mob.khureenii_kharuul", "mob.khureenii_kharuul", "mob.dainy_chono", "mob.dainy_chono"]
+      ]
+    },
+    {
+      "id": "dungeon.burkhan_agui",
+      "name": "Бурхан Халдуны Агуй",
+      "minLevel": 48,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.kherlen",
+      "where": "Хэнтий (зүүн хойд)",
+      "site": {"theme": "SACRED", "bearing": 60, "radius": 3700},
+      "completion": {"exp": 25000, "coins": 980},
+      "loot": "loot.dungeon.burkhan_agui",
+      "boss": {
+        "mob": "mob.khangai_savdag",
+        "enrageSeconds": 300,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.uulyn_savdag", "mob.uulyn_savdag", "mob.uulyn_savdag", "mob.uulyn_savdag"],
+        ["mob.uulyn_savdag", "mob.uulyn_savdag", "mob.aguin_baavgai", "mob.aguin_baavgai"],
+        ["mob.aguin_baavgai", "mob.uulyn_savdag", "mob.uulyn_savdag", "mob.uulyn_savdag", "mob.aguin_baavgai"]
+      ]
+    },
+    {
+      "id": "dungeon.tengeriin_shat",
+      "name": "Тэнгэрийн Шат",
+      "minLevel": 54,
+      "minParty": 1,
+      "maxParty": 4,
+      "region": "region.altai",
+      "where": "Өндөр Алтай (баруун)",
+      "site": {"theme": "SKYSTAIR", "bearing": 285, "radius": 4100},
+      "completion": {"exp": 33000, "coins": 1120},
+      "loot": "loot.dungeon.tengeriin_shat",
+      "boss": {
+        "mob": "mob.khukh_tengeriin_elch",
+        "enrageSeconds": 300,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.tengeriin_tsereg", "mob.tengeriin_tsereg", "mob.tengeriin_tsereg", "mob.tengeriin_chono"],
+        ["mob.tengeriin_tsereg", "mob.tengeriin_tsereg", "mob.tengeriin_chono", "mob.tengeriin_chono"],
+        ["mob.tengeriin_chono", "mob.tengeriin_chono", "mob.tengeriin_tsereg", "mob.tengeriin_tsereg", "mob.tengeriin_tsereg"]
+      ]
+    },
+    {
+      "id": "dungeon.tengeriin_ordon",
+      "name": "Тэнгэрийн Ордон",
+      "minLevel": 60,
+      "minParty": 2,
+      "maxParty": 4,
+      "region": "region.khangai",
+      "where": "Ертөнцийн хойд хязгаар",
+      "site": {"theme": "PALACE", "bearing": 0, "radius": 4500},
+      "completion": {"exp": 42000, "coins": 1400},
+      "loot": "loot.dungeon.tengeriin_ordon",
+      "boss": {
+        "mob": "mob.khukh_suldiin_sakhiul",
+        "enrageSeconds": 315,
+        "phases": [
+          {"at": 1, "attack": 1, "name": "Сэрсэн"},
+          {"at": 0.6, "attack": 1.3, "name": "Уурласан"},
+          {"at": 0.3, "attack": 1.6, "name": "Галзуурсан"}
+        ]
+      },
+      "waves": [
+        ["mob.ordny_sakhiul", "mob.ordny_sakhiul", "mob.ordny_sakhiul"],
+        ["mob.ordny_sakhiul", "mob.ordny_sakhiul", "mob.tengeriin_tsereg", "mob.tengeriin_tsereg"],
+        ["mob.ordny_sakhiul", "mob.ordny_sakhiul", "mob.ordny_sakhiul", "mob.tengeriin_chono", "mob.tengeriin_chono"],
+        ["mob.ordny_sakhiul", "mob.ordny_sakhiul", "mob.ordny_sakhiul", "mob.ordny_sakhiul"]
+      ]
+    }
+  ]
+}

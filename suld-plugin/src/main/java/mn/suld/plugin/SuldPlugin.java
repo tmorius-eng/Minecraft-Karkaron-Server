@@ -41,6 +41,15 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.dungeon.DungeonHalls halls;
     private mn.suld.plugin.branding.TutorialService tutorial;
 
+    /**
+     * The content files are installed first, before anything reads a mob, region, dungeon or quest
+     * (docs/CONTENT_DATA.md): the server's copies in plugins/SULD/content/ where it has them, else the bundled ones.
+     */
+    @Override
+    public void onLoad() {
+        mn.suld.plugin.content.Content.install(getDataFolder().toPath().resolve("content"), getLogger());
+    }
+
     @Override
     public void onEnable() {
         saveDefaultConfig();

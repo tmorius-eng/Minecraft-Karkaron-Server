@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "about": "World events and world-unique relics.",
+  "worldEvents": [
+    {
+      "id": "event.chonyn_dovtolgoo",
+      "aliases": ["wolf_raid"],
+      "name": "Чонын Довтолгоо",
+      "description": "Тал нутгийг чоно дайрлаа! Бүгдээрээ 10 минутад 30 чоно устгаарай.",
+      "targetMobs": ["mob.goviin_chono", "mob.orkhon_chono"],
+      "targetKills": 30,
+      "durationSeconds": 600,
+      "rewardExp": 300,
+      "rewardCoins": 60,
+      "minContribution": 3,
+      "clanExpPerKill": 5,
+      "clanSuccessBonus": 200
+    }
+  ],
+  "relics": [
+    {
+      "key": "relic.khukh_suld",
+      "name": "Хөх Сүлд",
+      "lore": "Мөнх тэнгэрийн хүчээр мандсан хөх сүлд — түүнийг барьсан нэгэн л тал нутгийг удирдана.",
+      "material": "minecraft:nether_star",
+      "customModelData": 870100,
+      "minLevel": 10,
+      "expBonus": 0.25
+    },
+    {
+      "key": "relic.altan_gerege",
+      "name": "Алтан Гэрэгэ",
+      "lore": "Хааны тамгатай алтан гэрэгэ — эзэн нь хаана ч хүндлэгдэнэ.",
+      "material": "minecraft:nether_star",
+      "customModelData": 870101,
+      "minLevel": 6,
+      "expBonus": 0.15
+    }
+  ]
+}

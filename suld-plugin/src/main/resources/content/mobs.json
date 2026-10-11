@@ -1,0 +1,295 @@
+{
+  "format": 1,
+  "about": "SÜLD mobs. Health, attack and EXP follow from level and tier (progression v2); host = the vanilla entity type; role: core (first hunt and dungeon), wild (home regions), ladder (outer lands), boss.",
+  "mobs": [
+    {
+      "id": "mob.goviin_chono",
+      "name": "Говийн Чоно",
+      "host": "WOLF",
+      "tier": "NORMAL",
+      "level": 2,
+      "loot": "loot.goviin_chono",
+      "role": "core"
+    },
+    {
+      "id": "mob.orkhon_chono",
+      "name": "Орхоны Чоно",
+      "host": "WOLF",
+      "tier": "NORMAL",
+      "level": 3,
+      "loot": "loot.orkhon_chono",
+      "role": "core"
+    },
+    {
+      "id": "mob.khasar",
+      "name": "Хасар — Агуйн Эзэн",
+      "host": "RAVAGER",
+      "tier": "BOSS",
+      "level": 8,
+      "loot": "loot.khasar",
+      "role": "core",
+      "model": "khasar"
+    },
+    {
+      "id": "mob.deeremchin",
+      "name": "Дээрэмчин",
+      "host": "PILLAGER",
+      "tier": "NORMAL",
+      "level": 4,
+      "loot": "loot.deeremchin",
+      "role": "wild"
+    },
+    {
+      "id": "mob.goviin_khilents",
+      "name": "Говийн Хилэнц",
+      "host": "CAVE_SPIDER",
+      "tier": "NORMAL",
+      "level": 7,
+      "loot": "loot.goviin_khilents",
+      "role": "wild"
+    },
+    {
+      "id": "mob.elsnii_suns",
+      "name": "Элсний Сүнс",
+      "host": "HUSK",
+      "tier": "NORMAL",
+      "level": 9,
+      "loot": "loot.elsnii_suns",
+      "role": "wild"
+    },
+    {
+      "id": "mob.saaral_chono",
+      "name": "Хангайн Саарал Чоно",
+      "host": "WOLF",
+      "tier": "NORMAL",
+      "level": 12,
+      "loot": "loot.saaral_chono",
+      "role": "wild"
+    },
+    {
+      "id": "mob.khangai_baavgai",
+      "name": "Хангайн Баавгай",
+      "host": "POLAR_BEAR",
+      "tier": "ELITE",
+      "level": 14,
+      "loot": "loot.khangai_baavgai",
+      "role": "wild"
+    },
+    {
+      "id": "mob.altai_mosun_suns",
+      "name": "Алтайн Мөсөн Сүнс",
+      "host": "STRAY",
+      "tier": "NORMAL",
+      "level": 19,
+      "loot": "loot.altai_mosun_suns",
+      "role": "wild"
+    },
+    {
+      "id": "mob.altai_avarga",
+      "name": "Алтайн Аварга",
+      "host": "RAVAGER",
+      "tier": "ELITE",
+      "level": 23,
+      "loot": "loot.altai_avarga",
+      "role": "wild"
+    },
+    {
+      "id": "mob.altai_tsasan_chono",
+      "name": "Алтайн Цасан Чоно",
+      "host": "WOLF",
+      "tier": "NORMAL",
+      "level": 25,
+      "loot": "loot.altai_mosun_suns",
+      "role": "wild"
+    },
+    {
+      "id": "mob.tengeriin_kharuul",
+      "name": "Тэнгэрийн Харуул",
+      "host": "VINDICATOR",
+      "tier": "NORMAL",
+      "level": 59,
+      "loot": "loot.tengeriin_tsereg",
+      "role": "wild"
+    },
+    {
+      "id": "mob.usny_lus",
+      "name": "Усны Лус",
+      "host": "DROWNED",
+      "tier": "NORMAL",
+      "level": 30,
+      "loot": "loot.usny_lus",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.dalain_chono",
+      "name": "Далайн Чоно",
+      "host": "WOLF",
+      "tier": "ELITE",
+      "level": 32,
+      "loot": "loot.dalain_chono",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.tangud_suns",
+      "name": "Тангудын Сүнс",
+      "host": "HUSK",
+      "tier": "NORMAL",
+      "level": 37,
+      "loot": "loot.tangud_suns",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.balgasny_khilents",
+      "name": "Балгасны Аварга Хилэнц",
+      "host": "CAVE_SPIDER",
+      "tier": "ELITE",
+      "level": 39,
+      "loot": "loot.balgasny_khilents",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.khureenii_kharuul",
+      "name": "Хүрээний Харуул",
+      "host": "PILLAGER",
+      "tier": "NORMAL",
+      "level": 43,
+      "loot": "loot.khureenii_kharuul",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.dainy_chono",
+      "name": "Дайны Чоно",
+      "host": "WOLF",
+      "tier": "ELITE",
+      "level": 45,
+      "loot": "loot.dainy_chono",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.uulyn_savdag",
+      "name": "Уулын Савдаг",
+      "host": "STRAY",
+      "tier": "NORMAL",
+      "level": 49,
+      "loot": "loot.uulyn_savdag",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.aguin_baavgai",
+      "name": "Агуйн Баавгай",
+      "host": "POLAR_BEAR",
+      "tier": "ELITE",
+      "level": 51,
+      "loot": "loot.aguin_baavgai",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.tengeriin_tsereg",
+      "name": "Тэнгэрийн Цэрэг",
+      "host": "STRAY",
+      "tier": "NORMAL",
+      "level": 55,
+      "loot": "loot.tengeriin_tsereg",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.tengeriin_chono",
+      "name": "Тэнгэрийн Чоно",
+      "host": "WOLF",
+      "tier": "ELITE",
+      "level": 57,
+      "loot": "loot.tengeriin_chono",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.ordny_sakhiul",
+      "name": "Ордны Сахиул",
+      "host": "VINDICATOR",
+      "tier": "ELITE",
+      "level": 60,
+      "loot": "loot.ordny_sakhiul",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.elsnii_khaan",
+      "name": "Элсний Хаан — Булшны Эзэн",
+      "host": "HUSK",
+      "tier": "BOSS",
+      "level": 14,
+      "loot": "loot.elsnii_khaan",
+      "role": "boss"
+    },
+    {
+      "id": "mob.oin_ezen",
+      "name": "Хар Баавгай — Ойн Эзэн",
+      "host": "POLAR_BEAR",
+      "tier": "BOSS",
+      "level": 20,
+      "loot": "loot.oin_ezen",
+      "role": "boss"
+    },
+    {
+      "id": "mob.mosun_khaan",
+      "name": "Мөсөн Хаан — Оргилын Сахиул",
+      "host": "STRAY",
+      "tier": "BOSS",
+      "level": 27,
+      "loot": "loot.mosun_khaan",
+      "role": "boss"
+    },
+    {
+      "id": "mob.lusyn_khaan",
+      "name": "Лусын Хаан — Далайн Эзэн",
+      "host": "DROWNED",
+      "tier": "BOSS",
+      "level": 34,
+      "loot": "loot.lusyn_khaan",
+      "role": "boss"
+    },
+    {
+      "id": "mob.khar_janjin",
+      "name": "Хар Жанжин — Балгасны Эзэн",
+      "host": "WITHER_SKELETON",
+      "tier": "BOSS",
+      "level": 41,
+      "loot": "loot.khar_janjin",
+      "role": "boss"
+    },
+    {
+      "id": "mob.ulaan_khadny_noyon",
+      "name": "Улаан Хадны Ноён",
+      "host": "VINDICATOR",
+      "tier": "BOSS",
+      "level": 47,
+      "loot": "loot.ulaan_khadny_noyon",
+      "role": "boss"
+    },
+    {
+      "id": "mob.khangai_savdag",
+      "name": "Хангай Савдаг — Уулын Эзэн",
+      "host": "RAVAGER",
+      "tier": "BOSS",
+      "level": 53,
+      "loot": "loot.khangai_savdag",
+      "role": "boss"
+    },
+    {
+      "id": "mob.khukh_tengeriin_elch",
+      "name": "Хөх Тэнгэрийн Элч",
+      "host": "STRAY",
+      "tier": "BOSS",
+      "level": 59,
+      "loot": "loot.khukh_tengeriin_elch",
+      "role": "boss"
+    },
+    {
+      "id": "mob.khukh_suldiin_sakhiul",
+      "name": "Хөх Сүлдийн Сахиул",
+      "host": "WITHER_SKELETON",
+      "tier": "BOSS",
+      "level": 60,
+      "loot": "loot.khukh_suldiin_sakhiul",
+      "role": "boss"
+    }
+  ]
+}

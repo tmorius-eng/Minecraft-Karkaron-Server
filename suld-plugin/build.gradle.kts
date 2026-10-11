@@ -57,8 +57,8 @@ dependencies {
 // ---------------------------------------------------------------------------------------------------------------
 // Progression simulator (docs/PROGRESSION_SIMULATION.md). A separate source set: it never ships in the plugin jar
 // (shadowJar takes `main` only) and needs no Paper API, so it builds without repo.papermc.io. It compiles against
-// suld-api plus a *copy* of the Bukkit-free content classes, so the live model reads the real mobs, dungeons and
-// story instead of a transcription that could drift.
+// suld-api plus a *copy* of the Bukkit-free content classes and the content files they read, so the live model reads
+// the real mobs, dungeons and story instead of a transcription that could drift.
 // ---------------------------------------------------------------------------------------------------------------
 val syncSimContent = tasks.register<Sync>("syncSimContent") {
     from("src/main/java/mn/suld/plugin/content")
@@ -68,6 +68,9 @@ val syncSimContent = tasks.register<Sync>("syncSimContent") {
 val sim: SourceSet = sourceSets.create("sim") {
     java.srcDir("src/sim/java")
     java.srcDir(layout.buildDirectory.dir("generated/simContent/java"))
+    // the content classes read the content files (docs/CONTENT_DATA.md): the simulator reads the same bundled ones
+    resources.srcDir("src/main/resources")
+    resources.include("content/**")
 }
 val simTestSet: SourceSet = sourceSets.create("simTest") {
     compileClasspath += sim.output
