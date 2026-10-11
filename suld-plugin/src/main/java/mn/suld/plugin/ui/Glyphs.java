@@ -148,11 +148,11 @@ public final class Glyphs {
     public static final String BADGE_Q_UNSEEN = "\uE043";
     /** mouse, left button (click hints) */
     public static final String MOUSE_LEFT = "\uE044";
-    /** chest background quest book, tab 1 active 176x126 */
+    /** chest background quest book, tab 1 active 176x126 (HD x4) */
     public static final String GUI_QUESTBOOK1 = "\uE045";
-    /** chest background quest book, tab 2 active 176x126 */
+    /** chest background quest book, tab 2 active 176x126 (HD x4) */
     public static final String GUI_QUESTBOOK2 = "\uE046";
-    /** chest background quest book, tab 3 active 176x126 */
+    /** chest background quest book, tab 3 active 176x126 (HD x4) */
     public static final String GUI_QUESTBOOK3 = "\uE047";
 
     private Glyphs() {

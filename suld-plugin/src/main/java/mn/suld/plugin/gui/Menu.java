@@ -53,6 +53,15 @@ public final class Menu implements InventoryHolder {
         this.inventory = Bukkit.createInventory(this, rows * 9, t);
     }
 
+    /**
+     * A menu whose title sits {@code titleShift} px right of the usual spot (past a painted ornament), in its own
+     * style.
+     */
+    public Menu(int rows, Component title, String background, int titleShift) {
+        Component t = StyleFormat.join(StyleFormat.shift(-8), StyleFormat.glyph(background), StyleFormat.shift(-169 + titleShift), title);
+        this.inventory = Bukkit.createInventory(this, rows * 9, t);
+    }
+
     @Override
     public @NotNull Inventory getInventory() {
         return inventory;

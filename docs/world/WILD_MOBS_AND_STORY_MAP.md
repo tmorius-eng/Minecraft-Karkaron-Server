@@ -37,6 +37,25 @@ A site card shows the kind, the history label, the description, the area and the
 The bottom row: menu, quest bar, dungeons, the journey, party, and «Газрын зураг», which opens the act's painted map
 below. The map's «Эрлийн Ном» button comes back.
 
+**The owner's art, in HD.** The window, the tooltip frame, the quest badges, the mouse icon and the 23 rank, staff,
+class and misc badges come from three paintings by the owner in `assets/art/source/`:
+* `gui_questbook.webp`, the window with Акт I active;
+* `tooltip_badges.webp`, the frame, the six quest pills and the mouse;
+* `badges.webp`, the 23 pills.
+
+`tools/pack/hd_art.py` turns them into textures four times larger than their font glyphs (`hd_art.SCALE`), so at GUI
+scale 4 every texture pixel is one screen pixel. What it does with each:
+* **Window:** warps the painting so its wells land on the chest slots (control points at the well centres; the
+  toolbar has its own spacing). It makes the Акт II and Газрууд states by swapping the gold and blue tab backgrounds
+  and recolouring the painted labels.
+* **Tooltip frame:** a 40x37 nine-slice with a 12 px border. The client draws the sprite 12 px around the text, so
+  the corner ornaments never cover it.
+* **Badges:** cut from the sheets. The badge sheet misspells «АЮУЛГҮЙ» and «АЮУЛТАЙ» as «АМУЛГУЙ», «АМУЛТАЙ», so those
+  two are re-lettered in the pixel font on their own fill.
+
+The badges are the same glyphs the TAB list, chat and the name tags above the players' heads use, so all of them
+changed together. Without the source files gen_ui falls back to the drawn versions.
+
 How the tooltip frame looks in a real client is **MANUAL_QA_REQUIRED**. The bots check the window, the cards, the
 `tooltip_style` component and the badges.
 

@@ -24,6 +24,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pixelfont as pf  # noqa: E402
+import hd_art  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ART = os.path.join(ROOT, "assets", "art", "source")
@@ -212,25 +213,44 @@ CLASSES = {"BAATAR": ("БААТАР", "#B02828"), "MERGEN": ("МЭРГЭН", "#2
 MISC = {"CLAN": ("ОВОГ", "#1E7878"), "SAFE": ("АЮУЛГҮЙ", "#288C3C"), "DANGER": ("АЮУЛТАЙ", "#B02828")}
 
 
+# Pills of the owner's badge sheet (assets/art/source/badges.webp) whose painted label is wrong: drawn again.
+BADGE_RELETTER = {"SAFE", "DANGER"}  # the sheet reads «АМУЛГУЙ», «АМУЛТАЙ»
+
+
 def badges(preview: str | None) -> None:
+    """Rank, staff, class and misc badges (TAB, chat, name tags). From the owner's sheet when present, at
+    hd_art.SCALE times the 9 px glyph (crisp at any GUI scale); else drawn with the pixel font."""
     out = []
     groups = [("RANK", RANKS, True), ("STAFF", STAFF, True), ("CLASS", CLASSES, False), ("", MISC, False)]
+    sheet_path = os.path.join(ART, "badges.webp")
+    sheet = hd_art.rank_badges(sheet_path) if os.path.exists(sheet_path) else []
+    total = sum(len(t) for _, t, _ in groups)
+    if sheet and len(sheet) != total:
+        raise SystemExit(f"badges.webp: {len(sheet)} pills, expected {total}")
+    i = 0
     for prefix, table, bright in groups:
         for name, (label, colour) in table.items():
-            c = _hex(colour)
-            # bright ranks: saturated fill with a light rim; class badges: their (darker) colour
-            fill = _dark(c, 0.78) if bright else c
-            edge = _light(c)
-            img = pf.badge(label, fill, edge, WHITE, _dark(c, 0.35))
+            if sheet:
+                pill = sheet[i]
+                img = hd_art.reletter(pill, label) if name in BADGE_RELETTER else hd_art.shrink(pill, 9 * hd_art.SCALE)
+            else:
+                c = _hex(colour)
+                # bright ranks: saturated fill with a light rim; class badges: their (darker) colour
+                fill = _dark(c, 0.78) if bright else c
+                edge = _light(c)
+                img = pf.badge(label, fill, edge, WHITE, _dark(c, 0.35))
+            i += 1
             key = f"BADGE_{prefix}_{name}" if prefix else f"BADGE_{name}"
             add_bitmap(key, img, f"badge/{(prefix + '_' if prefix else '') + name}".lower(), 9, 8, f"badge «{label}»")
             out.append(img)
     if preview:
-        wmax = max(i.width for i in out)
-        s = Image.new("RGBA", (wmax + 4, len(out) * 11 + 2), NAVY + (255,))
-        for i, im in enumerate(out):
-            s.paste(im, (2, 2 + i * 11), im)
-        s.resize((s.width * 6, s.height * 6), Image.NEAREST).save(os.path.join(preview, "badges.png"))
+        k = 6 if not sheet else 2
+        unit = out[0].height
+        wmax = max(im.width for im in out)
+        s = Image.new("RGBA", (wmax + 4, len(out) * (unit + 2) + 2), NAVY + (255,))
+        for j, im in enumerate(out):
+            s.paste(im, (2, 2 + j * (unit + 2)), im)
+        s.resize((s.width * k, s.height * k), Image.NEAREST).save(os.path.join(preview, "badges.png"))
 
 
 # ----------------------------------------------------------------------------------------- GUI backgrounds
@@ -727,6 +747,19 @@ def tooltip_style() -> None:
     _frame; the outer 9 px are the margin the client draws around the text box."""
     root = os.path.join(RP, "textures", "gui", "sprites", "tooltip")
     os.makedirs(root, exist_ok=True)
+    sheet = os.path.join(ART, "tooltip_badges.webp")
+    if os.path.exists(sheet):
+        # the owner's frame (HD): the whole painted frame is the background sprite, the frame sprite is empty
+        bg = hd_art.tooltip_frame(sheet)
+        w, h = hd_art.TT_SIZE
+        meta = {"gui": {"scaling": {"type": "nine_slice", "width": w, "height": h, "border": hd_art.TT_BORDER}}}
+        bg.save(os.path.join(root, "mongol_background.png"))
+        Image.new("RGBA", bg.size, (0, 0, 0, 0)).save(os.path.join(root, "mongol_frame.png"))
+        for name in ("mongol_background", "mongol_frame"):
+            with open(os.path.join(root, name + ".png.mcmeta"), "w", encoding="utf-8") as fh:
+                json.dump(meta, fh, indent=1)
+                fh.write("\n")
+        return
     meta = {"gui": {"scaling": {"type": "nine_slice", "width": 100, "height": 100, "border": 9}}}
     bg = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
     d = ImageDraw.Draw(bg)
@@ -758,6 +791,15 @@ def quest_badges(preview: str | None) -> None:
     """Status pills for the quest book tooltips, and a mouse icon for click hints."""
     table = [("Q_OPEN", "НЭЭЛТТЭЙ", (40, 140, 60)), ("Q_ACTIVE", "ИДЭВХТЭЙ", (200, 140, 30)), ("Q_DONE", "ДУУССАН", (40, 120, 70)),
              ("Q_LOCKED", "ТҮГЖЭЭТЭЙ", (170, 40, 36)), ("Q_SEEN", "ҮЗСЭН", (40, 120, 70)), ("Q_UNSEEN", "ҮЗЭЭГҮЙ", (90, 90, 110))]
+    sheet_path = os.path.join(ART, "tooltip_badges.webp")
+    if os.path.exists(sheet_path):
+        sheet = hd_art.tooltip_sheet(sheet_path)
+        if len(sheet["pills"]) != len(table):
+            raise SystemExit(f"tooltip_badges.webp: {len(sheet['pills'])} pills, expected {len(table)}")
+        for (key, label, _), pill in zip(table, sheet["pills"]):
+            add_bitmap("BADGE_" + key, hd_art.shrink(pill, 9 * hd_art.SCALE), "badge/" + key.lower(), 9, 8, f"quest badge «{label}»")
+        add_bitmap("MOUSE_LEFT", hd_art.shrink(sheet["mouse"], 9 * hd_art.SCALE), "icon/mouse_left", 9, 8, "mouse, left button (click hints)")
+        return
     for key, label, c in table:
         img = pf.badge(label, c, _light(c), WHITE, _dark(c, 0.35))
         add_bitmap("BADGE_" + key, img, "badge/" + key.lower(), 9, 8, f"quest badge «{label}»")
@@ -771,8 +813,17 @@ def quest_badges(preview: str | None) -> None:
 
 def gui_questbook(preview: str | None) -> None:
     """The quest book's chest background, one per tab (akuma-style tabs): row 0 holds three tabs, the active one
-    gold; rows 1-4 a framed blue panel of item wells; row 5 the toolbar."""
+    gold; rows 1-4 a framed blue panel of item wells; row 5 the toolbar. From the owner's painting
+    (assets/art/source/gui_questbook.webp, HD) when present."""
     height = 17 + 6 * 18 + 1
+    art = os.path.join(ART, "gui_questbook.webp")
+    if os.path.exists(art):
+        for active, img in enumerate(hd_art.questbook(art, height)):
+            add_bitmap(f"GUI_QUESTBOOK{active + 1}", img, f"gui/questbook{active + 1}", height, 13,
+                       f"chest background quest book, tab {active + 1} active 176x{height} (HD x{hd_art.SCALE})")
+            if preview:
+                img.save(os.path.join(preview, f"gui_questbook{active + 1}.png"))
+        return
     for active in range(3):
         img = Image.new("RGBA", (176, height), LEATHER + (255,))
         d = ImageDraw.Draw(img)

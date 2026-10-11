@@ -104,12 +104,10 @@ public final class QuestMenu {
         if (tab == 2 && !hasTwo) tab = 1;
         if (tab < 1 || tab > 3) tab = 1;
         final int shownTab = tab;
-        String title = switch (tab) {
-            case 2 -> "Хөх Сүлдний Зам · " + done + "/" + chain.size();
-            case 3 -> "Түүхэн Газрууд · " + seenCount(p) + "/" + sites().size();
-            default -> "Сүлдний Зам · " + done + "/" + chain.size();
-        };
-        Menu m = new Menu(6, title, tab == 2 ? Glyphs.GUI_QUESTBOOK2 : tab == 3 ? Glyphs.GUI_QUESTBOOK3 : Glyphs.GUI_QUESTBOOK1);
+        // short: the painted top strip has knots at its ends and in the middle; the title sits between the first two
+        String title = tab == 3 ? seenCount(p) + "/" + sites().size() + " газар" : done + "/" + chain.size() + " бүлэг";
+        Menu m = new Menu(6, Component.text(title, TextColor.fromHexString("#F2D58A")),
+                tab == 2 ? Glyphs.GUI_QUESTBOOK2 : tab == 3 ? Glyphs.GUI_QUESTBOOK3 : Glyphs.GUI_QUESTBOOK1, 14);
 
         // row 0: the tabs (the background draws them; invisible buttons on top)
         tab(m, new int[]{0, 1, 2}, "Акт I · Сүлдний Зам", "1–" + Math.min(ACT_ONE, chain.size()) + "-р бүлэг: Хархорумаас Алтай хүртэл",
