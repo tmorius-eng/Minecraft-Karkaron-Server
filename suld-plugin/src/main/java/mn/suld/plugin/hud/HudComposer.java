@@ -156,7 +156,11 @@ public final class HudComposer {
             int mid = x + HudGlyphs.SLOT_W / 2;
             switch (sl.state()) {
                 case COOLDOWN -> c.centred(HudGlyphs.SLOT, mid, seconds(sl.seconds()), WHITE);
-                case LOCKED -> centredGlyph(c, mid, HudGlyphs.NUM_LOCK, GREY);
+                // the level that unlocks it (10, 20, 35) when known, else a padlock
+                case LOCKED -> {
+                    if (sl.seconds() >= 1) c.centred(HudGlyphs.SLOT, mid, Integer.toString((int) sl.seconds()), GREY);
+                    else centredGlyph(c, mid, HudGlyphs.NUM_LOCK, GREY);
+                }
                 case NO_RESOURCE -> centredGlyph(c, mid, numeral(sl.numeral()), RED);
                 case READY -> centredGlyph(c, mid, numeral(sl.numeral()), sl.numeral() == 0 ? GOLD : sl.color());
             }

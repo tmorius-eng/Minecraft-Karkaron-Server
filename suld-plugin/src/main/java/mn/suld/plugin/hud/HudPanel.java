@@ -317,7 +317,8 @@ final class HudPanel implements Listener {
             else if (cd > 0.05) st = HudState.SlotState.COOLDOWN;
             else if (resource < skills.costFor(p, s)) st = HudState.SlotState.NO_RESOURCE;
             else st = HudState.SlotState.READY;
-            out.add(new HudState.Slot(s.slot(), st, cd, color));
+            // a locked slot carries its unlock level in place of a cooldown (the HUD prints it)
+            out.add(new HudState.Slot(s.slot(), st, st == HudState.SlotState.LOCKED ? Spell.UNLOCK_LEVEL[s.slot()] : cd, color));
         }
         SkillTreeService tree = services.skillTree();
         if (tree != null && tree.ultimateOf(p) != null) {

@@ -533,6 +533,9 @@ public final class Menus {
                     sellAll(pl);
                     shop(pl);
                 });
+        m.set(30, Menu.item(Material.GOLD_NUGGET, Menu.title("Зарах цонх", GOLD), Menu.lore(GOLD,
+                List.of(b("Цүнхэн дэх олз, зэвсэг, хуяг, тушиг"), b("бүгд үнэтэйгээ харагдана — сонгоод зарна.")),
+                List.of(), "Дарж нээх")), (pl, c) -> sell(pl));
         m.set(31, Menu.item(Material.ARMOR_STAND, Menu.title("Гоёл", PURPLE), Menu.lore(PURPLE,
                 List.of(b("Цол, нэрийн өнгө, чатын өнгө...")), List.of(), "Дарж нээх")), (pl, c) -> cosmetics(pl));
         m.set(33, Menu.item(Material.EMERALD, Menu.title("Кредит дэлгүүр · /buy", SKY), Menu.lore(SKY,
@@ -566,6 +569,105 @@ public final class Menus {
         ItemStack[] storage = p.getInventory().getStorageContents();
         for (int i = 0; i < storage.length && i < 36; i++) sim.setItem(i, storage[i] == null ? null : storage[i].clone());
         return sim.addItem(stack.clone()).isEmpty();
+    }
+
+    /** Bag slot a player clicked once in the sell window (gear sells on the second click). */
+    private final Map<java.util.UUID, Integer> sellArmed = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * The sell window (/shop → Зарах цонх): every item in the bag a merchant buys, with its price ("Үнэ" on the
+     * tooltip is what it pays). Loot materials sell on a click; gear asks for a second click on the same item.
+     * Class gear, relics, forged items and Legendary-or-better gear never appear (they cannot be sold: salvage them).
+     */
+    public void sell(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        Integer armed = sellArmed.get(p.getUniqueId());
+        Menu m = new Menu(6, "Зарах · Sell", null);
+        ItemStack[] inv = p.getInventory().getStorageContents();
+        int shown = 0;
+        long all = 0;
+        for (int i = 0; i < inv.length && shown < 45; i++) {
+            ItemStack it = inv[i];
+            long unit = unitPrice(it);
+            if (unit <= 0) continue;
+            final int bag = i;
+            final ItemStack seen = it.clone();
+            long price = unit * it.getAmount();
+            if (material(it)) all += price;
+            ItemStack icon = it.clone();
+            var meta = icon.getItemMeta();
+            List<Component> lore = meta.lore() == null ? new ArrayList<>() : new ArrayList<>(meta.lore());
+            lore.add(Component.empty());
+            lore.add(Menu.kv("Зарах үнэ:", fmt(price) + " ₮" + (it.getAmount() > 1 ? "  (" + fmt(unit) + " × " + it.getAmount() + ")" : ""), GOLD));
+            lore.add(b(armed != null && armed == bag ? "▶ Дахин дарж зарахаа батал" : material(it) ? "Дарж зарах" : "Дарж сонгоод, дахин дарж зарна"));
+            meta.lore(lore);
+            icon.setItemMeta(meta);
+            m.set(shown++, icon, (pl, c) -> sellSlot(pl, bag, seen));
+        }
+        if (shown == 0) m.set(22, Menu.item(Material.BARRIER, Menu.title("Зарах зүйл алга", RED), Menu.lore(RED,
+                List.of(b("Мангасаас унасан олз, хэрэгсэл энд гарна."), b("Ангийн эд, дурсгалыг зарахгүй.")), List.of(), null)), null);
+        final long allMaterials = all;
+        m.set(45, Menu.item(Material.ARROW, Menu.title("« Дэлгүүр", GOLD), List.of()), (pl, c) -> shop(pl));
+        m.set(49, Menu.item(Material.LEATHER, Menu.title("Бүх олзыг зарах", GOLD), Menu.lore(GOLD,
+                List.of(b("Зөвхөн материал (арьс, хор, чулуу...)."), b("Хэрэгслийг нэг нэгээр нь сонгож зарна.")),
+                List.of(Menu.kv("Нийт:", fmt(allMaterials) + " ₮", GOLD)), "Дарж бүгдийг зарах")), (pl, c) -> {
+            sellAll(pl);
+            sell(pl);
+        });
+        m.set(53, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()) + " ₮", GOLD))), null);
+        m.open(p);
+    }
+
+    /** What a merchant pays for one of this stack, 0 when it is not for sale. */
+    private long unitPrice(ItemStack it) {
+        if (it == null || it.getType().isAir()) return 0;
+        ItemInstance ii = services.items().read(it).orElse(null);
+        if (ii == null || mn.suld.plugin.item.SoulboundGuard.soulbound(ii)) return 0;
+        if (services.relics().items().isRelic(it)) return 0;
+        mn.suld.api.item.ItemDefinition idef = mn.suld.plugin.content.SuldContent.definitionFor(ii.definitionId());
+        if (idef == null || services.itemService().check(it).verdict() == mn.suld.plugin.item.ItemService.Verdict.FORGED) return 0;
+        return mn.suld.api.item.ItemEconomy.sellPrice(idef, ii);
+    }
+
+    private boolean material(ItemStack it) {
+        ItemInstance ii = services.items().read(it).orElse(null);
+        mn.suld.api.item.ItemDefinition idef = ii == null ? null : mn.suld.plugin.content.SuldContent.definitionFor(ii.definitionId());
+        return idef != null && idef.type() == mn.suld.api.item.ItemType.MATERIAL;
+    }
+
+    private void sellSlot(Player p, int bag, ItemStack seen) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        ItemStack now = p.getInventory().getItem(bag);
+        // the bag changed since the window was drawn (moved, split, swapped): redraw, never sell something else
+        if (pr == null || now == null || !now.isSimilar(seen) || now.getAmount() != seen.getAmount()) {
+            sellArmed.remove(p.getUniqueId());
+            sell(p);
+            return;
+        }
+        long unit = unitPrice(now);
+        if (unit <= 0) {
+            sell(p);
+            return;
+        }
+        Integer armed = sellArmed.get(p.getUniqueId());
+        if (!material(now) && (armed == null || armed != bag)) {
+            sellArmed.put(p.getUniqueId(), bag);
+            sell(p);
+            return;
+        }
+        sellArmed.remove(p.getUniqueId());
+        long price = unit * now.getAmount();
+        ItemInstance ii = services.items().read(now).orElse(null);
+        p.getInventory().setItem(bag, null);
+        pr.addCurrency(price);
+        services.profiles().save(pr);
+        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, p); // the item is gone on disk together with the coins
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(p.getUniqueId().toString(), "item.sell",
+                (ii == null ? "?" : ii.definitionId() + "-" + ii.uuid()), now.getAmount() + " for " + price));
+        p.sendMessage(Messages.success("Зарагдлаа: +" + fmt(price) + " ₮"));
+        services.hud().update(p, pr);
+        sell(p);
     }
 
     private void sellAll(Player p) {

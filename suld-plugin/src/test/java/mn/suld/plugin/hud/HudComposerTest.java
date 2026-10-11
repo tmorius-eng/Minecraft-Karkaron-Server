@@ -186,6 +186,18 @@ class HudComposerTest {
     }
 
     @Test
+    void aLockedSlotShowsTheLevelThatUnlocksIt() {
+        HudState base = state(20, 20, PlayerClass.BAATAR, 50, 100, 7, 0);
+        HudState s = new HudState(base.hp(), base.maxHp(), 0, base.hp(), base.lowBar(), base.resource(), base.resourceMax(), base.clazz(),
+                base.level(), base.expFraction(), false, List.of(new HudState.Slot(1, HudState.SlotState.READY, 0, W),
+                new HudState.Slot(2, HudState.SlotState.LOCKED, 10, W)), List.of(), List.of());
+        Decoded d = decode(HudComposer.panel(s, false), HudComposer.HALF);
+        assertEquals(1, d.named("SLOT_LOCKED").size());
+        assertEquals(0, d.named("NUM_LOCK").size());
+        assertEquals("10", d.text("SLOT"));
+    }
+
+    @Test
     void slotsShowStateCooldownAndUltimate() {
         Decoded d = decode(HudComposer.panel(state(20, 20, PlayerClass.BAATAR, 50, 100, 20, 0), false), HudComposer.HALF);
         assertEquals(2, d.named("SLOT_READY").size() + d.named("SLOT_ULT").size());

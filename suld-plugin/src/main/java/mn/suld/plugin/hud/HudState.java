@@ -39,7 +39,7 @@ public record HudState(double hp, double maxHp, double absorption, double recent
      * One spell slot.
      *
      * @param numeral   1..4, or 0 for the ultimate
-     * @param seconds   cooldown left (shown while COOLDOWN)
+     * @param seconds   cooldown left (shown while COOLDOWN); the unlock level while LOCKED (0 = unknown)
      * @param color     the class colour of the numeral when ready
      */
     public record Slot(int numeral, SlotState state, double seconds, TextColor color) {
