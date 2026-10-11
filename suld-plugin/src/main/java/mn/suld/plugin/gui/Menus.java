@@ -524,10 +524,13 @@ public final class Menus {
                 info.add(Menu.kv("Төлөв:", on ? "Зүүсэн ✔" : "Танд байгаа", GREEN));
                 hint = cat == Cosmetic.Category.EMOJI ? "Чатад бичиж ашигла" : on ? "Дарж тайлах" : "Дарж зүүх";
             } else {
-                if (c.sold()) info.add(Menu.kv("Зоос:", fmt(c.price()) + " ₮", coins >= c.price() ? GREEN : RED));
+                boolean forCoins = styles().coinBuyable(c);
+                if (forCoins) info.add(Menu.kv("Зоос:", fmt(c.price()) + " ₮", coins >= c.price() ? GREEN : RED));
                 if (c.creditPrice() > 0) info.add(Menu.kv("Кредит:", fmt(c.creditPrice()) + " ✦", s.credits() >= c.creditPrice() ? GREEN : RED));
+                if (c.creditPrice() > 0 && !forCoins) info.add(Menu.kv("Авах:", "Зөвхөн кредитээр · /buy", SKY));
                 if (c.source().startsWith("level:")) info.add(Menu.kv("Авах:", "Түвшин " + c.source().substring(6) + " · /lvlup", PURPLE));
-                hint = c.sold() ? "Зүүн: зоосоор · Баруун: кредитээр" : c.creditPrice() > 0 ? "Дарж кредитээр авах" : "Түвшний шагнал";
+                hint = forCoins ? "Зүүн: " + fmt(c.price()) + " ₮ зоосоор · Баруун: " + fmt(c.creditPrice()) + " ✦ кредитээр"
+                        : c.creditPrice() > 0 ? "Дарж " + fmt(c.creditPrice()) + " ✦ кредитээр авах" : "Түвшний шагнал";
             }
             body.add(Component.text("Shift + зүүн дарж урьдчилан харна", NamedTextColor.GRAY, TextDecoration.BOLD));
             Material icon = owned ? CAT_ICON.get(cat) : Material.GRAY_DYE;
@@ -538,9 +541,10 @@ public final class Menus {
                     previewCosmetic(pl, c);
                     return;
                 }
-                StyleService.Currency cur = (click == ClickType.RIGHT || click == ClickType.SHIFT_RIGHT || !c.sold())
+                boolean forCoins = styles().coinBuyable(c);
+                StyleService.Currency cur = (click == ClickType.RIGHT || click == ClickType.SHIFT_RIGHT || !forCoins)
                         ? StyleService.Currency.CREDITS : StyleService.Currency.COINS;
-                if (!owned && !c.sold() && c.creditPrice() == 0) return;
+                if (!owned && !forCoins && c.creditPrice() == 0) return;
                 styles().buyOrEquip(pl, c, cur, () -> category(pl, cat));
             });
         }

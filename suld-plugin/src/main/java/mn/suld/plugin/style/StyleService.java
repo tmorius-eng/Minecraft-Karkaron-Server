@@ -51,6 +51,22 @@ public final class StyleService implements Listener {
         this.plugin = plugin;
         this.services = services;
         this.repository = repository;
+        String max = plugin.getConfig().getString("cosmetics.coin-max-rarity", "COMMON");
+        Cosmetic.Rarity r;
+        try {
+            r = Cosmetic.Rarity.valueOf(max.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            plugin.getLogger().warning("cosmetics.coin-max-rarity '" + max + "' is not COMMON/RARE/EPIC/LEGENDARY: using COMMON");
+            r = Cosmetic.Rarity.COMMON;
+        }
+        this.coinMaxRarity = r;
+    }
+
+    private final Cosmetic.Rarity coinMaxRarity;
+
+    /** Coins may buy it here (shop cosmetic no rarer than {@code cosmetics.coin-max-rarity}); otherwise credits only. */
+    public boolean coinBuyable(Cosmetic c) {
+        return c.coinBuyable(coinMaxRarity);
     }
 
     /** Styles that could not be loaded (reload while the database is down): never written, so defaults cannot overwrite. */
@@ -279,9 +295,9 @@ public final class StyleService implements Listener {
             return;
         }
         try {
-            if (!c.sold()) {
+            if (!coinBuyable(c)) {
                 p.sendMessage(Messages.error(c.source().startsWith("level:") ? "Түвшин " + c.source().substring(6) + "-д /lvlup-аар авна."
-                        : "Энэ зүйл зөвхөн кредитээр авагдана. /buy"));
+                        : "Энэ зүйл зөвхөн Сүлд Кредитээр авагдана (" + c.creditPrice() + " ✦). /buy"));
                 return;
             }
             PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);

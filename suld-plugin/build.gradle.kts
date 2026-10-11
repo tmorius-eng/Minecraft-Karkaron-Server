@@ -147,7 +147,13 @@ tasks {
 
     // Make the plugin jar's resources (plugin.yml) available to processResources.
     processResources {
-        val props = mapOf("version" to project.version, "apiVersion" to "1.21")
+        // The commit the jar was built from (plus "-dirty" for uncommitted changes), shown by /suld info and in the
+        // startup log so the owner can tell which build a server runs.
+        val commit = providers.exec {
+            commandLine("git", "describe", "--always", "--dirty", "--abbrev=7", "--exclude=*")
+            isIgnoreExitValue = true
+        }.standardOutput.asText.map { it.trim().ifEmpty { "unknown" } }.getOrElse("unknown")
+        val props = mapOf("version" to "${project.version}+$commit", "apiVersion" to "1.21")
         inputs.properties(props)
         filesMatching("plugin.yml") {
             expand(props)

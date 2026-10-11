@@ -337,7 +337,11 @@ public final class SuldCommand implements CommandExecutor {
     }
 
     private void info(CommandSender sender) {
-        sender.sendMessage(Messages.accent("SULD v" + plugin.getPluginMeta().getVersion()));
+        String v = plugin.getPluginMeta().getVersion();
+        int plus = v.indexOf('+');
+        sender.sendMessage(Messages.accent("SULD v" + (plus < 0 ? v : v.substring(0, plus))));
+        if (plus >= 0) sender.sendMessage(Messages.info("Build: " + v.substring(plus + 1)
+                + " (github.com/tmorius-eng/Minecraft-Karkaron-Server/commit/" + v.substring(plus + 1).replace("-dirty", "") + ")"));
         sender.sendMessage(Messages.info("Онлайн: " + Bukkit.getOnlinePlayers().size()
                 + "/" + Bukkit.getMaxPlayers()));
         sender.sendMessage(Messages.info("Хадгалалт: " + services.config().database().type()));

@@ -106,6 +106,16 @@ class StyleTest {
     }
 
     @Test
+    void onlyCosmeticsUpToTheCoinRarityAreSoldForCoins() {
+        for (Cosmetic c : CosmeticCatalog.ALL) {
+            boolean common = c.sold() && c.rarity() == Cosmetic.Rarity.COMMON;
+            assertEquals(common, c.coinBuyable(Cosmetic.Rarity.COMMON), c.id());
+            assertEquals(c.sold(), c.coinBuyable(Cosmetic.Rarity.LEGENDARY), c.id());
+            if (c.sold()) assertTrue(c.creditPrice() > 0, c.id() + " still has a credit price");
+        }
+    }
+
+    @Test
     void levelRewardsAreClaimedOnce() {
         long mask = 0;
         assertEquals(3, LevelRewards.claimable(5, mask).size()); // 2, 3, 5

@@ -61,6 +61,14 @@ public record Cosmetic(String id, Category category, String name, long price, St
         return price > 0 && "shop".equals(source);
     }
 
+    /**
+     * Whether coins may buy it on this server: sold in the shop and no rarer than {@code maxForCoins}
+     * ({@code cosmetics.coin-max-rarity}). Rarer shop cosmetics are credits-only.
+     */
+    public boolean coinBuyable(Rarity maxForCoins) {
+        return sold() && rarity.ordinal() <= maxForCoins.ordinal();
+    }
+
     /** Price in credits ({@code 0} = not for credits): a tenth of the coin price, or the store price. */
     public long creditPrice() {
         if ("store".equals(source)) return price;

@@ -99,8 +99,9 @@ lp user <name> parent add mod
 `/cosmetics` is a card menu with eight categories: tags, name colours, chat colours, join messages, emojis, and
 three particle categories — **auras** (light circling the player), **trails** (left behind while walking or riding)
 and **kill effects** (where a monster falls). Everything is visual only. Shift + left click previews an item before
-buying (a chat sample, or the effect around the player). Coins buy most items (a tenth of the price in credits works
-too); some are credits-only (see `/buy`). Effects are skipped for invisible players, spectators and souls.
+buying (a chat sample, or the effect around the player). Common (Энгийн) shop items can be bought with coins
+(left click) or credits at a tenth of the price (right click); rarer ones — Ховор, Гайхамшигт, Домогт — and every
+store item are credits-only (`cosmetics.coin-max-rarity`, default `COMMON`). Cosmetics already owned are kept. Effects are skipped for invisible players, spectators and souls.
 
 ## Credit store
 
