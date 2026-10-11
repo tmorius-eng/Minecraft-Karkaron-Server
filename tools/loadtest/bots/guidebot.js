@@ -1,0 +1,27 @@
+const mineflayer = require('mineflayer'); const { execFileSync } = require('child_process');
+const ctl = process.argv[2]; const name = 'Gd' + Math.floor(Math.random() * 1000);
+const bot = mineflayer.createBot({ host: '127.0.0.1', port: 25571, username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
+const sleep = (ms) => new Promise(r => setTimeout(r, ms)); const cmd = (c) => execFileSync(ctl, ['cmd', c]);
+const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') return c; const v = c.value || c; let s = ''; if (v.text) s += (v.text.value ?? v.text); const ex = v.extra && (v.extra.value?.value || v.extra.value || v.extra); if (Array.isArray(ex)) ex.forEach(e => s += flat(e.value ? e : { value: e })); return s; };
+const log = []; let displays = new Set(); const boardText = {};
+bot._client.on('set_title_text', (pk) => log.push('TITLE ' + flat(pk.text)));
+bot._client.on('set_title_subtitle', (pk) => log.push('SUB ' + flat(pk.text)));
+bot._client.on('action_bar', (pk) => log.push('BAR ' + flat(pk.text)));
+bot._client.on('system_chat', (pk) => { const s = flat(pk.content); if (pk.overlay) log.push('BAR ' + s); else log.push(s); });
+bot._client.on('spawn_entity', (pk) => { const t = bot.registry.entities[pk.type]; if (t && t.name === 'text_display') displays.add(pk.entityId); });
+bot._client.on('entity_metadata', (pk) => { if (!displays.has(pk.entityId)) return; for (const m of pk.metadata) if (m.value && typeof m.value === 'object') { const t = flat(m.value); if (t) boardText[pk.entityId] = t; } });
+bot.once('spawn', async () => {
+  await sleep(14000);
+  const keep = log.filter(l => !/SkinsRestorer|Дүрс|Тавтай|ирлээ/.test(l));
+  console.log('--- JOIN ---\n' + keep.join('\n')); log.length = 0;
+  console.log('--- BOARDS (' + Object.keys(boardText).length + ') ---'); for (const t of Object.values(boardText)) console.log(t.replace(/\n/g, ' | ').slice(0, 150));
+  if (bot.currentWindow) await bot.clickWindow(10, 0, 0).catch(() => {});
+  await sleep(2000);
+  bot.chat('/commands'); await sleep(1200);
+  console.log('--- /commands (player) ---\n' + log.filter(l => l.startsWith('▎')).join('\n')); log.length = 0;
+  cmd('op ' + name); await sleep(800);
+  bot.chat('/commands'); await sleep(1200);
+  console.log('--- /commands (op) groups ---\n' + log.filter(l => l.startsWith('▎')).join('\n') + '\nlines: ' + log.length);
+  bot.quit(); process.exit(0);
+});
+setTimeout(() => process.exit(1), 60000);

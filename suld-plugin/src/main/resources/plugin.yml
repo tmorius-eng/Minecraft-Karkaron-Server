@@ -49,11 +49,19 @@ commands:
     usage: /suldpack <status|reload|force>
   party:
     description: SULD party control (invite, accept, leave, kick, promote, disband, info).
-    usage: /party <invite|accept|leave|kick|promote|disband|info>
+    usage: /party <invite|accept|leave|kick|promote|disband|info|find|join|recruit|role>
     aliases: [p]
   duel:
     description: A consented fight outside Kharkhorum (SULD is PvE; players fight only by agreement).
     usage: /duel <player|accept|decline|end|status>
+  khuraldai:
+    description: Их Хуралдай — the weekly vote and the week's campaign (vote, status, deliver; admin open/close/force/resolve/cancel).
+    usage: /khuraldai [vote <1-3>|status|deliver [amount]]
+    aliases: [huraldai, campaign]
+  chronicle:
+    description: Баатрын Хроник — the server's book of firsts, records and campaigns.
+    usage: /chronicle [mine|dungeon|relic|site|khuraldai]
+    aliases: [khronik, hronik]
   dungeon:
     description: SULD dungeons (opens the dungeon window; enter, status, leave, abort).
     usage: /dungeon [enter|status|leave|abort]
@@ -281,6 +289,7 @@ permissions:
       suld.admin.classgear: true
       suld.admin.pack: true
       suld.admin.event: true
+      suld.admin.campaign: true
       suld.admin.relic: true
       suld.admin.world: true
       suld.admin.credits: true
@@ -335,6 +344,9 @@ permissions:
     default: op
   suld.admin.event:
     description: Allows starting/stopping world events.
+    default: op
+  suld.admin.campaign:
+    description: Allows opening/closing the Хуралдай vote and forcing, resolving or cancelling the week's campaign; hiding chronicle lines.
     default: op
   suld.admin.relic:
     description: Relic administration (setshrine, return, give, recover, tp) and shrine block edits.

@@ -169,6 +169,115 @@ public final class PartyService {
         }
     }
 
+    // ------------------------------------------------------------- party finder (docs/KHURALDAI.md)
+
+    /** List the parties looking for members, optionally for one dungeon. */
+    public void find(Player player, String dungeonId) {
+        java.util.List<mn.suld.api.party.PartyFinder.Listing> list = mn.suld.api.party.PartyFinder.listings(registry.all(), dungeonId);
+        if (list.isEmpty()) {
+            player.sendMessage(Messages.info("Одоогоор баг хайж буй хүн алга. Өөрөө нээ: /party recruit [агуй]"));
+            return;
+        }
+        player.sendMessage(Messages.accent("Баг хайж байна (" + list.size() + "):"));
+        for (mn.suld.api.party.PartyFinder.Listing l : list) {
+            String roles = l.missingRoles().isEmpty() ? "" : " · хэрэгтэй: " + String.join(", ", l.missingRoles().stream().map(mn.suld.api.party.PartyRole::displayName).toList());
+            String dungeon = l.dungeonId().isBlank() ? "" : " · " + dungeonName(l.dungeonId());
+            String leader = nameOf(l.leader());
+            player.sendMessage(Component.text("  ★ " + leader + " (" + l.size() + "/" + l.capacity() + ")" + dungeon + roles, net.kyori.adventure.text.format.NamedTextColor.WHITE)
+                    .append(Component.text("  [нэгдэх]", Messages.BRAND)
+                            .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/party join " + leader))
+                            .hoverEvent(Component.text("/party join " + leader))));
+        }
+    }
+
+    private static String dungeonName(String id) {
+        mn.suld.api.dungeon.DungeonDefinition d = mn.suld.plugin.content.SuldContent.dungeonFor(id);
+        return d == null ? id : d.displayName();
+    }
+
+    /** Join a recruiting party by its leader's name, no invite needed. */
+    public void join(Player player, String leaderName) {
+        if (soul.test(player.getUniqueId())) {
+            player.sendMessage(Messages.error("Сүнс багт нэгдэх боломжгүй."));
+            return;
+        }
+        Player leader = Bukkit.getPlayerExact(leaderName);
+        if (leader == null) {
+            player.sendMessage(Messages.error("Тоглогч онлайн биш байна."));
+            return;
+        }
+        PartyRegistry.Action a = registry.join(player.getUniqueId(), leader.getUniqueId());
+        switch (a.result()) {
+            case JOINED -> {
+                broadcast(a.party(), Messages.success(player.getName() + " багт нэгдлээ. (" + a.party().size() + "/" + a.party().capacity() + ")"));
+                if (!a.party().isRecruiting()) broadcast(a.party(), Messages.info("Баг дүүрлээ; хайлтаас хасагдав."));
+            }
+            case NOT_RECRUITING -> player.sendMessage(Messages.error(leader.getName() + "-ийн баг гишүүн хайхгүй байна."));
+            case PARTY_FULL -> player.sendMessage(Messages.error("Баг дүүрсэн."));
+            case PARTY_BUSY -> player.sendMessage(Messages.error("Баг агуйд явж байна."));
+            case ALREADY_IN_PARTY -> player.sendMessage(Messages.error("Та аль хэдийн багт байна. /party leave"));
+            case SELF_TARGET -> player.sendMessage(Messages.error("Өөрийнхөө багт нэгдэх боломжгүй."));
+            default -> player.sendMessage(Messages.error(leader.getName() + " багт байхгүй."));
+        }
+    }
+
+    /** The leader puts the party on the board ({@code /party recruit [dungeon]}) or takes it off ({@code off}). */
+    public void recruit(Player leader, String dungeonArg) {
+        if (soul.test(leader.getUniqueId())) {
+            leader.sendMessage(Messages.error("Сүнс баг бүрдүүлэхгүй."));
+            return;
+        }
+        Party party = registry.ensureParty(leader.getUniqueId());
+        if (!party.isLeader(leader.getUniqueId())) {
+            leader.sendMessage(Messages.error("Зөвхөн багийн ахлагч хайлт нээнэ."));
+            return;
+        }
+        if (dungeonArg != null && (dungeonArg.equalsIgnoreCase("off") || dungeonArg.equalsIgnoreCase("stop"))) {
+            party.recruit(false, "");
+            leader.sendMessage(Messages.info("Баг хайлтаас хасагдав."));
+            return;
+        }
+        String dungeon = "";
+        if (dungeonArg != null && !dungeonArg.isBlank()) {
+            String id = dungeonArg.startsWith("dungeon.") ? dungeonArg : "dungeon." + dungeonArg;
+            if (mn.suld.plugin.content.SuldContent.dungeonFor(id) == null) {
+                leader.sendMessage(Messages.error("Ийм агуй алга: " + dungeonArg));
+                return;
+            }
+            dungeon = id;
+        }
+        if (party.isFull()) {
+            leader.sendMessage(Messages.error("Баг дүүрсэн."));
+            return;
+        }
+        party.recruit(true, dungeon);
+        if (party.roles().get(leader.getUniqueId()) == null) {
+            party.role(leader.getUniqueId(), mn.suld.api.party.PartyRole.defaultFor(
+                    classOf.apply(leader.getUniqueId())));
+        }
+        leader.sendMessage(Messages.success("Баг хайлтад орлоо" + (dungeon.isEmpty() ? "" : " (" + dungeonName(dungeon) + ")")
+                + ". Бусад /party find-аар харж, /party join " + leader.getName() + "-аар нэгдэнэ."));
+        Bukkit.broadcast(Messages.info(leader.getName() + " баг бүрдүүлж байна" + (dungeon.isEmpty() ? "" : ": " + dungeonName(dungeon)) + " — /party join " + leader.getName()));
+    }
+
+    /** Set by SuldServices: the class of a player, for the default role. */
+    public volatile java.util.function.Function<UUID, mn.suld.api.clazz.PlayerClass> classOf = id -> null;
+
+    public void role(Player player, String roleText) {
+        Party party = registry.partyOf(player.getUniqueId()).orElse(null);
+        if (party == null) {
+            player.sendMessage(Messages.error("Та багт байхгүй байна."));
+            return;
+        }
+        mn.suld.api.party.PartyRole role = mn.suld.api.party.PartyRole.parse(roleText);
+        if (role == null) {
+            player.sendMessage(Messages.error("/party role <tank|healer|dps>"));
+            return;
+        }
+        party.role(player.getUniqueId(), role);
+        broadcast(party, Messages.info(player.getName() + " — " + role.displayName()));
+    }
+
     public void broadcast(Party party, Component message) {
         for (UUID member : party.members()) {
             Player p = Bukkit.getPlayer(member);

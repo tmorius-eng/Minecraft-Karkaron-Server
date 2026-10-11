@@ -15,6 +15,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
@@ -111,8 +112,9 @@ public final class NpcService implements Listener {
     public Map<String, NamedTextColor> glowEntries() {
         Map<String, NamedTextColor> out = new HashMap<>();
         for (Map.Entry<String, UUID> e : spawned.entrySet()) {
-            WorldPoint p = point(e.getKey());
-            Role r = p == null ? null : roleFor(p);
+            Dynamic d = dynamics.get(e.getKey());
+            WorldPoint p = d == null ? point(e.getKey()) : null;
+            Role r = d != null ? d.role() : p == null ? null : roleFor(p);
             if (r != null) out.put(e.getValue().toString(), r.glow());
         }
         return out;
@@ -123,7 +125,81 @@ public final class NpcService implements Listener {
         return null;
     }
 
+    // ------------------------------------------------------------- dynamic NPCs (campaign world effects)
+
+    /** A dynamic NPC: a role at a fixed spot, under a world-state flag key (docs/KHURALDAI.md). */
+    private record Dynamic(String key, Role role, Location at, float yaw) {
+    }
+
+    private final Map<String, Dynamic> dynamics = new java.util.LinkedHashMap<>();
+
+    /** The roles a campaign may bring to the city, by role id. */
+    private static Role dynamicRole(String roleId) {
+        return switch (roleId) {
+            case "merchant.caravan" -> new Role("merchant", "Жингийн Худалдаачин", "Жингийн зам нээлттэй · Дэлгүүр", NamedTextColor.GREEN);
+            case "steward.campaign" -> new Role("guide", "Хуралдайн Түшмэл", "Их Хуралдай · Аян", NamedTextColor.GOLD);
+            default -> null;
+        };
+    }
+
+    /**
+     * Put the NPC {@code roleId} at {@code anchor}: a city point id, or {@code "city:x,z"} (an offset from the city
+     * origin), shifted by {@code dx}/{@code dz}. Idempotent per key.
+     */
+    public void addDynamic(String key, String roleId, String anchor, int dx, int dz, float yaw) {
+        Role role = dynamicRole(roleId);
+        if (role == null) {
+            plugin.getLogger().warning("[npc] unknown dynamic role " + roleId + " for " + key);
+            return;
+        }
+        if (dynamics.containsKey(key)) return;
+        Location at = null;
+        if (anchor.startsWith("city:")) {
+            String[] xz = anchor.substring(5).split(",");
+            World w = Bukkit.getWorlds().get(0);
+            int[] o = services.city().origin(w.getName()).orElse(null);
+            if (o != null && xz.length == 2) {
+                try {
+                    int x = o[0] + Integer.parseInt(xz[0].trim()) + dx, z = o[1] + Integer.parseInt(xz[1].trim()) + dz;
+                    at = new Location(w, x + 0.5, w.getHighestBlockYAt(x, z) + 1, z + 0.5);
+                } catch (NumberFormatException ignored) {
+                    at = null;
+                }
+            }
+        } else {
+            Location p = city.pointLocation(anchor);
+            if (p != null) at = p.clone().add(dx, 0, dz);
+        }
+        if (at == null) {
+            plugin.getLogger().warning("[npc] anchor " + anchor + " of " + key + " cannot be placed yet (city not built?)");
+            return;
+        }
+        dynamics.put(key, new Dynamic(key, role, at, yaw));
+        plugin.getLogger().info("[npc] dynamic " + roleId + " at " + at.getBlockX() + " " + at.getBlockZ() + " for " + key);
+        ensureAll();
+    }
+
+    public void removeDynamic(String key) {
+        Dynamic d = dynamics.remove(key);
+        if (d == null) return;
+        UUID id = spawned.remove(key);
+        Entity e = id == null ? null : Bukkit.getEntity(id);
+        if (e != null) e.remove();
+        services.hud().refreshGlow();
+    }
+
+    private void ensureDynamics() {
+        for (Dynamic d : dynamics.values()) {
+            UUID id = spawned.get(d.key());
+            Entity e = id == null ? null : Bukkit.getEntity(id);
+            if (e != null && e.isValid()) continue;
+            if (!d.at().isChunkLoaded()) continue;
+            spawn(new WorldPoint(d.key(), "npc", "dynamic", d.at().getBlockX(), d.at().getBlockY(), d.at().getBlockZ(), d.yaw(), false, "dynamic"), d.role(), d.at());
+        }
+    }
+
     private void ensureAll() {
+        ensureDynamics();
         if (!city.isBuilt()) return;
         for (WorldPoint p : city.slicePoints()) {
             Role r = roleFor(p);
@@ -243,6 +319,7 @@ public final class NpcService implements Listener {
     private final NpcDialogue dialogue;
 
     private static String actionLabel(String id) {
+        if (id.startsWith("effect:")) return "Үргэлжлүүлэх";
         if (id.equals("class_selection")) return "Анги сонгох";
         if (id.equals("tutorial")) return "Заавар нээх";
         if (id.equals("quest.first_hunt")) return "Аяны зам";
@@ -256,6 +333,12 @@ public final class NpcService implements Listener {
     private void act(Player p, String id) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
+        Dynamic dyn = dynamics.get(id);
+        if (dyn != null) { // a campaign's NPC: the caravan merchant trades, the steward opens the Хуралдай
+            if (dyn.role().skin().equals("merchant")) menus.shop(p);
+            else p.performCommand("khuraldai");
+            return;
+        }
         if (id.equals("class_selection")) {
             if (!pr.hasSelectedClass()) services.classSelectionGui().open(p);
             else p.performCommand("class");

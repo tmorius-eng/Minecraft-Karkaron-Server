@@ -127,7 +127,9 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(effects, this);
         effects.start();
         getServer().getPluginManager().registerEvents(
-                new mn.suld.plugin.clan.SocialListener(services.clans(), services.worldEvents()), this);
+                social = new mn.suld.plugin.clan.SocialListener(services.clans(), services.worldEvents()), this);
+        social.mobIds = services.mobs()::mobId;
+        social.campaignKills = (killer, mobId) -> services.campaigns().onMobKill(killer, mobId);
         mn.suld.plugin.command.ClanCommand clanCommand = new mn.suld.plugin.command.ClanCommand(services.clans());
         registerCommand("clan", clanCommand);
         registerCommand("cc", clanCommand);
@@ -385,6 +387,15 @@ public final class SuldPlugin extends JavaPlugin {
         services.historicSites = historicSites;
         props = new mn.suld.plugin.prop.PropService(this, services);
         props.start();
+        services.props = props;
+        services.npcs = npcs;
+        // Их Хуралдай, the week's campaign and the chronicle (docs/KHURALDAI.md): after the city, props and NPCs, so a
+        // restored world effect has something to attach to
+        services.chronicle().start();
+        services.khuraldai().start();
+        services.campaigns().start();
+        registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
+        registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
         worldCommand.sites(historicSites);
         pregen.start();
 
@@ -593,6 +604,7 @@ public final class SuldPlugin extends JavaPlugin {
     }
 
     private mn.suld.plugin.prop.PropService props;
+    private mn.suld.plugin.clan.SocialListener social;
     private mn.suld.plugin.anticheat.GrimBridge grim;
 
     /** The GrimAC bridge (inactive when GrimAC is not installed). */

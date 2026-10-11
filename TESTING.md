@@ -17,6 +17,31 @@
    `./gradlew :suld-plugin:simulate` re-runs the full matrix and rewrites
    `docs/PROGRESSION_SIMULATION.md`, the spec tables and `audit/progression-balance.json`.
 
+## Bots (`tools/loadtest/`)
+
+The Mineflayer harness lives in the repository since 2026-10-11 (`tools/loadtest/README.md`): `firstjoin.js` (the
+first-join flow), `featbot.js` (the functional sweep), `khuraldai-smoke.js` (Их Хуралдай: ballot → vote once → close →
+force → party finder → resolve → chronicle, plus a PvP-policy hit), `mmo50.js` (the 50-bot capacity run). Local dev
+server with the insecure offline dev flag only.
+
+## Их Хуралдай, campaigns, chronicle, PvP policy (docs/KHURALDAI.md, GAME_DESIGN.md «PvP»)
+
+| Step | How verified | Status |
+|---|---|---|
+| ISO-week cycles, phases from the clock, year rollover | `WeeklyCycleTest` | automated ✅ |
+| Campaign goals, tiers, dedupe, expiry, snapshot/restore | `CampaignRunTest` | automated ✅ |
+| Ballot eligibility, tally tie-break, quorum, rotation cooldowns | `VoteAndRotationTest` | automated ✅ |
+| Chronicle firsts, records, hiding, Mongolian headlines | `ChronicleTest` | automated ✅ |
+| Party finder: join rules, listing order, roles | `PartyFinderTest`, `PartyRegistryTest` | automated ✅ |
+| `campaigns.json` references and tier rules; names clean | `ContentDataTest`, `CulturalNamingTest` | automated ✅ |
+| One ballot of 24 concurrent, exact concurrent sums, one CAS close/resolve, flags | `JdbcCampaignRepositoryIT` (H2; PostgreSQL with `SULD_TEST_PG_URL`) | automated ✅ |
+| One first of 24 concurrent claims; records converge to the best; hidden rows stay | `JdbcChronicleRepositoryIT` | automated ✅ |
+| PvE-only verdicts, duels lapse and end, arenas parse | `PvpRulesTest`, `RelicRulesAndHintsTest` | automated ✅ |
+| V17 marks upsert, backfill twice, counts per player | `JdbcMarksRepositoryIT` | automated ✅ |
+| Open → vote → close → force → finder → resolve → chronicle on a live server | `tools/loadtest/bots/khuraldai-smoke.js` | bots ⏳ (not yet run) |
+| Progress survives a restart mid-campaign | `khuraldai status` before and after a stop/start | manual ⏳ |
+| `/khuraldai` and `/chronicle` screens, boss bar text at GUI scale 2–4 | real client | manual ⏳ |
+
 ## Critical invariants (unit-tested)
 - Progression: level/EXP curve, overflow at cap, multi-level rollover.
 - Combat: armor mitigation curve, crit boundary (`roll < chance`), determinism.

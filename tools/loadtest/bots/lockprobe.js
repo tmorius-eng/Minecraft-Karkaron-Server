@@ -1,0 +1,30 @@
+const mineflayer = require('mineflayer');
+const { execFileSync } = require('child_process');
+const [ctl] = process.argv.slice(2);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const cmd = (c) => execFileSync(ctl, ['cmd', c]);
+const name = 'Lk' + Math.floor(Math.random() * 900 + 100);
+const bot = mineflayer.createBot({ host: '127.0.0.1', port: 25571, username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
+const log = []; bot.on('messagestr', (m) => log.push(m));
+bot._client.on('system_chat', (pk) => { if (pk.isActionBar || pk.overlay) log.push('AB ' + JSON.stringify(pk.content).slice(0, 160)); });
+bot.once('spawn', async () => {
+  await sleep(3500);
+  for (let i = 0; i < 10 && !bot.currentWindow; i++) await sleep(400);
+  if (bot.currentWindow) { await bot.clickWindow(10, 0, 0).catch(() => {}); await sleep(1500); }
+  if (bot.currentWindow) bot.closeWindow(bot.currentWindow);
+  cmd(`tp ${name} 300 90 -46`); await sleep(3000);
+  cmd(`execute at ${name} run summon minecraft:zombie ~ ~ ~5 {NoAI:1b,Tags:["lockp"]}`); await sleep(1000);
+  console.log('items', bot.inventory.items().map(i => i.slot + ':' + i.name).join(' '), 'held', bot.quickBarSlot, bot.heldItem && bot.heldItem.name);
+  const w = bot.inventory.items().find(i => !/clock|compass|book|paper/.test(i.name));
+  if (w) await bot.equip(w, 'hand');
+  await sleep(500);
+  console.log('held now', bot.heldItem && bot.heldItem.name);
+  await bot.lookAt(bot.entity.position.offset(0, 1.5, 5));
+  let disp = 0; bot.on('entitySpawn', (e) => { if (/display/.test(e.name)) disp++; });
+  bot._client.write('block_dig', { status: 4, location: { x: 0, y: 0, z: 0 }, face: 0, sequence: 0 });
+  await sleep(2000);
+  console.log('displays', disp, 'items after', bot.inventory.items().length);
+  console.log(log.slice(-6).join('\n'));
+  cmd('kill @e[tag=lockp]'); bot.quit(); setTimeout(() => process.exit(0), 500);
+});
+setTimeout(() => process.exit(0), 40000);

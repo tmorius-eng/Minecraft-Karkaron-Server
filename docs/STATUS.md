@@ -5,7 +5,7 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-11 · **Commit base:** `main` after `56865ba` · **Schema:** V17
+**Last updated:** 2026-10-11 · **Commit base:** `main` after `56865ba` · **Schema:** V19
 
 ## Legend
 
@@ -39,7 +39,8 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Regions | 9 (Kharkhorum + 4 inner + 4 outer) | `content/world.json` |
 | Named areas / ovoo | 40 / 40 | `content/world.json`, `OvooService` |
 | Historic sites | 16 | `content/sites.json` |
-| World events | 1 (Чонын Довтолгоо) | `content/events.json` |
+| World events | 1 (Чонын Довтолгоо); campaigns can unlock more into the rotation | `content/events.json` |
+| Хуралдай campaigns | 4 | `content/campaigns.json` |
 | Relics | 2 | `content/events.json` |
 | Classes / spells / ultimates | 5 / 25 / 15 | `PlayerClass`, `Spell`, `Ultimate` |
 | Skill-tree nodes | 111 per class + 5 universal | `skills/*.json` |
@@ -71,10 +72,12 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Backups (flush → dump → off-host), restore drill | ✅ | ✅ dev container | 👤 G11 | |
 | Credit store (idempotent grants) | ✅ | ✅ | — | payment provider not built; EULA review ⏳ |
 | CI | ⏳ | — | — | TEST-001 |
-| PvE-only + consented PvP | ⏳ (this slice) | | | owner decision 2026-10-11 |
-| Их Хуралдай (weekly vote) | ⏳ (this slice) | | | `docs/KHURALDAI.md` |
-| Campaigns (living world) | ⏳ (this slice) | | | |
-| Баатрын Хроник (chronicle) | ⏳ (this slice) | | | |
+| Bot harness in the repo | ✅ | — | — | `tools/loadtest/` (B.4 done) |
+| PvE-only + consented PvP (`/duel`, arenas) | ✅ | ⏳ | ⏳ | owner decision 2026-10-11; `GAME_DESIGN.md` «PvP policy» |
+| Их Хуралдай (weekly vote, V18) | ✅ | ⏳ `khuraldai-smoke.js` | ⏳ | `docs/KHURALDAI.md` |
+| Campaigns: goals, tiers, flush, resolve, world effects (V18) | ✅ | ⏳ | ⏳ | 4 campaigns in `content/campaigns.json`; palace notice board and Hall of Fame displays are v1.1 |
+| Баатрын Хроник (V19), `/chronicle`, «Миний түүх» | ✅ | ⏳ | ⏳ | |
+| Party finder (`/party find|join|recruit|role`) | ✅ | ⏳ | ⏳ | chat board; a GUI is v1.1 |
 
 ## Not built (and said so)
 

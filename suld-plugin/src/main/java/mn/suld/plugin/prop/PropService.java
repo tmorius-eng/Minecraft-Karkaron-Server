@@ -319,6 +319,39 @@ public final class PropService implements Listener {
         return out;
     }
 
+    // --------------------------------------------------------------- dynamic places (campaign world effects)
+
+    private final Map<String, Integer> dynamicIndex = new HashMap<>();
+    private int nextDynamic = 100_000;
+
+    /**
+     * A campaign's world effect: prop {@code propId} appears {@code dx}/{@code dz} blocks from historic site
+     * {@code siteId}, under the flag {@code key} (docs/KHURALDAI.md). Idempotent per key; false for an unknown prop.
+     */
+    public boolean placeDynamic(String key, String propId, String siteId, int dx, int dz, float yaw) {
+        Prop prop = props.get(propId);
+        if (prop == null) return false;
+        if (dynamicIndex.containsKey(key)) return true;
+        int index = nextDynamic++;
+        dynamicIndex.put(key, index);
+        places.add(new Place(index, prop, null, siteId, new int[]{dx, dz}, yaw));
+        plugin.getLogger().info("[props] dynamic " + propId + " at " + siteId + " (+" + dx + ", +" + dz + ") for " + key);
+        return true;
+    }
+
+    /** The flag lapsed: the prop, its click box and its barriers go. */
+    public void removeDynamic(String key) {
+        Integer index = dynamicIndex.remove(key);
+        if (index == null) return;
+        places.removeIf(p -> p.index() == index);
+        Entity[] e = live.remove(index);
+        if (e != null) for (Entity x : e) x.remove();
+        List<org.bukkit.block.Block> bs = barriers.remove(index);
+        if (bs != null) for (org.bukkit.block.Block b : bs) if (b.getType() == Material.BARRIER) b.setType(Material.AIR, false);
+        solidDone.remove(index);
+        plugin.getLogger().info("[props] dynamic place of " + key + " removed");
+    }
+
     /** Where the first place of this prop stands (for /suld props tp), or null. */
     public Location where(String id) {
         World w = Bukkit.getWorlds().get(0);

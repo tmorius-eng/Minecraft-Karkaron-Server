@@ -179,6 +179,7 @@ public final class SuldServices {
         // Vertical Slice 2 services.
         this.partyService = new PartyService();
         this.partyService.soul = id -> isSoul.test(id); // isSoul is set later by the death system
+        this.partyService.classOf = id -> profileService.cached(id).flatMap(pr -> pr.playerClass()).orElse(null);
         this.bossService = new BossService();
         this.dungeonService = new DungeonService(plugin, this, mobService, partyService, bossService);
         this.hudService.addStatusLine(id -> dungeonService.statusLine(id).map(s -> "§7Агуй: §c" + s));
@@ -234,6 +235,56 @@ public final class SuldServices {
                 ? new mn.suld.api.persistence.InMemoryMarksRepository()
                 : new mn.suld.plugin.persistence.JdbcMarksRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
         this.duels = new mn.suld.plugin.combat.DuelService(plugin, this, config.pvp());
+
+        // Их Хуралдай, the week's campaign and the chronicle (docs/KHURALDAI.md): one ordered writer, so a vote's close
+        // and a campaign's resolution never reorder; contributions are additive and the chronicle is append-only.
+        this.campaignExecutor = Executors.newSingleThreadExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "suld-campaign-io");
+            thread.setDaemon(true);
+            return thread;
+        });
+        mn.suld.api.persistence.CampaignRepository campaignRepository = dataSource == null
+                ? new mn.suld.api.persistence.InMemoryCampaignRepository()
+                : new mn.suld.plugin.persistence.JdbcCampaignRepository(dataSource, SqlDialect.forStorage(config.database().type()), campaignExecutor);
+        mn.suld.api.persistence.ChronicleRepository chronicleRepository = dataSource == null
+                ? new mn.suld.api.persistence.InMemoryChronicleRepository()
+                : new mn.suld.plugin.persistence.JdbcChronicleRepository(dataSource, SqlDialect.forStorage(config.database().type()), campaignExecutor);
+        mn.suld.api.config.CampaignSettings cs = config.campaign();
+        this.weeklyCycle = new mn.suld.api.campaign.WeeklyCycle(zone, cs.campaignStarts(), cs.campaignEnds(), cs.voteOpens(), cs.voteCloses());
+        this.chronicleService = new mn.suld.plugin.chronicle.ChronicleService(plugin, this, chronicleRepository, config.chronicle(),
+                () -> weeklyCycle.cycleId(java.time.Instant.now()));
+        this.khuraldaiService = new mn.suld.plugin.campaign.KhuraldaiService(plugin, this, campaignRepository, cs, weeklyCycle, chronicleService);
+        mn.suld.plugin.campaign.CampaignEffects effects = new mn.suld.plugin.campaign.CampaignEffects(plugin, this, campaignRepository, cs, weeklyCycle);
+        this.campaignService = new mn.suld.plugin.campaign.CampaignService(plugin, this, campaignRepository, cs, weeklyCycle, khuraldaiService,
+                chronicleService, effects);
+        this.hudService.addStatusLine(campaignService::hudLine);
+    }
+
+    private final ExecutorService campaignExecutor;
+    private final mn.suld.api.campaign.WeeklyCycle weeklyCycle;
+    private final mn.suld.plugin.chronicle.ChronicleService chronicleService;
+    private final mn.suld.plugin.campaign.KhuraldaiService khuraldaiService;
+    private final mn.suld.plugin.campaign.CampaignService campaignService;
+    /** The 3D props (set by SuldPlugin once they are placed; campaign effects add dynamic ones). */
+    public volatile mn.suld.plugin.prop.PropService props;
+    /** The city NPCs (set by SuldPlugin; campaign effects add dynamic ones). */
+    public volatile mn.suld.plugin.npc.NpcService npcs;
+
+    /** The weekly calendar of Их Хуралдай. */
+    public mn.suld.api.campaign.WeeklyCycle weeklyCycle() {
+        return weeklyCycle;
+    }
+
+    public mn.suld.plugin.chronicle.ChronicleService chronicle() {
+        return chronicleService;
+    }
+
+    public mn.suld.plugin.campaign.KhuraldaiService khuraldai() {
+        return khuraldaiService;
+    }
+
+    public mn.suld.plugin.campaign.CampaignService campaigns() {
+        return campaignService;
     }
 
     private final mn.suld.plugin.progress.PlayerMarks marks;
@@ -456,8 +507,9 @@ public final class SuldServices {
         java.util.concurrent.CompletableFuture<Void> styles = styleService.stop();
         java.util.concurrent.CompletableFuture<Void> clans = clanService.shutdown();
         java.util.concurrent.CompletableFuture<Void> stats = analytics.flush();
+        java.util.concurrent.CompletableFuture<Void> campaigns = campaignService.shutdown();
         try {
-            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats)
+            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats, campaigns)
                     .get(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
         } catch (Exception ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
@@ -469,6 +521,7 @@ public final class SuldServices {
         pools.put("death", deathExecutor);
         pools.put("relic", relicExecutor);
         pools.put("clan", clanExecutor);
+        pools.put("campaign", campaignExecutor);
         pools.put("io", ioExecutor);
         PoolShutdown.drain(pools, deadline, log);
         if (dataSource != null) {

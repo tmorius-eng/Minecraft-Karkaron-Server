@@ -1,0 +1,37 @@
+const mineflayer = require('mineflayer'); const { execFileSync } = require('child_process');
+const ctl = process.argv[2];
+const bot = mineflayer.createBot({ host: '127.0.0.1', port: 25571, username: 'Dorj', version: '1.21.11', auth: 'offline', hideErrors: true });
+const out = { before: [], after: [], chat: [], titles: [], bossbars: [], hpAfterHit: null };
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') return c; const v = c.value || c; let s = ''; if (v.text) s += (v.text.value ?? v.text); const ex = v.extra && (v.extra.value?.value || v.extra.value || v.extra); if (Array.isArray(ex)) ex.forEach(e => s += flat(e.value ? e : { value: e })); return s; };
+bot._client.on('set_title_text', (pk) => out.titles.push(flat(pk.text)));
+bot._client.on('boss_bar', (pk) => { if (pk.title) out.bossbars.push(flat(pk.title)); });
+bot._client.on('system_chat', (pk) => { if (!(pk.isActionBar || pk.overlay)) out.chat.push(flat(pk.content)); });
+const inv = () => bot.inventory.slots.map((i, n) => i ? n + ':' + i.name + 'x' + i.count + (i.durabilityUsed != null ? '/d' + i.durabilityUsed : '') : null).filter(Boolean);
+bot.once('spawn', async () => {
+  await sleep(5000);
+  if (bot.currentWindow) await bot.clickWindow(10, 0, 0).catch(() => {});
+  await sleep(1500);
+  execFileSync(ctl, ['cmd', 'minecraft:clear Dorj']); await sleep(500);
+  execFileSync(ctl, ['cmd', 'suld exp Dorj 5000']); await sleep(1500);
+  for (const it of ['iron_helmet', 'iron_chestplate', 'bread 16', 'cobblestone 64', 'oak_log 32', 'apple 8', 'torch 20', 'stone_pickaxe'])
+    execFileSync(ctl, ['cmd', 'minecraft:give Dorj ' + it]);
+  await sleep(1500);
+  bot.chat('/exp'); await sleep(1000);
+  out.before = inv(); execFileSync(ctl, ['cmd', 'data get entity Dorj Inventory']);
+  execFileSync(ctl, ['cmd', 'kill Dorj']);
+  await sleep(1500);
+  bot.respawn ? bot.respawn() : bot._client.write('client_command', { actionId: 0 });
+  await sleep(3000);
+  out.after = inv(); execFileSync(ctl, ['cmd', 'data get entity Dorj Inventory']);
+  bot.chat('/exp'); await sleep(1000);
+  execFileSync(ctl, ['cmd', 'damage Dorj 5 minecraft:generic']);
+  await sleep(1000); out.hpAfterHit = bot.health;
+  execFileSync(ctl, ['cmd', 'revive Dorj']);
+  await sleep(1500);
+  execFileSync(ctl, ['cmd', 'damage Dorj 5 minecraft:generic']);
+  await sleep(1000); out.hpAfterRevive = bot.health;
+  bot.quit();
+});
+bot.on('end', () => { console.log(JSON.stringify(out, null, 1)); process.exit(0); });
+setTimeout(() => { console.log(JSON.stringify(out, null, 1)); process.exit(0); }, 60000);

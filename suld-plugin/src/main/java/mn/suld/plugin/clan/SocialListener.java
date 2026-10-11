@@ -26,10 +26,16 @@ public final class SocialListener implements Listener {
     }
 
     /** MONITOR: SÜLD combat has already granted kill EXP/loot. */
+    /** Set by SuldPlugin: the week's campaign counts SÜLD kills too. */
+    public volatile java.util.function.BiConsumer<org.bukkit.entity.Player, String> campaignKills = (p, id) -> { };
+    public volatile java.util.function.Function<org.bukkit.entity.LivingEntity, java.util.Optional<String>> mobIds = e -> java.util.Optional.empty();
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(EntityDeathEvent event) {
         if (!(event instanceof PlayerDeathEvent)) {
             events.onMobDeath(event.getEntity());
+            org.bukkit.entity.Player killer = event.getEntity().getKiller();
+            if (killer != null) mobIds.apply(event.getEntity()).ifPresent(id -> campaignKills.accept(killer, id));
         }
     }
 }

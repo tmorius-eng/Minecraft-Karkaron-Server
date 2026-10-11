@@ -49,6 +49,26 @@ public final class Menus {
         this.questMenu = new QuestMenu(services);
         this.plugin = plugin;
         this.services = services;
+        this.khuraldaiMenu = new KhuraldaiMenu(services, this);
+        this.chronicleMenu = new ChronicleMenu(plugin, services, this);
+    }
+
+    private final KhuraldaiMenu khuraldaiMenu;
+    private final ChronicleMenu chronicleMenu;
+
+    /** Их Хуралдай: the week's campaign and the ballot (docs/KHURALDAI.md). */
+    public void khuraldai(Player p) {
+        khuraldaiMenu.open(p);
+    }
+
+    /** Баатрын Хроник, all kinds or one. */
+    public void chronicle(Player p, mn.suld.api.chronicle.ChronicleKind kind) {
+        chronicleMenu.open(p, kind);
+    }
+
+    /** «Миний түүх»: the player's own chronicle lines. */
+    public void chronicleMine(Player p) {
+        chronicleMenu.mine(p);
     }
 
     private StyleService styles() {
@@ -218,6 +238,13 @@ public final class Menus {
             pl.performCommand("mori");
         } : null);
         m.set(36, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
+        var campaign = services.campaigns().active();
+        m.set(42, Menu.item(Material.LECTERN, Menu.title("Их Хуралдай · /khuraldai", GOLD), Menu.lore(GOLD,
+                List.of(b("Долоо хоногийн аян ба санал хураалт.")),
+                campaign.map(r -> List.of(Menu.kv("Аян:", r.definition().name(), GOLD),
+                        Menu.kv("Таны хувь:", String.valueOf(r.unitsOf(p.getUniqueId())), GREEN))).orElse(List.of()), "Дарж нээх")), (pl, c) -> khuraldai(pl));
+        m.set(43, Menu.item(Material.WRITABLE_BOOK, Menu.title("Миний түүх · /chronicle mine", GOLD), Menu.lore(GOLD,
+                List.of(b("Хроникт бичигдсэн таны амжилтууд.")), List.of(), "Дарж нээх")), (pl, c) -> chronicleMine(pl));
         m.open(p);
     }
 

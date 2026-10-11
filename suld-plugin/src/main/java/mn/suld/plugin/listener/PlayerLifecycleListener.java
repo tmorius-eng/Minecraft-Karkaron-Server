@@ -53,6 +53,7 @@ public final class PlayerLifecycleListener implements Listener {
         if (services.items().refreshModels(ender) > 0) player.getEnderChest().setContents(ender);
         services.relics().scheduleTease(player, profile);
         services.marks().backfill(player); // V17: the player file's clears / sites / ovoo days into the database, once
+        services.campaigns().onJoin(player); // the campaign's boss bar; a tier reward owed from last week
         player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "! — SÜLD"));
         if (!profile.hasSelectedClass()) {
             player.sendMessage(Messages.info("Анхны алхам: ангиа сонгоно уу."));
@@ -100,6 +101,7 @@ public final class PlayerLifecycleListener implements Listener {
         mn.suld.api.analytics.SessionTotals totals = services.sessionEnded(id);
         services.analytics().record(totals == null ? AnalyticsEvent.of(AnalyticsEventType.SESSION_END, id)
                 : AnalyticsEvent.of(AnalyticsEventType.SESSION_END, id, totals.attributes(System.currentTimeMillis())));
+        services.campaigns().onQuit(player);
         // Saving/unloading is session-aware and owned by AuthenticationService (runs at MONITOR).
     }
 }

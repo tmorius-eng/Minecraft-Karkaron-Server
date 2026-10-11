@@ -49,8 +49,8 @@ class JdbcCampaignRepositoryIT {
         assertEquals(CampaignRepository.CastResult.NO_CYCLE, repo.castVote("2026-W40", UUID.randomUUID(), "campaign.a", 1, 1).join());
         for (int i = 0; i < 5; i++) assertEquals(CampaignRepository.CastResult.CAST, repo.castVote("2026-W41", UUID.randomUUID(), "campaign.b", 7, 1).join());
         Map<String, Integer> tally = repo.tally("2026-W41").join();
-        assertEquals(6, tally.values().stream().mapToInt(Integer::intValue).sum());
-        assertEquals(5, tally.get("campaign.b"));
+        assertEquals(6, tally.values().stream().mapToInt(Integer::intValue).sum(), "5 voters for b plus p's one accepted ballot");
+        assertTrue(tally.get("campaign.b") >= 5, "p's one ballot may have landed on either option");
 
         List<CompletableFuture<Boolean>> closes = new ArrayList<>();
         for (int i = 0; i < 8; i++) closes.add(repo.closeVote("2026-W41", "campaign.b", tally, 200, 0));

@@ -16,7 +16,7 @@ import java.util.Locale;
 /** {@code /party invite|accept|leave|kick|promote|disband|info}. */
 public final class PartyCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBS = List.of("invite", "accept", "leave", "kick", "promote", "disband", "info");
+    private static final List<String> SUBS = List.of("invite", "accept", "leave", "kick", "promote", "disband", "info", "find", "join", "recruit", "role");
 
     private final PartyService parties;
 
@@ -63,7 +63,14 @@ public final class PartyCommand implements CommandExecutor, TabCompleter {
             }
             case "disband" -> parties.disband(player);
             case "info", "list" -> parties.info(player);
-            default -> player.sendMessage(Messages.info("/party <invite|accept|leave|kick|promote|disband|info>"));
+            case "find", "хайх" -> parties.find(player, args.length > 1 ? (args[1].startsWith("dungeon.") ? args[1] : "dungeon." + args[1]) : null);
+            case "join", "нэгдэх" -> {
+                if (args.length < 2) player.sendMessage(Messages.error("/party join <ахлагч>"));
+                else parties.join(player, args[1]);
+            }
+            case "recruit", "хайлт" -> parties.recruit(player, args.length > 1 ? args[1] : null);
+            case "role", "үүрэг" -> parties.role(player, args.length > 1 ? args[1] : null);
+            default -> player.sendMessage(Messages.info("/party <invite|accept|leave|kick|promote|disband|info|find|join|recruit|role>"));
         }
         return true;
     }
@@ -74,7 +81,12 @@ public final class PartyCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             return SUBS.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         }
-        if (args.length == 2 && List.of("invite", "kick", "promote").contains(args[0].toLowerCase(Locale.ROOT))) {
+        if (args.length == 2 && args[0].equalsIgnoreCase("role")) return List.of("tank", "healer", "dps");
+        if (args.length == 2 && (args[0].equalsIgnoreCase("recruit") || args[0].equalsIgnoreCase("find"))) {
+            return mn.suld.plugin.content.Content.pack().dungeons().stream().map(d -> d.id().substring("dungeon.".length()))
+                    .filter(n -> n.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
+        }
+        if (args.length == 2 && List.of("invite", "kick", "promote", "join").contains(args[0].toLowerCase(Locale.ROOT))) {
             return Bukkit.getOnlinePlayers().stream().map(Player::getName)
                     .filter(n -> n.toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         }

@@ -117,6 +117,38 @@ world-events:
   min-players: 1
 
 # ---------------------------------------------------------------------------
+# Их Хуралдай (docs/KHURALDAI.md): once a week the server votes on next week's campaign. Times are "<WEEKDAY> HH:mm"
+# in daily.timezone. The vote held in a week elects the campaign of the next week. min-account-days keeps fresh alt
+# accounts out of the ballot; min-voters is the quorum, below it the rotation decides.
+# ---------------------------------------------------------------------------
+khuraldai:
+  enabled: true
+  vote-opens: "SATURDAY 20:00"
+  vote-closes: "SUNDAY 20:00"
+  min-level: 5
+  min-account-days: 1
+  options: 3
+  min-voters: 3
+
+# The week's campaign (content/campaigns.json): the shared goal, personal tiers, a world effect on success.
+# flush-seconds: how often buffered contributions reach the database (a crash loses at most this much progress).
+# reward-claim-days: an offline player claims an owed tier reward on login within this many days (0 = online only).
+# effect-cycles: how many later weeks a world effect stays (0 = permanent).
+campaign:
+  enabled: true
+  starts: "MONDAY 00:00"
+  ends: "SATURDAY 20:00"
+  flush-seconds: 10
+  reward-claim-days: 7
+  effect-cycles: 1
+
+# Баатрын Хроник: firsts, records and campaign results. broadcast: every new line is announced to everyone.
+chronicle:
+  enabled: true
+  broadcast: true
+  hall-entries: 12
+
+# ---------------------------------------------------------------------------
 # PvP policy (owner decision 2026-10-11): SÜLD is a hardcore PvE game. A player hurts another player only when both
 # agreed: an accepted /duel (outside Kharkhorum, for duel-minutes) or a declared fighting ground. A relic is seized
 # only in such a fight; any other death returns it to its shrine. wild-enabled: true restores the old open steppe.

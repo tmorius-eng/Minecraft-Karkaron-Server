@@ -16,13 +16,14 @@ layer (MythicMobs, MMOItems/MMOCore, Citizens, ItemsAdder, DeluxeMenus, TAB, …
 
 ## Status — playable
 
-Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (215 tests; PostgreSQL ITs opt-in):
+Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (530 tests; PostgreSQL ITs opt-in; the counts below come from `docs/STATUS.md`):
 
-- **Classes and combat:** five classes, 3D class weapons in four level tiers with effects, Wynncraft-style click
-  combos (20 spells), class resources, a data-driven level curve.
+- **Classes and combat:** five classes, 3D class weapons in six level tiers with effects, Wynncraft-style click
+  combos (25 spells, 15 ultimates), class resources, a data-driven level curve.
 - **World:** Kharkhorum (safe city with glowing NPCs: class, tutorial, quests, shop, smith, travel, blessing) and
-  four wild regions (Хэрлэн, Говь, Хангай, Алтай) with their own mobs, level bands, discovery EXP and danger warnings.
-- **Content:** the 18-chapter storyline «Сүлдний Зам» with a quest tracker; four dungeons with three-phase
+  eight wild regions (Хэрлэн, Говь, Хангай, Алтай and the four outer lands) in 40 named areas, with their own mobs,
+  level bands, discovery EXP, 40 ovoo, 16 historic sites and danger warnings.
+- **Content:** the 42-chapter storyline «Сүлдний Зам» (Act I 1–18, Act II 19–42) with a quest tracker; a ten-dungeon ladder in instanced halls with three-phase
   bosses; world events; two world-unique relics; clans and parties.
 - **Hardcore death:** loot and EXP loss, gear wear, soul state.
 - **UI:** Mongolian-themed resource pack, sidebar, TAB, chat badges, GUIs for every command (menu, help, tutorial,
@@ -30,6 +31,12 @@ Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (215 test
 - **Retention and social:** daily streak reward, daily hunting tasks, `/top` leaderboards, `/trade`, personal
   steppe horses, blacksmith upgrades, level milestones, rank ladder, cosmetics bought with coins or store credits
   (cosmetics only). Damage numbers and mob health bars.
+- **Их Хуралдай → Амьд ертөнц → Баатрын Хроник** ([docs/KHURALDAI.md](docs/KHURALDAI.md)): every week the players vote
+  on the next campaign, the whole server works toward one goal with personal tiers, success changes the world (an
+  event joins the rotation, a prop or an NPC appears), and the chronicle keeps the firsts, records and outcomes
+  (`/khuraldai`, `/chronicle`, `/party find`).
+- **PvE only:** players fight each other only by an accepted `/duel` or on a declared fighting ground; a relic is
+  seized only in such a fight ([GAME_DESIGN.md](GAME_DESIGN.md) «PvP policy»).
 - **Operations:** verified Microsoft accounts only, chat guard, MOTD and icon, tips, plugin installer (Modrinth,
   hash-verified), production deploy/update/backup scripts. See [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
@@ -73,6 +80,8 @@ Both need outbound access to Paper's download CDN (`fill.papermc.io`,
 - [ROADMAP.md](ROADMAP.md) — phased implementation plan.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — conventions and the "build it yourself" rule.
 - [DEPENDENCIES.md](DEPENDENCIES.md) — auditable dependency & repository list.
+- [docs/STATUS.md](docs/STATUS.md) — the single source of truth: what is implemented, bot-verified, client-verified, planned; the content counts.
+- [docs/KHURALDAI.md](docs/KHURALDAI.md) — the weekly vote, campaigns, world effects, the chronicle, the party finder.
 - [docs/OPERATIONS.md](docs/OPERATIONS.md) — running the server: commands, staff badges (LuckPerms), credit store, death rules, Bedrock, MOTD.
 - [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) — identity = Minecraft/Microsoft-authenticated UUID; no /login; join pipeline, races, audit.
 - [DEPLOYMENT.md](DEPLOYMENT.md) — production runbook for a fresh Ubuntu 24.04 (Vultr) VPS: deploy, update/rollback, backup/restore.

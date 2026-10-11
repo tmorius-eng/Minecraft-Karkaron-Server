@@ -532,6 +532,7 @@ public final class DungeonService {
         ar.run.complete();
         long seconds = ar.run.elapsedSeconds();
         String provenance = "dungeon:" + ar.def.id() + ":" + ar.run.runId();
+        List<Player> rewarded = new java.util.ArrayList<>(); // present and not downed: the chronicle's and the campaign's party
         for (UUID id : ar.participants) {
             Player p = Bukkit.getPlayer(id);
             PlayerProfile profile = services.profiles().cached(id).orElse(null);
@@ -546,6 +547,7 @@ public final class DungeonService {
                 p.sendMessage(Messages.info("Та агуйн талбарт байгаагүй тул шагнал авсангүй."));
                 continue;
             }
+            rewarded.add(p);
             int from = profile.progression().level();
             services.session(id).dungeonClears++;
             services.session(id).bossesDefeated++;
@@ -597,6 +599,10 @@ public final class DungeonService {
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.BOSS_PARTICIPATION, id,
                     Map.of("boss", ar.def.bossDefinition().id(), "seconds", seconds)));
             services.profiles().save(profile);
+        }
+        if (!rewarded.isEmpty()) {
+            services.chronicle().dungeonCleared(ar.def, rewarded, seconds); // first clear, fastest clear
+            services.campaigns().onDungeonCleared(ar.def.id(), rewarded, ar.run.runId());
         }
         cleanup(ar);
     }

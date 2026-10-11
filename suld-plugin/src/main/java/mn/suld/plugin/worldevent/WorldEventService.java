@@ -64,6 +64,37 @@ public final class WorldEventService {
         return eventMobs.contains(entity);
     }
 
+    /** World events a campaign unlocked (docs/KHURALDAI.md): they join the automatic rotation beside the wolf raid. */
+    private final Set<String> unlocked = new java.util.LinkedHashSet<>();
+
+    /** A campaign's world effect: {@code eventId} starts automatically from now on (idempotent). */
+    public void unlock(String eventId) {
+        if (SuldContent.worldEventFor(eventId) == null) {
+            plugin.getLogger().warning("[events] cannot unlock unknown world event " + eventId);
+            return;
+        }
+        if (unlocked.add(eventId)) plugin.getLogger().info("[events] unlocked " + eventId);
+    }
+
+    public void lock(String eventId) {
+        if (unlocked.remove(eventId)) plugin.getLogger().info("[events] locked " + eventId + " again");
+    }
+
+    public Set<String> unlocked() {
+        return java.util.Collections.unmodifiableSet(unlocked);
+    }
+
+    /** The automatic pool: the wolf raid plus whatever campaigns unlocked; one is drawn per automatic start. */
+    private WorldEventDefinition nextAutomatic() {
+        List<WorldEventDefinition> pool = new ArrayList<>();
+        pool.add(SuldContent.WOLF_RAID);
+        for (String id : unlocked) {
+            WorldEventDefinition d = SuldContent.worldEventFor(id);
+            if (d != null && !d.id().equals(SuldContent.WOLF_RAID.id())) pool.add(d);
+        }
+        return pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
+    }
+
     private WorldEventRun active;
     private BukkitTask ticker;
     private long nextAutoStartMillis;
@@ -154,7 +185,7 @@ public final class WorldEventService {
         if (active == null || !active.isActive()) {
             if (settings.worldEventsEnabled() && now >= nextAutoStartMillis) {
                 if (eligiblePlayers().size() >= settings.worldEventMinPlayers()) {
-                    start(SuldContent.WOLF_RAID);
+                    start(nextAutomatic());
                 } else {
                     scheduleNextAuto();
                 }

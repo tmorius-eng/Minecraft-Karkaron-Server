@@ -457,6 +457,7 @@ public final class RelicService {
             }
             services.audit().record(AuditEvent.of(id.toString(), "relic.discovered", key, player.getName()));
             services.analytics().record(AnalyticsEvent.of("relic_discovered", id, Map.of("relic", key)));
+            services.chronicle().relicClaimed(key, def.displayName(), player);
             if (player.isOnline()) {
                 validate(player); // issues the copy, turns on glowing
                 Presentation.banner(player, def.displayName().toUpperCase(java.util.Locale.ROOT), "Цор ганц сүлд таных боллоо",
