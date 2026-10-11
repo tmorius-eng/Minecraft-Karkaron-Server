@@ -13,11 +13,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SkillTest {
 
     @Test
-    void everyClassHasFourSpellsWithDistinctCombos() {
+    void everyClassHasFiveSpells_fourCombosAndShiftF() {
         for (PlayerClass c : PlayerClass.values()) {
             Set<String> combos = new HashSet<>();
-            assertEquals(4, Spell.of(c).size(), c.name());
+            assertEquals(5, Spell.of(c).size(), c.name());
             for (Spell s : Spell.of(c)) {
+                if (s.slot() == Spell.SHIFT_F_SLOT) {
+                    // the fifth spell has no combo: Shift+F casts it, and no click sequence reaches it
+                    assertEquals("", s.combo());
+                    assertEquals("Shift+F", s.keys());
+                    assertEquals(s, Spell.shiftF(c).orElseThrow());
+                    assertTrue(Spell.byCombo(c, "").isEmpty());
+                    continue;
+                }
                 assertTrue(combos.add(s.combo()), s.name());
                 assertEquals(Spell.firstClick(c), s.combo().charAt(0));
                 assertEquals(s, Spell.byCombo(c, s.combo()).orElseThrow());
@@ -26,6 +34,24 @@ class SkillTest {
         assertEquals("RLR", Spell.TENGER_TSAVCHILT.combo());
         assertEquals("LRL", Spell.CHONYN_NUD.combo());
         assertEquals(35, Spell.TENGERIIN_SUM.unlockLevel());
+        assertEquals(50, Spell.SUMNY_BOROO.unlockLevel());
+    }
+
+    @Test
+    void spellsRankUpWithTheLevel() {
+        assertEquals(1, Spell.TENGER_TSAVCHILT.rankAt(39));
+        assertEquals(2, Spell.TENGER_TSAVCHILT.rankAt(40));
+        assertEquals(3, Spell.TENGER_TSAVCHILT.rankAt(55));
+        // the fifth spell opens at 50, so it ranks up later
+        assertEquals(1, Spell.GALT_UUL.rankAt(50));
+        assertEquals(2, Spell.GALT_UUL.rankAt(55));
+        assertEquals(3, Spell.GALT_UUL.rankAt(60));
+        assertEquals(1.0, Spell.rankPower(1), 1e-9);
+        assertEquals(1.15, Spell.rankPower(2), 1e-9);
+        assertEquals(1.30, Spell.rankPower(3), 1e-9);
+        assertEquals(1.0, Spell.rankCooldown(2), 1e-9);
+        assertEquals(0.9, Spell.rankCooldown(3), 1e-9);
+        assertEquals("III", Spell.roman(3));
     }
 
     @Test

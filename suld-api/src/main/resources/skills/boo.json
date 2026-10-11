@@ -58,6 +58,8 @@
      "effects": [{"type": "mod", "spell": "TENGERIIN_KHAALGA", "key": "DAMAGE_PCT", "value": 40}, {"type": "mod", "spell": "TENGERIIN_KHAALGA", "key": "ECHO_PCT", "value": 25}, {"type": "mod", "spell": "TENGERIIN_KHAALGA", "key": "COST_PCT", "value": -10}]},
     {"id": "r7", "name": "Хар Бөө", "category": "OFFENSE", "icon": "WITHER_SKELETON_SKULL", "x": 3, "y": 7, "cost": 3, "level": 30,
      "effects": [{"type": "stat", "key": "SPELL_DAMAGE", "value": 20}, {"type": "stat", "key": "CRIT_DAMAGE", "value": 20}]},
+    {"id": "f5", "name": "Хар Салхины Хүч", "description": "5-р ид шидийг (Shift+F) хүчирхэгжүүлнэ.", "category": "SPELL", "icon": "ECHO_SHARD", "x": 4, "y": 6, "cost": 2, "maxRank": 3, "level": 50, "tags": ["nosat"], "effects": [{"type": "mod", "spell": "KHAR_SALKHI", "key": "DAMAGE_PCT", "value": 10}, {"type": "mod", "spell": "KHAR_SALKHI", "key": "RADIUS_PCT", "value": 6}]},
+    {"id": "k2", "name": "Онгоны Гэрээ", "category": "KEYSTONE", "icon": "SOUL_LANTERN", "x": 4, "y": 7, "cost": 4, "level": 40, "keystone": true, "effects": [{"type": "keystone", "kind": "ONGONY_GEREE"}]},
     {"id": "u1", "name": "Өвгөдийн Залбирал", "category": "ULTIMATE", "icon": "GOLDEN_APPLE", "x": 1, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "l6", "rank": 1}], "capstone": true,
      "effects": [{"type": "ultimate", "ultimate": "OVGODIIN_ZALBIRAL"}]},
     {"id": "u2", "name": "Тэнгэрийн Шийтгэл", "category": "ULTIMATE", "icon": "LIGHTNING_ROD", "x": 2, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "m6", "rank": 1}], "capstone": true,
@@ -154,6 +156,7 @@
     ["r4", "r5"], ["l5", "l5b"], ["r5b", "r5"], ["l5b", "l6"],
     ["m5", "m6"], ["r5b", "r6"], ["l6", "m6"], ["m6", "r6"],
     ["l6", "l7"], ["m6", "m7"], ["r6", "r7"], ["l7", "u1"],
+    ["r6", "f5"], ["r6", "k2"],
     ["m7", "u2"], ["r7", "u3"], ["l7", "u2"], ["r7", "u2"],
     ["l1", "l1_s1"], ["l1", "l1_s2"], ["l1", "l1_s3"],
     ["m1", "m1_s1"], ["m1", "m1_s2"], ["m1", "m1_s3"],
@@ -183,6 +186,7 @@
     ["r7", "r7_s1"], ["r7", "r7_s2"], ["r7", "r7_s3"]
   ],
   "exclusive": [
+    ["l7", "k2"],
     ["l2", "m2"], ["m2", "r2"], ["l4", "m4"], ["m4", "r4"],
     ["l5b", "m5"], ["m5", "r5b"], ["l7", "m7"], ["m7", "r7"],
     ["u1", "u2"], ["u2", "u3"], ["u1", "u3"]

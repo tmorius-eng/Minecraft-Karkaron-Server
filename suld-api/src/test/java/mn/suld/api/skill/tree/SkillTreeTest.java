@@ -32,13 +32,14 @@ class SkillTreeTest {
         Set<String> classOnlyNames = new HashSet<>();
         for (PlayerClass c : PlayerClass.values()) {
             SkillTree t = tree(c);
-            // 31 class nodes + 5 universal + 78 satellites (3 per notable, tools/content/gen_skill_minors.py)
-            assertEquals(114, t.nodes().size(), c.name());
+            // 33 class nodes + 5 universal + 78 satellites (3 per notable, tools/content/gen_skill_minors.py; the
+            // level-50 node f5 keeps none)
+            assertEquals(116, t.nodes().size(), c.name());
             assertEquals(78, t.nodes().stream().filter(SkillNode::satellite).count(), c + " satellites");
             total += t.nodes().size() - 1;
             assertTrue(t.totalCost() > SkillPoints.total(60, 15, 20, 0), c + " total " + t.totalCost());
             assertEquals(3, t.nodes().stream().filter(SkillNode::unlocksUltimate).count(), c + " ultimates");
-            assertEquals(1, t.nodes().stream().filter(SkillNode::keystone).count(), c + " keystone");
+            assertEquals(2, t.nodes().stream().filter(SkillNode::keystone).count(), c + " keystones");
             for (SkillNode n : t.nodes()) {
                 if (!n.root() && !n.tags().contains("universal") && !n.satellite()) assertTrue(classOnlyNames.add(n.name()), "name shared between classes: " + n.name());
                 if (n.root()) continue;
@@ -56,12 +57,12 @@ class SkillTreeTest {
         for (PlayerClass c : PlayerClass.values()) {
             Set<mn.suld.api.skill.Spell> touched = new HashSet<>();
             for (SkillNode n : tree(c).nodes()) touched.addAll(n.spells());
-            assertEquals(4, touched.size(), c + " modifies " + touched);
+            assertEquals(5, touched.size(), c + " modifies " + touched);
         }
     }
 
     @Test
-    void fifteenUltimatesAndFiveKeystonesAreEachTaughtOnce() {
+    void fifteenUltimatesAndTenKeystonesAreEachTaughtOnce() {
         Set<Ultimate> ults = new HashSet<>();
         Set<KeystoneKind> keys = new HashSet<>();
         for (PlayerClass c : PlayerClass.values()) {

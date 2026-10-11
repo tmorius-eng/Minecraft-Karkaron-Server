@@ -17,7 +17,7 @@ public final class SpellMods {
         return switch (k) {
             case COST_PCT, SHIELD, HASTE -> true;
             case DAMAGE_PCT -> s.damageMultiplier() > 0 || s == Spell.SUNSNII_ZALBIRAL;
-            case ECHO_PCT -> s.damageMultiplier() > 0 && s != Spell.OLON_SUM;
+            case ECHO_PCT -> s.damageMultiplier() > 0 && s != Spell.OLON_SUM && s.slot() != Spell.SHIFT_F_SLOT; // the fifth spells last long already
             case RADIUS_PCT -> switch (s) {
                 case TENGERIIN_SUM, ZHADNY_SHIDELT, OLON_SUM, ONGONY_DUUDLAGA -> false;
                 default -> affectsEnemies(s) || s == Spell.SUNSNII_ZALBIRAL;

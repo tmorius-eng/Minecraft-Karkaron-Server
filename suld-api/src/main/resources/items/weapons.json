@@ -1249,6 +1249,32 @@
    "lore": "Сүнсний онгон — эзнээ сахина."
   },
   {
+   "id": "weapon.tengeriin_num",
+   "name": "Тэнгэрийн Нум",
+   "material": "minecraft:bow",
+   "type": "BOW",
+   "rarity": "rare",
+   "maxRarity": "mythic",
+   "level": 30,
+   "stats": {
+    "damage": [
+     18,
+     22
+    ],
+    "crit_chance": [
+     5,
+     8
+    ]
+   },
+   "perLevel": {
+    "damage": 1.5,
+    "crit_chance": 0.2
+   },
+   "durability": 600,
+   "sell": 60,
+   "lore": "Тэнгэрийн хөхөөс сунгасан мэт нум: мэргэн харваачийн дээд зэвсэг."
+  },
+  {
    "id": "weapon.anchin_num",
    "name": "Анчны Нум",
    "material": "minecraft:bow",

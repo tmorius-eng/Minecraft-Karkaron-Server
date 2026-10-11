@@ -45,7 +45,8 @@ def main() -> None:
         lines = [l for l in text.split("\n") if '"orbit:' not in l and "_s1\"]" not in l]
         text = re.sub(r",(\s*\n\s*\])", r"\1", "\n".join(lines))  # the comma the removed lines leave behind
         d = json.loads(text)
-        hubs = [n for n in d["nodes"] if n["category"] in POOL and not n.get("keystone") and not n.get("capstone")]
+        hubs = [n for n in d["nodes"] if n["category"] in POOL and not n.get("keystone") and not n.get("capstone")
+                and "nosat" not in n.get("tags", [])]  # "nosat": a node that keeps no satellites (the level-50 ones)
         used: dict[str, int] = {}
         sats, edges = [], []
         for i, hub in enumerate(hubs):

@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The 20 class spells (4 per class), cast with a three-click combo while holding the class weapon (as in
- * Wynncraft). Melee classes start combos with a right click; the archer (Мэргэн) with a left click, because the
- * right click draws the bow. Unlocked at levels 1, 10, 20 and 35; each spends the class resource.
+ * The 25 class spells (5 per class). Spells 1–4 are cast with a three-click combo while holding the class weapon (as in
+ * Wynncraft); melee classes start combos with a right click, the archer (Мэргэн) with a left click, because the right
+ * click draws the bow. The fifth spell has no combo: Shift+F casts it. Unlocked at levels 1, 10, 20, 35 and 50; each
+ * spends the class resource. Spells grow in rank with the caster's level ({@link #rankAt}): rank II hits 15 % harder,
+ * rank III 30 % harder with a 10 % shorter cooldown.
  */
 public enum Spell {
     // Баатар — Хил / Rage
@@ -35,12 +37,23 @@ public enum Spell {
     KHURDAN_DOVTOLGOO(PlayerClass.KHULEGCHIN, 1, "Хурдан Довтолгоо", 20, 1.3, "Урагш давхиж замд таарсныг цохино."),
     SALKHINY_KHURD(PlayerClass.KHULEGCHIN, 2, "Салхины Хурд", 25, 0.0, "6 секунд салхи шиг хурдан."),
     ZHADNY_SHIDELT(PlayerClass.KHULEGCHIN, 3, "Жадны Шидэлт", 35, 2.2, "Жадыг шидэж шугамаар нэвт хатгана."),
-    KHULGIIN_DAIRALT(PlayerClass.KHULEGCHIN, 4, "Хүлгийн Дайралт", 60, 3.5, "Сүнсэн адуун сүрэг урагш давхина.");
+    KHULGIIN_DAIRALT(PlayerClass.KHULEGCHIN, 4, "Хүлгийн Дайралт", 60, 3.5, "Сүнсэн адуун сүрэг урагш давхина."),
+    // the fifth spells (level 50, Shift+F)
+    SULDIIN_TSOKHILT(PlayerClass.BAATAR, 5, "Сүлдний Цохилт", 60, 3.2, "Сүлдээ газарт шааж ойрын бүх дайсныг өргөн цохиж, 5 секунд хамгаалалт авна."),
+    SUMNY_BOROO(PlayerClass.MERGEN, 5, "Сумны Бороо", 60, 0.8, "Онилсон газарт таван давалгаа сум бороо мэт асгарна."),
+    KHAR_SALKHI(PlayerClass.BOO, 5, "Хар Салхи", 70, 0.9, "Онгодын хар салхи дайснуудыг татаж таван удаа цохиж, чамайг эдгээнэ."),
+    GALT_UUL(PlayerClass.DARKHAN, 5, "Галт Уул", 70, 3.6, "Онилсон газар галт уул дэлбэрч, дайснуудыг шидэж шатаана."),
+    KHIIMORIIN_DAVKHILT(PlayerClass.KHULEGCHIN, 5, "Хийморийн Давхилт", 60, 2.8, "Хийморь сэргэж урагш давхин замд таарсан бүхнийг цохиж, 6 секунд хурд авна.");
 
-    public static final int[] UNLOCK_LEVEL = {0, 1, 10, 20, 35};
+    public static final int[] UNLOCK_LEVEL = {0, 1, 10, 20, 35, 50};
 
-    /** Base cooldown in seconds by slot (1..4): the stronger the spell, the longer before it can be cast again. */
-    private static final double[] COOLDOWN_SECONDS = {0, 1.5, 4, 5, 10};
+    /** Base cooldown in seconds by slot (1..5): the stronger the spell, the longer before it can be cast again. */
+    private static final double[] COOLDOWN_SECONDS = {0, 1.5, 4, 5, 10, 18};
+
+    /** The slot of the spell cast with Shift+F instead of a combo. */
+    public static final int SHIFT_F_SLOT = 5;
+    /** Levels at which spells 1–4 reach rank II and III; the fifth spell reaches them at 55 and 60. */
+    public static final int RANK_II_LEVEL = 40, RANK_III_LEVEL = 55;
 
     private final PlayerClass clazz;
     private final int slot;
@@ -59,7 +72,7 @@ public enum Spell {
     }
 
     public PlayerClass clazz() { return clazz; }
-    /** 1..4 */
+    /** 1..5 */
     public int slot() { return slot; }
     public String displayName() { return displayName; }
     public int cost() { return cost; }
@@ -70,12 +83,41 @@ public enum Spell {
     /** Seconds before this spell can be cast again (before cooldown reduction). */
     public double cooldownSeconds() { return COOLDOWN_SECONDS[slot]; }
 
-    /** The combo for this spell, e.g. "RLR" (melee) or "LRL" (archer). */
+    /** The spell's rank (1..3) at a caster level: spells 1–4 rank up at 40 and 55, the fifth at 55 and 60. */
+    public int rankAt(int level) {
+        int two = slot == SHIFT_F_SLOT ? RANK_III_LEVEL : RANK_II_LEVEL, three = slot == SHIFT_F_SLOT ? 60 : RANK_III_LEVEL;
+        return level >= three ? 3 : level >= two ? 2 : 1;
+    }
+
+    /** Damage and healing factor of a rank: I ×1, II ×1.15, III ×1.30. */
+    public static double rankPower(int rank) {
+        return 1 + 0.15 * (Math.max(1, Math.min(3, rank)) - 1);
+    }
+
+    /** Cooldown factor of a rank: rank III casts 10 % sooner. */
+    public static double rankCooldown(int rank) {
+        return rank >= 3 ? 0.9 : 1.0;
+    }
+
+    public static String roman(int rank) {
+        return switch (rank) {
+            case 2 -> "II";
+            case 3 -> "III";
+            default -> "I";
+        };
+    }
+
+    /** The combo for this spell, e.g. "RLR" (melee) or "LRL" (archer); "" for the fifth spell (Shift+F). */
     public String combo() {
         return comboFor(clazz, slot);
     }
 
-    /** Spell combos: slot 1 xYx, 2 xxx, 3 xYY, 4 xxY with x = the class's first click. */
+    /** How the spell is cast, for the menus: the combo with dashes, or Shift+F. */
+    public String keys() {
+        return slot == SHIFT_F_SLOT ? "Shift+F" : String.join("-", combo().split(""));
+    }
+
+    /** Spell combos: slot 1 xYx, 2 xxx, 3 xYY, 4 xxY with x = the class's first click; slot 5 has none (Shift+F). */
     public static String comboFor(PlayerClass c, int slot) {
         char x = c == PlayerClass.MERGEN ? 'L' : 'R';
         char y = x == 'R' ? 'L' : 'R';
@@ -83,8 +125,15 @@ public enum Spell {
             case 1 -> "" + x + y + x;
             case 2 -> "" + x + x + x;
             case 3 -> "" + x + y + y;
-            default -> "" + x + x + y;
+            case 4 -> "" + x + x + y;
+            default -> "";
         };
+    }
+
+    /** The class's spell cast with Shift+F. */
+    public static java.util.Optional<Spell> shiftF(PlayerClass c) {
+        for (Spell s : of(c)) if (s.slot == SHIFT_F_SLOT) return java.util.Optional.of(s);
+        return java.util.Optional.empty();
     }
 
     public static char firstClick(PlayerClass c) {
@@ -99,6 +148,7 @@ public enum Spell {
 
     /** The spell a completed combo casts for this class, if any. */
     public static java.util.Optional<Spell> byCombo(PlayerClass c, String combo) {
+        if (combo == null || combo.isEmpty()) return java.util.Optional.empty();
         for (Spell s : of(c)) if (s.combo().equals(combo)) return java.util.Optional.of(s);
         return java.util.Optional.empty();
     }

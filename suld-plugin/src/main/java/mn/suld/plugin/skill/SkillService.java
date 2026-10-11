@@ -22,6 +22,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
@@ -101,6 +102,15 @@ public final class SkillService implements Listener {
 
     private PlayerClass clazzOf(Player p) {
         return services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
+    }
+
+    private int levelOf(Player p) {
+        return services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
+    }
+
+    /** The spell's rank power for this caster (I ×1, II ×1.15 from level 40, III ×1.30 from 55). */
+    private double rankPower(Player p, Spell s) {
+        return Spell.rankPower(s.rankAt(levelOf(p)));
     }
 
     private SkillBuild buildOf(Player p) {
@@ -257,6 +267,11 @@ public final class SkillService implements Listener {
         return s.cooldownSeconds() * (1 - Math.min(60, b.stat(StatKey.COOLDOWN_REDUCTION)) / 100.0);
     }
 
+    /** The cooldown at a caster level: rank III casts 10 % sooner. */
+    public static double cooldownSeconds(SkillBuild b, Spell s, int level) {
+        return cooldownSeconds(b, s) * Spell.rankCooldown(s.rankAt(level));
+    }
+
     /**
      * Cast {@code s} for {@code p} with all the normal rules (soul, level, anti-spam gap, cooldown, resource).
      * {@code ignoreTiming} skips the anti-spam gap and the cooldown (used by the QA suite to cast repeatedly).
@@ -304,10 +319,11 @@ public final class SkillService implements Listener {
             return CastResult.NO_RESOURCE;
         }
         spellReady.computeIfAbsent(p.getUniqueId(), k -> new java.util.EnumMap<>(Spell.class))
-                .put(s, now + (long) (cooldownSeconds(build, s) * 1000));
+                .put(s, now + (long) (cooldownSeconds(build, s, pr.progression().level()) * 1000));
         lastCast.put(p.getUniqueId(), now);
         castAttack.put(p.getUniqueId(), CombatListener.attackOf(services, p));
-        say(p, "§e✦ " + s.displayName());
+        int rank = s.rankAt(pr.progression().level());
+        say(p, "§e✦ " + s.displayName() + (rank > 1 ? " " + Spell.roman(rank) : ""));
         run(p, s);
         double echo = build.mod(s, ModKey.ECHO_PCT);
         if (echo > 0 && java.util.concurrent.ThreadLocalRandom.current().nextDouble() * 100 < echo) {
@@ -328,7 +344,8 @@ public final class SkillService implements Listener {
 
     /** Mana cost after spell modifiers and cooldown/cost reduction (never below 1). */
     private static int costOf(SkillBuild b, Spell s) {
-        double factor = 1 + b.mod(s, ModKey.COST_PCT) / 100.0 - b.stat(StatKey.COST_REDUCTION) / 100.0;
+        double factor = 1 + b.mod(s, ModKey.COST_PCT) / 100.0 - b.stat(StatKey.COST_REDUCTION) / 100.0
+                + (b.has(KeystoneKind.KHATUU_ZORIG) ? 0.25 : 0);
         return Math.max(1, (int) Math.round(s.cost() * Math.max(0.2, factor)));
     }
 
@@ -358,7 +375,166 @@ public final class SkillService implements Listener {
                     new PotionEffect(PotionEffectType.SPEED, 120, 2));
             case ZHADNY_SHIDELT -> beam(p, s, 18, Particle.CRIT, Sound.ITEM_TRIDENT_THROW);
             case KHULGIIN_DAIRALT -> stampede(p, s);
+            case SULDIIN_TSOKHILT -> suldStrike(p, s);
+            case SUMNY_BOROO -> arrowRain(p, s);
+            case KHAR_SALKHI -> blackWind(p, s);
+            case GALT_UUL -> volcano(p, s);
+            case KHIIMORIIN_DAVKHILT -> windHorse(p, s);
         }
+    }
+
+    // ------------------------------------------------------------------ the fifth spells (level 50, Shift+F)
+
+    /** Shift+F with the class weapon casts the fifth spell (F alone stays the ultimate). */
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onShiftF(org.bukkit.event.player.PlayerSwapHandItemsEvent e) {
+        Player p = e.getPlayer();
+        if (!p.isSneaking() || !holdsClassWeapon(p)) return;
+        PlayerClass c = clazzOf(p);
+        Spell s = c == null ? null : Spell.shiftF(c).orElse(null);
+        if (s == null) return;
+        e.setCancelled(true); // the hands never swap, and the ultimate handler skips a cancelled event
+        cast(p, s);
+    }
+
+    /** Баатар: the banner slams the ground; everyone around is thrown back, the hero is hardened 5 s. */
+    private void suldStrike(Player p, Spell s) {
+        Location c = p.getLocation();
+        for (LivingEntity e : around(p, c, r(p, s, 5.5))) {
+            hurt(p, e, s);
+            Vector away = horizontal(e.getLocation().toVector().subtract(c.toVector()));
+            e.setVelocity(away.multiply(0.9).setY(0.45));
+        }
+        p.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 100, 1));
+        for (int i = 0; i < 24; i++) {
+            double a = Math.PI * 2 * i / 24;
+            c.getWorld().spawnParticle(Particle.DUST, c.clone().add(Math.cos(a) * 4.5, 0.2, Math.sin(a) * 4.5), 2, 0.1, 0.1, 0.1, 0,
+                    new Particle.DustOptions(Color.fromRGB(255, 205, 70), 1.6f));
+        }
+        c.getWorld().spawnParticle(Particle.EXPLOSION, c, 2, 0.6, 0.1, 0.6);
+        c.getWorld().spawnParticle(Particle.BLOCK, c, 40, 2, 0.1, 2, 0, Material.DIRT.createBlockData());
+        c.getWorld().playSound(c, Sound.ITEM_MACE_SMASH_GROUND_HEAVY, 1.2f, 0.8f);
+        c.getWorld().playSound(c, Sound.ENTITY_IRON_GOLEM_ATTACK, 1f, 0.6f);
+    }
+
+    /** Мэргэн: five waves of arrows fall on the aimed spot, half a second apart. */
+    private void arrowRain(Player p, Spell s) {
+        Location c = targetPoint(p, 24);
+        double rr = r(p, s, 4.5);
+        new BukkitRunnable() {
+            int t;
+
+            @Override
+            public void run() {
+                if (!p.isOnline() || p.isDead() || t >= 5) {
+                    cancel();
+                    return;
+                }
+                t++;
+                for (int i = 0; i < 18; i++) {
+                    double a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * rr;
+                    Location at = c.clone().add(Math.cos(a) * d, 4, Math.sin(a) * d);
+                    c.getWorld().spawnParticle(Particle.CRIT, at, 0, 0, -1.5, 0, 1);
+                }
+                for (LivingEntity e : around(p, c, rr)) hurt(p, e, s);
+                c.getWorld().playSound(c, Sound.ENTITY_ARROW_SHOOT, 1f, 0.7f + 0.1f * t);
+                c.getWorld().playSound(c, Sound.ENTITY_ARROW_HIT, 0.8f, 1.1f);
+            }
+        }.runTaskTimer(plugin, 6L, 10L);
+        p.getWorld().playSound(p.getLocation(), Sound.ITEM_CROSSBOW_SHOOT, 1f, 0.6f);
+    }
+
+    /** Бөө: a black wind of the spirits pulls the enemies in and strikes five times; each strike heals the shaman. */
+    private void blackWind(Player p, Spell s) {
+        Location c = targetPoint(p, 16);
+        double rr = r(p, s, 5.5);
+        new BukkitRunnable() {
+            int t;
+
+            @Override
+            public void run() {
+                if (!p.isOnline() || p.isDead() || t >= 5) {
+                    cancel();
+                    return;
+                }
+                t++;
+                int hits = 0;
+                for (LivingEntity e : around(p, c, rr)) {
+                    Vector in = horizontal(c.toVector().subtract(e.getLocation().toVector()));
+                    e.setVelocity(in.multiply(0.45).setY(0.12));
+                    hurt(p, e, s);
+                    hits++;
+                }
+                if (hits > 0) services.skillTree().heal(p, Math.min(4, hits) * 0.8 * rankPower(p, s));
+                for (int i = 0; i < 20; i++) {
+                    double a = Math.PI * 2 * i / 20 + t * 0.6, rad = rr * (1 - (i % 5) * 0.15);
+                    c.getWorld().spawnParticle(Particle.DUST, c.clone().add(Math.cos(a) * rad, 0.3 + (i % 5) * 0.4, Math.sin(a) * rad), 1, 0, 0, 0, 0,
+                            new Particle.DustOptions(Color.fromRGB(70, 30, 110), 1.8f));
+                }
+                c.getWorld().spawnParticle(Particle.SOUL, c.clone().add(0, 1, 0), 8, rr / 3, 0.6, rr / 3, 0.02);
+                c.getWorld().playSound(c, Sound.ENTITY_BREEZE_WIND_BURST, 1f, 0.5f + 0.1f * t);
+            }
+        }.runTaskTimer(plugin, 4L, 12L);
+    }
+
+    /** Дархан: the aimed ground smoulders, then erupts: everyone is thrown up and set on fire. */
+    private void volcano(Player p, Spell s) {
+        Location c = targetPoint(p, 20);
+        new BukkitRunnable() {
+            int t;
+
+            @Override
+            public void run() {
+                if (!p.isOnline() || p.isDead()) {
+                    cancel();
+                    return;
+                }
+                if (t++ < 16) {
+                    c.getWorld().spawnParticle(Particle.LAVA, c, 2, 1.5, 0.1, 1.5);
+                    c.getWorld().spawnParticle(Particle.LARGE_SMOKE, c, 3, 1.5, 0.1, 1.5, 0.01);
+                    if (t % 5 == 0) c.getWorld().playSound(c, Sound.BLOCK_LAVA_POP, 1f, 0.6f);
+                    return;
+                }
+                for (LivingEntity e : around(p, c, r(p, s, 4.5))) {
+                    hurt(p, e, s);
+                    ignite(p, e, s, 100);
+                    e.setVelocity(e.getVelocity().add(new Vector(0, 0.8, 0)));
+                }
+                c.getWorld().spawnParticle(Particle.EXPLOSION, c, 4, 1, 0.3, 1);
+                c.getWorld().spawnParticle(Particle.FLAME, c, 60, 1.5, 1.5, 1.5, 0.08);
+                c.getWorld().spawnParticle(Particle.LAVA, c, 25, 2, 0.5, 2);
+                c.getWorld().playSound(c, Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 0.7f);
+                cancel();
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
+    }
+
+    /** Хүлэгчин: the wind horse rises; a long charge strikes everything on the way, then 6 s of speed. */
+    private void windHorse(Player p, Spell s) {
+        p.setVelocity(flat(p).multiply(2.1).setY(0.2));
+        Set<UUID> hit = new HashSet<>();
+        new BukkitRunnable() {
+            int t;
+
+            @Override
+            public void run() {
+                if (!p.isOnline() || p.isDead() || t++ > 14) {
+                    cancel();
+                    return;
+                }
+                if (t == 6) p.setVelocity(flat(p).multiply(1.6).setY(0.1));
+                for (LivingEntity e : around(p, p.getLocation(), r(p, s, 2.4))) if (hit.add(e.getUniqueId())) {
+                    hurt(p, e, s);
+                    e.setVelocity(flat(p).multiply(0.6).setY(0.5));
+                }
+                p.getWorld().spawnParticle(Particle.DUST, p.getLocation().add(0, 1, 0), 6, 0.6, 0.5, 0.6, 0,
+                        new Particle.DustOptions(Color.fromRGB(120, 200, 255), 1.5f));
+                p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 3, 0.3, 0.1, 0.3, 0.02);
+            }
+        }.runTaskTimer(plugin, 0L, 1L);
+        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 120, 2));
+        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_HORSE_ANGRY, 1f, 1.1f);
+        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_CHARGE, 1f, 0.8f);
     }
 
     public void say(Player p, String text) {
@@ -395,7 +571,8 @@ public final class SkillService implements Listener {
         Double snap = castAttack.get(p.getUniqueId());
         boolean fresh = cast != null && snap != null && System.currentTimeMillis() - cast < 5_000;
         SkillBuild b = buildOf(p);
-        double mult = s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p);
+        double mult = s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p)
+                * rankPower(p, s);
         double dmg = (fresh ? snap : CombatListener.attackOf(services, p)) * mult;
         CombatListener.spellDamage = true;
         try {
@@ -609,7 +786,7 @@ public final class SkillService implements Listener {
 
     private void heal(Player p, Spell s, double hp, double radius) {
         double rr = r(p, s, radius);
-        double amount = hp * (1 + buildOf(p).mod(s, ModKey.DAMAGE_PCT) / 100.0);
+        double amount = hp * (1 + buildOf(p).mod(s, ModKey.DAMAGE_PCT) / 100.0) * rankPower(p, s);
         for (Player ally : p.getWorld().getPlayers()) {
             if (ally.getLocation().distanceSquared(p.getLocation()) > rr * rr) continue;
             services.skillTree().healFrom(p, ally, amount);
@@ -720,7 +897,7 @@ public final class SkillService implements Listener {
                 }
                 for (LivingEntity e : around(p, c, r(p, s, 5))) hurt(p, e, s);
                 for (Player ally : c.getWorld().getPlayers()) {
-                    if (ally.getLocation().distanceSquared(c) < Math.pow(r(p, s, 6), 2)) services.skillTree().healFrom(p, ally, 6 * (1 + buildOf(p).mod(s, ModKey.DAMAGE_PCT) / 100.0));
+                    if (ally.getLocation().distanceSquared(c) < Math.pow(r(p, s, 6), 2)) services.skillTree().healFrom(p, ally, 6 * (1 + buildOf(p).mod(s, ModKey.DAMAGE_PCT) / 100.0) * rankPower(p, s));
                 }
                 c.getWorld().spawnParticle(Particle.FLASH, c, 1, 0, 0, 0, 0, Color.WHITE);
                 c.getWorld().spawnParticle(Particle.DUST, c, 80, 2.5, 1, 2.5, 0, new Particle.DustOptions(Color.fromRGB(150, 235, 255), 1.6f));

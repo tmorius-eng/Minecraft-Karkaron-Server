@@ -7,15 +7,20 @@ with the same code (`LiveRules` extends `ProposedRules`).
 
 Status of everything below: **MANUAL_QA_REQUIRED** (bots and simulation, not yet a full human playtest).
 
-## Measured (quick simulate, `./gradlew :suld-plugin:simulate -Pquick`)
+## Measured (full simulate, `./gradlew :suld-plugin:simulate`)
 
-* Live hardcore p50: **201 active hours to level 60**, against 218 h for the proposed design (8 % apart; L1 needs
+* Live hardcore p50: **207 active hours to level 60**, against 224 h for the proposed design (8 % apart; L1 needs
   180–220 h and ≤ 10 %). With Act II (42 chapters) the live curve base is 242 (`Balance.CURVE_BASE`, curve version 3);
   Act I alone used 190. The design's 315 (`Balance.DESIGN_BASE`) also counts band raids and a world boss.
-* Every proposed criterion C1–C13 passes, and every live criterion L1–L10 (`Sim.liveChecks`) passes: no dead levels,
-  loot clamped to the band, coin sinks ≥ 60 %, a milestone on ≥ 90 % of the first 30 days, at most 40 % of the ladder
-  at level 20, Ascension I reachable.
-* `SimulationTest.liveAndProposedReachSixtyAtTheSamePace` keeps the parity in the test suite.
+* Classes, live (M2): Баатар 213 h, Мэргэн 196 h, Бөө 217 h, Дархан 215 h, Хүлэгчин 191 h, all within ±10 % of the
+  median. Before M2 Бөө (228 h) was the slow outlier and no bow rolled above legendary.
+* Every live criterion L1–L10 (`Sim.liveChecks`) passes, and C2–C13 pass. **C1 fails narrowly**: the proposed design
+  takes 223.8 h against its 180–220 h band (218.5 h before M2).
+* The simulator's per-class hours move a few percent with any small change, because the simulated player's choices
+  flip. With spells counted as a flat share of hits, a share of 0.2 gave Баатар 201 h, 0.3 gave 214 h, 0.45 gave 198 h
+  and 1.0 gave 162 h. M2's spell model (gear and tree spell damage, Бөө's trait, ranks, the fifth spell) raised DPS at
+  60 by about 25 %, but C1's 1.7 % overshoot is inside that noise, so it was not tuned away.
+* `SimulationTest.liveAndProposedReachSixtyAtTheSamePace` keeps the parity in the test suite (passes).
 
 ## In the game
 
@@ -34,6 +39,7 @@ Status of everything below: **MANUAL_QA_REQUIRED** (bots and simulation, not yet
 | Gear power | `GearPower`, `DungeonService.gearPower` |
 | Vendor prices, reforge cost | `Economy`, `ItemEconomy` |
 | Skill points: levels, chapters, regions, Ascension | `SkillPoints`, `SkillEngine.total` |
+| M2: five spells per class (the fifth at 50 with Shift+F), spell ranks II/III (40/55), a second keystone per class, Бөө spell trait, a mythic-capable bow (Тэнгэрийн Нум) | `Spell`, `SkillService`, `KeystoneKind`, `skills/*.json` (f5, k2), `CombatRules.spellPassive`, `items/weapons.json`, `docs/SKILL_TREE_DESIGN.md` |
 | Outer lands 27–60 (four regions, 16 areas), mobs fitted to the local level | `content/world.json`, `WorldContent.localLevel`, `RegionSpawner` |
 | Daily tasks, daily login EXP, landmark and discovery rewards, world-event floor | `Rewards`, `DailyTasks`, `OvooService`, `WorldEventService` |
 | Тэнгэрийн Зэрэг I–III: оноо, gates, rite, +1 point, +1 % attack, T6 at III, longest death lock | `Ascension`, `AscensionMenu`, `docs/ASCENSION_SPEC.md` |

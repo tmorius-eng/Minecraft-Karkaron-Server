@@ -250,7 +250,7 @@ public final class Menus {
 
     // ================================================================== skills
 
-    private static final Material[] SPELL_ICON = {Material.BLAZE_POWDER, Material.FIRE_CHARGE, Material.FEATHER, Material.NETHER_STAR};
+    private static final Material[] SPELL_ICON = {Material.BLAZE_POWDER, Material.FIRE_CHARGE, Material.FEATHER, Material.NETHER_STAR, Material.HEART_OF_THE_SEA};
 
     private SkillMapMenu skillMap;
 
@@ -273,24 +273,27 @@ public final class Menus {
         m.set(4, Menu.item(Material.BOOK, Menu.title(clazz.displayName() + " · " + clazz.resourceName(), GOLD), List.of(
                 b("Ангийн зэвсгээ барьж гурван товшилт:"),
                 b(mn.suld.api.skill.Spell.firstClick(clazz) == 'R' ? "Баруун-Зүүн-Баруун гэх мэт (R-L-R)." : "Зүүн-Баруун-Зүүн гэх мэт (L-R-L)."),
+                b("5-р ид шид (50-р түвшин): Shift+F."),
+                b("Зэрэг II 40-р, зэрэг III 55-р түвшинд."),
                 b("Нөөц цаг ба тулаанаар нөхөгдөнө."))), null);
-        int slot = 10;
+        int slot = 11; // five spells: 11..15 (18 is the back button)
         for (mn.suld.api.skill.Spell sp : mn.suld.api.skill.Spell.of(clazz)) {
             boolean open = level >= sp.unlockLevel();
             TextColor c = open ? GREEN : RED;
-            String combo = String.join("-", sp.combo().split(""));
+            int rank = sp.rankAt(level);
             List<Component> info = new ArrayList<>();
-            info.add(Menu.kv("Хослол:", combo, GOLD));
+            info.add(Menu.kv("Хослол:", sp.keys(), GOLD));
+            if (open) info.add(Menu.kv("Зэрэг:", mn.suld.api.skill.Spell.roman(rank) + (rank > 1 ? " (+" + Math.round((mn.suld.api.skill.Spell.rankPower(rank) - 1) * 100) + "% хүч)" : ""), GOLD));
             info.add(Menu.kv("Нөөц:", String.valueOf(sp.cost()), SKY));
-            info.add(Menu.kv("Хүлээлт:", sp.cooldownSeconds() + " сек", SKY));
+            info.add(Menu.kv("Хүлээлт:", String.format(java.util.Locale.ROOT, "%.1f", sp.cooldownSeconds() * mn.suld.api.skill.Spell.rankCooldown(rank)) + " сек", SKY));
             if (sp.damageMultiplier() > 0) info.add(Menu.kv("Хүч:", "x" + sp.damageMultiplier() + " ATK", RED));
             info.add(Menu.kv("Түвшин:", String.valueOf(sp.unlockLevel()), c));
             ItemStack it = Menu.item(open ? SPELL_ICON[sp.slot() - 1] : Material.GRAY_DYE,
-                    Component.text(sp.slot() + ". " + sp.displayName(), open ? GOLD : NamedTextColor.GRAY, TextDecoration.BOLD),
-                    Menu.lore(c, List.of(b(sp.description())), info, open ? "Хослолоор хэрэглэ" : "Түвшин " + sp.unlockLevel() + " хүрэх"));
+                    Component.text(sp.slot() + ". " + sp.displayName() + (open && rank > 1 ? " " + mn.suld.api.skill.Spell.roman(rank) : ""), open ? GOLD : NamedTextColor.GRAY, TextDecoration.BOLD),
+                    Menu.lore(c, List.of(b(sp.description())), info, open ? (sp.slot() == mn.suld.api.skill.Spell.SHIFT_F_SLOT ? "Shift+F дарж хэрэглэ" : "Хослолоор хэрэглэ") : "Түвшин " + sp.unlockLevel() + " хүрэх"));
             if (open) Menu.glow(it);
             m.set(slot, it, null);
-            slot += 2;
+            slot++;
         }
         m.set(18, Menu.item(Material.ARROW, Menu.title("« Дүр", GOLD), List.of()), (pl, c) -> profile(pl));
         if (skillMap != null) {

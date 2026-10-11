@@ -425,9 +425,12 @@ public final class SkillTreeService implements Listener {
         AttributeInstance maxHp = p.getAttribute(Attribute.MAX_HEALTH);
         double base = maxHp == null ? 20 : maxHp.getBaseValue();
         if (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH)) health -= (base + health) * 0.25;
+        if (b.has(KeystoneKind.BURGEDIIN_NUD) || b.has(KeystoneKind.SALKHINY_KHUU)) health -= (base + health) * 0.15;
         setModifier(p, Attribute.MAX_HEALTH, "health", health, AttributeModifier.Operation.ADD_NUMBER);
         double move = b.stat(StatKey.MOVE_PCT) / 100.0;
         if (b.has(KeystoneKind.TALYN_SALKHI)) move -= 0.10;
+        if (b.has(KeystoneKind.TUMRIIN_BIYE)) move -= 0.12;
+        if (b.has(KeystoneKind.SALKHINY_KHUU)) move += 0.10;
         setModifier(p, Attribute.MOVEMENT_SPEED, "move", move, AttributeModifier.Operation.ADD_SCALAR);
         // SÜLD armour is applied by CombatListener.onMitigate (a/(a+K) by attacker level); vanilla armour points are off
         setModifier(p, Attribute.ARMOR, "armor", -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
@@ -795,15 +798,21 @@ public final class SkillTreeService implements Listener {
     // ------------------------------------------------------------------ stats used by the combat code
 
     public double attackMultiplier(Player p) {
-        return 1 + build(p).stat(StatKey.ATTACK_PCT) / 100.0;
+        SkillBuild b = build(p);
+        double v = 1 + b.stat(StatKey.ATTACK_PCT) / 100.0;
+        if (b.has(KeystoneKind.KHATUU_ZORIG)) v += 0.15;
+        if (b.has(KeystoneKind.SALKHINY_KHUU) && p.isSprinting()) v += 0.15;
+        return v;
     }
 
     public double critChance(Player p) {
-        return build(p).stat(StatKey.CRIT_CHANCE) / 100.0;
+        SkillBuild b = build(p);
+        return b.stat(StatKey.CRIT_CHANCE) / 100.0 + (b.has(KeystoneKind.BURGEDIIN_NUD) ? 0.12 : 0);
     }
 
     public double critMultiplier(Player p) {
-        return 1.5 + build(p).stat(StatKey.CRIT_DAMAGE) / 100.0;
+        SkillBuild b = build(p);
+        return 1.5 + b.stat(StatKey.CRIT_DAMAGE) / 100.0 + (b.has(KeystoneKind.BURGEDIIN_NUD) ? 0.20 : 0);
     }
 
     public double expMultiplier(Player p) {
@@ -825,6 +834,9 @@ public final class SkillTreeService implements Listener {
         SkillBuild b = build(p);
         double v = 1 + b.stat(StatKey.SPELL_DAMAGE) / 100.0;
         if (b.has(KeystoneKind.ALTAN_DOSH)) v += 0.15;
+        if (b.has(KeystoneKind.ONGONY_GEREE)) v += 0.25;
+        PlayerClass c = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
+        if (c != null) v += mn.suld.api.balance.CombatRules.spellPassive(c); // Бөө «Тэнгэрийн хүч»
         return v;
     }
 
@@ -1017,6 +1029,7 @@ public final class SkillTreeService implements Listener {
         AttributeInstance max = p.getAttribute(Attribute.MAX_HEALTH);
         double maxHp = max == null ? 20 : max.getValue();
         if (b.has(KeystoneKind.MUNKH_TESVER) && p.getHealth() / maxHp < 0.30) reduction += 35;
+        if (b.has(KeystoneKind.TUMRIIN_BIYE)) reduction += 15;
         if (reduction > 0) e.setDamage(e.getDamage() * (1 - Math.min(75, reduction) / 100.0));
     }
 
@@ -1099,10 +1112,13 @@ public final class SkillTreeService implements Listener {
         if (e.isSneaking()) fire(e.getPlayer(), TriggerEvent.SNEAK, null);
     }
 
-    /** Keystone Мөнх Тэсвэр: the price of its resistance is weaker healing. */
+    /** Keystones Мөнх Тэсвэр and Онгоны Гэрээ: the price of their power is weaker healing. */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onRegain(EntityRegainHealthEvent e) {
-        if (e.getEntity() instanceof Player p && build(p).has(KeystoneKind.MUNKH_TESVER)) e.setAmount(e.getAmount() * 0.5);
+        if (!(e.getEntity() instanceof Player p)) return;
+        SkillBuild b = build(p);
+        if (b.has(KeystoneKind.MUNKH_TESVER)) e.setAmount(e.getAmount() * 0.5);
+        if (b.has(KeystoneKind.ONGONY_GEREE)) e.setAmount(e.getAmount() * 0.75);
     }
 
     /** Keystone Алтан Дөш: gear lasts longer. */

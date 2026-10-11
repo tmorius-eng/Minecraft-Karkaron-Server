@@ -1,16 +1,17 @@
 # SÜLD skill tree — design
 
 The tree is a map the player walks outward from a root node. The left branch (L) is survival, the middle one (M) reshapes
-the class's four spells, the right one (R) is offence and passive spells, the top row offers three ultimates of which one can be
+the class's spells, the right one (R) is offence and passive spells, the top row offers three ultimates of which one can be
 learned, and five universal nodes sit beside the root. **Red links** connect nodes that cannot both be learned, so no player
 can have everything: a full tree costs more than a level-60 character earns (44 level points + up to 9 from the story and discovery).
 
-## Shape (shared by the five classes, 31 class nodes on a 5 × 9 grid + 5 universal)
+## Shape (shared by the five classes, 33 class nodes on a 5 × 9 grid + 5 universal)
 
 ```
 row 8   u1(ult)  u2(ult)  u3(ult)            ult row: pick ONE (red links), u1/u2/u3 each also need l6/m6/r6
-row 7   l7(*)  ✖  m7  ✖  r7               one keystone per class sits at l7 or r7
-row 6   l6  — m6  — r6                      bridge row
+row 7   K  l7(*)  ✖  m7  ✖  r7  K          a keystone at l7 or r7; the second (k2, level 40) at the other edge,
+                                            ✖ with the first: a build takes one of the two
+row 6   F  l6  — m6  — r6  F                bridge row; f5 (level 50) strengthens the fifth spell, beside k2
 row 5   l5 — l5b ✖ m5 ✖ r5b — r5
 row 4   l4  ✖ m4  ✖ r4
 row 3   l3b — l3 — m3 — r3 — r3b            bridge row
@@ -228,11 +229,37 @@ row 0   x2 — x1 — ROOT — x3 — x4 — x5      universal nodes: EXP, loot,
 
 ## Keystones
 
+Two per class; the tree makes them exclusive (red link), so a build takes one. The second one (`k2`, level 40) sits on
+the other edge of row 7, reached from l6 or r6.
+
 * **Мөнх Тэсвэр** (Baatar): Амь 30%-аас доош бол авах хохирол -35%, гэвч авах эдгээлт 50%-иар буурна.
 * **Нэг Сумны Хувь** (Mergen): Энгийн сум +40% хохирол өгнө, гэвч Олон Сум -30% сул болно.
 * **Тэнгэртэй Холбогдох** (Boo): Сүнсний нөөц +40, секундэд +3 сэргэнэ, гэвч дээд амь -25%.
 * **Алтан Дөш** (Darkhan): Хуяг зэвсгийн элэгдэл 60%-иар буурч, шидийн хүч +15%, шидийн шатаалт +3 сек.
 * **Талын Салхи** (Khulegchin): Морин дээр байхад хурд +60%, гэвч явган үед хурд -10%.
+* **Хатуу Зориг** (Baatar, k2): Довтолгоо +15%, гэвч ид шид 25% илүү Хил зарцуулна.
+* **Бүргэдийн Нүд** (Mergen, k2): Цохилтын магадлал +12%, цохилтын хүч +20%, гэвч дээд амь -15%.
+* **Онгоны Гэрээ** (Boo, k2): Ид шидийн хүч +25%, гэвч авах эдгээлт 25%-иар буурна.
+* **Төмрийн Бие** (Darkhan, k2): Авах хохирол -15%, гэвч хурд -12%.
+* **Салхины Хүү** (Khulegchin, k2): Гүйж байхад довтолгоо +15%, хурд +10%, гэвч дээд амь -15%.
+
+## Spells: five per class, ranks
+
+Spells 1–4 unlock at 10/20/35 and are cast with the three-click combos. The fifth spell unlocks at level 50 and is cast
+with **Shift+F** while holding the class weapon (all four combos were taken; F alone stays the ultimate). Spells rank up
+with the level (`Spell.rankAt`): spells 1–4 reach rank II at 40 and III at 55, the fifth at 55 and 60. Rank II hits and
+heals 15 % harder, rank III 30 % harder and casts 10 % sooner. The HUD shows a fifth slot (numeral V).
+
+| Class | Fifth spell | Cost · power | What it does |
+|---|---|---|---|
+| Баатар | Сүлдний Цохилт | 60 · 3.2 ATK | slams the ground: everyone within 5.5 is hit and thrown back, 5 s Resistance II |
+| Мэргэн | Сумны Бороо | 60 · 5 × 0.8 ATK | five waves of arrows on the aimed spot (radius 4.5), half a second apart |
+| Бөө | Хар Салхи | 70 · 5 × 0.9 ATK | a spirit wind pulls enemies in and strikes five times; each strike heals the shaman |
+| Дархан | Галт Уул | 70 · 3.6 ATK | the aimed ground smoulders, then erupts: thrown up and set on fire for 5 s |
+| Хүлэгчин | Хийморийн Давхилт | 60 · 2.8 ATK | a long charge that hits everything on the way, then 6 s Speed III |
+
+Cooldown 18 s. The fifth spells take every spell mod except echo (they last long already). Бөө also gets +25 % spell
+power as a class trait (`CombatRules.spellPassive`).
 
 ## Reading the map
 

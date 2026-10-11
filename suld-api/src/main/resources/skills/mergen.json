@@ -58,6 +58,8 @@
      "effects": [{"type": "mod", "spell": "UKHRAKH_USRELT", "key": "SLOW", "value": 4}, {"type": "mod", "spell": "UKHRAKH_USRELT", "key": "WEAKEN", "value": 6}, {"type": "mod", "spell": "UKHRAKH_USRELT", "key": "RADIUS_PCT", "value": 30}]},
     {"id": "r7", "name": "Нэг Сумны Хувь", "category": "KEYSTONE", "icon": "SPECTRAL_ARROW", "x": 3, "y": 7, "cost": 4, "level": 30, "keystone": true,
      "effects": [{"type": "keystone", "kind": "NEG_SUMNII_KHUVI"}]},
+    {"id": "f5", "name": "Борооны Нягт", "description": "5-р ид шидийг (Shift+F) хүчирхэгжүүлнэ.", "category": "SPELL", "icon": "SPECTRAL_ARROW", "x": 0, "y": 6, "cost": 2, "maxRank": 3, "level": 50, "tags": ["nosat"], "effects": [{"type": "mod", "spell": "SUMNY_BOROO", "key": "DAMAGE_PCT", "value": 10}, {"type": "mod", "spell": "SUMNY_BOROO", "key": "RADIUS_PCT", "value": 6}]},
+    {"id": "k2", "name": "Бүргэдийн Нүд", "category": "KEYSTONE", "icon": "SPYGLASS", "x": 0, "y": 7, "cost": 4, "level": 40, "keystone": true, "effects": [{"type": "keystone", "kind": "BURGEDIIN_NUD"}]},
     {"id": "u1", "name": "Үхлийн Тэмдэг", "category": "ULTIMATE", "icon": "SPYGLASS", "x": 1, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "l6", "rank": 1}], "capstone": true,
      "effects": [{"type": "ultimate", "ultimate": "UKHLIIN_TEMDEG"}]},
     {"id": "u2", "name": "Сумын Борооны Цаг", "category": "ULTIMATE", "icon": "TIPPED_ARROW", "x": 2, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "m6", "rank": 1}], "capstone": true,
@@ -154,6 +156,7 @@
     ["r4", "r5"], ["l5", "l5b"], ["r5b", "r5"], ["l5b", "l6"],
     ["m5", "m6"], ["r5b", "r6"], ["l6", "m6"], ["m6", "r6"],
     ["l6", "l7"], ["m6", "m7"], ["r6", "r7"], ["l7", "u1"],
+    ["l6", "f5"], ["l6", "k2"],
     ["m7", "u2"], ["r7", "u3"], ["l7", "u2"], ["r7", "u2"],
     ["l1", "l1_s1"], ["l1", "l1_s2"], ["l1", "l1_s3"],
     ["m1", "m1_s1"], ["m1", "m1_s2"], ["m1", "m1_s3"],
@@ -183,6 +186,7 @@
     ["m7", "m7_s1"], ["m7", "m7_s2"], ["m7", "m7_s3"]
   ],
   "exclusive": [
+    ["r7", "k2"],
     ["l2", "m2"], ["m2", "r2"], ["l4", "m4"], ["m4", "r4"],
     ["l5b", "m5"], ["m5", "r5b"], ["l7", "m7"], ["m7", "r7"],
     ["u1", "u2"], ["u2", "u3"], ["u1", "u3"]

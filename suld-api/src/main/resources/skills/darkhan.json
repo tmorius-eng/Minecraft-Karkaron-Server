@@ -58,6 +58,8 @@
      "effects": [{"type": "mod", "spell": "GALYN_DAVTALT", "key": "DAMAGE_PCT", "value": 35}, {"type": "mod", "spell": "GALYN_DAVTALT", "key": "RADIUS_PCT", "value": 30}, {"type": "mod", "spell": "GALYN_DAVTALT", "key": "ECHO_PCT", "value": 25}]},
     {"id": "r7", "name": "Алтан Дөш", "category": "KEYSTONE", "icon": "GOLD_BLOCK", "x": 3, "y": 7, "cost": 4, "level": 30, "keystone": true,
      "effects": [{"type": "keystone", "kind": "ALTAN_DOSH"}]},
+    {"id": "f5", "name": "Галт Уулын Хүч", "description": "5-р ид шидийг (Shift+F) хүчирхэгжүүлнэ.", "category": "SPELL", "icon": "MAGMA_CREAM", "x": 0, "y": 6, "cost": 2, "maxRank": 3, "level": 50, "tags": ["nosat"], "effects": [{"type": "mod", "spell": "GALT_UUL", "key": "DAMAGE_PCT", "value": 10}, {"type": "mod", "spell": "GALT_UUL", "key": "BURN", "value": 1}]},
+    {"id": "k2", "name": "Төмрийн Бие", "category": "KEYSTONE", "icon": "ANVIL", "x": 0, "y": 7, "cost": 4, "level": 40, "keystone": true, "effects": [{"type": "keystone", "kind": "TUMRIIN_BIYE"}]},
     {"id": "u1", "name": "Бамбайн Хэрэм", "category": "ULTIMATE", "icon": "SHIELD", "x": 1, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "l6", "rank": 1}], "capstone": true,
      "effects": [{"type": "ultimate", "ultimate": "BAMBAIN_KHEREM"}]},
     {"id": "u2", "name": "Хайлсан Далай", "category": "ULTIMATE", "icon": "LAVA_BUCKET", "x": 2, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "m6", "rank": 1}], "capstone": true,
@@ -154,6 +156,7 @@
     ["r4", "r5"], ["l5", "l5b"], ["r5b", "r5"], ["l5b", "l6"],
     ["m5", "m6"], ["r5b", "r6"], ["l6", "m6"], ["m6", "r6"],
     ["l6", "l7"], ["m6", "m7"], ["r6", "r7"], ["l7", "u1"],
+    ["l6", "f5"], ["l6", "k2"],
     ["m7", "u2"], ["r7", "u3"], ["l7", "u2"], ["r7", "u2"],
     ["l1", "l1_s1"], ["l1", "l1_s2"], ["l1", "l1_s3"],
     ["m1", "m1_s1"], ["m1", "m1_s2"], ["m1", "m1_s3"],
@@ -183,6 +186,7 @@
     ["m7", "m7_s1"], ["m7", "m7_s2"], ["m7", "m7_s3"]
   ],
   "exclusive": [
+    ["r7", "k2"],
     ["l2", "m2"], ["m2", "r2"], ["l4", "m4"], ["m4", "r4"],
     ["l5b", "m5"], ["m5", "r5b"], ["l7", "m7"], ["m7", "r7"],
     ["u1", "u2"], ["u2", "u3"], ["u1", "u3"]

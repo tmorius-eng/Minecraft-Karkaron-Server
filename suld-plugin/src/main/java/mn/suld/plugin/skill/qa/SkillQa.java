@@ -444,6 +444,12 @@ public final class SkillQa {
                 case KHURDAN_DOVTOLGOO -> new Cfg("lateral", 3, 4, 25, true, 0, false);
                 case ZHADNY_SHIDELT -> new Cfg("forward", 12, 0, 6, false, 0, false);
                 case KHULGIIN_DAIRALT -> new Cfg("lateral", 7, 5, 35, true, 0, false);
+                // the fifth spells (Shift+F): the area ones land 8 blocks ahead when the ray finds no block
+                case SULDIIN_TSOKHILT -> new Cfg("forward", 4, 0, 6, false, 0, false);
+                case SUMNY_BOROO -> new Cfg("twoSide", 8, 3, 70, false, 8, false);
+                case KHAR_SALKHI -> new Cfg("twoSide", 8, 3, 75, false, 8, false);
+                case GALT_UUL -> new Cfg("twoSide", 8, 3, 30, false, 8, false);
+                case KHIIMORIIN_DAVKHILT -> new Cfg("lateral", 5, 4, 30, true, 0, false);
                 default -> new Cfg("single", 6, 0, 6, false, 0, false);
             };
         }
@@ -939,8 +945,9 @@ public final class SkillQa {
                         return skills.cooldownLeft(p, s);
                     });
                     double cdr = Math.min(60, v) / 100;
+                    double cd0 = rankedCooldown(s); // rank III (level 55+) casts 10 % sooner
                     check(id, category, what, "cooldown left right after casting " + s.displayName() + " (s)", x[0], x[1],
-                            EffectNum.n(s.cooldownSeconds() * (1 - cdr)), near(x[0], s.cooldownSeconds(), 0.15) && near(x[1], s.cooldownSeconds() * (1 - cdr), 0.15));
+                            EffectNum.n(cd0 * (1 - cdr)), near(x[0], cd0, 0.15) && near(x[1], cd0 * (1 - cdr), 0.15));
                 });
                 case EXP_PCT -> expNode(c, t, id, what, v);
                 case LOOT_PCT -> lootNode(c, t, id, what, v);
@@ -1565,7 +1572,8 @@ public final class SkillQa {
                         p.heal(4, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.CUSTOM);
                         return p.getHealth() - 5;
                     });
-                    check(id + ".resist-low", "keystone", what, "health lost from a 2 damage hit at 25% health", low[0], low[1], "x0.65", near(low[1] / low[0], 0.65, 0.01));
+                    double lowRatio = drRatio(35); // the reductions add up: the player may already have some
+                    check(id + ".resist-low", "keystone", what, "health lost from a 2 damage hit at 25% health", low[0], low[1], "x" + EffectNum.n(lowRatio), near(low[1] / low[0], lowRatio, 0.01));
                     check(id + ".no-resist-high", "keystone", what, "health lost from a 2 damage hit at full health", high[0], high[1], "x1.0 (no change above 30%)", near(high[1] / high[0], 1.0, 0.01));
                     check(id + ".healing", "keystone", what, "health restored by a 4 point heal", heal[0], heal[1], "x0.5", near(heal[1] / heal[0], 0.5, 0.01));
                 });
@@ -1607,8 +1615,75 @@ public final class SkillQa {
                     check(id + ".mounted", "keystone", what, "horse speed attribute with the player on it", horse[0], horse[1], "x1.6", horse[0] > 0 && near(horse[1] / horse[0], 1.6, 0.01));
                 });
                 case NEG_SUMNII_KHUVI -> arrowKeystone(c, n, id, what);
+                case KHATUU_ZORIG -> k.add(() -> {
+                    k.setClass(c);
+                    Spell probe = probeSpell(c);
+                    double[] atk = beforeAfter(c, n, () -> services.skillTree().attackMultiplier(p));
+                    double[] cost = beforeAfter(c, n, () -> (double) skills.costFor(p, probe));
+                    check(id + ".attack", "keystone", what, "attack multiplier", atk[0], atk[1], "+0.15", near(atk[1] - atk[0], 0.15, 0.001));
+                    check(id + ".cost", "keystone", what, "resource cost of " + probe.displayName(), cost[0], cost[1], "x1.25",
+                            near(cost[1], Math.max(1, Math.round(cost[0] * 1.25)), 1.01));
+                });
+                case BURGEDIIN_NUD -> k.add(() -> {
+                    k.setClass(c);
+                    double[] cc = beforeAfter(c, n, () -> services.skillTree().critChance(p));
+                    double[] cm = beforeAfter(c, n, () -> services.skillTree().critMultiplier(p));
+                    double[] hp = beforeAfter(c, n, () -> attr(Attribute.MAX_HEALTH));
+                    check(id + ".crit-chance", "keystone", what, "crit chance", cc[0], cc[1], "+0.12", near(cc[1] - cc[0], 0.12, 0.001));
+                    check(id + ".crit-damage", "keystone", what, "crit multiplier", cm[0], cm[1], "+0.20", near(cm[1] - cm[0], 0.20, 0.001));
+                    check(id + ".max-health", "keystone", what, "max health", hp[0], hp[1], "x0.85", near(hp[1] / hp[0], 0.85, 0.005));
+                });
+                case ONGONY_GEREE -> k.add(() -> {
+                    k.setClass(c);
+                    double[] sd = beforeAfter(c, n, () -> services.skillTree().spellDamageMultiplier(p));
+                    double[] heal = beforeAfter(c, n, () -> {
+                        k.resetPlayer();
+                        p.setHealth(5);
+                        p.heal(4, org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.CUSTOM);
+                        return p.getHealth() - 5;
+                    });
+                    check(id + ".spell-damage", "keystone", what, "spell damage multiplier", sd[0], sd[1], "+0.25", near(sd[1] - sd[0], 0.25, 0.001));
+                    check(id + ".healing", "keystone", what, "health restored by a 4 point heal", heal[0], heal[1], "x0.75", near(heal[1] / heal[0], 0.75, 0.01));
+                });
+                case TUMRIIN_BIYE -> k.add(() -> {
+                    k.setClass(c);
+                    single(2);
+                    LivingEntity src = k.dummies.get(0);
+                    double[] hit = beforeAfter(c, n, () -> {
+                        k.resetPlayer();
+                        return k.hurtPlayer(2, src);
+                    });
+                    double[] walk = beforeAfter(c, n, () -> attr(Attribute.MOVEMENT_SPEED));
+                    double hitRatio = drRatio(15);
+                    var ms = p.getAttribute(Attribute.MOVEMENT_SPEED);
+                    double base = ms == null ? 0.1 : ms.getBaseValue(); // speed modifiers add up as shares of the base
+                    check(id + ".resist", "keystone", what, "health lost from a 2 damage hit", hit[0], hit[1], "x" + EffectNum.n(hitRatio), near(hit[1] / hit[0], hitRatio, 0.01));
+                    check(id + ".walking", "keystone", what, "walking speed", walk[0], walk[1], "-12% of the base", near(walk[1] - walk[0], -0.12 * base, 0.0005));
+                });
+                case SALKHINY_KHUU -> k.add(() -> {
+                    k.setClass(c);
+                    double[] walk = beforeAfter(c, n, () -> attr(Attribute.MOVEMENT_SPEED));
+                    double[] hp = beforeAfter(c, n, () -> attr(Attribute.MAX_HEALTH));
+                    double[] run = beforeAfter(c, n, () -> {
+                        p.setSprinting(true);
+                        double v = services.skillTree().attackMultiplier(p);
+                        p.setSprinting(false);
+                        return v;
+                    });
+                    var ms = p.getAttribute(Attribute.MOVEMENT_SPEED);
+                    double base = ms == null ? 0.1 : ms.getBaseValue();
+                    check(id + ".walking", "keystone", what, "walking speed", walk[0], walk[1], "+10% of the base", near(walk[1] - walk[0], 0.10 * base, 0.0005));
+                    check(id + ".max-health", "keystone", what, "max health", hp[0], hp[1], "x0.85", near(hp[1] / hp[0], 0.85, 0.005));
+                    check(id + ".sprint-attack", "keystone", what, "attack multiplier while running", run[0], run[1], "+0.15", near(run[1] - run[0], 0.15, 0.001));
+                });
             }
             k.wait(1);
+        }
+
+        /** Damage taken with {@code extra} % more reduction over what the player already has (they add, capped at 75). */
+        double drRatio(double extra) {
+            double r = mn.suld.plugin.skill.SkillTreeService.build(services, p).stat(mn.suld.api.skill.tree.StatKey.DAMAGE_REDUCTION);
+            return (1 - Math.min(75, r + extra) / 100.0) / (1 - Math.min(75, r) / 100.0);
         }
 
         void altan(PlayerClass c, SkillNode n, String id, String what) {
@@ -1949,6 +2024,11 @@ public final class SkillQa {
 
         // ======================================================================================== COOLDOWNS (spells and ultimate)
 
+        /** The spell's base cooldown at the QA player's level (rank III is 10 % shorter). */
+        double rankedCooldown(Spell s) {
+            return s.cooldownSeconds() * Spell.rankCooldown(s.rankAt(pr.progression().level()));
+        }
+
         void cooldowns() {
             for (PlayerClass c : PlayerClass.values()) {
                 for (Spell s : Spell.of(c)) {
@@ -1960,8 +2040,10 @@ public final class SkillQa {
                         skills.castDirect(p, s, true);
                         double left = skills.cooldownLeft(p, s);
                         SkillService.CastResult again = skills.castDirect(p, s, false);
-                        check("cooldown." + s.name(), "cooldown", s.displayName() + " (slot " + s.slot() + ")", "seconds left right after the cast; recast refused?", 0, left,
-                                EffectNum.n(s.cooldownSeconds()) + " and the recast refused", near(left, s.cooldownSeconds(), 0.15) && again != SkillService.CastResult.CAST);
+                        double cd = rankedCooldown(s);
+                        check("cooldown." + s.name(), "cooldown", s.displayName() + " (slot " + s.slot() + ", rank " + Spell.roman(s.rankAt(pr.progression().level())) + ")",
+                                "seconds left right after the cast; recast refused?", 0, left,
+                                EffectNum.n(cd) + " and the recast refused", near(left, cd, 0.15) && again != SkillService.CastResult.CAST);
                     });
                     k.wait(1);
                 }
