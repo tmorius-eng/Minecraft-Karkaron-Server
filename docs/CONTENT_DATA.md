@@ -10,6 +10,7 @@ move a dungeon gate, retune a region or rewrite a quest.
 | The dungeon ladder (waves, boss and phases, gate site, completion bonus) | `content/dungeons.json` | `plugins/SULD/content/dungeons.json` |
 | The story «Сүлдний Зам» (chapters, giver, hint, story text) | `content/quests.json` | `plugins/SULD/content/quests.json` |
 | World events, world-unique relics | `content/events.json` | `plugins/SULD/content/events.json` |
+| Historic sites (place, kind of build, bearing and distance, history label, story) | `content/sites.json` | `plugins/SULD/content/sites.json` |
 | Items, affixes, sets, loot tables | `items/*.json` (suld-api) | `plugins/SULD/items/` |
 | Skill trees (5 classes) | `skills/*.json` (suld-api) | `plugins/SULD/skills/` |
 | Game rules: EXP curve, death, economy, protection, database | `config.yml` | `plugins/SULD/config.yml` |

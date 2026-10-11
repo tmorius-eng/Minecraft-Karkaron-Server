@@ -82,7 +82,10 @@ public final class OvooService implements Listener {
             ovoos.add(new Ovoo(a, sp.getBlockX() + (int) Math.round(Math.sin(mid) * r), sp.getBlockZ() + (int) Math.round(-Math.cos(mid) * r)));
         }
         YamlConfiguration st = YamlConfiguration.loadConfiguration(stateFile);
-        for (String k : st.getKeys(false)) built.put(k, new int[]{st.getInt(k + ".x"), st.getInt(k + ".y"), st.getInt(k + ".z")});
+        for (String k : st.getKeys(false)) {
+            built.put(k, new int[]{st.getInt(k + ".x"), st.getInt(k + ".y"), st.getInt(k + ".z")});
+            guard(k, built.get(k));
+        }
         Bukkit.getScheduler().runTaskTimer(plugin, this::buildLoaded, 200L, 100L);
         Bukkit.getScheduler().runTaskTimer(plugin, this::track, 40L, 10L);
         for (Player p : Bukkit.getOnlinePlayers()) loadBlessing(p);
@@ -106,8 +109,14 @@ public final class OvooService implements Listener {
             int y = w.getHighestBlockYAt(o.x(), o.z(), HeightMap.MOTION_BLOCKING_NO_LEAVES);
             build(w, o.x(), y + 1, o.z());
             built.put(o.id(), new int[]{o.x(), y + 1, o.z()});
+            guard(o.id(), built.get(o.id()));
             save();
         }
+    }
+
+    /** The cairn, its pole and its base cannot be broken or blown up (VillageProtection). */
+    private static void guard(String id, int[] b) {
+        mn.suld.plugin.worldbuild.VillageProtection.protect("ovoo." + id, b[0] - 3, b[1] - 4, b[2] - 3, b[0] + 3, b[1] + 8, b[2] + 3);
     }
 
     /** The cairn reaches 3 blocks out (base and stones): every chunk it touches must already be loaded. */

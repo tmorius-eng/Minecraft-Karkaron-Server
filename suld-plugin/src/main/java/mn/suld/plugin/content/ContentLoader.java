@@ -45,7 +45,7 @@ import static mn.suld.api.skill.tree.SkillTreeLoader.str;
 public final class ContentLoader {
 
     public static final int FORMAT_VERSION = 1;
-    public static final List<String> FILES = List.of("mobs.json", "world.json", "dungeons.json", "quests.json", "events.json");
+    public static final List<String> FILES = List.of("mobs.json", "world.json", "dungeons.json", "quests.json", "events.json", "sites.json");
 
     /** Ids the code names directly (tutorial, first dungeon, boss brains, story constants): they must exist. */
     public static final Set<String> REQUIRED = Set.of(
@@ -396,6 +396,37 @@ public final class ContentLoader {
             }
         }
 
+        // ----------------------------------------------------------------------------------------------- sites
+        f = "sites.json";
+        List<mn.suld.api.world.site.HistoricSite> historic = new ArrayList<>();
+        List<Object> siteList = list(f, "", files.get(f), "sites", issues);
+        for (int i = 0; i < siteList.size(); i++) {
+            String at = "sites[" + i + "]";
+            Map<String, Object> st = obj(f, at, siteList.get(i), issues);
+            if (st == null) continue;
+            String id = str(f, at, st, "id", true, issues);
+            String name = str(f, at, st, "name", true, issues);
+            mn.suld.api.world.site.SiteKind kind = SkillTreeLoader.enumOf(mn.suld.api.world.site.SiteKind.class, str(f, at, st, "kind", true, issues), f, at + ".kind", issues);
+            String areaId = str(f, at, st, "area", true, issues);
+            String history = str(f, at, st, "history", true, issues);
+            double bearing = SkillTreeLoader.num(f, at, st, "bearing", 0, 360, issues);
+            double radius = SkillTreeLoader.num(f, at, st, "radius", 120, 4900, issues);
+            if (history != null && !HISTORY.contains(history)) issues.add(new Issue(f, at + ".history", "one of " + HISTORY));
+            if (id != null && historic.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
+            Area area = areaId == null ? null : areas.stream().filter(a -> a.id().equals(areaId)).findFirst().orElse(null);
+            if (areaId != null && area == null) issues.add(new Issue(f, at + ".area", "no area " + areaId + " in world.json"));
+            if (id == null || name == null || kind == null || area == null) continue;
+            try {
+                var site = new mn.suld.api.world.site.HistoricSite(id, name, kind, areaId, bearing, radius, history,
+                        st.get("description") instanceof String d ? d : "");
+                int[] o = site.offset();
+                if (!area.contains(o[0], o[1])) issues.add(new Issue(f, at, "bearing " + bearing + " / radius " + radius + " is outside " + areaId));
+                historic.add(site);
+            } catch (IllegalArgumentException e) {
+                issues.add(new Issue(f, at, e.getMessage()));
+            }
+        }
+
         // --------------------------------------------------------------------------------- names the code uses
         Set<String> known = new HashSet<>(mobs.keySet());
         regions.forEach(r -> known.add(r.id()));
@@ -412,7 +443,7 @@ public final class ContentLoader {
         }
         if (!issues.isEmpty()) return new Result(null, issues, overridden);
         return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, outer, areas, dungeons, sites, completions,
-                dRegion, dWhere, chapters, lore, story, events, aliases, relics), issues, overridden);
+                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic), issues, overridden);
     }
 
     private static String fileFor(String id) {

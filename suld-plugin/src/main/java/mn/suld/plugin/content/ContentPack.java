@@ -24,6 +24,8 @@ import java.util.Set;
  * @param models      mob id → model rig id, for the mobs that have one
  * @param outer       ids of the outer regions (their level grows with the distance)
  * @param chapters    the story, with the EXP the rules give each chapter already filled in
+ * @param sites         the dungeon gates (dungeons.json)
+ * @param historicSites the historical places in the wild (content/sites.json)
  */
 public record ContentPack(
         Map<String, MobDefinition> mobs,
@@ -44,7 +46,8 @@ public record ContentPack(
         Map<String, String> story,
         List<WorldEventDefinition> worldEvents,
         Map<String, String> eventAliases,
-        List<RelicDefinition> relics) {
+        List<RelicDefinition> relics,
+        List<mn.suld.api.world.site.HistoricSite> historicSites) {
 
     public ContentPack {
         mobs = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(mobs)); // keeps the file order
@@ -64,6 +67,7 @@ public record ContentPack(
         worldEvents = List.copyOf(worldEvents);
         eventAliases = Map.copyOf(eventAliases);
         relics = List.copyOf(relics);
+        historicSites = List.copyOf(historicSites);
     }
 
     /** The mobs of a role, in file order. */

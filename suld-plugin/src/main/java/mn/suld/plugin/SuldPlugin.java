@@ -368,11 +368,16 @@ public final class SuldPlugin extends JavaPlugin {
             border.apply("spawn moved");
             halls.placeGates(); // gates follow the spawn like every region ring
         });
-        registerTab("suldworld", new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls));
+        mn.suld.plugin.worldbuild.SuldWorldCommand worldCommand = new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls);
+        registerTab("suldworld", worldCommand);
         // ovoo at the heart of every area (docs/world/OVOO.md): circle three times clockwise for Тэнгэрийн ивээл
         mn.suld.plugin.region.OvooService ovoo = new mn.suld.plugin.region.OvooService(this, services);
         getServer().getPluginManager().registerEvents(ovoo, this);
         ovoo.start();
+        // the historical places of the Mongol lands in the wild (content/sites.json, docs/world/HISTORIC_SITES.md)
+        mn.suld.plugin.region.HistoricSiteService historicSites = new mn.suld.plugin.region.HistoricSiteService(this, services);
+        historicSites.start();
+        worldCommand.sites(historicSites);
         pregen.start();
 
         long flushTicks = TICKS_PER_SECOND * Math.max(1, config.analytics().flushIntervalSeconds());

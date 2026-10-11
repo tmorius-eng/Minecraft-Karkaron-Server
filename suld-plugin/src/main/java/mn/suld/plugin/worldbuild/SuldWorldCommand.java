@@ -16,12 +16,19 @@ import java.util.function.Consumer;
  */
 public final class SuldWorldCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("border", "pregen", "report", "halls");
+    private static final List<String> SUBS = List.of("border", "pregen", "report", "halls", "sites", "site");
     private static final List<String> PREGEN = List.of("status", "start", "pause", "resume", "cancel", "restart", "full");
 
     private final WorldBorderService border;
     private final PregenService pregen;
     private final mn.suld.plugin.dungeon.DungeonHalls halls;
+
+    private volatile mn.suld.plugin.region.HistoricSiteService sites;
+
+    /** The historic sites (set once they start). */
+    public void sites(mn.suld.plugin.region.HistoricSiteService sites) {
+        this.sites = sites;
+    }
 
     public SuldWorldCommand(WorldBorderService border, PregenService pregen, mn.suld.plugin.dungeon.DungeonHalls halls) {
         this.border = border;
@@ -64,6 +71,15 @@ public final class SuldWorldCommand implements TabExecutor {
             case "halls" -> {
                 if (halls == null) say.accept("Танхим алга.");
                 else halls.describe(say);
+            }
+            case "sites" -> {
+                if (sites == null) say.accept("Түүхэн газар алга.");
+                else sites.describe().forEach(say);
+            }
+            case "site" -> {
+                org.bukkit.Location at = sites == null || args.length < 2 ? null : sites.location(args[1]);
+                if (!(sender instanceof org.bukkit.entity.Player p) || at == null) say.accept("/suldworld site <id> (/suldworld sites)");
+                else p.teleportAsync(at, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
             }
             case "report" -> {
                 border.status().forEach(say);

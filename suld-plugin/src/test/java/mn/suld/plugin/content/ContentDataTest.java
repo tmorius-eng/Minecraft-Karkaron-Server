@@ -155,4 +155,37 @@ class ContentDataTest {
         assertFalse(issues.isEmpty());
         assertEquals(9, Content.pack().regions().size(), "the bundled regions run instead");
     }
+
+    /** The historic sites stand in their areas, clear of the ovoo, the dungeon gates, each other and the city. */
+    @Test
+    void historicSitesHaveRoomOfTheirOwn() {
+        ContentPack p = Content.bundled();
+        assertEquals(16, p.historicSites().size());
+        List<double[]> others = new ArrayList<>();
+        for (var a : p.areas()) { // the ovoo of each area (OvooService: the middle bearing, half way out, border 5000)
+            double span = ((a.toDeg() - a.fromDeg()) % 360 + 360) % 360;
+            double mid = Math.toRadians(a.fromDeg() + (span == 0 ? 360 : span) / 2);
+            double r = (a.minRadius() + Math.min(a.maxRadius(), 5000 - 64)) / 2;
+            others.add(new double[]{Math.sin(mid) * r, -Math.cos(mid) * r});
+        }
+        for (var g : p.sites()) others.add(new double[]{g.offset()[0], g.offset()[1]});
+        List<double[]> placed = new ArrayList<>();
+        for (var s : p.historicSites()) {
+            int[] o = s.offset();
+            assertTrue(Math.hypot(o[0], o[1]) >= 200, s.id() + " is inside the city");
+            for (double[] q : others) assertTrue(Math.hypot(o[0] - q[0], o[1] - q[1]) >= 100, s.id() + " is too close to an ovoo or a gate");
+            for (double[] q : placed) assertTrue(Math.hypot(o[0] - q[0], o[1] - q[1]) >= 150, s.id() + " is too close to another site");
+            placed.add(new double[]{o[0], o[1]});
+            assertTrue(p.areas().stream().anyMatch(a -> a.id().equals(s.areaId()) && a.contains(o[0], o[1])), s.id() + " outside its area");
+            assertFalse(s.description().isBlank(), s.id());
+        }
+    }
+
+    @Test
+    void aSiteOutsideItsAreaIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("sites.json", root -> list(root, "sites").get(0).put("bearing", 300)));
+        assertTrue(has(r, "sites.json", "is outside area.kherlen"), r.issues()::toString);
+        ContentLoader.Result k = load(edited("sites.json", root -> list(root, "sites").get(1).put("kind", "CASTLE")));
+        assertTrue(has(k, "sites.json", "sites[1].kind unknown value 'CASTLE'"), k.issues()::toString);
+    }
 }

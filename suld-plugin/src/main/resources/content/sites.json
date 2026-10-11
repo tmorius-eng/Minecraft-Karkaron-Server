@@ -1,0 +1,166 @@
+{
+  "format": 1,
+  "about": "Historical places of the Mongol lands, set in their named areas (bearing from the Kharkhorum plaza, 0 = north; distance in blocks; the map is compressed). history labels the PLACE: VERIFIED (a known place), INSPIRED (tradition, or a reconstruction in its spirit), FICTION. Every build is a simplified game version, never a copy of a real monument. Facts here come from secondary summaries and must be checked against primary sources before public use (docs/research/history/README.md).",
+  "sites": [
+    {
+      "id": "site.aurag",
+      "name": "Аураг — Их Ордны Туурь",
+      "kind": "ORDO_RUINS",
+      "area": "area.kherlen",
+      "bearing": 105,
+      "radius": 560,
+      "history": "VERIFIED",
+      "description": "Хэрлэн голын хөндийд Чингис хааны их ордон (Аураг) байсан гэж археологичид үздэг газар. Энд үзэгдэх туурь нь тоглоомын хялбаршуулсан хувилбар."
+    },
+    {
+      "id": "site.khodoo_aral",
+      "name": "Хөдөө Арал — Есөн Хөлт Цагаан Туг",
+      "kind": "NINE_BANNERS",
+      "area": "area.khodoo_aral",
+      "bearing": 118,
+      "radius": 1180,
+      "history": "VERIFIED",
+      "description": "Хэрлэн, Цэнхэрийн бэлчирийн Хөдөө Арал — их хуралдай болдог байсан газар. 1206 онд Тэмүжинийг Чингис хаан хэмээн өргөмжилж, есөн хөлт цагаан туг мандуулсан гэж Монголын нууц товчоонд өгүүлдэг. Тахилын тавцан нь тоглоомын хувилбар."
+    },
+    {
+      "id": "site.burkhan_ovoo",
+      "name": "Бурхан Халдуны Их Овоо",
+      "kind": "GREAT_OVOO",
+      "area": "area.burkhan_khaldun",
+      "bearing": 54,
+      "radius": 1250,
+      "history": "VERIFIED",
+      "description": "Бурхан Халдун бол монголчуудын эртнээс шүтэж ирсэн ариун уул. Овоо тахих, гурав тойрох заншил өнөөг хүртэл хадгалагдсаар буй. Энэ их овоо нь тоглоомын хувилбар."
+    },
+    {
+      "id": "site.deluun_boldog",
+      "name": "Дэлүүн Болдог",
+      "kind": "BIRTH_STONE",
+      "area": "area.onon",
+      "bearing": 82,
+      "radius": 2250,
+      "history": "INSPIRED",
+      "description": "Тэмүжин Онон голын Дэлүүн Болдогт төрсөн гэж нууц товчоонд өгүүлдэг. Яг аль газар болох нь маргаантай тул энд тэмдэглэсэн чулуу нь уламжлалыг сэдэвлэсэн тоглоомын дурсгал."
+    },
+    {
+      "id": "site.khar_balgas",
+      "name": "Хар Балгасын Хэрэм",
+      "kind": "RUIN_WALLS",
+      "area": "area.khar_balgas",
+      "bearing": 328,
+      "radius": 540,
+      "history": "VERIFIED",
+      "description": "Орхоны хөндий дэх Уйгурын хаант улсын нийслэлийн (VIII–IX зуун) балгас. Шавар дэлдэж барьсан хэрмийн үлдэгдэл өнөө хүртэл үлджээ. Энд барьсан хэрэм нь хялбаршуулсан."
+    },
+    {
+      "id": "site.khoshoo_tsaidam",
+      "name": "Хөшөө Цайдамын Гэрэлт Хөшөө",
+      "kind": "STELE",
+      "area": "area.orkhon",
+      "bearing": 30,
+      "radius": 560,
+      "history": "VERIFIED",
+      "description": "Орхоны хөндийд Түрэгийн үеийн (VIII зуун) бичээстэй гэрэлт хөшөөнүүд байдаг. Энэ хөшөө бичээсгүй, тоглоомын хялбаршуулсан хувилбар — жинхэнэ бичээсийг хуулаагүй."
+    },
+    {
+      "id": "site.uushig",
+      "name": "Уушгийн Өврийн Буган Хөшөө",
+      "kind": "DEER_STONES",
+      "area": "area.khuvsgul",
+      "bearing": 342,
+      "radius": 2150,
+      "history": "VERIFIED",
+      "description": "Хөвсгөлийн нутаг дахь хүрэл зэвсгийн үеийн буган хөшөөний цогцолбор. Чулуун хөшөөдийг хиргисүүрийн чулуун хүрээ тойрдог. Энд байгаа хөшөөд нь сийлбэргүй, хялбаршуулсан."
+    },
+    {
+      "id": "site.dariganga",
+      "name": "Дарьгангын Хүн Чулуу",
+      "kind": "STONE_MEN",
+      "area": "area.dariganga",
+      "bearing": 116,
+      "radius": 3300,
+      "history": "VERIFIED",
+      "description": "Дарьганга нутагт эртний хүн чулуун хөшөөд олноор бий. Тэдгээрийн үе, утгыг судлаачид янз бүрээр тайлбарладаг. Энд буй дүрсүүд нь тоглоомын хувилбар."
+    },
+    {
+      "id": "site.chingis_wall",
+      "name": "Чингисийн Хэрэм",
+      "kind": "EARTH_WALL",
+      "area": "area.menen",
+      "bearing": 100,
+      "radius": 4350,
+      "history": "VERIFIED",
+      "description": "Дорнод нутгаар үргэлжлэх шороон далан. Ард түмэн «Чингисийн хэрэм» гэж нэрлэдэг ч Чингис хаанаас өмнөх үед баригдсан гэж судлаачид үздэг. Энд далангийн богино хэсгийг дүрсэлсэн."
+    },
+    {
+      "id": "site.altai_petroglyphs",
+      "name": "Алтайн Хадны Зураг",
+      "kind": "PETROGLYPHS",
+      "area": "area.tavan_bogd",
+      "bearing": 288,
+      "radius": 4400,
+      "history": "VERIFIED",
+      "description": "Монгол Алтайд олон мянган жилийн өмнөх хадны сийлмэл зургийн цогцолборууд бий. Энд буй хаднууд нь жинхэнэ зургийг хуулаагүй, тоглоомын дүрслэл."
+    },
+    {
+      "id": "site.tangut_tower",
+      "name": "Тангудын Хилийн Харуул",
+      "kind": "WATCHTOWER_RUIN",
+      "area": "area.tangut",
+      "bearing": 206,
+      "radius": 2050,
+      "history": "INSPIRED",
+      "description": "Тангуд (Си Ся) улсын хил рүү чиглэсэн замд харуулын цамхаг байсан байж болох талаар сэдэвлэсэн тоглоомын балгас."
+    },
+    {
+      "id": "site.ogloogchiin_kherem",
+      "name": "Өглөгчийн Хэрэм",
+      "kind": "STONE_WALL_RING",
+      "area": "area.khentii_taiga",
+      "bearing": 72,
+      "radius": 3050,
+      "history": "VERIFIED",
+      "description": "Хэнтийн нуруунд хуурай чулуугаар өрсөн эртний хэрэм бий. Түүний зориулалтын талаар судлаачид өөр өөр санаа дэвшүүлдэг. Энд хүрээг хялбаршуулан барьсан."
+    },
+    {
+      "id": "site.urtuu_east",
+      "name": "Зүүн Замын Өртөө",
+      "kind": "YAM_STATION",
+      "area": "area.onon",
+      "bearing": 66,
+      "radius": 1700,
+      "history": "INSPIRED",
+      "description": "Их Монгол улсын өртөөний (ям) систем элч, мэдээг морь сольж хурдан хүргэдэг байв (бодит түүх). Энэ өртөө нь түүнийг сэдэвлэсэн тоглоомын байр."
+    },
+    {
+      "id": "site.urtuu_south",
+      "name": "Өмнөд Замын Өртөө",
+      "kind": "YAM_STATION",
+      "area": "area.omnii_govi",
+      "bearing": 168,
+      "radius": 1000,
+      "history": "INSPIRED",
+      "description": "Говийг гатлах замын өртөө: элч нар энд морь сольж, ус ууж амардаг байсныг сэдэвлэсэн тоглоомын байр."
+    },
+    {
+      "id": "site.urtuu_west",
+      "name": "Баруун Замын Өртөө",
+      "kind": "YAM_STATION",
+      "area": "area.otgontenger",
+      "bearing": 240,
+      "radius": 1100,
+      "history": "INSPIRED",
+      "description": "Баруун зүгийн замын өртөө — Их Монгол улсын ям системийг сэдэвлэсэн тоглоомын байр."
+    },
+    {
+      "id": "site.urtuu_north",
+      "name": "Хойд Замын Өртөө",
+      "kind": "YAM_STATION",
+      "area": "area.selenge",
+      "bearing": 36,
+      "radius": 1300,
+      "history": "INSPIRED",
+      "description": "Сэлэнгэ рүү чиглэсэн хойд замын өртөө — ям системийг сэдэвлэсэн тоглоомын байр."
+    }
+  ]
+}
