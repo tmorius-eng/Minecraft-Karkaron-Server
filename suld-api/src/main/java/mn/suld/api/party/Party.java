@@ -16,7 +16,10 @@ public final class Party {
     private final UUID id;
     private final int capacity;
     private final LinkedHashSet<UUID> members; // ordered; first = current leader
+    private final java.util.Map<UUID, PartyRole> roles = new java.util.HashMap<>();
     private PartyState state;
+    private boolean recruiting;
+    private String targetDungeonId = "";
 
     private Party(UUID id, UUID leader, int capacity) {
         this.id = id;
@@ -63,6 +66,7 @@ public final class Party {
      */
     public boolean removeMember(UUID player) {
         boolean removed = members.remove(player);
+        roles.remove(player);
         if (removed && members.isEmpty()) {
             state = PartyState.DISBANDED;
         }
@@ -105,6 +109,27 @@ public final class Party {
     }
 
     public boolean isDisbanded() { return state == PartyState.DISBANDED; }
+
+    // ------------------------------------------------------------ party finder
+
+    /** Listed in {@code /party find}: anyone may join while there is room. */
+    public boolean isRecruiting() { return recruiting && state != PartyState.DISBANDED; }
+
+    /** The dungeon this party means to run ("" = any). */
+    public String targetDungeonId() { return targetDungeonId; }
+
+    public void recruit(boolean on, String dungeonId) {
+        this.recruiting = on;
+        this.targetDungeonId = dungeonId == null ? "" : dungeonId;
+    }
+
+    /** Each member's declared role (members without one are not in the map). */
+    public java.util.Map<UUID, PartyRole> roles() { return Collections.unmodifiableMap(roles); }
+
+    public void role(UUID member, PartyRole role) {
+        if (!members.contains(member)) return;
+        if (role == null) roles.remove(member); else roles.put(member, role);
+    }
 
     /** First member that is not the leader, if any. */
     public Optional<UUID> firstNonLeader() {

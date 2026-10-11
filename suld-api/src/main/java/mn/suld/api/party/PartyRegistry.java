@@ -165,6 +165,26 @@ public final class PartyRegistry {
         return new Action(PartyResult.PROMOTED, party);
     }
 
+    /** Every party, for the finder. */
+    public java.util.Collection<Party> all() {
+        return java.util.Collections.unmodifiableCollection(parties.values());
+    }
+
+    /** {@code player} joins the recruiting party led by {@code leader} without an invite (party finder). */
+    public Action join(UUID player, UUID leader) {
+        if (player.equals(leader)) return new Action(PartyResult.SELF_TARGET, null);
+        if (memberToParty.containsKey(player)) return new Action(PartyResult.ALREADY_IN_PARTY, partyOf(player).orElse(null));
+        Party party = partyOf(leader).orElse(null);
+        if (party == null || party.isDisbanded()) return new Action(PartyResult.PARTY_GONE, null);
+        if (!party.isRecruiting()) return new Action(PartyResult.NOT_RECRUITING, party);
+        if (party.state() == PartyState.IN_DUNGEON) return new Action(PartyResult.PARTY_BUSY, party);
+        if (!party.addMember(player)) return new Action(PartyResult.PARTY_FULL, party);
+        memberToParty.put(player, party.id());
+        invitesByInvitee.remove(player);
+        if (party.isFull()) party.recruit(false, party.targetDungeonId()); // a full party leaves the board
+        return new Action(PartyResult.JOINED, party);
+    }
+
     /** Disband a party outright (leader command or dungeon cleanup). */
     public void disband(Party party) {
         for (UUID member : party.members()) {

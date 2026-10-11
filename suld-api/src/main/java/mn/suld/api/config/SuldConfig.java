@@ -15,7 +15,9 @@ public record SuldConfig(
         AuthSettings auth,
         RelicSettings relics,
         WorldSettings world,
-        PvpSettings pvp) {
+        PvpSettings pvp,
+        CampaignSettings campaign,
+        ChronicleSettings chronicle) {
 
     public static SuldConfig defaults() {
         return new SuldConfig(
@@ -29,6 +31,8 @@ public record SuldConfig(
                 AuthSettings.defaults(),
                 RelicSettings.defaults(),
                 WorldSettings.defaults(),
-                PvpSettings.defaults());
+                PvpSettings.defaults(),
+                CampaignSettings.defaults(),
+                ChronicleSettings.defaults());
     }
 }

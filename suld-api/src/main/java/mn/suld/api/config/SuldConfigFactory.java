@@ -125,7 +125,29 @@ public final class SuldConfigFactory {
                 view.getInt("pvp.duel-minutes", pd.duelMinutes()),
                 PvpSettings.parseArenas(view.getStringList("pvp.arenas")));
 
-        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world, pvp);
+        CampaignSettings cd = d.campaign();
+        CampaignSettings campaign = new CampaignSettings(
+                view.getBoolean("khuraldai.enabled", cd.khuraldaiEnabled()),
+                mn.suld.api.campaign.DayTime.parseOr(view.getString("khuraldai.vote-opens", cd.voteOpens().toString()), cd.voteOpens()),
+                mn.suld.api.campaign.DayTime.parseOr(view.getString("khuraldai.vote-closes", cd.voteCloses().toString()), cd.voteCloses()),
+                view.getInt("khuraldai.min-level", cd.minLevel()),
+                view.getInt("khuraldai.min-account-days", cd.minAccountDays()),
+                view.getInt("khuraldai.options", cd.options()),
+                view.getInt("khuraldai.min-voters", cd.minVoters()),
+                view.getBoolean("campaign.enabled", cd.campaignEnabled()),
+                mn.suld.api.campaign.DayTime.parseOr(view.getString("campaign.starts", cd.campaignStarts().toString()), cd.campaignStarts()),
+                mn.suld.api.campaign.DayTime.parseOr(view.getString("campaign.ends", cd.campaignEnds().toString()), cd.campaignEnds()),
+                view.getInt("campaign.flush-seconds", cd.flushSeconds()),
+                view.getInt("campaign.reward-claim-days", cd.rewardClaimDays()),
+                view.getInt("campaign.effect-cycles", cd.effectCycles()));
+
+        ChronicleSettings chd = d.chronicle();
+        ChronicleSettings chronicle = new ChronicleSettings(
+                view.getBoolean("chronicle.enabled", chd.enabled()),
+                view.getBoolean("chronicle.broadcast", chd.broadcast()),
+                view.getInt("chronicle.hall-entries", chd.hallEntries()));
+
+        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world, pvp, campaign, chronicle);
     }
 
     private static mn.suld.api.death.DeathLock.Curve lockCurve(String v, mn.suld.api.death.DeathLock.Curve fallback) {

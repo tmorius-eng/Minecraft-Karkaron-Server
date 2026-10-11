@@ -119,6 +119,28 @@ class SuldConfigFactoryTest {
     }
 
     @Test
+    void khuraldaiAndChronicleSettingsLoadAndClamp() {
+        SuldConfig d = SuldConfigFactory.load(new MapConfigView(Map.of()));
+        assertTrue(d.campaign().khuraldaiEnabled());
+        assertEquals("SATURDAY 20:00", d.campaign().voteOpens().toString());
+        assertEquals("MONDAY 00:00", d.campaign().campaignStarts().toString());
+        assertEquals(3, d.campaign().options());
+        assertTrue(d.chronicle().broadcast());
+        SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(Map.of(
+                "khuraldai", Map.of("vote-opens", "friday 18:00", "vote-closes", "nonsense", "options", 9, "min-level", 0),
+                "campaign", Map.of("flush-seconds", 1, "reward-claim-days", 99),
+                "chronicle", Map.of("broadcast", false, "hall-entries", 100))));
+        assertEquals("FRIDAY 18:00", cfg.campaign().voteOpens().toString());
+        assertEquals("SUNDAY 20:00", cfg.campaign().voteCloses().toString(), "a malformed day-time keeps the default");
+        assertEquals(3, cfg.campaign().options(), "clamped to 2..3");
+        assertEquals(1, cfg.campaign().minLevel());
+        assertEquals(5, cfg.campaign().flushSeconds());
+        assertEquals(30, cfg.campaign().rewardClaimDays());
+        assertFalse(cfg.chronicle().broadcast());
+        assertEquals(30, cfg.chronicle().hallEntries());
+    }
+
+    @Test
     void cityAutoRepairIsOffUnlessAsked() {
         assertFalse(SuldConfigFactory.load(new MapConfigView(Map.of())).world().autoRepairKharkhorum(),
                 "a server whose config predates the key keeps hand-built spawn changes");

@@ -35,4 +35,15 @@ public final class AnalyticsEventType {
     public static final String ITEM_ECONOMY = "item_economy";
     public static final String DEATH = "death";
     public static final String BOSS_PARTICIPATION = "boss_participation";
+
+    // Их Хуралдай, campaigns and the chronicle (docs/KHURALDAI.md)
+    public static final String VOTE_CAST = "vote_cast";
+    public static final String VOTE_CLOSED = "vote_closed";
+    public static final String CAMPAIGN_START = "campaign_start";
+    public static final String CAMPAIGN_CONTRIBUTION = "campaign_contribution";
+    public static final String CAMPAIGN_END = "campaign_end";
+    public static final String CAMPAIGN_REWARD_CLAIM = "campaign_reward_claim";
+    public static final String CHRONICLE_ENTRY = "chronicle_entry";
+    public static final String PARTY_FIND = "party_find";
+    public static final String WORLD_EFFECT_APPLIED = "world_effect_applied";
 }

@@ -17,4 +17,13 @@ public final class AuditActions {
     public static final String JOIN_WITHOUT_SESSION = "auth.join_without_session";
     public static final String PENDING_EXPIRED = "auth.pending_expired";
     public static final String SESSION_END = "auth.session_end";
+
+    // Их Хуралдай and the chronicle (admin actions and world changes)
+    public static final String CAMPAIGN_ADMIN_OPEN = "campaign.admin.open";
+    public static final String CAMPAIGN_ADMIN_CLOSE = "campaign.admin.close";
+    public static final String CAMPAIGN_ADMIN_FORCE = "campaign.admin.force";
+    public static final String CAMPAIGN_ADMIN_RESOLVE = "campaign.admin.resolve";
+    public static final String CAMPAIGN_ADMIN_CANCEL = "campaign.admin.cancel";
+    public static final String CAMPAIGN_EFFECT_APPLIED = "campaign.effect_applied";
+    public static final String CHRONICLE_ADMIN_HIDE = "chronicle.admin.hide";
 }

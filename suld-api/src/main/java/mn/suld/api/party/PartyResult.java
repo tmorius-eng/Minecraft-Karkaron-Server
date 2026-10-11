@@ -18,5 +18,6 @@ public enum PartyResult {
     PARTY_BUSY,
     NO_INVITE,
     INVITE_EXPIRED,
-    PARTY_GONE
+    PARTY_GONE,
+    NOT_RECRUITING
 }
