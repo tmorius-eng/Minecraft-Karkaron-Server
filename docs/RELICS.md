@@ -127,6 +127,7 @@ Config (`config.yml`, `relics:`): `enabled`, `auto-place-min-radius` / `auto-pla
 | Bearer `/kill`ed (no player killer) | `RETURNED`; DB `UNCLAIMED v2`; bearer 0 copies; nothing dropped; broadcast. |
 | `/relic give altan_gerege Seeker` | `ADMIN_GRANTED`; bearer gets 1 copy. |
 | **PvP: Rival kills Seeker with a sword** | `SEIZED`; DB `OWNED Rival v2`; Rival 1 copy, Seeker 0; "⚔ Rival Seeker-ээс Алтан Гэрэгэ-ийг булааж авлаа!" |
+| *(since the PvP policy, 2026-10-11)* a kill outside a consented fight | `RETURNED` to the shrine; a seize needs an accepted `/duel` or a fighting ground (GAME_DESIGN.md «PvP policy») |
 
 The first live run caught a real bug. Statless items crashed in `ItemInstance` (`new EnumMap<>(Map.of())`
 throws), so bearers were never issued their copy. It is fixed at the root, with a regression test

@@ -51,6 +51,9 @@ commands:
     description: SULD party control (invite, accept, leave, kick, promote, disband, info).
     usage: /party <invite|accept|leave|kick|promote|disband|info>
     aliases: [p]
+  duel:
+    description: A consented fight outside Kharkhorum (SULD is PvE; players fight only by agreement).
+    usage: /duel <player|accept|decline|end|status>
   dungeon:
     description: SULD dungeons (opens the dungeon window; enter, status, leave, abort).
     usage: /dungeon [enter|status|leave|abort]

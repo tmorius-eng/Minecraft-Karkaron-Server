@@ -233,9 +233,16 @@ public final class SuldServices {
         this.marks = new mn.suld.plugin.progress.PlayerMarks(plugin, dataSource == null
                 ? new mn.suld.api.persistence.InMemoryMarksRepository()
                 : new mn.suld.plugin.persistence.JdbcMarksRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
+        this.duels = new mn.suld.plugin.combat.DuelService(plugin, this, config.pvp());
     }
 
     private final mn.suld.plugin.progress.PlayerMarks marks;
+    private final mn.suld.plugin.combat.DuelService duels;
+
+    /** The PvP policy: consented duels and fighting grounds (docs/GAME_DESIGN.md «PvP»). */
+    public mn.suld.plugin.combat.DuelService duels() {
+        return duels;
+    }
 
     /** Per-player progress marks (dungeon clears, sites, ovoo days) mirrored to the database. */
     public mn.suld.plugin.progress.PlayerMarks marks() {

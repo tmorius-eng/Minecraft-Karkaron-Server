@@ -14,7 +14,8 @@ public record SuldConfig(
         SocialSettings social,
         AuthSettings auth,
         RelicSettings relics,
-        WorldSettings world) {
+        WorldSettings world,
+        PvpSettings pvp) {
 
     public static SuldConfig defaults() {
         return new SuldConfig(
@@ -27,6 +28,7 @@ public record SuldConfig(
                 SocialSettings.defaults(),
                 AuthSettings.defaults(),
                 RelicSettings.defaults(),
-                WorldSettings.defaults());
+                WorldSettings.defaults(),
+                PvpSettings.defaults());
     }
 }

@@ -71,6 +71,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/trade <нэр>", "Тоглогчтой аюулгүй арилжаа", null),
             e(Group.GAME, "/mori", "Өөрийн морь (5-р түвшнээс)", null),
             e(Group.GAME, "/party …", "Бүлэг: invite, accept, leave, kick…", null),
+            e(Group.GAME, "/duel <нэр>", "Зөвшөөрөлтэй тулаан (SÜLD бол PvE)", null),
             e(Group.GAME, "/dungeon", "Агуйн Шат: 10 агуйн цонх, хаалга руу зам заана", null),
             e(Group.GAME, "/clan …", "Овог: create, invite, top, info…", null),
             e(Group.GAME, "/cc <мессеж>", "Овгийн чат", null),

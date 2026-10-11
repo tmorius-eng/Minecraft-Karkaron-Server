@@ -28,10 +28,11 @@ class RelicRulesAndHintsTest {
     @Test
     void deathOutcomes() {
         UUID bearer = UUID.randomUUID(), killer = UUID.randomUUID();
-        assertEquals(RelicRules.DeathOutcome.SEIZE_BY_KILLER, RelicRules.onBearerDeath(bearer, killer, 0));
-        assertEquals(RelicRules.DeathOutcome.RETURN_TO_SHRINE, RelicRules.onBearerDeath(bearer, null, 0), "mob/void/fall");
-        assertEquals(RelicRules.DeathOutcome.RETURN_TO_SHRINE, RelicRules.onBearerDeath(bearer, bearer, 0), "suicide farming");
-        assertEquals(RelicRules.DeathOutcome.RETURN_TO_SHRINE, RelicRules.onBearerDeath(bearer, killer, 1), "killer already bears one");
+        assertEquals(RelicRules.DeathOutcome.SEIZE_BY_KILLER, RelicRules.onBearerDeath(bearer, killer, 0, true), "a consented fight");
+        assertEquals(RelicRules.DeathOutcome.RETURN_TO_SHRINE, RelicRules.onBearerDeath(bearer, killer, 0, false), "PvE policy: no seize without consent");
+        assertEquals(RelicRules.DeathOutcome.RETURN_TO_SHRINE, RelicRules.onBearerDeath(bearer, null, 0, true), "mob/void/fall");
+        assertEquals(RelicRules.DeathOutcome.RETURN_TO_SHRINE, RelicRules.onBearerDeath(bearer, bearer, 0, true), "suicide farming");
+        assertEquals(RelicRules.DeathOutcome.RETURN_TO_SHRINE, RelicRules.onBearerDeath(bearer, killer, 1, true), "killer already bears one");
     }
 
     @Test

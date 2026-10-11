@@ -117,7 +117,15 @@ public final class SuldConfigFactory {
                 view.getInt("world.region-mobs-per-player", wd.regionMobsPerPlayer()),
                 view.getBoolean("world.kharkhorum-auto-repair", wd.autoRepairKharkhorum()));
 
-        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world);
+        PvpSettings pd = d.pvp();
+        PvpSettings pvp = new PvpSettings(
+                view.getBoolean("pvp.wild-enabled", pd.wildEnabled()),
+                view.getBoolean("pvp.duel-enabled", pd.duelEnabled()),
+                view.getInt("pvp.duel-request-seconds", pd.duelRequestSeconds()),
+                view.getInt("pvp.duel-minutes", pd.duelMinutes()),
+                PvpSettings.parseArenas(view.getStringList("pvp.arenas")));
+
+        return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world, pvp);
     }
 
     private static mn.suld.api.death.DeathLock.Curve lockCurve(String v, mn.suld.api.death.DeathLock.Curve fallback) {

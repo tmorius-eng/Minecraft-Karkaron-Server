@@ -31,9 +31,22 @@ public final class RelicRules {
     /**
      * The bearer died. A different player who killed them (and bears no relic) seizes it;
      * any other death returns the relic to its shrine.
+     *
+     * @deprecated since the PvP policy (2026-10-11) a kill seizes only inside a consented fight: use
+     * {@link #onBearerDeath(UUID, UUID, int, boolean)}.
      */
+    @Deprecated
     public static DeathOutcome onBearerDeath(UUID bearer, @Nullable UUID killer, int killerRelicCount) {
-        if (killer != null && !killer.equals(bearer) && killerRelicCount < MAX_RELICS_PER_BEARER) {
+        return onBearerDeath(bearer, killer, killerRelicCount, true);
+    }
+
+    /**
+     * The bearer died. A different player who killed them in a <em>consented</em> fight (a duel both accepted, or a
+     * fighting ground) and bears no relic seizes it; any other death, including a kill the policy should have
+     * prevented, returns the relic to its shrine. SÜLD is PvE: the relic makes its bearer famous, not hunted.
+     */
+    public static DeathOutcome onBearerDeath(UUID bearer, @Nullable UUID killer, int killerRelicCount, boolean consentedFight) {
+        if (consentedFight && killer != null && !killer.equals(bearer) && killerRelicCount < MAX_RELICS_PER_BEARER) {
             return DeathOutcome.SEIZE_BY_KILLER;
         }
         return DeathOutcome.RETURN_TO_SHRINE;

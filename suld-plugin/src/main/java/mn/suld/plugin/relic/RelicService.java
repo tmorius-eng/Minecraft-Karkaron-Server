@@ -530,8 +530,9 @@ public final class RelicService {
         RelicDefinition def = SuldContent.relicFor(rec.key());
         Player killer = victim.getKiller();
         int killerBears = killer != null && borneBy(killer.getUniqueId()).isPresent() ? 1 : 0;
+        // PvE policy: a kill seizes the relic only inside a consented fight (a duel or a fighting ground)
         RelicRules.DeathOutcome outcome = RelicRules.onBearerDeath(victim.getUniqueId(),
-                killer == null ? null : killer.getUniqueId(), killerBears);
+                killer == null ? null : killer.getUniqueId(), killerBears, services.duels().consented(killer, victim));
         removeAllCopies(victim);
         if (outcome == RelicRules.DeathOutcome.SEIZE_BY_KILLER) {
             UUID kid = killer.getUniqueId();

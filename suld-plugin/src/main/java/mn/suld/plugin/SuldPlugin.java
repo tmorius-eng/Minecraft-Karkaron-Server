@@ -95,6 +95,10 @@ public final class SuldPlugin extends JavaPlugin {
                 new mn.suld.plugin.dungeon.DungeonListener(services.dungeons(), services.parties()), this);
         registerCommand("suld", new SuldCommand(this, services));
         registerCommand("party", new mn.suld.plugin.command.PartyCommand(services.parties()));
+        // PvP policy (owner decision 2026-10-11): PvE-only; players fight each other only by /duel or on a fighting ground
+        getServer().getPluginManager().registerEvents(services.duels(), this);
+        services.duels().start();
+        registerTab("duel", new mn.suld.plugin.command.DuelCommand(services.duels()));
         dungeonGuide = new mn.suld.plugin.dungeon.DungeonGuide(this, services);
         getServer().getPluginManager().registerEvents(dungeonGuide, this);
         dungeonGuide.start();

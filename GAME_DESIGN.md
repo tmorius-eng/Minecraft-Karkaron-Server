@@ -12,6 +12,14 @@ Hardcore **PvE**: exploration, progression, loot, class builds, dungeons,
 bosses, clans, meaningful death, and extremely rare world-first items. No
 pay-to-win, no gambling mechanics.
 
+## PvP policy (owner decision 2026-10-11)
+
+SÜLD is PvE. A player hurts another player only when **both agreed**: an accepted `/duel` (outside Kharkhorum, open for
+`pvp.duel-minutes`) or a declared fighting ground (`pvp.arenas`). Everything else is cancelled and the attacker is
+told how to duel. Kharkhorum stays a sanctuary for everyone, souls are never fought. A relic is seized only in such a
+consented fight; any other death returns it to its shrine (`RelicRules.onBearerDeath(…, consentedFight)`). The bearer
+stays famous (glow, broadcast, chronicle), not hunted. `pvp.wild-enabled: true` restores the old open steppe.
+
 ## Classes
 
 Five classes. Each has active, passive, and ultimate skills via a class skill

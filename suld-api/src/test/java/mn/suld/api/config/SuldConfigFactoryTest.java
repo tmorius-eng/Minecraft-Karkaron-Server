@@ -102,6 +102,23 @@ class SuldConfigFactoryTest {
     }
 
     @Test
+    void pvpIsConsentOnlyByDefault() {
+        SuldConfig d = SuldConfigFactory.load(new MapConfigView(Map.of()));
+        assertFalse(d.pvp().wildEnabled(), "SÜLD is PvE: the steppe is peaceful unless the owner opens it");
+        assertTrue(d.pvp().duelEnabled());
+        assertEquals(60, d.pvp().duelRequestSeconds());
+        assertTrue(d.pvp().arenas().isEmpty());
+        SuldConfig cfg = SuldConfigFactory.load(new MapConfigView(Map.of("pvp", Map.of(
+                "wild-enabled", true, "duel-request-seconds", 1, "duel-minutes", 999,
+                "arenas", java.util.List.of("world 10 10 -10 -10", "nonsense")))));
+        assertTrue(cfg.pvp().wildEnabled());
+        assertEquals(10, cfg.pvp().duelRequestSeconds(), "clamped to >= 10 s");
+        assertEquals(60, cfg.pvp().duelMinutes(), "clamped to <= 60 min");
+        assertEquals(1, cfg.pvp().arenas().size(), "malformed arena lines are skipped");
+        assertTrue(cfg.pvp().inArena("world", 0, 0));
+    }
+
+    @Test
     void cityAutoRepairIsOffUnlessAsked() {
         assertFalse(SuldConfigFactory.load(new MapConfigView(Map.of())).world().autoRepairKharkhorum(),
                 "a server whose config predates the key keeps hand-built spawn changes");

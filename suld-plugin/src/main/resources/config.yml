@@ -117,6 +117,19 @@ world-events:
   min-players: 1
 
 # ---------------------------------------------------------------------------
+# PvP policy (owner decision 2026-10-11): SÜLD is a hardcore PvE game. A player hurts another player only when both
+# agreed: an accepted /duel (outside Kharkhorum, for duel-minutes) or a declared fighting ground. A relic is seized
+# only in such a fight; any other death returns it to its shrine. wild-enabled: true restores the old open steppe.
+# arenas: "world x1 z1 x2 z2" rectangles (block coordinates) where everyone may fight everyone.
+# ---------------------------------------------------------------------------
+pvp:
+  wild-enabled: false
+  duel-enabled: true
+  duel-request-seconds: 60
+  duel-minutes: 10
+  arenas: []
+
+# ---------------------------------------------------------------------------
 # Authentication. SÜLD has NO /register or /login and never sees a password:
 # identity comes only from Minecraft/Microsoft authentication (online-mode=true,
 # or a Velocity proxy with modern forwarding). Players are identified by UUID.
