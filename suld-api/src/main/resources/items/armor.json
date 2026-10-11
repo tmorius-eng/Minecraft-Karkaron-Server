@@ -522,7 +522,7 @@
   },
   {
    "id": "armor.chingis.helmet",
-   "name": "Чингисийн Малгай",
+   "name": "Хаадын Малгай",
    "material": "minecraft:netherite_helmet",
    "type": "HELMET",
    "rarity": "legendary",
@@ -543,12 +543,12 @@
    },
    "durability": 900,
    "sell": 80,
-   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "lore": "Эртний хаадын өв — тав бүрдвэл тэнгэр дэмжинэ.",
    "set": "set.chingis"
   },
   {
    "id": "armor.chingis.chestplate",
-   "name": "Чингисийн Дээл",
+   "name": "Хаадын Дээл",
    "material": "minecraft:netherite_chestplate",
    "type": "CHESTPLATE",
    "rarity": "legendary",
@@ -569,12 +569,12 @@
    },
    "durability": 900,
    "sell": 80,
-   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "lore": "Эртний хаадын өв — тав бүрдвэл тэнгэр дэмжинэ.",
    "set": "set.chingis"
   },
   {
    "id": "armor.chingis.leggings",
-   "name": "Чингисийн Өмд",
+   "name": "Хаадын Өмд",
    "material": "minecraft:netherite_leggings",
    "type": "LEGGINGS",
    "rarity": "legendary",
@@ -595,12 +595,12 @@
    },
    "durability": 900,
    "sell": 80,
-   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "lore": "Эртний хаадын өв — тав бүрдвэл тэнгэр дэмжинэ.",
    "set": "set.chingis"
   },
   {
    "id": "armor.chingis.boots",
-   "name": "Чингисийн Гутал",
+   "name": "Хаадын Гутал",
    "material": "minecraft:netherite_boots",
    "type": "BOOTS",
    "rarity": "legendary",
@@ -621,7 +621,7 @@
    },
    "durability": 900,
    "sell": 80,
-   "lore": "Их хааны өв — тав бүрдвэл тэнгэр дэмжинэ.",
+   "lore": "Эртний хаадын өв — тав бүрдвэл тэнгэр дэмжинэ.",
    "set": "set.chingis"
   },
   {

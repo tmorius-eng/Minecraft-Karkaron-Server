@@ -507,6 +507,7 @@ public final class Menus {
         for (Cosmetic c : CosmeticCatalog.of(cat)) {
             if (slot >= 45) break;
             boolean owned = s.owns(c.id());
+            if (c.withheld() && !owned) continue; // not obtainable for now (CULT-001 review)
             boolean on = s.equipped(cat).map(x -> x.id().equals(c.id())).orElse(false);
             TextColor rc = StyleFormat.hex(c.rarity().color());
             Component name = switch (cat) {

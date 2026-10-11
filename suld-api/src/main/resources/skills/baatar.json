@@ -64,7 +64,7 @@
      "effects": [{"type": "ultimate", "ultimate": "UKHEL_UNDER"}]},
     {"id": "u2", "name": "Бүхний Нурал", "category": "ULTIMATE", "icon": "MACE", "x": 2, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "m6", "rank": 1}], "capstone": true,
      "effects": [{"type": "ultimate", "ultimate": "BUKHNII_NURAL"}]},
-    {"id": "u3", "name": "Чингисийн Уур", "category": "ULTIMATE", "icon": "NETHERITE_AXE", "x": 3, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "r6", "rank": 1}], "capstone": true,
+    {"id": "u3", "name": "Баатрын Их Уур", "category": "ULTIMATE", "icon": "NETHERITE_AXE", "x": 3, "y": 8, "cost": 4, "level": 36, "requires": [{"node": "r6", "rank": 1}], "capstone": true,
      "effects": [{"type": "ultimate", "ultimate": "CHINGISIIN_UUR"}]},
     {"id": "l1_s1", "name": "Бат Бие", "description": "«Ган Бие»-ын жижиг чадвар.", "category": "DEFENSE", "icon": "APPLE", "x": 15, "y": 15, "cost": 1, "level": 3, "tags": ["orbit:l1", "minor"], "effects": [{"type": "stat", "key": "HEALTH", "value": 3}]},
     {"id": "l1_s2", "name": "Бамбай Сэтгэл", "description": "«Ган Бие»-ын жижиг чадвар.", "category": "DEFENSE", "icon": "TURTLE_SCUTE", "x": 15, "y": 15, "cost": 1, "level": 3, "tags": ["orbit:l1", "minor"], "effects": [{"type": "stat", "key": "DAMAGE_REDUCTION", "value": 1.5}]},

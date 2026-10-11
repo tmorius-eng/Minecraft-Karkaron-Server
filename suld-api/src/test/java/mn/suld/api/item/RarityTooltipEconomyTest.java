@@ -88,7 +88,7 @@ class RarityTooltipEconomyTest {
         List<ItemTooltip.Line> lines = ItemTooltip.lines(CAT, helm, i,
                 new ItemTooltip.Viewer(null, PlayerClass.BAATAR, 50, Set.of("armor.chingis.helmet", "armor.chingis.boots")), 0, helm.maxDurability(i.rarity()), null);
         String t = text(lines);
-        assertTrue(t.contains("Иж бүрдэл: Чингисийн Өв (2/5)"), t);
+        assertTrue(t.contains("Иж бүрдэл: Хаадын Өв (2/5)"), t);
         assertEquals(1, lines.stream().filter(l -> l.style() == ItemTooltip.Style.SET_ACTIVE).count(), "only the 2-piece bonus is active");
         assertEquals(3, lines.stream().filter(l -> l.style() == ItemTooltip.Style.SET_INACTIVE).count());
         assertTrue(t.contains("— эвдэрсэн"), t);

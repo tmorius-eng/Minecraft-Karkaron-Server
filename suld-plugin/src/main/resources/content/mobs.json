@@ -22,7 +22,7 @@
     },
     {
       "id": "mob.khasar",
-      "name": "Хасар — Агуйн Эзэн",
+      "name": "Хөгшин Саарал — Агуйн Эзэн",
       "host": "RAVAGER",
       "tier": "BOSS",
       "level": 8,
@@ -266,7 +266,7 @@
     },
     {
       "id": "mob.khangai_savdag",
-      "name": "Хангай Савдаг — Уулын Эзэн",
+      "name": "Хадны Мангас — Агуйн Эзэн",
       "host": "RAVAGER",
       "tier": "BOSS",
       "level": 53,

@@ -98,9 +98,11 @@ class StyleTest {
         s.grant("tag.chono");
         repo.save(s.snapshotAndClean()).get(); // a style save never touches credits
         assertEquals(40L, repo.load(id).get().orElseThrow().credits());
-        Cosmetic store = CosmeticCatalog.byId("tag.chingis").orElseThrow();
+        Cosmetic store = CosmeticCatalog.byId("tag.suld_sakhiulsan").orElseThrow();
         assertFalse(store.sold()); // not for coins
-        assertEquals(400, store.creditPrice());
+        assertEquals(250, store.creditPrice());
+        // a withheld store cosmetic (CULT-001 review) is not sold at all
+        assertEquals(0, CosmeticCatalog.byId("tag.chingis").orElseThrow().creditPrice());
         assertEquals(35, CosmeticCatalog.byId("tag.chono").orElseThrow().creditPrice());
         assertEquals(0, CosmeticCatalog.byId("tag.anchin").orElseThrow().creditPrice()); // level reward only
     }

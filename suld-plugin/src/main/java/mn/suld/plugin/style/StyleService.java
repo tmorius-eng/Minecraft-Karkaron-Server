@@ -256,6 +256,10 @@ public final class StyleService implements Listener {
             after.run();
             return;
         }
+        if (c.withheld()) {
+            p.sendMessage(Messages.error("Энэ зүйл одоогоор худалдаалагдахгүй."));
+            return;
+        }
         if (!purchasing.add(p.getUniqueId())) return; // a purchase is already in flight: no double spend
         if (currency == Currency.CREDITS) {
             long cost = c.creditPrice();

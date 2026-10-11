@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Every SÜLD cosmetic — Mongolian themed. Prices in SÜLD coins; nothing is sold for real money. */
+/** Every SÜLD cosmetic — Mongolian themed. Prices in SÜLD coins, or in credits for the store ones (cosmetics only). */
 public final class CosmeticCatalog {
 
     private CosmeticCatalog() {
@@ -32,6 +32,11 @@ public final class CosmeticCatalog {
 
     private static Cosmetic emoji(String id, String name, String code, long price, Rarity r) {
         return new Cosmetic("emoji." + id, Category.EMOJI, name, price, code, r, price == 0 ? "default" : "shop");
+    }
+
+    /** Kept in the catalog (owners keep it) but never sold; see {@link Cosmetic#withheld()}. */
+    private static Cosmetic withheld(Cosmetic c) {
+        return new Cosmetic(c.id(), c.category(), c.name(), c.price(), c.style(), c.rarity(), "withheld");
     }
 
     /** Credits-only (store) cosmetic; {@code credits} is its price in credits. */
@@ -59,19 +64,20 @@ public final class CosmeticCatalog {
             tag("salkhi", "Талын Салхи", "<gradient:#6BD06B:#EFFFF0>Талын Салхи</gradient>", 500, Rarity.RARE),
             tag("govi", "Говийн Од", "<gradient:#FFE08A:#FF9A3C>Говийн Од</gradient>", 500, Rarity.RARE),
             tag("morin_khuur", "Морин Хуур", "<gradient:#A0642A:#FFD24A>Морин Хуур</gradient>", 600, Rarity.EPIC),
-            tag("naadam", "Наадамч", "<gradient:#FF4A4A:#FFD24A>Наадамч</gradient>", 700, Rarity.EPIC),
-            tag("tsagaan_sar", "Цагаан Сар", "<gradient:#FFFFFF:#9FF3FF>Цагаан Сар</gradient>", 700, Rarity.EPIC),
+            withheld(tag("naadam", "Наадамч", "<gradient:#FF4A4A:#FFD24A>Наадамч</gradient>", 700, Rarity.EPIC)), // Naadam was removed from the game
+            withheld(tag("tsagaan_sar", "Цагаан Сар", "<gradient:#FFFFFF:#9FF3FF>Цагаан Сар</gradient>", 700, Rarity.EPIC)), // a national holiday: review
             tag("irves", "Алтайн Ирвэс", "<gradient:#FFFFFF:#8C96A8>Алтайн Ирвэс</gradient>", 900, Rarity.EPIC),
             tag("tenger", "Мөнх Тэнгэр", "<gradient:#2A6BFF:#9FF3FF:#2A6BFF>Мөнх Тэнгэр</gradient>", 1_500, Rarity.LEGENDARY),
-            tag("khar_suld", "Хар Сүлд", "<gradient:#3C3C46:#FF4A4A>Хар Сүлд</gradient>", 1_800, Rarity.LEGENDARY),
-            tag("tsagaan_suld", "Цагаан Сүлд", "<gradient:#FFFFFF:#C8D2E6>Цагаан Сүлд</gradient>", 1_800, Rarity.LEGENDARY),
-            tag("altan_urag", "Алтан Ураг", "<gradient:#FFF0A0:#FFD24A:#FF9A3C>Алтан Ураг</gradient>", 3_000, Rarity.LEGENDARY),
+            withheld(tag("khar_suld", "Хар Сүлд", "<gradient:#3C3C46:#FF4A4A>Хар Сүлд</gradient>", 1_800, Rarity.LEGENDARY)), // a venerated state banner: review
+            withheld(tag("tsagaan_suld", "Цагаан Сүлд", "<gradient:#FFFFFF:#C8D2E6>Цагаан Сүлд</gradient>", 1_800, Rarity.LEGENDARY)), // a venerated state banner: review
+            withheld(tag("altan_urag", "Алтан Ураг", "<gradient:#FFF0A0:#FFD24A:#FF9A3C>Алтан Ураг</gradient>", 3_000, Rarity.LEGENDARY)), // the Chinggisid lineage: review
             levelTag("anchin", "Анчин", "<#6BD06B>Анчин", 5, Rarity.COMMON),
             levelTag("tal_baatar", "Талын Баатар", "<gradient:#6BD06B:#FFD24A>Талын Баатар</gradient>", 30, Rarity.EPIC),
             levelTag("monkh_baatar", "Мөнхийн Баатар", "<gradient:#FFD24A:#FF4A4A:#B06BFF>Мөнхийн Баатар</gradient>", 60, Rarity.LEGENDARY),
             store("tag.suld_sakhiulsan", Category.TAG, "Сүлд Сахиулсан", "<gradient:#FFD24A:#9FF3FF:#FFD24A>✦ Сүлд Сахиулсан ✦</gradient>", 250, Rarity.LEGENDARY),
             store("tag.tengeriin_khuu", Category.TAG, "Тэнгэрийн Хүү", "<gradient:#9FF3FF:#4F8BFF:#B06BFF>Тэнгэрийн Хүү</gradient>", 200, Rarity.LEGENDARY),
-            store("tag.chingis", Category.TAG, "Их Хааны Ач", "<gradient:#FF4A4A:#FFD24A:#FF4A4A>⚜ Их Хааны Ач ⚜</gradient>", 400, Rarity.LEGENDARY),
+            // "grandson of the Great Khan", sold for real money: withheld until the legal/platform-policy review
+            withheld(store("tag.chingis", Category.TAG, "Их Хааны Ач", "<gradient:#FF4A4A:#FFD24A:#FF4A4A>⚜ Их Хааны Ач ⚜</gradient>", 400, Rarity.LEGENDARY)),
             // --- name colours ---
             name("ulaan", "Улаан", "<#FF6B6B>", "", 200, Rarity.COMMON),
             name("nogoon", "Ногоон", "<#7CE07C>", "", 200, Rarity.COMMON),

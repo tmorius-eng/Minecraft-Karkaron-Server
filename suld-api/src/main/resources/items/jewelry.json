@@ -22,7 +22,7 @@
   },
   {
    "id": "item.khasar_zurkh",
-   "name": "Хасарын Зүрх",
+   "name": "Саарлын Зүрх",
    "material": "minecraft:heart_of_the_sea",
    "type": "AMULET",
    "rarity": "legendary",
@@ -172,7 +172,7 @@
   },
   {
    "id": "jewel.chingis_tamga",
-   "name": "Чингисийн Тамга",
+   "name": "Хаадын Тамга",
    "material": "minecraft:nether_star",
    "type": "AMULET",
    "rarity": "legendary",
@@ -192,7 +192,7 @@
     "max_health": 0.4
    },
    "sell": 150,
-   "lore": "Их хааны тамга.",
+   "lore": "Эртний хаадын тамга (SÜLD-ийн зохиомол).",
    "set": "set.chingis"
   },
   {

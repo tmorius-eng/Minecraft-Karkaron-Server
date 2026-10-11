@@ -286,7 +286,7 @@ public final class HistoricSiteService {
         p.playSound(p.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.7f, 0.8f);
         p.sendMessage(Component.text("✦ " + s.name(), GOLD, TextDecoration.BOLD));
         p.sendMessage(Component.text(s.description(), NamedTextColor.WHITE));
-        p.sendMessage(Component.text("Шошго: " + label(s.history()) + " (" + s.history() + ")", NamedTextColor.GRAY));
+        p.sendMessage(Component.text("Шошго: " + label(s.history()), NamedTextColor.GRAY)); // no raw English label (LANG-009)
         var pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null || services.isSoul.test(p.getUniqueId())) return;
         Area area = WorldContent.AREAS.stream().filter(a -> a.id().equals(s.areaId())).findFirst().orElse(null);

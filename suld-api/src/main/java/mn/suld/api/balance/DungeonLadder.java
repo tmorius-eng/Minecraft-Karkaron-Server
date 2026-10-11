@@ -28,14 +28,14 @@ public final class DungeonLadder {
     }
 
     public static final List<Rung> RUNGS = List.of(
-            new Rung("dungeon.khasar_den", "Хасарын Агуй", 3, 10, 0, 3, 1),
+            new Rung("dungeon.khasar_den", "Саарлын Агуй", 3, 10, 0, 3, 1),
             new Rung("dungeon.govi_bulsh", "Говийн Булш", 9, 16, 1, 7, 2),
             new Rung("dungeon.baavgain_uur", "Баавгайн Үүр", 15, 22, 2, 12, 2),
             new Rung("dungeon.mosun_orgil", "Мөсөн Оргил", 22, 30, 3, 15, 3),
             new Rung("dungeon.dalain_gun", "Далайн Гүн", 29, 37, 4, 20, 3),
             new Rung("dungeon.khar_khot", "Хар Хотын Балгас", 36, 44, 5, 26, 3),
             new Rung("dungeon.ulaan_khad", "Улаан Хадны Хүрээ", 42, 50, 6, 31, 4),
-            new Rung("dungeon.burkhan_agui", "Бурхан Халдуны Агуй", 48, 56, 6, 34, 4),
+            new Rung("dungeon.burkhan_agui", "Хэнтийн Гүн Агуй", 48, 56, 6, 34, 4),
             new Rung("dungeon.tengeriin_shat", "Тэнгэрийн Шат", 54, 60, 7, 38, 4),
             new Rung("dungeon.tengeriin_ordon", "Тэнгэрийн Ордон", 60, 60, 7, 41, 4));
 

@@ -18,7 +18,7 @@ import java.util.Optional;
 public enum PlayerClass {
 
     /** Баатар — warrior / tank / berserker. High defense, melee bruiser. */
-    BAATAR("baatar", "Баатар", ClassRole.TANK, "Хил / Rage", 3, 40.0, 7.0, 100),
+    BAATAR("baatar", "Баатар", ClassRole.TANK, "Уур хилэн / Rage", 3, 40.0, 7.0, 100),
 
     /** Мэргэн — archer / ranged / assassin. High single-target ranged damage. */
     MERGEN("mergen", "Мэргэн", ClassRole.RANGED, "Төвлөрөл / Focus", 4, 26.0, 9.0, 100),

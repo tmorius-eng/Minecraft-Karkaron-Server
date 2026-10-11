@@ -12,7 +12,7 @@ package mn.suld.api.style;
  *                 for EMOJI the code typed in chat (e.g. {@code :zurkh:})
  * @param rarity   display tier
  * @param source   how it is obtained: {@code shop} (coins or credits), {@code store} (credits only),
- *                 {@code level:N}, {@code default}
+ *                 {@code level:N}, {@code default}, or {@code withheld}: not obtainable at all for now (owners keep it)
  *
  * <p>Credits (Сүлд Кредит) are the store currency. Cosmetics are the only thing credits buy — never items,
  * levels or power (Minecraft EULA: no pay-to-win).
@@ -54,6 +54,15 @@ public record Cosmetic(String id, Category category, String name, long price, St
 
         public String displayName() { return displayName; }
         public String color() { return color; }
+    }
+
+    /**
+     * Not sold for coins or credits and not listed to players who do not own it. Used for names that need a
+     * Mongolian cultural/legal review before they may be sold (audit 2026-10-11 CULT-001: sacred banners, the
+     * Chinggisid lineage, Naadam). Players who already own one keep it.
+     */
+    public boolean withheld() {
+        return "withheld".equals(source);
     }
 
     /** Sold for SÜLD coins in {@code /shop}. */

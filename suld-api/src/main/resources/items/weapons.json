@@ -65,7 +65,7 @@
   },
   {
    "id": "weapon.khasar_soyo",
-   "name": "Хасарын Соёо",
+   "name": "Саарлын Соёо",
    "material": "minecraft:iron_sword",
    "type": "SWORD",
    "rarity": "epic",
@@ -92,7 +92,7 @@
    "durability": 250,
    "sell": 30,
    "model": 870012,
-   "lore": "Агуйн эзэн Хасарын соёогоор хийсэн ир.",
+   "lore": "Агуйн эзэн Хөгшин Саарлын соёогоор хийсэн ир.",
    "effects": [
     {
      "type": "proc",

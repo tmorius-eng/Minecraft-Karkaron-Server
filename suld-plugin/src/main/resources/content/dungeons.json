@@ -4,7 +4,7 @@
   "dungeons": [
     {
       "id": "dungeon.khasar_den",
-      "name": "Хасарын Агуй",
+      "name": "Саарлын Агуй",
       "minLevel": 3,
       "minParty": 1,
       "maxParty": 4,
@@ -185,7 +185,7 @@
     },
     {
       "id": "dungeon.burkhan_agui",
-      "name": "Бурхан Халдуны Агуй",
+      "name": "Хэнтийн Гүн Агуй",
       "minLevel": 48,
       "minParty": 1,
       "maxParty": 4,

@@ -9,7 +9,7 @@ import java.util.Optional;
 /** The 15 ultimates (three per class, one chosen), cast with F while holding the class weapon. */
 public enum Ultimate {
     // Баатар
-    CHINGISIIN_UUR(PlayerClass.BAATAR, "Чингисийн Уур", "12 секунд: Хүч II, Хамгаалалт I, Сэргэлт II."),
+    CHINGISIIN_UUR(PlayerClass.BAATAR, "Баатрын Их Уур", "12 секунд: Хүч II, Хамгаалалт I, Сэргэлт II."),
     BUKHNII_NURAL(PlayerClass.BAATAR, "Бүхний Нурал", "8 блок хүрээнд газрыг хагалан 6 дахин хүчтэй цохиж, дайснуудыг дээш хөөнө."),
     UKHEL_UNDER(PlayerClass.BAATAR, "Үхэшгүй Эр", "8 секунд: Хамгаалалт IV ба 10 ❤ нэмэлт амь."),
     // Мэргэн

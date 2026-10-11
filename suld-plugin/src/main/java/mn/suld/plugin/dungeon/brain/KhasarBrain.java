@@ -100,7 +100,7 @@ public final class KhasarBrain implements BossBrain {
         boss.getWorld().spawnParticle(Particle.BLOCK, boss.getLocation().add(0, 0.2, 0), 60, 2, 0.2, 2, 0, Material.STONE.createBlockData());
         if (phase >= 2) {
             boss.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, false, false));
-            for (Player p : targets(boss, 24)) warn(p, Component.text("Хасар галзуурлаа!", NamedTextColor.DARK_RED));
+            for (Player p : targets(boss, 24)) warn(p, Component.text("Хөгшин Саарал галзуурлаа!", NamedTextColor.DARK_RED));
         }
     }
 
@@ -126,7 +126,7 @@ public final class KhasarBrain implements BossBrain {
         Location land = target.getLocation().clone();
         // telegraph: a ring where Хасар will land, and a warning
         ring(land, 3, Particle.DUST, new Particle.DustOptions(org.bukkit.Color.fromRGB(200, 40, 30), 1.6f), 28);
-        warn(target, Component.text("⚠ Хасар үсрэх гэж байна — зайл!", NamedTextColor.RED));
+        warn(target, Component.text("⚠ Хөгшин Саарал үсрэх гэж байна — зайл!", NamedTextColor.RED));
         boss.getWorld().playSound(boss.getLocation(), Sound.ENTITY_RAVAGER_STEP, 1.5f, 0.6f);
         double dmg = self.scaledAttack() * 1.6;
         playOr(boss, "pounce", 10, () -> {
@@ -163,7 +163,7 @@ public final class KhasarBrain implements BossBrain {
     private void howl(LivingEntity boss) {
         hold(6);
         boss.getWorld().playSound(boss.getLocation(), Sound.ENTITY_WOLF_ANGRY_AMBIENT, 2f, 0.45f);
-        for (Player p : targets(boss, 24)) warn(p, Component.text("Хасар улилаа — агуйн чононууд ирж байна!", NamedTextColor.GOLD));
+        for (Player p : targets(boss, 24)) warn(p, Component.text("Хөгшин Саарал улилаа — агуйн чононууд ирж байна!", NamedTextColor.GOLD));
         playOr(boss, "howl", 12, () -> {
             if (summon == null) return;
             // at most 4 adds alive: a long fight must not snowball into a wolf pack (or an EXP farm)
