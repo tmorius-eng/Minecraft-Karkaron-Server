@@ -593,11 +593,13 @@ public final class DungeonService {
                 }
             }
             services.quests().onDungeonCleared(p, profile, ar.def.id());
+            boolean firstClear = !cleared(p, ar.def.id());
             markCleared(p, ar.def.id());
             if (services.classArmor != null) services.classArmor.dungeonCleared(p, ar.def.id());
-            services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_BOSS, id));
+            // first_boss once per player and dungeon (ANA-001); every clear is a boss_participation
+            if (firstClear) services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_BOSS, id, Map.of("dungeon", ar.def.id())));
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.BOSS_PARTICIPATION, id,
-                    Map.of("boss", ar.def.bossDefinition().id(), "seconds", seconds)));
+                    Map.of("boss", ar.def.bossDefinition().id(), "dungeon", ar.def.id(), "seconds", seconds, "first", firstClear)));
             services.profiles().save(profile);
         }
         if (!rewarded.isEmpty()) {

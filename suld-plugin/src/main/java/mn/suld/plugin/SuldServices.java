@@ -171,8 +171,10 @@ public final class SuldServices {
         this.hudService = new HudService(progressionService);
         this.questService = new QuestService(progressionService);
         this.questService.items(itemFactory);
+        this.questService.analytics = analytics::record;
         this.mobService = new MobService(plugin);
         this.resourcePackService = new ResourcePackService(plugin, config.resourcePack());
+        this.resourcePackService.analytics = analytics::record;
         this.classSelectionGui = new ClassSelectionGui(plugin, this, hudService, questService, itemFactory);
         this.combatListener = new CombatListener(this, mobService, questService, hudService, itemFactory);
 

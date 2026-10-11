@@ -1,7 +1,35 @@
 # SÜLD analytics
 
-**Status:** FUNCTIONAL_BUT_INCOMPLETE (Stage C3b). The database sink and session totals are implemented and tested on
-PostgreSQL. MySQL migrations are written but not run here. There are no dashboards.
+**Status:** FUNCTIONAL (2026-10-11). The database sink and session totals are implemented and tested on PostgreSQL;
+the first-five-minutes funnel is emitted end to end (audit ANA-001); `tools/analytics/funnel.py` prints the funnel,
+D1/D7 retention and the session summary as Markdown. There is no web dashboard (the query tool is the dashboard v0).
+
+## Funnel (docs/audits/2026-10-11/03-first-five-minutes.md)
+
+| Step | Event (`AnalyticsEventType`) | Emitted where | Attributes |
+|---|---|---|---|
+| join_attempt | `join_attempt` | `AuthenticationService.onPreLogin`, every outcome | `outcome`: `allowed`, `allowed:new`, `denied:<code>`, `profile_failed:<why>`, `refused_before_suld:<result>` |
+| join_success | `session_start` (every join), `first_login` (first) | `PlayerLifecycleListener`, `AuthenticationService` | |
+| resource_pack_ready | `resource_pack_status` | `ResourcePackService.onStatus`, every status | `status`, `required`, `ms` since the pack was sent |
+| class_selected | `class_selected` | `ClassSelectionGui` | |
+| first_action / first_objective | `tutorial_step` | `TutorialService.complete`, every step | `step`, `of`, `name`, `completed` |
+| first chapter | `quest_complete` | `QuestService.complete`, every chapter | `quest`, `chapter`, `of`, `level` |
+| first_combat | `first_mob_kill` | `CombatListener`, once per session | |
+| first_reward | `first_item`, `first_rare_item` | `CombatListener`, `DungeonService` | |
+| five_minute_active | `active_5m` | `ActivePlaytimeService.closeMinute` at the 5th **validated active** minute of a session | `level`, `combat_min` |
+| retention marks | `retention_15m`, `retention_30m`, `retention_1h` | the same, at 15 / 30 / 60 active minutes | |
+| first death | `first_death` | `DeathService`, the player's first stored death (`death_seq == 1`) | `level`, `cause` |
+| first boss | `first_boss` | `DungeonService.complete`, the player's **first** clear of that dungeon (every clear is a `boss_participation`) | `dungeon` |
+| level up | `level_up` | `DefaultProgressionService` | |
+| Их Хуралдай | `vote_cast`, `vote_closed`, `campaign_start`, `campaign_contribution` (tier reached), `campaign_end`, `campaign_reward_claim`, `chronicle_entry`, `world_effect_applied` | docs/KHURALDAI.md | |
+
+```bash
+tools/analytics/funnel.py --url postgresql://suld:…@127.0.0.1:5432/suld --days 7
+```
+
+prints the funnel as distinct players per step and the share of first logins, the D1/D7 cohort table (first_login day →
+seen again by `session_start` 1 and 7 days later) and the session summary from `suld_sessions`. The closed alpha's exit
+numbers (`09-public-launch-and-growth.md` §3.3): `join_success → first_mob_kill ≥ 70 %`, `active_5m ≥ 50 %`, D1 ≥ 40 %.
 
 ## What is recorded
 
@@ -47,7 +75,7 @@ PostgreSQL. MySQL migrations are written but not run here. There are no dashboar
 
 ## Not done
 
-* Dashboards and queries.
+* A web dashboard (the Markdown tool above is the dashboard v0).
 * The HTTP export.
 * Exact combat time (the totals count combat *minutes*).
 * Per-spell usage.

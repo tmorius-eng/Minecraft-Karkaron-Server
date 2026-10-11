@@ -156,6 +156,19 @@ public final class ActivePlaytimeService implements Listener {
             if (v.active()) {
                 mn.suld.api.analytics.SessionTotals st = services.session(p.getUniqueId());
                 st.activeMinutes++;
+                // the funnel's "five minutes of real play" and the retention marks: validated active minutes, not wall-clock
+                String mark = switch ((int) st.activeMinutes) {
+                    case 5 -> mn.suld.api.analytics.AnalyticsEventType.ACTIVE_5M;
+                    case 15 -> mn.suld.api.analytics.AnalyticsEventType.RETENTION_15M;
+                    case 30 -> mn.suld.api.analytics.AnalyticsEventType.RETENTION_30M;
+                    case 60 -> mn.suld.api.analytics.AnalyticsEventType.RETENTION_1H;
+                    default -> null;
+                };
+                if (mark != null) {
+                    PlayerProfile mp = services.profiles().cached(p.getUniqueId()).orElse(null);
+                    services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(mark, p.getUniqueId(),
+                            java.util.Map.of("level", mp == null ? 0 : mp.progression().level(), "combat_min", st.combatMinutes)));
+                }
                 if (v.category() == mn.suld.api.activity.ActivityCategory.COMBAT || v.category() == mn.suld.api.activity.ActivityCategory.DUNGEON) st.combatMinutes++;
                 PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
                 if (pr != null) pr.activeMinutes(pr.activeMinutes().plus(v.category(), 1));

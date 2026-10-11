@@ -121,6 +121,7 @@ public final class AuthenticationService implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+            joinAttempt(event.getUniqueId(), "refused_before_suld:" + event.getLoginResult());
             return;
         }
         UUID uuid = event.getUniqueId();
@@ -129,6 +130,7 @@ public final class AuthenticationService implements Listener {
         if (!decision.allowed()) {
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Component.text(decision.reason(), NamedTextColor.RED));
             audit.record(AuditEvent.of(String.valueOf(uuid), AuditActions.DENIED, safeName(name), decision.code().name()));
+            joinAttempt(uuid, "denied:" + decision.code().name());
             return;
         }
         if (decision.code() == AuthDecision.Code.ALLOWED_INSECURE_DEV) {
@@ -147,12 +149,14 @@ public final class AuthenticationService implements Listener {
             sessions.end(uuid, session.sessionId());
             String why = ex instanceof TimeoutException ? "timeout" : rootCause(ex).getClass().getSimpleName();
             audit.record(AuditEvent.of(uuid.toString(), AuditActions.PROFILE_LOAD_FAILED, name, why));
+            joinAttempt(uuid, "profile_failed:" + why);
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Component.text(
                     "SÜLD профайл түр ачааллагдсангүй. Хэдэн секундын дараа дахин орно уу.\n"
                             + "Your SÜLD profile could not be loaded right now — please try again shortly.",
                     NamedTextColor.RED));
             return;
         }
+        joinAttempt(uuid, load.created() ? "allowed:new" : "allowed");
         if (load.created()) {
             audit.record(AuditEvent.of(uuid.toString(), AuditActions.FIRST_JOIN, name, "profile created"));
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_LOGIN, uuid));
@@ -164,6 +168,11 @@ public final class AuthenticationService implements Listener {
             audit.record(AuditEvent.of(uuid.toString(), AuditActions.NAME_CHANGE, name,
                     load.previousName() + " -> " + name + " (same UUID, same profile)"));
         }
+    }
+
+    /** The first funnel step (docs/ANALYTICS.md): every login attempt with its outcome, allowed or not. */
+    private void joinAttempt(UUID uuid, String outcome) {
+        services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.JOIN_ATTEMPT, uuid, java.util.Map.of("outcome", outcome)));
     }
 
     /** LOWEST: bind the session before any gameplay listener touches the player. */

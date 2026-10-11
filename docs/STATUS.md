@@ -68,7 +68,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Kharkhorum slice 1 (ceremonial axis), hand-built spawn | ✅ | ✅ | 👤 | auto-repair off; palace interior, clan district, relic hall ⏳ |
 | Historic sites 16, ovoo 40, discovery EXP | ✅ | ✅ | ⏳ | |
 | Progress marks mirror (V17) | ✅ | ⏳ | — | clears / sites / ovoo → `suld_player_marks`; backfill on login |
-| Analytics (DB sink, sessions) | ✅ | ✅ | — | funnel events ANA-001 ⏳; no dashboard ⏳ |
+| Analytics (DB sink, sessions, funnel events ANA-001, `tools/analytics/funnel.py`) | ✅ | ✅ 17 event types seen on PostgreSQL in one bot run | — | web dashboard ⏳ (the Markdown tool is v0) |
 | Backups (flush → dump → off-host), restore drill | ✅ | ✅ dev container | 👤 G11 | |
 | Credit store (idempotent grants) | ✅ | ✅ | — | payment provider not built; EULA review ⏳ |
 | CI | ⏳ | — | — | TEST-001 |

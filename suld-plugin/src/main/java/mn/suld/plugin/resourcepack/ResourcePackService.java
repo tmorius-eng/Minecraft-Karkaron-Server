@@ -163,6 +163,7 @@ public final class ResourcePackService implements Listener {
         if (!enabled()) {
             return;
         }
+        sentAt.put(player.getUniqueId(), System.currentTimeMillis());
         byte[] hash = decodeSha1(sha1());
         Component prompt = Component.text(settings.prompt(), Messages.BRAND);
         try {
@@ -219,10 +220,21 @@ public final class ResourcePackService implements Listener {
         status.remove(id);
     }
 
+    /** When the pack was sent to each online player, for the time-to-load of the funnel event. */
+    private final Map<UUID, Long> sentAt = new ConcurrentHashMap<>();
+    /** Set by SuldServices: the analytics sink. */
+    public volatile java.util.function.Consumer<mn.suld.api.analytics.AnalyticsEvent> analytics = e -> { };
+
     @EventHandler
     public void onStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
         status.put(player.getUniqueId(), event.getStatus());
+        // the funnel's second step (ANA-001): every status with the time since the pack was sent; a decline on a
+        // required pack is where a player is lost before the class menu
+        Long sent = sentAt.get(player.getUniqueId());
+        analytics.accept(mn.suld.api.analytics.AnalyticsEvent.of(mn.suld.api.analytics.AnalyticsEventType.RESOURCE_PACK_STATUS,
+                player.getUniqueId(), java.util.Map.of("status", event.getStatus().name(), "required", settings.required(),
+                        "ms", sent == null ? -1L : System.currentTimeMillis() - sent)));
         Runnable ready = gate.answer(player.getUniqueId(), answer(event.getStatus()), System.currentTimeMillis());
         switch (event.getStatus()) {
             case SUCCESSFULLY_LOADED -> player.sendMessage(Messages.success("Дүрс багц амжилттай ачаалагдлаа."));

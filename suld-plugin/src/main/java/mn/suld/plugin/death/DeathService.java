@@ -281,6 +281,9 @@ public final class DeathService implements Listener {
                 .thenCompose(x -> repo.insert(rec));
         stored.whenComplete((r, ex) -> {
             if (ex != null) plugin.getLogger().severe("death of " + p.getName() + " could not be stored: " + ex);
+            // the funnel's first_death (ANA-001): the player's first stored death, once (the sink never blocks)
+            else if (r != null && r.seq() == 1) services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
+                    mn.suld.api.analytics.AnalyticsEventType.FIRST_DEATH, id, Map.<String, Object>of("level", level, "cause", cause)));
         });
         locks.put(id, stored);
         lockedUntil.put(id, until);

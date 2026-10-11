@@ -47,6 +47,9 @@ public final class QuestService {
     }
 
     /** Called after any quest change (HUD refresh). */
+    /** Set by SuldServices: the analytics sink (a chapter completion is a funnel step, docs/ANALYTICS.md). */
+    public volatile java.util.function.Consumer<mn.suld.api.analytics.AnalyticsEvent> analytics = e -> { };
+
     /** Called when a chapter completes (coins and EXP granted, collected items taken): persist both stores now. */
     private BiConsumer<Player, PlayerProfile> onComplete = (p, pr) -> { };
 
@@ -183,6 +186,8 @@ public final class QuestService {
         int from = profile.progression().level();
         var gained = progression.grantExp(profile, def.expReward(), ExpSource.QUEST);
         if (gained.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(player, from, gained.after().level());
+        analytics.accept(mn.suld.api.analytics.AnalyticsEvent.of(mn.suld.api.analytics.AnalyticsEventType.QUEST_COMPLETE, player.getUniqueId(),
+                java.util.Map.of("quest", def.id(), "chapter", chapter, "of", chain.size(), "level", from)));
         onComplete.accept(player, profile);
         if (next.isPresent()) {
             announceStart(player, next.get());

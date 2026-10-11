@@ -191,6 +191,9 @@ public final class TutorialService implements Listener, TabExecutor {
         }
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.3f);
         TutorialProgress next = t.advance();
+        services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(mn.suld.api.analytics.AnalyticsEventType.TUTORIAL_STEP, p.getUniqueId(),
+                java.util.Map.of("step", t.step() + 1, "of", TutorialProgress.STEPS.size(), "name", s.name(),
+                        "completed", next.state() == TutorialProgress.State.COMPLETED)));
         if (next.state() == TutorialProgress.State.COMPLETED) {
             if (pr != null && t.finishUnpaid()) {
                 services.progression().grantExp(pr, TutorialProgress.FINISH_EXP, ExpSource.QUEST);

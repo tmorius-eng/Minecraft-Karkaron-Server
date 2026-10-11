@@ -22,6 +22,15 @@ public final class AnalyticsEventType {
     public static final String FIRST_DUNGEON = "first_dungeon";
     public static final String FIRST_BOSS = "first_boss";
 
+    // The first five minutes (audit 2026-10-11 ANA-001, docs/ANALYTICS.md §Funnel)
+    public static final String JOIN_ATTEMPT = "join_attempt";
+    public static final String RESOURCE_PACK_STATUS = "resource_pack_status";
+    public static final String TUTORIAL_STEP = "tutorial_step";
+    public static final String QUEST_COMPLETE = "quest_complete";
+    /** Five validated active minutes in one session (ActivePlaytime, not wall-clock). */
+    public static final String ACTIVE_5M = "active_5m";
+
+    /** Fifteen, thirty and sixty validated active minutes in one session. */
     public static final String RETENTION_15M = "retention_15m";
     public static final String RETENTION_30M = "retention_30m";
     public static final String RETENTION_1H = "retention_1h";
