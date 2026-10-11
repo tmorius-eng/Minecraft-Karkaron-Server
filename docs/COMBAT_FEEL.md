@@ -12,10 +12,10 @@ Better Lock On, but no code or assets are copied.
 
 * The class weapon can never be dropped (SoulboundGuard), so Q is free as the lock key. In an open container Q
   still means "drop" and is refused as before.
-* While locked, the camera **eases** onto the target. Each tick `Player#lookAt` turns it 45 % of the remaining angle,
-  and once within 1.5° it holds exactly on the target, at chest height.
-* Every aimed skill (beams, volleys, Онгон, Тэнгэрийн Цавчилт), arrow and melee hit therefore goes to the target with
-  no extra aim code.
+* On locking (and on Shift + Q), the camera **turns onto the target once**: each tick `Player#lookAt` turns it 45 % of
+  the remaining angle, for at most 8 ticks or until it is within 2°. After that nothing turns the camera: the mouse
+  and movement are the player's own. (Steering every tick fought the mouse and made the camera feel stuck; owner
+  report 2026-10-11.)
 * The HUD target frame shows the locked target first.
 * A gold **reticle** (`entity/vfx/reticle`) floats over the target. Only the locking player sees it
   (`setVisibleByDefault(false)` + `showEntity`).
@@ -24,7 +24,8 @@ Better Lock On, but no code or assets are copied.
   * it is more than 32 blocks away;
   * it has been out of sight for 2 s;
   * the player changes world, quits or dies.
-* The lock never targets players, city NPCs (mannequins), tamed animals or armour stands.
+* The lock targets enemies only: SÜLD mobs and hostile monsters. Never players, city NPCs (mannequins), animals (a
+  horse, sheep), tamed animals or armour stands.
 
 ## Attack decals
 

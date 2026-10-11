@@ -49,9 +49,10 @@ import java.util.UUID;
  * <p>
  * <b>Lock-on.</b> Q with the class weapon in hand (it can never be dropped anyway) locks onto the creature nearest the
  * crosshair within 24 blocks and in sight; Q again (or the target dying, leaving 32 blocks or sight for 2 s) releases
- * it. While locked the camera eases onto the target every tick ({@code Player#lookAt}, so the client turns smoothly
- * and every aimed skill, arrow and beam goes where the player looks), the HUD target frame follows it, and a reticle
- * only the locking player can see floats over it. Sneak + Q cycles to the next target.
+ * it. Only enemies lock: SÜLD mobs and hostile monsters, never animals such as a horse. On locking the camera
+ * turns onto the target once (a short ease, {@link #STEER_TICKS} at most); after that the mouse is the player's
+ * own, nothing turns the camera. The HUD target frame follows the target and a reticle only the locking player can
+ * see floats over it. Sneak + Q cycles to the next target (and turns onto it).
  * <p>
  * <b>Attack decals.</b> A full-strength swing with the class weapon draws the class's motion as a short-lived
  * {@link ItemDisplay} decal (one entity, 5 ticks, interpolated by the client): Баатар a red horizontal sweep, Дархан an
@@ -66,6 +67,8 @@ public final class CombatFeel implements Listener {
     private static final double LOCK_CONE_COS = Math.cos(Math.toRadians(40));
     private static final long LOST_SIGHT_MS = 2000;
     private static final double EASE = 0.45; // fraction of the remaining turn per tick
+    /** The camera is turned for at most this many ticks after locking, then left alone. */
+    static final int STEER_TICKS = 8;
 
     private final Plugin plugin;
     private final SuldServices services;
@@ -75,6 +78,7 @@ public final class CombatFeel implements Listener {
         final UUID target;
         final ItemDisplay reticle;
         long lostSince;
+        int steer = STEER_TICKS;
 
         Lock(UUID target, ItemDisplay reticle) {
             this.target = target;
@@ -136,6 +140,8 @@ public final class CombatFeel implements Listener {
         if (e.getType().name().equals("MANNEQUIN")) return false; // city NPCs
         if (e instanceof Tameable t && t.getOwnerUniqueId() != null) return false; // someone's horse or wolf
         if (le.isInvisible() && !e.getScoreboardTags().contains(mn.suld.plugin.model.ModelService.HOST_TAG)) return false;
+        // enemies only: SÜLD mobs (their wolves and bears are vanilla animals underneath) and hostile monsters
+        if (!services.mobs().isSuldMob(e) && !(e instanceof org.bukkit.entity.Enemy)) return false;
         return e.getWorld().equals(p.getWorld());
     }
 
@@ -217,17 +223,22 @@ public final class CombatFeel implements Listener {
             } else {
                 l.lostSince = 0;
             }
-            // ease the camera: aim a fraction of the remaining angle each tick, so it glides on and then holds
-            Location eye = p.getEyeLocation();
-            Vector want = t.getLocation().add(0, t.getHeight() * 0.7, 0).toVector().subtract(eye.toVector());
-            if (want.lengthSquared() > 1e-4) {
-                want.normalize();
-                Vector cur = eye.getDirection();
-                Vector next = cur.clone().multiply(1 - EASE).add(want.clone().multiply(EASE));
-                // on target (within 2°): send nothing, so the player's own mouse is not fought tick after tick
-                if (cur.angle(want) >= Math.toRadians(2)) {
-                    Vector at = eye.toVector().add(next.normalize().multiply(8));
-                    p.lookAt(at.getX(), at.getY(), at.getZ(), LookAnchor.EYES);
+            // turn onto the target once, right after locking: a fraction of the remaining angle per tick, then never
+            // again (steering every tick fought the mouse and made the camera feel stuck)
+            if (l.steer > 0) {
+                l.steer--;
+                Location eye = p.getEyeLocation();
+                Vector want = t.getLocation().add(0, t.getHeight() * 0.7, 0).toVector().subtract(eye.toVector());
+                if (want.lengthSquared() > 1e-4) {
+                    want.normalize();
+                    Vector cur = eye.getDirection();
+                    if (cur.angle(want) < Math.toRadians(2)) {
+                        l.steer = 0;
+                    } else {
+                        Vector next = cur.clone().multiply(1 - EASE).add(want.clone().multiply(EASE));
+                        Vector at = eye.toVector().add(next.normalize().multiply(8));
+                        p.lookAt(at.getX(), at.getY(), at.getZ(), LookAnchor.EYES);
+                    }
                 }
             }
             l.reticle.teleport(t.getLocation().add(0, t.getHeight() + 0.6, 0));
