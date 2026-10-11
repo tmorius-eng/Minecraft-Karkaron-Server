@@ -240,6 +240,9 @@ relics:
 # ---------------------------------------------------------------------------
 world:
   kharkhorum-auto-build: true
+  # true: on every start the built city is put back exactly as planned (/worldbuild repair). That also undoes
+  # what staff build by hand in the city (/worldbuild edit), so it is off while the spawn is built by hand.
+  kharkhorum-auto-repair: false
   build-blocks-per-tick: 4000
   region-spawning: true
   region-mobs-per-player: 4

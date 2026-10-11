@@ -66,6 +66,12 @@ Admin-only SÜLD commands (all need `suld.admin` unless noted): `/suld exp|coins
 `/relic setshrine|return|give|recover|tp` (`suld.admin.relic`). `suld.admin` also lets a player look at others'
 `/profile /exp /class /quest /balance <name>`, skips the `/spawn` warm-up and may abort any dungeon.
 
+Building in Kharkhorum by hand: the city is protected (no breaking, placing, buckets, signs) for everyone. An
+operator (or `suld.admin.world`) types `/worldbuild edit` to build there; typing it again protects the city again.
+The mode lasts until the server restarts. Hand-built changes stay: the start-up self-repair
+that put the city back to its plan is off (`world.kharkhorum-auto-repair: false`). Do not run `/worldbuild repair`
+or `/worldbuild rollback` once the spawn is built by hand: both rewrite the city from the plan.
+
 SÜLD owns these labels even where EssentialsX has the same command: `/help /rules /spawn /balance /pay /top /baltop
 /exp /rank /vote /discord`. Staff reach Essentials' own versions with the prefix, e.g. `/essentials:top`,
 `/essentials:exp`. While in a dungeon run, players cannot use `/home /tpa /back /warp /tp…` (staff excepted).

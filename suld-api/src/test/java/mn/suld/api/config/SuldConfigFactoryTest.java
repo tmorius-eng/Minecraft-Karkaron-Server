@@ -100,4 +100,12 @@ class SuldConfigFactoryTest {
         assertEquals(96, cfg.relics().autoPlaceMaxRadius(), "max > min");
         assertEquals(60, cfg.relics().ritualSeconds());
     }
+
+    @Test
+    void cityAutoRepairIsOffUnlessAsked() {
+        assertFalse(SuldConfigFactory.load(new MapConfigView(Map.of())).world().autoRepairKharkhorum(),
+                "a server whose config predates the key keeps hand-built spawn changes");
+        assertTrue(SuldConfigFactory.load(new MapConfigView(Map.of("world", Map.of("kharkhorum-auto-repair", true))))
+                .world().autoRepairKharkhorum());
+    }
 }

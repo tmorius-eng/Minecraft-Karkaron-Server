@@ -156,9 +156,10 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
                 case BUILDING -> Bukkit.getScheduler().runTaskLater(plugin, () -> resume(null), 40L);
                 case BUILT, APPROVED, LOCKED -> {
                     Bukkit.getScheduler().runTask(plugin, this::applySpawn);
-                    // Self-heal: anything that changed the city while unprotected (explosions, old builds)
-                    // is put back from the plan. Idempotent; only differing blocks are written.
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> repair(null), 60L);
+                    // Self-heal (world.kharkhorum-auto-repair): anything that changed the city is put back from the
+                    // plan. Idempotent; only differing blocks are written. Off by default: it would also undo what
+                    // staff build by hand in /worldbuild edit.
+                    if (settings.autoRepairKharkhorum()) Bukkit.getScheduler().runTaskLater(plugin, () -> repair(null), 60L);
                 }
                 default -> { }
             }

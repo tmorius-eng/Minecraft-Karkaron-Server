@@ -114,7 +114,8 @@ public final class SuldConfigFactory {
                 view.getBoolean("world.kharkhorum-auto-build", wd.autoBuildKharkhorum()),
                 view.getInt("world.build-blocks-per-tick", wd.buildBlocksPerTick()),
                 view.getBoolean("world.region-spawning", wd.regionSpawning()),
-                view.getInt("world.region-mobs-per-player", wd.regionMobsPerPlayer()));
+                view.getInt("world.region-mobs-per-player", wd.regionMobsPerPlayer()),
+                view.getBoolean("world.kharkhorum-auto-repair", wd.autoRepairKharkhorum()));
 
         return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world);
     }
