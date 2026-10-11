@@ -97,7 +97,7 @@ public final class KhuraldaiService {
 
     public boolean open() {
         VoteCycle c = current;
-        return c != null && !c.closed() && c.cycleId().equals(cycle.cycleId(Instant.now()));
+        return c != null && !c.closed() && Instant.now().toEpochMilli() < c.closesAt();
     }
 
     /** The campaign definitions on the current ballot, in ballot order. */
@@ -118,14 +118,11 @@ public final class KhuraldaiService {
         Instant now = Instant.now();
         String id = cycle.cycleId(now);
         VoteCycle c = current;
-        if (c != null && !c.cycleId().equals(id)) {
-            // a new week: last week's closed vote stays readable until this week's opens
-            if (!c.closed() && !closing) close(c, "cycle rolled over");
-        }
+        // the row carries its own closing time: the clock's ballot closes at vote-closes, an admin's late ballot a day later
+        if (c != null && !c.closed() && !closing && now.toEpochMilli() >= c.closesAt()) close(c, "closes at " + Instant.ofEpochMilli(c.closesAt()));
         if (!settings.khuraldaiEnabled()) return;
         WeeklyCycle.Phase phase = cycle.phase(now);
-        if (phase == WeeklyCycle.Phase.VOTING && (c == null || !c.cycleId().equals(id)) && !opening) openBallot(id);
-        if (c != null && c.cycleId().equals(id) && !c.closed() && !closing && !now.isBefore(cycle.voteCloses(id))) close(c, "closes at " + cycle.voteCloses(id));
+        if (phase == WeeklyCycle.Phase.VOTING && (c == null || !c.cycleId().equals(id)) && !opening) openBallot(id, false, "clock");
         if (System.currentTimeMillis() - lastTallyRefresh > 30_000 && open()) refreshTally();
     }
 
@@ -140,8 +137,12 @@ public final class KhuraldaiService {
 
     // ------------------------------------------------------------------- open
 
-    /** Put next week's ballot up for the cycle {@code id} (admin or the clock). Main thread. */
-    public void openBallot(String id) {
+    /**
+     * Put next week's ballot up for the cycle {@code id}. The clock opens at vote-opens and closes at vote-closes; an
+     * admin opening outside the window gets a ballot that stays up for one window's length, and {@code reopen} lets an
+     * admin replace a closed ballot (its votes are discarded; the chronicle keeps the earlier result). Main thread.
+     */
+    public void openBallot(String id, boolean reopen, String actor) {
         if (opening) return;
         opening = true;
         List<CampaignDefinition> all = Content.pack().campaigns();
@@ -165,17 +166,31 @@ public final class KhuraldaiService {
             }
             List<String> options = CampaignRotation.pick(all, winners, lastLosers, settings.options(), cycle.nextCycleId(id))
                     .stream().map(CampaignDefinition::id).toList();
-            whenDone(repository.openVote(id, options, cycle.voteOpens(id).toEpochMilli(), cycle.voteCloses(id).toEpochMilli()), (row, e2) -> {
+            long now = System.currentTimeMillis();
+            long opensAt = Math.max(cycle.voteOpens(id).toEpochMilli(), Math.min(now, cycle.voteCloses(id).toEpochMilli()));
+            long window = cycle.voteCloses(id).toEpochMilli() - cycle.voteOpens(id).toEpochMilli();
+            long closesAt = now < cycle.voteCloses(id).toEpochMilli() ? cycle.voteCloses(id).toEpochMilli() : now + window;
+            VoteCycle existing = current != null && current.cycleId().equals(id) ? current : null;
+            CompletableFuture<VoteCycle> opened;
+            if (reopen && existing != null) {
+                long expected = existing.version();
+                opened = repository.reopenVote(id, options, now, closesAt, expected)
+                        .thenCompose(ok -> repository.voteCycle(id).thenApply(v -> v.orElse(null)));
+            } else {
+                opened = repository.openVote(id, options, opensAt, closesAt);
+            }
+            whenDone(opened, (row, e2) -> {
                 opening = false;
-                if (e2 != null) {
-                    plugin.getLogger().log(Level.WARNING, "[khuraldai] vote not opened: " + root(e2));
+                if (e2 != null || row == null) {
+                    plugin.getLogger().log(Level.WARNING, "[khuraldai] vote not opened: " + (e2 == null ? "no row" : root(e2)));
                     return;
                 }
-                boolean fresh = current == null || !current.cycleId().equals(row.cycleId());
+                boolean fresh = existing == null || existing.closed() && !row.closed() || existing.version() != row.version();
                 current = row;
                 tally = Map.of();
                 if (fresh && !row.closed()) announceOpen(row);
-                plugin.getLogger().info("[khuraldai] vote " + row.cycleId() + " open: " + row.options());
+                plugin.getLogger().info("[khuraldai] vote " + row.cycleId() + (row.closed() ? " already closed: " : " open (" + actor + "): ") + row.options()
+                        + " until " + Instant.ofEpochMilli(row.closesAt()));
             });
         });
     }
@@ -302,9 +317,13 @@ public final class KhuraldaiService {
 
     // ------------------------------------------------------------------ admin
 
+    /** Admin: open the ballot now; a closed ballot of this cycle is replaced (its votes discarded). */
     public void adminOpen(String actor) {
-        services.audit().record(AuditEvent.of(actor, AuditActions.CAMPAIGN_ADMIN_OPEN, cycle.cycleId(Instant.now()), ""));
-        openBallot(cycle.cycleId(Instant.now()));
+        String id = cycle.cycleId(Instant.now());
+        VoteCycle c = current;
+        boolean reopen = c != null && c.cycleId().equals(id) && c.closed();
+        services.audit().record(AuditEvent.of(actor, AuditActions.CAMPAIGN_ADMIN_OPEN, id, reopen ? "reopen" : ""));
+        openBallot(id, reopen, actor);
     }
 
     public boolean adminClose(String actor) {

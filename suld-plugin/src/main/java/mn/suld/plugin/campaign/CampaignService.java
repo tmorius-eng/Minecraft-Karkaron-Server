@@ -206,12 +206,39 @@ public final class CampaignService {
                 return;
             }
             if (!inserted) {
+                if (!"clock".equals(actor)) { // an admin force after this week's campaign resolved: replace the row
+                    whenDone(repository.campaign(id), (existing, e2) -> {
+                        if (e2 != null || existing.isEmpty() || !existing.get().state().resolved()) {
+                            plugin.getLogger().info("[campaign] " + id + " already has a live campaign row: restoring it");
+                            restore();
+                            return;
+                        }
+                        long expected = existing.get().version();
+                        whenDone(repository.replaceCampaign(row, expected), (ok, e3) -> {
+                            if (e3 != null || !ok) {
+                                plugin.getLogger().warning("[campaign] " + id + " could not be replaced (" + (e3 == null ? "version moved" : root(e3)) + ")");
+                                restore();
+                                return;
+                            }
+                            activate(run, expected + 1, actor);
+                        });
+                    });
+                    return;
+                }
                 plugin.getLogger().info("[campaign] " + id + " already has a campaign row: restoring it");
                 restore();
                 return;
             }
+            activate(run, 0, actor);
+        });
+    }
+
+    private void activate(CampaignRun run, long version, String actor) {
+        CampaignDefinition def = run.definition();
+        String id = run.cycleId();
+        {
             active = run;
-            activeVersion = 0;
+            activeVersion = version;
             startedCycle = id;
             buffer.clear();
             tierToasted.clear();
@@ -227,7 +254,7 @@ public final class CampaignService {
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CAMPAIGN_START, null, Map.of("cycle", id, "campaign", def.id(), "by", actor)));
             plugin.getLogger().info("[campaign] " + def.id() + " started for " + id + " (" + actor + ")");
             updateBar();
-        });
+        }
     }
 
     // ----------------------------------------------------------------- hooks

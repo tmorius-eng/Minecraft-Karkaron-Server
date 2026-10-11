@@ -108,6 +108,42 @@ public final class JdbcCampaignRepository implements CampaignRepository {
     }
 
     @Override
+    public CompletableFuture<Boolean> reopenVote(String cycleId, List<String> options, long opensAt, long closesAt, long expectedVersion) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = dataSource.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    int changed;
+                    try (PreparedStatement ps = conn.prepareStatement("UPDATE suld_khuraldai_cycles SET options = ?, opened_at = ?, closes_at = ?, "
+                            + "closed_at = NULL, winner = NULL, tally = '', voters = 0, version = version + 1 WHERE cycle_id = ? AND version = ?")) {
+                        ps.setString(1, String.join(",", options));
+                        ps.setLong(2, opensAt);
+                        ps.setLong(3, closesAt);
+                        ps.setString(4, cycleId);
+                        ps.setLong(5, expectedVersion);
+                        changed = ps.executeUpdate();
+                    }
+                    if (changed != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                    try (PreparedStatement ps = conn.prepareStatement("DELETE FROM suld_khuraldai_votes WHERE cycle_id = ?")) {
+                        ps.setString(1, cycleId);
+                        ps.executeUpdate();
+                    }
+                    conn.commit();
+                    return true;
+                } catch (SQLException ex) {
+                    conn.rollback();
+                    throw ex;
+                }
+            } catch (SQLException ex) {
+                throw new RepositoryException("Failed to reopen vote " + cycleId, ex);
+            }
+        }, executor);
+    }
+
+    @Override
     public CompletableFuture<Map<String, Integer>> tally(String cycleId) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
@@ -274,6 +310,47 @@ public final class JdbcCampaignRepository implements CampaignRepository {
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to save campaign " + s.cycleId(), ex);
+            }
+        }, executor);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> replaceCampaign(CampaignSnapshot s, long expectedVersion) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = dataSource.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    int changed;
+                    try (PreparedStatement ps = conn.prepareStatement("UPDATE suld_campaigns SET campaign_id = ?, state = ?, starts_at = ?, ends_at = ?, "
+                            + "resolved_at = ?, target = ?, total = ?, effect_applied_at = ?, version = version + 1 WHERE cycle_id = ? AND version = ?")) {
+                        ps.setString(1, s.campaignId());
+                        ps.setString(2, s.state().name());
+                        ps.setLong(3, s.startsAt());
+                        ps.setLong(4, s.endsAt());
+                        setNullableLong(ps, 5, s.resolvedAt());
+                        ps.setLong(6, s.target());
+                        ps.setLong(7, s.total());
+                        setNullableLong(ps, 8, s.effectAppliedAt());
+                        ps.setString(9, s.cycleId());
+                        ps.setLong(10, expectedVersion);
+                        changed = ps.executeUpdate();
+                    }
+                    if (changed != 1) {
+                        conn.rollback();
+                        return false;
+                    }
+                    try (PreparedStatement ps = conn.prepareStatement("DELETE FROM suld_campaign_totals WHERE cycle_id = ?")) {
+                        ps.setString(1, s.cycleId());
+                        ps.executeUpdate();
+                    }
+                    conn.commit();
+                    return true;
+                } catch (SQLException ex) {
+                    conn.rollback();
+                    throw ex;
+                }
+            } catch (SQLException ex) {
+                throw new RepositoryException("Failed to replace campaign " + s.cycleId(), ex);
             }
         }, executor);
     }

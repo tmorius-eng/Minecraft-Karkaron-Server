@@ -21,12 +21,13 @@ function join(name) {
     bot.on('messagestr', (m) => bot.chatLog.push(m));
     bot._client.on('boss_bar', (pk) => { if (pk.title) bot.bars.set(String(pk.entityUUID), flat(pk.title)); });
     bot.on('error', () => {});
+    bot.on('resourcePack', () => { try { bot.acceptResourcePack(); } catch (e) {} }); // the class menu waits for the pack answer (ONB-001)
     bot.once('spawn', async () => { await sleep(3500); resolve(bot); });
     setTimeout(() => resolve(null), 30000);
   });
 }
 async function pickClass(bot, slot) {
-  for (let i = 0; i < 10 && !bot.currentWindow; i++) await sleep(500);
+  for (let i = 0; i < 80 && !bot.currentWindow; i++) await sleep(500); // up to 40 s: the pack gate's silence timeout is 30 s
   if (bot.currentWindow) { await bot.clickWindow(slot, 0, 0).catch(() => {}); await sleep(1200); }
   if (bot.currentWindow) bot.closeWindow(bot.currentWindow);
 }
@@ -37,13 +38,19 @@ const logged = (from, text) => lines().slice(from).some(l => l.includes(text));
   const tag = 'K' + Math.floor(Math.random() * 900 + 100);
   const A = await join(tag + 'a'); await pickClass(A, 10);
   const B = await join(tag + 'b'); await pickClass(B, 11);
-  cmd(`suld exp ${tag}a 5000`); cmd(`suld exp ${tag}b 5000`); // past khuraldai.min-level
+  cmd(`suld exp ${tag}a 30000`); // level 5 needs about 9,100 EXP on the 242·L^2.2 curve: well past khuraldai.min-level
   await sleep(1500);
+  A.chat('/class'); await sleep(1500);
+  check('bot A has a class', heard(A, 'Анги') && !heard(A, 'Эхлээд ангиа сонго'), A.chatLog.slice(-2).join(' | '));
+  if (A.currentWindow) A.closeWindow(A.currentWindow);
 
   // ------------------------------------------------------------------ ballot
   let n = lines().length;
   cmd('khuraldai open'); await sleep(3000);
   check('the ballot opens and is announced', heard(A, 'Их Хуралдай нээгдлээ') || logged(n, '[khuraldai] vote'), A.chatLog.filter(l => l.includes('Хуралдай')).join(' | '));
+  check('an admin ballot stays open outside the window', logged(n, 'open ('), lines().slice(n).filter(l => l.includes('[khuraldai]')).join(' | '));
+  B.chat('/khuraldai vote 1'); await sleep(2000);
+  check('a level-1 character may not vote', heard(B, '5-р түвшнээс'), B.chatLog.slice(-2).join(' | '));
   A.chat('/khuraldai vote 1'); await sleep(2000);
   check('a vote is recorded', heard(A, 'Санал бүртгэгдлээ'), A.chatLog.slice(-3).join(' | '));
   A.chat('/khuraldai vote 2'); await sleep(2000);

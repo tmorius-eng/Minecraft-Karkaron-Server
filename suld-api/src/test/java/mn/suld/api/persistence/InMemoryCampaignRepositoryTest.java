@@ -38,6 +38,13 @@ class InMemoryCampaignRepositoryTest {
         assertEquals(List.of("campaign.b"), closed.losers());
         assertEquals(1, closed.voters());
         assertEquals("2026-W41", r.recentVotes(5).join().get(0).cycleId());
+        assertFalse(r.reopenVote("2026-W41", List.of("campaign.c"), 60, 160, 0).join(), "CAS: the version moved");
+        assertTrue(r.reopenVote("2026-W41", List.of("campaign.c"), 60, 160, 1).join());
+        VoteCycle again = r.voteCycle("2026-W41").join().orElseThrow();
+        assertFalse(again.closed());
+        assertEquals(List.of("campaign.c"), again.options());
+        assertTrue(r.tally("2026-W41").join().isEmpty(), "a reopened ballot starts empty");
+        assertEquals(CampaignRepository.CastResult.CAST, r.castVote("2026-W41", p, "campaign.c", 10, 4).join(), "the player may vote again");
     }
 
     @Test

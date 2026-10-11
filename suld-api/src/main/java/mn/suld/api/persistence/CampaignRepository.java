@@ -32,6 +32,12 @@ public interface CampaignRepository {
 
     CompletableFuture<Map<String, Integer>> tally(String cycleId);
 
+    /**
+     * Admin override: a closed (or open) cycle gets a fresh ballot and its votes are discarded; false when the row
+     * changed under the caller (CAS on version). Audited by the caller; the chronicle keeps the earlier result.
+     */
+    CompletableFuture<Boolean> reopenVote(String cycleId, List<String> options, long opensAt, long closesAt, long expectedVersion);
+
     /** Close the vote with its tally and winner; false when another server closed it first (CAS on version). */
     CompletableFuture<Boolean> closeVote(String cycleId, String winner, Map<String, Integer> tally, long closedAt, long expectedVersion);
 
@@ -47,6 +53,12 @@ public interface CampaignRepository {
      * {@code snapshot} with {@code version + 1}. False when the row changed under the caller (or already exists).
      */
     CompletableFuture<Boolean> saveCampaign(CampaignSnapshot snapshot, long expectedVersion);
+
+    /**
+     * Admin override: replace a cycle's campaign row with {@code snapshot} (every column, total included) and drop its
+     * contributors, when the row is still at {@code expectedVersion}. Used by a forced start after a resolved week.
+     */
+    CompletableFuture<Boolean> replaceCampaign(CampaignSnapshot snapshot, long expectedVersion);
 
     /** Add contribution deltas: each player's units grow, the campaign total grows by the sum, and a ledger row is kept. */
     CompletableFuture<Void> addContributions(String cycleId, List<Contribution> deltas);

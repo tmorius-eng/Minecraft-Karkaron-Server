@@ -47,6 +47,15 @@ public final class InMemoryCampaignRepository implements CampaignRepository {
     }
 
     @Override
+    public synchronized CompletableFuture<Boolean> reopenVote(String cycleId, List<String> options, long opensAt, long closesAt, long expectedVersion) {
+        VoteCycle c = cycles.get(cycleId);
+        if (c == null || c.version() != expectedVersion) return CompletableFuture.completedFuture(false);
+        cycles.put(cycleId, new VoteCycle(cycleId, options, opensAt, closesAt, null, null, Map.of(), 0, c.version() + 1));
+        ballots.remove(cycleId);
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
     public synchronized CompletableFuture<Map<String, Integer>> tally(String cycleId) {
         Map<String, Integer> out = new HashMap<>();
         ballots.getOrDefault(cycleId, Map.of()).values().forEach(o -> out.merge(o, 1, Integer::sum));
@@ -86,6 +95,16 @@ public final class InMemoryCampaignRepository implements CampaignRepository {
         if (cur == null || cur.version() != expectedVersion) return CompletableFuture.completedFuture(false);
         campaigns.put(s.cycleId(), new CampaignSnapshot(s.cycleId(), s.campaignId(), s.state(), s.startsAt(), s.endsAt(), s.resolvedAt(),
                 s.target(), cur.total(), s.effectAppliedAt(), cur.version() + 1)); // the total is owned by addContributions
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public synchronized CompletableFuture<Boolean> replaceCampaign(CampaignSnapshot s, long expectedVersion) {
+        CampaignSnapshot cur = campaigns.get(s.cycleId());
+        if (cur == null || cur.version() != expectedVersion) return CompletableFuture.completedFuture(false);
+        campaigns.put(s.cycleId(), new CampaignSnapshot(s.cycleId(), s.campaignId(), s.state(), s.startsAt(), s.endsAt(), s.resolvedAt(),
+                s.target(), s.total(), s.effectAppliedAt(), cur.version() + 1));
+        totals.remove(s.cycleId());
         return CompletableFuture.completedFuture(true);
     }
 

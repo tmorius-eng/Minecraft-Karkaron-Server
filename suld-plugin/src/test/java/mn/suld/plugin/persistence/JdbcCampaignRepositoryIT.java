@@ -64,6 +64,14 @@ class JdbcCampaignRepositoryIT {
         assertEquals(CampaignRepository.CastResult.CLOSED, repo.castVote("2026-W41", UUID.randomUUID(), "campaign.a", 1, 1).join());
         repo.openVote("2026-W42", List.of("campaign.a"), 1, 2).join();
         assertEquals("2026-W42", repo.recentVotes(5).join().get(0).cycleId(), "newest first");
+        assertFalse(repo.reopenVote("2026-W41", List.of("campaign.c"), 300, 400, 0).join(), "CAS: the version moved on close");
+        assertTrue(repo.reopenVote("2026-W41", List.of("campaign.c"), 300, 400, 1).join());
+        VoteCycle again = repo.voteCycle("2026-W41").join().orElseThrow();
+        assertFalse(again.closed());
+        assertEquals(List.of("campaign.c"), again.options());
+        assertEquals(2, again.version());
+        assertTrue(repo.tally("2026-W41").join().isEmpty(), "the old ballots are discarded");
+        assertEquals(CampaignRepository.CastResult.CAST, repo.castVote("2026-W41", p, "campaign.c", 10, 500).join(), "everyone may vote again");
     }
 
     @Test
