@@ -275,8 +275,8 @@ public final class ItemCommands {
         }
         p.getInventory().setItemInMainHand(null);
         pr.addCurrency(price);
-        services.profiles().save(pr);
-        mn.suld.plugin.item.PlayerDataSaves.soon(org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ItemCommands.class), p); // item gone on disk with the coins
+        mn.suld.plugin.item.PlayerDataSaves.itemsForCoins(org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ItemCommands.class), services, p, pr,
+                "sell " + def.id()); // item off disk, then the coins
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.sell", def.id() + "-" + c.item().uuid(), amount + " for " + price));
         p.sendMessage(Messages.success(def.displayName() + (amount > 1 ? " ×" + amount : "") + " зарагдлаа: +" + price + " ₮"));
         services.hud().update(p, pr);

@@ -344,19 +344,23 @@ public final class CityCommands implements Listener {
                 s.sendMessage(Messages.error("Хоёулаа анги сонгосон байх ёстой."));
                 return true;
             }
-            synchronized (CityCommands.class) { // one transfer at a time: no double spend
-                if (a1.currency() < amount) {
-                    s.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + a1.currency() + ")."));
-                    return true;
-                }
-                a1.addCurrency(-amount);
-                b1.addCurrency(amount);
+            // the check and the in-memory move happen on the main thread (no double spend); both rows are then
+            // written in one transaction, and a failed transaction puts the coins back
+            if (a1.currency() < amount) {
+                s.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + a1.currency() + ")."));
+                return true;
             }
-            services.profiles().save(a1);
-            services.profiles().save(b1);
-            plugin.getLogger().info("[audit] pay " + from.getName() + " -> " + to.getName() + " " + amount + " coins");
-            from.sendMessage(Messages.success(to.getName() + "-д " + amount + " ₮ шилжүүллээ."));
-            to.sendMessage(Messages.success(from.getName() + " танд " + amount + " ₮ илгээлээ."));
+            final long sum = amount;
+            plugin.getLogger().info("[audit] pay " + from.getName() + " -> " + to.getName() + " " + sum + " coins");
+            services.profiles().transfer(a1, b1, sum).whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
+                if (err != null) {
+                    plugin.getLogger().severe("[audit] pay " + from.getName() + " -> " + to.getName() + " " + sum + " FAILED, balances restored: " + err);
+                    if (from.isOnline()) from.sendMessage(Messages.error("Шилжүүлэг хадгалагдсангүй — зоос буцаалаа."));
+                    return;
+                }
+                if (from.isOnline()) from.sendMessage(Messages.success(to.getName() + "-д " + sum + " ₮ шилжүүллээ."));
+                if (to.isOnline()) to.sendMessage(Messages.success(from.getName() + " танд " + sum + " ₮ илгээлээ."));
+            }));
             return true;
         }
 

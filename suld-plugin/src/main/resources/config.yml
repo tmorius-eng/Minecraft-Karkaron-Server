@@ -279,3 +279,11 @@ skills:
     slots: 3                    # saved builds per player (/skills build save <name>)
   ultimate:
     resource-cost: 60           # class resource spent by the F ultimate (45 s cooldown)
+
+# ---------------------------------------------------------------------------
+# Shutdown. After the 15 s profile flush, this many seconds are shared by the style/clan/analytics flushes and the
+# drain of every background pool. A pool still busy afterwards (a slow or dead database) is interrupted and the
+# abandoned work is logged, so a stop never hangs into the server watchdog.
+# ---------------------------------------------------------------------------
+shutdown:
+  budget-seconds: 20

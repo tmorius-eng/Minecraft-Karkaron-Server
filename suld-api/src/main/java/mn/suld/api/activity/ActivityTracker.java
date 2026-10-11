@@ -99,6 +99,30 @@ public final class ActivityTracker {
         return f;
     }
 
+    /**
+     * The kill memory for storage: {@code activeIndex} first, then one {@code {activeMinute, x, z, mobHash}} per
+     * remembered kill. Kills are pruned by active minutes, not wall time, so the counter travels with them.
+     */
+    public synchronized java.util.List<double[]> exportKills() {
+        java.util.List<double[]> out = new java.util.ArrayList<>();
+        out.add(new double[] {activeIndex});
+        for (double[] k : kills) out.add(k.clone());
+        return out;
+    }
+
+    /** Restores {@link #exportKills()} into a fresh tracker (a server restart): entries outside the window are dropped. */
+    public synchronized void importKills(java.util.List<double[]> data) {
+        if (data == null || data.isEmpty()) return;
+        activeIndex = (long) data.get(0)[0];
+        kills.clear();
+        for (int i = 1; i < data.size(); i++) {
+            double[] k = data.get(i);
+            if (k.length < 4 || k[0] < activeIndex - AREA_WINDOW_MINUTES) continue;
+            kills.addLast(k.clone());
+            if (kills.size() > KILL_MEMORY) kills.removeFirst();
+        }
+    }
+
     /** The reward factor a kill of this mob type here would get now (see the class comment). */
     public double farmFactor(String mobId, double x, double z) {
         int hash = mobId.hashCode();

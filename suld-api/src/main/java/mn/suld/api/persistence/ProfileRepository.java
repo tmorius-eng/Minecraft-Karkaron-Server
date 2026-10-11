@@ -32,6 +32,13 @@ public interface ProfileRepository {
      */
     CompletableFuture<PlayerProfile> save(PlayerProfile profile);
 
+    /**
+     * Persist two profiles in one storage transaction: both rows are written or neither (a coin transfer between
+     * two players). On success both profiles are {@link PlayerProfile#markPersisted(long) marked persisted}; on
+     * failure neither is, so both stay dirty for the next save.
+     */
+    CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second);
+
     CompletableFuture<Void> delete(UUID playerId);
 
     /** The stored top {@code limit} rows of a leaderboard (players who have picked a class). */

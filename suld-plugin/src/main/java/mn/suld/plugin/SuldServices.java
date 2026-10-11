@@ -44,6 +44,7 @@ import mn.suld.api.persistence.ClanRepository;
 import mn.suld.api.persistence.InMemoryClanRepository;
 import org.bukkit.plugin.Plugin;
 
+import mn.suld.plugin.persistence.PoolShutdown;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -64,6 +65,9 @@ public final class SuldServices {
     private final mn.suld.plugin.style.StyleService styleService;
     private final mn.suld.plugin.item.ClassWeapons classWeapons;
     private final ExecutorService ioExecutor;
+    private final java.util.logging.Logger shutdownLogger;
+    /** The server's calendar zone ({@code daily.timezone}): daily resets, death times, chat times, ovoo days. */
+    private final java.time.ZoneId zone;
     private final HikariDataSource dataSource; // null in MEMORY mode
     private final ProfileRepository repository;
     private final DefaultProfileService profileService;
@@ -95,6 +99,16 @@ public final class SuldServices {
         this.events = new BukkitEventDispatcher(plugin);
         int poolSize = Math.max(2, config.database().poolSize());
         this.ioExecutor = Executors.newFixedThreadPool(poolSize, daemonThreadFactory());
+        this.shutdownLogger = plugin.getLogger();
+        java.time.ZoneId z;
+        String zoneId = plugin.getConfig().getString("daily.timezone", "Asia/Ulaanbaatar");
+        try {
+            z = java.time.ZoneId.of(zoneId);
+        } catch (java.time.DateTimeException ex) {
+            plugin.getLogger().warning("daily.timezone '" + zoneId + "' is not a valid time zone; using Asia/Ulaanbaatar");
+            z = java.time.ZoneId.of("Asia/Ulaanbaatar");
+        }
+        this.zone = z;
 
         switch (config.database().type()) {
             case MEMORY -> {
@@ -231,6 +245,11 @@ public final class SuldServices {
 
     public mn.suld.plugin.style.StyleService styles() {
         return styleService;
+    }
+
+    /** The one time zone every clock in the game uses (config {@code daily.timezone}). */
+    public java.time.ZoneId zone() {
+        return zone;
     }
 
     public SuldConfig config() {
@@ -402,53 +421,46 @@ public final class SuldServices {
         return worldEventService;
     }
 
-    /** Flush analytics, stop the IO pool, and close the connection pool. */
-    public void close() {
-        styleService.stop();
-        styleExecutor.shutdown();
-        deathExecutor.shutdown();
-        try {
-            deathExecutor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-        try {
-            styleExecutor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
+    /**
+     * Shutdown with one deadline: the style, clan and analytics flushes run at the same time and are given what is
+     * left of {@code budgetSeconds}; then every pool is drained against the same deadline ({@link PoolShutdown}),
+     * anything still running is interrupted and logged, and the connection pool closes last. The worst case is the
+     * budget, not the sum of six waits.
+     */
+    public void close(long budgetSeconds) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(Math.max(1, budgetSeconds));
+        java.util.logging.Logger log = shutdownLog();
         worldEventService.shutdown();
         dungeonService.shutdown();
-        clanService.shutdown();
-        clanExecutor.shutdown();
-        relicExecutor.shutdown();
+        java.util.concurrent.CompletableFuture<Void> styles = styleService.stop();
+        java.util.concurrent.CompletableFuture<Void> clans = clanService.shutdown();
+        java.util.concurrent.CompletableFuture<Void> stats = analytics.flush();
         try {
-            relicExecutor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
+            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats)
+                    .get(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
+        } catch (Exception ex) {
+            if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
+            log.warning("[shutdown] flushes incomplete within the budget: styles " + state(styles) + ", clans " + state(clans)
+                    + ", analytics " + state(stats) + " (" + ex.getClass().getSimpleName() + ")");
         }
-        try {
-            clanExecutor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-        try {
-            analytics.flush().get(5, TimeUnit.SECONDS);
-        } catch (Exception ignored) {
-            // best-effort flush on shutdown
-        }
-        ioExecutor.shutdown();
-        try {
-            if (!ioExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
-                ioExecutor.shutdownNow();
-            }
-        } catch (InterruptedException ex) {
-            ioExecutor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
+        java.util.LinkedHashMap<String, ExecutorService> pools = new java.util.LinkedHashMap<>();
+        pools.put("style", styleExecutor);
+        pools.put("death", deathExecutor);
+        pools.put("relic", relicExecutor);
+        pools.put("clan", clanExecutor);
+        pools.put("io", ioExecutor);
+        PoolShutdown.drain(pools, deadline, log);
         if (dataSource != null) {
             dataSource.close();
         }
+    }
+
+    private static String state(java.util.concurrent.CompletableFuture<?> f) {
+        return f.isCompletedExceptionally() ? "failed" : f.isDone() ? "done" : "pending";
+    }
+
+    private java.util.logging.Logger shutdownLog() {
+        return shutdownLogger != null ? shutdownLogger : java.util.logging.Logger.getLogger("SULD");
     }
 
     private static ThreadFactory daemonThreadFactory() {

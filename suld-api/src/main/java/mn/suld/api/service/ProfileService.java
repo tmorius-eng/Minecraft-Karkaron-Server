@@ -32,6 +32,26 @@ public interface ProfileService {
     /** Persist the profile asynchronously. */
     CompletableFuture<PlayerProfile> save(PlayerProfile profile);
 
+    /** Persist two profiles atomically (both rows or neither), sequenced on both players. */
+    CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second);
+
+    /**
+     * Move {@code amount} coins from one player to another: the in-memory balances change at once (the caller has
+     * checked {@code from} can pay, on the main thread), then both rows are written in one transaction. If storage
+     * fails, the in-memory move is undone and the future fails, so neither side keeps coins the other lost.
+     */
+    default CompletableFuture<Void> transfer(PlayerProfile from, PlayerProfile to, long amount) {
+        if (amount <= 0) return CompletableFuture.completedFuture(null);
+        from.addCurrency(-amount);
+        to.addCurrency(amount);
+        return saveTogether(from, to).whenComplete((v, err) -> {
+            if (err != null) {
+                from.addCurrency(amount);
+                to.addCurrency(-amount);
+            }
+        });
+    }
+
     /**
      * Persist and remove the profile from the cache. Only call when the <i>last</i> live
      * session for the UUID has ended (see {@code SessionRegistry}).

@@ -53,13 +53,7 @@ public final class TaskService implements Listener, TabExecutor {
 
     public TaskService(Plugin plugin, SuldServices services) {
         this.services = services;
-        ZoneId z;
-        try {
-            z = ZoneId.of(plugin.getConfig().getString("daily.timezone", "Asia/Ulaanbaatar"));
-        } catch (DateTimeException ex) {
-            z = ZoneId.of("Asia/Ulaanbaatar");
-        }
-        this.zone = z;
+        this.zone = services.zone();
         for (RegionDefinition r : WorldContent.REGIONS) {
             if (r.safeZone()) continue;
             for (String id : r.mobIds()) {

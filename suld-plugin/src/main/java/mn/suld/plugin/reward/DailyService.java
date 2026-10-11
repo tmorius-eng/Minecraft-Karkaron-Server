@@ -51,14 +51,7 @@ public final class DailyService implements Listener, TabExecutor {
     public DailyService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
         this.services = services;
-        ZoneId z;
-        try {
-            z = ZoneId.of(plugin.getConfig().getString("daily.timezone", "Asia/Ulaanbaatar"));
-        } catch (DateTimeException ex) {
-            plugin.getLogger().warning("daily.timezone is not a valid time zone; using Asia/Ulaanbaatar");
-            z = ZoneId.of("Asia/Ulaanbaatar");
-        }
-        this.zone = z;
+        this.zone = services.zone();
     }
 
     private long today() {

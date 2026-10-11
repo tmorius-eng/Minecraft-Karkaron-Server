@@ -410,20 +410,7 @@ public final class DungeonService {
             return en.getValue().isEmpty();
         });
         recentClears.forEach((k, q) -> y.set(k.replace(':', '|'), new java.util.ArrayList<>(q)));
-        String text = y.saveToString();
-        java.nio.file.Path file = fatigueFile().toPath();
-        Runnable write = () -> {
-            try {
-                java.nio.file.Files.createDirectories(file.getParent());
-                java.nio.file.Path tmp = file.resolveSibling("dungeon-fatigue.yml.tmp");
-                java.nio.file.Files.writeString(tmp, text);
-                java.nio.file.Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
-            } catch (java.io.IOException e) {
-                plugin.getLogger().warning("dungeon-fatigue.yml: " + e.getMessage());
-            }
-        };
-        if (plugin.isEnabled()) Bukkit.getScheduler().runTaskAsynchronously(plugin, write);
-        else write.run();
+        mn.suld.plugin.persistence.AtomicYaml.write(plugin, fatigueFile().toPath(), y);
     }
     static final long FATIGUE_WINDOW_MS = 2 * 60 * 60 * 1000L;
 

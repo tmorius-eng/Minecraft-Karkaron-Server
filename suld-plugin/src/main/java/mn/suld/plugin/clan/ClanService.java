@@ -309,18 +309,16 @@ public final class ClanService {
         dirty.clear();
     }
 
-    /** Shutdown: flush everything and wait for the ordered writes to finish. */
-    public void shutdown() {
-        try {
-            java.util.concurrent.CompletableFuture<?>[] saves = registry.all().stream()
-                    .filter(c -> dirty.contains(c.id()))
-                    .map(c -> repository.save(c.snapshot()))
-                    .toArray(java.util.concurrent.CompletableFuture[]::new);
-            dirty.clear();
-            java.util.concurrent.CompletableFuture.allOf(saves).get(10, TimeUnit.SECONDS);
-        } catch (Exception ex) {
-            plugin.getLogger().warning("Clan flush on shutdown incomplete: " + ex.getMessage());
-        }
+    /** Shutdown: every dirty clan is written at once; the caller waits on the batch with the shutdown deadline. */
+    public java.util.concurrent.CompletableFuture<Void> shutdown() {
+        java.util.concurrent.CompletableFuture<?>[] saves = registry.all().stream()
+                .filter(c -> dirty.contains(c.id()))
+                .map(c -> repository.save(c.snapshot()).whenComplete((v, err) -> {
+                    if (err != null) plugin.getLogger().severe("[shutdown] clan [" + c.tag() + "] not saved: " + err.getMessage());
+                }))
+                .toArray(java.util.concurrent.CompletableFuture[]::new);
+        dirty.clear();
+        return java.util.concurrent.CompletableFuture.allOf(saves);
     }
 
     private void saveNow(Clan clan) {

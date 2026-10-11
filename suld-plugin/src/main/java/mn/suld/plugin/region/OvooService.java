@@ -230,11 +230,7 @@ public final class OvooService implements Listener {
     }
 
     private java.time.ZoneId zone() {
-        try {
-            return java.time.ZoneId.of(plugin.getConfig().getString("daily.timezone", "Asia/Ulaanbaatar"));
-        } catch (java.time.DateTimeException e) {
-            return java.time.ZoneId.of("Asia/Ulaanbaatar");
-        }
+        return services.zone();
     }
 
     private void loadBlessing(Player p) {

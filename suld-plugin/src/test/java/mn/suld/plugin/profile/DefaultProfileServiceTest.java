@@ -68,6 +68,28 @@ class DefaultProfileServiceTest {
             }, io);
         }
 
+        final AtomicBoolean failTogether = new AtomicBoolean();
+
+        @Override
+        public CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second) {
+            long ca = first.currency(), cb = second.currency();
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    Thread.sleep(saveDelayMs);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                if (failTogether.get()) throw new RepositoryException("db down", null);
+                storedName.putIfAbsent(first.playerId(), first.name());
+                storedName.putIfAbsent(second.playerId(), second.name());
+                storedCurrency.put(first.playerId(), ca);
+                storedCurrency.put(second.playerId(), cb);
+                first.markPersisted(first.version());
+                second.markPersisted(second.version());
+                return null;
+            }, io);
+        }
+
         @Override
         public CompletableFuture<Void> delete(UUID id) {
             storedName.remove(id);
@@ -191,5 +213,68 @@ class DefaultProfileServiceTest {
         PlayerProfile any = loads.get(0).join().profile();
         assertTrue(loads.stream().allMatch(f -> f.join().profile() == any));
         pool.shutdown();
+    }
+
+    @Test
+    void transferMovesCoinsAndWritesBothRowsTogether() throws Exception {
+        SlowRepo repo = new SlowRepo();
+        repo.saveDelayMs = 0;
+        DefaultProfileService svc = new DefaultProfileService(repo);
+        PlayerProfile a = acquire(svc, UUID.randomUUID(), "Payer").profile();
+        PlayerProfile b = acquire(svc, UUID.randomUUID(), "Payee").profile();
+        a.addCurrency(100);
+        svc.save(a).get(5, TimeUnit.SECONDS);
+
+        svc.transfer(a, b, 40).get(5, TimeUnit.SECONDS);
+
+        assertEquals(60, a.currency());
+        assertEquals(40, b.currency());
+        assertEquals(60, repo.storedCurrency.get(a.playerId()));
+        assertEquals(40, repo.storedCurrency.get(b.playerId()));
+        assertFalse(a.isDirty());
+        assertFalse(b.isDirty());
+    }
+
+    @Test
+    void transferRevertsBothBalancesWhenStorageFails() throws Exception {
+        SlowRepo repo = new SlowRepo();
+        repo.saveDelayMs = 0;
+        DefaultProfileService svc = new DefaultProfileService(repo);
+        PlayerProfile a = acquire(svc, UUID.randomUUID(), "Payer").profile();
+        PlayerProfile b = acquire(svc, UUID.randomUUID(), "Payee").profile();
+        a.addCurrency(100);
+        svc.save(a).get(5, TimeUnit.SECONDS);
+        repo.failTogether.set(true);
+
+        CompletableFuture<Void> t = svc.transfer(a, b, 40);
+        assertThrows(Exception.class, () -> t.get(5, TimeUnit.SECONDS));
+
+        assertEquals(100, a.currency(), "the payer has the coins back");
+        assertEquals(0, b.currency(), "the payee never kept them");
+        assertEquals(100, repo.storedCurrency.get(a.playerId()), "storage untouched");
+        assertEquals(0L, repo.storedCurrency.get(b.playerId()), "the payee's row (0 from its creation) is untouched");
+        assertTrue(a.isDirty());
+        assertTrue(b.isDirty());
+    }
+
+    @Test
+    void opposingTransfersNeverDeadlock() throws Exception {
+        SlowRepo repo = new SlowRepo();
+        repo.saveDelayMs = 1;
+        DefaultProfileService svc = new DefaultProfileService(repo);
+        PlayerProfile a = acquire(svc, UUID.randomUUID(), "A").profile();
+        PlayerProfile b = acquire(svc, UUID.randomUUID(), "B").profile();
+        a.addCurrency(1000);
+        b.addCurrency(1000);
+        java.util.List<CompletableFuture<Void>> all = new java.util.ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            all.add(svc.transfer(a, b, 3));
+            all.add(svc.transfer(b, a, 2));
+            all.add(svc.save(a).thenApply(x -> null));
+        }
+        CompletableFuture.allOf(all.toArray(new CompletableFuture[0])).get(10, TimeUnit.SECONDS);
+        assertEquals(2000, a.currency() + b.currency(), "coins are moved, never made or lost");
+        assertEquals(900, a.currency());
+        assertEquals(0, svc.inFlight());
     }
 }

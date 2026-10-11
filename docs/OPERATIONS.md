@@ -175,3 +175,31 @@ centred on the spawn) is docs/world/WORLD_BORDER.md.
 * Storage: `suld_profiles.skill_data` (migration V10), one versioned JSON document per player. A newer or unreadable
   document makes that login fail loudly instead of being overwritten.
 * Design, architecture, tests and QA record: `docs/SKILL_TREE_*.md`, `audit/skill-tree-status.json`.
+
+## Persistence and shutdown (audit Phase 2)
+
+* **Items and coins never duplicate on a crash.** Items live in the player file, coins in SQL. Every sale and trade
+  writes the player file synchronously first and saves the coins after; every shop purchase charges and saves the
+  coins first and gives the item only once the row is committed (`PlayerDataSaves`). A crash in between can cost
+  coins (the `[audit]` and `[coins]` log lines say which player and what), never create an item. A coin save that
+  fails tells the player and leaves the profile dirty, so the autosave and the quit save retry it.
+* **`/pay` and `/trade` move coins in one database transaction** (`ProfileRepository.saveTogether`): both rows or
+  neither. If the transaction fails the in-memory balances are put back and the payer is told
+  (`[audit] pay … FAILED` in the log).
+* **A stale save is refused on every database** (MySQL and H2 included): nothing is marked persisted unless the row
+  carries it.
+* **Shutdown has one deadline.** After the 15 s profile flush, `shutdown.budget-seconds` (default 20, `config.yml`)
+  is shared by the style/clan/analytics flushes and the drain of every background pool. A pool still busy afterwards
+  (a dead or slow database) is interrupted and the log says what was abandoned: `[shutdown] pool <name> not
+  drained…` and `[shutdown] N profile save(s) not confirmed: <uuids>`. Those players' last changes may be missing;
+  the database row is what it was before.
+* **Trade mailbox.** Items a trade could not hand back to an offline player (a disconnect during the cancel, a stop
+  mid-trade) wait in `plugins/SULD/mailbox/<uuid>.yml` and are delivered on the next join (`[mailbox]` log lines).
+* **Farming fatigue survives a restart:** `plugins/SULD/farm-fatigue.yml`, written every 5 minutes and on stop.
+* **One time zone.** `daily.timezone` (default `Asia/Ulaanbaatar`) now drives every clock: daily resets, daily
+  tasks, ovoo days, death-lock times, the death log and the chat screen.
+* **Souls** (players under a death lock) no longer count toward world-event thresholds and draw no spawns.
+* **Anti-xray** is on in the deploy tuning (`anticheat.anti-xray.engine-mode: 2`, Paper's default block lists).
+* **Resource-pack budget.** `tools/validation/validate_pack_budget.py` passes again: `assets/registry/pack_budget.json`
+  names every exception and why (HUD glyph widths are structural, the HD badges and chest backgrounds, the blank
+  vanilla-hide sprites, the three prop models). HUD glyph families that share a bitmap now share one file.

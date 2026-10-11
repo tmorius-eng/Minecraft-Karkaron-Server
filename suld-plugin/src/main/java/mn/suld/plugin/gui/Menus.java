@@ -619,11 +619,13 @@ public final class Menus {
             p.sendMessage(Messages.error("Цүнх дүүрэн байна."));
             return;
         }
-        p.getInventory().addItem(give.clone());
+        // COINS → ITEMS (PlayerDataSaves): charge first, give only once the coins are in the database
         pr.addCurrency(-sup.price());
-        services.profiles().save(pr);
-        p.sendMessage(Messages.success("Авлаа: " + sup.name() + " (-" + sup.price() + " ₮)"));
-        shop(p);
+        mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, p, pr, sup.price(), "buy " + sup.name(), pl -> {
+            for (ItemStack left : pl.getInventory().addItem(give.clone()).values()) pl.getWorld().dropItemNaturally(pl.getLocation(), left);
+            pl.sendMessage(Messages.success("Авлаа: " + sup.name() + " (-" + sup.price() + " ₮)"));
+            shop(pl);
+        });
     }
 
     /** Whether the whole stack fits into the player's storage, tested on a copy. */
@@ -724,8 +726,7 @@ public final class Menus {
         ItemInstance ii = services.items().read(now).orElse(null);
         p.getInventory().setItem(bag, null);
         pr.addCurrency(price);
-        services.profiles().save(pr);
-        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, p); // the item is gone on disk together with the coins
+        mn.suld.plugin.item.PlayerDataSaves.itemsForCoins(plugin, services, p, pr, "sell " + (ii == null ? "?" : ii.definitionId())); // item off disk, then the coins
         services.audit().record(mn.suld.api.audit.AuditEvent.of(p.getUniqueId().toString(), "item.sell",
                 (ii == null ? "?" : ii.definitionId() + "-" + ii.uuid()), now.getAmount() + " for " + price));
         p.sendMessage(Messages.success("Зарагдлаа: +" + fmt(price) + " ₮"));
@@ -759,8 +760,7 @@ public final class Menus {
             return;
         }
         pr.addCurrency(total);
-        services.profiles().save(pr);
-        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, p); // coins and the emptied slots reach disk together (no crash dupe)
+        mn.suld.plugin.item.PlayerDataSaves.itemsForCoins(plugin, services, p, pr, "sell all"); // emptied slots off disk, then the coins
         p.sendMessage(Messages.success(count + " олз зарж +" + fmt(total) + " ₮ авлаа."));
     }
 

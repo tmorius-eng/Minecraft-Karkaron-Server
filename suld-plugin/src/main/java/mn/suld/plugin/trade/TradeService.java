@@ -72,10 +72,13 @@ public final class TradeService implements Listener, TabExecutor {
     private final Map<UUID, Trade> trades = new HashMap<>();
     /** Offers of players who died mid-trade: handed back after respawn (the death itself never touches them). */
     private final Map<UUID, List<ItemStack>> afterRespawn = new HashMap<>();
+    /** Items for players who were offline when a trade had to give them back (delivered on join). */
+    private final Mailbox mailbox;
     /** The offer of a player whose death event is in progress (between LOWEST and MONITOR). */
     private final Map<UUID, List<ItemStack>> dyingOffer = new HashMap<>();
 
     public TradeService(Plugin plugin, SuldServices services) {
+        this.mailbox = new Mailbox(plugin);
         this.plugin = plugin;
         this.services = services;
         this.menuKey = new NamespacedKey(plugin, "menu_item");
@@ -401,14 +404,20 @@ public final class TradeService implements Listener, TabExecutor {
         }
         for (ItemStack it : offered(t.b)) giveBack(pa, it);
         for (ItemStack it : offered(t.a)) giveBack(pb, it);
-        ra.addCurrency(t.b.coins - t.a.coins);
-        rb.addCurrency(t.a.coins - t.b.coins);
-        services.profiles().save(ra);
-        services.profiles().save(rb);
-        // the coins are in SQL now: write the inventories soon too (off this click, batched), so a crash before the
-        // autosave cannot undo one side only
-        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, pa);
-        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, pb);
+        // ITEMS → COINS (PlayerDataSaves): both inventories reach disk now, then the coins move in one transaction
+        mn.suld.plugin.item.PlayerDataSaves.now(pa);
+        mn.suld.plugin.item.PlayerDataSaves.now(pb);
+        long net = t.b.coins - t.a.coins; // what A receives
+        if (net != 0) {
+            PlayerProfile payer = net > 0 ? rb : ra, payee = net > 0 ? ra : rb;
+            services.profiles().transfer(payer, payee, Math.abs(net)).whenComplete((v, err) -> {
+                if (err == null) return;
+                plugin.getLogger().severe("[audit] trade coins " + pa.getName() + " <-> " + pb.getName() + " (" + net + ") NOT saved, balances restored: " + err);
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    for (Player p : List.of(pa, pb)) if (p.isOnline()) p.sendMessage(Messages.error("Арилжааны зоос хадгалагдсангүй — зоос буцаалаа (эд зүйл солигдсон)."));
+                });
+            });
+        }
         plugin.getLogger().info("[audit] trade " + pa.getName() + " (" + offered(t.a).size() + " stacks, " + t.a.coins + " coins) <-> "
                 + pb.getName() + " (" + offered(t.b).size() + " stacks, " + t.b.coins + " coins)");
         pa.closeInventory();
@@ -445,7 +454,7 @@ public final class TradeService implements Listener, TabExecutor {
                 if (p.getOpenInventory().getTopInventory().getHolder() instanceof View) p.closeInventory();
                 p.sendMessage(Messages.info("Арилжаа цуцлагдлаа: " + reason));
             } else if (!back.isEmpty()) {
-                plugin.getLogger().warning("[trade] " + back.size() + " stacks could not be returned to offline " + s.player);
+                mailbox.keep(s.player, back, "trade cancelled while offline: " + reason); // given back on the next join
             }
         }
     }
@@ -518,11 +527,23 @@ public final class TradeService implements Listener, TabExecutor {
         if (back == null) return;
         Player p = e.getPlayer();
         Bukkit.getScheduler().runTask(plugin, () -> {
-            for (ItemStack it : back) {
-                if (p.isOnline()) giveBack(p, it);
-                else afterRespawn.computeIfAbsent(p.getUniqueId(), k -> new ArrayList<>()).add(it);
+            if (!p.isOnline()) {
+                mailbox.keep(p.getUniqueId(), back, "left before the respawn hand-back");
+                return;
             }
+            for (ItemStack it : back) giveBack(p, it);
         });
+    }
+
+    /** Anything the mailbox holds for this player comes back a moment after they join. */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoinMailbox(org.bukkit.event.player.PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!p.isOnline()) return;
+            int n = mailbox.deliver(p);
+            if (n > 0) p.sendMessage(Messages.success("Арилжаанаас үлдсэн " + n + " эд зүйлийг буцааж өглөө."));
+        }, 40L);
     }
 
     @EventHandler
@@ -535,7 +556,7 @@ public final class TradeService implements Listener, TabExecutor {
         for (Map.Entry<UUID, List<ItemStack>> en : List.copyOf(afterRespawn.entrySet())) {
             Player p = Bukkit.getPlayer(en.getKey());
             if (p == null) {
-                plugin.getLogger().warning("[trade] " + en.getValue().size() + " stacks of " + en.getKey() + " were mid-trade when they died and could not be returned");
+                mailbox.keep(en.getKey(), en.getValue(), "mid-trade death, server stopping");
                 continue;
             }
             for (ItemStack it : en.getValue()) giveBack(p, it);

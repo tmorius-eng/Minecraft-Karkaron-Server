@@ -52,6 +52,16 @@ public final class InMemoryProfileRepository implements ProfileRepository {
     }
 
     @Override
+    public CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second) {
+        PlayerProfile a = snapshot(first), b = snapshot(second);
+        store.put(a.playerId(), a);
+        store.put(b.playerId(), b);
+        first.markPersisted(a.version());
+        second.markPersisted(b.version());
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
     public CompletableFuture<Void> delete(UUID playerId) {
         store.remove(playerId);
         return CompletableFuture.completedFuture(null);

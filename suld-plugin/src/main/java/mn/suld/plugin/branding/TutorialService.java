@@ -84,9 +84,9 @@ public final class TutorialService implements Listener, TabExecutor {
 
     private void save(Player p, TutorialProgress t) {
         p.getPersistentDataContainer().set(key, PersistentDataType.STRING, t.encode());
-        // the paid-steps mask lives in the player file while the coins are in SQL already: write it soon, so a crash
-        // cannot pay a step twice
-        mn.suld.plugin.item.PlayerDataSaves.soon(plugin, p);
+        // the paid-steps mask lives in the player file while the coins go to SQL: the mask is written now, so a
+        // crash can never pay a step twice (PlayerDataSaves: the side a crash could duplicate is written first)
+        mn.suld.plugin.item.PlayerDataSaves.now(p);
     }
 
     // ------------------------------------------------------------------ lifecycle

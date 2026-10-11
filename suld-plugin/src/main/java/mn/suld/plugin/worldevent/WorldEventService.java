@@ -325,7 +325,8 @@ public final class WorldEventService {
     private List<Player> eligiblePlayers() {
         List<Player> out = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (p.isDead() || p.getWorld().getEnvironment() != World.Environment.NORMAL) {
+            // a soul (death lock) is alive to the server but cannot fight: it neither counts for the raid nor draws it
+            if (p.isDead() || services.isSoul.test(p.getUniqueId()) || p.getWorld().getEnvironment() != World.Environment.NORMAL) {
                 continue;
             }
             if (services.dungeons().isInAnyRun(p.getUniqueId())) {

@@ -75,7 +75,8 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
     }
 
     private boolean eligible(Player p) {
-        return p.isValid() && !p.isDead() && (p.getGameMode() == GameMode.SURVIVAL || p.getGameMode() == GameMode.ADVENTURE)
+        return p.isValid() && !p.isDead() && !services.isSoul.test(p.getUniqueId()) // a soul draws no spawns
+                && (p.getGameMode() == GameMode.SURVIVAL || p.getGameMode() == GameMode.ADVENTURE)
                 && p.getWorld().equals(Bukkit.getWorlds().get(0)) // the overworld only: not the dungeon halls
                 && !services.dungeons().isInAnyRun(p.getUniqueId())
                 && !services.city().near(p.getWorld().getName(), p.getLocation().getBlockX(), p.getLocation().getBlockZ(), CITY_MARGIN);

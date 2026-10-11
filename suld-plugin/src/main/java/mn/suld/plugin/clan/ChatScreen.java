@@ -42,13 +42,14 @@ import java.util.Locale;
 public final class ChatScreen implements TabExecutor {
 
     private static final int LINES = 12;
-    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault());
+    private final DateTimeFormatter TIME; // the server's zone, not the machine's
     private static final ClickCallback.Options ONCE = ClickCallback.Options.builder().uses(1).lifetime(Duration.ofMinutes(10)).build();
 
     private final Plugin plugin;
     private final ChatChannels channels;
 
-    public ChatScreen(Plugin plugin, ChatChannels channels) {
+    public ChatScreen(Plugin plugin, ChatChannels channels, ZoneId zone) {
+        this.TIME = DateTimeFormatter.ofPattern("HH:mm").withZone(zone);
         this.plugin = plugin;
         this.channels = channels;
     }

@@ -68,16 +68,14 @@ public final class StyleService implements Listener {
         }
     }
 
-    public void stop() {
+    /** Shutdown: every dirty style is written at once; the caller waits on the whole batch with its own deadline. */
+    public java.util.concurrent.CompletableFuture<Void> stop() {
+        java.util.List<java.util.concurrent.CompletableFuture<Void>> writes = new java.util.ArrayList<>();
         for (PlayerStyle s : cache.values()) {
-            if (s.isDirty() && !unsafe.contains(s.player())) {
-                try {
-                    repository.save(s.snapshotAndClean()).get(5, TimeUnit.SECONDS);
-                } catch (Exception e) {
-                    plugin.getLogger().warning("style save on shutdown failed for " + s.player() + ": " + e.getMessage());
-                }
-            }
+            java.util.concurrent.CompletableFuture<Void> w = persist(s);
+            if (w != null) writes.add(w);
         }
+        return java.util.concurrent.CompletableFuture.allOf(writes.toArray(new java.util.concurrent.CompletableFuture[0]));
     }
 
     /** Called (main thread) after anything visible about a player's style changed: chat/TAB/name tag refresh. */
@@ -173,14 +171,14 @@ public final class StyleService implements Listener {
      * Snapshot and write if dirty. Taking the snapshot and queueing the write happen under one lock so snapshots are
      * written in order, and a failed write marks the style dirty again so the next flush retries it.
      */
-    private void persist(PlayerStyle s) {
-        if (unsafe.contains(s.player())) return;
+    private java.util.concurrent.CompletableFuture<Void> persist(PlayerStyle s) {
+        if (unsafe.contains(s.player())) return null;
         java.util.concurrent.CompletableFuture<Void> write;
         synchronized (s) {
-            if (!s.isDirty()) return;
+            if (!s.isDirty()) return null;
             write = repository.save(s.snapshotAndClean());
         }
-        write.whenComplete((v, err) -> {
+        return write.whenComplete((v, err) -> {
             if (err != null) {
                 s.markDirty();
                 plugin.getLogger().warning("style save failed for " + s.player() + " (will retry): " + err.getMessage());

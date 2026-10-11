@@ -72,10 +72,53 @@ public final class ActivePlaytimeService implements Listener {
     public void start() {
         for (Player p : Bukkit.getOnlinePlayers()) tracker(p.getUniqueId());
         Bukkit.getScheduler().runTaskTimer(plugin, this::closeMinute, 20L * 60, 20L * 60);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::saveFatigue, 20L * 300, 20L * 300);
     }
 
     private ActivityTracker tracker(UUID id) {
-        return trackers.computeIfAbsent(id, k -> new ActivityTracker());
+        return trackers.computeIfAbsent(id, k -> {
+            ActivityTracker t = new ActivityTracker();
+            t.importKills(storedKills(k)); // the kill memory (farming fatigue) survives a restart
+            return t;
+        });
+    }
+
+    // ------------------------------------------------------------------------------------------------ fatigue file
+
+    /**
+     * The kill memory of every tracker, in {@code plugins/SULD/farm-fatigue.yml} (written every 5 minutes and on
+     * shutdown), so a restart does not reset the farming factor. Format: {@code <uuid>: [activeIndex, m,x,z,h, ...]}.
+     */
+    private java.nio.file.Path fatigueFile() {
+        return plugin.getDataFolder().toPath().resolve("farm-fatigue.yml");
+    }
+
+    private java.util.List<double[]> storedKills(UUID id) {
+        java.util.List<Double> flat = mn.suld.plugin.persistence.AtomicYaml.read(fatigueFile()).getDoubleList(id.toString());
+        if (flat.isEmpty()) return java.util.List.of();
+        java.util.List<double[]> out = new java.util.ArrayList<>();
+        out.add(new double[] {flat.get(0)});
+        for (int i = 1; i + 3 < flat.size(); i += 4) out.add(new double[] {flat.get(i), flat.get(i + 1), flat.get(i + 2), flat.get(i + 3)});
+        return out;
+    }
+
+    /** Every tracker's kill memory, dropping trackers whose memory is empty. */
+    public void saveFatigue() {
+        org.bukkit.configuration.file.YamlConfiguration y = new org.bukkit.configuration.file.YamlConfiguration();
+        for (Map.Entry<UUID, ActivityTracker> e : trackers.entrySet()) {
+            java.util.List<double[]> data = e.getValue().exportKills();
+            if (data.size() <= 1) continue;
+            java.util.List<Double> flat = new java.util.ArrayList<>();
+            flat.add(data.get(0)[0]);
+            for (int i = 1; i < data.size(); i++) for (double v : data.get(i)) flat.add(v);
+            y.set(e.getKey().toString(), flat);
+        }
+        mn.suld.plugin.persistence.AtomicYaml.write(plugin, fatigueFile(), y);
+    }
+
+    /** Shutdown: the fatigue file is written inline (the scheduler is closed by then). */
+    public void stop() {
+        saveFatigue();
     }
 
     /** A signal from another service (spell cast, trade, quest). */

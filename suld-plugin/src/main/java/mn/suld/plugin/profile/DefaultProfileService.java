@@ -92,6 +92,18 @@ public final class DefaultProfileService implements ProfileService {
         return sequencer.submit(profile.playerId(), () -> repository.save(profile));
     }
 
+    /**
+     * Both players' queues are taken, always in ascending UUID order, before the transaction runs. Single-player
+     * operations never wait on a second key and two-player ones always nest in the same order, so no cycle can form.
+     */
+    @Override
+    public CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second) {
+        if (first.playerId().equals(second.playerId())) return save(first).thenApply(x -> null);
+        PlayerProfile lo = first.playerId().compareTo(second.playerId()) < 0 ? first : second;
+        PlayerProfile hi = lo == first ? second : first;
+        return sequencer.submit(lo.playerId(), () -> sequencer.submit(hi.playerId(), () -> repository.saveTogether(lo, hi)));
+    }
+
     @Override
     public CompletableFuture<Void> saveAndUnload(UUID playerId) {
         return sequencer.submit(playerId, () -> {

@@ -107,7 +107,7 @@ public final class SuldPlugin extends JavaPlugin {
         services.clans().channels(chatChannels);
         getServer().getPluginManager().registerEvents(
                 new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks(), chatChannels), this);
-        mn.suld.plugin.clan.ChatScreen chatScreen = new mn.suld.plugin.clan.ChatScreen(this, chatChannels);
+        mn.suld.plugin.clan.ChatScreen chatScreen = new mn.suld.plugin.clan.ChatScreen(this, chatChannels, services.zone());
         for (String c : java.util.List.of("chat", "ch", "g", "l", "pc", "tr")) registerTab(c, chatScreen);
         services.hud().attach(this, services);
         combatFeel = new mn.suld.plugin.combat.CombatFeel(this, services);
@@ -286,11 +286,9 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(perf, this);
         registerTab("suldperf", perf.command());
         services.quests().onChange((p, pr) -> services.hud().update(p, pr));
-        // a finished chapter pays coins and EXP (SQL) and may take collected items (player file): save both now
-        services.quests().onComplete((p, pr) -> {
-            services.profiles().save(pr);
-            mn.suld.plugin.item.PlayerDataSaves.soon(this, p);
-        });
+        // a finished chapter may take collected items (player file) and pays coins and EXP (SQL): the items leave
+        // disk first, then the reward is saved (PlayerDataSaves: ITEMS → COINS)
+        services.quests().onComplete((p, pr) -> mn.suld.plugin.item.PlayerDataSaves.itemsForCoins(this, services, p, pr, "chapter reward"));
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.quest.QuestListener(this, services), this);
         mn.suld.plugin.command.ProgressCommands progress = new mn.suld.plugin.command.ProgressCommands(services);
         progress.menus(menus);
@@ -414,6 +412,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (trades != null) {
             trades.shutdown();
         }
+        if (services != null && services.activity != null) services.activity.stop(); // farming fatigue to disk
         if (horses != null) {
             horses.shutdown();
         }
@@ -443,16 +442,21 @@ public final class SuldPlugin extends JavaPlugin {
         java.util.Set<java.util.UUID> toSave = new java.util.LinkedHashSet<>();
         for (Player player : getServer().getOnlinePlayers()) toSave.add(player.getUniqueId());
         for (var profile : services.profiles().cachedProfiles()) toSave.add(profile.playerId());
-        List<CompletableFuture<Void>> saves = new ArrayList<>();
+        java.util.Map<java.util.UUID, CompletableFuture<Void>> saves = new java.util.LinkedHashMap<>();
         for (java.util.UUID id : toSave) {
-            saves.add(services.profiles().saveAndUnload(id));
+            saves.put(id, services.profiles().saveAndUnload(id));
         }
         try {
-            CompletableFuture.allOf(saves.toArray(CompletableFuture[]::new)).get(15, TimeUnit.SECONDS);
+            CompletableFuture.allOf(saves.values().toArray(CompletableFuture[]::new)).get(15, TimeUnit.SECONDS);
         } catch (Exception ex) {
-            getLogger().warning("Not all profiles saved cleanly on shutdown: " + ex.getMessage());
+            if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
+            List<java.util.UUID> missing = new ArrayList<>();
+            for (var e : saves.entrySet()) if (!e.getValue().isDone() || e.getValue().isCompletedExceptionally()) missing.add(e.getKey());
+            getLogger().severe("[shutdown] " + missing.size() + " profile save(s) not confirmed within 15 s (" + ex.getClass().getSimpleName()
+                    + "): " + missing + " — these players' last changes may be missing; the database row is what it was before");
         }
-        services.close();
+        // after the profile flush: style/clan/analytics flushes and every pool, all against one deadline
+        services.close(getConfig().getLong("shutdown.budget-seconds", 20));
         getLogger().info("SULD disabled.");
     }
 

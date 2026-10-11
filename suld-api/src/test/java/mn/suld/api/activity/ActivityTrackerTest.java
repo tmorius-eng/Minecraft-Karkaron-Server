@@ -149,4 +149,19 @@ class ActivityTrackerTest {
         assertEquals(ActiveMinutes.NONE, ActiveMinutes.fromJson(""));
         assertThrows(IllegalArgumentException.class, () -> ActiveMinutes.fromJson("{\"v\":2}"));
     }
+
+    @Test
+    void killMemorySurvivesExportAndImport() {
+        ActivityTracker t = new ActivityTracker();
+        for (int i = 0; i < 90; i++) t.kill("mob.chono", 10, 10); // well past the free kills: a reduced factor
+        double before = t.farmFactor("mob.chono", 10, 10);
+        assertTrue(before < 1.0);
+
+        ActivityTracker restarted = new ActivityTracker(); // a server restart: a fresh tracker
+        restarted.importKills(t.exportKills());
+
+        assertEquals(before, restarted.farmFactor("mob.chono", 10, 10), 1e-9, "the farming factor is the same after a restart");
+        assertEquals(1.0, restarted.farmFactor("mob.chono", 500, 500), 1e-9, "elsewhere it is still fresh");
+        assertTrue(new ActivityTracker().exportKills().size() == 1, "an empty memory exports only the counter");
+    }
 }

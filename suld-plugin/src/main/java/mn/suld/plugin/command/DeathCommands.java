@@ -34,13 +34,14 @@ import java.util.UUID;
  */
 public final class DeathCommands implements TabExecutor {
 
-    private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.of("Asia/Ulaanbaatar"));
+    private final DateTimeFormatter WHEN; // in the server's zone (SuldServices.zone)
 
     private final Plugin plugin;
     private final SuldServices services;
     private final DeathService deaths;
 
     public DeathCommands(Plugin plugin, SuldServices services, DeathService deaths) {
+        this.WHEN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(services.zone());
         this.plugin = plugin;
         this.services = services;
         this.deaths = deaths;

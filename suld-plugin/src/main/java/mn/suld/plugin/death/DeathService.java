@@ -83,8 +83,7 @@ import java.util.concurrent.TimeUnit;
 public final class DeathService implements Listener {
 
     private static final TextColor SOUL = TextColor.fromHexString("#9FD8FF");
-    private static final ZoneId ZONE = ZoneId.of("Asia/Ulaanbaatar");
-    private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZONE);
+    private final DateTimeFormatter WHEN; // in the server's zone (SuldServices.zone)
     /** "The lock only ends by an admin" (allow-free-revive: false): 100 years. */
     private static final long FOREVER = TimeUnit.DAYS.toMillis(36_500);
 
@@ -106,6 +105,7 @@ public final class DeathService implements Listener {
     private final Map<UUID, Component> summaries = new ConcurrentHashMap<>();
 
     public DeathService(Plugin plugin, SuldServices services) {
+        this.WHEN = DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(services.zone());
         this.plugin = plugin;
         this.menuItemKey = new org.bukkit.NamespacedKey(plugin, "menu_item");
         this.services = services;

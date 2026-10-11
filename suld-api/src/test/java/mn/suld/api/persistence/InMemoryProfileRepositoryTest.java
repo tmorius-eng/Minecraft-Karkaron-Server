@@ -51,4 +51,20 @@ class InMemoryProfileRepositoryTest {
         repo.save(profile).join();
         assertFalse(profile.isDirty());
     }
+
+    @Test
+    void saveTogetherStoresBothAndMarksBothClean() {
+        InMemoryProfileRepository repo = new InMemoryProfileRepository();
+        PlayerProfile a = PlayerProfile.createNew(UUID.randomUUID(), "Payer", Instant.now());
+        PlayerProfile b = PlayerProfile.createNew(UUID.randomUUID(), "Payee", Instant.now());
+        a.addCurrency(100);
+        b.addCurrency(5);
+
+        repo.saveTogether(a, b).join();
+
+        assertEquals(100, repo.find(a.playerId()).join().orElseThrow().currency());
+        assertEquals(5, repo.find(b.playerId()).join().orElseThrow().currency());
+        assertFalse(a.isDirty());
+        assertFalse(b.isDirty());
+    }
 }

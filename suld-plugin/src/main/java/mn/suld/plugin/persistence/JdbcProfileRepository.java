@@ -177,39 +177,93 @@ public final class JdbcProfileRepository implements ProfileRepository {
             // One consistent snapshot (all fields and the version under the profile's lock): the row and the
             // in-memory "persisted" marker agree, and a change made meanwhile stays dirty for the next save.
             PlayerProfile.Snapshot snap = profile.snapshot();
-            long version = snap.version();
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(dialect.profileUpsert())) {
-                bindUuid(ps, 1, snap.playerId());
-                ps.setString(2, snap.name());
-                ps.setString(3, snap.playerClass() == null ? null : snap.playerClass().id());
-                ps.setInt(4, snap.progression().level());
-                ps.setLong(5, snap.progression().expIntoLevel());
-                ps.setLong(6, snap.createdAt().toEpochMilli());
-                ps.setLong(7, snap.lastSeenAt().toEpochMilli());
-                ps.setLong(8, version);
-                ps.setLong(9, snap.currency());
-                QuestState q = snap.questState();
-                ps.setString(10, q.questId().isEmpty() ? null : q.questId());
-                ps.setInt(11, q.progress());
-                ps.setBoolean(12, q.completed());
-                ps.setString(13, snap.skillState().toJson());
-                ps.setString(14, snap.equipment().isEmpty() ? null : snap.equipment().toJson());
-                ps.setString(15, snap.classGear().isEmpty() ? null : snap.classGear().toJson());
-                ps.setString(16, snap.activeMinutes().isEmpty() ? null : snap.activeMinutes().toJson());
-                ps.setString(17, snap.endgame().toJson());
-                int rows = ps.executeUpdate();
-                if (rows == 0 && dialect == SqlDialect.POSTGRESQL) {
-                    // the stored row is newer than this snapshot (another writer saved it): never roll it back
-                    throw new RepositoryException("Stale save of profile " + snap.playerId() + " (version " + version
-                            + ") refused: the stored row is newer");
-                }
-                profile.markPersisted(version);
+            try (Connection conn = dataSource.getConnection()) {
+                writeRow(conn, snap);
+                profile.markPersisted(snap.version());
                 return profile;
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to save profile " + profile.playerId(), ex);
             }
         }), executor);
+    }
+
+    /**
+     * Two profiles in one transaction (a coin transfer): both rows or neither. Rows are written in UUID order, so
+     * two transfers between the same players lock them in the same order. Both are marked persisted only after the
+     * commit; on any failure (SQL error, a stale snapshot) the transaction is rolled back and both stay dirty.
+     */
+    @Override
+    public CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second) {
+        return CompletableFuture.supplyAsync(mn.suld.plugin.perf.PerfProbe.timed("db.profile.saveTogether", () -> {
+            PlayerProfile lo = first.playerId().compareTo(second.playerId()) <= 0 ? first : second;
+            PlayerProfile hi = lo == first ? second : first;
+            PlayerProfile.Snapshot a = lo.snapshot(), b = hi.snapshot();
+            try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
+                conn.setAutoCommit(false);
+                try {
+                    writeRow(conn, a);
+                    writeRow(conn, b);
+                    conn.commit();
+                } catch (SQLException | RuntimeException ex) {
+                    conn.rollback();
+                    throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
+                }
+                lo.markPersisted(a.version());
+                hi.markPersisted(b.version());
+                return null;
+            } catch (SQLException ex) {
+                throw new RepositoryException("Failed to save profiles " + first.playerId() + " and " + second.playerId() + " together", ex);
+            }
+        }), executor);
+    }
+
+    /**
+     * Upsert one snapshot on {@code conn} and make sure the row now carries it. PostgreSQL reports 0 rows when the
+     * stored version is newer; MySQL (and H2 in MySQL mode) reports <em>found</em> rows and ignores the write
+     * silently, so the version is read back on the same connection. A stale snapshot throws, so the caller never
+     * marks it persisted.
+     */
+    private void writeRow(Connection conn, PlayerProfile.Snapshot snap) throws SQLException {
+        long version = snap.version();
+        try (PreparedStatement ps = conn.prepareStatement(dialect.profileUpsert())) {
+            bindUuid(ps, 1, snap.playerId());
+            ps.setString(2, snap.name());
+            ps.setString(3, snap.playerClass() == null ? null : snap.playerClass().id());
+            ps.setInt(4, snap.progression().level());
+            ps.setLong(5, snap.progression().expIntoLevel());
+            ps.setLong(6, snap.createdAt().toEpochMilli());
+            ps.setLong(7, snap.lastSeenAt().toEpochMilli());
+            ps.setLong(8, version);
+            ps.setLong(9, snap.currency());
+            QuestState q = snap.questState();
+            ps.setString(10, q.questId().isEmpty() ? null : q.questId());
+            ps.setInt(11, q.progress());
+            ps.setBoolean(12, q.completed());
+            ps.setString(13, snap.skillState().toJson());
+            ps.setString(14, snap.equipment().isEmpty() ? null : snap.equipment().toJson());
+            ps.setString(15, snap.classGear().isEmpty() ? null : snap.classGear().toJson());
+            ps.setString(16, snap.activeMinutes().isEmpty() ? null : snap.activeMinutes().toJson());
+            ps.setString(17, snap.endgame().toJson());
+            int rows = ps.executeUpdate();
+            if (rows == 0 && dialect == SqlDialect.POSTGRESQL) throw stale(snap);
+        }
+        if (dialect != SqlDialect.POSTGRESQL) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT version FROM suld_profiles WHERE player_uuid = ?")) {
+                bindUuid(ps, 1, snap.playerId());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getLong(1) > version) throw stale(snap);
+                }
+            }
+        }
+    }
+
+    private static RepositoryException stale(PlayerProfile.Snapshot snap) {
+        // the stored row is newer than this snapshot (another writer saved it): never roll it back
+        return new RepositoryException("Stale save of profile " + snap.playerId() + " (version " + snap.version()
+                + ") refused: the stored row is newer");
     }
 
     @Override
