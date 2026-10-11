@@ -193,6 +193,7 @@ public final class Sim {
         deathLocks();
         party();
         complianceChecks(main);
+        liveChecks(main);
         out.put("compliance", compliance);
         tables.put("compliance", complianceTable());
     }
@@ -678,6 +679,57 @@ public final class Sim {
         double mastP90 = pct(col(hp, x -> snap(x, 7, "armorMastery")), 0.9);
         check("C13", "10 h/day × 7 days: no run reaches maximum armour power (AL 60 + T6 + enhancement 5 + mastery 10), every exploit included",
                 maxArmorRuns == 0, (int) maxArmorRuns + " runs at max; armour mastery day 7 p90 = " + f1(mastP90));
+    }
+
+    /**
+     * Phase F: the compliance criteria that apply to the live game, run on the live rules (L-series). The design-only
+     * criteria (calibration, exploits, playstyles, the ten Ascension ranks) stay with the proposed rules above.
+     */
+    void liveChecks(Map<String, Map<String, List<Engine.Result>>> main) {
+        List<Engine.Result> hl = main.get("live").get("hardcore"), hp = main.get("proposed").get("hardcore");
+        double l60 = pct(col(hl, x -> hoursTo(x, 60)), 0.5), p60 = pct(col(hp, x -> hoursTo(x, 60)), 0.5);
+        check("L1", "live: hardcore p50 active hours to level 60 within 180–220 h and within ±10 % of the proposed design",
+                l60 >= 180 && l60 <= 220 && Math.abs(l60 - p60) <= 0.1 * p60, f1(l60) + " h vs proposed " + f1(p60) + " h");
+        double d7 = pct(col(hl, x -> snap(x, 7, "levelFraction")), 0.9);
+        check("L2", "live: 10 h/day × 7 days does not reach level 60 (p90)", d7 < 60, "day-7 p90 level " + f1(d7));
+        int dead = 0;
+        for (int lv = 1; lv <= 60; lv++) {
+            boolean ok = false;
+            for (World.Zone z : live.world().zones()) for (World.Mob m : z.mobs()) if (!m.elite() && Math.abs(m.level() - lv) <= 3) ok = true;
+            if (!ok) dead++;
+        }
+        check("L3", "live: every level 1–60 has normal mobs within ±3 levels", dead == 0, dead + " dead levels");
+        boolean l4 = true;
+        for (World.Dungeon d : live.world().dungeons()) if (!d.heroic() && live.dungeonLootLevel(d, 60) > d.max()) l4 = false;
+        check("L4", "live: dungeon loot level never exceeds the dungeon's band", l4, l4 ? "every dungeon clamped" : "a dungeon drops above its band");
+        int day = quick ? 60 : 90;
+        double sinkA = pct(col(main.get("live").get("active"), x -> snap(x, day, "coinsSpent") / Math.max(1, snap(x, day, "coinsEarned"))), 0.5);
+        double sinkH = pct(col(hl, x -> snap(x, day, "coinsSpent") / Math.max(1, snap(x, day, "coinsEarned"))), 0.5);
+        check("L5", "live: sinks absorb ≥ 60 % of coin income (active, hardcore p50, day " + day + ")", sinkA >= 0.6 && sinkH >= 0.6,
+                "active " + f0(100 * sinkA) + " %, hardcore " + f0(100 * sinkH) + " %");
+        double asc = pct(col(hl, x -> snap(x, day, "ascension")), 0.9);
+        check("L8", "live: Тэнгэрийн Зэрэг I is reachable (hardcore p90 has rank ≥ 1 by day " + day + ")", asc >= 1, "p90 rank " + f0(asc));
+        StringBuilder l9v = new StringBuilder();
+        boolean l9 = true;
+        for (String a : ARCH) {
+            List<Engine.Result> rs = main.get("live").get(a);
+            double share = pct(col(rs, x -> {
+                int n = Math.min(30, x.player().dayMilestones.size()), ok = 0;
+                for (int i = 0; i < n; i++) {
+                    double gained = x.player().dayLevelFraction.get(i) - (i == 0 ? 1.0 : x.player().dayLevelFraction.get(i - 1));
+                    if (x.player().dayMilestones.get(i) > 0 || gained >= 0.2) ok++;
+                }
+                return (double) ok / Math.max(1, n);
+            }), 0.5);
+            l9 &= share >= 0.9;
+            l9v.append(a).append(' ').append(f0(100 * share)).append(" %; ");
+        }
+        check("L9", "live: ≥ 90 % of the first 30 days bring a milestone or ≥ 20 % of a level (p50)", l9, l9v.toString());
+        @SuppressWarnings("unchecked")
+        Map<String, Map<String, Double>> l20 = (Map<String, Map<String, Double>>) (Map<?, ?>) out.get("level20");
+        Map<String, Double> lv20 = l20 == null ? null : l20.get("live.hardcore");
+        check("L10", "live: level 20 reaches at most 40 % of the dungeon ladder", lv20 != null && lv20.get("open") / lv20.get("total") <= 0.4,
+                lv20 == null ? "n/a" : f0(lv20.get("open")) + " of " + f0(lv20.get("total")) + " open");
     }
 
     static double toD(Object o) {

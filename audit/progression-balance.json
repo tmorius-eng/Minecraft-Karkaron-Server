@@ -13292,170 +13292,170 @@
     },
     "level20": {
       "live.casual": {
-        "total": 10,
         "open": 3,
-        "clearable": 3
+        "clearable": 3,
+        "total": 10
       },
       "live.active": {
-        "total": 10,
         "open": 3,
-        "clearable": 3
+        "clearable": 3,
+        "total": 10
       },
       "live.hardcore": {
-        "total": 10,
         "open": 3,
-        "clearable": 3
+        "clearable": 3,
+        "total": 10
       },
       "proposed.casual": {
-        "total": 10,
         "open": 3,
-        "clearable": 3
+        "clearable": 3,
+        "total": 10
       },
       "proposed.active": {
-        "total": 10,
         "open": 3,
-        "clearable": 3
+        "clearable": 3,
+        "total": 10
       },
       "proposed.hardcore": {
-        "total": 10,
         "open": 3,
-        "clearable": 3
+        "clearable": 3,
+        "total": 10
       }
     },
     "playstyles": {
       "live.GENERALIST": {
-        "hoursTo60": 212.19,
         "topShare": 0.47,
         "topSource": "kill",
-        "hoursTo30": 33.74
+        "hoursTo30": 33.74,
+        "hoursTo60": 212.19
       },
       "live.QUEST_FARMER": {
-        "hoursTo60": 207.88,
         "topShare": 0.45,
         "topSource": "kill",
-        "hoursTo30": 33.2
+        "hoursTo30": 33.2,
+        "hoursTo60": 207.88
       },
       "live.DUNGEON_FARMER": {
-        "hoursTo60": 227.01,
         "topShare": 0.45,
         "topSource": "dungeon",
-        "hoursTo30": 37.58
+        "hoursTo30": 37.58,
+        "hoursTo60": 227.01
       },
       "live.EXPLORER": {
-        "hoursTo60": 197.91,
         "topShare": 0.51,
         "topSource": "kill",
-        "hoursTo30": 36.14
+        "hoursTo30": 36.14,
+        "hoursTo60": 197.91
       },
       "live.BOSS_FARMER": {
-        "hoursTo60": 231.35,
         "topShare": 0.39,
         "topSource": "dungeon",
-        "hoursTo30": 35.41
+        "hoursTo30": 35.41,
+        "hoursTo60": 231.35
       },
       "live.CRAFTER": {
-        "hoursTo60": 202.82,
         "topShare": 0.49,
         "topSource": "kill",
-        "hoursTo30": 36.94
+        "hoursTo30": 36.94,
+        "hoursTo60": 202.82
       },
       "proposed.GENERALIST": {
-        "hoursTo60": 197.95,
         "topShare": 0.26,
         "topSource": "dungeon",
-        "hoursTo30": 48.27
+        "hoursTo30": 48.27,
+        "hoursTo60": 197.95
       },
       "proposed.QUEST_FARMER": {
-        "hoursTo60": 196.16,
         "topShare": 0.29,
         "topSource": "dungeon",
-        "hoursTo30": 46.34
+        "hoursTo30": 46.34,
+        "hoursTo60": 196.16
       },
       "proposed.DUNGEON_FARMER": {
-        "hoursTo60": 244.76,
         "topShare": 0.47,
         "topSource": "dungeon",
-        "hoursTo30": 52.84
+        "hoursTo30": 52.84,
+        "hoursTo60": 244.76
       },
       "proposed.EXPLORER": {
-        "hoursTo60": 179.43,
         "topShare": 0.33,
         "topSource": "kill",
-        "hoursTo30": 48.47
+        "hoursTo30": 48.47,
+        "hoursTo60": 179.43
       },
       "proposed.BOSS_FARMER": {
-        "hoursTo60": 248.41,
         "topShare": 0.39,
         "topSource": "dungeon",
-        "hoursTo30": 54.04
+        "hoursTo30": 54.04,
+        "hoursTo60": 248.41
       },
       "proposed.CRAFTER": {
-        "hoursTo60": 197.48,
         "topShare": 0.28,
         "topSource": "dungeon",
-        "hoursTo30": 43.32
+        "hoursTo30": 43.32,
+        "hoursTo60": 197.48
       }
     },
     "exploits": {
       "live.NONE": {
-        "day7LevelP90": 41.56,
         "expPerHour": 91275.11,
-        "day7LevelP50": 37.14
+        "day7LevelP50": 37.14,
+        "day7LevelP90": 41.56
       },
       "live.LOW_DUNGEON_FARM": {
-        "day7LevelP90": 19.65,
         "expPerHour": 6353.93,
-        "day7LevelP50": 16.74
+        "day7LevelP50": 16.74,
+        "day7LevelP90": 19.65
       },
       "live.ZONE_RUSH": {
-        "day7LevelP90": 12.01,
         "expPerHour": 33612.19,
-        "day7LevelP50": 11.41
+        "day7LevelP50": 11.41,
+        "day7LevelP90": 12.01
       },
       "live.CARRY": {
-        "day7LevelP90": 19.35,
         "expPerHour": 10136.15,
-        "day7LevelP50": 19.14
+        "day7LevelP50": 19.14,
+        "day7LevelP90": 19.35
       },
       "live.SINGLE_ACTIVITY": {
-        "day7LevelP90": 41.16,
         "expPerHour": 103357.37,
-        "day7LevelP50": 38.63
+        "day7LevelP50": 38.63,
+        "day7LevelP90": 41.16
       },
       "live.AFK": {
-        "day7LevelP90": 16.3,
         "expPerHour": 17625.07,
-        "day7LevelP50": 14.43
+        "day7LevelP50": 14.43,
+        "day7LevelP90": 16.3
       },
       "proposed.NONE": {
-        "day7LevelP90": 38.91,
         "expPerHour": 130949.14,
-        "day7LevelP50": 35.71
+        "day7LevelP50": 35.71,
+        "day7LevelP90": 38.91
       },
       "proposed.LOW_DUNGEON_FARM": {
-        "day7LevelP90": 18.97,
         "expPerHour": 15545.93,
-        "day7LevelP50": 18.66
+        "day7LevelP50": 18.66,
+        "day7LevelP90": 18.97
       },
       "proposed.ZONE_RUSH": {
-        "day7LevelP90": 7.38,
         "expPerHour": 21880.67,
-        "day7LevelP50": 6.34
+        "day7LevelP50": 6.34,
+        "day7LevelP90": 7.38
       },
       "proposed.CARRY": {
-        "day7LevelP90": 19.55,
         "expPerHour": 15654.56,
-        "day7LevelP50": 18.73
+        "day7LevelP50": 18.73,
+        "day7LevelP90": 19.55
       },
       "proposed.SINGLE_ACTIVITY": {
-        "day7LevelP90": 35.39,
         "expPerHour": 105473.23,
-        "day7LevelP50": 33.54
+        "day7LevelP50": 33.54,
+        "day7LevelP90": 35.39
       },
       "proposed.AFK": {
-        "day7LevelP90": 12.42,
         "expPerHour": 12923.26,
-        "day7LevelP50": 12.38
+        "day7LevelP50": 12.38,
+        "day7LevelP90": 12.42
       }
     },
     "calibration": {
@@ -13506,94 +13506,94 @@
     },
     "deathLock": {
       "NONE_30S.casual": {
-        "deathsPer100h": 4.970233413580052,
         "lostShare": 4.1401463868243017E-4,
         "level30": 31.040261104591437,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 4.970233413580052
       },
       "NONE_30S.active": {
-        "deathsPer100h": 13.326865256834312,
         "lostShare": 0.0011093401025636202,
         "level30": 60,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 13.326865256834312
       },
       "NONE_30S.hardcore": {
-        "deathsPer100h": 7.670090202188549,
         "lostShare": 6.387659008425837E-4,
         "level30": 60,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 7.670090202188549
       },
       "LINEAR.casual": {
-        "deathsPer100h": 3.4148731396276286,
         "lostShare": 0.025407144585728902,
         "level30": 30.57197603121516,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 3.4148731396276286
       },
       "LINEAR.active": {
-        "deathsPer100h": 5.401055403232396,
         "lostShare": 0.13735771016347487,
         "level30": 55.12557262421867,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 5.401055403232396
       },
       "LINEAR.hardcore": {
-        "deathsPer100h": 2.1595990543161436,
         "lostShare": 0.09956476238783821,
         "level30": 60,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 2.1595990543161436
       },
       "STEP.casual": {
-        "deathsPer100h": 6.666511214934722,
         "lostShare": 0.039107078077563494,
         "level30": 32.10355437748016,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 6.666511214934722
       },
       "STEP.active": {
-        "deathsPer100h": 4.959092333024112,
         "lostShare": 0.06793455062254869,
         "level30": 58.14824603958613,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 4.959092333024112
       },
       "STEP.hardcore": {
-        "deathsPer100h": 2.077582850250357,
         "lostShare": 0.08541986752396521,
         "level30": 60,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 2.077582850250357
       },
       "GEOMETRIC.casual": {
-        "deathsPer100h": 5.016595024758531,
         "lostShare": 0.016872603441846108,
         "level30": 30.31471893491124,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 5.016595024758531
       },
       "GEOMETRIC.active": {
-        "deathsPer100h": 4.983142653201041,
         "lostShare": 0.06527112220100748,
         "level30": 58.29236513813585,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 4.983142653201041
       },
       "GEOMETRIC.hardcore": {
-        "deathsPer100h": 4.027360937943304,
         "lostShare": 0.08985753825925115,
         "level30": 60,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 4.027360937943304
       },
       "LOG.casual": {
-        "deathsPer100h": 11.580869975109085,
         "lostShare": 0.13985860823674173,
         "level30": 29.582460861480538,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 11.580869975109085
       },
       "LOG.active": {
-        "deathsPer100h": 2.9091098017094623,
         "lostShare": 0.08385100817814253,
         "level30": 53.73959207609839,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 2.9091098017094623
       },
       "LOG.hardcore": {
-        "deathsPer100h": 1.8882434305284321,
         "lostShare": 0.11795017376894994,
         "level30": 58.327619880703715,
-        "streakP90": 0
+        "streakP90": 0,
+        "deathsPer100h": 1.8882434305284321
       }
     },
     "compliance": [
@@ -13674,9 +13674,57 @@
         "criterion": "10 h/day × 7 days: no run reaches maximum armour power (AL 60 + T6 + enhancement 5 + mastery 10), every exploit included",
         "result": "PASS",
         "value": "0 runs at max; armour mastery day 7 p90 = 5.0"
+      },
+      {
+        "id": "L1",
+        "criterion": "live: hardcore p50 active hours to level 60 within 180–220 h and within ±10 % of the proposed design",
+        "result": "PASS",
+        "value": "207.0 h vs proposed 196.4 h"
+      },
+      {
+        "id": "L2",
+        "criterion": "live: 10 h/day × 7 days does not reach level 60 (p90)",
+        "result": "PASS",
+        "value": "day-7 p90 level 43.2"
+      },
+      {
+        "id": "L3",
+        "criterion": "live: every level 1–60 has normal mobs within ±3 levels",
+        "result": "PASS",
+        "value": "0 dead levels"
+      },
+      {
+        "id": "L4",
+        "criterion": "live: dungeon loot level never exceeds the dungeon's band",
+        "result": "PASS",
+        "value": "every dungeon clamped"
+      },
+      {
+        "id": "L5",
+        "criterion": "live: sinks absorb ≥ 60 % of coin income (active, hardcore p50, day 60)",
+        "result": "PASS",
+        "value": "active 96 %, hardcore 90 %"
+      },
+      {
+        "id": "L8",
+        "criterion": "live: Тэнгэрийн Зэрэг I is reachable (hardcore p90 has rank ≥ 1 by day 60)",
+        "result": "PASS",
+        "value": "p90 rank 3"
+      },
+      {
+        "id": "L9",
+        "criterion": "live: ≥ 90 % of the first 30 days bring a milestone or ≥ 20 % of a level (p50)",
+        "result": "PASS",
+        "value": "casual 100 %; active 100 %; hardcore 93 %; "
+      },
+      {
+        "id": "L10",
+        "criterion": "live: level 20 reaches at most 40 % of the dungeon ladder",
+        "result": "PASS",
+        "value": "3 of 10 open"
       }
     ],
-    "runtimeSeconds": 40
+    "runtimeSeconds": 37
   },
   "spec": {
     "status": "SPEC (awaiting owner approval; not implemented)",

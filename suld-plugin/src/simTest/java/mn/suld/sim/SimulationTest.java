@@ -146,6 +146,29 @@ class SimulationTest {
         assertTrue(r.player().level < 40, "three hardcore days no longer finish live (progression v2): " + r.player().level);
     }
 
+    /**
+     * Phase F parity (plan): the live game and the proposed design reach level 60 at the same pace — live hardcore
+     * p50 within 180–220 active hours and within ±10 % of the proposed rules (same seeds, every class).
+     */
+    @Test
+    void liveAndProposedReachSixtyAtTheSamePace() {
+        double live = medianHoursTo60(LIVE), proposed = medianHoursTo60(PROPOSED);
+        assertTrue(live >= 180 && live <= 220, "live hardcore p50 " + live + " h");
+        assertTrue(Math.abs(live - proposed) <= 0.1 * proposed, "live " + live + " h vs proposed " + proposed + " h");
+    }
+
+    private static double medianHoursTo60(ProposedRules rules) {
+        java.util.List<Double> h = new java.util.ArrayList<>();
+        for (PlayerClass c : PlayerClass.values()) {
+            for (int seed = 0; seed < 2; seed++) {
+                Engine.Result r = Engine.run(rules, Profile.hardcore(), c, 7100 + 31 * seed + c.ordinal(), 40);
+                h.add(Sim.hoursTo(r, 60));
+            }
+        }
+        java.util.Collections.sort(h);
+        return (h.get(h.size() / 2 - 1) + h.get(h.size() / 2)) / 2;
+    }
+
     @Test
     void afkEarnsNoArmour() {
         Engine.Result r = Engine.run(PROPOSED, Profile.hardcore().exploit(Profile.Exploit.AFK), PlayerClass.DARKHAN, 3, 3);

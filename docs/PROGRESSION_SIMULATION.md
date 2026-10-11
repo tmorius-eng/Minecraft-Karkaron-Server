@@ -384,4 +384,12 @@ Effect on players (90 days):
 | C11 | no single activity dominates: no playstyle reaches L30 > 25 % faster than the generalist; no source > 50 % of the generalist's EXP to 60 | **PASS** | generalist 48.3 h, fastest CRAFTER 43.3 h, largest source share 26 % |
 | C12 | no exploit beats normal optimal play by more than ×1.25 in EXP per online hour | **PASS** | SINGLE_ACTIVITY 105473 vs optimal 130949 EXP/h |
 | C13 | 10 h/day × 7 days: no run reaches maximum armour power (AL 60 + T6 + enhancement 5 + mastery 10), every exploit included | **PASS** | 0 runs at max; armour mastery day 7 p90 = 5.0 |
+| L1 | live: hardcore p50 active hours to level 60 within 180–220 h and within ±10 % of the proposed design | **PASS** | 207.0 h vs proposed 196.4 h |
+| L2 | live: 10 h/day × 7 days does not reach level 60 (p90) | **PASS** | day-7 p90 level 43.2 |
+| L3 | live: every level 1–60 has normal mobs within ±3 levels | **PASS** | 0 dead levels |
+| L4 | live: dungeon loot level never exceeds the dungeon's band | **PASS** | every dungeon clamped |
+| L5 | live: sinks absorb ≥ 60 % of coin income (active, hardcore p50, day 60) | **PASS** | active 96 %, hardcore 90 % |
+| L8 | live: Тэнгэрийн Зэрэг I is reachable (hardcore p90 has rank ≥ 1 by day 60) | **PASS** | p90 rank 3 |
+| L9 | live: ≥ 90 % of the first 30 days bring a milestone or ≥ 20 % of a level (p50) | **PASS** | casual 100 %; active 100 %; hardcore 93 %;  |
+| L10 | live: level 20 reaches at most 40 % of the dungeon ladder | **PASS** | 3 of 10 open |
 <!-- sim:end compliance -->
