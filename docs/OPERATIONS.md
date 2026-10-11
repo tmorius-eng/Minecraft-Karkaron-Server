@@ -11,7 +11,7 @@ the README (local test server).
 | `/menu` (or the clock in hotbar slot 9) | Main menu: character, class, quests, rank, shop, tutorial |
 | `/help`, `/tutorial` | Guide GUI · step-by-step guide for new players |
 | `/class`, `/profile`, `/exp` | Class GUI · character sheet · level/EXP |
-| `/skills` (`/tree`), `/skill <node>` | Skill-tree map (points, passive spells, spell modifiers, ultimate), spells list, builds, respec, search |
+| `/skills`, `/skill <node>` | Skill-tree map (points, passive spells, spell modifiers, ultimate), spells list, builds, respec, search |
 | `/quest` | Storyline board (18 chapters); `/quest info` prints the active chapter; `/quest track` toggles the tracker (boss bar with arrow and distance to the objective's region) |
 | `/rankup`, `/lvlup` | Rank ladder (Ард → Хаан, costs ₮) · level rewards |
 | `/shop`, `/cosmetics`, `/buy` | Supplies and selling loot · tags/colours/join messages/emojis · credit store |

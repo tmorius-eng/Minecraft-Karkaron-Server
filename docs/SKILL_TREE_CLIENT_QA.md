@@ -22,7 +22,7 @@ QA situations (one command each, `<you>` = your name):
 
 ## 1. Opens (`fresh`)
 
-`/skills` (or `/tree`, or main menu → «Ур чадвар»). Expect: a chest window titled «Чадварын Газрын Зураг · <класс>», a **parchment map**
+`/skills` (or main menu → «Ур чадвар»). Expect: a chest window titled «Чадварын Газрын Зураг · <класс>», a **parchment map**
 (tan paper with faint contour lines, bronze frame, small turquoise corner studs), a **dark leather bottom row** with nine bronze-rimmed
 button wells. Nodes must sit **on the paper**, buttons **inside the wells**. Look for: background shifted left/right, wells not under the buttons, cut-off title.
 

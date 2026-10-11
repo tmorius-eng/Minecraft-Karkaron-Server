@@ -154,7 +154,7 @@ commands:
   skills:
     description: Your skill tree map (points, passive and active skills), spells, builds, respec, search.
     usage: /skills [tree|info|spells|reset [branch]|build save|load|delete|list <name>|search <text>]
-    aliases: [tree, spells, ur, chadvar]
+    aliases: [spells, ur, chadvar]
     permission: suld.skills
   skill:
     description: Inspect, unlock or refund one skill node (/skill <node> [unlock|refund|info|open]).

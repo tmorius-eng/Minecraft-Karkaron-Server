@@ -446,7 +446,7 @@ public final class SkillTreeService implements Listener {
             if (pr == null || pr.playerClass().isEmpty()) return;
             int avail = available(p);
             if (spent(p) == 0 && avail > 0) {
-                p.sendMessage(Messages.accent("◆ Танд " + avail + " чадварын оноо байна — /skills эсвэл /tree гэж бичиж чадварын газрын зургаа нээ!"));
+                p.sendMessage(Messages.accent("◆ Танд " + avail + " чадварын оноо байна — /skills гэж бичиж чадварын газрын зургаа нээ!"));
             } else if (avail > 0) {
                 p.sendMessage(Messages.info("◆ " + avail + " зарцуулаагүй чадварын оноо — /skills"));
             }
