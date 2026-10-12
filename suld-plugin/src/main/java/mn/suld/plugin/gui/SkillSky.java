@@ -166,11 +166,15 @@ public final class SkillSky implements Listener {
     /** Open the tree; false (with a reason sent) when it cannot open here and now. */
     public boolean open(Player p) {
         if (sessions.containsKey(p.getUniqueId())) return true;
+        // opened from the menu's sky window: leave that one first (back where the player stood)
+        MenuSky menuSky = MenuSky.instance();
+        boolean fromMenu = menuSky != null && menuSky.isOpen(p);
+        if (fromMenu) menuSky.close(p);
         SkillTree tree = st() == null ? null : st().tree(p);
         String why = tree == null ? "Эхлээд ангиа сонго."
                 : services.dungeons().isInAnyRun(p.getUniqueId()) ? "Агуйн дотор чадварын модыг нээх боломжгүй."
                 : System.currentTimeMillis() - lastCombat.getOrDefault(p.getUniqueId(), 0L) < COMBAT_MS ? "Тулалдааны үеэр нээх боломжгүй."
-                : p.isInsideVehicle() || p.isGliding() || !p.isOnGround() && !p.isFlying() ? "Газар зогсож байхдаа нээ."
+                : !fromMenu && (p.isInsideVehicle() || p.isGliding() || !p.isOnGround() && !p.isFlying()) ? "Газар зогсож байхдаа нээ."
                 : null;
         if (why != null) {
             p.sendMessage(net.kyori.adventure.text.Component.text("ᠰ " + why, NamedTextColor.RED));

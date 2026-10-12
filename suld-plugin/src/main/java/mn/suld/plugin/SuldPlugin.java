@@ -35,6 +35,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.death.DeathService deaths;
     private mn.suld.plugin.death.DeathTrialService deathTrial;
     private mn.suld.plugin.gui.SkillSky skillSky;
+    private mn.suld.plugin.gui.MenuSky menuSky;
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.dungeon.DungeonGuide dungeonGuide;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
@@ -298,6 +299,9 @@ public final class SuldPlugin extends JavaPlugin {
         skillMap.sky(skillSky);
         getServer().getPluginManager().registerEvents(skillSky, this);
         skillSky.start();
+        menuSky = new mn.suld.plugin.gui.MenuSky(this, services);
+        getServer().getPluginManager().registerEvents(menuSky, this);
+        menuSky.start();
         mn.suld.plugin.command.SkillCommands skillCommands = new mn.suld.plugin.command.SkillCommands(services, skillMap, menus,
                 new mn.suld.plugin.skill.qa.SkillQa(this, services, skillTree, skills));
         registerTab("skills", skillCommands.skills());
@@ -460,6 +464,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (props != null) props.stop();
         if (combatFeel != null) combatFeel.shutdown();
         if (halls != null) halls.shutdown();
+        if (menuSky != null) menuSky.shutdown(); // players in the menu's sky window go back where they stood
         if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood
         if (services != null && services.skillTree != null) {
             services.skillTree.stop();

@@ -889,7 +889,7 @@ public final class SkillQa {
                 });
                 case SPELL_DAMAGE -> {
                     Spell s = probeSpell(c);
-                    // spell damage adds to one multiplier with the class's own bonus (Бөө +25 %, CombatRules.spellPassive)
+                    // spell damage adds to one multiplier with the class's own bonus (Бөө +40 %, CombatRules.spellPassive)
                     // and the player's gear: the node raises that sum by v %, so the hit grows by (m0 + v/100) / m0
                     double[] m0 = new double[1];
                     k.add(() -> {

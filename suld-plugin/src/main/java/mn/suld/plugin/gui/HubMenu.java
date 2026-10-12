@@ -52,7 +52,15 @@ public final class HubMenu {
     private HubMenu() {
     }
 
+    /** The page in the sky window ({@link MenuSky}); the chest window only where the sky cannot open (combat, a run, mid-air). */
     public static Menu open(Player p, Spec spec, List<Tab> tabs) {
+        MenuSky sky = MenuSky.instance();
+        if (sky != null && sky.show(p, spec, tabs)) return null;
+        return openChest(p, spec, tabs);
+    }
+
+    /** The chest-window form of a page (art drawn through the title, {@link HubLayout}). */
+    public static Menu openChest(Player p, Spec spec, List<Tab> tabs) {
         Menu m = new Menu(6, HubLayout.title(spec.page(), spec.activeTab(), spec.cardMask(), spec.back() != null, spec.prev() != null,
                 spec.next() != null, spec.dynamic()));
         for (int i = 0; i < Math.min(tabs.size(), HubLayout.TABS); i++) {
