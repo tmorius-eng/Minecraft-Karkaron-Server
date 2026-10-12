@@ -77,7 +77,8 @@ async function click(b, slot) {
   check(has(r.w, G.PROFILE) && r.chat.length === 0, '/profile opens the window and prints no chat', 'chat lines ' + r.chat.length);
 
   // text pages are dialogs (mineflayer cannot read them): the proof is that no chat lines follow the command
-  for (const c of ['/help start', '/rules', '/commands', '/discord', '/exp']) {
+  cmd(`suld coins ${name} 500`);
+  for (const c of ['/help start', '/rules', '/commands', '/discord', '/exp', '/clan top', '/party info', '/relic list', '/loot', '/khuraldai status', '/duel status', '/suldevent status', '/quest info']) {
     if (b.currentWindow) { b.closeWindow(b.currentWindow); await sleep(400); }
     const k = b.chatLog.length;
     b.chat(c); await sleep(1800);

@@ -99,9 +99,10 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
             return;
         }
         DungeonRun r = run.get();
-        player.sendMessage(Messages.accent("Агуй: " + r.dungeonId()));
-        player.sendMessage(Messages.info("Төлөв: " + services.dungeons().statusLine(player.getUniqueId()).orElse("—")
-                + " · " + r.elapsedSeconds() + "с"));
+        mn.suld.plugin.ui.Pages.text(player, "АГУЙ · " + r.dungeonId(), java.util.List.of(
+                mn.suld.plugin.ui.Pages.line("Төлөв: " + services.dungeons().statusLine(player.getUniqueId()).orElse("—")),
+                mn.suld.plugin.ui.Pages.dim("Өнгөрсөн: " + r.elapsedSeconds() + " с")),
+                java.util.List.of(mn.suld.plugin.ui.Pages.command("dungeon leave", "Аянаас гарах")), null);
     }
 
     @Override

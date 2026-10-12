@@ -5,7 +5,7 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-11 · **Commit base:** `main` after `56865ba` · **Schema:** V20
+**Last updated:** 2026-10-12 · **Commit base:** `main` after `b391659` · **Schema:** V21
 
 ## Legend
 
@@ -67,6 +67,9 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | World events | ✅ (1 event; no raid while a world boss stands) | ✅ | ⏳ | «Чонын Их Аян» success: guards warn 2 min before a raid |
 | Daily reward / tasks, leaderboards, trade, horses, smith | ✅ | 🤖 | ⏳ | B.8 ✅ a missed day costs one streak step, never a reset; 43 recipes + order board (`docs/CRAFTING.md`) |
 | HUD, menus (HD painted) | ✅ | — | 👤 G7 | `docs/HUD_MANUAL_QA.md` rows not recorded |
+| «Командын Өргөө» HD window system (`/menu` hub, profile, rankup, shop ×2, travel, settings, help pages; `suld:hd` font; default tooltip frame; themed buttons; slot glow) | ✅ | ✅ `hubbot.js` 22/22 | ⏳ owner: GUI scale 2/3/4 | `docs/UI_HUB.md`; the picture's 8 commands all work; `/travel` trips only from a relay (GAME-001) |
+| Chat walls → windows (`/help <page>` `/rules` `/commands` links, `/clan info|top`, `/party info`, `/relic list|info`, `/loot`, `/classgear`, `/khuraldai|duel|dungeon|suldevent status`, `/item inspect|compare`, `/profile|exp|class|quest info`) | ✅ | 🤖 no chat after the command | ⏳ | `ui/Pages` dialogs; console keeps the text |
+| Per-player settings (V21 `settings_off`: tracker, sidebar, tips, toasts, menu sounds, chat heads, invites, duels) | ✅ | ✅ toggle round-trip | ⏳ | `PlayerSetting`; `/settings` |
 | Kharkhorum slice 1 (ceremonial axis), hand-built spawn | ✅ | ✅ | 👤 | auto-repair off; palace interior, clan district, relic hall ⏳ |
 | Historic sites 16, ovoo 40, discovery EXP | ✅ | ✅ | ⏳ | |
 | Progress marks mirror (V17) | ✅ | ⏳ | — | clears / sites / ovoo → `suld_player_marks`; backfill on login |

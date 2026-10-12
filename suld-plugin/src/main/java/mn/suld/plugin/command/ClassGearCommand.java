@@ -107,7 +107,11 @@ public final class ClassGearCommand implements TabExecutor {
         sb.append("\n§7Идэвхтэй тоглолт: §f").append(pr.activeMinutes().total()).append(" мин");
         double area = services.activity == null ? 1 : services.activity.areaFactor(p.getUniqueId());
         if (area < 1) sb.append("§c · энэ газар хэт олон агнасан (×").append(Math.round(area * 100) / 100.0).append("): өөр газар оч");
-        p.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(sb.toString()));
+        java.util.List<net.kyori.adventure.text.Component> lines = new java.util.ArrayList<>();
+        for (String line : sb.toString().split("\n")) {
+            lines.add(mn.suld.plugin.ui.StyleFormat.hd(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(line.strip())));
+        }
+        mn.suld.plugin.ui.Pages.text(p, "АНГИЙН ХУЯГ", lines, java.util.List.of(mn.suld.plugin.ui.Pages.command("classgear enhance", "Сайжруулах")), pl -> pl.performCommand("profile"));
     }
 
     private String name(String id) {

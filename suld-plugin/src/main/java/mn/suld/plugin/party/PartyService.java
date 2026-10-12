@@ -165,14 +165,21 @@ public final class PartyService {
     public void info(Player player) {
         Party party = registry.partyOf(player.getUniqueId()).orElse(null);
         if (party == null) {
-            player.sendMessage(Messages.info("Та багт байхгүй. /party invite <тоглогч>"));
+            mn.suld.plugin.ui.Pages.text(player, "БАГ", java.util.List.of(mn.suld.plugin.ui.Pages.line("Та багт байхгүй."),
+                    mn.suld.plugin.ui.Pages.dim("Урих: /party invite <тоглогч> · самбараас нэгдэх: доорх товч.")),
+                    java.util.List.of(mn.suld.plugin.ui.Pages.action("Баг хайх", "Самбар дээрх багууд", pl -> find(pl, null))), pl -> pl.performCommand("menu"));
             return;
         }
-        player.sendMessage(Messages.accent("Баг (" + party.size() + "/" + party.capacity() + ")"));
+        java.util.List<Component> lines = new java.util.ArrayList<>();
         for (UUID member : party.members()) {
-            player.sendMessage(Component.text("  " + (party.isLeader(member) ? "★ " : "• ") + nameOf(member),
-                    party.isLeader(member) ? Messages.BRAND : net.kyori.adventure.text.format.NamedTextColor.WHITE));
+            lines.add(mn.suld.plugin.ui.Pages.line((party.isLeader(member) ? "★ " : "• ") + nameOf(member)
+                    + (org.bukkit.Bukkit.getPlayer(member) != null ? "" : " (офлайн)")));
         }
+        java.util.List<mn.suld.plugin.ui.Pages.Button> buttons = new java.util.ArrayList<>();
+        buttons.add(mn.suld.plugin.ui.Pages.action("Баг хайх", "Самбар дээрх багууд", pl -> find(pl, null)));
+        buttons.add(mn.suld.plugin.ui.Pages.command("party recruit", "Багаа самбарт тавих"));
+        buttons.add(mn.suld.plugin.ui.Pages.command("party leave", "Багаас гарах"));
+        mn.suld.plugin.ui.Pages.text(player, "БАГ · " + party.size() + "/" + party.capacity(), lines, buttons, pl -> pl.performCommand("menu"));
     }
 
     // ------------------------------------------------------------- party finder (docs/KHURALDAI.md)
@@ -180,22 +187,7 @@ public final class PartyService {
     /** List the parties looking for members, optionally for one dungeon. */
     public void find(Player player, String dungeonId) {
         java.util.List<mn.suld.api.party.PartyFinder.Listing> list = mn.suld.api.party.PartyFinder.listings(registry.all(), dungeonId);
-        if (list.isEmpty()) {
-            player.sendMessage(Messages.info("Одоогоор баг хайж буй хүн алга. Өөрөө нээ: /party recruit [агуй]"));
-            openBoard(player, list);
-            return;
-        }
-        player.sendMessage(Messages.accent("Баг хайж байна (" + list.size() + "):"));
-        for (mn.suld.api.party.PartyFinder.Listing l : list) {
-            String roles = l.missingRoles().isEmpty() ? "" : " · хэрэгтэй: " + String.join(", ", l.missingRoles().stream().map(mn.suld.api.party.PartyRole::displayName).toList());
-            String dungeon = l.dungeonId().isBlank() ? "" : " · " + dungeonName(l.dungeonId());
-            String leader = nameOf(l.leader());
-            player.sendMessage(Component.text("  ★ " + leader + " (" + l.size() + "/" + l.capacity() + ")" + dungeon + roles, net.kyori.adventure.text.format.NamedTextColor.WHITE)
-                    .append(Component.text("  [нэгдэх]", Messages.BRAND)
-                            .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/party join " + leader))
-                            .hoverEvent(Component.text("/party join " + leader))));
-        }
-        openBoard(player, list);
+        openBoard(player, list);     // the window says it all (an empty board carries its own hint)
     }
 
     /** The party finder window: one card per recruiting party (missing roles first), a click joins it. */

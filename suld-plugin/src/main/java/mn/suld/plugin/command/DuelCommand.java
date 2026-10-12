@@ -32,10 +32,11 @@ public final class DuelCommand implements TabExecutor {
             case "accept" -> duels.accept(p);
             case "decline" -> duels.decline(p);
             case "end", "stop" -> duels.end(p);
-            case "status" -> p.sendMessage(duels.duelOf(p.getUniqueId())
-                    .map(d -> Messages.accent("Тулаанд: " + name(d.other(p.getUniqueId())) + " · дуустал "
+            case "status" -> mn.suld.plugin.ui.Pages.text(p, "ТУЛААН", java.util.List.of(duels.duelOf(p.getUniqueId())
+                    .map(d -> mn.suld.plugin.ui.Pages.line("Тулаанд: " + name(d.other(p.getUniqueId())) + " · дуустал "
                             + Math.max(0, (d.endsAt().toEpochMilli() - System.currentTimeMillis()) / 1000) + " с"))
-                    .orElse(Messages.info("SÜLD бол PvE: тоглогчтой зөвхөн зөвшөөрөлтэй тулалдана. /duel <нэр> — урих.")));
+                    .orElse(mn.suld.plugin.ui.Pages.line("SÜLD бол PvE: тоглогчтой зөвхөн зөвшөөрөлтэй тулалдана. /duel <нэр> — урих."))),
+                    java.util.List.of(), pl -> pl.performCommand("menu"));
             default -> {
                 Player target = Bukkit.getPlayerExact(args[0]);
                 if (target == null) {

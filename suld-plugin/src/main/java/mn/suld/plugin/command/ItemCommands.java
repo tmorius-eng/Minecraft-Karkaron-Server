@@ -172,11 +172,13 @@ public final class ItemCommands {
         ItemInstance i = c.item();
         ItemDefinition def = catalog().require(i.definitionId());
         int[] d = items().factory().durability(p.getInventory().getItemInMainHand(), i);
+        List<Component> lines = new ArrayList<>();
         for (ItemTooltip.Line line : ItemTooltip.lines(catalog(), def, i, items().viewer(p), d[0], d[1], null)) {
-            if (!line.text().isEmpty()) p.sendMessage(ItemFactory.component(line, ItemFactory.rarityColor(i.rarity())));
+            if (!line.text().isEmpty()) lines.add(mn.suld.plugin.ui.StyleFormat.hd(ItemFactory.component(line, ItemFactory.rarityColor(i.rarity()))));
         }
-        p.sendMessage(Component.text("id " + def.id() + " · " + i.uuid() + " · эх сурвалж " + i.provenance() + " · хувилбар " + i.schemaVersion()
-                + (c.verdict() == ItemService.Verdict.MIGRATED ? " (хуучнаас шилжүүлсэн)" : ""), NamedTextColor.DARK_GRAY));
+        lines.add(mn.suld.plugin.ui.Pages.dim("id " + def.id() + " · " + i.uuid() + " · эх сурвалж " + i.provenance() + " · хувилбар " + i.schemaVersion()
+                + (c.verdict() == ItemService.Verdict.MIGRATED ? " (хуучнаас шилжүүлсэн)" : "")));
+        mn.suld.plugin.ui.Pages.text(p, "ЭД ЗҮЙЛ", lines, List.of(mn.suld.plugin.ui.Pages.command("item compare", "Өмссөнтэй харьцуулах")), null);
     }
 
     private void compare(Player p) {
@@ -190,13 +192,14 @@ public final class ItemCommands {
         }
         Map<EquipSlot, ItemInstance> worn = equipment().worn(p);
         boolean any = false;
+        List<Component> lines = new ArrayList<>();
         for (EquipSlot slot : slots) {
             ItemInstance other = worn.get(slot);
             if (other == null || other.uuid().equals(c.item().uuid())) continue;
             any = true;
-            p.sendMessage(Messages.info(slot.label() + ": " + ItemTooltip.name(catalog(), catalog().require(other.definitionId()), other)));
+            lines.add(mn.suld.plugin.ui.Pages.line(slot.label() + ": " + ItemTooltip.name(catalog(), catalog().require(other.definitionId()), other)));
             for (ItemTooltip.Line line : ItemTooltip.compare(catalog(), c.item(), other)) {
-                if (!line.text().isEmpty()) p.sendMessage(ItemFactory.component(line, NamedTextColor.GRAY));
+                if (!line.text().isEmpty()) lines.add(mn.suld.plugin.ui.StyleFormat.hd(ItemFactory.component(line, NamedTextColor.GRAY)));
             }
         }
         if (!any) p.sendMessage(Messages.info("Харьцуулах өмссөн зүйл алга: " + def.type().label() + "-н нүд хоосон."));
@@ -469,6 +472,16 @@ public final class ItemCommands {
             @Override
             public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
                 if (a.length == 0) {
+                    if (s instanceof Player p) {
+                        List<Component> lines = new ArrayList<>();
+                        List<mn.suld.plugin.ui.Pages.Button> buttons = new ArrayList<>();
+                        for (LootTable t : catalog().lootTables()) {
+                            lines.add(mn.suld.plugin.ui.Pages.line(t.id() + " · " + t.tier()));
+                            if (buttons.size() < 9) buttons.add(mn.suld.plugin.ui.Pages.command("loot " + t.id(), String.valueOf(t.tier())));
+                        }
+                        mn.suld.plugin.ui.Pages.text(p, "ОЛЗНЫ ХҮСНЭГТҮҮД", lines, buttons, pl -> pl.performCommand("menu"));
+                        return true;
+                    }
                     s.sendMessage(Messages.info("Олзны хүснэгт (/loot <нэр>):"));
                     for (LootTable t : catalog().lootTables()) s.sendMessage(Component.text("  " + t.id() + " · " + t.tier(), NamedTextColor.GRAY));
                     return true;
@@ -494,16 +507,24 @@ public final class ItemCommands {
     }
 
     private void describeTable(CommandSender s, LootTable t) {
-        s.sendMessage(Messages.info(t.id() + " — " + t.tier() + " (" + rarities(t.tier()) + "), " + t.minRolls() + ".." + t.maxRolls() + " удаа"));
-        for (LootTable.Entry e : t.guaranteed()) s.sendMessage(Component.text("  ✔ заавал: " + entryName(e) + qty(e), NamedTextColor.GREEN));
+        List<Component> lines = new ArrayList<>();
+        lines.add(Messages.info(t.id() + " — " + t.tier() + " (" + rarities(t.tier()) + "), " + t.minRolls() + ".." + t.maxRolls() + " удаа"));
+        for (LootTable.Entry e : t.guaranteed()) lines.add(Component.text("  ✔ заавал: " + entryName(e) + qty(e), NamedTextColor.GREEN));
         double total = t.nothingWeight();
         for (LootTable.Entry e : t.entries()) total += e.weight();
         for (LootTable.Entry e : t.entries()) {
-            s.sendMessage(Component.text(String.format(Locale.ROOT, "  %5.1f%% %s%s", 100.0 * e.weight() / total, entryName(e), qty(e)), NamedTextColor.WHITE));
+            lines.add(Component.text(String.format(Locale.ROOT, "  %5.1f%% %s%s", 100.0 * e.weight() / total, entryName(e), qty(e)), NamedTextColor.WHITE));
         }
         for (LootTable.Rare r : t.rare()) {
-            s.sendMessage(Component.text(String.format(Locale.ROOT, "  %5.2f%% (тусдаа) %s%s", 100.0 * r.chance(), entryName(r.entry()), qty(r.entry())), NamedTextColor.AQUA));
+            lines.add(Component.text(String.format(Locale.ROOT, "  %5.2f%% (тусдаа) %s%s", 100.0 * r.chance(), entryName(r.entry()), qty(r.entry())), NamedTextColor.AQUA));
         }
+        if (s instanceof Player p) {
+            List<Component> hd = new ArrayList<>();
+            for (Component l : lines) hd.add(mn.suld.plugin.ui.StyleFormat.hd(l));
+            mn.suld.plugin.ui.Pages.text(p, "ОЛЗ · " + t.id(), hd, List.of(mn.suld.plugin.ui.Pages.command("loot", "Бүх хүснэгт")), null);
+            return;
+        }
+        lines.forEach(s::sendMessage);
     }
 
     private String rarities(LootTier tier) {

@@ -213,7 +213,13 @@ public final class ProgressCommands {
                 tp.sendMessage(tracker.toggle(tp) ? Messages.success("Эрлийн заагч асаалаа.") : Messages.info("Эрлийн заагч унтраалаа (/quest track)."));
                 return true;
             }
-            if (a.length > 0 && a[0].equalsIgnoreCase("info")) a = new String[0];
+            if (a.length > 0 && a[0].equalsIgnoreCase("info")) {
+                if (menus != null && s instanceof Player p) {
+                    menus.quests(p);     // the book shows the chapter, its lore and the progress
+                    return true;
+                }
+                a = new String[0];
+            }
             PlayerProfile profile = profileOf(s, a);
             if (profile == null) return true;
             QuestState q = profile.questState();

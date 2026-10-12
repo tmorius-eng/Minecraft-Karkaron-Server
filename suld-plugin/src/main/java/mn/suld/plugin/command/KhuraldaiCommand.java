@@ -67,6 +67,10 @@ public final class KhuraldaiCommand implements TabExecutor {
     }
 
     private void status(CommandSender s) {
+        if (s instanceof Player p) {
+            statusPage(p);
+            return;
+        }
         var k = services.khuraldai();
         Optional<CampaignRun> run = services.campaigns().active();
         s.sendMessage(Messages.accent("Их Хуралдай · " + services.weeklyCycle().cycleId(Instant.now())));
@@ -90,6 +94,35 @@ public final class KhuraldaiCommand implements TabExecutor {
         } else {
             s.sendMessage(Messages.info("Дараагийн санал хураалт: " + k.settings().voteOpens() + "."));
         }
+    }
+
+    /** The status as a page: the week's campaign, the ballot or the last decision, a button to the window. */
+    private void statusPage(Player p) {
+        var k = services.khuraldai();
+        Optional<CampaignRun> run = services.campaigns().active();
+        List<net.kyori.adventure.text.Component> lines = new java.util.ArrayList<>();
+        if (run.isPresent()) {
+            CampaignRun r = run.get();
+            lines.add(mn.suld.plugin.ui.Pages.line("Аян: «" + r.definition().name() + "» " + r.total() + "/" + r.definition().goal().target() + " "
+                    + r.definition().goal().unitWord() + ", " + r.ranking().size() + " оролцогч, " + (r.remainingSeconds(Instant.now()) / 3600) + " цаг үлдсэн"));
+            lines.add(mn.suld.plugin.ui.Pages.dim("Таны хувь: " + r.unitsOf(p.getUniqueId()) + " · шат " + r.tierOf(p.getUniqueId())));
+        } else {
+            lines.add(mn.suld.plugin.ui.Pages.dim("Энэ долоо хоногт аян явагдахгүй байна (эхлэх: " + k.settings().campaignStarts() + ")."));
+        }
+        if (k.open()) {
+            lines.add(mn.suld.plugin.ui.Pages.line("Санал хураалт нээлттэй (" + k.settings().voteCloses() + " хүртэл):"));
+            List<CampaignDefinition> ballot = k.ballot();
+            for (int i = 0; i < ballot.size(); i++) {
+                lines.add(mn.suld.plugin.ui.Pages.line("  " + (i + 1) + ". " + ballot.get(i).name() + " — " + k.votesFor(ballot.get(i).id()) + " санал"));
+            }
+        } else if (k.current() != null && k.current().closed()) {
+            CampaignDefinition w = Content.pack().campaign(k.current().winner() == null ? "" : k.current().winner());
+            lines.add(mn.suld.plugin.ui.Pages.dim("Сүүлийн шийдвэр: «" + (w == null ? k.current().winner() : w.name()) + "» (" + k.current().voters() + " санал)."));
+        } else {
+            lines.add(mn.suld.plugin.ui.Pages.dim("Дараагийн санал хураалт: " + k.settings().voteOpens() + "."));
+        }
+        mn.suld.plugin.ui.Pages.text(p, "ИХ ХУРАЛДАЙ · " + services.weeklyCycle().cycleId(Instant.now()), lines,
+                List.of(mn.suld.plugin.ui.Pages.command("khuraldai", "Хуралдайн цонх: санал өгөх, аян")), pl -> pl.performCommand("menu"));
     }
 
     /** Hand the campaign the items it asks for, from the inventory: all matching stacks, or {@code amount}. */

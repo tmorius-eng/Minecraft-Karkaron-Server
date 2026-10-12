@@ -255,24 +255,31 @@ public final class ClanService {
             return;
         }
         Clan c = clan.get();
-        viewer.sendMessage(Messages.accent("[" + c.tag() + "] " + c.name() + " — түвшин " + c.level()
-                + " (" + c.size() + "/" + c.capacity() + ")"));
         long toNext = ClanProgression.expToNext(c.exp());
-        viewer.sendMessage(Messages.info("Овгийн EXP: " + c.exp() + (toNext > 0 ? " (дараагийн түвшин хүртэл " + toNext + ")" : " (дээд)")
+        java.util.List<Component> lines = new java.util.ArrayList<>();
+        lines.add(mn.suld.plugin.ui.Pages.line("Түвшин " + c.level() + " · " + c.size() + "/" + c.capacity() + " гишүүн"));
+        lines.add(mn.suld.plugin.ui.Pages.dim("Овгийн EXP: " + c.exp() + (toNext > 0 ? " (дараагийн түвшин хүртэл " + toNext + ")" : " (дээд)")
                 + " · гишүүдийн EXP бонус +" + Math.round(ClanProgression.expBonus(c.level()) * 100) + "%"));
         c.members().stream()
                 .sorted(Comparator.comparingInt((ClanMember m) -> m.rank().authority()).reversed()
                         .thenComparing(Comparator.comparingLong(ClanMember::contribution).reversed()))
-                .forEach(m -> viewer.sendMessage(Component.text("  " + m.rank().displayName() + " · " + m.name()
-                        + " · " + m.contribution() + " EXP" + (Bukkit.getPlayer(m.playerId()) != null ? " ●" : ""),
-                        NamedTextColor.WHITE)));
+                .forEach(m -> lines.add(mn.suld.plugin.ui.Pages.line((Bukkit.getPlayer(m.playerId()) != null ? "● " : "○ ") + m.rank().displayName() + " · " + m.name()
+                        + " · " + m.contribution() + " EXP")));
+        boolean mine = registry.clanOf(viewer.getUniqueId()).map(own -> own.id().equals(c.id())).orElse(false);
+        java.util.List<mn.suld.plugin.ui.Pages.Button> buttons = new java.util.ArrayList<>();
+        buttons.add(mn.suld.plugin.ui.Pages.action("Шилдэг овгууд", "Топ 10 овог", this::top));
+        if (mine) buttons.add(mn.suld.plugin.ui.Pages.command("cc", "Овгийн чат"));
+        mn.suld.plugin.ui.Pages.text(viewer, "ОВОГ · [" + c.tag() + "] " + c.name(), lines, buttons, pl -> pl.performCommand("menu"));
     }
 
     public void top(Player viewer) {
-        viewer.sendMessage(Messages.accent("Шилдэг овгууд"));
+        java.util.List<Component> lines = new java.util.ArrayList<>();
+        int[] i = {1};
         registry.all().stream().sorted(Comparator.comparingLong(Clan::exp).reversed()).limit(10).forEach(c ->
-                viewer.sendMessage(Messages.info("[" + c.tag() + "] " + c.name() + " — Lv" + c.level() + " · "
+                lines.add(mn.suld.plugin.ui.Pages.line((i[0]++) + ". [" + c.tag() + "] " + c.name() + " — Lv" + c.level() + " · "
                         + c.exp() + " EXP · " + c.size() + " гишүүн")));
+        if (lines.isEmpty()) lines.add(mn.suld.plugin.ui.Pages.dim("Овог хараахан алга. /clan create <нэр> <таг>"));
+        mn.suld.plugin.ui.Pages.text(viewer, "ШИЛДЭГ ОВГУУД", lines, java.util.List.of(mn.suld.plugin.ui.Pages.action("Миний овог", null, pl -> info(pl, null))), pl -> pl.performCommand("menu"));
     }
 
     private ChatChannels channels;

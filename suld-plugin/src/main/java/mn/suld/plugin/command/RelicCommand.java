@@ -79,6 +79,24 @@ public final class RelicCommand implements CommandExecutor, TabCompleter {
     }
 
     private void list(CommandSender sender) {
+        if (sender instanceof Player p) {
+            java.util.List<net.kyori.adventure.text.Component> lines = new java.util.ArrayList<>();
+            java.util.List<mn.suld.plugin.ui.Pages.Button> buttons = new java.util.ArrayList<>();
+            lines.add(mn.suld.plugin.ui.Pages.dim("Серверт тус бүр ганцхан. Эзэмшигч гэрэлтэж, зөвшөөрөлт тулаанд алдана."));
+            for (RelicDefinition def : SuldContent.RELICS) {
+                RelicRecord r = relics.record(def.key()).orElse(null);
+                if (r == null) continue;
+                String state = r.isAvailable()
+                        ? (r.shrine() == null ? "сүм хараахан босоогүй" : "сүмдээ эзнээ хүлээж байна")
+                        : "эзэн: " + r.ownerName() + since(r.acquiredAt());
+                lines.add(mn.suld.plugin.ui.Pages.line(def.displayName() + " — " + state));
+                String key = def.key().substring(6);
+                buttons.add(mn.suld.plugin.ui.Pages.action(def.displayName(), "/relic info " + key, pl -> info(pl, key)));
+            }
+            buttons.add(mn.suld.plugin.ui.Pages.action("Сүмийн зөвлөгөө", "/relic hint", relics::hint));
+            mn.suld.plugin.ui.Pages.text(p, "РЕЛИКС", lines, buttons, pl -> pl.performCommand("menu"));
+            return;
+        }
         sender.sendMessage(Messages.accent("Цор ганц сүлднүүд — серверт тус бүр ганцхан"));
         for (RelicDefinition def : SuldContent.RELICS) {
             RelicRecord r = relics.record(def.key()).orElse(null);
@@ -96,6 +114,20 @@ public final class RelicCommand implements CommandExecutor, TabCompleter {
         RelicRecord r = def == null ? null : relics.record(def.key()).orElse(null);
         if (r == null) {
             sender.sendMessage(Messages.error("Ийм сүлд алга. /relic list"));
+            return;
+        }
+        if (sender instanceof Player p) {
+            java.util.List<net.kyori.adventure.text.Component> lines = new java.util.ArrayList<>();
+            lines.add(mn.suld.plugin.ui.Pages.line(def.lore()));
+            lines.add(mn.suld.plugin.ui.Pages.dim("Шаардлага: түвшин " + def.minLevel() + " · эзэмшигчид +" + Math.round(def.expBonus() * 100) + "% EXP · эзэмшигч гэрэлтэнэ"));
+            lines.add(mn.suld.plugin.ui.Pages.line(r.isAvailable() ? "Одоо: сүмдээ" : "Одоо: " + r.ownerName() + since(r.acquiredAt())));
+            if (p.hasPermission("suld.admin.relic")) {
+                lines.add(mn.suld.plugin.ui.Pages.dim("item_uuid=" + r.itemUuid() + " үе=" + r.version()
+                        + (r.shrine() == null ? " сүм=—" : " сүм=" + r.shrine().world() + " " + r.shrine().x() + " " + r.shrine().y() + " " + r.shrine().z())));
+            }
+            String k = def.key().substring(6);
+            mn.suld.plugin.ui.Pages.text(p, def.displayName(), lines, java.util.List.of(mn.suld.plugin.ui.Pages.action("Түүх", "/relic history " + k, pl -> relics.history(pl, k)),
+                    mn.suld.plugin.ui.Pages.action("Сүмийн зөвлөгөө", "/relic hint", relics::hint)), this::list);
             return;
         }
         sender.sendMessage(Messages.accent(def.displayName()));

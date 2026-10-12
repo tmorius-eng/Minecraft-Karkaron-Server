@@ -71,16 +71,24 @@ public final class SuldEventCommand implements CommandExecutor, TabCompleter {
             case "stop" -> sender.sendMessage(events.stop()
                     ? Messages.info("Үйл явдлыг зогсоолоо.") : Messages.error("Идэвхтэй үйл явдал алга."));
             default -> {
-                sender.sendMessage(events.active()
+                List<Component> lines = new java.util.ArrayList<>();
+                lines.add(events.active()
                     .map(r -> Messages.accent(r.definition().displayName() + ": " + r.kills() + "/"
                             + r.definition().targetKills() + ", " + r.remainingSeconds(Instant.now()) + "с үлдсэн, "
                             + r.contributions().size() + " оролцогч"))
                     .orElse(Messages.info("Одоогоор үйл явдал алга.")));
                 var bosses = services.worldBosses;
                 if (bosses != null) {
-                    bosses.active().ifPresentOrElse(f -> sender.sendMessage(Messages.accent("⚔ " + mn.suld.plugin.worldboss.WorldBossService.name(f.definition())
+                    bosses.active().ifPresentOrElse(f -> lines.add(Messages.accent("⚔ " + mn.suld.plugin.worldboss.WorldBossService.name(f.definition())
                                     + " босоод байна: " + f.ranking().size() + " баатар, " + f.elapsedSeconds(Instant.now()) + " с")),
-                            () -> bosses.nextText().ifPresent(t -> sender.sendMessage(Messages.info("Дараагийн дэлхийн босс: " + t))));
+                            () -> bosses.nextText().ifPresent(t -> lines.add(Messages.info("Дараагийн дэлхийн босс: " + t))));
+                }
+                if (sender instanceof org.bukkit.entity.Player p) {
+                    List<Component> hd = new java.util.ArrayList<>();
+                    for (Component l : lines) hd.add(mn.suld.plugin.ui.StyleFormat.hd(l));
+                    mn.suld.plugin.ui.Pages.text(p, "ДЭЛХИЙН ҮЙЛ ЯВДАЛ", hd, List.of(mn.suld.plugin.ui.Pages.command("chronicle boss", "Боссын хроник")), pl -> pl.performCommand("menu"));
+                } else {
+                    lines.forEach(sender::sendMessage);
                 }
             }
         }
