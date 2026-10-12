@@ -627,6 +627,8 @@ public final class MenuSky implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onCombat(EntityDamageByEntityEvent e) {
+        // hits on a class-trial practice dummy are not a fight
+        if (e.getEntity().getScoreboardTags().contains(mn.suld.plugin.clazz.ClassTrialService.TAG)) return;
         long now = System.currentTimeMillis();
         if (e.getEntity() instanceof Player p) lastCombat.put(p.getUniqueId(), now);
         if (e.getDamager() instanceof Player p) lastCombat.put(p.getUniqueId(), now);

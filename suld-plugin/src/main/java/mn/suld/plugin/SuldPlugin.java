@@ -246,6 +246,9 @@ public final class SuldPlugin extends JavaPlugin {
         regionSpawner.start();
         getServer().getPluginManager().registerEvents(services.classWeapons(), this);
         services.classWeapons().start();
+        mn.suld.plugin.item.BowQuiver quiver = new mn.suld.plugin.item.BowQuiver(this, services.items());
+        getServer().getPluginManager().registerEvents(quiver, this);
+        quiver.start();
 
         mn.suld.plugin.ui.Pages.install(this);
         mn.suld.plugin.command.CityCommands city = new mn.suld.plugin.command.CityCommands(this, services, worldBuild);
@@ -289,6 +292,9 @@ public final class SuldPlugin extends JavaPlugin {
         skillTree.start();
         services.classChange = new mn.suld.plugin.clazz.ClassChangeService(this, services, skills);
         getServer().getPluginManager().registerEvents(services.classChange, this);
+        services.classTrial = new mn.suld.plugin.clazz.ClassTrialService(this, services, services.classChange);
+        getServer().getPluginManager().registerEvents(services.classTrial, this);
+        registerTab("classtrial", services.classTrial);
         mn.suld.plugin.skill.OrbOfOblivion.registerRecipe(this);
         mn.suld.plugin.gui.SkillMapMenu skillMap = new mn.suld.plugin.gui.SkillMapMenu(this, services);
         skillMap.menus(menus);
@@ -466,6 +472,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (props != null) props.stop();
         if (combatFeel != null) combatFeel.shutdown();
         if (halls != null) halls.shutdown();
+        if (services != null && services.classTrial != null) services.classTrial.shutdown(); // trial players back to their class
         if (menuSky != null) menuSky.shutdown(); // players in the menu's sky window go back where they stood
         if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood
         if (services != null && services.skillTree != null) {

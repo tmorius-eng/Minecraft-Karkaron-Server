@@ -15,9 +15,9 @@ import java.util.Optional;
  * weapon). The class being played keeps its progress in the profile itself ({@code skillState}, {@code classGear});
  * this holds only the others. Immutable; stored as one JSON document ({@code suld_profiles.class_mastery}, V22).
  */
-public record ClassMasteries(Map<PlayerClass, Saved> saved) {
+public record ClassMasteries(Map<PlayerClass, Saved> saved, Trial trial) {
 
-    public static final ClassMasteries NONE = new ClassMasteries(Map.of());
+    public static final ClassMasteries NONE = new ClassMasteries(Map.of(), null);
     static final int VERSION = 1;
 
     /** One class's stored progress. */
@@ -26,6 +26,20 @@ public record ClassMasteries(Map<PlayerClass, Saved> saved) {
             skills = skills == null ? SkillState.NONE : skills;
             gear = gear == null ? ClassGear.NONE : gear;
         }
+    }
+
+    /**
+     * A class trial in progress (docs/CLASS_CHANGE.md «Сорилт»): the class the player really plays, the trial class's
+     * stored progress before the trial (null = never played), the cooldown stamp, and the coins and level at the
+     * start, which the end never lets grow. Stored with the profile, so a crash or a disconnect ends it on the next
+     * join instead of leaving the player in the trial class.
+     */
+    public record Trial(PlayerClass from, PlayerClass to, Saved toBefore, long lastChangeBefore, long startedAt,
+                        long coinsAtStart, int levelAtStart, long expAtStart) {
+    }
+
+    public ClassMasteries(Map<PlayerClass, Saved> saved) {
+        this(saved, null);
     }
 
     public ClassMasteries {
@@ -43,7 +57,7 @@ public record ClassMasteries(Map<PlayerClass, Saved> saved) {
         EnumMap<PlayerClass, Saved> m = new EnumMap<>(PlayerClass.class);
         m.putAll(saved);
         m.put(c, s);
-        return new ClassMasteries(m);
+        return new ClassMasteries(m, trial);
     }
 
     /** {@code c} taken out (it is the class being played again). */
@@ -52,16 +66,20 @@ public record ClassMasteries(Map<PlayerClass, Saved> saved) {
         EnumMap<PlayerClass, Saved> m = new EnumMap<>(PlayerClass.class);
         m.putAll(saved);
         m.remove(c);
-        return new ClassMasteries(m);
+        return new ClassMasteries(m, trial);
+    }
+
+    public ClassMasteries withTrial(Trial t) {
+        return new ClassMasteries(saved, t);
     }
 
     public boolean isEmpty() {
-        return saved.isEmpty();
+        return saved.isEmpty() && trial == null;
     }
 
     /** The stored document, or null when empty (NULL column). */
     public String toJson() {
-        if (saved.isEmpty()) return null;
+        if (isEmpty()) return null;
         Map<String, Object> classes = new LinkedHashMap<>();
         for (Map.Entry<PlayerClass, Saved> e : saved.entrySet()) {
             Map<String, Object> o = new LinkedHashMap<>();
@@ -73,7 +91,38 @@ public record ClassMasteries(Map<PlayerClass, Saved> saved) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("v", VERSION);
         doc.put("classes", classes);
+        if (trial != null) {
+            Map<String, Object> t = new LinkedHashMap<>();
+            t.put("from", trial.from().id());
+            t.put("to", trial.to().id());
+            if (trial.toBefore() != null) {
+                Map<String, Object> o = new LinkedHashMap<>();
+                o.put("skills", trial.toBefore().skills().toJson());
+                o.put("gear", trial.toBefore().gear().toJson());
+                o.put("at", trial.toBefore().lastPlayedAt());
+                t.put("toBefore", o);
+            }
+            t.put("lastChange", trial.lastChangeBefore());
+            t.put("at", trial.startedAt());
+            t.put("coins", trial.coinsAtStart());
+            t.put("level", trial.levelAtStart());
+            t.put("exp", trial.expAtStart());
+            doc.put("trial", t);
+        }
         return Json.write(doc);
+    }
+
+    private static Saved saved(Map<String, Object> o) {
+        return new Saved(SkillState.fromJson(o.get("skills") == null ? null : String.valueOf(o.get("skills"))),
+                ClassGear.fromJson(o.get("gear") == null ? null : String.valueOf(o.get("gear"))), num(o.get("at")));
+    }
+
+    private static PlayerClass clazz(Object id) {
+        return PlayerClass.byId(String.valueOf(id)).orElseThrow(() -> new IllegalArgumentException("unknown class " + id));
+    }
+
+    private static long num(Object o) {
+        return o == null ? 0L : ((Number) o).longValue();
     }
 
     /** Read a stored document; anything unreadable (or newer) throws, so a load never wipes a class's progress. */
@@ -89,13 +138,17 @@ public record ClassMasteries(Map<PlayerClass, Saved> saved) {
                 for (Map.Entry<String, Object> e : Json.object(classes).entrySet()) {
                     PlayerClass c = PlayerClass.byId(e.getKey())
                             .orElseThrow(() -> new IllegalArgumentException("unknown class " + e.getKey()));
-                    Map<String, Object> o = Json.object(e.getValue());
-                    m.put(c, new Saved(SkillState.fromJson(o.get("skills") == null ? null : String.valueOf(o.get("skills"))),
-                            ClassGear.fromJson(o.get("gear") == null ? null : String.valueOf(o.get("gear"))),
-                            o.get("at") == null ? 0L : ((Number) o.get("at")).longValue()));
+                    m.put(c, saved(Json.object(e.getValue())));
                 }
             }
-            return new ClassMasteries(m);
+            Trial trial = null;
+            if (doc.get("trial") != null) {
+                Map<String, Object> t = Json.object(doc.get("trial"));
+                trial = new Trial(clazz(t.get("from")), clazz(t.get("to")),
+                        t.get("toBefore") == null ? null : saved(Json.object(t.get("toBefore"))), num(t.get("lastChange")),
+                        num(t.get("at")), num(t.get("coins")), (int) num(t.get("level")), num(t.get("exp")));
+            }
+            return new ClassMasteries(m, trial);
         } catch (RuntimeException e) {
             throw new IllegalArgumentException("unreadable class mastery: " + e.getMessage(), e);
         }

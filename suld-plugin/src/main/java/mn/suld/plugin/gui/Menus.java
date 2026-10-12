@@ -287,6 +287,13 @@ public final class Menus {
             cards.add(HubMenu.card(Menu.title("✖ Одоо болохгүй", HubMenu.GOLD), List.of(Menu.line(v.refusal().text
                     + (v.refusal() == mn.suld.api.clazz.ClassChangeRules.Refusal.COOLDOWN ? " (" + mn.suld.api.clazz.ClassChangeRules.format(v.cooldownLeftMs()) + ")" : ""))), null, null));
         }
+        var trial = services.classTrial;
+        if (trial != null) {
+            String why = trial.blocked(p, to);
+            cards.add(HubMenu.card(Menu.title("⚔ Турших: " + to.displayName(), HubMenu.CYAN), List.of(Menu.line(why == null
+                    ? "5 минут дамми дээр турш. Юу ч үлдэхгүй, зардалгүй." : "✖ " + why), Menu.line("Дараа нь өөрийн ангидаа буцна.")), null,
+                    why == null ? (pl, k) -> trial.start(pl, to) : null));
+        }
         cards.add(HubMenu.card("‹ Буцах", "Ангийн Академи руу.", (pl, k) -> academy(pl)));
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, Menu.line(to.displayName() + " руу шилжих уу?"), cards, null, this::academy, null, null, 0,
                 "Анги солих"), hubTabs());

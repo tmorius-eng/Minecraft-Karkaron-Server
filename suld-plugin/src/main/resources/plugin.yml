@@ -40,6 +40,10 @@ commands:
     description: Тэнгэрийн сорил — as a soul, fight three spirit wolves to end the death lock now (the wound stays).
     usage: /trial
     aliases: [soril, сорил]
+  classtrial:
+    description: Ангийн Сорилт — try another class for 5 minutes on practice dummies; nothing of it stays.
+    usage: /classtrial <class>|leave
+    aliases: [сорилт]
   deathrevive:
     description: End a player's death lock now; the wound still applies (admin, audited).
     usage: /deathrevive <player>

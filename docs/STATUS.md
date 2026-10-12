@@ -111,7 +111,8 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | External audit 2026-10-12 (FIND-01…10) | ✅ | ✅ | — | `docs/audits/2026-10-12-external/RESPONSE.md`: H2 shaded (boots offline), mailbox stuck-file guard, scoped spell flag, `player.save_data` probe, Java-only deploy |
 | «Тэнгэрийн сорил» (`/trial`), lock cap 30 min (config v7) | ✅ | ✅ `trialbot.js` 6/6 | ⏳ | `docs/DEATH_AND_RECOVERY.md`; time to 60 now ~146 h simulated (was ~200), accepted by the owner 2026-10-12 |
 | /menu sky window (`MenuSky`, every hub page; chest window only in combat/runs/mid-air) | ✅ | ✅ `skymenubot.js` 8/8 | ⏳ | `docs/UI_HUB.md` §0; owner to check look and text size on the real client |
-| Class change + «Ангийн Академи» (V22 class_mastery: each class keeps its tree and gear) | ✅ | ✅ `classchangebot.js` 10/10 | ⏳ | `docs/CLASS_CHANGE.md`; trial arena not built yet |
+| Class change + «Ангийн Академи» (V22 class_mastery: each class keeps its tree and gear) | ✅ | ✅ `classchangebot.js` 10/10, `classreconnectbot.js` 6/6 | ⏳ | `docs/CLASS_CHANGE.md` |
+| Class trial «Турших» (5 min arena, dummies, nothing kept) + SÜLD bows with Infinity | ✅ | ✅ `classtrialbot.js` 7/7 | ⏳ | `docs/CLASS_CHANGE.md` §Сорилт, §Нум |
 
 ## Not built (and said so)
 

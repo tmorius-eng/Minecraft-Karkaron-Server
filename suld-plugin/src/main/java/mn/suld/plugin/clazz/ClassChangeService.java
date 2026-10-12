@@ -68,7 +68,7 @@ public final class ClassChangeService implements Listener {
         return ClassChangeRules.check(request(p, pr, to));
     }
 
-    private ClassChangeRules.Request request(Player p, PlayerProfile pr, PlayerClass to) {
+    ClassChangeRules.Request request(Player p, PlayerProfile pr, PlayerClass to) {
         UUID id = p.getUniqueId();
         boolean inEvent = services.worldEvents() != null
                 && services.worldEvents().active().map(r -> r.contributions().containsKey(id)).orElse(false);
@@ -86,6 +86,7 @@ public final class ClassChangeService implements Listener {
     public ClassChangeRules.Verdict change(Player p, PlayerClass to) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return new ClassChangeRules.Verdict(ClassChangeRules.Refusal.NO_CLASS, null, 0, 0);
+        if (pr.classTrial() != null) return new ClassChangeRules.Verdict(ClassChangeRules.Refusal.IN_TRIAL, null, 0, 0);
         ClassChangeRules.Verdict v = ClassChangeRules.check(request(p, pr, to));
         if (!v.allowed()) return v;
         PlayerClass from = pr.playerClass().orElseThrow();
@@ -156,7 +157,7 @@ public final class ClassChangeService implements Listener {
     }
 
     /** The old class's own soulbound weapon and armour, out of every place the player keeps items. */
-    int stripClassGear(Player p, PlayerClass from) {
+    public int stripClassGear(Player p, PlayerClass from) {
         String w = "weapon.class." + from.id() + ".", a = "armor.class." + from.id() + ".";
         int n = 0;
         ItemStack[] inv = p.getInventory().getContents();
@@ -175,6 +176,7 @@ public final class ClassChangeService implements Listener {
             }
         }
         p.getEnderChest().setContents(ender);
+        mn.suld.plugin.item.BowQuiver.strip(p);
         if (own(p, p.getItemOnCursor(), w, a)) {
             p.setItemOnCursor(null);
             n++;
@@ -190,8 +192,56 @@ public final class ClassChangeService implements Listener {
         return (d.startsWith(weaponPrefix) || d.startsWith(armorPrefix)) && (ii.boundTo() == null || p.getUniqueId().equals(ii.boundTo()));
     }
 
+    /** When {@code id} last hit or was hit by anything (0 = not this run). */
+    public long lastCombat(UUID id) {
+        return lastCombat.getOrDefault(id, 0L);
+    }
+
+    /**
+     * Put the class the profile now names on the player: tree, attributes, empty pool, waiting spells, its own gear
+     * (rebuilt with its identity, or the starter set the first time), and health at {@code share} of the new maximum.
+     * Shared by the change and the trial.
+     */
+    public void applyClass(Player p, PlayerProfile pr, double share) {
+        PlayerClass to = pr.playerClass().orElse(null);
+        if (to == null) return;
+        try {
+            services.classWeapons().syncRemembered(p);
+            for (PotionEffect e : p.getActivePotionEffects()) p.removePotionEffect(e.getType());
+            if (services.skillTree() != null) services.skillTree().attach(p);
+            skills.afterClassChange(p, SPELL_LOCK_MS);
+        } catch (RuntimeException ex) {
+            plugin.getLogger().severe("[class] " + p.getName() + ": applying " + to + " failed: " + ex);
+        }
+        try {
+            if (services.classArmor != null && services.classArmor.supports(to)) services.classArmor.recover(p);
+            if (pr.classGear().weapon() == null) {
+                ItemStack w = services.classWeapons().starter(to, pr.progression().level(), p);
+                if (w != null) p.getInventory().addItem(w).values().forEach(x -> p.getWorld().dropItemNaturally(p.getLocation(), x));
+            } else {
+                services.classWeapons().recover(p);
+            }
+            services.equipment().dirty(p);
+        } catch (RuntimeException ex) {
+            plugin.getLogger().severe("[class] " + p.getName() + ": the " + to + " gear failed (/classgear recover rebuilds it): " + ex);
+        }
+        var maxAttr = p.getAttribute(Attribute.MAX_HEALTH);
+        double max = maxAttr == null ? 20 : maxAttr.getValue();
+        if (!p.isDead()) p.setHealth(Math.max(1, Math.min(max, share * max)));
+        if (services.hud() != null) services.hud().update(p, pr);
+    }
+
+    /** The share of the maximum health the player has now. */
+    public static double healthShare(Player p) {
+        var maxAttr = p.getAttribute(Attribute.MAX_HEALTH);
+        double max = maxAttr == null ? 20 : maxAttr.getValue();
+        return Math.max(0.05, Math.min(1.0, p.getHealth() / Math.max(1, max)));
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onCombat(EntityDamageByEntityEvent e) {
+        // hits on a class-trial practice dummy are not a fight
+        if (e.getEntity().getScoreboardTags().contains(ClassTrialService.TAG)) return;
         long now = System.currentTimeMillis();
         if (e.getEntity() instanceof Player p) lastCombat.put(p.getUniqueId(), now);
         if (e.getDamager() instanceof Player p) lastCombat.put(p.getUniqueId(), now);

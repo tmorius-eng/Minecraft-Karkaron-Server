@@ -436,6 +436,7 @@ public final class SuldServices {
     public volatile mn.suld.plugin.item.ClassArmor classArmor;
     /** Class change and the academy (docs/CLASS_CHANGE.md); null until the plugin enabled it. */
     public volatile mn.suld.plugin.clazz.ClassChangeService classChange;
+    public volatile mn.suld.plugin.clazz.ClassTrialService classTrial;
     /** Тэнгэрийн Зэрэг window and rite (set by SuldPlugin). */
     public volatile mn.suld.plugin.gui.AscensionMenu ascension;
     /** The historic sites (set by SuldPlugin). */

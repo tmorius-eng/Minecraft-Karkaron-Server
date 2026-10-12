@@ -105,6 +105,7 @@ public final class ItemFactory {
         }
         if (def.equippable()) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         if (instance.rarity().atLeast(ItemRarity.LEGENDARY)) meta.setEnchantmentGlintOverride(true);
+        if (material == org.bukkit.Material.BOW) BowQuiver.infinite(meta); // a SÜLD bow never runs out of arrows
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(keyItem, PersistentDataType.STRING, ItemCodec.encode(stored));
         // the plain id/uuid keys stay: the relic validator and older readers look for them
@@ -183,6 +184,9 @@ public final class ItemFactory {
                 .decoration(TextDecoration.BOLD, i.rarity().atLeast(ItemRarity.LEGENDARY)));
         List<Component> lore = new ArrayList<>();
         for (int k = 1; k < lines.size(); k++) lore.add(component(lines.get(k), color));
+        if (def.material().endsWith(":bow") || def.material().equals("bow")) {
+            lore.add(Component.text("∞ Сум дуусахгүй", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
+        }
         lore.add(Component.text("SÜLD", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
         meta.lore(lore);
         meta.setTooltipStyle(MONGOL_TOOLTIP);   // SÜLD gear wears the pack's navy-and-gold tooltip frame

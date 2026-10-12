@@ -203,6 +203,7 @@ public final class SuldCommand implements CommandExecutor {
             return;
         }
         profile.clearClassChangeCooldown();
+        if (services.classTrial != null) services.classTrial.clearCooldown(target.getUniqueId());
         services.profiles().save(profile);
         services.audit().record(mn.suld.api.audit.AuditEvent.of(sender.getName(), "class.admin.reset", target.getUniqueId().toString(), "cooldown cleared"));
         sender.sendMessage(Messages.success(target.getName() + ": анги солих хүлээлт арилсан."));

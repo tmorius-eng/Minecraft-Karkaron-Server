@@ -309,6 +309,53 @@ public final class PlayerProfile {
         return lastClassChange;
     }
 
+    /** The class trial in progress, or null. */
+    public synchronized mn.suld.api.clazz.ClassMasteries.Trial classTrial() {
+        return classMasteries.trial();
+    }
+
+    /**
+     * Start a class trial (docs/CLASS_CHANGE.md «Сорилт»): the player plays {@code to} for a while with a fresh or
+     * its own stored progress; {@link #endClassTrial} puts everything back. The cooldown is not touched.
+     *
+     * @return false without a class, for the class already played, or while a trial runs
+     */
+    public synchronized boolean beginClassTrial(PlayerClass to, long now) {
+        Objects.requireNonNull(to, "to");
+        if (playerClass == null || playerClass == to || classMasteries.trial() != null) return false;
+        mn.suld.api.clazz.ClassMasteries.Trial t = new mn.suld.api.clazz.ClassMasteries.Trial(playerClass, to,
+                classMasteries.of(to).orElse(null), lastClassChange, now, currency, progression.level(), progression.expIntoLevel());
+        long before = lastClassChange;
+        switchClass(to, now);
+        this.lastClassChange = before;
+        this.classMasteries = classMasteries.withTrial(t);
+        touchInternal();
+        return true;
+    }
+
+    /**
+     * End the trial: back to the real class with its own progress, the trial class's stored progress exactly as it
+     * was before (nothing learned or earned in the trial stays), the cooldown as it was, and coins and level never
+     * above their value at the start.
+     *
+     * @return false when no trial runs
+     */
+    public synchronized boolean endClassTrial(long now) {
+        mn.suld.api.clazz.ClassMasteries.Trial t = classMasteries.trial();
+        if (t == null) return false;
+        if (playerClass != t.from()) switchClass(t.from(), now);
+        mn.suld.api.clazz.ClassMasteries m = t.toBefore() == null ? classMasteries.without(t.to()) : classMasteries.with(t.to(), t.toBefore());
+        this.classMasteries = m.withTrial(null);
+        this.lastClassChange = t.lastChangeBefore();
+        if (currency > t.coinsAtStart()) currency = t.coinsAtStart();
+        Progression start = new Progression(Math.max(1, t.levelAtStart()), Math.max(0, t.expAtStart()));
+        if (progression.level() > start.level() || progression.level() == start.level() && progression.expIntoLevel() > start.expIntoLevel()) {
+            progression = start;
+        }
+        touchInternal();
+        return true;
+    }
+
     /** Staff support: the class-change cooldown cleared. */
     public synchronized void clearClassChangeCooldown() {
         if (lastClassChange != 0) {

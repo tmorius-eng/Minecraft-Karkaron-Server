@@ -174,7 +174,7 @@ public final class SkillSky implements Listener {
         String why = tree == null ? "Эхлээд ангиа сонго."
                 : services.dungeons().isInAnyRun(p.getUniqueId()) ? "Агуйн дотор чадварын модыг нээх боломжгүй."
                 : System.currentTimeMillis() - lastCombat.getOrDefault(p.getUniqueId(), 0L) < COMBAT_MS ? "Тулалдааны үеэр нээх боломжгүй."
-                : !fromMenu && (p.isInsideVehicle() || p.isGliding() || !p.isOnGround() && !p.isFlying()) ? "Газар зогсож байхдаа нээ."
+                : !fromMenu && (p.isInsideVehicle() || p.isGliding() || !p.isFlying() && (p.getFallDistance() > 1.5f || p.getVelocity().getY() < -0.6)) ? "Газар зогсож байхдаа нээ."
                 : null;
         if (why != null) {
             p.sendMessage(net.kyori.adventure.text.Component.text("ᠰ " + why, NamedTextColor.RED));
@@ -674,6 +674,8 @@ public final class SkillSky implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onCombat(EntityDamageByEntityEvent e) {
+        // hits on a class-trial practice dummy are not a fight
+        if (e.getEntity().getScoreboardTags().contains(mn.suld.plugin.clazz.ClassTrialService.TAG)) return;
         long now = System.currentTimeMillis();
         if (e.getEntity() instanceof Player p) lastCombat.put(p.getUniqueId(), now);
         if (e.getDamager() instanceof Player p) lastCombat.put(p.getUniqueId(), now);
