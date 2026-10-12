@@ -52,9 +52,20 @@ const L = async (b) => { b.swingArm('right'); };
   // L-L-L = Олон Сум: five arrows
   a0 = arrows; await L(b); await sleep(250); await L(b); await sleep(250); await L(b); await sleep(1200);
   check(arrows - a0 >= 5, 'L-L-L casts Олон Сум (five arrows)', (arrows - a0) + ' arrows');
+  // bought arrows (for a loot bow) wait in the quiver while the class bow is in the hand, and come back after
+  b.setQuickBarSlot(8); await sleep(800);
+  execFileSync(ctl, ['cmd', `minecraft:give ${name} minecraft:arrow 16`]); await sleep(1500);
+  const bowSlot = b.inventory.slots.findIndex(i => i && i.name === 'bow') - 36;
+  b.setQuickBarSlot(bowSlot); await sleep(2500);
+  check(!items(b).includes('arrow'), 'holding the class bow puts bought arrows in the quiver', items(b).join(','));
+  a0 = arrows; await sleep(2500); await L(b); await sleep(250); await L(b); await sleep(250); await L(b); await sleep(1200);
+  check(arrows - a0 >= 5, 'combos still cast with arrows in the quiver', (arrows - a0) + ' arrows');
+  b.setQuickBarSlot(8); await sleep(2500);
+  const back = b.inventory.items().filter(i => i.name === 'arrow').reduce((n, i) => n + i.count, 0);
+  check(back === 16, 'another item in the hand gives all 16 arrows back', back + ' arrows');
   b.quit(); await sleep(3000);
   b = await join(); await sleep(4000);
-  check(items(b).includes('bow') && !items(b).includes('arrow'), 'after a relog the bow is there, still no arrow needed', items(b).join(','));
+  check(items(b).includes('bow'), 'after a relog the bow is there', items(b).join(','));
   b.quit();
   const bad = results.filter(x => !x).length;
   console.log(bad ? bad + ' FAILED' : 'ALL ' + results.length + ' PASSED');
