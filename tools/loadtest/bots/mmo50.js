@@ -20,7 +20,7 @@ const alive = () => Date.now() < end;
 
 function join(name, idx) {
   return new Promise((resolve) => {
-    const bot = mineflayer.createBot({ host: '127.0.0.1', port: 25571, username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
+    const bot = mineflayer.createBot({ host: '127.0.0.1', port: Number(process.env.PORT || 25571), username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
     bot.on('resourcePack', () => { try { bot.acceptResourcePack(); } catch (e) {} });
     bot.on('error', () => {});
     bot.on('kicked', (r) => stats.kicked.push(name + ': ' + String(r).slice(0, 120)));

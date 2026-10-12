@@ -76,8 +76,14 @@ public final class ModelInstance {
         this.lastLoc = host.getLocation();
     }
 
+    /** Display view range (× 64 blocks): bosses are seen from afar; a steppe mob's rig only within 64 blocks. */
+    static final float VIEW_BOSS = 1.5f, VIEW_MOB = 1.0f;
+
     static ModelInstance spawn(Plugin plugin, LivingEntity host, RigLoader.Model model) {
         Rig rig = model.rig();
+        // M3 LOD: region mobs (RegionSpawner.TAG) are many and short-lived, so their displays are tracked and drawn
+        // only within 64 blocks; bosses, world bosses and dungeon mobs keep the long range
+        float view = host.getScoreboardTags().contains(mn.suld.plugin.mob.RegionSpawner.TAG) ? VIEW_MOB : VIEW_BOSS;
         host.setInvisible(true);
         host.setSilent(true);
         host.setCustomNameVisible(true); // the name tag (MobService.nameplate: level, name, health) stays over the model
@@ -107,7 +113,7 @@ public final class ModelInstance {
                 d.setItemStack(it);
                 d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
                 d.setBillboard(Display.Billboard.FIXED);
-                d.setViewRange(1.5f); // × 64 blocks
+                d.setViewRange(view); // × 64 blocks
                 d.setShadowRadius(0);
                 d.setInterpolationDelay(0);
                 d.setInterpolationDuration(3);
