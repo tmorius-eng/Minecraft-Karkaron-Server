@@ -46,8 +46,20 @@ public final class DungeonContent {
         return c != null ? c : Content.pack().completions().get(ALL.get(0).id());
     }
 
-    /** The wild region a dungeon belongs to (where its quest tracker points). */
+    /**
+     * The wild region a dungeon belongs to (where its quest tracker points): the region that holds its gate site.
+     * DATA-002: the "region" field of dungeons.json was wrong for 6 of 10 dungeons (the outer gates stand in the outer
+     * lands), so the gate's position decides; the field is only the fallback for a dungeon without a site.
+     */
     public static String regionOf(String dungeonId) {
+        for (mn.suld.api.dungeon.hall.DungeonSite s : Content.pack().sites()) {
+            if (!s.dungeonId().equals(dungeonId)) continue;
+            int[] o = s.offset();
+            // a gate on the seam between rings (e.g. radius 2600) belongs to the ring further out, where its level is
+            double len = Math.hypot(o[0], o[1]), k = len == 0 ? 1 : (len + 2) / len;
+            var r = new mn.suld.api.region.RegionIndex(WorldContent.REGIONS).at(o[0] * k, o[1] * k);
+            if (r.isPresent()) return r.get().id();
+        }
         return Content.pack().dungeonRegions().getOrDefault(dungeonId, WorldContent.KHERLEN.id());
     }
 

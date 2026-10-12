@@ -124,6 +124,20 @@ class ContentDataTest {
     }
 
     @Test
+    void everyDungeonLiesInARegionOfItsLevel() {
+        // DATA-002: the tracker sends players to the dungeon's region; it must be where the gate is, at a fitting level
+        StringBuilder map = new StringBuilder();
+        for (var d : Content.pack().dungeons()) {
+            String id = DungeonContent.regionOf(d.id());
+            var r = WorldContent.REGIONS.stream().filter(x -> x.id().equals(id)).findFirst().orElseThrow();
+            map.append(d.id()).append(" -> ").append(id).append("; ");
+            assertTrue(r.minLevel() <= d.maxLevel() && d.minLevel() <= r.maxLevel(),
+                    d.id() + " (" + d.minLevel() + "-" + d.maxLevel() + ") is placed in " + id + " (" + r.minLevel() + "-" + r.maxLevel() + ")");
+        }
+        System.out.println("[DATA-002] " + map);
+    }
+
+    @Test
     void aWaveWithAnUnknownMobIsRefused() throws Exception {
         ContentLoader.Result r = load(edited("dungeons.json", root -> {
             @SuppressWarnings("unchecked") List<List<Object>> waves = (List<List<Object>>) list(root, "dungeons").get(1).get("waves");
