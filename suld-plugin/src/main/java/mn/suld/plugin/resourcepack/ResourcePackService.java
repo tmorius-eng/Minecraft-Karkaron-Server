@@ -43,6 +43,7 @@ import java.util.concurrent.Executors;
 public final class ResourcePackService implements Listener {
 
     private static final UUID PACK_ID = UUID.nameUUIDFromBytes("suld:resourcepack".getBytes(StandardCharsets.UTF_8));
+    private static final UUID NIL = new UUID(0L, 0L);
 
     private final Plugin plugin;
     private volatile ResourcePackSettings settings;
@@ -241,7 +242,9 @@ public final class ResourcePackService implements Listener {
     public void onStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
         // only SÜLD's pack decides the HUD and the onboarding gate: another plugin's pack must not overwrite it
-        if (event.getID() != null && !PACK_ID.equals(event.getID())) {
+        // some clients (and Mineflayer) answer with the nil id: that is ours too (SÜLD sends one pack)
+        UUID answered = event.getID();
+        if (answered != null && !PACK_ID.equals(answered) && !NIL.equals(answered)) {
             plugin.getLogger().info("Resource pack: " + player.getName() + " -> " + event.getStatus() + " for another pack " + event.getID());
             return;
         }
