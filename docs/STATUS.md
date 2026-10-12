@@ -84,9 +84,10 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Bot harness in the repo | ✅ | — | — | `tools/loadtest/` (B.4 done) |
 | PvE-only + consented PvP (`/duel`, arenas) | ✅ | ✅ a hit without consent does no damage | ⏳ | owner decision 2026-10-11; `GAME_DESIGN.md` «PvP policy» |
 | Их Хуралдай (weekly vote, V18) | ✅ | ✅ `khuraldai-smoke.js` 22/22 on PostgreSQL | ⏳ | `docs/KHURALDAI.md` |
-| Campaigns: goals, tiers, flush, resolve, world effects (V18) | ✅ | ✅ deliver → success → reward → effect → chronicle; restart restores; flag re-applies | ⏳ | 4 campaigns in `content/campaigns.json`; kill/clear hooks not bot-exercised yet; palace notice board and Hall of Fame displays are v1.1 |
+| Campaigns: goals, tiers, flush, resolve, world effects (V18) | ✅ | ✅ deliver → success → reward → effect → chronicle; restart restores; flag re-applies; `campaign-effects.js` 6/6: kills count, PROP and NPC effects placed | ⏳ | 4 campaigns in `content/campaigns.json`; the dungeon-clear hook is not bot-exercised yet |
+| Plaza boards: Хуралдай notice board + Hall of Fame | ✅ | ✅ both stand | ⏳ | `PlazaBoards`, text at GUI scale to check by the owner |
 | Баатрын Хроник (V19), `/chronicle`, «Миний түүх» | ✅ | ✅ | ⏳ | |
-| Party finder (`/party find|join|recruit|role`) | ✅ | ✅ | ⏳ | chat board; a GUI is v1.1 |
+| Party finder (`/party find|join|recruit|role`) | ✅ | ✅ | ⏳ | chat board + a window with click-to-join cards |
 
 ## Not built (and said so)
 

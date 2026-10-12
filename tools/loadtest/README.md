@@ -13,6 +13,7 @@ scripts/run-test-server.sh 1.21.11               # the dev Paper (see TESTING.md
 node bots/featbot.js ./srv2ctl.sh server.log     # the functional sweep (tutorial, chat, lock-on, dungeon hall, ...)
 node bots/khuraldai-smoke.js ./srv2ctl.sh server.log 25572   # Их Хуралдай: ballot, vote, close, force, finder, resolve, chronicle, PvP policy
 node bots/campaign-deliver.js ./srv2ctl.sh server.log test_deliver item.chonon_arisan 60 25572   # a DELIVER_ITEMS campaign to success
+node bots/campaign-effects.js ./srv2ctl.sh server.log 25572   # plaza boards, kill contributions, PROP and NPC effects (dev campaigns test_kill/test_prop/test_npc)
 node bots/mmo50.js 50                            # 50 role-mixed bots for the capacity run (docs/perf/WORLD_50.md)
 ```
 

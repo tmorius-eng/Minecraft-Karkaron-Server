@@ -89,7 +89,9 @@ better, retried on a lost compare-and-set so the best of concurrent attempts alw
 
 Every new line is broadcast (`chronicle.broadcast`), logged, and recorded as the `chronicle_entry` analytics event.
 `/chronicle` opens the book by kind; `/chronicle mine` («Миний түүх») lists the player's own lines; the profile menu
-links both. The Hall of Fame displays in the palace are v1.1 (`hall-entries` is reserved for them).
+links both. Two boards on the plaza (`chronicle.hall-boards`, anchor `chronicle.hall-anchor`, default `event.plaza`):
+the Хуралдай notice board (open ballot with its tally, or the week's campaign with progress, top three and time left)
+and the Hall of Fame (the newest chronicle lines, at most `hall-entries`, 8 on the board).
 
 Pre-existing clears live only in the player file without a time, so the book starts with the alpha reset: "Хроник
 эхэлснээс хойш". The V17 marks mirror (`suld_player_marks`) backfills those clears for queries, not for firsts.
@@ -99,7 +101,7 @@ Pre-existing clears live only in the player file without a time, so the book sta
 `/party recruit [dungeon]` lists the leader's party; `/party find [dungeon]` shows the board (parties still missing a
 role first, then by free seats) with a click-to-join line; `/party join <leader>` joins without an invite;
 `/party role <tank|healer|dps>` declares what you bring (Баатар defaults to Бамбай, Бөө to Эмч). A full party or one
-entering a dungeon leaves the board.
+entering a dungeon leaves the board. `/party find` also opens a window: one card per party, a click joins.
 
 ## 7. Threads, restarts, failure
 
@@ -134,5 +136,8 @@ entering a dungeon leaves the board.
   consent does no damage) and `tools/loadtest/bots/campaign-deliver.js` **7/7** (60 deliveries → SUCCEEDED → gold tier
   +450 EXP / +45 coins → `UNLOCK_EVENT` applied and stored in `suld_world_state` → chronicle). A stop/start mid-campaign
   logged `[campaign] restored … 0/60` and `[campaign] world effects: 1 live`.
-* Not yet bot-exercised: the kill and dungeon-clear contribution hooks, PROP and NPC effects in the world.
+* `tools/loadtest/bots/campaign-effects.js` **6/6** (2026-10-12, dev campaigns `test_kill`, `test_prop`, `test_npc`):
+  both plaza boards stand, wolf kills by a player count toward a KILL_MOBS campaign, a PROP effect places the
+  stone man at Хөдөө Арал, an NPC effect places the caravan merchant by `merchant.general`.
+* Not yet bot-exercised: the dungeon-clear contribution hook (needs a full dungeon run).
 * Real client (owner): `/khuraldai` GUI voting, the Аян card, `/chronicle mine`, the boss bar text at GUI scale 2–4.
