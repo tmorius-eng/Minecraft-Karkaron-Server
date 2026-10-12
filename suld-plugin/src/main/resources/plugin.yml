@@ -174,6 +174,10 @@ commands:
     description: The travel page (relays, historic sites, the nearest ovoo); trips start at a relay post.
     usage: /travel
     aliases: [ayalal, аялал]
+  settings:
+    description: Your settings page (tracker, sidebar, tips, HUD notices, menu sounds, chat heads, invites).
+    usage: /settings
+    aliases: [tohirgoo, тохиргоо, options]
   skills:
     description: Your skill tree map (points, passive and active skills), spells, builds, respec, search.
     usage: /skills [tree|info|spells|reset [branch]|build save|load|delete|list <name>|search <text>]

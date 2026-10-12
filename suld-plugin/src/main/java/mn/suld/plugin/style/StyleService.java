@@ -269,6 +269,19 @@ public final class StyleService implements Listener {
         return placeholder;
     }
 
+    /** A «Тохиргоо» setting of {@code id} (on when the style is not cached yet). */
+    public boolean setting(UUID id, mn.suld.api.style.PlayerSetting s) {
+        PlayerStyle st = cache.get(id);
+        return st == null || st.setting(s);
+    }
+
+    /** Flips a setting (saved with the next style flush); returns whether it is on now. */
+    public boolean toggleSetting(Player p, mn.suld.api.style.PlayerSetting s) {
+        boolean on = of(p.getUniqueId()).toggleSetting(s);
+        changed(p);
+        return on;
+    }
+
     /** False while a player's style is not known to match storage: rewards and purchases must wait. */
     public boolean ready(UUID id) {
         return cache.containsKey(id) && !unsafe.contains(id);

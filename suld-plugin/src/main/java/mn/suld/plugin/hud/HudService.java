@@ -167,6 +167,12 @@ public final class HudService {
 
     public void update(Player player, PlayerProfile profile) {
         Scoreboard board = board(player);
+        if (!services.styles().setting(player.getUniqueId(), mn.suld.api.style.PlayerSetting.SIDEBAR)) {
+            Objective off = board.getObjective("suld");
+            if (off != null) off.unregister();      // the Тохиргоо page turned the sidebar off; teams/TAB stay
+            lastLines.remove(player.getUniqueId());
+            return;
+        }
         List<Component> lines = buildLines(player, profile);
         if (lines.equals(lastLines.get(player.getUniqueId()))) return;
         lastLines.put(player.getUniqueId(), lines);

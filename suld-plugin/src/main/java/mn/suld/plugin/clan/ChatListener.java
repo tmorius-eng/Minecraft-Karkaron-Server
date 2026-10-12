@@ -1,6 +1,7 @@
 package mn.suld.plugin.clan;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import mn.suld.api.chat.ChatChannel;
 import mn.suld.api.style.Cosmetic;
 import mn.suld.api.style.PlayerStyle;
 import mn.suld.plugin.resourcepack.ResourcePackService;
@@ -51,9 +52,12 @@ public final class ChatListener implements Listener {
                 : Component.text("[" + tag + "] ", NamedTextColor.AQUA, TextDecoration.BOLD);
         Component name = StyleFormat.name(p, s);
         Component title = StyleFormat.tag(s).map(t -> Component.text(" ").append(t)).orElse(Component.empty());
-        Component channel = channels == null ? Component.empty() : channels.prefix(channels.routedChannel(event), p);
+        ChatChannel routed = channels == null ? null : channels.routedChannel(event);
         event.renderer((source, displayName, message, viewer) -> {
             boolean pack = hasPack(viewer);
+            // the speaker's head only for viewers who keep «Чатын толгой» on (Тохиргоо)
+            boolean heads = !(viewer instanceof Player v) || styles.setting(v.getUniqueId(), mn.suld.api.style.PlayerSetting.CHAT_HEADS);
+            Component channel = channels == null ? Component.empty() : channels.prefix(routed, p, heads);
             return channel.append(StyleFormat.badges(p, s, pack)).append(clan).append(name).append(title)
                     .append(Component.text(" » ", NamedTextColor.GRAY))
                     .append(StyleFormat.message(s, plain, pack));

@@ -107,6 +107,10 @@ public final class DuelService implements Listener {
             from.sendMessage(Messages.error(PvpRules.reason(PvpRules.Verdict.DENIED_SOUL)));
             return;
         }
+        if (!services.styles().setting(to.getUniqueId(), mn.suld.api.style.PlayerSetting.DUEL_REQUESTS)) {
+            from.sendMessage(Messages.error(to.getName() + " тулааны урилга хүлээн авдаггүй (Тохиргоо)."));
+            return;
+        }
         switch (duels.challenge(from.getUniqueId(), to.getUniqueId())) {
             case CHALLENGED -> {
                 from.sendMessage(Messages.success(to.getName() + "-д тулааны урилга илгээлээ (" + settings.duelRequestSeconds() + " с)."));

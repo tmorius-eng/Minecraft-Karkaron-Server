@@ -96,6 +96,15 @@ async function click(b, slot) {
   check(has(w2, '\ue052') && w2.slots[52], 'the arrow turns to page two (with a previous-page arrow)', w2 ? 'ok' : 'no window');
   r = await open(b, '/travel');
   check(has(r.w, '\ue053') && r.w.slots[9] && r.w.slots[36], '/travel opens the Аялал page (relays and the way home)', r.w ? 'ok' : 'no window');
+  r = await open(b, '/settings');
+  const glows = (w) => (JSON.stringify(w.title).match(/\ue054|\\ue054/g) || []).length;
+  const before = r.w ? glows(r.w) : -1;
+  check(has(r.w, '\ue058') && before === 2, '/settings opens the Тохиргоо page with every setting glowing (two glows on row 1)', 'row-1 glows ' + before);
+  w2 = await click(b, 9);
+  check(w2 && glows(w2) === 1, 'clicking a setting turns it off (one glow left on row 1) and reopens the page', w2 ? 'row-1 glows ' + glows(w2) : 'no window');
+  w2 = await click(b, 9);
+  check(w2 && glows(w2) === 2, 'clicking it again turns it back on', w2 ? 'row-1 glows ' + glows(w2) : 'no window');
+  r = await open(b, '/travel');
   const k2 = b.chatLog.length;
   await b.clickWindow(14, 0, 0).catch(() => {}); await sleep(1500);
   const said = b.chatLog.slice(k2).join(' | ');

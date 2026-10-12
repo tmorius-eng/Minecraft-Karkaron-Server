@@ -505,8 +505,20 @@ TRAVEL = Spec("travel", "АЯЛАЛ", None, "Өртөө ба газрууд", "�
     Card("chest", "Хархорум руу", "/spawn — хот руу буцах."),
 ])
 
+SETTINGS = Spec("settings", "ТОХИРГОО", None, "Тоглолтын тохиргоо", "Гэрэлтсэн = асаалттай", [
+    Card("scroll", "Эрлийн самбар", "Дэлгэцийн дээд талын эрлийн зурвас."),
+    Card("chart", "Хажуугийн самбар", "Баруун талын SÜLD самбар."),
+    Card("book", "Зөвлөмж", "Үе үе гарах зөвлөмжийн мөрүүд."),
+    Card("compass", "HUD мэдэгдэл", "Үйлдлийн мөрөн дээрх мэдэгдлүүд."),
+    Card("arrows", "Цэсний дуу", "Товч дарахад гарах дуу."),
+    Card("swords", "Чатын толгой", "Чат дахь тоглогчийн толгой."),
+    Card("map", "Багийн урилга", "Бусдаас багийн урилга авах."),
+    Card("chest", "Тулааны урилга", "Бусдаас тулааны урилга авах."),
+])
+
 PAGES = [HUB, PROFILE]          # the first glyphs; new pages go to EXTRA_PAGES (code points only ever append)
 EXTRA_PAGES = [HELP, RANKUP, SHOP, SHOP2, TRAVEL]
+LATER_PAGES = [SETTINGS]        # after the glow glyphs, which came first
 
 
 def _canvas() -> Image.Image:
@@ -754,11 +766,15 @@ def build(add_bitmap, preview: str | None, mc_dir: str) -> None:
         # one texture, four providers (only the ascent differs per row)
         add_bitmap(f"HUB_CARD_ON_R{row + 1}", glow, "gui/hub_card_on", CARD_H + 2, 13 - top,
                    f"glow frame over a card of row {row + 1} (owned rank, chosen setting), 74x14 (HD x4)")
+    for spec in LATER_PAGES:
+        pg = page(kit, spec)
+        pages[spec.name] = pg
+        add_bitmap(f"PAGE_{spec.name.upper()}", pg, f"gui/hub_page_{spec.name}", H, ascent, f"hub page {spec.name} {W}x{H} (HD x4)")
     button_sprites(mc_dir)
     slot_highlight(mc_dir)
     if preview:
         chest = os.path.join(mc_dir, "textures", "gui", "container", "generic_54.png")
-        for spec, active in ((HUB, -1), (PROFILE, 0), (HELP, 7), (RANKUP, 4), (SHOP, 3), (TRAVEL, 5)):
+        for spec, active in ((HUB, -1), (PROFILE, 0), (HELP, 7), (RANKUP, 4), (SHOP, 3), (TRAVEL, 5), (SETTINGS, 6)):
             comp = preview_compose(fr, pages[spec.name], tab_on, active, chest)
             if spec is RANKUP:
                 for i in range(3):

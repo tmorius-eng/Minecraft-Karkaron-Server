@@ -668,6 +668,15 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_page_settings.png",
+   "height": 244,
+   "ascent": 35,
+   "chars": [
+    ""
+   ]
   }
  ]
 }

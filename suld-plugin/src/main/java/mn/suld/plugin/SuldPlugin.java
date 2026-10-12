@@ -269,6 +269,7 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("rankup", mc.rankup());
         registerTab("lvlup", mc.lvlup());
         registerTab("travel", mc.travel());
+        registerTab("settings", mc.settings());
         registerTab("credits", mc.credits());
         mn.suld.plugin.skill.SkillService skills = new mn.suld.plugin.skill.SkillService(this, services);
         getServer().getPluginManager().registerEvents(skills, this);
@@ -365,7 +366,9 @@ public final class SuldPlugin extends JavaPlugin {
 
         mn.suld.plugin.branding.ServerListService serverList = new mn.suld.plugin.branding.ServerListService(this);
         serverList.start();
-        new mn.suld.plugin.branding.TipsService(this).start();
+        new mn.suld.plugin.branding.TipsService(this)
+                .filter(p -> services.styles().setting(p.getUniqueId(), mn.suld.api.style.PlayerSetting.TIPS)).start();
+        mn.suld.plugin.gui.Menu.clickSound = p -> services.styles().setting(p.getUniqueId(), mn.suld.api.style.PlayerSetting.MENU_SOUNDS);
         mn.suld.plugin.branding.LinkCommands links = new mn.suld.plugin.branding.LinkCommands(this);
         registerTab("discord", links);
         registerTab("website", links);

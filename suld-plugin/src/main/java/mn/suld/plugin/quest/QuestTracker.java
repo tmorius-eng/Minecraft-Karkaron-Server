@@ -57,15 +57,14 @@ public final class QuestTracker implements Listener {
 
     /** Toggle for {@code /quest track}; returns true if the tracker is now shown. */
     public boolean toggle(Player p) {
-        if (hidden.remove(p.getUniqueId())) return true;
-        hidden.add(p.getUniqueId());
-        hide(p);
-        return false;
+        boolean on = services.styles().toggleSetting(p, mn.suld.api.style.PlayerSetting.QUEST_TRACKER);
+        if (!on) hide(p);
+        return on;
     }
 
-    /** Whether the tracker bar is on for {@code p} ({@code /quest track} turns it off). */
+    /** Whether the tracker bar is on for {@code p} ({@code /quest track} or the Тохиргоо page turns it off). */
     public boolean shown(Player p) {
-        return !hidden.contains(p.getUniqueId());
+        return !hidden.contains(p.getUniqueId()) && services.styles().setting(p.getUniqueId(), mn.suld.api.style.PlayerSetting.QUEST_TRACKER);
     }
 
     /** The wild region an objective points at, if it has one. */
@@ -107,7 +106,7 @@ public final class QuestTracker implements Listener {
 
     private void tick() {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            Component line = hidden.contains(p.getUniqueId()) ? null : line(p);
+            Component line = shown(p) ? line(p) : null;
             if (line == null) {
                 hide(p);
                 continue;

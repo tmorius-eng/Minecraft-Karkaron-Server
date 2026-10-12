@@ -186,6 +186,7 @@ public final class SuldServices {
             // Vertical Slice 2 services.
             this.partyService = new PartyService();
             this.partyService.soul = id -> isSoul.test(id); // isSoul is set later by the death system
+            this.partyService.acceptsInvites = id -> styles().setting(id, mn.suld.api.style.PlayerSetting.PARTY_INVITES);
             this.partyService.classOf = id -> profileService.cached(id).flatMap(pr -> pr.playerClass()).orElse(null);
             this.bossService = new BossService();
             this.dungeonService = new DungeonService(plugin, this, mobService, partyService, bossService);

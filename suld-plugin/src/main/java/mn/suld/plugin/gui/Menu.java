@@ -90,10 +90,13 @@ public final class Menu implements InventoryHolder {
         return this;
     }
 
+    /** Whether a player hears menu clicks (the Тохиргоо page's «Цэсний дуу»); set by SuldPlugin. */
+    public static volatile java.util.function.Predicate<Player> clickSound = p -> true;
+
     void click(Player p, int slot, ClickType type) {
         Click c = clicks.get(slot);
         if (c != null) {
-            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.3f);
+            if (clickSound.test(p)) p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.3f);
             c.accept(p, type);
         }
     }

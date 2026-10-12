@@ -42,10 +42,16 @@ public final class PartyService {
 
     /** Souls (docs/DEATH_AND_RECOVERY.md) cannot form parties; set by SuldServices. */
     public java.util.function.Predicate<java.util.UUID> soul = id -> false;
+    /** Players who turned «Багийн урилга» off (Тохиргоо) are not invited; set by SuldServices. */
+    public java.util.function.Predicate<java.util.UUID> acceptsInvites = id -> true;
 
     public void invite(Player inviter, Player target) {
         if (soul.test(inviter.getUniqueId()) || soul.test(target.getUniqueId())) {
             inviter.sendMessage(Messages.error("Сүнс багт нэгдэх боломжгүй."));
+            return;
+        }
+        if (!acceptsInvites.test(target.getUniqueId())) {
+            inviter.sendMessage(Messages.error(target.getName() + " багийн урилга хүлээн авдаггүй."));
             return;
         }
         PartyRegistry.Action a = registry.invite(inviter.getUniqueId(), target.getUniqueId());

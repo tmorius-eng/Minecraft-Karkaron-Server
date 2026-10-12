@@ -177,6 +177,7 @@ final class HudPanel implements Listener {
     void toast(Player p, Component message, long millis) {
         String text = PlainTextComponentSerializer.plainText().serialize(message).strip();
         if (text.isEmpty()) return;
+        if (services != null && !services.styles().setting(p.getUniqueId(), mn.suld.api.style.PlayerSetting.TOASTS)) return;
         TextColor color = firstColor(message);
         toasts.put(p.getUniqueId(), new Toast(List.of(new HudState.Run(text, color == null ? NamedTextColor.WHITE : color)), message,
                 System.currentTimeMillis() + millis));

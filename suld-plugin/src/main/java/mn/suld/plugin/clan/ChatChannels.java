@@ -129,8 +129,13 @@ public final class ChatChannels implements Listener {
 
     /** "[Н] " in the channel's colour, with the speaker's head in front when enabled. */
     public Component prefix(ChatChannel c, Player speaker) {
+        return prefix(c, speaker, true);
+    }
+
+    /** The same, {@code withHead} false drops the head for a viewer who turned chat heads off. */
+    public Component prefix(ChatChannel c, Player speaker, boolean withHead) {
         Component tag = Component.text("[" + c.tag() + "] ", TextColor.color(c.rgb()));
-        if (!heads) return tag;
+        if (!heads || !withHead) return tag;
         return Component.object(ObjectContents.playerHead(speaker.getUniqueId())).append(Component.text(" ")).append(tag);
     }
 

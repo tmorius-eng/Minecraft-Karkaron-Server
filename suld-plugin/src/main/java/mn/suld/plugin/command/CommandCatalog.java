@@ -65,6 +65,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/shop", "Хангамж, олз зарах", null),
             e(Group.GAME, "/rankup", "Цол ахиулах", null),
             e(Group.GAME, "/travel", "Аялал: өртөө (өртөөнөөс л явна), түүхэн газрууд, овоо", null),
+            e(Group.GAME, "/settings", "Тохиргоо: самбар, зөвлөмж, дуу, чатын толгой, урилга", null),
             e(Group.GAME, "/lvlup", "Түвшний шагнал авах", null),
             e(Group.GAME, "/cosmetics", "Таг, өнгө, мэндчилгээ, эможи", null),
             e(Group.GAME, "/buy", "Кредит дэлгүүр (гоёлд л)", null),

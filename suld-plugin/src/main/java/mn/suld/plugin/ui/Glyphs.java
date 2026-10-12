@@ -186,6 +186,8 @@ public final class Glyphs {
     public static final String HUB_CARD_ON_R3 = "\uE056";
     /** glow frame over a card of row 4 (owned rank, chosen setting), 74x14 (HD x4) */
     public static final String HUB_CARD_ON_R4 = "\uE057";
+    /** hub page settings 212x244 (HD x4) */
+    public static final String PAGE_SETTINGS = "\uE058";
 
     private Glyphs() {
     }

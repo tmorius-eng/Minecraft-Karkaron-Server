@@ -15,7 +15,14 @@ public final class PlayerStyle {
     /** Immutable copy for persistence. */
     public record Snapshot(UUID player, Rank rank, Set<String> owned, String tag, String nameColor, String chatColor,
                            String joinMessage, long claimedLevels, long credits, long discovered, long dailyDay, int dailyStreak, long taskDay, String taskProgress,
-                           String aura, String trail, String killEffect) {
+                           String aura, String trail, String killEffect, long settingsOff) {
+        /** The older shape (every setting on). */
+        public Snapshot(UUID player, Rank rank, Set<String> owned, String tag, String nameColor, String chatColor, String joinMessage,
+                        long claimedLevels, long credits, long discovered, long dailyDay, int dailyStreak, long taskDay, String taskProgress,
+                        String aura, String trail, String killEffect) {
+            this(player, rank, owned, tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered, dailyDay, dailyStreak, taskDay,
+                    taskProgress, aura, trail, killEffect, 0);
+        }
     }
 
     private final UUID player;
@@ -35,6 +42,7 @@ public final class PlayerStyle {
     private long taskDay;
     private String taskProgress = "";
     private long credits;
+    private long settingsOff;
     private boolean dirty;
 
     public PlayerStyle(UUID player) {
@@ -60,6 +68,7 @@ public final class PlayerStyle {
         p.taskDay = s.taskDay();
         p.taskProgress = s.taskProgress() == null ? "" : s.taskProgress();
         p.credits = Math.max(0, s.credits());
+        p.settingsOff = s.settingsOff();
         return p;
     }
 
@@ -201,11 +210,23 @@ public final class PlayerStyle {
 
     public synchronized void creditsCache(long value) { credits = Math.max(0, value); }
 
+    /** The settings the player turned off, as {@link PlayerSetting} bits. */
+    public synchronized long settingsOff() { return settingsOff; }
+
+    public synchronized boolean setting(PlayerSetting s) { return s.enabled(settingsOff); }
+
+    /** Flips {@code s}; returns whether it is on now. */
+    public synchronized boolean toggleSetting(PlayerSetting s) {
+        settingsOff = s.toggled(settingsOff);
+        dirty = true;
+        return s.enabled(settingsOff);
+    }
+
     public synchronized boolean isDirty() { return dirty; }
 
     public synchronized Snapshot snapshotAndClean() {
         dirty = false;
-        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered, dailyDay, dailyStreak, taskDay, taskProgress, aura, trail, killEffect);
+        return new Snapshot(player, rank, new LinkedHashSet<>(owned), tag, nameColor, chatColor, joinMessage, claimedLevels, credits, discovered, dailyDay, dailyStreak, taskDay, taskProgress, aura, trail, killEffect, settingsOff);
     }
 
     public synchronized void markDirty() { dirty = true; }

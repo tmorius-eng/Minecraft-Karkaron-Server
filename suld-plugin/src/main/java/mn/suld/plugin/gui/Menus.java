@@ -94,7 +94,7 @@ public final class Menus {
                 new HubMenu.Tab("Дэлгүүр", "Хангамж, олз зарах, гоёл.", this::shop),
                 new HubMenu.Tab("Rankup", "Ард → Хаан: цол ахих нөхцөл.", this::rankup),
                 new HubMenu.Tab("Аялал", "Өртөө, түүхэн газрууд, овоо.", this::travel),
-                new HubMenu.Tab("Тохиргоо", "HUD, чат, тоглолтын тохиргоо.", null),
+                new HubMenu.Tab("Тохиргоо", "Самбар, зөвлөмж, дуу, чат, урилга.", this::settings),
                 new HubMenu.Tab("Тусламж", "Заавар, командууд, дүрэм.", this::help));
     }
 
@@ -255,6 +255,26 @@ public final class Menus {
                     pl.performCommand("tasks");
                 }));
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, row, cards, head, this::main, null, null), hubTabs());
+    }
+
+    /** The Тохиргоо page of the hub ({@code /settings}): eight on/off settings; the ones that are on glow. */
+    public void settings(Player p) {
+        PlayerStyle s = styles().of(p.getUniqueId());
+        List<HubMenu.Card> cards = new ArrayList<>();
+        int mask = 0;
+        for (mn.suld.api.style.PlayerSetting st : mn.suld.api.style.PlayerSetting.values()) {
+            boolean on = s.setting(st);
+            if (on) mask |= 1 << st.ordinal();
+            cards.add(new HubMenu.Card(Menu.title(st.label(), on ? GREEN : NamedTextColor.GRAY), List.of(Menu.line(st.description()),
+                    Component.empty(), Menu.kv("Одоо:", on ? "асаалттай ✔" : "унтраалттай ✘", on ? GREEN : RED),
+                    Menu.line("« Дарж солих »")), (pl, c) -> {
+                styles().toggleSetting(pl, st);
+                settings(pl);
+            }));
+        }
+        int on = Integer.bitCount(mask);
+        Component row = Component.text(on + " / " + cards.size() + " асаалттай · гэрэлтсэн карт = асаалттай", TextColor.fromHexString("#A4B0C8"));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SETTINGS, 6, row, cards, null, this::main, null, null, mask), hubTabs());
     }
 
     /** The older five-row profile (horse, Их Хуралдай, «Миний түүх»): behind the hub profile's head tile. */

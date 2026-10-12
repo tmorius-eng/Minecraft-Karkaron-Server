@@ -32,9 +32,16 @@ public final class TipsService {
     private final Plugin plugin;
     private final List<Component> tips = new ArrayList<>();
     private int next;
+    private java.util.function.Predicate<Player> wants = p -> true;
 
     public TipsService(Plugin plugin) {
         this.plugin = plugin;
+    }
+
+    /** Who still wants the tips (the Тохиргоо page's «Зөвлөмж»). */
+    public TipsService filter(java.util.function.Predicate<Player> wants) {
+        this.wants = wants;
+        return this;
     }
 
     public void start() {
@@ -59,6 +66,6 @@ public final class TipsService {
     private void broadcast() {
         if (Bukkit.getOnlinePlayers().isEmpty()) return;
         Component tip = tips.get(next++ % tips.size());
-        for (Player p : Bukkit.getOnlinePlayers()) p.sendMessage(tip);
+        for (Player p : Bukkit.getOnlinePlayers()) if (wants.test(p)) p.sendMessage(tip);
     }
 }
