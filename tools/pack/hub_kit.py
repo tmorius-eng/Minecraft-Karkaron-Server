@@ -450,7 +450,19 @@ PROFILE = Spec("profile", "ТОГЛОГЧИЙН ПРОФАЙЛ", None, "Мини
     Card("map", "Даалгавар", "Өдрийн даалгаврууд."),
 ])
 
-PAGES = [HUB, PROFILE]
+HELP = Spec("help", "ТУСЛАМЖ", "Заавар · командууд · дүрэм", "Тусламжийн сэдвүүд", "Дарж уншина", [
+    Card("compass", "Эхлэх", "Шинэ тоглогчийн алхмууд."),
+    Card("swords", "Анги", "Таван анги, /class /profile /exp."),
+    Card("map", "Хархорум", "Хотын үйлчилгээ, аюулгүй бүс."),
+    Card("chest", "Агуй ба бүлэг", "/party /dungeon."),
+    Card("arrows", "Овог", "/clan /cc."),
+    Card("chart", "Реликс", "/relic list · hint · history."),
+    Card("scroll", "Командууд", "Бүх команд нэг дор."),
+    Card("book", "Дүрэм", "Серверийн дүрэм."),
+])
+
+PAGES = [HUB, PROFILE]          # the first glyphs; new pages go to EXTRA_PAGES (code points only ever append)
+EXTRA_PAGES = [HELP]
 
 
 def _canvas() -> Image.Image:
@@ -651,11 +663,15 @@ def build(add_bitmap, preview: str | None, mc_dir: str) -> None:
     prev_, next_ = kit.arrow(False), kit.arrow(True)
     add_bitmap("HUB_PREV", prev_, "gui/hub_prev", 14, 13 - ARROW[0][1], "footer paging arrow « 16x14 at slot 7 (HD x4)")
     add_bitmap("HUB_NEXT", next_, "gui/hub_next", 14, 13 - ARROW[1][1], "footer paging arrow » 16x14 at slot 8 (HD x4)")
+    for spec in EXTRA_PAGES:
+        pg = page(kit, spec)
+        pages[spec.name] = pg
+        add_bitmap(f"PAGE_{spec.name.upper()}", pg, f"gui/hub_page_{spec.name}", H, ascent, f"hub page {spec.name} {W}x{H} (HD x4)")
     button_sprites(mc_dir)
     slot_highlight(mc_dir)
     if preview:
         chest = os.path.join(mc_dir, "textures", "gui", "container", "generic_54.png")
-        for spec, active in ((HUB, -1), (PROFILE, 0)):
+        for spec, active in ((HUB, -1), (PROFILE, 0), (HELP, 7)):
             comp = preview_compose(fr, pages[spec.name], tab_on, active, chest)
             if spec is PROFILE:
                 comp.alpha_composite(back, (cx(BACK[0]), cy(BACK[1])))

@@ -587,6 +587,15 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_page_help.png",
+   "height": 244,
+   "ascent": 35,
+   "chars": [
+    ""
+   ]
   }
  ]
 }

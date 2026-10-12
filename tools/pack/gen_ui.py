@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pixelfont as pf  # noqa: E402
 import hd_art  # noqa: E402
 import hub_kit  # noqa: E402
+import hd_font  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ART = os.path.join(ROOT, "assets", "art", "source")
@@ -1220,6 +1221,7 @@ def main() -> None:
     gui_inventory(args.preview)
     # appended last: the «Командын Өргөө» window kit (earlier glyphs keep their code points)
     hub_kit.build(add_bitmap, args.preview, os.path.join(ROOT, "resourcepack", "assets", "minecraft"))
+    hd_font.build(RP)
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)

@@ -116,9 +116,48 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.ADMIN, "/lp …", "LuckPerms: бүлэг, эрх", "luckperms.editor"),
             e(Group.ADMIN, "/chunky …  //wand  /rg …", "Дэлхий бэлдэх, WorldEdit, WorldGuard", "chunky.command"));
 
+    /** The groups {@code s} may see (console: all). */
+    private static List<Group> visible(CommandSender s) {
+        boolean console = !(s instanceof org.bukkit.entity.Player);
+        List<Group> out = new ArrayList<>();
+        for (Group g : Group.values()) {
+            for (Entry en : ALL) {
+                if (en.group() == g && (console || en.permission() == null || s.hasPermission(en.permission()))) {
+                    out.add(g);
+                    break;
+                }
+            }
+        }
+        return out;
+    }
+
+    /** One group as a page: its rows, the other groups as buttons, «« Буцах» to the help window. */
+    private static void page(org.bukkit.entity.Player p, Group g) {
+        List<Component> lines = new ArrayList<>();
+        for (Entry en : ALL) {
+            if (en.group() != g || (en.permission() != null && !p.hasPermission(en.permission()))) continue;
+            lines.add(mn.suld.plugin.ui.StyleFormat.hd(Component.text(en.command(), NamedTextColor.AQUA, TextDecoration.BOLD)
+                    .append(Component.text(" — " + en.what(), NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))));
+        }
+        List<Group> groups = visible(p);
+        if (!groups.contains(Group.SERVER)) {
+            lines.add(mn.suld.plugin.ui.Pages.dim("Нэмэлт серверийн командууд (/home, /tpa, /msg…) таны бүлэгт одоогоор нээгдээгүй."));
+        }
+        List<mn.suld.plugin.ui.Pages.Button> buttons = new ArrayList<>();
+        for (Group other : groups) {
+            if (other == g) continue;
+            buttons.add(new mn.suld.plugin.ui.Pages.Button(mn.suld.plugin.ui.StyleFormat.hd(Component.text(other.title, other.color)), null, pl -> page(pl, other)));
+        }
+        mn.suld.plugin.ui.Pages.text(p, "КОМАНДУУД · " + g.title, lines, buttons, pl -> pl.performCommand("help"));
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
         boolean console = !(s instanceof org.bukkit.entity.Player);
+        if (s instanceof org.bukkit.entity.Player p) {
+            page(p, Group.GAME);
+            return true;
+        }
         s.sendMessage(Component.text("━━━━━ ", NamedTextColor.GOLD).append(Component.text("КОМАНДУУД", NamedTextColor.GOLD, TextDecoration.BOLD))
                 .append(Component.text(" ━━━━━", NamedTextColor.GOLD)));
         List<Group> shown = new ArrayList<>();

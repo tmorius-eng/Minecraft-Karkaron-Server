@@ -43,6 +43,14 @@ public final class StyleFormat {
         return out;
     }
 
+    /** The pack's HD text font (a TrueType provider, tools/pack/hd_font.py): tooltips, dialog pages, hub rows. */
+    public static final net.kyori.adventure.key.Key HD = net.kyori.adventure.key.Key.key("suld", "hd");
+
+    /** {@code c} in the HD text font (children with their own font keep it). */
+    public static Component hd(Component c) {
+        return c.font(HD);
+    }
+
     /** A pack glyph, untinted and without the text shadow. */
     public static Component glyph(String glyph) {
         return Component.text(glyph).font(Glyphs.FONT).color(NamedTextColor.WHITE).shadowColor(ShadowColor.none());

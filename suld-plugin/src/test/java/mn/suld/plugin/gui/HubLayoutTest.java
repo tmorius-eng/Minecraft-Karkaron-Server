@@ -88,8 +88,9 @@ class HubLayoutTest {
     }
 
     @Test
-    void textWidthIsSixPerLetterWithNarrowPunctuation() {
-        assertEquals(6 * 2 + 4 + 6 * 2, HubLayout.textWidth("Lv 12"));
-        assertEquals(2, HubLayout.textWidth("·"));
+    void textWidthFollowsTheHdFontsGlyphClasses() {
+        assertEquals((60 + 52 + 28 + 60 + 60 + 5) / 10, HubLayout.textWidth("Lv 12"));
+        assertEquals(3, HubLayout.textWidth("·"));
+        assertTrue(HubLayout.textWidth("ММММ") > HubLayout.textWidth("iiii"));
     }
 }

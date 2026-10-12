@@ -168,6 +168,8 @@ public final class Glyphs {
     public static final String HUB_PREV = "\uE04D";
     /** footer paging arrow » 16x14 at slot 8 (HD x4) */
     public static final String HUB_NEXT = "\uE04E";
+    /** hub page help 212x244 (HD x4) */
+    public static final String PAGE_HELP = "\uE04F";
 
     private Glyphs() {
     }

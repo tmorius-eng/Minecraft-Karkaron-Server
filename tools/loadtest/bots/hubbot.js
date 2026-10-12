@@ -76,6 +76,17 @@ async function click(b, slot) {
   r = await open(b, '/profile');
   check(has(r.w, G.PROFILE) && r.chat.length === 0, '/profile opens the window and prints no chat', 'chat lines ' + r.chat.length);
 
+  // text pages are dialogs (mineflayer cannot read them): the proof is that no chat lines follow the command
+  for (const c of ['/help start', '/rules', '/commands', '/discord', '/exp']) {
+    if (b.currentWindow) { b.closeWindow(b.currentWindow); await sleep(400); }
+    const k = b.chatLog.length;
+    b.chat(c); await sleep(1800);
+    const lines = b.chatLog.slice(k).filter(l => !l.includes('Холбоос хараахан'));
+    check(lines.length === 0, c + ' answers with a window, not chat', lines.join(' | ').slice(0, 160) || 'no chat');
+  }
+  r = await open(b, '/help');
+  check(has(r.w, '\ue04f') && r.w.slots[8], '/help opens the Тусламж page with the tutorial on the ornament tile', r.w ? 'ok' : 'no window');
+
   console.log(results.every(Boolean) ? `ALL ${results.length} PASSED` : `${results.filter(x => !x).length} FAILED`);
   b.quit(); process.exit(results.every(Boolean) ? 0 : 1);
 })();

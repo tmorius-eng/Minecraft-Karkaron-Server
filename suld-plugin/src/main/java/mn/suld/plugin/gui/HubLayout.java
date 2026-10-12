@@ -101,21 +101,22 @@ public final class HubLayout {
         return x + width + 1;
     }
 
-    /** Width of {@code text} in the client's default font, close enough to centre a short row (px). */
+    /**
+     * Width of {@code text} in the pack's HD font (DejaVu Sans Bold at 8 px, tools/pack/hd_font.py), close enough
+     * to centre a short row: tenths of a px per glyph class, rounded at the end.
+     */
     public static int textWidth(String text) {
-        int w = 0;
+        int tenths = 0;
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            w += switch (c) {
-                case ' ' -> 4;
-                case 'i', '!', '.', ',', ':', ';', '\'', '|', '·', 'ı' -> 2;
-                case 'l', 'І', 'ї' -> 3;
-                case 'I', 't', '(', ')', '[', ']', '{', '}', '<', '>' -> 4;
-                case 'f', 'k' -> 5;
-                case 'м', 'ш', 'щ', 'ы', 'ю', 'ж', 'ф', 'М', 'Ш', 'Щ', 'Ы', 'Ю', 'Ж', 'Ф', 'W', 'M', 'm', 'w', '@', '~' -> 7;
-                default -> 6;
+            tenths += switch (c) {
+                case ' ' -> 28;
+                case 'i', 'l', '!', '.', ',', ':', ';', '\'', '|', '·', 'ı', 'I', 'j', 'т' -> 30;
+                case 'f', 't', 'r', '(', ')', '[', ']', '{', '}', 'г', 'з', 'с', 'ь' -> 40;
+                case 'м', 'ш', 'щ', 'ы', 'ю', 'ж', 'ф', 'М', 'Ш', 'Щ', 'Ы', 'Ю', 'Ж', 'Ф', 'W', 'M', 'm', 'w', '@', '~', 'Д', 'Ц' -> 75;
+                default -> Character.isUpperCase(c) || Character.isDigit(c) ? 60 : 52;
             };
         }
-        return w;
+        return (tenths + 5) / 10;
     }
 }

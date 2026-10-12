@@ -200,22 +200,18 @@ public final class Menus {
             new HelpEntry(Material.OAK_SIGN, "Командууд", GREEN, List.of("Бүх команд нэг дор"), "commands"),
             new HelpEntry(Material.PAPER, "Дүрэм", RED, List.of("Серверийн дүрэм"), "rules"));
 
+    /** The Тусламж page of the hub: eight topics, each a text page ({@code /help <page>}); the ornament tile = the tutorial. */
     public void help(Player p) {
-        Menu m = new Menu(3, "Тусламж · Help", null);
-        int[] slots = {10, 11, 12, 13, 14, 15, 16, 22};
-        for (int i = 0; i < HELP.size(); i++) {
-            HelpEntry h = HELP.get(i);
-            List<Component> body = new ArrayList<>();
-            for (String l : h.lines()) body.add(b(l));
-            m.set(slots[i], Menu.item(h.icon(), Menu.title(h.title(), h.color()), Menu.lore(h.color(), body, List.of(), "Дарж унших")),
-                    (pl, c) -> {
-                        pl.closeInventory();
-                        pl.performCommand("help " + h.page());
-                    });
+        List<HubMenu.Card> cards = new ArrayList<>();
+        for (HelpEntry h : HELP) {
+            cards.add(HubMenu.card(h.title(), String.join(" · ", h.lines()), (pl, c) -> {
+                pl.closeInventory();
+                pl.performCommand("help " + h.page());
+            }));
         }
-        m.set(18, Menu.item(Material.ARROW, Menu.title("« Заавар", GREEN), List.of()), (pl, c) -> tutorial(pl));
-        m.set(26, Menu.item(Material.CLOCK, Menu.title("Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
-        m.open(p);
+        HubMenu.Card tut = new HubMenu.Card(Menu.title("Заавар · /tutorial", GREEN), List.of(Menu.line("Алхам алхмаар танилцуулга."),
+                Component.empty(), Menu.line("« Дарж нээх »")), (pl, c) -> tutorial(pl));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_HELP, 7, null, cards, tut, this::main, null, null), hubTabs());
     }
 
     // ================================================================== profile / quests

@@ -25,6 +25,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -178,6 +179,10 @@ public final class CityCommands implements Listener {
                 }
             }
             Page page = PAGES.get(index);
+            if (s instanceof Player p) {
+                helpPage(p, page);
+                return true;
+            }
             s.sendMessage(Component.text("━━━━ ", NamedTextColor.GRAY, TextDecoration.BOLD)
                     .append(Component.text("ᠰ SÜLD ", Messages.BRAND, TextDecoration.BOLD))
                     .append(Component.text(page.title(), NamedTextColor.GOLD, TextDecoration.BOLD))
@@ -208,9 +213,33 @@ public final class CityCommands implements Listener {
         }
     };
 
+    /** A help page as a window (docs/UI_HUB.md): its lines, its commands as buttons, «« Буцах» to the help hub. */
+    private void helpPage(Player p, Page page) {
+        List<Component> lines = new ArrayList<>();
+        List<mn.suld.plugin.ui.Pages.Button> buttons = new ArrayList<>();
+        java.util.Set<String> seen = new java.util.LinkedHashSet<>();
+        for (String[] line : page.lines()) {
+            lines.add(mn.suld.plugin.ui.Pages.line(line[0]));
+            if (line[1] != null && seen.add(line[1])) buttons.add(mn.suld.plugin.ui.Pages.command(line[1], null));
+        }
+        if (page.key().equals("rules")) {
+            lines.clear();
+            for (String r : RULES) lines.add(mn.suld.plugin.ui.Pages.line(r));
+            buttons.clear();
+        }
+        mn.suld.plugin.ui.Pages.text(p, page.title(), lines, buttons.subList(0, Math.min(6, buttons.size())),
+                menus == null ? null : menus::help);
+    }
+
     private final TabExecutor rules = new TabExecutor() {
         @Override
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
+            if (s instanceof Player p) {
+                List<Component> lines = new ArrayList<>();
+                for (String r : RULES) lines.add(mn.suld.plugin.ui.Pages.line(r));
+                mn.suld.plugin.ui.Pages.text(p, "Дүрэм · Rules", lines, List.of(), menus == null ? null : menus::help);
+                return true;
+            }
             s.sendMessage(Component.text("━━━━ ", NamedTextColor.GRAY, TextDecoration.BOLD).append(Component.text("Дүрэм · Rules", NamedTextColor.GOLD, TextDecoration.BOLD)));
             RULES.forEach(r -> s.sendMessage(Component.text(r, NamedTextColor.WHITE, TextDecoration.BOLD)));
             return true;

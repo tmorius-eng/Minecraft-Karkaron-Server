@@ -175,16 +175,18 @@ public final class Menu implements InventoryHolder {
         return out;
     }
 
+    // menu text is drawn in the pack's HD font (StyleFormat.HD): sharp in tooltips at every GUI scale
+
     public static Component title(String text, TextColor color) {
-        return Component.text(text, color, TextDecoration.BOLD);
+        return StyleFormat.hd(Component.text(text, color, TextDecoration.BOLD));
     }
 
     public static Component line(String text) {
-        return Component.text(text, NamedTextColor.WHITE, TextDecoration.BOLD);
+        return StyleFormat.hd(Component.text(text, NamedTextColor.WHITE));
     }
 
     public static Component kv(String key, String value, TextColor color) {
-        return Component.text(key + " ", NamedTextColor.WHITE, TextDecoration.BOLD).append(Component.text(value, color, TextDecoration.BOLD));
+        return StyleFormat.hd(Component.text(key + " ", NamedTextColor.WHITE).append(Component.text(value, color, TextDecoration.BOLD)));
     }
 
     /** Slots of a 2-wide, 3-tall card in the 4x2 cosmetics grid (card index 0..7, four per row). */

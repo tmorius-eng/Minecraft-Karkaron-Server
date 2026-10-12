@@ -42,6 +42,10 @@ public final class LinkCommands implements TabExecutor {
             case "vote" -> "Санал өгөх";
             default -> "Вэбсайт";
         };
+        if (s instanceof org.bukkit.entity.Player p) {
+            mn.suld.plugin.ui.Pages.link(p, label, url);
+            return true;
+        }
         s.sendMessage(Component.text("✦ " + label + ": ", NamedTextColor.GOLD, TextDecoration.BOLD)
                 .append(Component.text(url, NamedTextColor.AQUA, TextDecoration.BOLD, TextDecoration.UNDERLINED)
                         .clickEvent(ClickEvent.openUrl(url))));

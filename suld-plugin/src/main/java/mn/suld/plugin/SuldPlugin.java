@@ -240,6 +240,7 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(services.classWeapons(), this);
         services.classWeapons().start();
 
+        mn.suld.plugin.ui.Pages.install(this);
         mn.suld.plugin.command.CityCommands city = new mn.suld.plugin.command.CityCommands(this, services, worldBuild);
         getServer().getPluginManager().registerEvents(city, this);
         registerTab("help", city.help());
