@@ -125,7 +125,7 @@ public final class SuldServices {
                     this.dataSource = DataSourceFactory.create(config.database(), plugin.getDataFolder().toPath());
                     if (dataSource instanceof AutoCloseable c) opened.add(c::close);
                     int applied = new SchemaMigrator(dataSource, dialect).migrate();
-                    plugin.getLogger().info("SULD storage ready (" + dialect + "), migrations applied: " + applied);
+                    plugin.getLogger().info("SULD storage ready (" + config.database().type() + (config.database().type().name().equals(dialect.name()) ? "" : ", " + dialect + " SQL") + "), migrations applied: " + applied);
                     this.repository = new JdbcProfileRepository(dataSource, dialect, ioExecutor);
                 }
                 default -> throw new IllegalStateException("Unhandled storage type: " + config.database().type());
