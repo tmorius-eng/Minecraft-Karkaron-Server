@@ -78,7 +78,7 @@ In the Vultr panel, create a Firewall Group and attach it to the instance:
 | TCP | 22 | your IP(s) if static, else anywhere |
 | TCP | 25565 | anywhere |
 | TCP | 8080 | anywhere (resource pack download) |
-| UDP | 19132 | anywhere (Bedrock players via Geyser) |
+| UDP | 19132 | only when `BEDROCK_PORT` is set (optional Geyser; SÜLD is Java Edition only by default) |
 
 Do not open 5432 (PostgreSQL).
 
@@ -246,7 +246,7 @@ lives only on the server's own disk.
   root-owned `/opt/suld/bin`, so a compromised game process cannot plant code that root later runs.
 - **Trust root:** updates build whatever `REPO_BRANCH` contains. Protect that branch on GitHub.
 - **Network:** PostgreSQL is localhost only (the health check warns otherwise). RCON and query are off.
-  ufw allows only 22/25565/8080 (TCP) and 19132 (UDP, Bedrock), and fail2ban protects SSH.
+  ufw allows only 22/25565/8080 (TCP), plus 19132 (UDP) only when Bedrock is switched on, and fail2ban protects SSH.
 - **SSH hardening** (do it yourself after confirming key login works): in `/etc/ssh/sshd_config` set
   `PasswordAuthentication no` and `PermitRootLogin prohibit-password`, then `systemctl reload ssh`.
 - **Private repo:** create a read-only *deploy key*:

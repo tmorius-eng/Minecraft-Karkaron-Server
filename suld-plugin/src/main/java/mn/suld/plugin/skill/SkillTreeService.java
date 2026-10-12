@@ -1106,7 +1106,7 @@ public final class SkillTreeService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent e) {
-        if (CombatListener.spellDamage || dispatching || !hostile(e.getEntity())) return;
+        if (CombatListener.isSpellDamage() || dispatching || !hostile(e.getEntity())) return;
         Player p = attackerOf(e);
         if (p == null) return;
         Runtime r = runtime.get(p.getUniqueId());

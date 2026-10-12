@@ -42,12 +42,16 @@ public final class Mailbox {
         plugin.getLogger().info("[mailbox] " + items.size() + " stack(s) kept for " + player + " (" + why + ")");
     }
 
+    /** Players whose delivered file could not be emptied: no second delivery from it in this run (FIND-08). */
+    private final java.util.Set<UUID> stuck = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     /**
      * Hands the player everything kept for them; what does not fit stays kept. Returns the stacks delivered.
      * PERS-005: the player file is written first, then the mailbox file shrinks, so a crash at any point leaves every
      * stack in at least one place (never in neither).
      */
     public synchronized int deliver(Player p) {
+        if (stuck.contains(p.getUniqueId())) return 0; // delivered once already; its file could not be emptied
         List<ItemStack> kept = read(p.getUniqueId());
         if (kept.isEmpty()) return 0;
         List<ItemStack> left = new ArrayList<>();
@@ -91,8 +95,17 @@ public final class Mailbox {
                 java.nio.file.Files.deleteIfExists(f);
             } catch (java.io.IOException e) {
                 // the stacks were delivered and the player file saved: a file that cannot go would deliver them twice
-                plugin.getLogger().severe("[mailbox] delivered but could not remove " + f.getFileName() + ": " + e.getMessage()
-                        + " — remove it by hand before the player's next join");
+                // (external audit FIND-08). Empty it instead; if even that fails, never read it again this run.
+                try {
+                    YamlConfiguration empty = new YamlConfiguration();
+                    empty.set("items", List.of());
+                    AtomicYaml.writeNow(f, empty);
+                    plugin.getLogger().warning("[mailbox] could not remove " + f.getFileName() + " (" + e.getMessage() + "); emptied it instead");
+                } catch (java.io.IOException e2) {
+                    stuck.add(player);
+                    plugin.getLogger().severe("[mailbox] delivered but could neither remove nor empty " + f.getFileName() + ": "
+                            + e2.getMessage() + " — not delivered again until restart; remove it by hand before then");
+                }
             }
             return;
         }

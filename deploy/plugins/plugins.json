@@ -133,10 +133,10 @@
     {
       "id": "geyser",
       "name": "Geyser-Spigot",
-      "profile": "core",
+      "profile": "optional",
       "modrinth": "geyser",
       "allow_beta": true,
-      "why": "Bedrock Edition (mobile, console, Windows) players can join; UDP port 19132. GeyserMC publishes every build on Modrinth as 'beta'",
+      "why": "Bedrock Edition (mobile, console, Windows) players can join; UDP port 19132. GeyserMC publishes every build on Modrinth as 'beta'. NOT installed by default: SÜLD's HUD, windows and lock-on need the Java resource pack and keyboard, which Bedrock clients do not have (external audit FIND-03); SÜLD is Java Edition only until a Bedrock UI exists",
       "optional": true,
       "requires": [
         "viaversion"
@@ -145,7 +145,7 @@
     {
       "id": "floodgate",
       "name": "floodgate",
-      "profile": "core",
+      "profile": "optional",
       "geysermc": "floodgate",
       "why": "Bedrock players join with their Xbox (Microsoft) account, no Java account needed; official GeyserMC download API",
       "optional": true,

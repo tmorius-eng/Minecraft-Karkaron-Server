@@ -29,9 +29,16 @@ public final class PlayerDataSaves {
     private PlayerDataSaves() {
     }
 
-    /** The player file, written now (main thread, same tick). */
+    /**
+     * The player file, written now (main thread, same tick). Never skipped or deferred: the item side must reach disk
+     * before the coins (see above), even when one tick writes it twice. Timed as {@code player.save_data} (external
+     * audit FIND-01) so its real cost shows in {@code /suldperf}.
+     */
     public static void now(Player p) {
-        if (p.isOnline()) p.saveData();
+        if (!p.isOnline()) return;
+        long t = mn.suld.plugin.perf.PerfProbe.start();
+        p.saveData();
+        mn.suld.plugin.perf.PerfProbe.stop("player.save_data", t);
     }
 
     /**

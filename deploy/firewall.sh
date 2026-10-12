@@ -25,6 +25,8 @@ run ufw default allow outgoing
 run ufw limit "${ssh_port}/tcp" comment 'ssh (rate-limited)'
 run ufw allow "${SERVER_PORT}/tcp" comment 'minecraft'
 run ufw allow "${PACK_PORT}/tcp" comment 'suld resource pack'
-run ufw allow "${BEDROCK_PORT}/udp" comment 'bedrock (geyser)'
+# Bedrock (Geyser) is optional and off by default (SÜLD is Java Edition only, docs/OPERATIONS.md): the UDP port opens
+# only when BEDROCK_PORT is set in suld.env.
+if [[ -n "${BEDROCK_PORT:-}" ]]; then run ufw allow "${BEDROCK_PORT}/udp" comment 'bedrock (geyser)'; fi
 run ufw --force enable
 [[ "$DRY_RUN" == "1" ]] || ufw status verbose

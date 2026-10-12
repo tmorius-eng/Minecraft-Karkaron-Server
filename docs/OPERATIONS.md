@@ -130,6 +130,8 @@ loses 25 % durability. They respawn as a **Сүнс** for 30 s: they cannot deal
 
 ## Bedrock players (Geyser)
 
+**Off by default.** SÜLD is Java Edition 1.21.11 only: its HUD, windows and lock-on need the Java resource pack and a keyboard, which Bedrock clients do not have (external audit FIND-03). Geyser and Floodgate are the `optional` plugin profile; to try them, install that profile and set `BEDROCK_PORT=19132` in `suld.env` (the firewall opens the UDP port only then). The notes below apply only when it is on.
+
 - Geyser listens on UDP **19132**. Open it in the firewall next to TCP 25565.
 - Without Floodgate, Bedrock players sign in with a Java (Microsoft) account (`auth-type: online`). Accounts are
   always verified.

@@ -216,7 +216,7 @@ public final class SkillService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMelee(EntityDamageByEntityEvent e) {
-        if (CombatListener.spellDamage) return;
+        if (CombatListener.isSpellDamage()) return;
         if (e.getDamager() instanceof Player p) {
             click(p, 'L');
             PlayerClass c = clazzOf(p);
@@ -574,12 +574,7 @@ public final class SkillService implements Listener {
         double mult = s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p)
                 * rankPower(p, s);
         double dmg = (fresh ? snap : CombatListener.attackOf(services, p)) * mult;
-        CombatListener.spellDamage = true;
-        try {
-            target.damage(dmg, p);
-        } finally {
-            CombatListener.spellDamage = false;
-        }
+        CombatListener.asSpell(() -> target.damage(dmg, p));
         riders(p, target, s);
         services.skillTree().fire(p, TriggerEvent.SPELL_HIT, target);
     }
@@ -636,13 +631,7 @@ public final class SkillService implements Listener {
     /** Damage from a passive spell or ultimate: ATK-based, never replaced by the hit formula, never triggering hit procs. */
     public void damage(Player p, LivingEntity target, double amount) {
         if (!target.isValid()) return;
-        boolean was = CombatListener.spellDamage;
-        CombatListener.spellDamage = true;
-        try {
-            target.damage(amount, p);
-        } finally {
-            CombatListener.spellDamage = was;
-        }
+        CombatListener.asSpell(() -> target.damage(amount, p));
     }
 
     /** Enemies whose body (the centre of their hitbox, not their feet) is within {@code r} of a point on a ray. */

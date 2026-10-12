@@ -55,8 +55,27 @@ public final class CombatListener implements Listener {
         this.items = items;
     }
 
-    /** True while SÜLD itself applies spell damage (its amount must not be replaced by the hit formula). */
-    public static boolean spellDamage;
+    /**
+     * How deep SÜLD's own spell damage is nested (a spell's hit can trigger a passive spell's hit). While it is above
+     * zero, damage is spell damage: its amount must not be replaced by the hit formula. Only {@link #asSpell} changes
+     * it, always restored in {@code finally} (external audit FIND-04: no bare global flag that an exception could leave set).
+     */
+    private static int spellDepth;
+
+    /** True while SÜLD itself applies spell damage. */
+    public static boolean isSpellDamage() {
+        return spellDepth > 0;
+    }
+
+    /** Runs {@code hit} as spell damage (main thread). */
+    public static void asSpell(Runnable hit) {
+        spellDepth++;
+        try {
+            hit.run();
+        } finally {
+            spellDepth--;
+        }
+    }
 
     /**
      * The SÜLD attack of a player: class base + level growth + the flat damage of everything they wear (weapon,
@@ -130,7 +149,7 @@ public final class CombatListener implements Listener {
      */
     @EventHandler(priority = org.bukkit.event.EventPriority.NORMAL, ignoreCancelled = true)
     public void onMobHitsPlayer(EntityDamageByEntityEvent event) {
-        if (spellDamage || !(event.getEntity() instanceof Player)) return;
+        if (isSpellDamage() || !(event.getEntity() instanceof Player)) return;
         org.bukkit.entity.Entity src = event.getDamager();
         boolean projectile = false;
         if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof org.bukkit.entity.Entity shooter) {
@@ -192,7 +211,7 @@ public final class CombatListener implements Listener {
     }
 
     private void onHit0(EntityDamageByEntityEvent event) {
-        if (spellDamage || !isTarget(event.getEntity())) {
+        if (isSpellDamage() || !isTarget(event.getEntity())) {
             return;
         }
         Player player;
