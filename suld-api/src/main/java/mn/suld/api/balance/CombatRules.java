@@ -46,10 +46,10 @@ public final class CombatRules {
     }
 
     /**
-     * The class's own spell power on top of the SPELL_DAMAGE stat: Бөө, the caster, adds 25 % («Тэнгэрийн хүч»); the
+     * The class's own spell power on top of the SPELL_DAMAGE stat: Бөө, the caster, adds 40 % («Тэнгэрийн хүч»; 25 % until 2026-10-12); the
      * others 0. Live in SkillTreeService.spellDamageMultiplier, measured by the simulator.
      */
     public static double spellPassive(PlayerClass c) {
-        return c == PlayerClass.BOO ? 0.25 : 0.0;
+        return c == PlayerClass.BOO ? 0.40 : 0.0;
     }
 }

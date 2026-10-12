@@ -258,7 +258,7 @@ heals 15 % harder, rank III 30 % harder and casts 10 % sooner. The HUD shows a f
 | Дархан | Галт Уул | 70 · 3.6 ATK | the aimed ground smoulders, then erupts: thrown up and set on fire for 5 s |
 | Хүлэгчин | Хийморийн Давхилт | 60 · 2.8 ATK | a long charge that hits everything on the way, then 6 s Speed III |
 
-Cooldown 18 s. The fifth spells take every spell mod except echo (they last long already). Бөө also gets +25 % spell
+Cooldown 18 s. The fifth spells take every spell mod except echo (they last long already). Бөө also gets +40 % spell
 power as a class trait (`CombatRules.spellPassive`).
 
 ## Reading the map
