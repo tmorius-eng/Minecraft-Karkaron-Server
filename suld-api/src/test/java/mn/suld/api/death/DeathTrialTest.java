@@ -28,6 +28,9 @@ class DeathTrialTest {
     @Test
     void wolvesGrowWithLevelAndNoLockOutlastsHalfAnHour() {
         assertTrue(DeathTrial.wolfHealth(60) > DeathTrial.wolfHealth(1));
+        // sized to the soul's attack: five plain hits, never below the level floor
+        assertEquals(5 * 40.0, DeathTrial.wolfHealth(20, 40), 1e-9);
+        assertEquals(DeathTrial.wolfHealth(20), DeathTrial.wolfHealth(20, 1), 1e-9);
         assertTrue(DeathTrial.wolfBite(60) > DeathTrial.wolfBite(1));
         DeathSettings s = DeathSettings.defaults();
         for (int level = 1; level <= 60; level++) assertTrue(DeathLock.minutes(s, level, 0) <= 30, "level " + level);

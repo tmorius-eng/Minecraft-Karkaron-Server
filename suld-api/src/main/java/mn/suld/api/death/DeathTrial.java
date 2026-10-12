@@ -36,6 +36,17 @@ public record DeathTrial(int wolves, int seconds, int cooldownSeconds) {
         return 10 + 1.6 * Math.max(1, level);
     }
 
+    /** Hits of the soul's own attack that a spirit wolf takes (so the fight is the same at every level and gear). */
+    public static final double WOLF_HITS = 5;
+
+    /**
+     * A spirit wolf's health against a soul whose SÜLD attack is {@code attack}: about {@link #WOLF_HITS} of its
+     * hits (crits and spells make it shorter), never less than {@link #wolfHealth(int)}.
+     */
+    public static double wolfHealth(int level, double attack) {
+        return Math.max(wolfHealth(level), WOLF_HITS * Math.max(0, attack));
+    }
+
     public static double wolfBite(int level) {
         return 2 + 0.25 * Math.max(1, level);
     }

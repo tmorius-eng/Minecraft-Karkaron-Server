@@ -51,8 +51,14 @@ time to level 60 fell from ~200 to ~146 active hours (`SimulationTest`); the own
 
 `/trial` (`/soril`, `/сорил`), `DeathTrialService` + pure `api/death/DeathTrial`:
 
-* Only a soul, outside Хархорум. Three glowing **«Сүнсний чоно»** spawn around it (HP 10 + 1.6·L, bite 2 + 0.25·L)
-  and hunt only that soul; nobody else can hit them, they bite nobody else.
+* Only a soul, outside Хархорум. Three glowing **«Сүнсний чоно»** spawn around it and hunt only that soul; nobody
+  else can hit them, they bite nobody else. HP = max(10 + 1.6·L, 5 × the soul's SÜLD attack) — about five of its
+  hits each, at any level and gear (`DeathTrial.wolfHealth(level, attack)`); bite 2 + 0.25·L.
+* **The soul fights with its whole class** while the trial runs: the soul's slowness and weakness are lifted, its
+  hits use the SÜLD attack (`CombatListener.isTarget` counts trial wolves), Мэргэн's bow shoots
+  (`DeathService.onSoulLaunch`, `SkillService.soulBlocked`) and spells cast and reach the wolves
+  (`SkillService.hostile`); `onSoulAttack` still lets them hurt only its own wolves. Before this, a soul hit for ≈ 0
+  (weakness V on vanilla damage) and an archer could not shoot at all, so the trial could not be won.
 * Kill all three within **3 minutes** → the lock ends now (`DeathRecord.State.RECOVERED`, actor `trial`); the wound
   still applies.
 * Time out, a bite that would take the soul to 0 HP, or logging out → the wolves vanish, the soul keeps its timer and

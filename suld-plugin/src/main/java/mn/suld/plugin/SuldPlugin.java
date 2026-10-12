@@ -173,6 +173,7 @@ public final class SuldPlugin extends JavaPlugin {
         // «Тэнгэрийн сорил»: the active way out of a death lock (docs/DEATH_AND_RECOVERY.md)
         deathTrial = new mn.suld.plugin.death.DeathTrialService(this, services, deaths);
         deaths.trial = deathTrial;
+        services.inDeathTrial = deathTrial::inTrial;
         getServer().getPluginManager().registerEvents(deathTrial, this);
         registerTab("trial", deathTrial);
         // the Display-Entity model renderer (docs/MODEL_RENDERER.md): rigged SÜLD mobs are dressed on spawn

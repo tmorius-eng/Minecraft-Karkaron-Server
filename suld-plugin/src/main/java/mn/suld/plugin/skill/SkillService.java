@@ -236,9 +236,17 @@ public final class SkillService implements Listener {
         if (t != null && !t.current(now).isEmpty()) return;
         Long last = lastShot.get(p.getUniqueId());
         if (last != null && now - last < SHOT_MS) return;
-        if (services.isSoul.test(p.getUniqueId())) return;
+        if (soulBlocked(p.getUniqueId())) return;
         lastShot.put(p.getUniqueId(), now);
         shoot(p);
+    }
+
+    /**
+     * A soul may not fight — except in its «Тэнгэрийн сорил», where DeathService.onSoulAttack lets its hits, arrows and
+     * spells reach only its own wolves.
+     */
+    private boolean soulBlocked(UUID id) {
+        return services.isSoul.test(id) && !services.inDeathTrial.test(id);
     }
 
     /** A fully drawn arrow (speed 3, the vanilla full-draw damage 6 that CombatListener scales from). */
@@ -357,7 +365,7 @@ public final class SkillService implements Listener {
     private CastResult castDirect0(Player p, Spell s, boolean ignoreTiming) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return CastResult.NO_PROFILE;
-        if (services.isSoul.test(p.getUniqueId())) { // a soul cannot cast
+        if (soulBlocked(p.getUniqueId())) { // a soul cannot cast (but fights its own trial wolves with everything)
             say(p, "§bСүнс — ид шид хэрэглэх боломжгүй");
             return CastResult.SOUL;
         }
@@ -629,7 +637,8 @@ public final class SkillService implements Listener {
 
     private boolean hostile(Entity e, Player caster) {
         return e instanceof LivingEntity le && le.isValid() && !(e instanceof Player) && e != caster
-                && (services.mobs().isSuldMob(e) || e instanceof Monster) && !e.getScoreboardTags().contains("city_npc");
+                && (services.mobs().isSuldMob(e) || e instanceof Monster || mn.suld.plugin.death.DeathTrialService.ownerOf(e) != null)
+                && !e.getScoreboardTags().contains("city_npc");
     }
 
     private void hurt(Player p, LivingEntity target, Spell s) {

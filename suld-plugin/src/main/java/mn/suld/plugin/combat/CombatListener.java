@@ -272,9 +272,12 @@ public final class CombatListener implements Listener {
         }
     }
 
-    /** SÜLD hit formula applies to SÜLD mobs (vanilla monsters keep vanilla damage). */
+    /**
+     * SÜLD hit formula applies to SÜLD mobs and to «Тэнгэрийн сорил» wolves (their health is sized for the class's
+     * SÜLD attack); vanilla monsters keep vanilla damage.
+     */
     private boolean isTarget(org.bukkit.entity.Entity e) {
-        return mobs.isSuldMob(e);
+        return mobs.isSuldMob(e) || mn.suld.plugin.death.DeathTrialService.ownerOf(e) != null;
     }
 
     @EventHandler

@@ -354,6 +354,13 @@ public final class DeathService implements Listener {
     }
 
     private void applySoulEffects(Player p) {
+        DeathTrialService t = trial;
+        if (t != null && t.inTrial(p.getUniqueId())) {
+            // the trial is a real fight: no soul slowness or weakness while it lasts
+            p.removePotionEffect(PotionEffectType.SLOWNESS);
+            p.removePotionEffect(PotionEffectType.WEAKNESS);
+            return;
+        }
         p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1, false, false, true));
         p.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 4, false, false, true));
     }
@@ -613,7 +620,9 @@ public final class DeathService implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onSoulLaunch(org.bukkit.event.entity.ProjectileLaunchEvent e) {
-        if (e.getEntity().getShooter() instanceof Player p && isSoul(p.getUniqueId())) e.setCancelled(true);
+        // in its «Тэнгэрийн сорил» a soul shoots (onSoulAttack lets its arrows reach only its own wolves)
+        if (e.getEntity().getShooter() instanceof Player p && isSoul(p.getUniqueId())
+                && (trial == null || !trial.inTrial(p.getUniqueId()))) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

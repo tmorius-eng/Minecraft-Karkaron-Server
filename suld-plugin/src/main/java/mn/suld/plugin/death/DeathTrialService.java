@@ -104,6 +104,8 @@ public final class DeathTrialService implements Listener, TabExecutor {
             return;
         }
         int level = services.profiles().cached(id).map(pr -> pr.progression().level()).orElse(1);
+        // wolves sized to this soul's SÜLD attack (class, level, gear, tree, wound): about five hits each
+        double wolfHp = DeathTrial.wolfHealth(level, mn.suld.plugin.combat.CombatListener.attackOf(services, p));
         Run r = new Run();
         Location at = p.getLocation();
         for (int i = 0; i < rules.wolves(); i++) {
@@ -119,8 +121,8 @@ public final class DeathTrialService implements Listener, TabExecutor {
                 wolf.setCustomNameVisible(true);
                 wolf.setGlowing(true);
                 var hp = wolf.getAttribute(Attribute.MAX_HEALTH);
-                if (hp != null) hp.setBaseValue(DeathTrial.wolfHealth(level));
-                wolf.setHealth(DeathTrial.wolfHealth(level));
+                if (hp != null) hp.setBaseValue(wolfHp);
+                wolf.setHealth(wolfHp);
                 var bite = wolf.getAttribute(Attribute.ATTACK_DAMAGE);
                 if (bite != null) bite.setBaseValue(DeathTrial.wolfBite(level));
                 wolf.setAngry(true);
@@ -129,6 +131,9 @@ public final class DeathTrialService implements Listener, TabExecutor {
             r.wolves.add(w.getUniqueId());
         }
         runs.put(id, r);
+        // a real fight: the soul's slowness and weakness go for the trial (DeathService keeps them off while it runs)
+        p.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS);
+        p.removePotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS);
         p.showTitle(net.kyori.adventure.title.Title.title(Component.text("Тэнгэрийн сорил", NamedTextColor.AQUA, TextDecoration.BOLD),
                 Component.text(rules.wolves() + " сүнсний чоныг " + rules.seconds() / 60 + " минутад дийл", NamedTextColor.WHITE)));
         p.playSound(p.getLocation(), Sound.ENTITY_WOLF_GROWL, 1f, 0.8f);
