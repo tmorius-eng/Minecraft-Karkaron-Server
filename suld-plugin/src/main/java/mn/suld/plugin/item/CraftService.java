@@ -70,8 +70,16 @@ public final class CraftService {
         return sb.toString();
     }
 
-    /** Why the player cannot craft {@code r} now, or null when they can. */
+    /** Why the player cannot craft {@code r} for themselves now, or null when they can. */
     public Component refusal(Player p, Recipe r) {
+        return refusalFor(p, r, true);
+    }
+
+    /**
+     * Why the player cannot craft {@code r} now, or null. {@code ownBag}: the item lands in their bag, so it needs a
+     * free slot (a crafting order sends it to the poster instead).
+     */
+    public Component refusalFor(Player p, Recipe r, boolean ownBag) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null || !pr.hasSelectedClass()) return Messages.error("Эхлээд ангиа сонго.");
         if (services.isSoul.test(p.getUniqueId())) return Messages.error("Сүнс байхдаа урлаж болохгүй.");
@@ -80,8 +88,15 @@ public final class CraftService {
         for (Map.Entry<String, Integer> m : r.materials().entrySet()) {
             if (count(p, m.getKey()) < m.getValue()) return Messages.error("Материал дутуу: " + describe(Map.of(m.getKey(), m.getValue())));
         }
-        if (p.getInventory().firstEmpty() < 0) return Messages.error("Цүнх дүүрэн байна.");
+        if (ownBag && p.getInventory().firstEmpty() < 0) return Messages.error("Цүнх дүүрэн байна.");
         return null;
+    }
+
+    /** Take the recipe's materials and coins from {@code p} (checked by {@link #refusalFor} just before). */
+    public void pay(Player p, Recipe r) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElseThrow();
+        r.materials().forEach((id, n) -> take(p, id, n));
+        pr.addCurrency(-r.coins());
     }
 
     /** Craft {@code r}: the made item, or null (the player was told why). Main thread. */
@@ -92,8 +107,7 @@ public final class CraftService {
             return null;
         }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElseThrow();
-        r.materials().forEach((id, n) -> take(p, id, n));
-        pr.addCurrency(-r.coins());
+        pay(p, r);
         ItemDefinition def = catalog().require(r.resultId());
         ItemRarity rarity = catalog().band(LootTier.CRAFT).pick(mn.suld.api.loot.Rng.threadLocal(), r.minRarity(), r.maxRarity());
         ItemInstance made = items().generate(def, rarity, r.itemLevel(pr.progression().level()), p.getUniqueId(), "craft:" + r.id());

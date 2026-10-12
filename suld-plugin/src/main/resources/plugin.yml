@@ -58,6 +58,10 @@ commands:
     description: Их Хуралдай — the weekly vote and the week's campaign (vote, status, deliver; admin open/close/force/resolve/cancel).
     usage: /khuraldai [vote <1-3>|status|deliver [amount]]
     aliases: [huraldai, campaign]
+  order:
+    description: The Дархан's order board — order a crafted item for a fee, or fill someone's order.
+    usage: /order [post <recipe> <fee> | withdraw <id>]
+    aliases: [zakhialga, orders]
   report:
     description: Tell the staff about a bug, a cheater or a problem (audit log + online staff).
     usage: /report <text>

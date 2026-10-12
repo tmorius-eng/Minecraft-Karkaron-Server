@@ -38,8 +38,28 @@ every level 1–60 has a recipe and that no band reaches further.
   checked before anything is taken; then materials, coins, the item, the profile save and an `item.craft` audit row.
 - Rarity is rolled in the recipe's range with the CRAFT band's weights.
 
+## Crafting orders (`/order`)
+
+The Дархан's order board: a player who cannot (or does not want to) make an item puts up a fee for a recipe; any
+other player who can make it fills the order with their own materials and the recipe's coins.
+
+- `/order post <recipe> <fee>` (fee 10–100 000 coins, at most 3 open orders each). The poster's level must reach the
+  recipe (no ordering gear one cannot wear). The fee leaves the poster and that profile is **stored** before the order
+  is written (`craft_orders.yml`, written at once); a failed save gives the fee back.
+- `/order` opens the board: someone else's order shows its materials as have/need and fills on a confirmed click;
+  your own withdraws on a confirmed click (the fee comes back).
+- Filling: the order is removed from the file first (so it can never be filled twice), then the crafter pays the
+  materials and the recipe's coins and gets the fee; the item is made at the poster's level held to the recipe band,
+  bound to the poster when its rarity binds, and goes to their bag, or to the mailbox when they are offline (given on
+  the next join).
+- Never one's own order. Orders expire after 7 days; the fee goes back, to an offline poster on their next join (owed
+  refunds live in the same file).
+- Audit rows: `craft.order_post`, `craft.order_fill`, `craft.order_withdraw`.
+
 ## Tests
 
 `RecipeCatalogTest` (band clamp, every level covered, no long band, every material obtainable), the catalogue loader
 tests, and `tools/loadtest/bots/craft.js` on the dev server (a level-30 smith gets the level-10 cap from a level-1
-recipe; the window asks, crafts and reopens; a level-50 recipe is refused).
+recipe; the window asks, crafts and reopens; a level-50 recipe is refused), `CraftOrderRulesTest`, and
+`tools/loadtest/bots/craft-orders.js` (post holds the fee, a fill pays the crafter and gives the poster the item,
+withdraw pays back, an offline poster gets the item from the mailbox on the next join).

@@ -295,6 +295,14 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("skill", skillCommands.skill());
         registerTab("skillsadmin", skillCommands.admin());
         mn.suld.plugin.command.ItemCommands itemCommands = new mn.suld.plugin.command.ItemCommands(services, new mn.suld.plugin.gui.ItemMenus(services));
+        // the Дархан's order board: a fee held for a recipe, the item to the poster, the fee to the crafter (docs/CRAFTING.md)
+        if (services.itemService() != null) {
+            mn.suld.plugin.item.CraftOrderService craftOrders = new mn.suld.plugin.item.CraftOrderService(this, services);
+            getServer().getPluginManager().registerEvents(craftOrders, this);
+            craftOrders.start();
+            services.craftOrders = craftOrders;
+        }
+        registerTab("order", new mn.suld.plugin.command.OrderCommand(this, services));
         registerTab("item", itemCommands.item());
         registerTab("items", itemCommands.itemsMenu());
         registerTab("equipment", itemCommands.equipmentMenu());

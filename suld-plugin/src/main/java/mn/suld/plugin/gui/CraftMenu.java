@@ -60,6 +60,7 @@ public final class CraftMenu {
             long coins = pr == null ? 0 : pr.currency();
             lore.add(Component.text((coins >= r.coins() ? "✔ " : "✘ ") + "Зоос " + coins + "/" + r.coins(), coins >= r.coins() ? NamedTextColor.GREEN : NamedTextColor.RED));
             lore.add(no == null ? Menu.line("Дарж урлана.") : no);
+            lore.add(Component.text("Бусдаар урлуулах: /order post " + r.id().substring("recipe.".length()) + " <хөлс>", NamedTextColor.DARK_GRAY));
             Material icon = Material.matchMaterial(def.material());
             m.set(slot++, Menu.item(icon == null || !icon.isItem() ? Material.SMITHING_TABLE : icon,
                     Menu.title(def.displayName(), no == null ? NamedTextColor.GOLD : NamedTextColor.GRAY), lore),

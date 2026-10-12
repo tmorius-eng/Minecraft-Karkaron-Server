@@ -580,7 +580,7 @@ public final class TradeService implements Listener, TabExecutor {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!p.isOnline()) return;
             int n = mailbox.deliver(p);
-            if (n > 0) p.sendMessage(Messages.success("Арилжаанаас үлдсэн " + n + " эд зүйлийг буцааж өглөө."));
+            if (n > 0) p.sendMessage(Messages.success("Таны нэр дээр хадгалагдсан " + n + " эд зүйлийг өглөө (арилжаа, Дарханы захиалга)."));
         }, 40L);
     }
 

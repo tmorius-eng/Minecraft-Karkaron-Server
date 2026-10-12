@@ -99,6 +99,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Campaigns: goals, tiers, flush, resolve, world effects (V18) | ✅ | ✅ deliver → success → reward → effect → chronicle; restart restores; flag re-applies; `campaign-effects.js` 6/6: kills count, PROP and NPC effects placed | ⏳ | 4 campaigns in `content/campaigns.json`; `dungeon-clear.js` 5/5: a clear counts and is chronicled |
 | Integration review 2026-10-12 (12 findings) | ✅ | ✅ duel paths live | — | mailbox partial stacks; trade goods in flight at shutdown; reward guard waits for a loaded style and an in-flight write, undoes one claim; rotation honours the arc; a missed ballot still decides; interlude force survives restarts; resolve waits for the last flush and retries; «Чонын Их Аян» success = guards warn 2 min before a raid; a soul's site visit waits |
 | Дархан recipe book (43 recipes, 9-level bands, smith window) | ✅ | ✅ `craft.js` 6/6 | ⏳ | `docs/CRAFTING.md`; crafted level held to the recipe band (was the crafter's level) |
+| Дархан order board (`/order`: fee in escrow, fill, withdraw, 7-day expiry) | ✅ | ✅ `craft-orders.js` 9/9 | ⏳ | `docs/CRAFTING.md` |
 | World bosses (weekly hours, crowd-sized, everyone at the fight rewarded) | ✅ | ✅ `world-boss.js` 10/10 | ⏳ | `docs/WORLD_BOSSES.md`; Хроник first/fastest kill |
 | Plaza boards: Хуралдай notice board + Hall of Fame | ✅ | ✅ both stand | ⏳ | `PlazaBoards`, text at GUI scale to check by the owner |
 | Баатрын Хроник (V19), `/chronicle`, «Миний түүх» | ✅ | ✅ | ⏳ | |
