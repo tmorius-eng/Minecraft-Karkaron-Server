@@ -30,8 +30,8 @@ original:
 <!-- spec:begin ladder -->
 | # | Dungeon | Level band | Story gate (chapter #) | Previous clear | Min gear power | Party | Boss HP / dmg | Enrage | Completion EXP | Coins | Loot level | Boss band |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Хасарын Агуй | 3–10 | 4 | — | 17 | 1 | 2468 / 28.8 | 180 s | 649 | 132 | clamp(L, 3, 10) | BOSS |
-| 2 | Говийн Булш | 9–16 | 8 | Хасарын Агуй | 50 | 2 | 6850 / 41.1 | 195 s | 2982 | 204 | clamp(L, 9, 16) | BOSS |
+| 1 | Саарлын Агуй | 3–10 | 4 | — | 17 | 1 | 2468 / 28.8 | 180 s | 649 | 132 | clamp(L, 3, 10) | BOSS |
+| 2 | Говийн Булш | 9–16 | 8 | Саарлын Агуй | 50 | 2 | 6850 / 41.1 | 195 s | 2982 | 204 | clamp(L, 9, 16) | BOSS |
 | 3 | Баавгайн Үүр | 15–22 | 13 | Говийн Булш | 89 | 2 | 10725 / 55.8 | 210 s | 7277 | 276 | clamp(L, 15, 22) | BOSS |
 | 4 | Мөсөн Оргил | 22–30 | 16 | Баавгайн Үүр | 144 | 3 | 20573 / 75.6 | 225 s | 14991 | 360 | clamp(L, 22, 30) | BOSS |
 | 5 | Далайн Гүн | 29–37 | 21 | Мөсөн Оргил | 190 | 3 | 27853 / 98.4 | 240 s | 25805 | 444 | clamp(L, 29, 37) | BOSS |
@@ -40,7 +40,7 @@ original:
 | 8 | Бурхан Халдуны Агуй | 48–56 | 35 | Улаан Хадны Хүрээ | 353 | 4 | 61880 / 175.0 | 285 s | 71949 | 672 | clamp(L, 48, 56) | BOSS |
 | 9 | Тэнгэрийн Шат | 54–60 | 39 | Бурхан Халдуны Агуй | 425 | 4 | 71400 / 203.7 | 300 s | 91896 | 744 | clamp(L, 54, 60) | BOSS |
 | 10 | Тэнгэрийн Ордон | 60–60 | 42 | Тэнгэрийн Шат | 504 | 4 | 73040 / 208.7 | 315 s | 99139 | 816 | clamp(L, 60, 60) | BOSS |
-| H1 | Хасарын Агуй (Баатарлаг) | 60–60 | all (42) | Тэнгэрийн Шат | 605 | 4 | 73040 / 208.7 | 315 s | 99139 | 780 | 60 | WORLD_EVENT |
+| H1 | Саарлын Агуй (Баатарлаг) | 60–60 | all (42) | Тэнгэрийн Шат | 605 | 4 | 73040 / 208.7 | 315 s | 99139 | 780 | 60 | WORLD_EVENT |
 | H2 | Говийн Булш (Баатарлаг) | 60–60 | all (42) | Тэнгэрийн Шат | 605 | 4 | 73040 / 208.7 | 315 s | 99139 | 780 | 60 | WORLD_EVENT |
 | H3 | Баавгайн Үүр (Баатарлаг) | 60–60 | all (42) | Тэнгэрийн Шат | 605 | 4 | 73040 / 208.7 | 315 s | 99139 | 780 | 60 | WORLD_EVENT |
 | H4 | Мөсөн Оргил (Баатарлаг) | 60–60 | all (42) | Тэнгэрийн Шат | 605 | 4 | 73040 / 208.7 | 315 s | 99139 | 780 | 60 | WORLD_EVENT |
@@ -53,7 +53,7 @@ original:
 Mythic tiers 1–10 of the heroic dungeons: health and damage ×(1 + 0.12·tier), EXP ×(1 + 0.06·tier), chest from the MYTHIC band, entry sigil 650–2900 ₮ (crafted).
 <!-- spec:end ladder -->
 
-Boss health is sized for the recommended party: ×(0.25 + 0.75 × party / 4) of the BOSS tier. Хасарын Агуй is soloable
+Boss health is sized for the recommended party: ×(0.25 + 0.75 × party / 4) of the BOSS tier. Саарлын Агуй is soloable
 by a par player inside its 180 s enrage. From Говийн Булш on, a group is expected. Solo players use the group finder
 (5 minutes in the model).
 
@@ -72,7 +72,7 @@ There is no calendar gate, no lockout, no stamina and no keys bought with time (
 
 ## Level 20 check (directive §6)
 
-At level 20 a player has 3 of 10 dungeons open: Хасарын Агуй, Говийн Булш, Баавгайн Үүр. The sim shows all 3
+At level 20 a player has 3 of 10 dungeons open: Саарлын Агуй, Говийн Булш, Баавгайн Үүр. The sim shows all 3
 realistically clearable (`docs/PROGRESSION_SIMULATION.md` §Level 20). Мөсөн Оргил opens at 22 after chapter 16, and
 the rest need levels 29–60.
 

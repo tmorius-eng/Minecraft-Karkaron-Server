@@ -129,7 +129,7 @@ vertical slice: death/recovery → class gear → armour + ActivePlaytime → as
 - Plugin: `PartyService` (messaging adapter), `DungeonService` (entry validation, wave spawning, boss encounter,
   per-participant rewards, wipe/timeout/abort/cleanup, boss bar, HUD status line), `BossService` (phase
   escalation, per-phase damage scaling, enrage timer), `DungeonListener`, commands `/party` and `/dungeon`.
-- Content (`SuldContent`): dungeon **Хасарын Агуй** (`dungeon.khasar_den`, lvl 2+, 1-4 players, 2 waves + boss
+- Content (`SuldContent`): dungeon **Саарлын Агуй** (`dungeon.khasar_den`, lvl 2+, 1-4 players, 2 waves + boss
   Хасар, RAVAGER, 3 phases, 180s enrage); new items (Хасарын Соёо epic, Хасарын Зүрх legendary, Талын Түшиг).
 - Rules: reward only to participants still online and not downed (hardcore); run ends on boss kill, party
   wipe, all leave, abort, or 20-minute cap; all spawned mobs are removed on any end.

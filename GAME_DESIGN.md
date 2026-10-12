@@ -101,7 +101,7 @@ discover a region (crossing into it), clear a dungeon (without being downed).
 | 2 | Чонын Арьс | collect 3 wolf pelts | Хэрлэн |
 | 3 | Хэрлэнгийн Дээрэмчид | 5 bandits | Хэрлэн |
 | 4 | Цэргийн Тангараг | level 5 | — |
-| 5 | Хасарын Агуй | clear Khasar's Den | dungeon |
+| 5 | Саарлын Агуй | clear Khasar's Den | dungeon |
 | 6 | Говийн Зам | reach the Gobi | Говь |
 | 7 | Хилэнцийн Хор | 6 scorpions | Говь |
 | 8 | Элсний Сүнснүүд | 5 sand spirits | Говь |
@@ -134,7 +134,7 @@ boss (enrages after a timer). Every participant who was not downed gets the comp
 
 | Dungeon | Region | Level | Boss | Bonus |
 |---|---|---|---|---|
-| Хасарын Агуй `khasar_den` | Хэрлэн | 2+ | Хасар (ravager) | 400 EXP · 75 ₮ |
+| Саарлын Агуй `khasar_den` | Хэрлэн | 2+ | Хөгшин Саарал (ravager) | 400 EXP · 75 ₮ |
 | Говийн Булш `govi_bulsh` | Говь | 8+ | Элсний Хаан (husk) | 1200 EXP · 160 ₮ |
 | Баавгайн Үүр `baavgain_uur` | Хангай | 14+ | Ойн Эзэн (bear) | 2600 EXP · 260 ₮ |
 | Мөсөн Оргил `mosun_orgil` | Алтай | 22+ | Мөсөн Хаан (stray archer) | 4800 EXP · 420 ₮ |

@@ -15,9 +15,9 @@ date from before D1; current statuses are in `audit/visual-content-status.json`.
 | Fact | Source |
 |---|---|
 | Tiers: NORMAL ×1, ELITE ×2.5, CHAMPION ×5, MYTHIC ×10, BOSS ×25, WORLD_BOSS ×80 (stat multipliers) | `suld-api/.../mob/MobTier.java` |
-| Хасар: `mob.khasar`, "Хасар — Агуйн Эзэн", RAVAGER, BOSS, level 5, base HP 8 (→ 200), attack 0.25 (→ 6.25) | `SuldContent.java:49-51` |
+| Хасар: `mob.khasar`, "Хөгшин Саарал — Агуйн Эзэн", RAVAGER, BOSS, level 5, base HP 8 (→ 200), attack 0.25 (→ 6.25) | `SuldContent.java:49-51` |
 | Хасар phases: Сэрсэн 100 % ×1.0 · Уурласан 60 % ×1.3 · Галзуурсан 30 % ×1.6 attack; enrage after 180 s | `SuldContent.java:53-56` |
-| Dungeon Хасарын Агуй: level 2+, 1–4 players, two wolf waves (Говийн Чоно, Орхоны Чоно), then Хасар | `SuldContent.java:58-64` |
+| Dungeon Саарлын Агуй: level 2+, 1–4 players, two wolf waves (Говийн Чоно, Орхоны Чоно), then Хөгшин Саарал | `SuldContent.java:58-64` |
 | Other dungeon bosses: Элсний Хаан (HUSK), Хар Баавгай — Ойн Эзэн (POLAR_BEAR), Мөсөн Хаан (STRAY) | `DungeonContent.java:31-57` |
 | Elites today: Хангайн Баавгай (POLAR_BEAR, ELITE, level 14), Алтайн Аварга (RAVAGER, ELITE, level 23) | `WorldContent.java:35-41` |
 | Target frames exist: `tgt_frame.png`, `tgt_frame_elite.png`, `tgt_frame_boss.png` | `resourcepack/assets/suld/textures/font/hud/` |

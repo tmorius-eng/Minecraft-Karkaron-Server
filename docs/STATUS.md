@@ -56,9 +56,9 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Auth (Microsoft UUID only, fail closed) | ✅ | ✅ | 👤 G12 | `docs/AUTHENTICATION.md` |
 | Resource pack gate (ONB-001) | ✅ | ✅ | 👤 G7 | `PackGate` |
 | Classes, spells, class resources, lock-on, dodge | ✅ | ✅ | 👤 | 25 spells; cooldowns per slot |
-| Skill tree, builds, respec | ✅ | ✅ (312/313 QA) | 👤 | SP-3 orb cooldown ⏳ |
+| Skill tree, builds, respec | ✅ | ✅ (312/313 QA) | 👤 | SP-3 ✅ the Orb's free respec waits a day since the last respec |
 | Story 42 chapters, tracker | ✅ | 🤖 first chapters | ⏳ | PROG-004/005 ⏳ |
-| Dungeon ladder 10, halls, boss brains | ✅ | 🤖 | ⏳ | DG-7 enrage wipe ⏳ |
+| Dungeon ladder 10, halls, boss brains | ✅ | 🤖 | ⏳ | DG-7 ✅ enrage + 60 s wipes the run; PROG-004 ✅ the loader refuses a story that softlocks a gate |
 | Hardcore death, lock, wound | ✅ | ✅ | ⏳ | |
 | Relics (2), seize rule | ✅ | ✅ | ⏳ | seize moves to consented fights only (PvP policy, this slice) |
 | Clans, parties, chat channels | ✅ | ✅ | ⏳ | party finder: this slice |
@@ -76,6 +76,11 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | In-game counts from content (`ContentCounts`, DOC-001/ONB-010) | ✅ | — | ⏳ | `ContentCountsTest` blocks literal counts |
 | Security hygiene: no shipped owner (SEC-002), owner pins revocable (SEC-001), default group 1 home + no `/tpa` (GAME-001), pinned plugins (OPS-002) | ✅ | — | — | `PermissionFileTest`, `tools/plugins/test_fetch_plugins.py` |
 | Daily streak: a missed day costs one step, never a reset (B.8) | ✅ | — | — | `DailyRewardTest` |
+| One level curve for levelling and rewards (PROG-002); chapter EXP never collapses in Act II (PROG-005) | ✅ | — | — | `BalanceCurveTest`, `ContentDataTest`; simulator golden tests pass |
+| Wolf raid gear is a 50 % roll, not a guaranteed top-band item (PROG-006) | ✅ | — | — | `ItemCatalogLoaderTest` |
+| Same-inventory duplicate caught by the periodic sweep (DU-1) | ✅ | — | — | |
+| Sidebar without credits (UX-1); coins read «зоос», ₮ only for real money (UX-4) | ✅ | — | ⏳ | `CoinSignTest` |
+| `/report <text>` → audit log + online staff | ✅ | — | ⏳ | one a minute |
 | Bot harness in the repo | ✅ | — | — | `tools/loadtest/` (B.4 done) |
 | PvE-only + consented PvP (`/duel`, arenas) | ✅ | ✅ a hit without consent does no damage | ⏳ | owner decision 2026-10-11; `GAME_DESIGN.md` «PvP policy» |
 | Их Хуралдай (weekly vote, V18) | ✅ | ✅ `khuraldai-smoke.js` 22/22 on PostgreSQL | ⏳ | `docs/KHURALDAI.md` |

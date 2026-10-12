@@ -185,7 +185,7 @@ Every row is checked in a real Minecraft 1.21.11 client with the server's pack, 
 | 16 | Tooltip | Rarity colour, tier name, armour level, set, stats; no vanilla attribute lines |
 | 17 | Rarity presentation | Glint decision applied; tooltip frame (if any) correct |
 | 18 | Icons | Inventory, hotbar and the armour slots |
-| 19 | Lighting | Day, night, cave, and the Хасарын Агуй arena |
+| 19 | Lighting | Day, night, cave, and the Саарлын Агуй arena |
 | 20 | Performance | 10 players in the set (T5–T6 with attachments) in one area: client ≥ 60 FPS, server mspt within budget |
 | 21 | History labels | Every motif on the sheet carries its label; no Soyombo; no real seal or script text |
 

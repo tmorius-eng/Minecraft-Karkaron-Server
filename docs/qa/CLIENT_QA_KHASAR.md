@@ -7,7 +7,7 @@ under `docs/qa/screens/khasar/`.
 
 ## Setup (op on a dev server)
 * Stand on open flat ground at least 30 blocks from Kharkhorum. Run `/suld spawnmob <you> mob.khasar 1`, or start the
-  Хасарын Агуй dungeon with a party.
+  Саарлын Агуй dungeon with a party.
 * For a harmless look, use `/suldperf model 1 60 <you> khasar`. It spawns a wandering rig for 60 s; you are invulnerable
   meanwhile.
 

@@ -20,7 +20,7 @@ and close. The chat list is gone.
 
 | # | Dungeon | Level | Party | Gate (bearing / distance from the spawn) | Hall | Waves | Boss |
 |---|---|---|---|---|---|---|---|
-| 1 | Хасарын Агуй | 2+ | 1–4 | 75° / 380 | DEN | 2 | Хасар — Агуйн Эзэн (rig with its own brain) |
+| 1 | Саарлын Агуй | 2+ | 1–4 | 75° / 380 | DEN | 2 | Хөгшин Саарал — Агуйн Эзэн (rig with its own brain) |
 | 2 | Говийн Булш | 8+ | 1–4 | 165° / 650 | TOMB | 3 | Элсний Хаан — Булшны Эзэн |
 | 3 | Баавгайн Үүр | 14+ | 1–4 | 20° / 1000 | LAIR | 3 | Хар Баавгай — Ойн Эзэн |
 | 4 | Мөсөн Оргил | 22+ | 1–4 | 255° / 1400 | PEAK | 3 | Мөсөн Хаан — Оргилын Сахиул |
@@ -64,4 +64,4 @@ Enrage arrives after 255–315 s, as in the spec's ladder.
   numbers chapters up to 42, and the gear-power scale is not verified against live items.
 * Heroic and mythic versions are not built.
 * Bosses 2–10 use the generic boss phases (health and damage multipliers per phase) with no special abilities yet.
-  Only Хасар has a brain.
+  Only Хөгшин Саарал has a brain.

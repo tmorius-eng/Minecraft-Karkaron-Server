@@ -8,7 +8,7 @@ blocks were there.
 
 | Dungeon | Region | Bearing from the spawn | Distance | Theme |
 |---|---|---|---|---|
-| Хасарын Агуй | Хэрлэн (east) | 75° | 380 | DEN: deepslate, bones, cobwebs, soul lanterns |
+| Саарлын Агуй | Хэрлэн (east) | 75° | 380 | DEN: deepslate, bones, cobwebs, soul lanterns |
 | Говийн Булш | Говь (south) | 165° | 650 | TOMB: sandstone, gold, sand, decorated pots, lanterns |
 | Баавгайн Үүр | Хангай (north) | 20° | 1000 | LAIR: podzol, moss, spruce, ferns, lanterns |
 | Мөсөн Оргил | Алтай (west) | 255° | 1400 | PEAK: snow, packed and blue ice, calcite, soul lanterns |
