@@ -28,7 +28,25 @@ public final class Balance {
         return new PolynomialLevelCurve(CURVE_V2_BASE, CURVE_EXP, MAX_LEVEL);
     }
 
+    private static volatile LevelCurve active = new PolynomialLevelCurve(CURVE_BASE, CURVE_EXP, MAX_LEVEL);
+
+    /**
+     * The one level curve every reward is priced on (PROG-002): levelling, chapter, login and task EXP. It is the
+     * design curve until the plugin installs the configured one ({@code progression.curve} in config.yml) with
+     * {@link #configure}, before any content is read.
+     */
     public static LevelCurve curve() {
+        return active;
+    }
+
+    /** Installs the configured curve (the plugin calls this once at load, before the content files). */
+    public static void configure(LevelCurve curve) {
+        if (curve == null || curve.maxLevel() < 2) throw new IllegalArgumentException("a level curve needs max level >= 2");
+        active = curve;
+    }
+
+    /** The design curve, without any configuration. */
+    public static LevelCurve designCurve() {
         return new PolynomialLevelCurve(CURVE_BASE, CURVE_EXP, MAX_LEVEL);
     }
 

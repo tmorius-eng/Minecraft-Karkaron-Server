@@ -349,6 +349,7 @@ public final class ContentLoader {
         List<Object> questList = list(f, "", files.get(f), "story", issues);
         if (questList.isEmpty()) issues.add(new Issue(f, "story", "the story needs at least one chapter"));
         var curve = mn.suld.api.balance.Balance.curve();
+        int chainLevel = 1; // PROG-005: a chapter is priced at least at the level the chain has already reached
         for (int i = 0; i < questList.size(); i++) {
             String at = "story[" + i + "]";
             Map<String, Object> q = obj(f, at, questList.get(i), issues);
@@ -383,6 +384,9 @@ public final class ContentLoader {
                 case KILL_MOB -> mobs.containsKey(target) ? mobs.get(target).level() : 1;
                 case COLLECT_ITEM -> 2;
             };
+            // Act II sends the player back to early areas: the area's own band would pay ~1 % of the neighbours
+            lv = Math.max(lv, chainLevel);
+            chainLevel = lv;
             long exp = q.containsKey("exp") ? intIn(f, at, q, "exp", 0, 100_000_000, true, 0, issues) : mn.suld.api.balance.Rewards.chapterExp(curve, lv);
             try {
                 chapters.add(new QuestDefinition(id, str(f, at, q, "title", true, issues), q.get("description") instanceof String s ? s : "",
@@ -392,6 +396,17 @@ public final class ContentLoader {
             }
             lore.put(id, new QuestContent.Lore(q.get("giver") instanceof String g ? g : "Хархорум", q.get("hint") instanceof String h ? h : ""));
             if (q.get("story") instanceof String s) story.put(id, s);
+        }
+        // PROG-004: the ladder gates a dungeon on "chapters done >= gate + 1". An edited story that moves a dungeon's
+        // chapter before its gate would ask for that dungeon before the player may enter it: a softlock. Refuse it.
+        for (var rung : mn.suld.api.balance.DungeonLadder.RUNGS) {
+            for (int i = 0; i < chapters.size(); i++) {
+                QuestDefinition c = chapters.get(i);
+                if (c.type() == QuestType.COMPLETE_DUNGEON && c.targetId().equals(rung.id()) && i < rung.chapterGate() + 1) {
+                    issues.add(new Issue(f, "story[" + i + "]", c.id() + " asks for " + rung.id() + ", which opens only after "
+                            + (rung.chapterGate() + 1) + " chapters (DungeonLadder): move the chapter later"));
+                }
+            }
         }
 
         // ---------------------------------------------------------------------------------------------- events

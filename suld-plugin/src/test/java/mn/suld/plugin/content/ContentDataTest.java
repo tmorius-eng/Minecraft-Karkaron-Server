@@ -85,6 +85,30 @@ class ContentDataTest {
     }
 
     @Test
+    void aDungeonChapterBeforeItsGateIsRefused() throws Exception {
+        // PROG-004: moving "clear Саарлын Агуй" to the front of the story would ask for a dungeon that is still closed
+        ContentLoader.Result r = load(edited("quests.json", root -> {
+            List<Map<String, Object>> story = list(root, "story");
+            Map<String, Object> den = story.stream().filter(q -> "dungeon.khasar_den".equals(q.get("target"))).findFirst().orElseThrow();
+            story.remove(den);
+            story.add(0, den);
+        }));
+        assertTrue(has(r, "quests.json", "which opens only after"), r.issues()::toString);
+    }
+
+    @Test
+    void chapterExpNeverCollapsesWhenTheStoryReturnsToEarlyLands() {
+        // PROG-005: a chapter is priced at least at the chain's level, so Act II's discovery chapters keep pace
+        var chapters = Content.pack().chapters();
+        var curve = mn.suld.api.balance.Balance.curve();
+        for (int i = 1; i < chapters.size(); i++) {
+            long prev = chapters.get(i - 1).expReward(), cur = chapters.get(i).expReward();
+            assertTrue(cur * 4 >= prev, chapters.get(i).id() + " pays " + cur + " after " + prev);
+        }
+        assertTrue(chapters.get(chapters.size() - 1).expReward() >= mn.suld.api.balance.Rewards.chapterExp(curve, 40));
+    }
+
+    @Test
     void aWaveWithAnUnknownMobIsRefused() throws Exception {
         ContentLoader.Result r = load(edited("dungeons.json", root -> {
             @SuppressWarnings("unchecked") List<List<Object>> waves = (List<List<Object>>) list(root, "dungeons").get(1).get("waves");

@@ -48,6 +48,15 @@ public final class SuldPlugin extends JavaPlugin {
      */
     @Override
     public void onLoad() {
+        // PROG-002: one level curve. Chapter EXP is priced while the content loads, so the configured curve goes in first.
+        try {
+            mn.suld.api.balance.Balance.configure(new mn.suld.api.progression.PolynomialLevelCurve(
+                    getConfig().getDouble("progression.curve.base", mn.suld.api.balance.Balance.CURVE_BASE),
+                    getConfig().getDouble("progression.curve.exponent", mn.suld.api.balance.Balance.CURVE_EXP),
+                    getConfig().getInt("progression.max-level", mn.suld.api.balance.Balance.MAX_LEVEL)));
+        } catch (IllegalArgumentException ex) {
+            getLogger().warning("progression.curve is invalid (" + ex.getMessage() + "); rewards use the design curve.");
+        }
         mn.suld.plugin.content.Content.install(getDataFolder().toPath().resolve("content"), getLogger());
     }
 
