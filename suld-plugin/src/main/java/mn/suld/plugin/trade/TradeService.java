@@ -402,31 +402,52 @@ public final class TradeService implements Listener, TabExecutor {
             services.activity.signal(pa.getUniqueId(), mn.suld.api.activity.ActivitySignal.TRADE);
             services.activity.signal(pb.getUniqueId(), mn.suld.api.activity.ActivitySignal.TRADE);
         }
-        for (ItemStack it : offered(t.b)) giveBack(pa, it);
-        for (ItemStack it : offered(t.a)) giveBack(pb, it);
-        // ITEMS → COINS (PlayerDataSaves): both inventories reach disk now, then the coins move in one transaction
-        mn.suld.plugin.item.PlayerDataSaves.now(pa);
-        mn.suld.plugin.item.PlayerDataSaves.now(pb);
-        long net = t.b.coins - t.a.coins; // what A receives
-        if (net != 0) {
-            PlayerProfile payer = net > 0 ? rb : ra, payee = net > 0 ? ra : rb;
-            services.profiles().transfer(payer, payee, Math.abs(net)).whenComplete((v, err) -> {
-                if (err == null) return;
-                plugin.getLogger().severe("[audit] trade coins " + pa.getName() + " <-> " + pb.getName() + " (" + net + ") NOT saved, balances restored: " + err);
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    for (Player p : List.of(pa, pb)) if (p.isOnline()) p.sendMessage(Messages.error("Арилжааны зоос хадгалагдсангүй — зоос буцаалаа (эд зүйл солигдсон)."));
-                });
-            });
-        }
-        plugin.getLogger().info("[audit] trade " + pa.getName() + " (" + offered(t.a).size() + " stacks, " + t.a.coins + " coins) <-> "
-                + pb.getName() + " (" + offered(t.b).size() + " stacks, " + t.b.coins + " coins)");
+        // PERS-004: COINS → ITEMS. The coins move in one transaction first; only when it is stored do the items change
+        // hands. A failed transaction gives each side its own items back, so nobody keeps goods they did not pay for.
+        List<ItemStack> fromA = offered(t.a), fromB = offered(t.b);
         pa.closeInventory();
         pb.closeInventory();
+        long net = t.b.coins - t.a.coins; // what A receives
+        if (net == 0) {
+            settle(pa, pb, fromA, fromB, true);
+            return;
+        }
+        PlayerProfile payer = net > 0 ? rb : ra, payee = net > 0 ? ra : rb;
+        services.profiles().transfer(payer, payee, Math.abs(net)).whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
+            if (err != null) {
+                plugin.getLogger().severe("[audit] trade coins " + pa.getName() + " <-> " + pb.getName() + " (" + net
+                        + ") NOT saved; balances restored, items returned to their owners: " + err);
+            }
+            settle(pa, pb, fromA, fromB, err == null);
+        }));
+    }
+
+    /** Hand the goods over (or back, when the coins could not be stored); a player who left gets them by mailbox. */
+    private void settle(Player pa, Player pb, List<ItemStack> fromA, List<ItemStack> fromB, boolean ok) {
+        deliver(pa, ok ? fromB : fromA, ok ? "trade with " + pb.getName() : "trade failed, own items");
+        deliver(pb, ok ? fromA : fromB, ok ? "trade with " + pa.getName() : "trade failed, own items");
+        plugin.getLogger().info("[audit] trade " + (ok ? "" : "FAILED ") + pa.getName() + " (" + fromA.size() + " stacks) <-> "
+                + pb.getName() + " (" + fromB.size() + " stacks)");
         for (Player p : List.of(pa, pb)) {
-            p.sendMessage(Messages.success("Арилжаа амжилттай!"));
-            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1f, 1f);
+            if (!p.isOnline()) continue;
+            if (ok) {
+                p.sendMessage(Messages.success("Арилжаа амжилттай!"));
+                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1f, 1f);
+            } else {
+                p.sendMessage(Messages.error("Арилжааны зоос хадгалагдсангүй: зоос, эд зүйл эздэдээ буцлаа."));
+            }
             services.profiles().cached(p.getUniqueId()).ifPresent(pr -> services.hud().update(p, pr));
         }
+    }
+
+    private void deliver(Player p, List<ItemStack> items, String why) {
+        if (items.isEmpty()) return;
+        if (!p.isOnline()) {
+            mailbox.keep(p.getUniqueId(), items, why); // given on the next join
+            return;
+        }
+        for (ItemStack it : items) giveBack(p, it);
+        mn.suld.plugin.item.PlayerDataSaves.now(p); // the goods reach the player file at once
     }
 
     private void giveBack(Player p, ItemStack it) {

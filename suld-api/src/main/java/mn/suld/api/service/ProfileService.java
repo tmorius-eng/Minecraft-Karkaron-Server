@@ -46,8 +46,10 @@ public interface ProfileService {
         to.addCurrency(amount);
         return saveTogether(from, to).whenComplete((v, err) -> {
             if (err != null) {
-                from.addCurrency(amount);
-                to.addCurrency(-amount);
+                // PERS-004: take back only what the payee still has (balances clamp at 0); never mint the difference
+                long back = Math.min(amount, Math.max(0, to.currency()));
+                to.addCurrency(-back);
+                from.addCurrency(back);
             }
         });
     }

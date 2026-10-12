@@ -30,8 +30,11 @@ public final class Mailbox {
         return plugin.getDataFolder().toPath().resolve("mailbox").resolve(player + ".yml");
     }
 
-    /** Appends items for an offline player (an empty list is a no-op). Writes the file atomically. */
-    public void keep(UUID player, List<ItemStack> items, String why) {
+    /**
+     * Appends items for an offline player (an empty list is a no-op). Read-modify-write under the mailbox lock and
+     * written at once (PERS-005): two keeps in a row can no longer lose the first batch to a stale read.
+     */
+    public synchronized void keep(UUID player, List<ItemStack> items, String why) {
         List<ItemStack> all = new ArrayList<>(read(player));
         for (ItemStack it : items) if (it != null && !it.getType().isAir()) all.add(it);
         if (all.isEmpty()) return;
@@ -39,8 +42,12 @@ public final class Mailbox {
         plugin.getLogger().info("[mailbox] " + items.size() + " stack(s) kept for " + player + " (" + why + ")");
     }
 
-    /** Hands the player everything kept for them; what does not fit stays kept. Returns the stacks delivered. */
-    public int deliver(Player p) {
+    /**
+     * Hands the player everything kept for them; what does not fit stays kept. Returns the stacks delivered.
+     * PERS-005: the player file is written first, then the mailbox file shrinks, so a crash at any point leaves every
+     * stack in at least one place (never in neither).
+     */
+    public synchronized int deliver(Player p) {
         List<ItemStack> kept = read(p.getUniqueId());
         if (kept.isEmpty()) return 0;
         List<ItemStack> left = new ArrayList<>();
@@ -50,6 +57,8 @@ public final class Mailbox {
             if (rest.isEmpty()) delivered++;
             else left.addAll(rest.values());
         }
+        if (delivered == 0 && left.size() == kept.size()) return 0; // nothing fitted: the file stays as it is
+        mn.suld.plugin.item.PlayerDataSaves.now(p);
         write(p.getUniqueId(), left);
         return delivered;
     }
@@ -72,8 +81,10 @@ public final class Mailbox {
         if (items.isEmpty()) {
             try {
                 java.nio.file.Files.deleteIfExists(f);
-            } catch (java.io.IOException ignored) {
-                // a leftover empty file is harmless: read() yields nothing
+            } catch (java.io.IOException e) {
+                // the stacks were delivered and the player file saved: a file that cannot go would deliver them twice
+                plugin.getLogger().severe("[mailbox] delivered but could not remove " + f.getFileName() + ": " + e.getMessage()
+                        + " — remove it by hand before the player's next join");
             }
             return;
         }
@@ -81,6 +92,10 @@ public final class Mailbox {
         List<String> enc = new ArrayList<>();
         for (ItemStack it : items) enc.add(Base64.getEncoder().encodeToString(it.serializeAsBytes()));
         y.set("items", enc);
-        AtomicYaml.write(plugin, f, y);
+        try {
+            AtomicYaml.writeNow(f, y); // a few stacks: synchronous keeps the order with the player file
+        } catch (java.io.IOException e) {
+            plugin.getLogger().severe("[mailbox] could not write " + f.getFileName() + " (" + items.size() + " stacks): " + e.getMessage());
+        }
     }
 }

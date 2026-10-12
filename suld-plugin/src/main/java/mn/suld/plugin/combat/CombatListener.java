@@ -281,6 +281,10 @@ public final class CombatListener implements Listener {
         if (profile == null) {
             return;
         }
+        if (profile.playerClass().isEmpty()) { // GAME-002: like vanilla kills, no rewards before a class is chosen
+            killer.sendActionBar(Messages.info("Эхлээд ангиа сонго: /class"));
+            return;
+        }
 
         // first_mob_kill once per session (it used to be recorded for every kill); every kill is in the session totals
         if (services.session(killer.getUniqueId()).mobsDefeated++ == 0) {

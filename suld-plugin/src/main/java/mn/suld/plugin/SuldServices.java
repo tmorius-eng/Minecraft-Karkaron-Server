@@ -95,171 +95,186 @@ public final class SuldServices {
     private final WorldEventService worldEventService;
 
     public SuldServices(Plugin plugin, SuldConfig config) {
-        this.config = config;
-        this.events = new BukkitEventDispatcher(plugin);
-        int poolSize = Math.max(2, config.database().poolSize());
-        this.ioExecutor = Executors.newFixedThreadPool(poolSize, daemonThreadFactory());
-        this.shutdownLogger = plugin.getLogger();
-        java.time.ZoneId z;
-        String zoneId = plugin.getConfig().getString("daily.timezone", "Asia/Ulaanbaatar");
+        // OPS-005: what this constructor opens is closed again if a later step fails (no leaked pool, no held H2 lock)
+        java.util.List<AutoCloseable> opened = new java.util.ArrayList<>();
         try {
-            z = java.time.ZoneId.of(zoneId);
-        } catch (java.time.DateTimeException ex) {
-            plugin.getLogger().warning("daily.timezone '" + zoneId + "' is not a valid time zone; using Asia/Ulaanbaatar");
-            z = java.time.ZoneId.of("Asia/Ulaanbaatar");
-        }
-        this.zone = z;
-
-        switch (config.database().type()) {
-            case MEMORY -> {
-                this.dataSource = null;
-                this.repository = new InMemoryProfileRepository();
-                plugin.getLogger().warning("SULD storage is MEMORY — data is volatile and not persisted.");
+            this.config = config;
+            this.events = new BukkitEventDispatcher(plugin);
+            int poolSize = Math.max(2, config.database().poolSize());
+            this.ioExecutor = Executors.newFixedThreadPool(poolSize, daemonThreadFactory());
+            opened.add(ioExecutor::shutdownNow);
+            this.shutdownLogger = plugin.getLogger();
+            java.time.ZoneId z;
+            String zoneId = plugin.getConfig().getString("daily.timezone", "Asia/Ulaanbaatar");
+            try {
+                z = java.time.ZoneId.of(zoneId);
+            } catch (java.time.DateTimeException ex) {
+                plugin.getLogger().warning("daily.timezone '" + zoneId + "' is not a valid time zone; using Asia/Ulaanbaatar");
+                z = java.time.ZoneId.of("Asia/Ulaanbaatar");
             }
-            case H2, MYSQL, POSTGRESQL -> {
-                SqlDialect dialect = SqlDialect.forStorage(config.database().type());
-                this.dataSource = DataSourceFactory.create(config.database(), plugin.getDataFolder().toPath());
-                int applied = new SchemaMigrator(dataSource, dialect).migrate();
-                plugin.getLogger().info("SULD storage ready (" + dialect + "), migrations applied: " + applied);
-                this.repository = new JdbcProfileRepository(dataSource, dialect, ioExecutor);
+            this.zone = z;
+
+            switch (config.database().type()) {
+                case MEMORY -> {
+                    this.dataSource = null;
+                    this.repository = new InMemoryProfileRepository();
+                    plugin.getLogger().warning("SULD storage is MEMORY — data is volatile and not persisted.");
+                }
+                case H2, MYSQL, POSTGRESQL -> {
+                    SqlDialect dialect = SqlDialect.forStorage(config.database().type());
+                    this.dataSource = DataSourceFactory.create(config.database(), plugin.getDataFolder().toPath());
+                    if (dataSource instanceof AutoCloseable c) opened.add(c::close);
+                    int applied = new SchemaMigrator(dataSource, dialect).migrate();
+                    plugin.getLogger().info("SULD storage ready (" + dialect + "), migrations applied: " + applied);
+                    this.repository = new JdbcProfileRepository(dataSource, dialect, ioExecutor);
+                }
+                default -> throw new IllegalStateException("Unhandled storage type: " + config.database().type());
             }
-            default -> throw new IllegalStateException("Unhandled storage type: " + config.database().type());
-        }
 
-        this.profileService = new DefaultProfileService(repository);
+            this.profileService = new DefaultProfileService(repository);
 
-        // analytics: the database sink needs the storage above (docs/ANALYTICS.md); otherwise the log sink
-        if (!config.analytics().enabled()) {
-            this.analytics = AnalyticsSink.NOOP;
-        } else if (config.analytics().sink() == mn.suld.api.config.AnalyticsSettings.Sink.DATABASE && dataSource != null) {
-            this.analytics = new mn.suld.plugin.analytics.JdbcAnalyticsSink(dataSource, SqlDialect.forStorage(config.database().type()),
-                    ioExecutor, plugin.getLogger(), config.analytics().skipTypes(), config.analytics().queueLimit());
-        } else {
-            if (config.analytics().sink() == mn.suld.api.config.AnalyticsSettings.Sink.DATABASE) {
-                plugin.getLogger().warning("analytics.sink: database needs MySQL/PostgreSQL storage; using the log sink.");
+            // analytics: the database sink needs the storage above (docs/ANALYTICS.md); otherwise the log sink
+            if (!config.analytics().enabled()) {
+                this.analytics = AnalyticsSink.NOOP;
+            } else if (config.analytics().sink() == mn.suld.api.config.AnalyticsSettings.Sink.DATABASE && dataSource != null) {
+                this.analytics = new mn.suld.plugin.analytics.JdbcAnalyticsSink(dataSource, SqlDialect.forStorage(config.database().type()),
+                        ioExecutor, plugin.getLogger(), config.analytics().skipTypes(), config.analytics().queueLimit());
+            } else {
+                if (config.analytics().sink() == mn.suld.api.config.AnalyticsSettings.Sink.DATABASE) {
+                    plugin.getLogger().warning("analytics.sink: database needs MySQL/PostgreSQL storage; using the log sink.");
+                }
+                this.analytics = new LoggingAnalyticsSink(plugin.getLogger());
             }
-            this.analytics = new LoggingAnalyticsSink(plugin.getLogger());
+            ProgressionEngine engine = new ProgressionEngine(config.progression().toCurve());
+            this.curve = engine.curve();
+            this.progressionService = new DefaultProgressionService(engine, events, analytics);
+
+            // Authentication + audit (identity = authenticated UUID; fail closed when unverified).
+            this.auditLog = dataSource == null
+                    ? new LoggingAuditLog(plugin.getLogger())
+                    : new JdbcAuditLog(dataSource, ioExecutor, plugin.getLogger());
+            java.io.File serverRoot = plugin.getDataFolder().getAbsoluteFile().getParentFile().getParentFile();
+            AuthPolicy policy = new AuthPolicy(
+                    AuthenticationService.detectMode(plugin.getServer(), serverRoot),
+                    config.auth().allowInsecureOfflineDevMode());
+            this.authService = new AuthenticationService(plugin, this, policy, config.auth(), auditLog);
+
+            // Clan writes must be applied in order -> one dedicated single-threaded writer.
+            this.clanExecutor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "suld-clan-io");
+                thread.setDaemon(true);
+                return thread;
+            });
+            ClanRepository clanRepository = dataSource == null
+                    ? new InMemoryClanRepository()
+                    : new JdbcClanRepository(dataSource, SqlDialect.forStorage(config.database().type()),
+                            clanExecutor, plugin.getLogger());
+
+            // Vertical Slice 1 services.
+            this.itemFactory = new ItemFactory(plugin);
+            this.soulboundGuard = new mn.suld.plugin.item.SoulboundGuard(itemFactory);
+            this.hudService = new HudService(progressionService);
+            this.questService = new QuestService(progressionService);
+            this.questService.items(itemFactory);
+            this.questService.analytics = analytics::record;
+            this.mobService = new MobService(plugin);
+            this.resourcePackService = new ResourcePackService(plugin, config.resourcePack());
+            this.resourcePackService.analytics = analytics::record;
+            this.classSelectionGui = new ClassSelectionGui(plugin, this, hudService, questService, itemFactory);
+            this.combatListener = new CombatListener(this, mobService, questService, hudService, itemFactory);
+
+            // Vertical Slice 2 services.
+            this.partyService = new PartyService();
+            this.partyService.soul = id -> isSoul.test(id); // isSoul is set later by the death system
+            this.partyService.classOf = id -> profileService.cached(id).flatMap(pr -> pr.playerClass()).orElse(null);
+            this.bossService = new BossService();
+            this.dungeonService = new DungeonService(plugin, this, mobService, partyService, bossService);
+            this.hudService.addStatusLine(id -> dungeonService.statusLine(id).map(s -> "§7Агуй: §c" + s));
+
+            // Vertical Slice 3 services.
+            this.clanService = new ClanService(plugin, this, clanRepository, config.social());
+            int clans = clanService.load();
+            plugin.getLogger().info("SULD clans loaded: " + clans);
+            this.worldEventService = new WorldEventService(plugin, this, mobService, config.social());
+            this.hudService.addStatusLine(clanService::hudLine);
+            this.hudService.addStatusLine(worldEventService::hudLine);
+
+            // Vertical Slice 4: world-unique relics. Ordered writer; the DB CAS is the real guarantee.
+            this.relicExecutor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "suld-relic-io");
+                thread.setDaemon(true);
+                return thread;
+            });
+            RelicRepository relicRepository = dataSource == null
+                    ? new InMemoryRelicRepository()
+                    : new JdbcRelicRepository(dataSource, SqlDialect.forStorage(config.database().type()), relicExecutor);
+            this.relicService = new RelicService(plugin, this, relicRepository, config.relics(),
+                    new RelicItems(plugin, itemFactory));
+            plugin.getLogger().info("SULD relics loaded: " + relicService.load());
+            this.hudService.addStatusLine(relicService::hudLine);
+            this.boosts = new ProgressionBoosts(this);
+
+            // Player style (ranks, cosmetics, credits): one ordered writer so saves of a player never reorder.
+            this.styleExecutor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "suld-style-io");
+                thread.setDaemon(true);
+                return thread;
+            });
+            mn.suld.api.persistence.StyleRepository styleRepository = dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryStyleRepository()
+                    : new mn.suld.plugin.persistence.JdbcStyleRepository(dataSource,
+                            SqlDialect.forStorage(config.database().type()), styleExecutor);
+            this.styleService = new mn.suld.plugin.style.StyleService(plugin, this, styleRepository);
+            // Hardcore death (V12): one ordered writer, so a player's death and recovery never reorder.
+            this.deathExecutor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "suld-death-io");
+                thread.setDaemon(true);
+                return thread;
+            });
+            this.deathRepository = dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryDeathRepository()
+                    : new mn.suld.plugin.persistence.JdbcDeathRepository(dataSource,
+                            SqlDialect.forStorage(config.database().type()), deathExecutor);
+            this.classWeapons = new mn.suld.plugin.item.ClassWeapons(plugin, this);
+            // Progress marks (V17): the database mirror of the player file's clears / sites / ovoo days. Upserts, so the
+            // shared pool is fine (order does not matter).
+            this.marks = new mn.suld.plugin.progress.PlayerMarks(plugin, dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryMarksRepository()
+                    : new mn.suld.plugin.persistence.JdbcMarksRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
+            this.duels = new mn.suld.plugin.combat.DuelService(plugin, this, config.pvp());
+
+            // Их Хуралдай, the week's campaign and the chronicle (docs/KHURALDAI.md): one ordered writer, so a vote's close
+            // and a campaign's resolution never reorder; contributions are additive and the chronicle is append-only.
+            this.campaignExecutor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "suld-campaign-io");
+                thread.setDaemon(true);
+                return thread;
+            });
+            mn.suld.api.persistence.CampaignRepository campaignRepository = dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryCampaignRepository()
+                    : new mn.suld.plugin.persistence.JdbcCampaignRepository(dataSource, SqlDialect.forStorage(config.database().type()), campaignExecutor);
+            mn.suld.api.persistence.ChronicleRepository chronicleRepository = dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryChronicleRepository()
+                    : new mn.suld.plugin.persistence.JdbcChronicleRepository(dataSource, SqlDialect.forStorage(config.database().type()), campaignExecutor);
+            mn.suld.api.config.CampaignSettings cs = config.campaign();
+            this.weeklyCycle = new mn.suld.api.campaign.WeeklyCycle(zone, cs.campaignStarts(), cs.campaignEnds(), cs.voteOpens(), cs.voteCloses());
+            this.chronicleService = new mn.suld.plugin.chronicle.ChronicleService(plugin, this, chronicleRepository, config.chronicle(),
+                    () -> weeklyCycle.cycleId(java.time.Instant.now()));
+            this.khuraldaiService = new mn.suld.plugin.campaign.KhuraldaiService(plugin, this, campaignRepository, cs, weeklyCycle, chronicleService);
+            mn.suld.plugin.campaign.CampaignEffects effects = new mn.suld.plugin.campaign.CampaignEffects(plugin, this, campaignRepository, cs, weeklyCycle);
+            this.campaignService = new mn.suld.plugin.campaign.CampaignService(plugin, this, campaignRepository, cs, weeklyCycle, khuraldaiService,
+                    chronicleService, effects);
+            this.hudService.addStatusLine(campaignService::hudLine);
+        } catch (RuntimeException | Error ex) {
+            for (int i = opened.size() - 1; i >= 0; i--) {
+                try {
+                    opened.get(i).close();
+                } catch (Exception closeFailure) {
+                    ex.addSuppressed(closeFailure);
+                }
+            }
+            throw ex;
         }
-        ProgressionEngine engine = new ProgressionEngine(config.progression().toCurve());
-        this.curve = engine.curve();
-        this.progressionService = new DefaultProgressionService(engine, events, analytics);
-
-        // Authentication + audit (identity = authenticated UUID; fail closed when unverified).
-        this.auditLog = dataSource == null
-                ? new LoggingAuditLog(plugin.getLogger())
-                : new JdbcAuditLog(dataSource, ioExecutor, plugin.getLogger());
-        java.io.File serverRoot = plugin.getDataFolder().getAbsoluteFile().getParentFile().getParentFile();
-        AuthPolicy policy = new AuthPolicy(
-                AuthenticationService.detectMode(plugin.getServer(), serverRoot),
-                config.auth().allowInsecureOfflineDevMode());
-        this.authService = new AuthenticationService(plugin, this, policy, config.auth(), auditLog);
-
-        // Clan writes must be applied in order -> one dedicated single-threaded writer.
-        this.clanExecutor = Executors.newSingleThreadExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "suld-clan-io");
-            thread.setDaemon(true);
-            return thread;
-        });
-        ClanRepository clanRepository = dataSource == null
-                ? new InMemoryClanRepository()
-                : new JdbcClanRepository(dataSource, SqlDialect.forStorage(config.database().type()),
-                        clanExecutor, plugin.getLogger());
-
-        // Vertical Slice 1 services.
-        this.itemFactory = new ItemFactory(plugin);
-        this.soulboundGuard = new mn.suld.plugin.item.SoulboundGuard(itemFactory);
-        this.hudService = new HudService(progressionService);
-        this.questService = new QuestService(progressionService);
-        this.questService.items(itemFactory);
-        this.questService.analytics = analytics::record;
-        this.mobService = new MobService(plugin);
-        this.resourcePackService = new ResourcePackService(plugin, config.resourcePack());
-        this.resourcePackService.analytics = analytics::record;
-        this.classSelectionGui = new ClassSelectionGui(plugin, this, hudService, questService, itemFactory);
-        this.combatListener = new CombatListener(this, mobService, questService, hudService, itemFactory);
-
-        // Vertical Slice 2 services.
-        this.partyService = new PartyService();
-        this.partyService.soul = id -> isSoul.test(id); // isSoul is set later by the death system
-        this.partyService.classOf = id -> profileService.cached(id).flatMap(pr -> pr.playerClass()).orElse(null);
-        this.bossService = new BossService();
-        this.dungeonService = new DungeonService(plugin, this, mobService, partyService, bossService);
-        this.hudService.addStatusLine(id -> dungeonService.statusLine(id).map(s -> "§7Агуй: §c" + s));
-
-        // Vertical Slice 3 services.
-        this.clanService = new ClanService(plugin, this, clanRepository, config.social());
-        int clans = clanService.load();
-        plugin.getLogger().info("SULD clans loaded: " + clans);
-        this.worldEventService = new WorldEventService(plugin, this, mobService, config.social());
-        this.hudService.addStatusLine(clanService::hudLine);
-        this.hudService.addStatusLine(worldEventService::hudLine);
-
-        // Vertical Slice 4: world-unique relics. Ordered writer; the DB CAS is the real guarantee.
-        this.relicExecutor = Executors.newSingleThreadExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "suld-relic-io");
-            thread.setDaemon(true);
-            return thread;
-        });
-        RelicRepository relicRepository = dataSource == null
-                ? new InMemoryRelicRepository()
-                : new JdbcRelicRepository(dataSource, SqlDialect.forStorage(config.database().type()), relicExecutor);
-        this.relicService = new RelicService(plugin, this, relicRepository, config.relics(),
-                new RelicItems(plugin, itemFactory));
-        plugin.getLogger().info("SULD relics loaded: " + relicService.load());
-        this.hudService.addStatusLine(relicService::hudLine);
-        this.boosts = new ProgressionBoosts(this);
-
-        // Player style (ranks, cosmetics, credits): one ordered writer so saves of a player never reorder.
-        this.styleExecutor = Executors.newSingleThreadExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "suld-style-io");
-            thread.setDaemon(true);
-            return thread;
-        });
-        mn.suld.api.persistence.StyleRepository styleRepository = dataSource == null
-                ? new mn.suld.api.persistence.InMemoryStyleRepository()
-                : new mn.suld.plugin.persistence.JdbcStyleRepository(dataSource,
-                        SqlDialect.forStorage(config.database().type()), styleExecutor);
-        this.styleService = new mn.suld.plugin.style.StyleService(plugin, this, styleRepository);
-        // Hardcore death (V12): one ordered writer, so a player's death and recovery never reorder.
-        this.deathExecutor = Executors.newSingleThreadExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "suld-death-io");
-            thread.setDaemon(true);
-            return thread;
-        });
-        this.deathRepository = dataSource == null
-                ? new mn.suld.api.persistence.InMemoryDeathRepository()
-                : new mn.suld.plugin.persistence.JdbcDeathRepository(dataSource,
-                        SqlDialect.forStorage(config.database().type()), deathExecutor);
-        this.classWeapons = new mn.suld.plugin.item.ClassWeapons(plugin, this);
-        // Progress marks (V17): the database mirror of the player file's clears / sites / ovoo days. Upserts, so the
-        // shared pool is fine (order does not matter).
-        this.marks = new mn.suld.plugin.progress.PlayerMarks(plugin, dataSource == null
-                ? new mn.suld.api.persistence.InMemoryMarksRepository()
-                : new mn.suld.plugin.persistence.JdbcMarksRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
-        this.duels = new mn.suld.plugin.combat.DuelService(plugin, this, config.pvp());
-
-        // Их Хуралдай, the week's campaign and the chronicle (docs/KHURALDAI.md): one ordered writer, so a vote's close
-        // and a campaign's resolution never reorder; contributions are additive and the chronicle is append-only.
-        this.campaignExecutor = Executors.newSingleThreadExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "suld-campaign-io");
-            thread.setDaemon(true);
-            return thread;
-        });
-        mn.suld.api.persistence.CampaignRepository campaignRepository = dataSource == null
-                ? new mn.suld.api.persistence.InMemoryCampaignRepository()
-                : new mn.suld.plugin.persistence.JdbcCampaignRepository(dataSource, SqlDialect.forStorage(config.database().type()), campaignExecutor);
-        mn.suld.api.persistence.ChronicleRepository chronicleRepository = dataSource == null
-                ? new mn.suld.api.persistence.InMemoryChronicleRepository()
-                : new mn.suld.plugin.persistence.JdbcChronicleRepository(dataSource, SqlDialect.forStorage(config.database().type()), campaignExecutor);
-        mn.suld.api.config.CampaignSettings cs = config.campaign();
-        this.weeklyCycle = new mn.suld.api.campaign.WeeklyCycle(zone, cs.campaignStarts(), cs.campaignEnds(), cs.voteOpens(), cs.voteCloses());
-        this.chronicleService = new mn.suld.plugin.chronicle.ChronicleService(plugin, this, chronicleRepository, config.chronicle(),
-                () -> weeklyCycle.cycleId(java.time.Instant.now()));
-        this.khuraldaiService = new mn.suld.plugin.campaign.KhuraldaiService(plugin, this, campaignRepository, cs, weeklyCycle, chronicleService);
-        mn.suld.plugin.campaign.CampaignEffects effects = new mn.suld.plugin.campaign.CampaignEffects(plugin, this, campaignRepository, cs, weeklyCycle);
-        this.campaignService = new mn.suld.plugin.campaign.CampaignService(plugin, this, campaignRepository, cs, weeklyCycle, khuraldaiService,
-                chronicleService, effects);
-        this.hudService.addStatusLine(campaignService::hudLine);
     }
 
     private final ExecutorService campaignExecutor;

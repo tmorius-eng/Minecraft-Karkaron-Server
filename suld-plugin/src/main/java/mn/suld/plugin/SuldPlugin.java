@@ -82,7 +82,7 @@ public final class SuldPlugin extends JavaPlugin {
             mn.suld.api.progression.LevelCurve currentCurve = config.progression().toCurve();
             services.profiles().onLoad(pr -> mn.suld.api.balance.ProfileUpgrade.onLoad(pr, legacyCurve, currentCurve, java.time.Instant.now()));
         } catch (Exception ex) {
-            getLogger().severe("Failed to initialise SULD services: " + ex.getMessage());
+            getLogger().log(java.util.logging.Level.SEVERE, "Failed to initialise SULD services: " + ex.getMessage(), ex);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }

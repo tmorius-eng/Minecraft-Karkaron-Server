@@ -306,6 +306,10 @@ public final class PerfService implements Listener {
         return new TabExecutor() {
             @Override
             public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
+                if (!s.hasPermission("suld.admin.perf")) { // SEC-004: never rely on plugin.yml alone
+                    s.sendMessage(net.kyori.adventure.text.Component.text("Эрх алга.", net.kyori.adventure.text.format.NamedTextColor.RED));
+                    return true;
+                }
                 String sub = a.length == 0 ? "" : a[0].toLowerCase(Locale.ROOT);
                 switch (sub) {
                     case "start" -> {

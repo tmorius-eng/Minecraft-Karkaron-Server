@@ -574,6 +574,10 @@ public final class ItemCommands {
         return new TabExecutor() {
             @Override
             public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
+                if (!s.hasPermission("suld.admin.items")) { // SEC-004: never rely on plugin.yml alone
+                    s.sendMessage(Messages.error("Эрх алга."));
+                    return true;
+                }
                 if (a.length == 0) {
                     s.sendMessage(Messages.info("/itemsadmin inspect <тоглогч> | give <тоглогч> <id> [rarity] [level] | roll <хүснэгт> [level] [tier] [тоглогч]"
                             + " | validate | reload | sweep <тоглогч> | quarantine [list|restore <№> <тоглогч>]"));

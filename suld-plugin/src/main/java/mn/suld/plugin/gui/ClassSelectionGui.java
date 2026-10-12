@@ -164,6 +164,13 @@ public final class ClassSelectionGui implements Listener {
         }
     }
 
+    /** GAME-003: a player who leaves without choosing is asked again on the next join, not kept here forever. */
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        mustChoose.remove(event.getPlayer().getUniqueId());
+        reopening.remove(event.getPlayer().getUniqueId());
+    }
+
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
         if (!(event.getInventory().getHolder() instanceof ClassSelectionHolder)) {

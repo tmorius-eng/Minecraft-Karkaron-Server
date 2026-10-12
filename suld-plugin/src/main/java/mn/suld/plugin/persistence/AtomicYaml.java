@@ -35,6 +35,14 @@ public final class AtomicYaml {
         else write.run();
     }
 
+    /** Like {@link #write} but on the caller's thread, reporting failure: for small files whose order matters. */
+    public static void writeNow(Path file, YamlConfiguration yaml) throws IOException {
+        Files.createDirectories(file.getParent());
+        Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
+        Files.writeString(tmp, yaml.saveToString());
+        Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+    }
+
     /** The file's contents, or an empty configuration when it does not exist. */
     public static YamlConfiguration read(Path file) {
         return Files.exists(file) ? YamlConfiguration.loadConfiguration(file.toFile()) : new YamlConfiguration();
