@@ -82,7 +82,7 @@ Minecraft-д серверээс нээдэг жинхэнэ цонх бол **ch
 ## 6. Шалгасан
 
 - `HubLayoutTest`, `PlayerSettingTest`, `PluginDescriptorTest`; `python3 tools/validation/run_all.py`.
-- `hubbot.js` dev сервер дээр 22/22: /menu, таб, буцах, хаах, /profile, /help, /rules, /commands, /discord, /exp чатгүй,
+- `hubbot.js` dev сервер дээр 30/30: /menu, таб, буцах, хаах, /profile, /help, /rules, /commands, /discord, /exp чатгүй,
   /rankup гэрэл, /shop талх нүхэнд + 2-р хуудас, /travel + өртөөний шаардлага, /settings унтраах/асаах.
 - Клиентээр (эзэмшигч): GUI scale 2/3/4, 1080p/1440p — толгой хайчлагдахгүй, цүнх нуугдсан, таб гэрэл, алтан hover,
   tooltip хүрээ, `suld:hd` мөр уншигдана; dialog товчууд загвартай.

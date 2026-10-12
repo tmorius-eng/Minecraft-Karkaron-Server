@@ -599,7 +599,7 @@ public final class Sim {
         boolean c4 = true;
         for (World.Dungeon d : proposed.world().dungeons()) if (!d.heroic() && proposed.dungeonLootLevel(d, 60) > d.max()) c4 = false;
         check("C4", "dungeon loot level never exceeds the dungeon's band (a level-60 farming dungeon I gets band-I loot)", c4,
-                "proposed max(min, min(max, L)); live " + live.dungeonLootLevel(live.world().dungeons().get(0), 60) + " for Хасарын Агуй at L60");
+                "proposed max(min, min(max, L)); live " + live.dungeonLootLevel(live.world().dungeons().get(0), 60) + " for Саарлын Агуй at L60");
         double sinkA = pct(col(main.get("proposed").get("active"), x -> snap(x, 90, "coinsSpent") / Math.max(1, snap(x, 90, "coinsEarned"))), 0.5);
         double sinkH = pct(col(hp, x -> snap(x, quick ? 60 : 90, "coinsSpent") / Math.max(1, snap(x, quick ? 60 : 90, "coinsEarned"))), 0.5);
         check("C5", "economy: sinks absorb ≥ 60 % of coin income over 90 days (active, hardcore p50)", sinkA >= 0.6 && sinkH >= 0.6,

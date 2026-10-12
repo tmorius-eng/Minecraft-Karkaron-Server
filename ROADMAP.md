@@ -69,6 +69,12 @@ Discord integration hooks, web/API dashboard (consuming the analytics stream),
 cosmetic-only monetization (cosmetics, particles, titles, emotes, mount skins,
 UI themes, pets, cosmetic battle pass), anti-exploit heuristics, richer audit.
 
+## Open questions (ask the players first)
+
+* **Client type** (external audit FIND-06): survey which launcher/account players use before building any
+  offline-account bridge. Until then the server stays online-mode (Microsoft UUID only).
+* **Bedrock** (FIND-03): Java Edition only; Geyser/Floodgate stay an optional profile until players ask.
+
 ## Cross-cutting (continuous)
 
 Anti-duplication, exploit detection, audit logging, performance (async I/O,

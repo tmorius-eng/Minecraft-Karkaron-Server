@@ -46,7 +46,7 @@ public class ProposedRules extends Rules {
     /** Death lock candidates evaluated by the simulation (minutes of real time, by level). */
     public enum LockCurve { NONE_30S, LINEAR, STEP, GEOMETRIC, LOG }
 
-    public static final double LOCK_MIN = 5, LOCK_MAX = 24 * 60;
+    public static final double LOCK_MIN = 5, LOCK_MAX = 30;   // live cap since config v7 (was 24 h, audit FIND-05)
 
     private final double curveBase;
     private final LockCurve lockCurve;
@@ -177,7 +177,7 @@ public class ProposedRules extends Rules {
     }
 
     static final List<DungeonSpec> DUNGEONS = List.of(
-            new DungeonSpec("dungeon.khasar_den", "Хасарын Агуй", 3, 10, 0, 3, 1),
+            new DungeonSpec("dungeon.khasar_den", "Саарлын Агуй", 3, 10, 0, 3, 1),
             new DungeonSpec("dungeon.govi_bulsh", "Говийн Булш", 9, 16, 1, 7, 2),
             new DungeonSpec("dungeon.baavgain_uur", "Баавгайн Үүр", 15, 22, 2, 12, 2),
             new DungeonSpec("dungeon.mosun_orgil", "Мөсөн Оргил", 22, 30, 3, 15, 3),
@@ -506,7 +506,7 @@ public class ProposedRules extends Rules {
         return switch (lockCurve) {
             case NONE_30S -> 0.5;
             case LINEAR -> LOCK_MIN + (LOCK_MAX - LOCK_MIN) * f;
-            case STEP -> level < 10 ? 5 : level < 20 ? 30 : level < 30 ? 120 : level < 40 ? 360 : level < 50 ? 720 : level < 60 ? 1080 : 1440;
+            case STEP -> Math.min(LOCK_MAX, level < 10 ? 5 : level < 20 ? 30 : level < 30 ? 120 : level < 40 ? 360 : level < 50 ? 720 : level < 60 ? 1080 : 1440);
             case GEOMETRIC -> LOCK_MIN * Math.pow(LOCK_MAX / LOCK_MIN, f);
             case LOG -> Math.max(LOCK_MIN, LOCK_MAX * Math.log(level) / Math.log(60));
         };

@@ -49,7 +49,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Class weapon tiers | 6 (levels 1/12/24/36/48/60) | `WeaponTiers` |
 | Level cap | 60; Ascension I–III | `Balance`, `Ascension` |
 | Level curve | 242·L^2.2 (live), legacy 100·L^1.75 rescaled on load | `config.yml` |
-| Death loss | 5 % of the level's progress, 25 % of droppable stacks; lock 5 min → 24 h, ≤ 1 min up to level 5 | `config.yml death:` |
+| Death loss | 5 % of the level's progress, 25 % of droppable stacks; lock 5 min → 30 min (cap since config v7), ≤ 1 min up to level 5; `/trial` «Тэнгэрийн сорил» ends it early | `config.yml death:` |
 
 ## Systems
 
@@ -108,6 +108,8 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Plaza boards: Хуралдай notice board + Hall of Fame | ✅ | ✅ both stand | ⏳ | `PlazaBoards`, text at GUI scale to check by the owner |
 | Баатрын Хроник (V19), `/chronicle`, «Миний түүх» | ✅ | ✅ | ⏳ | |
 | Party finder (`/party find|join|recruit|role`) | ✅ | ✅ | ⏳ | chat board + a window with click-to-join cards |
+| External audit 2026-10-12 (FIND-01…10) | ✅ | ✅ | — | `docs/audits/2026-10-12-external/RESPONSE.md`: H2 shaded (boots offline), mailbox stuck-file guard, scoped spell flag, `player.save_data` probe, Java-only deploy |
+| «Тэнгэрийн сорил» (`/trial`), lock cap 30 min (config v7) | ✅ | ✅ `trialbot.js` 6/6 | ⏳ | `docs/DEATH_AND_RECOVERY.md`; time to 60 now ~146 h simulated (was ~200) |
 
 ## Not built (and said so)
 

@@ -36,6 +36,10 @@ commands:
     description: One recorded death of a player in full (admin).
     usage: /deathinfo <player> [death#]
     permission: suld.admin.death
+  trial:
+    description: Тэнгэрийн сорил — as a soul, fight three spirit wolves to end the death lock now (the wound stays).
+    usage: /trial
+    aliases: [soril, сорил]
   deathrevive:
     description: End a player's death lock now; the wound still applies (admin, audited).
     usage: /deathrevive <player>

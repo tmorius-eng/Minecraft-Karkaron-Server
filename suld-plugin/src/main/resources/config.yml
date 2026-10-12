@@ -7,7 +7,7 @@
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
 # Schema version of this file (SULD migrates older files on start; do not edit).
-config-version: 6
+config-version: 7
 locale: mn
 
 # ---------------------------------------------------------------------------
@@ -62,8 +62,8 @@ death:
   allow-free-revive: true       # false = the lock only ends by /deathrevive
   lock:
     curve: GEOMETRIC            # GEOMETRIC (approved) | LINEAR | STEP | FIXED
-    min-minutes: 5              # level 1   (geometric: 5 min · 288^((L−1)/59) → 31 min @20, 3.5 h @40, 24 h @60)
-    max-minutes: 1440           # level 60 and Ascension
+    min-minutes: 5              # level 1   (geometric: 5 min · 6^((L−1)/59) → 9 min @20, 17 min @40, 30 min @60)
+    max-minutes: 30             # level 60 and Ascension (was 1440 = 24 h; external audit FIND-05). /trial ends a lock sooner
     newbie-levels: 5            # up to this level the lock is at most newbie-minutes (0 = off)
     newbie-minutes: 1           # a level 1–5 death costs one minute, not five
   wound:

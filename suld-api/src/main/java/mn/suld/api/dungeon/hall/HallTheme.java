@@ -10,7 +10,7 @@ import java.util.Locale;
  */
 public enum HallTheme {
 
-    /** Хасарын Агуй: a wolf den under the steppe; dark stone, bones, cobwebs, soul fire. */
+    /** Саарлын Агуй: a wolf den under the steppe; dark stone, bones, cobwebs, soul fire. */
     DEN(true, "minecraft:deepslate",
             List.of("minecraft:coarse_dirt", "minecraft:gravel", "minecraft:cobbled_deepslate", "minecraft:rooted_dirt", "minecraft:coarse_dirt"),
             List.of("minecraft:deepslate", "minecraft:cobbled_deepslate", "minecraft:tuff", "minecraft:deepslate", "minecraft:mossy_cobblestone"),

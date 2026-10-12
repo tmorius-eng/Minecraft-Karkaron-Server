@@ -22,10 +22,12 @@ class DeathLockTest {
     @Test
     void geometricCurveMatchesTheSpec() {
         assertEquals(5, DeathLock.minutes(CURVE, 1, 0), 1e-9);
-        assertEquals(1440, DeathLock.minutes(S, 60, 0), 1e-6);
-        assertEquals(31, DeathLock.minutes(S, 20, 0), 1.0);      // docs/DEATH_AND_RECOVERY.md: 31 min at 20
-        assertEquals(3.5 * 60, DeathLock.minutes(S, 40, 0), 6);   // 3.5 h at 40
-        assertEquals(1440, DeathLock.minutes(S, 30, 2), 1e-9, "Ascension = the top of the curve");
+        // the default tops out at 30 min (external audit FIND-05; was 24 h): 5 · 6^((L−1)/59)
+        assertEquals(30, DeathLock.minutes(S, 60, 0), 1e-6);
+        assertEquals(5 * Math.pow(6, 19 / 59.0), DeathLock.minutes(S, 20, 0), 1e-9);   // ≈ 9 min at 20
+        assertEquals(5 * Math.pow(6, 39 / 59.0), DeathLock.minutes(S, 40, 0), 1e-9);   // ≈ 16 min at 40
+        assertEquals(30, DeathLock.minutes(S, 30, 2), 1e-9, "Ascension = the top of the curve");
+        assertEquals(1440, DeathLock.minutes(CURVE, 60, 0), 1e-6, "a server may still configure the old 24 h top");
         double prev = 0;
         for (int lv = 1; lv <= 60; lv++) {
             double m = DeathLock.minutes(CURVE, lv, 0);
@@ -41,9 +43,9 @@ class DeathLockTest {
             assertEquals(1.0, DeathLock.minutes(S, lv, 0), 1e-9, "level " + lv);
             assertEquals(60_000, DeathLock.millis(S, lv, 0));
         }
-        assertEquals(DeathLock.minutes(CURVE, 6, 0), DeathLock.minutes(S, 6, 0), 1e-9, "level 6 is back on the curve");
+        assertEquals(5 * Math.pow(6, 5 / 59.0), DeathLock.minutes(S, 6, 0), 1e-9, "level 6 is back on the curve");
         assertTrue(DeathLock.minutes(S, 6, 0) > 5);
-        assertEquals(1440, DeathLock.minutes(S, 3, 1), 1e-9, "Ascension is never a new player");
+        assertEquals(30, DeathLock.minutes(S, 3, 1), 1e-9, "Ascension is never a new player");
         double prev = 0;
         for (int lv = 1; lv <= 60; lv++) {
             double m = DeathLock.minutes(S, lv, 0);

@@ -72,8 +72,8 @@ or duplicated — any non-genuine copy is destroyed on sight.
 ## Hardcore death system
 
 Configurable (see `death:` in `config.yml`). A death may place the character in
-a **real-time death lock** that grows with level (geometric, 5 min at level 1 → 24 h at 60; persisted, survives
-restarts — docs/DEATH_AND_RECOVERY.md) spent as a soul, then a **wound** on the class gear (−5 % per death, max −15 %,
+a **real-time death lock** that grows with level (geometric, 5 min at level 1 → 30 min at 60; persisted, survives
+restarts; a soul may win it back early with «Тэнгэрийн сорил», `/trial` — docs/DEATH_AND_RECOVERY.md) spent as a soul, then a **wound** on the class gear (−5 % per death, max −15 %,
 healed by active play), apply gear durability
 damage, lose a fraction of current-level EXP, and drop a configurable fraction
 of non-soulbound loot. Recovery is **free in-game** (resurrection quest hooks,

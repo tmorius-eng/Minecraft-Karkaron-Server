@@ -529,20 +529,45 @@ public final class DeathService implements Listener {
     public void onSoulAttack(EntityDamageByEntityEvent e) {
         Entity damager = e.getDamager();
         if (damager instanceof Projectile pr && pr.getShooter() instanceof Player shooter) damager = shooter;
+        UUID wolfOwner = DeathTrialService.ownerOf(e.getEntity());
+        if (wolfOwner != null) {
+            // a trial wolf: only its own soul may hit it (no help, no stolen kill)
+            if (!(damager instanceof Player p) || !p.getUniqueId().equals(wolfOwner)) e.setCancelled(true);
+            return;
+        }
         if (damager instanceof Player p && isSoul(p.getUniqueId())) e.setCancelled(true);
     }
+
+    /** «Тэнгэрийн сорил» (set by SuldPlugin): its soul fights and is bitten by its own wolves only. */
+    public volatile DeathTrialService trial;
 
     /** …and nothing can hurt a soul. */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onSoulDamaged(EntityDamageEvent e) {
-        if (e.getEntity() instanceof Player p && isSoul(p.getUniqueId())
-                && e.getCause() != EntityDamageEvent.DamageCause.VOID && e.getCause() != EntityDamageEvent.DamageCause.KILL) {
-            e.setCancelled(true);
+        if (!(e.getEntity() instanceof Player p) || !isSoul(p.getUniqueId())
+                || e.getCause() == EntityDamageEvent.DamageCause.VOID || e.getCause() == EntityDamageEvent.DamageCause.KILL) {
+            return;
         }
+        DeathTrialService t = trial;
+        if (t != null && t.inTrial(p.getUniqueId()) && e instanceof EntityDamageByEntityEvent by
+                && p.getUniqueId().equals(DeathTrialService.ownerOf(by.getDamager()))) {
+            // a bite from its own trial wolf: it hurts, but a soul never dies again — the trial is lost instead
+            if (p.getHealth() - e.getFinalDamage() <= 1) {
+                e.setCancelled(true);
+                t.fell(p);
+            }
+            return;
+        }
+        e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onTarget(EntityTargetLivingEntityEvent e) {
+        UUID wolfOwner = DeathTrialService.ownerOf(e.getEntity());
+        if (wolfOwner != null) {
+            if (!(e.getTarget() instanceof Player p) || !p.getUniqueId().equals(wolfOwner)) e.setCancelled(true);
+            return;
+        }
         if (e.getTarget() instanceof Player p && isSoul(p.getUniqueId())) e.setCancelled(true);
     }
 
@@ -616,7 +641,7 @@ public final class DeathService implements Listener {
 
     /** What a soul may still run: death and revive, chat and messages, help and reading its own state. */
     private static final java.util.Set<String> SOUL_COMMANDS = java.util.Set.of(
-            "revive", "skills", "skill", "deathstatus", "deathinfo", "help", "rules", "commands", "menu", "tutorial", "profile", "quest",
+            "revive", "trial", "soril", "сорил", "skills", "skill", "deathstatus", "deathinfo", "help", "rules", "commands", "menu", "tutorial", "profile", "quest",
             "chat", "ch", "g", "l", "pc", "tr", "cc", "msg", "tell", "w", "whisper", "r", "reply", "mail",
             "discord", "website", "vote", "top", "balance", "cosmetics", "buy", "credits");
 

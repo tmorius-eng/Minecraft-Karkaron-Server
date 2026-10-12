@@ -78,13 +78,13 @@ public record DeathSettings(
     public DeathSettings(boolean enabled, int soulStateSeconds, double expLossFraction, double durabilityDamageFraction,
                          boolean dropLoot, double lootLossFraction, boolean allowFreeRevive) {
         this(enabled, soulStateSeconds, expLossFraction, durabilityDamageFraction, dropLoot, lootLossFraction, allowFreeRevive,
-                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 1440, 0.05, 0.15, 180);
+                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 30, 0.05, 0.15, 180);
     }
 
     /** The approved balance (docs/DEATH_AND_RECOVERY.md): geometric 5 min → 24 h lock, −5 % wound per death (max −15 %). */
     public static DeathSettings defaults() {
         return new DeathSettings(true, 30, 0.05, 0.25, true, 0.25, true,
-                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 1440, 0.05, 0.15, 180, NEWBIE_LEVELS, NEWBIE_LOCK_MINUTES);
+                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 30, 0.05, 0.15, 180, NEWBIE_LEVELS, NEWBIE_LOCK_MINUTES);
     }
 
     private static double clamp01(double v) {

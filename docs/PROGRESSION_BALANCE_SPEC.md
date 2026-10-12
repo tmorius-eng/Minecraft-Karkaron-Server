@@ -208,7 +208,7 @@ Each has its own spec:
 * `docs/ASCENSION_SPEC.md`: ranks I–X, each a different kind of requirement, none time-based.
 * `docs/DIFFICULTY_CURVE.md`: mob curves derived from the par player, gap rules, mechanics.
 * `docs/ECONOMY_BALANCE_SPEC.md`: faucets and sinks (sinks take 84–96 % of income by day 90).
-* `docs/DEATH_AND_RECOVERY.md`: the level-scaled death lock (geometric, 5 min → 24 h) and the wound.
+* `docs/DEATH_AND_RECOVERY.md`: the level-scaled death lock (geometric, 5 min → 30 min since config v7, «Тэнгэрийн сорил») and the wound.
 
 ### Rarity acquisition targets
 

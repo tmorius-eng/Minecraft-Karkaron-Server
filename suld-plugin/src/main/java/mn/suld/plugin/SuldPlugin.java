@@ -33,6 +33,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.trade.TradeService trades;
     private mn.suld.plugin.style.CosmeticEffects effects;
     private mn.suld.plugin.death.DeathService deaths;
+    private mn.suld.plugin.death.DeathTrialService deathTrial;
     private mn.suld.plugin.gui.SkillSky skillSky;
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.dungeon.DungeonGuide dungeonGuide;
@@ -168,6 +169,11 @@ public final class SuldPlugin extends JavaPlugin {
         services.woundFactor = deaths::woundFactor;
         mn.suld.plugin.command.DeathCommands deathCommands = new mn.suld.plugin.command.DeathCommands(this, services, deaths);
         for (String c : List.of("revive", "deathstatus", "deathinfo", "deathrevive", "deathreset")) registerTab(c, deathCommands);
+        // «Тэнгэрийн сорил»: the active way out of a death lock (docs/DEATH_AND_RECOVERY.md)
+        deathTrial = new mn.suld.plugin.death.DeathTrialService(this, services, deaths);
+        deaths.trial = deathTrial;
+        getServer().getPluginManager().registerEvents(deathTrial, this);
+        registerTab("trial", deathTrial);
         // the Display-Entity model renderer (docs/MODEL_RENDERER.md): rigged SÜLD mobs are dressed on spawn
         mn.suld.plugin.model.ModelService models = new mn.suld.plugin.model.ModelService(this);
         models.load();
@@ -450,6 +456,7 @@ public final class SuldPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (deathTrial != null) deathTrial.shutdown();
         if (props != null) props.stop();
         if (combatFeel != null) combatFeel.shutdown();
         if (halls != null) halls.shutdown();
@@ -517,6 +524,7 @@ public final class SuldPlugin extends JavaPlugin {
         migrateToV4(getConfig().getInt("config-version", 1));
         if (getConfig().getInt("config-version", 1) < 5) migrateCurve();
         if (getConfig().getInt("config-version", 1) < 6) migrateActTwoCurve();
+        if (getConfig().getInt("config-version", 1) < 7) migrateDeathCap();
     }
 
     /**
@@ -555,6 +563,17 @@ public final class SuldPlugin extends JavaPlugin {
                     + mn.suld.api.balance.Balance.CURVE_BASE + "*L^2.2 (Act II). Existing players keep their level; their bar is rescaled on their next login.");
         }
         getConfig().set("config-version", 6);
+        saveConfig();
+    }
+
+    /** v7 (external audit FIND-05): the lock tops out at 30 minutes, not 24 hours; «Тэнгэрийн сорил» ends it sooner. */
+    private void migrateDeathCap() {
+        if (getConfig().getDouble("death.lock.max-minutes", 30) == 1440) {
+            getConfig().set("death.lock.max-minutes", 30);
+            getLogger().warning("config.yml migrated to v7: death.lock.max-minutes 1440 -> 30 (a lock now lasts 5 min at level 1 to"
+                    + " 30 min at 60; a soul can end it with /trial). Locks already running keep their end time.");
+        }
+        getConfig().set("config-version", 7);
         saveConfig();
     }
 
