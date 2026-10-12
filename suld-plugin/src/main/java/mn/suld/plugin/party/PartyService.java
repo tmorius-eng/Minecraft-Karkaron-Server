@@ -176,6 +176,7 @@ public final class PartyService {
         java.util.List<mn.suld.api.party.PartyFinder.Listing> list = mn.suld.api.party.PartyFinder.listings(registry.all(), dungeonId);
         if (list.isEmpty()) {
             player.sendMessage(Messages.info("Одоогоор баг хайж буй хүн алга. Өөрөө нээ: /party recruit [агуй]"));
+            openBoard(player, list);
             return;
         }
         player.sendMessage(Messages.accent("Баг хайж байна (" + list.size() + "):"));
@@ -188,6 +189,42 @@ public final class PartyService {
                             .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/party join " + leader))
                             .hoverEvent(Component.text("/party join " + leader))));
         }
+        openBoard(player, list);
+    }
+
+    /** The party finder window: one card per recruiting party (missing roles first), a click joins it. */
+    private void openBoard(Player player, java.util.List<mn.suld.api.party.PartyFinder.Listing> list) {
+        mn.suld.plugin.gui.Menu m = new mn.suld.plugin.gui.Menu(6, "Баг хайх", null);
+        int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
+        for (int i = 0; i < list.size() && i < slots.length; i++) {
+            mn.suld.api.party.PartyFinder.Listing l = list.get(i);
+            String leader = nameOf(l.leader());
+            java.util.List<Component> lore = new java.util.ArrayList<>();
+            lore.add(mn.suld.plugin.gui.Menu.kv("Хүн:", l.size() + " / " + l.capacity(), net.kyori.adventure.text.format.NamedTextColor.WHITE));
+            if (!l.dungeonId().isBlank()) lore.add(mn.suld.plugin.gui.Menu.kv("Агуй:", dungeonName(l.dungeonId()), net.kyori.adventure.text.format.NamedTextColor.AQUA));
+            if (!l.missingRoles().isEmpty()) lore.add(mn.suld.plugin.gui.Menu.kv("Хэрэгтэй:", String.join(", ",
+                    l.missingRoles().stream().map(mn.suld.api.party.PartyRole::displayName).toList()), net.kyori.adventure.text.format.NamedTextColor.YELLOW));
+            lore.add(Component.empty());
+            lore.add(Component.text("» Дарж нэгдэх «", net.kyori.adventure.text.format.NamedTextColor.GOLD));
+            org.bukkit.inventory.ItemStack card = mn.suld.plugin.gui.Menu.item(l.missingRoles().isEmpty() ? org.bukkit.Material.IRON_SWORD : org.bukkit.Material.SHIELD,
+                    Component.text("★ " + leader + "-ийн баг", Messages.BRAND), lore);
+            m.set(slots[i], card, (pl, c) -> {
+                pl.closeInventory();
+                join(pl, leader);
+            });
+        }
+        if (list.isEmpty()) {
+            m.set(22, mn.suld.plugin.gui.Menu.item(org.bukkit.Material.PAPER, Component.text("Баг хайж буй хүн алга", net.kyori.adventure.text.format.NamedTextColor.GRAY),
+                    java.util.List.of(Component.text("Өөрөө нээ: доорх товч эсвэл /party recruit", net.kyori.adventure.text.format.NamedTextColor.WHITE))), null);
+        }
+        m.set(48, mn.suld.plugin.gui.Menu.item(org.bukkit.Material.WRITABLE_BOOK, Component.text("Миний багийг самбарт тавих", net.kyori.adventure.text.format.NamedTextColor.GREEN),
+                java.util.List.of(Component.text("/party recruit — бусад энд харж нэгдэнэ", net.kyori.adventure.text.format.NamedTextColor.WHITE))), (pl, c) -> {
+            pl.closeInventory();
+            recruit(pl, null);
+        });
+        m.set(50, mn.suld.plugin.gui.Menu.item(org.bukkit.Material.BARRIER, Component.text("Хаах", net.kyori.adventure.text.format.NamedTextColor.RED), java.util.List.of()),
+                (pl, c) -> pl.closeInventory());
+        m.open(player);
     }
 
     private static String dungeonName(String id) {

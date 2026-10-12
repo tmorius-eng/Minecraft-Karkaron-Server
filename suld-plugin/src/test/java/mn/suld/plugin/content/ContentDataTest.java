@@ -109,6 +109,21 @@ class ContentDataTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void everyNpcEffectStandsOnARealCityPoint() throws Exception {
+        // a campaign NPC at a point the city does not have is never placed (the caravan once pointed at merchant.south)
+        Map<String, Object> pts = (Map<String, Object>) Json.parse(java.nio.file.Files.readString(
+                java.nio.file.Path.of("../assets/world/kharkhorum/points.json")));
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        for (Object o : (List<Object>) pts.get("points")) ids.add((String) ((Map<String, Object>) o).get("id"));
+        for (var c : Content.pack().campaigns()) {
+            var e = c.effect();
+            if (e == null || e.type() != mn.suld.api.campaign.WorldEffect.Type.NPC || e.anchor().startsWith("city:")) continue;
+            assertTrue(ids.contains(e.anchor()), c.id() + ": NPC anchor " + e.anchor() + " is not a point in points.json");
+        }
+    }
+
+    @Test
     void aWaveWithAnUnknownMobIsRefused() throws Exception {
         ContentLoader.Result r = load(edited("dungeons.json", root -> {
             @SuppressWarnings("unchecked") List<List<Object>> waves = (List<List<Object>>) list(root, "dungeons").get(1).get("waves");

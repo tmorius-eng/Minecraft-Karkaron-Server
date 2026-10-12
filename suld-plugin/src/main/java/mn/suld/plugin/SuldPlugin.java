@@ -345,6 +345,7 @@ public final class SuldPlugin extends JavaPlugin {
 
         guide = new mn.suld.plugin.branding.GuideBoards(this, worldBuild);
         guide.start();
+        new mn.suld.plugin.chronicle.PlazaBoards(this, services, worldBuild).start(); // Хуралдай notice board + Hall of Fame
         mn.suld.plugin.branding.OnboardingService onboarding = new mn.suld.plugin.branding.OnboardingService(this, services);
         getServer().getPluginManager().registerEvents(onboarding, this);
         onboarding.start();

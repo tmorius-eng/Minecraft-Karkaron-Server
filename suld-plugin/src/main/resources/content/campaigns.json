@@ -38,7 +38,7 @@
       "podium": [1.5, 1.3, 1.2],
       "clanExpPerUnit": 4,
       "clanSuccessBonus": 1500,
-      "effect": {"type": "NPC", "ref": "merchant.caravan", "anchor": "merchant.south"},
+      "effect": {"type": "NPC", "ref": "merchant.caravan", "anchor": "merchant.general", "dx": 0, "dz": 3},
       "cooldownCycles": 1
     },
     {

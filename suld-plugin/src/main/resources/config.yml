@@ -147,6 +147,9 @@ chronicle:
   enabled: true
   broadcast: true
   hall-entries: 12
+  # Two boards on the plaza (entities, never blocks): the Хуралдай notice board and the Hall of Fame (newest lines).
+  hall-boards: true
+  hall-anchor: "event.plaza"   # a city point (assets/world/kharkhorum/points.json); boards stand 6 blocks to either side
 
 # ---------------------------------------------------------------------------
 # PvP policy (owner decision 2026-10-11): SÜLD is a hardcore PvE game. A player hurts another player only when both
