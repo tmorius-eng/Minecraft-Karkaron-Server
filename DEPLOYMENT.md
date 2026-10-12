@@ -63,8 +63,7 @@ regions (e.g. Seoul, Tokyo) and test ping from Ulaanbaatar before you commit.
 **Decide now** (you put these in `/etc/suld/suld.env`):
 - `ACCEPT_EULA=true`. You must read and accept the [Minecraft EULA](https://aka.ms/MinecraftEULA) yourself.
 - `ADMIN_PLAYERS` is empty by default (no shipped owner, SEC-002). Put your own account name there: these names become operator after the first boot.
-- `REPO_BRANCH`. Use the branch you want live. Until the work is merged into `main`, that is
-  `claude/gracious-lamport-5aaowc`.
+- `REPO_BRANCH`. The branch that goes live: `main` (all work is pushed there).
 - `REPO_URL`. If the repository is **private**, use an SSH deploy key (see §9). Never put a token in the URL.
 - `PUBLIC_HOST` is auto-detected (the Vultr public IPv4 is on the NIC). Set a DNS name instead if you have one.
 
@@ -93,7 +92,7 @@ ssh root@<SERVER_IP>
 apt-get update && apt-get -y upgrade && reboot      # start from a patched system
 # reconnect, then:
 apt-get install -y git
-git clone --branch claude/gracious-lamport-5aaowc https://github.com/tmorius-eng/Minecraft-Karkaron-Server.git /root/suld-src
+git clone --branch main https://github.com/tmorius-eng/Minecraft-Karkaron-Server.git /root/suld-src
 cd /root/suld-src
 
 # Optional: see exactly what will happen, changes nothing
