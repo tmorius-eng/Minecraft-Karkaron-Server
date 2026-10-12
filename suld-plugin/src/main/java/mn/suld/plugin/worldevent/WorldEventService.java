@@ -243,7 +243,8 @@ public final class WorldEventService {
     /**
      * The event's own loot table (loot.world_event.&lt;name&gt;), one roll for each rewarded defender. Items roll at
      * the player's level, capped at the event's band (its strongest target mob + 5): a low-level wolf raid never
-     * drops endgame gear to a level-60 player.
+     * drops endgame gear to a level-60 player. The table's {@code nothing} weight (1 against the gear entry's 1 for the
+     * wolf raid) makes the item a coin flip, not a top-rarity piece every 45 minutes (PROG-006).
      */
     private void eventLoot(Player p, PlayerProfile profile, WorldEventDefinition def, long runId) {
         mn.suld.plugin.item.ItemService items = services.itemService();

@@ -163,4 +163,13 @@ class ItemCatalogLoaderTest {
                 + "\"effects\":[{\"type\":\"keystone\",\"kind\":\"MUNKH_TESVER\"}]}")));
         assertTrue(k.contains("come from the skill tree"), k);
     }
+
+    @org.junit.jupiter.api.Test
+    void worldEventGearIsNotAGuaranteedRoll() {
+        // PROG-006: a wolf raid every 45 minutes paying a top-band item every time was a steady gear faucet
+        for (mn.suld.api.loot.LootTable t : BUNDLED.lootTables()) {
+            if (t.tier() != mn.suld.api.loot.LootTier.WORLD_EVENT) continue;
+            assertTrue(t.nothingWeight() >= 1, t.id() + " must be able to roll nothing");
+        }
+    }
 }
