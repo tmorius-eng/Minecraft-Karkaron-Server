@@ -240,6 +240,11 @@ public final class ResourcePackService implements Listener {
     @EventHandler
     public void onStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
+        // only SÜLD's pack decides the HUD and the onboarding gate: another plugin's pack must not overwrite it
+        if (event.getID() != null && !PACK_ID.equals(event.getID())) {
+            plugin.getLogger().info("Resource pack: " + player.getName() + " -> " + event.getStatus() + " for another pack " + event.getID());
+            return;
+        }
         status.put(player.getUniqueId(), event.getStatus());
         Long t0 = sentAt.get(player.getUniqueId());
         plugin.getLogger().info("Resource pack: " + player.getName() + " -> " + event.getStatus()
