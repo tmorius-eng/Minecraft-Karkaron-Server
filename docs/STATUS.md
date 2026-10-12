@@ -59,13 +59,13 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Resource pack gate (ONB-001) | ✅ | ✅ | 👤 G7 | `PackGate` |
 | Classes, spells, class resources, lock-on, dodge | ✅ | ✅ | 👤 | 25 spells; cooldowns per slot |
 | Skill tree, builds, respec | ✅ | ✅ (312/313 QA) | 👤 | SP-3 ✅ the Orb's free respec waits a day since the last respec |
-| Story 42 chapters, tracker | ✅ | 🤖 first chapters | ⏳ | PROG-004/005 ⏳ |
+| Story 42 chapters, tracker | ✅ | 🤖 first chapters | ⏳ | PROG-004 ✅ gate by chapter id; PROG-005 ✅ chapter EXP never below the previous chapter |
 | Dungeon ladder 10, halls, boss brains | ✅ | 🤖 | ⏳ | DG-7 ✅ enrage + 60 s wipes the run; PROG-004 ✅ the loader refuses a story that softlocks a gate |
 | Hardcore death, lock, wound | ✅ | ✅ | ⏳ | |
 | Relics (2), seize rule | ✅ | ✅ | ⏳ | seize moves to consented fights only (PvP policy, this slice) |
 | Clans, parties, chat channels | ✅ | ✅ | ⏳ | party finder: this slice |
-| World events | ✅ (1 event) | ✅ | ⏳ | campaign system: this slice |
-| Daily reward / tasks, leaderboards, trade, horses, smith | ✅ | 🤖 | ⏳ | streak resets to day 1 (B.8 ⏳) |
+| World events | ✅ (1 event; no raid while a world boss stands) | ✅ | ⏳ | «Чонын Их Аян» success: guards warn 2 min before a raid |
+| Daily reward / tasks, leaderboards, trade, horses, smith | ✅ | 🤖 | ⏳ | B.8 ✅ a missed day costs one streak step, never a reset; 43 recipes + order board (`docs/CRAFTING.md`) |
 | HUD, menus (HD painted) | ✅ | — | 👤 G7 | `docs/HUD_MANUAL_QA.md` rows not recorded |
 | Kharkhorum slice 1 (ceremonial axis), hand-built spawn | ✅ | ✅ | 👤 | auto-repair off; palace interior, clan district, relic hall ⏳ |
 | Historic sites 16, ovoo 40, discovery EXP | ✅ | ✅ | ⏳ | |
@@ -96,7 +96,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Bot harness in the repo | ✅ | — | — | `tools/loadtest/` (B.4 done) |
 | PvE-only + consented PvP (`/duel`, arenas) | ✅ | ✅ a hit without consent does no damage | ⏳ | owner decision 2026-10-11; `GAME_DESIGN.md` «PvP policy»; a lethal duel hit, or the burn a duel hit started, is a defeat at ¼ health, not a hardcore death; outside a duel the same burn kills (`duel-defeat.js` 7/7) |
 | Их Хуралдай (weekly vote, V18) | ✅ | ✅ `khuraldai-smoke.js` 22/22 on PostgreSQL | ⏳ | `docs/KHURALDAI.md` |
-| Campaigns: goals, tiers, flush, resolve, world effects (V18) | ✅ | ✅ deliver → success → reward → effect → chronicle; restart restores; flag re-applies; `campaign-effects.js` 6/6: kills count, PROP and NPC effects placed | ⏳ | 4 campaigns in `content/campaigns.json`; `dungeon-clear.js` 5/5: a clear counts and is chronicled |
+| Campaigns: goals, tiers, flush, resolve, world effects (V18) | ✅ | ✅ deliver → success → reward → effect → chronicle; restart restores; flag re-applies; `campaign-effects.js` 6/6: kills count, PROP and NPC effects placed | ⏳ | 7 campaigns in `content/campaigns.json` (4 open + the «Эхний аян» arc); `dungeon-clear.js` 5/5: a clear counts and is chronicled |
 | Integration review 2026-10-12 (12 findings) | ✅ | ✅ duel paths live | — | mailbox partial stacks; trade goods in flight at shutdown; reward guard waits for a loaded style and an in-flight write, undoes one claim; rotation honours the arc; a missed ballot still decides; interlude force survives restarts; resolve waits for the last flush and retries; «Чонын Их Аян» success = guards warn 2 min before a raid; a soul's site visit waits |
 | Дархан recipe book (43 recipes, 9-level bands, smith window) | ✅ | ✅ `craft.js` 6/6 | ⏳ | `docs/CRAFTING.md`; crafted level held to the recipe band (was the crafter's level) |
 | Дархан order board (`/order`: fee in escrow, fill, withdraw, 7-day expiry) | ✅ | ✅ `craft-orders.js` 9/9 | ⏳ | `docs/CRAFTING.md` |
