@@ -106,20 +106,30 @@ public final class ClassChangeService implements Listener {
         if (!pr.switchClass(to, now)) return new ClassChangeRules.Verdict(ClassChangeRules.Refusal.SAME_CLASS, null, 0, 0);
         // a free change while new starts no cooldown: the 6 hours count from the first paid (or sealed) change
         if (v.payment() == ClassChangeRules.Payment.GRACE) pr.clearClassChangeCooldown();
-        services.classWeapons().syncRemembered(p);
-        for (PotionEffect e : p.getActivePotionEffects()) p.removePotionEffect(e.getType());
-        if (services.skillTree() != null) services.skillTree().attach(p);
-        skills.afterClassChange(p, SPELL_LOCK_MS);
-
-        // the new class's gear: rebuilt with its identity, or the starter set the first time
-        if (services.classArmor != null && services.classArmor.supports(to)) services.classArmor.recover(p);
-        if (pr.classGear().weapon() == null) {
-            ItemStack w = services.classWeapons().starter(to, pr.progression().level(), p);
-            if (w != null) p.getInventory().addItem(w).values().forEach(x -> p.getWorld().dropItemNaturally(p.getLocation(), x));
-        } else {
-            services.classWeapons().recover(p);
+        // from here the profile is the new class: anything below that fails is logged and the change still stands
+        // (saved below); a missing piece of gear is what /classgear recover rebuilds, so nothing is left half-way
+        try {
+            services.classWeapons().syncRemembered(p);
+            for (PotionEffect e : p.getActivePotionEffects()) p.removePotionEffect(e.getType());
+            if (services.skillTree() != null) services.skillTree().attach(p);
+            skills.afterClassChange(p, SPELL_LOCK_MS);
+        } catch (RuntimeException ex) {
+            plugin.getLogger().severe("[class] " + p.getName() + ": applying " + to + " failed: " + ex);
         }
-        services.equipment().dirty(p);
+        try {
+            // the new class's gear: rebuilt with its identity, or the starter set the first time
+            if (services.classArmor != null && services.classArmor.supports(to)) services.classArmor.recover(p);
+            if (pr.classGear().weapon() == null) {
+                ItemStack w = services.classWeapons().starter(to, pr.progression().level(), p);
+                if (w != null) p.getInventory().addItem(w).values().forEach(x -> p.getWorld().dropItemNaturally(p.getLocation(), x));
+            } else {
+                services.classWeapons().recover(p);
+            }
+            services.equipment().dirty(p);
+        } catch (RuntimeException ex) {
+            plugin.getLogger().severe("[class] " + p.getName() + ": the " + to + " gear failed (/classgear recover rebuilds it): " + ex);
+            p.sendMessage(Messages.error("Ангийн зэвсэг/хуяг бүрэн ирсэнгүй: /classgear recover"));
+        }
         PlayerDataSaves.now(p);
 
         // 4: health keeps its share of the new maximum

@@ -60,4 +60,25 @@ class ClassMasteryTest {
         assertThrows(IllegalArgumentException.class, () -> ClassMasteries.fromJson("{\"v\":9}"));
         assertThrows(IllegalArgumentException.class, () -> ClassMasteries.fromJson("{\"v\":1,\"classes\":{\"nobody\":{}}}"));
     }
+
+    @Test
+    void switchingBackAndForthManyTimesNeverMixesTheTwoClasses() {
+        PlayerProfile p = PlayerProfile.createNew(UUID.randomUUID(), "Twin", Instant.EPOCH);
+        p.selectClass(PlayerClass.BAATAR);
+        p.skillState(SkillState.NONE.withRanks("b.root:1"));
+        p.classGear(gear(5, ArmorTier.T1, 1));
+        assertTrue(p.switchClass(PlayerClass.KHULEGCHIN, 1));
+        p.skillState(SkillState.NONE.withRanks("k.root:1"));
+        p.classGear(gear(7, ArmorTier.T2, 2));
+        long v = p.version();
+        for (int i = 0; i < 20; i++) {
+            PlayerClass to = p.playerClass().orElseThrow() == PlayerClass.BAATAR ? PlayerClass.KHULEGCHIN : PlayerClass.BAATAR;
+            assertTrue(p.switchClass(to, 10 + i));
+            String want = to == PlayerClass.BAATAR ? "b.root:1" : "k.root:1";
+            assertEquals(want, p.skillState().ranks(), "round " + i);
+            assertEquals(to == PlayerClass.BAATAR ? 5 : 7, p.classGear().armorLevel(), "round " + i);
+            assertEquals(1, p.classMasteries().saved().size(), "only the class not played is stored");
+        }
+        assertTrue(p.version() > v && p.isDirty(), "every switch bumps the version, so the next save writes it");
+    }
 }
