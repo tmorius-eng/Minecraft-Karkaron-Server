@@ -95,7 +95,7 @@ resource-pack:
   sha1: ''
   # The SÜLD UI (badges, menu art, icons, weapon skins) lives in the pack, so it is required by default.
   required: true
-  prompt: 'SÜLD-ийн дүрс багцыг татаж авна уу (Download the SÜLD resource pack)'
+  prompt: 'SÜLD-д дүрс багц заавал хэрэгтэй: цэс, тэмдэг, зэвсгийн дүрс. Нэг удаа татна (~7 MB). (Required: the SÜLD resource pack)'
   self-host:
     enabled: true
     bind: 0.0.0.0

@@ -245,7 +245,16 @@ public final class ResourcePackService implements Listener {
         Runnable ready = gate.answer(player.getUniqueId(), answer(event.getStatus()), System.currentTimeMillis());
         switch (event.getStatus()) {
             case SUCCESSFULLY_LOADED -> player.sendMessage(Messages.success("Дүрс багц амжилттай ачаалагдлаа."));
-            case DECLINED -> player.sendMessage(Messages.info("Дүрс багцгүйгээр тоглож байна. (Server list → Edit → Server Resource Packs: Enabled)"));
+            case DECLINED -> {
+                if (settings.required()) {
+                    // ONB-008: the client would drop the player with a bare vanilla line; say what SÜLD needs and how
+                    player.kick(Component.text("SÜLD-д дүрс багц заавал хэрэгтэй (цэс, тэмдэг, зэвсгийн дүрс).\n\n", Messages.BRAND)
+                            .append(Component.text("Дахин орохдоо «Yes / Тийм» дарна уу.\nЭсвэл: Multiplayer → SÜLD → Edit → Server Resource Packs: Enabled",
+                                    net.kyori.adventure.text.format.NamedTextColor.WHITE)));
+                } else {
+                    player.sendMessage(Messages.info("Дүрс багцгүйгээр тоглож байна. (Server list → Edit → Server Resource Packs: Enabled)"));
+                }
+            }
             case FAILED_DOWNLOAD, INVALID_URL, FAILED_RELOAD -> player.sendMessage(Messages.error(
                     "Дүрс багц татаж чадсангүй (" + event.getStatus() + "). Дахин оролдох: /suldpack"));
             default -> {

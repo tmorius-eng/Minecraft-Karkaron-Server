@@ -125,8 +125,15 @@ public final class CampaignService {
             CampaignSnapshot s = row.get();
             CampaignDefinition def = Content.pack().campaign(s.campaignId());
             if (def == null) {
-                plugin.getLogger().warning("[campaign] " + s.campaignId() + " of " + id + " is no longer in campaigns.json; left as is");
                 startedCycle = id;
+                if (s.state().resolved()) {
+                    plugin.getLogger().warning("[campaign] " + s.campaignId() + " of " + id + " is no longer in campaigns.json (already resolved)");
+                    return;
+                }
+                // an orphaned live row would block the week: nothing can run it, cancel finds no run, force sees it live
+                whenDone(repository.saveCampaign(s.withState(mn.suld.api.campaign.CampaignState.CANCELLED, System.currentTimeMillis()), s.version()),
+                        (ok, e) -> plugin.getLogger().warning("[campaign] " + s.campaignId() + " of " + id + " is no longer in campaigns.json; "
+                                + (e == null && Boolean.TRUE.equals(ok) ? "cancelled, so the week can start another campaign" : "could not cancel it: " + (e == null ? "version moved" : root(e)))));
                 return;
             }
             if (s.state().resolved()) {
@@ -208,7 +215,8 @@ public final class CampaignService {
             if (!inserted) {
                 if (!"clock".equals(actor)) { // an admin force after this week's campaign resolved: replace the row
                     whenDone(repository.campaign(id), (existing, e2) -> {
-                        if (e2 != null || existing.isEmpty() || !existing.get().state().resolved()) {
+                        boolean orphan = existing.isPresent() && Content.pack().campaign(existing.get().campaignId()) == null;
+                        if (e2 != null || existing.isEmpty() || (!existing.get().state().resolved() && !orphan)) {
                             plugin.getLogger().info("[campaign] " + id + " already has a live campaign row: restoring it");
                             restore();
                             return;

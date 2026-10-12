@@ -22,7 +22,7 @@ public record ResourcePackSettings(boolean enabled, String url, String sha1, boo
 
     public static ResourcePackSettings defaults() {
         return new ResourcePackSettings(true, "", "", false,
-                "SÜLD-ийн дүрс багцыг татаж авна уу (Download the SÜLD resource pack)",
+                "SÜLD-д дүрс багц заавал хэрэгтэй: цэс, тэмдэг, зэвсгийн дүрс. Нэг удаа татна (~7 MB). (Required: the SÜLD resource pack)",
                 true, "0.0.0.0", 8164, "");
     }
 }

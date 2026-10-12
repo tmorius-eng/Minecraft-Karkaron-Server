@@ -67,6 +67,19 @@ public final class TaskService implements Listener, TabExecutor {
         return LocalDate.now(zone).toEpochDay();
     }
 
+    /**
+     * The week's campaign this task also feeds (plan §3.2: the daily loop leads into the weekly one): the campaign's
+     * name when it is a KILL_MOBS campaign that counts this task's mob, else null. Selection itself never changes,
+     * so a campaign that ends mid-day cannot reshuffle the day's progress.
+     */
+    private String campaignFor(DailyTasks.Task t) {
+        var run = services.campaigns() == null ? null : services.campaigns().active().orElse(null);
+        if (run == null || !run.isActive()) return null;
+        var goal = run.definition().goal();
+        return goal.type() == mn.suld.api.campaign.CampaignGoal.Type.KILL_MOBS && goal.targets().contains(t.prey().mobId())
+                ? run.definition().name() : null;
+    }
+
     /** The day's tasks, rolled at the level the player had when the day's progress started (pinned). */
     private List<DailyTasks.Task> tasks(Player p, PlayerProfile pr, String stored) {
         return DailyTasks.tasks(p.getUniqueId(), today(), DailyTasks.pinnedLevel(stored, pr.progression().level()), pool);
@@ -152,7 +165,10 @@ public final class TaskService implements Listener, TabExecutor {
                                     Component.text(t.prey().regionName() + " нутагт ан хий.", NamedTextColor.WHITE, TextDecoration.BOLD),
                                     Component.text("▰".repeat(filled), c).append(Component.text("▱".repeat(10 - filled), NamedTextColor.DARK_GRAY))
                                             .append(Component.text("  " + Math.min(progress[i], t.count()) + "/" + t.count(), NamedTextColor.WHITE, TextDecoration.BOLD))),
-                            List.of(Menu.kv("Шагнал:", t.coins() + " зоос · " + t.exp() + " EXP", GREEN)), done ? "Биелсэн ✔" : "Идэвхтэй"));
+                            campaignFor(t) == null ? List.of(Menu.kv("Шагнал:", t.coins() + " зоос · " + t.exp() + " EXP", GREEN))
+                                    : List.of(Menu.kv("Шагнал:", t.coins() + " зоос · " + t.exp() + " EXP", GREEN),
+                                            Menu.kv("★ Аянд тусална:", "«" + campaignFor(t) + "»", NamedTextColor.AQUA)),
+                            done ? "Биелсэн ✔" : "Идэвхтэй"));
             if (done) Menu.glow(it);
             m.set(slots[i], it, null);
         }

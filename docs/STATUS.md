@@ -81,6 +81,12 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Same-inventory duplicate caught by the periodic sweep (DU-1) | ✅ | — | — | |
 | Sidebar without credits (UX-1); coins read «зоос», ₮ only for real money (UX-4) | ✅ | — | ⏳ | `CoinSignTest` |
 | `/report <text>` → audit log + online staff | ✅ | — | ⏳ | one a minute |
+| Trade pays before goods move; coin-conserving revert; ordered mailbox (PERS-004/005) | ✅ | — | — | `ProfileTransferTest` |
+| Admin checks in code (SEC-004); classless kills pay nothing (GAME-002); failed start frees the pool (OPS-005) | ✅ | — | — | |
+| Pack server timeouts + elastic pool (OPS-004); required-pack decline explained in Mongolian (ONB-008) | ✅ | ✅ a bot that declines is told why | ⏳ | |
+| Tracker points at the region holding a dungeon's gate (DATA-002) | ✅ | — | ⏳ | `ContentDataTest` |
+| Daily tasks marked «Аянд тусална» when they feed the week's KILL_MOBS campaign | ✅ | ✅ marked during a wolf campaign | ⏳ | plan §3.2 day → week loop |
+| An orphaned campaign row (content removed) is cancelled on start, so the week is never stuck | ✅ | ✅ | — | |
 | Bot harness in the repo | ✅ | — | — | `tools/loadtest/` (B.4 done) |
 | PvE-only + consented PvP (`/duel`, arenas) | ✅ | ✅ a hit without consent does no damage | ⏳ | owner decision 2026-10-11; `GAME_DESIGN.md` «PvP policy» |
 | Их Хуралдай (weekly vote, V18) | ✅ | ✅ `khuraldai-smoke.js` 22/22 on PostgreSQL | ⏳ | `docs/KHURALDAI.md` |
