@@ -27,6 +27,7 @@ import java.util.Set;
  * @param sites         the dungeon gates (dungeons.json)
  * @param historicSites the historical places in the wild (content/sites.json)
  * @param campaigns     the Их Хуралдай campaigns (content/campaigns.json)
+ * @param worldBosses   the world bosses (content/events.json "worldBosses")
  */
 public record ContentPack(
         Map<String, MobDefinition> mobs,
@@ -49,7 +50,8 @@ public record ContentPack(
         Map<String, String> eventAliases,
         List<RelicDefinition> relics,
         List<mn.suld.api.world.site.HistoricSite> historicSites,
-        List<mn.suld.api.campaign.CampaignDefinition> campaigns) {
+        List<mn.suld.api.campaign.CampaignDefinition> campaigns,
+        List<mn.suld.api.worldboss.WorldBossDefinition> worldBosses) {
 
     public ContentPack {
         mobs = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(mobs)); // keeps the file order
@@ -71,6 +73,13 @@ public record ContentPack(
         relics = List.copyOf(relics);
         historicSites = List.copyOf(historicSites);
         campaigns = List.copyOf(campaigns);
+        worldBosses = List.copyOf(worldBosses);
+    }
+
+    /** A world boss by id, or null. */
+    public mn.suld.api.worldboss.WorldBossDefinition worldBoss(String id) {
+        for (mn.suld.api.worldboss.WorldBossDefinition b : worldBosses) if (b.id().equals(id)) return b;
+        return null;
     }
 
     /** A Хуралдай campaign by id, or null. */

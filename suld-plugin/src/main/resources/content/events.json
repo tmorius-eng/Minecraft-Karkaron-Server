@@ -1,13 +1,18 @@
 {
   "format": 1,
-  "about": "World events and world-unique relics.",
+  "about": "World events, world bosses (docs/WORLD_BOSSES.md) and world-unique relics.",
   "worldEvents": [
     {
       "id": "event.chonyn_dovtolgoo",
-      "aliases": ["wolf_raid"],
+      "aliases": [
+        "wolf_raid"
+      ],
       "name": "Чонын Довтолгоо",
       "description": "Тал нутгийг чоно дайрлаа! Бүгдээрээ 10 минутад 30 чоно устгаарай.",
-      "targetMobs": ["mob.goviin_chono", "mob.orkhon_chono"],
+      "targetMobs": [
+        "mob.goviin_chono",
+        "mob.orkhon_chono"
+      ],
       "targetKills": 30,
       "durationSeconds": 600,
       "rewardExp": 300,
@@ -15,6 +20,72 @@
       "minContribution": 3,
       "clanExpPerKill": 5,
       "clanSuccessBonus": 200
+    }
+  ],
+  "worldBosses": [
+    {
+      "id": "worldboss.ikh_baavgai",
+      "mob": "mob.khuvsgul_ikh_baavgai",
+      "site": "site.uushig",
+      "dx": 14,
+      "dz": 6,
+      "phases": [
+        {
+          "at": 1.0,
+          "attack": 1.0,
+          "name": "Сэрсэн"
+        },
+        {
+          "at": 0.6,
+          "attack": 1.25,
+          "name": "Уурласан"
+        },
+        {
+          "at": 0.25,
+          "attack": 1.5,
+          "name": "Галзуу"
+        }
+      ],
+      "enrageSeconds": 600,
+      "durationSeconds": 900,
+      "leash": 40,
+      "loot": "loot.worldboss.ikh_baavgai",
+      "rewardExp": 2500,
+      "rewardCoins": 250,
+      "clanBonus": 800,
+      "about": "Хөвсгөлийн тайгаас бууж ирсэн аварга баавгай. Түвшин 20: Хангайн бүс."
+    },
+    {
+      "id": "worldboss.ikh_avarga",
+      "mob": "mob.altai_ikh_avarga",
+      "site": "site.altai_petroglyphs",
+      "dx": 14,
+      "dz": 6,
+      "phases": [
+        {
+          "at": 1.0,
+          "attack": 1.0,
+          "name": "Сэрсэн"
+        },
+        {
+          "at": 0.6,
+          "attack": 1.25,
+          "name": "Уурласан"
+        },
+        {
+          "at": 0.25,
+          "attack": 1.5,
+          "name": "Уулын Уур"
+        }
+      ],
+      "enrageSeconds": 600,
+      "durationSeconds": 900,
+      "leash": 40,
+      "loot": "loot.worldboss.ikh_avarga",
+      "rewardExp": 12000,
+      "rewardCoins": 700,
+      "clanBonus": 2000,
+      "about": "Алтайн оргилоос буусан аварга. Түвшин 50: гадаад нутаг."
     }
   ],
   "relics": [

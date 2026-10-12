@@ -13,7 +13,7 @@ public final class ChronicleRules {
         if (!kind.isRecord() || candidate == null) return false;
         if (current == null) return true;
         return switch (kind) {
-            case FASTEST_DUNGEON_CLEAR -> candidate < current;
+            case FASTEST_DUNGEON_CLEAR, FASTEST_WORLD_BOSS_KILL -> candidate < current;
             default -> candidate > current;
         };
     }
@@ -38,6 +38,10 @@ public final class ChronicleRules {
             case FIRST_SITE_DISCOVERY -> "✦ Хроник: " + e.playerName() + clan + " «" + subjectName + "»-д анх хүрэв.";
             case CAMPAIGN_RESULT -> "✦ Хроник: " + e.detail();
             case KHURALDAI_RESULT -> "✦ Хуралдай: " + e.detail();
+            case FIRST_WORLD_BOSS_KILL -> "✦ Хроник: " + who + clan + " тэргүүтэй баатрууд «" + subjectName + "»-г анх дарав"
+                    + (e.value() == null ? "" : " (" + formatSeconds(e.value()) + ")") + ".";
+            case FASTEST_WORLD_BOSS_KILL -> "✦ Хроник: «" + subjectName + "»-г хамгийн хурдан дарсан — " + formatSeconds(e.value() == null ? 0 : e.value())
+                    + " (" + who + clan + " тэргүүтэй).";
         };
     }
 
@@ -50,6 +54,8 @@ public final class ChronicleRules {
             case FIRST_SITE_DISCOVERY -> "Анхны нээлт";
             case CAMPAIGN_RESULT -> "Аяны үр дүн";
             case KHURALDAI_RESULT -> "Хуралдайн шийдвэр";
+            case FIRST_WORLD_BOSS_KILL -> "Анхны ялалт";
+            case FASTEST_WORLD_BOSS_KILL -> "Хурдан ялалт";
         };
     }
 }

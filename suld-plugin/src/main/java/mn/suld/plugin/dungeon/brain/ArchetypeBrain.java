@@ -267,7 +267,7 @@ public final class ArchetypeBrain implements BossBrain {
             LivingEntity add = services.mobs().spawn(f.summon(), l);
             add.addScoreboardTag(DungeonService.DUNGEON_TAG);
             add.addScoreboardTag(CombatListener.SUMMON_TAG);
-            services.dungeons().adopt(boss.getUniqueId(), add);
+            if (!services.dungeons().adopt(boss.getUniqueId(), add) && services.worldBosses != null) services.worldBosses.adopt(boss.getUniqueId(), add);
         }
     }
 

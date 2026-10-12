@@ -55,4 +55,7 @@ public final class AnalyticsEventType {
     public static final String CHRONICLE_ENTRY = "chronicle_entry";
     public static final String PARTY_FIND = "party_find";
     public static final String WORLD_EFFECT_APPLIED = "world_effect_applied";
+    // world bosses (docs/WORLD_BOSSES.md)
+    public static final String WORLD_BOSS_SPAWN = "world_boss_spawn";
+    public static final String WORLD_BOSS_END = "world_boss_end";
 }

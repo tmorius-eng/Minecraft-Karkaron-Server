@@ -114,6 +114,23 @@ public final class ChronicleService {
         whenDone(repository.recordIfBetter(record), (e, err) -> written("fastest clear", e, err));
     }
 
+    /**
+     * A world boss fell: the first kill of each boss and the fastest one are claimed for the top three by damage
+     * ({@code top} is the reward ranking, hero first).
+     */
+    public void worldBossDefeated(String bossId, String bossName, List<Player> top, long seconds) {
+        if (!settings.enabled() || top.isEmpty()) return;
+        Player hero = top.get(0);
+        List<String> names = new ArrayList<>();
+        for (Player p : top) names.add(p.getName());
+        String clan = services.clans().tagOf(hero.getUniqueId()).orElse("");
+        long now = System.currentTimeMillis();
+        whenDone(repository.claimFirst(ChronicleEntry.of(ChronicleKind.FIRST_WORLD_BOSS_KILL, bossId, hero.getUniqueId(), hero.getName(), names, clan,
+                seconds, bossName, cycleId.get(), now)), (e, err) -> written("first world boss", e, err));
+        whenDone(repository.recordIfBetter(ChronicleEntry.of(ChronicleKind.FASTEST_WORLD_BOSS_KILL, bossId, hero.getUniqueId(), hero.getName(), names, clan,
+                seconds, bossName, cycleId.get(), now)), (e, err) -> written("fastest world boss", e, err));
+    }
+
     /** A historic site was stood on for the first time by this player; the first of anyone is claimed. */
     public void siteDiscovered(HistoricSite site, Player p) {
         if (!settings.enabled()) return;
@@ -223,6 +240,8 @@ public final class ChronicleService {
             case FIRST_SITE_DISCOVERY -> NamedTextColor.GREEN;
             case CAMPAIGN_RESULT -> NamedTextColor.YELLOW;
             case KHURALDAI_RESULT -> NamedTextColor.WHITE;
+            case FIRST_WORLD_BOSS_KILL -> NamedTextColor.RED;
+            case FASTEST_WORLD_BOSS_KILL -> NamedTextColor.DARK_AQUA;
         };
     }
 }

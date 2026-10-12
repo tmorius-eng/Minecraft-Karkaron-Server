@@ -196,6 +196,7 @@ public final class WorldEventService {
     private void tick() {
         long now = System.currentTimeMillis();
         if (active == null || !active.isActive()) {
+            if (services.worldBosses != null && services.worldBosses.active().isPresent()) return; // no raid on a world boss fight: it waits
             if (settings.worldEventsEnabled() && now >= nextAutoStartMillis) {
                 if (eligiblePlayers().size() >= settings.worldEventMinPlayers()) {
                     WorldEventDefinition next = upcoming != null ? upcoming : nextAutomatic();

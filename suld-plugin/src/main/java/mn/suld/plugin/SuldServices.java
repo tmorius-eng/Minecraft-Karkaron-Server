@@ -437,6 +437,8 @@ public final class SuldServices {
     public volatile mn.suld.plugin.gui.AscensionMenu ascension;
     /** The historic sites (set by SuldPlugin). */
     public volatile mn.suld.plugin.region.HistoricSiteService historicSites;
+    /** World bosses (docs/WORLD_BOSSES.md); set once the historic sites are placed. */
+    public volatile mn.suld.plugin.worldboss.WorldBossService worldBosses;
 
     public mn.suld.plugin.item.ItemService itemService() {
         return itemService;

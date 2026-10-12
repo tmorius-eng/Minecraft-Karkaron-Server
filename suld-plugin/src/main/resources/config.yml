@@ -119,6 +119,17 @@ world-events:
   min-players: 1
 
 # ---------------------------------------------------------------------------
+# World bosses (docs/WORLD_BOSSES.md): a WORLD_BOSS mob rises at a historic site at each of these weekly hours
+# ("<WEEKDAY> HH:mm" in daily.timezone); the bosses of content/events.json "worldBosses" take turns. The server is
+# told announce-minutes before, and once more a minute before. Its health grows with the crowd (2–20 fighters).
+# Admins: /suldevent boss [id] | boss stop.
+# ---------------------------------------------------------------------------
+worldboss:
+  enabled: true
+  times: ["WEDNESDAY 21:00", "SATURDAY 17:00"]
+  announce-minutes: 10
+
+# ---------------------------------------------------------------------------
 # Их Хуралдай (docs/KHURALDAI.md): once a week the server votes on next week's campaign. Times are "<WEEKDAY> HH:mm"
 # in daily.timezone. The vote held in a week elects the campaign of the next week. min-account-days keeps fresh alt
 # accounts out of the ballot; min-voters is the quorum, below it the rotation decides.

@@ -232,6 +232,21 @@ public final class MobService implements org.bukkit.event.Listener {
         }
     }
 
+    /**
+     * A new max health in design units, keeping the share of health the mob has left (a world boss growing with its
+     * crowd). Above {@link #HP_CAP} the scale marker carries the rest, as at spawn.
+     */
+    public void resize(LivingEntity living, double designMax) {
+        AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
+        if (maxHealth == null || designMax <= 0) return;
+        double frac = trueMaxHealth(living) <= 0 ? 1 : Math.max(0, Math.min(1, trueHealth(living) / trueMaxHealth(living)));
+        double real = Math.min(designMax, HP_CAP);
+        maxHealth.setBaseValue(real);
+        living.setHealth(Math.max(1, Math.min(real, real * frac)));
+        markScale(living, designMax / real);
+        living.getPersistentDataContainer().set(keyMaxHp, PersistentDataType.DOUBLE, designMax);
+    }
+
     private static void markScale(LivingEntity living, double scale) {
         if (scale > 1.0001) living.getPersistentDataContainer().set(KEY_HP_SCALE, PersistentDataType.DOUBLE, scale);
         else living.getPersistentDataContainer().remove(KEY_HP_SCALE);

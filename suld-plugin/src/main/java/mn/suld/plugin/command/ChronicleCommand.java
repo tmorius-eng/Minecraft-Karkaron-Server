@@ -57,6 +57,7 @@ public final class ChronicleCommand implements TabExecutor {
             case "relic", "сүлд" -> ChronicleKind.RELIC_CLAIMED;
             case "site", "газар" -> ChronicleKind.FIRST_SITE_DISCOVERY;
             case "khuraldai", "campaign", "аян" -> ChronicleKind.CAMPAIGN_RESULT;
+            case "boss", "босс" -> ChronicleKind.FIRST_WORLD_BOSS_KILL;
             default -> null;
         };
         if (sub.equals("mine") || sub.equals("миний")) menus.chronicleMine(p);
@@ -67,7 +68,7 @@ public final class ChronicleCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length != 1) return List.of();
-        List<String> subs = new java.util.ArrayList<>(List.of("mine", "dungeon", "record", "relic", "site", "khuraldai"));
+        List<String> subs = new java.util.ArrayList<>(List.of("mine", "dungeon", "record", "relic", "site", "khuraldai", "boss"));
         if (sender.hasPermission("suld.admin.campaign")) subs.add("hide");
         return subs.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
     }

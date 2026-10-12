@@ -271,6 +271,8 @@ public final class CombatListener implements Listener {
         event.getDrops().clear();
         event.setDroppedExp(0);
 
+        // a world boss is everyone's kill: WorldBossService pays every fighter by the fight, not the last hit
+        if (services.worldBosses != null && services.worldBosses.owns(entity.getUniqueId())) return;
         String mobId = mobs.mobId(entity).orElse(null);
         MobDefinition def = mobId == null ? null : SuldContent.mobFor(mobId);
         Player killer = entity.getKiller();

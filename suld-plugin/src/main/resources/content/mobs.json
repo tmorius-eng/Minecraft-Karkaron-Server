@@ -290,6 +290,26 @@
       "level": 60,
       "loot": "loot.khukh_suldiin_sakhiul",
       "role": "boss"
+    },
+    {
+      "id": "mob.khuvsgul_ikh_baavgai",
+      "name": "Хөвсгөлийн Их Баавгай",
+      "host": "POLAR_BEAR",
+      "tier": "WORLD_BOSS",
+      "level": 20,
+      "loot": "loot.worldboss.ikh_baavgai",
+      "role": "worldboss",
+      "model": "aguin_baavgai"
+    },
+    {
+      "id": "mob.altai_ikh_avarga",
+      "name": "Алтайн Их Аварга",
+      "host": "RAVAGER",
+      "tier": "WORLD_BOSS",
+      "level": 50,
+      "loot": "loot.worldboss.ikh_avarga",
+      "role": "worldboss",
+      "model": "altai_avarga"
     }
   ]
 }

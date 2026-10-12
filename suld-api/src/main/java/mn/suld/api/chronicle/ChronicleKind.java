@@ -16,7 +16,11 @@ public enum ChronicleKind {
     /** subject = cycle id; the campaign's outcome and its top contributors */
     CAMPAIGN_RESULT(Shape.LOG),
     /** subject = cycle id; what the Хуралдай chose */
-    KHURALDAI_RESULT(Shape.LOG);
+    KHURALDAI_RESULT(Shape.LOG),
+    /** subject = world boss id; the first crowd to bring it down (party = the top three) */
+    FIRST_WORLD_BOSS_KILL(Shape.FIRST),
+    /** subject = world boss id; value = seconds; the fastest kill so far */
+    FASTEST_WORLD_BOSS_KILL(Shape.RECORD);
 
     public enum Shape { FIRST, RECORD, LOG }
 

@@ -142,7 +142,7 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.command.ClanCommand clanCommand = new mn.suld.plugin.command.ClanCommand(services.clans());
         registerCommand("clan", clanCommand);
         registerCommand("cc", clanCommand);
-        registerCommand("suldevent", new mn.suld.plugin.command.SuldEventCommand(services.worldEvents()));
+        registerCommand("suldevent", new mn.suld.plugin.command.SuldEventCommand(services.worldEvents(), services));
         services.worldEvents().startTicker();
         // the item engine: catalog (validated data files), generation, loot, inventory checks, equipment
         mn.suld.plugin.item.ItemService itemService = new mn.suld.plugin.item.ItemService(this, services);
@@ -395,6 +395,11 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.region.HistoricSiteService historicSites = new mn.suld.plugin.region.HistoricSiteService(this, services);
         historicSites.start();
         services.historicSites = historicSites;
+        // world bosses rise at historic sites at the weekly hours of worldboss.times (docs/WORLD_BOSSES.md)
+        mn.suld.plugin.worldboss.WorldBossService worldBosses = new mn.suld.plugin.worldboss.WorldBossService(this, services);
+        getServer().getPluginManager().registerEvents(worldBosses, this);
+        worldBosses.start();
+        services.worldBosses = worldBosses;
         props = new mn.suld.plugin.prop.PropService(this, services);
         props.start();
         services.props = props;
@@ -441,6 +446,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (trades != null) {
             trades.shutdown();
         }
+        if (services != null && services.worldBosses != null) services.worldBosses.shutdown(); // the boss never outlives the server
         if (services != null && services.activity != null) services.activity.stop(); // farming fatigue to disk
         if (horses != null) {
             horses.shutdown();
@@ -688,8 +694,18 @@ public final class SuldPlugin extends JavaPlugin {
                 new B(mn.suld.plugin.content.LadderContent.BANNER_GUARDIAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хөх Сүлдийн Сахиул",
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, BARRAGE, NOVA, SUMMON}), 0x3A6AE0, org.bukkit.Particle.END_ROD,
                         org.bukkit.Material.GOLD_BLOCK, org.bukkit.Sound.ENTITY_WARDEN_SONIC_BOOM, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
-                        mn.suld.plugin.content.LadderContent.PALACE_GUARD)));
+                        mn.suld.plugin.content.LadderContent.PALACE_GUARD)),
+                // world bosses (docs/WORLD_BOSSES.md): the same archetypes, out in the open
+                new B(mn.suld.plugin.content.SuldContent.mobFor("mob.khuvsgul_ikh_baavgai"), new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хөвсгөлийн Их Баавгай",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, SLAM, SUMMON}), 0x6B4A2B, org.bukkit.Particle.CLOUD,
+                        org.bukkit.Material.SPRUCE_LOG, org.bukkit.Sound.ENTITY_POLAR_BEAR_WARNING, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
+                        mn.suld.plugin.content.WorldContent.GREY_WOLF)),
+                new B(mn.suld.plugin.content.SuldContent.mobFor("mob.altai_ikh_avarga"), new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Алтайн Их Аварга",
+                        set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{SLAM, CHARGE, BARRAGE, NOVA, SUMMON}), 0x9ED2EE, org.bukkit.Particle.SNOWFLAKE,
+                        org.bukkit.Material.PACKED_ICE, org.bukkit.Sound.ENTITY_RAVAGER_ROAR, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.SLOW,
+                        mn.suld.plugin.content.WorldContent.ICE_SPIRIT)));
         for (B b : all) {
+            if (b.boss() == null) continue; // a world boss taken out of content/mobs.json: nothing to dress
             services.bosses().brain(b.boss().id(), boss -> new mn.suld.plugin.dungeon.brain.ArchetypeBrain(this, services, b.boss(), b.f()));
         }
     }

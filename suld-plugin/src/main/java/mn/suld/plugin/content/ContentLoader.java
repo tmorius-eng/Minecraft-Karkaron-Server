@@ -68,7 +68,7 @@ public final class ContentLoader {
     private static final Pattern QUEST_ID = Pattern.compile("quest\\.[a-z0-9_]{2,40}");
     private static final Pattern AREA_ID = Pattern.compile("area\\.[a-z0-9_]{2,40}");
     private static final Pattern HOST = Pattern.compile("[A-Z][A-Z_]{1,40}");
-    private static final Set<String> ROLES = Set.of("core", "wild", "ladder", "boss");
+    private static final Set<String> ROLES = Set.of("core", "wild", "ladder", "boss", "worldboss");
     private static final Set<String> HISTORY = Set.of("VERIFIED", "INSPIRED", "FICTION");
 
     private ContentLoader() {
@@ -413,6 +413,7 @@ public final class ContentLoader {
 
         // ---------------------------------------------------------------------------------------------- events
         f = "events.json";
+        Map<String, String> bossSites = new LinkedHashMap<>();
         List<WorldEventDefinition> events = new ArrayList<>();
         Map<String, String> aliases = new HashMap<>();
         List<Object> eventList = list(f, "", files.get(f), "worldEvents", issues);
@@ -434,6 +435,47 @@ public final class ContentLoader {
                 issues.add(new Issue(f, at, ex.getMessage()));
             }
             for (String alias : strings(f, at, e, "aliases", issues)) aliases.put(alias, id);
+        }
+        // world bosses (docs/WORLD_BOSSES.md): optional, a WORLD_BOSS mob at a historic site
+        List<mn.suld.api.worldboss.WorldBossDefinition> worldBosses = new ArrayList<>();
+        List<Object> bossList = files.get(f).containsKey("worldBosses") ? list(f, "", files.get(f), "worldBosses", issues) : List.of();
+        for (int i = 0; i < bossList.size(); i++) {
+            String at = "worldBosses[" + i + "]";
+            Map<String, Object> b = obj(f, at, bossList.get(i), issues);
+            if (b == null) continue;
+            String id = str(f, at, b, "id", true, issues);
+            String mob = str(f, at, b, "mob", true, issues);
+            String site = str(f, at, b, "site", true, issues);
+            String loot = str(f, at, b, "loot", true, issues);
+            MobDefinition md = mob == null ? null : mobs.get(mob);
+            if (mob != null && md == null) issues.add(new Issue(f, at + ".mob", "no mob " + mob + " in mobs.json"));
+            else if (md != null && md.tier() != MobTier.WORLD_BOSS) issues.add(new Issue(f, at + ".mob", mob + " must have tier WORLD_BOSS"));
+            else if (md != null && !"worldboss".equals(roles.get(mob))) issues.add(new Issue(f, at + ".mob", mob + " must have role worldboss (no region spawns it)"));
+            if (loot != null && lootExists != null && !lootExists.test(loot)) issues.add(new Issue(f, at + ".loot", "no loot table " + loot + " in the item catalog"));
+            if (site != null) bossSites.put(at + ".site", site); // checked against sites.json below
+            List<mn.suld.api.dungeon.BossPhase> phases = new ArrayList<>();
+            List<Object> phaseList = list(f, at, b, "phases", issues);
+            for (int k = 0; k < phaseList.size(); k++) {
+                Map<String, Object> ph = obj(f, at + ".phases[" + k + "]", phaseList.get(k), issues);
+                if (ph == null) continue;
+                try {
+                    phases.add(new mn.suld.api.dungeon.BossPhase(SkillTreeLoader.num(f, at + ".phases[" + k + "]", ph, "at", 0, 1, issues),
+                            SkillTreeLoader.num(f, at + ".phases[" + k + "]", ph, "attack", 0.1, 10, issues), str(f, at + ".phases[" + k + "]", ph, "name", true, issues)));
+                } catch (IllegalArgumentException ex) {
+                    issues.add(new Issue(f, at + ".phases[" + k + "]", ex.getMessage()));
+                }
+            }
+            if (id == null || mob == null || site == null || loot == null) continue;
+            if (worldBosses.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
+            try {
+                worldBosses.add(new mn.suld.api.worldboss.WorldBossDefinition(id, mob, site, intIn(f, at, b, "dx", -64, 64, false, 0, issues),
+                        intIn(f, at, b, "dz", -64, 64, false, 0, issues), phases, intIn(f, at, b, "enrageSeconds", 0, 7200, true, 0, issues),
+                        intIn(f, at, b, "durationSeconds", 60, 7200, true, 900, issues), intIn(f, at, b, "leash", 16, 128, true, 40, issues), loot,
+                        intIn(f, at, b, "rewardExp", 0, 10_000_000, true, 0, issues), intIn(f, at, b, "rewardCoins", 0, 10_000_000, true, 0, issues),
+                        intIn(f, at, b, "clanBonus", 0, 10_000_000, true, 0, issues)));
+            } catch (IllegalArgumentException ex) {
+                issues.add(new Issue(f, at, ex.getMessage()));
+            }
         }
         List<RelicDefinition> relics = new ArrayList<>();
         List<Object> relicList = list(f, "", files.get(f), "relics", issues);
@@ -566,9 +608,12 @@ public final class ContentLoader {
             if (!completions.containsKey(d.id()) && mn.suld.api.balance.DungeonLadder.rung(d.id()) == null)
                 issues.add(new Issue("dungeons.json", d.id() + ".completion", "missing: a dungeon outside the ladder needs its completion reward"));
         }
+        bossSites.forEach((at, site) -> {
+            if (historic.stream().noneMatch(x -> x.id().equals(site))) issues.add(new Issue("events.json", at, "no site " + site + " in sites.json"));
+        });
         if (!issues.isEmpty()) return new Result(null, issues, overridden);
         return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, outer, areas, dungeons, sites, completions,
-                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns), issues, overridden);
+                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns, worldBosses), issues, overridden);
     }
 
     private static String fileFor(String id) {

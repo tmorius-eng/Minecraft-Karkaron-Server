@@ -15,13 +15,18 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
-/** Admin: {@code /suldevent start [wolf_raid] | stop | status}. Status is open to everyone. */
+/**
+ * Admin: {@code /suldevent start [wolf_raid] | stop | boss [id] | boss stop | status}. Status is open to everyone and
+ * names the next world boss too.
+ */
 public final class SuldEventCommand implements CommandExecutor, TabCompleter {
 
     private final WorldEventService events;
+    private final mn.suld.plugin.SuldServices services;
 
-    public SuldEventCommand(WorldEventService events) {
+    public SuldEventCommand(WorldEventService events, mn.suld.plugin.SuldServices services) {
         this.events = events;
+        this.services = services;
     }
 
     @Override
@@ -42,13 +47,42 @@ public final class SuldEventCommand implements CommandExecutor, TabCompleter {
                 Component error = events.start(def);
                 sender.sendMessage(error != null ? error : Messages.success(def.displayName() + " эхэллээ."));
             }
+            case "boss" -> {
+                var bosses = services.worldBosses;
+                if (bosses == null) {
+                    sender.sendMessage(Messages.error("Дэлхийн босс ачаалагдаагүй байна."));
+                    return true;
+                }
+                if (args.length > 1 && args[1].equalsIgnoreCase("stop")) {
+                    sender.sendMessage(bosses.stop() ? Messages.info("Дэлхийн боссыг шагналгүй буцаалаа.") : Messages.error("Босс алга."));
+                    return true;
+                }
+                var all = bosses.bosses();
+                var def = args.length > 1
+                        ? all.stream().filter(b -> b.id().equals(args[1]) || b.id().equals("worldboss." + args[1])).findFirst().orElse(null)
+                        : all.isEmpty() ? null : all.get(0);
+                if (def == null) {
+                    sender.sendMessage(Messages.error("Ийм босс алга. (" + String.join(", ", all.stream().map(b -> b.id().substring(10)).toList()) + ")"));
+                    return true;
+                }
+                Component error = bosses.spawn(def, sender.getName());
+                sender.sendMessage(error != null ? error : Messages.success(mn.suld.plugin.worldboss.WorldBossService.name(def) + " бослоо."));
+            }
             case "stop" -> sender.sendMessage(events.stop()
                     ? Messages.info("Үйл явдлыг зогсоолоо.") : Messages.error("Идэвхтэй үйл явдал алга."));
-            default -> sender.sendMessage(events.active()
+            default -> {
+                sender.sendMessage(events.active()
                     .map(r -> Messages.accent(r.definition().displayName() + ": " + r.kills() + "/"
                             + r.definition().targetKills() + ", " + r.remainingSeconds(Instant.now()) + "с үлдсэн, "
                             + r.contributions().size() + " оролцогч"))
                     .orElse(Messages.info("Одоогоор үйл явдал алга.")));
+                var bosses = services.worldBosses;
+                if (bosses != null) {
+                    bosses.active().ifPresentOrElse(f -> sender.sendMessage(Messages.accent("⚔ " + mn.suld.plugin.worldboss.WorldBossService.name(f.definition())
+                                    + " босоод байна: " + f.ranking().size() + " баатар, " + f.elapsedSeconds(Instant.now()) + " с")),
+                            () -> bosses.nextText().ifPresent(t -> sender.sendMessage(Messages.info("Дараагийн дэлхийн босс: " + t))));
+                }
+            }
         }
         return true;
     }
@@ -57,7 +91,12 @@ public final class SuldEventCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                       @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            return List.of("start", "stop", "status").stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
+            return List.of("start", "stop", "status", "boss").stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("boss") && services.worldBosses != null) {
+            List<String> out = new java.util.ArrayList<>(List.of("stop"));
+            for (var b : services.worldBosses.bosses()) out.add(b.id().substring("worldboss.".length()));
+            return out.stream().filter(x -> x.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         }
         return args.length == 2 && args[0].equalsIgnoreCase("start") ? List.of("wolf_raid") : List.of();
     }

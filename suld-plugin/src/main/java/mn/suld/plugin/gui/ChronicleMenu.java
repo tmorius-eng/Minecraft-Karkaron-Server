@@ -86,6 +86,7 @@ public final class ChronicleMenu {
         tab(m, 3, Material.NETHER_STAR, ChronicleRules.label(ChronicleKind.RELIC_CLAIMED), kind == ChronicleKind.RELIC_CLAIMED, pl -> open(pl, ChronicleKind.RELIC_CLAIMED));
         tab(m, 4, Material.COMPASS, ChronicleRules.label(ChronicleKind.FIRST_SITE_DISCOVERY), kind == ChronicleKind.FIRST_SITE_DISCOVERY, pl -> open(pl, ChronicleKind.FIRST_SITE_DISCOVERY));
         tab(m, 5, Material.YELLOW_BANNER, ChronicleRules.label(ChronicleKind.CAMPAIGN_RESULT), kind == ChronicleKind.CAMPAIGN_RESULT, pl -> open(pl, ChronicleKind.CAMPAIGN_RESULT));
+        tab(m, 6, Material.DRAGON_HEAD, ChronicleRules.label(ChronicleKind.FIRST_WORLD_BOSS_KILL), kind == ChronicleKind.FIRST_WORLD_BOSS_KILL, pl -> open(pl, ChronicleKind.FIRST_WORLD_BOSS_KILL));
         tab(m, 7, Material.PLAYER_HEAD, "Миний түүх", mine, this::mine);
         m.set(45, Menu.item(Material.ARROW, Menu.title("« Дүр", GOLD), List.of()), (pl, c) -> menus.profile(pl));
         m.set(53, Menu.item(Material.LECTERN, Menu.title("Их Хуралдай · /khuraldai", GOLD), List.of()), (pl, c) -> menus.khuraldai(pl));
@@ -105,6 +106,8 @@ public final class ChronicleMenu {
             case FIRST_SITE_DISCOVERY -> Material.COMPASS;
             case CAMPAIGN_RESULT -> Material.YELLOW_BANNER;
             case KHURALDAI_RESULT -> Material.LECTERN;
+            case FIRST_WORLD_BOSS_KILL -> Material.DRAGON_HEAD;
+            case FASTEST_WORLD_BOSS_KILL -> Material.RECOVERY_COMPASS;
         };
     }
 }

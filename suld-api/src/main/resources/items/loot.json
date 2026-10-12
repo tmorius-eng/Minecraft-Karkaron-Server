@@ -1289,6 +1289,76 @@
      "chance": 0.3
     }
    ]
+  },
+  {
+   "id": "loot.worldboss.ikh_baavgai",
+   "tier": "WORLD_EVENT",
+   "rolls": [
+    1,
+    2
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.baavgain_arisan",
+     "qty": [
+      4,
+      6
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "jewel.chingis_tamga",
+     "chance": 0.04
+    }
+   ]
+  },
+  {
+   "id": "loot.worldboss.ikh_avarga",
+   "tier": "WORLD_EVENT",
+   "rolls": [
+    1,
+    2
+   ],
+   "nothing": 1,
+   "entries": [
+    {
+     "pool": [
+      "ARMOR",
+      "JEWELRY",
+      "OFFHAND"
+     ],
+     "weight": 1,
+     "spread": 2
+    }
+   ],
+   "guaranteed": [
+    {
+     "item": "item.mosun_chuluu",
+     "qty": [
+      4,
+      6
+     ]
+    }
+   ],
+   "rare": [
+    {
+     "item": "jewel.chingis_tamga",
+     "chance": 0.04
+    }
+   ]
   }
  ]
 }

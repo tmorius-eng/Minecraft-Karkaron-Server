@@ -52,7 +52,7 @@ class ContentDataTest {
         ContentLoader.Result r = load(ContentLoader.classpath());
         assertTrue(r.ok(), () -> r.issues().stream().map(Issue::toString).reduce("", (a, b) -> a + "\n" + b));
         ContentPack p = r.pack();
-        assertEquals(32, p.mobs().size());
+        assertEquals(34, p.mobs().size());
         assertEquals(9, p.regions().size());
         assertEquals(40, p.areas().size());
         assertEquals(10, p.dungeons().size());
@@ -170,6 +170,23 @@ class ContentDataTest {
         assertTrue(has(areas, "world.json", "areas[1].index index 16 is used twice"), areas.issues()::toString);
         ContentLoader.Result json = load(name -> name.equals("quests.json") ? "{ \"format\": 1, \"story\": [ " : ContentLoader.classpath().read(name));
         assertTrue(has(json, "quests.json", "not valid JSON"), json.issues()::toString);
+    }
+
+    @Test
+    void worldBossesAreCheckedAgainstMobsSitesAndLoot() throws Exception {
+        ContentLoader.Result ok = load(ContentLoader.classpath());
+        assertEquals(2, ok.pack().worldBosses().size());
+        assertEquals("mob.khuvsgul_ikh_baavgai", ok.pack().worldBoss("worldboss.ikh_baavgai").mobId());
+        assertTrue(ok.pack().mobsOf("boss").stream().noneMatch(m -> m.id().contains("ikh_")), "a world boss is no dungeon boss");
+        ContentLoader.Result r = load(edited("events.json", root -> {
+            list(root, "worldBosses").get(0).put("mob", "mob.goviin_chono");
+            list(root, "worldBosses").get(1).put("site", "site.nowhere");
+        }));
+        assertTrue(has(r, "events.json", "worldBosses[0].mob mob.goviin_chono must have tier WORLD_BOSS"), r.issues()::toString);
+        assertTrue(has(r, "events.json", "worldBosses[1].site no site site.nowhere in sites.json"), r.issues()::toString);
+        ContentLoader.Result none = load(edited("events.json", root -> root.remove("worldBosses")));
+        assertTrue(none.ok(), "world bosses are optional: " + none.issues());
+        assertTrue(none.pack().worldBosses().isEmpty());
     }
 
     @Test
