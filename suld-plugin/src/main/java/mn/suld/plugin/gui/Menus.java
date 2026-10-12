@@ -240,17 +240,24 @@ public final class Menus {
             lore.add(Menu.line("Эхлэл ур: " + ClassSelectionGui.STARTER_SKILL.getOrDefault(c, "—")));
             lore.add(Menu.line(ClassSelectionGui.lore(c)));
             lore.add(Component.empty());
+            var gear = mine ? pr.classGear() : saved == null ? null : saved.gear();
+            if (gear != null) {
+                lore.add(Menu.line((mn.suld.api.clazz.ClassMastery.isMaster(gear) ? "✦ Мастер · " : "")
+                        + "Ангийн Мастер: " + mn.suld.api.clazz.ClassMastery.level(gear) + "/" + mn.suld.api.clazz.ClassMastery.MASTER_LEVEL
+                        + " · хуяг " + gear.tier().displayName() + " · ур чадвар " + gear.mastery()));
+            }
             if (mine) {
                 lore.add(Menu.line("« Таны одоогийн анги »"));
             } else {
-                lore.add(Menu.line(saved == null ? "Анх удаа: эхлэлийн зэвсэг, хуяг өгнө."
-                        : "Хадгалсан ахиц: хуяг " + saved.gear().armorLevel() + "-р түвшин, " + saved.gear().tier() + " · ур чадвар хадгалагдсан"));
+                lore.add(Menu.line(saved == null ? "Анх удаа: эхлэлийн зэвсэг, хуяг өгнө; Мастер 1-ээс (EXP ×2 гүйцэх хүртэл)."
+                        : "Мод, хуяг, зэвсэг хадгалагдсан."));
                 var v = cc == null ? null : cc.verdict(p, c);
                 lore.add(Menu.line(v == null ? "" : v.allowed() ? price(v) : "✖ " + v.refusal().text
                         + (v.refusal() == mn.suld.api.clazz.ClassChangeRules.Refusal.COOLDOWN ? " (" + mn.suld.api.clazz.ClassChangeRules.format(v.cooldownLeftMs()) + ")" : "")));
                 lore.add(Menu.line("« Дарж сонгоно »"));
             }
-            cards.add(HubMenu.card(Menu.title(c.displayName(), mine ? HubMenu.GOLD : HubMenu.CYAN), lore,
+            cards.add(HubMenu.card(Menu.title((gear != null && mn.suld.api.clazz.ClassMastery.isMaster(gear) ? "✦ " : "") + c.displayName(),
+                    mine ? HubMenu.GOLD : HubMenu.CYAN), lore,
                     new ItemStack(ClassSelectionGui.ICONS.getOrDefault(c, Material.PAPER)), mine ? null : (pl, k) -> academyConfirm(pl, c)));
         }
         boolean grace = mn.suld.api.clazz.ClassChangeRules.grace(pr.progression().level(), pr.activeMinutes().total());
@@ -258,8 +265,20 @@ public final class Menus {
         String row = "Одоо: " + current.displayName() + " · " + (grace ? "шинэ тоглогч: солилт үнэгүй"
                 : left > 0 ? "дараагийн солилт " + mn.suld.api.clazz.ClassChangeRules.format(left) + "-ын дараа"
                 : "солилт " + mn.suld.api.clazz.ClassChangeRules.cost(pr.progression().level()) + " зоос")
-                + " · тамга: " + mn.suld.plugin.clazz.ClassSeal.count(p);
+                + " · тамга: " + mn.suld.plugin.clazz.ClassSeal.count(p)
+                + " · мастер анги: " + mn.suld.api.clazz.ClassMastery.masters(pr) + "/" + PlayerClass.values().length;
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, Menu.line(row), cards, null, this::profile, null, null, mask, "Ангийн Академи"), hubTabs());
+    }
+
+    /** «Баатар 60✦ · Мэргэн 34» — every class played, the mastered ones starred, the five-class title when earned. */
+    private static String masteryLine(PlayerProfile pr) {
+        StringBuilder sb = new StringBuilder();
+        mn.suld.api.clazz.ClassMastery.levels(pr).forEach((c, l) -> {
+            if (sb.length() > 0) sb.append(" · ");
+            sb.append(c.displayName()).append(' ').append(l).append(l >= mn.suld.api.clazz.ClassMastery.MASTER_LEVEL ? "✦" : "");
+        });
+        String title = mn.suld.api.clazz.ClassMastery.title(mn.suld.api.clazz.ClassMastery.masters(pr));
+        return sb.length() == 0 ? "—" : title == null ? sb.toString() : title + " · " + sb;
     }
 
     private static String price(mn.suld.api.clazz.ClassChangeRules.Verdict v) {
@@ -315,6 +334,7 @@ public final class Menus {
                 Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
                 Menu.kv("Кредит:", fmt(s.credits()) + " ✦", SKY),
                 Menu.kv("Овог:", services.clans().tagOf(p.getUniqueId()).map(t -> "[" + t + "]").orElse("—"), NamedTextColor.AQUA),
+                Menu.kv("Ангийн Мастер:", masteryLine(pr), GOLD),
                 Component.empty(),
                 Menu.line("« Дарж: морь, Хуралдай, хроник »"));
         HubMenu.Card head = new HubMenu.Card(StyleFormat.name(p, s).decoration(TextDecoration.BOLD, true), stats, (pl, c) -> profileClassic(pl));

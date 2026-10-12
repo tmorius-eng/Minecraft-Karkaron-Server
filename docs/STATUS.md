@@ -113,6 +113,8 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | /menu sky window (`MenuSky`, every hub page; chest window only in combat/runs/mid-air) | ✅ | ✅ `skymenubot.js` 8/8 | ⏳ | `docs/UI_HUB.md` §0; owner to check look and text size on the real client |
 | Class change + «Ангийн Академи» (V22 class_mastery: each class keeps its tree and gear) | ✅ | ✅ `classchangebot.js` 10/10, `classreconnectbot.js` 6/6 | ⏳ | `docs/CLASS_CHANGE.md` |
 | Class trial «Турших» (5 min arena, dummies, nothing kept) + SÜLD bows with Infinity | ✅ | ✅ `classtrialbot.js` 7/7 | ⏳ | `docs/CLASS_CHANGE.md` §Сорилт, §Нум |
+| «Ангийн Мастер» (class armour level = per-class mastery 1–60, milestones 20/40/60, «Таван Ангийн Эзэн») | ✅ | ✅ `masterybot.js` 3/3 | ⏳ | `docs/CLASS_CHANGE.md` §Ангийн Мастер |
+| «Тэнгэрийн сорил» fought with the class (soul hits/shoots/casts at its wolves, wolf HP = 5 × attack) | ✅ | ✅ `trialclassbot.js` 4/4 × 5 classes | ⏳ | `docs/DEATH_AND_RECOVERY.md` |
 
 ## Not built (and said so)
 

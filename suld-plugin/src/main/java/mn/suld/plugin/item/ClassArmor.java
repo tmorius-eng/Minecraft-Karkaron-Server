@@ -205,13 +205,36 @@ public final class ClassArmor implements Listener {
         if (gain.added() <= 0) return;
         pr.classGear(gain.after());
         services.session(p.getUniqueId()).armorXp += gain.added();
-        if (gain.levels() > 0) levelled(p, gain.after());
+        if (gain.levels() > 0) levelled(p, pr, gain.after(), gain.levels());
     }
 
-    private void levelled(Player p, ClassGear g) {
+    /**
+     * The class armour level is the class's «Ангийн Мастер» level (api ClassMastery): 20 and 40 are announced to the
+     * player, 60 to the server, and the fifth mastered class gives «Таван Ангийн Эзэн».
+     */
+    private void levelled(Player p, PlayerProfile pr, ClassGear g, int levels) {
         refresh(p);
-        p.sendMessage(Messages.success("Ангийн хуяг " + g.armorLevel() + "-р түвшинд хүрлээ (" + g.tier().displayName() + ")."));
+        String clazz = pr.playerClass().map(c -> c.displayName()).orElse("");
+        p.sendMessage(Messages.success("Ангийн Мастер " + g.armorLevel() + " (" + clazz + ") — хуяг " + g.tier().displayName() + "."));
         p.playSound(p.getLocation(), Sound.ITEM_ARMOR_EQUIP_NETHERITE, 0.8f, 1.2f);
+        int milestone = mn.suld.api.clazz.ClassMastery.milestone(g.armorLevel() - levels, g.armorLevel());
+        if (milestone == 0) return;
+        if (milestone < mn.suld.api.clazz.ClassMastery.MASTER_LEVEL) {
+            p.sendMessage(Messages.success("✦ " + clazz + ": Ангийн Мастер " + milestone + " / " + mn.suld.api.clazz.ClassMastery.MASTER_LEVEL));
+            p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.3f);
+            return;
+        }
+        Bukkit.broadcast(net.kyori.adventure.text.Component.text("✦ " + p.getName() + " " + clazz + " ангийн Мастер боллоо!", Messages.BRAND, net.kyori.adventure.text.format.TextDecoration.BOLD));
+        p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
+        services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "class.master", p.getUniqueId().toString(), clazz));
+        int masters = mn.suld.api.clazz.ClassMastery.masters(pr);
+        String title = mn.suld.api.clazz.ClassMastery.title(masters);
+        if (title != null) {
+            Bukkit.broadcast(net.kyori.adventure.text.Component.text("✦✦ " + p.getName() + " — " + title + ": таван ангийг бүгдийг мастерлав!", Messages.BRAND, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "class.master.all", p.getUniqueId().toString(), "masters=" + masters));
+        } else {
+            p.sendMessage(Messages.success("Мастер анги: " + masters + "/" + PlayerClass.values().length + " — дараагийн ангиа /class-аас."));
+        }
     }
 
     /** ActivePlaytime: one validated active minute (no armour XP while area-fatigued). */
@@ -345,7 +368,7 @@ public final class ClassArmor implements Listener {
             ArmorRules.Gain gain = ArmorRules.settle(pr.classGear(), lu.toLevel());
             if (gain.levels() > 0) {
                 pr.classGear(gain.after());
-                levelled(p, gain.after());
+                levelled(p, pr, gain.after(), gain.levels());
             }
             MasteryRules.Gain m = MasteryRules.settle(pr.classGear(), lu.toLevel());
             if (m.ranks() > 0) {

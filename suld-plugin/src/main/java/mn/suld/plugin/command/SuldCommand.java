@@ -43,6 +43,7 @@ public final class SuldCommand implements CommandExecutor {
             case "quest" -> setQuest(sender, args);
             case "coins" -> giveCoins(sender, args);
             case "classreset" -> classReset(sender, args);
+            case "classchange" -> classChange(sender, args);
             case "classseal" -> classSeal(sender, args);
             case "content" -> content(sender, args);
             case "endgame" -> endgame(sender, args);
@@ -207,6 +208,22 @@ public final class SuldCommand implements CommandExecutor {
         services.profiles().save(profile);
         services.audit().record(mn.suld.api.audit.AuditEvent.of(sender.getName(), "class.admin.reset", target.getUniqueId().toString(), "cooldown cleared"));
         sender.sendMessage(Messages.success(target.getName() + ": анги солих хүлээлт арилсан."));
+    }
+
+    /** Staff QA: {@code /suld classchange <player> <class>} — the player's real class change, every rule and price. */
+    private void classChange(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player target = args.length < 3 ? null : Bukkit.getPlayerExact(args[1]);
+        mn.suld.api.clazz.PlayerClass to = args.length < 3 ? null : mn.suld.api.clazz.PlayerClass.byId(args[2]).orElse(null);
+        if (target == null || to == null || services.classChange == null) {
+            sender.sendMessage(Messages.info("/suld classchange <онлайн тоглогч> <baatar|mergen|boo|darkhan|khulegchin>"));
+            return;
+        }
+        var v = services.classChange.change(target, to);
+        sender.sendMessage(v.allowed() ? Messages.success(target.getName() + ": " + to.displayName()) : Messages.error(v.refusal().text));
     }
 
     /** Give class change seals («Хувь Төөргийн Тамга»). */

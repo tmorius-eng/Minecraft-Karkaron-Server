@@ -199,7 +199,7 @@ public final class ClassGearCommand implements TabExecutor {
             return;
         }
         if (args.length < 4 || armor() == null) {
-            sender.sendMessage(Messages.info("/classgear set <тоглогч> level|tier|enhance|mastery <n> · cleared <dungeon id>"));
+            sender.sendMessage(Messages.info("/classgear set <тоглогч> level|tier|enhance|mastery|xp <n> · cleared <dungeon id>"));
             return;
         }
         Player target = Bukkit.getPlayerExact(args[1]);
@@ -217,11 +217,12 @@ public final class ClassGearCommand implements TabExecutor {
         } catch (NumberFormatException e) {
             n = -1;
         }
-        if (target == null || n < 0 || !List.of("level", "tier", "enhance", "mastery").contains(what)) {
+        if (target == null || n < 0 || !List.of("level", "tier", "enhance", "mastery", "xp").contains(what)) {
             sender.sendMessage(Messages.error("/classgear set <онлайн тоглогч> level|tier|enhance <n>"));
             return;
         }
-        armor().set(target, what, n);
+        if (what.equals("xp")) armor().addXp(target, n); // through the normal path: levels, milestones, «Ангийн Мастер»
+        else armor().set(target, what, n);
         services.audit().record(AuditEvent.of(sender instanceof Player p ? p.getUniqueId().toString() : "console",
                 "classgear.set", target.getUniqueId().toString(), what + "=" + n));
         sender.sendMessage(Messages.success(target.getName() + ": " + what + " = " + n));
@@ -234,7 +235,7 @@ public final class ClassGearCommand implements TabExecutor {
         if (args.length == 2 && staff && List.of("recover", "set").contains(args[0].toLowerCase(Locale.ROOT))) {
             return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
         }
-        if (args.length == 3 && staff && args[0].equalsIgnoreCase("set")) return List.of("level", "tier", "enhance", "mastery", "cleared");
+        if (args.length == 3 && staff && args[0].equalsIgnoreCase("set")) return List.of("level", "tier", "enhance", "mastery", "xp", "cleared");
         return List.of();
     }
 }
