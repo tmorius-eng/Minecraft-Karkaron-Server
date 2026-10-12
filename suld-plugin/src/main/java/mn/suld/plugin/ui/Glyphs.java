@@ -154,6 +154,20 @@ public final class Glyphs {
     public static final String GUI_QUESTBOOK2 = "\uE046";
     /** chest background quest book, tab 3 active 176x126 (HD x4) */
     public static final String GUI_QUESTBOOK3 = "\uE047";
+    /** Командын Өргөө frame 212x244 at x-18 (HD x4): banners, tabs, close */
+    public static final String HUB_FRAME = "\uE048";
+    /** hub page hub 212x244 (HD x4) */
+    public static final String PAGE_HUB = "\uE049";
+    /** hub page profile 212x244 (HD x4) */
+    public static final String PAGE_PROFILE = "\uE04A";
+    /** active tab tile 19x18 at the tab's slot (HD x4) */
+    public static final String HUB_TAB_ON = "\uE04B";
+    /** footer «Буцах» button 38x14 at slot 0 (HD x4) */
+    public static final String HUB_BACK = "\uE04C";
+    /** footer paging arrow « 16x14 at slot 7 (HD x4) */
+    public static final String HUB_PREV = "\uE04D";
+    /** footer paging arrow » 16x14 at slot 8 (HD x4) */
+    public static final String HUB_NEXT = "\uE04E";
 
     private Glyphs() {
     }

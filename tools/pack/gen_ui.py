@@ -25,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFilter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pixelfont as pf  # noqa: E402
 import hd_art  # noqa: E402
+import hub_kit  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ART = os.path.join(ROOT, "assets", "art", "source")
@@ -846,21 +847,29 @@ QB_TABS = ("АКТ I", "АКТ II", "ГАЗРУУД")
 def tooltip_style() -> None:
     """The «mongol» tooltip style (item component tooltip_style suld:mongol): a deep-blue body, a double gold frame
     and gold corner knots. 100x100 nine-slice sprites, as the client expects for tooltip/<name>_background and
-    _frame; the outer 9 px are the margin the client draws around the text box."""
+    _frame; the outer 9 px are the margin the client draws around the text box.
+
+    The same frame is also written as the pack's DEFAULT tooltip (minecraft:tooltip/background + frame), so every
+    tooltip in the game wears it: vanilla items, the bag, dialog buttons, the HUD. suld:mongol stays for stacks
+    that set it explicitly (Menu.item and ItemFactory do)."""
     root = os.path.join(RP, "textures", "gui", "sprites", "tooltip")
+    mc_root = os.path.join(ROOT, "resourcepack", "assets", "minecraft", "textures", "gui", "sprites", "tooltip")
     os.makedirs(root, exist_ok=True)
+    os.makedirs(mc_root, exist_ok=True)
     sheet = os.path.join(ART, "tooltip_badges.webp")
     if os.path.exists(sheet):
         # the owner's frame (HD): the whole painted frame is the background sprite, the frame sprite is empty
         bg = hd_art.tooltip_frame(sheet)
         w, h = hd_art.TT_SIZE
         meta = {"gui": {"scaling": {"type": "nine_slice", "width": w, "height": h, "border": hd_art.TT_BORDER}}}
-        bg.save(os.path.join(root, "mongol_background.png"))
-        Image.new("RGBA", bg.size, (0, 0, 0, 0)).save(os.path.join(root, "mongol_frame.png"))
-        for name in ("mongol_background", "mongol_frame"):
-            with open(os.path.join(root, name + ".png.mcmeta"), "w", encoding="utf-8") as fh:
-                json.dump(meta, fh, indent=1)
-                fh.write("\n")
+        empty = Image.new("RGBA", bg.size, (0, 0, 0, 0))
+        for folder, bg_name, fr_name in ((root, "mongol_background", "mongol_frame"), (mc_root, "background", "frame")):
+            bg.save(os.path.join(folder, bg_name + ".png"))
+            empty.save(os.path.join(folder, fr_name + ".png"))
+            for name in (bg_name, fr_name):
+                with open(os.path.join(folder, name + ".png.mcmeta"), "w", encoding="utf-8") as fh:
+                    json.dump(meta, fh, indent=1)
+                    fh.write("\n")
         return
     meta = {"gui": {"scaling": {"type": "nine_slice", "width": 100, "height": 100, "border": 9}}}
     bg = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
@@ -1209,6 +1218,8 @@ def main() -> None:
     gui_questbook(args.preview)
     tooltip_style()
     gui_inventory(args.preview)
+    # appended last: the «Командын Өргөө» window kit (earlier glyphs keep their code points)
+    hub_kit.build(add_bitmap, args.preview, os.path.join(ROOT, "resourcepack", "assets", "minecraft"))
     os.makedirs(os.path.join(RP, "font"), exist_ok=True)
     with open(os.path.join(RP, "font", "ui.json"), "w", encoding="utf-8") as fh:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)
