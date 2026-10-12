@@ -109,7 +109,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Баатрын Хроник (V19), `/chronicle`, «Миний түүх» | ✅ | ✅ | ⏳ | |
 | Party finder (`/party find|join|recruit|role`) | ✅ | ✅ | ⏳ | chat board + a window with click-to-join cards |
 | External audit 2026-10-12 (FIND-01…10) | ✅ | ✅ | — | `docs/audits/2026-10-12-external/RESPONSE.md`: H2 shaded (boots offline), mailbox stuck-file guard, scoped spell flag, `player.save_data` probe, Java-only deploy |
-| «Тэнгэрийн сорил» (`/trial`), lock cap 30 min (config v7) | ✅ | ✅ `trialbot.js` 6/6 | ⏳ | `docs/DEATH_AND_RECOVERY.md`; time to 60 now ~146 h simulated (was ~200) |
+| «Тэнгэрийн сорил» (`/trial`), lock cap 30 min (config v7) | ✅ | ✅ `trialbot.js` 6/6 | ⏳ | `docs/DEATH_AND_RECOVERY.md`; time to 60 now ~146 h simulated (was ~200), accepted by the owner 2026-10-12 |
 
 ## Not built (and said so)
 

@@ -92,7 +92,7 @@ These are first-usable-drop times in active hours, p50, from the simulation. The
 | Epic | elites (10 %), the first dungeons | 1–5 h | ~1 h |
 | Legendary | dungeon bosses (10 %), champions, chests (3 %) | 30–60 h | ~2 h |
 | Ancient | dungeon bosses (2 %), heroics, mythic chests | 100–150 h | ~4–8 h |
-| Mythic | world boss / heroic (3 %), mythic chests (5 %) | ≈ level 60 (~200 h) | ~15–40 h |
+| Mythic | world boss / heroic (3 %), mythic chests (5 %) | ≈ level 60 (~146 h live) | ~15–40 h |
 | Unique | relics only (never loot) | — | — |
 
 One fixed-rarity definition, `item.khasar_zurkh` (legendary-only, level 5), lets a legendary drop at about 10–50 h.

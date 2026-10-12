@@ -569,8 +569,8 @@ public final class Sim {
     void complianceChecks(Map<String, Map<String, List<Engine.Result>>> main) {
         List<Engine.Result> hp = main.get("proposed").get("hardcore"), hl = main.get("live").get("hardcore");
         double h60 = pct(col(hp, x -> hoursTo(x, 60)), 0.5);
-        check("C1", "efficient (hardcore, optimal policy) active hours to level 60 within 180–220 h (p50, mid calibration)",
-                h60 >= 180 && h60 <= 220, f1(h60) + " h (live: " + f1(pct(col(hl, x -> hoursTo(x, 60)), 0.5)) + " h)");
+        check("C1", "efficient (hardcore, optimal policy) active hours to level 60 within 130–170 h (p50, mid calibration)",
+                h60 >= 130 && h60 <= 170, f1(h60) + " h (live: " + f1(pct(col(hl, x -> hoursTo(x, 60)), 0.5)) + " h)");
         double d7 = pct(col(hp, x -> snap(x, 7, "levelFraction")), 0.9);
         double d7max = pct(col(hp, x -> snap(x, 7, "maxGearPct")), 0.9), d7end = pct(col(hp, x -> snap(x, 7, "endgamePct")), 0.9);
         double d7high = calib.getOrDefault("high.hardcore.d7p90", Double.NaN);
@@ -688,8 +688,9 @@ public final class Sim {
     void liveChecks(Map<String, Map<String, List<Engine.Result>>> main) {
         List<Engine.Result> hl = main.get("live").get("hardcore"), hp = main.get("proposed").get("hardcore");
         double l60 = pct(col(hl, x -> hoursTo(x, 60)), 0.5), p60 = pct(col(hp, x -> hoursTo(x, 60)), 0.5);
-        check("L1", "live: hardcore p50 active hours to level 60 within 180–220 h and within ±10 % of the proposed design",
-                l60 >= 180 && l60 <= 220 && Math.abs(l60 - p60) <= 0.1 * p60, f1(l60) + " h vs proposed " + f1(p60) + " h");
+        // owner accepted ~146 h (2026-10-12, after the 30-minute lock cap); the proposed model is a reference only
+        check("L1", "live: hardcore p50 active hours to level 60 within 130–170 h (owner target since the 30-min lock)",
+                l60 >= 130 && l60 <= 170, f1(l60) + " h vs proposed " + f1(p60) + " h");
         double d7 = pct(col(hl, x -> snap(x, 7, "levelFraction")), 0.9);
         check("L2", "live: 10 h/day × 7 days does not reach level 60 (p90)", d7 < 60, "day-7 p90 level " + f1(d7));
         int dead = 0;

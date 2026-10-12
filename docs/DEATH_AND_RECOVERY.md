@@ -44,7 +44,8 @@ Exact values:
 <!-- spec:end lock -->
 
 The simulator can re-run any alternative in a minute (`ProposedRules.LockCurve`). With the cap, live hardcore
-time to level 60 fell from ~200 to ~146 active hours (`SimulationTest`); the EXP curve is the owner's call.
+time to level 60 fell from ~200 to ~146 active hours (`SimulationTest`); the owner accepted ~146 h as the target
+(2026-10-12), the EXP curve stays.
 
 ## «Тэнгэрийн сорил» — the active way back
 

@@ -154,8 +154,8 @@ class SimulationTest {
     void liveAndProposedReachSixtyAtTheSamePace() {
         double live = medianHoursTo60(LIVE), proposed = medianHoursTo60(PROPOSED);
         // The 30-minute lock cap (config v7, audit FIND-05) took the waiting out of the top levels: live p50 fell from
-        // ~200 h to ~146 h and the proposed model (same cap) to ~179 h. Re-baselined here; the EXP curve is the
-        // owner's call (docs/audits/2026-10-12-external/RESPONSE.md).
+        // ~200 h to ~146 h and the proposed model (same cap) to ~179 h. The owner accepted ~146 h (2026-10-12,
+        // docs/audits/2026-10-12-external/RESPONSE.md).
         assertTrue(live >= 130 && live <= 170, "live hardcore p50 " + live + " h");
         assertTrue(Math.abs(live - proposed) <= 0.20 * proposed, "live " + live + " h vs proposed " + proposed + " h");
     }

@@ -10,7 +10,8 @@
 
 Owner decisions built in:
 
-* ~200 h of efficient play to level 60.
+* ~200 h of efficient play to level 60 (the original target). Since the 30-minute death-lock cap the live game
+  takes **~146 h**, and the owner accepted that as the target (2026-10-12).
 * Level cap 60, then Тэнгэрийн Зэрэг I–X, then Mastery.
 * No artificial time gating (directive §2).
 * 10 h/day × 7 days must not reach max level + max gear + endgame.
