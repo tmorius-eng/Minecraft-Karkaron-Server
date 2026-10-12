@@ -100,6 +100,17 @@ public final class BossService implements Listener {
         return Optional.of(new Status(frac, f.phaseIndex, f.def.phases().get(f.phaseIndex).phaseName(), f.enraged));
     }
 
+    /** DG-7: a boss still standing this long after its enrage wipes the party (the run fails). */
+    public static final long ENRAGE_WIPE_SECONDS = 60;
+
+    /** True once {@code boss} has been enraged for {@link #ENRAGE_WIPE_SECONDS}: the owning run should fail. */
+    public boolean wipes(LivingEntity boss) {
+        Fight f = fights.get(boss.getUniqueId());
+        if (f == null || !f.enraged || f.def.enrageSeconds() <= 0) return false;
+        long elapsed = (System.currentTimeMillis() - f.startedMillis) / 1000;
+        return elapsed >= f.def.enrageSeconds() + ENRAGE_WIPE_SECONDS;
+    }
+
     /** Called about twice a second by the owning dungeon run: enforces the enrage timer. */
     public void tick(LivingEntity boss) {
         Fight f = fights.get(boss.getUniqueId());

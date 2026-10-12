@@ -322,7 +322,7 @@ public final class DungeonService {
     private void onPhaseChange(ActiveRun ar, BossService.PhaseChange change) {
         ar.phaseName = change.phase().phaseName();
         String text = change.enraged()
-                ? "Босс галзуурлаа! Тулаан хэт удсан тул цохилт нь ×" + BossService.ENRAGE_MULTIPLIER + " хүчтэй боллоо!"
+                ? "Босс галзуурлаа! Цохилт нь ×" + BossService.ENRAGE_MULTIPLIER + " хүчтэй. " + BossService.ENRAGE_WIPE_SECONDS + " секундэд унагахгүй бол баг ялагдана!"
                 : "Босс шинэ шат: " + change.phase().phaseName() + " (х" + change.phase().attackMultiplier() + ")";
         broadcast(ar, Messages.error(text));
         updateBar(ar);
@@ -727,6 +727,10 @@ public final class DungeonService {
         }
         if (ar.bossId != null && Bukkit.getEntity(ar.bossId) instanceof LivingEntity boss) {
             bosses.tick(boss);
+            if (bosses.wipes(boss)) {
+                fail(ar, "Босс галзуурснаас хойш " + BossService.ENRAGE_WIPE_SECONDS + " секундэд унасангүй: баг ялагдлаа.");
+                return;
+            }
             MobService.keepHostile(boss, onlineParticipants(ar), 48);
         }
         List<Player> fighters = onlineParticipants(ar);

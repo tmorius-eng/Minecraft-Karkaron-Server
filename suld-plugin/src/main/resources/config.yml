@@ -326,7 +326,8 @@ world:
 # ---------------------------------------------------------------------------
 skills:
   respec:
-    cooldown-seconds: 300       # between two refunds (an Orb of Oblivion ignores it)
+    cooldown-seconds: 300       # between two paid refunds
+    orb-cooldown-seconds: 86400 # an Orb of Oblivion refunds for free, but only this long after the last respec (SP-3)
     coins-per-point: 25         # price per refunded point; free up to free-level
     free-level: 10
   builds:

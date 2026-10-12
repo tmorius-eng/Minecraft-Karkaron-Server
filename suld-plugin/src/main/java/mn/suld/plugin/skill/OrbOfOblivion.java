@@ -17,8 +17,8 @@ import org.bukkit.plugin.Plugin;
 import java.util.List;
 
 /**
- * The Мартагдлын Бөмбөрцөг (Orb of Oblivion): a consumable that refunds the whole skill tree for free and without the
- * respec cooldown. Crafted from a diamond and four ender pearls, or given by an administrator. The item is a quiet
+ * The Мартагдлын Бөмбөрцөг (Orb of Oblivion): a consumable that refunds the whole skill tree for free; it waits
+ * {@code skills.respec.orb-cooldown-seconds} (a day) since the last respec, so it is not a free respec on demand (SP-3). Crafted from a diamond and four ender pearls, or given by an administrator. The item is a quiet
  * vanilla material (it must do nothing when used) wearing a pack model; it is recognised by a persistent tag.
  */
 public final class OrbOfOblivion {

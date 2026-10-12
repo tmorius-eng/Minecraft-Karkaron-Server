@@ -593,6 +593,11 @@ public final class SkillTreeService implements Listener {
 
     // respec policy -----------------------------------------------------------------------------------------------
 
+    /** SP-3: the orb's free respec still waits this long since the last respec (one free reset a day by default). */
+    public long orbCooldownMs() {
+        return Math.max(0, plugin.getConfig().getLong("skills.respec.orb-cooldown-seconds", 86_400)) * 1000L;
+    }
+
     public long respecCooldownMs() {
         return plugin.getConfig().getLong("skills.respec.cooldown-seconds", 300) * 1000L;
     }
@@ -629,7 +634,7 @@ public final class SkillTreeService implements Listener {
             if (refunded <= 0) return new ResetResult(ResetOutcome.NOTHING, 0, 0, 0);
             long coins = useOrb ? 0 : respecCost(p, refunded);
             if (pr.currency() < coins) return new ResetResult(ResetOutcome.NO_COINS, coins, refunded, 0);
-            long cd = useOrb ? 0 : respecCooldownMs();
+            long cd = useOrb ? orbCooldownMs() : respecCooldownMs();
             SkillEngine.Result r = category == null ? SkillEngine.resetAll(pr, t, System.currentTimeMillis(), cd)
                     : SkillEngine.resetCategory(pr, t, category, System.currentTimeMillis(), cd);
             if (r.outcome() == SkillEngine.Outcome.COOLDOWN) return new ResetResult(ResetOutcome.COOLDOWN, coins, refunded, Integer.parseInt(r.detail()));
@@ -663,7 +668,7 @@ public final class SkillTreeService implements Listener {
                 int removed = 0;
                 for (SkillNode n : t.nodes()) removed += Math.max(0, cur.rank(n) - next.rank(n)) * n.cost(); // points, not ranks
                 coins = respecCost(p, removed);
-                if (pr.currency() < coins) return new SkillEngine.Result(SkillEngine.Outcome.INVALID, coins + " ₮ хэрэгтэй");
+                if (pr.currency() < coins) return new SkillEngine.Result(SkillEngine.Outcome.INVALID, coins + " зоос хэрэгтэй");
             }
             SkillEngine.Result r = SkillEngine.loadBuild(pr, t, name, context(p), System.currentTimeMillis(), respecCooldownMs());
             if (r.ok()) {

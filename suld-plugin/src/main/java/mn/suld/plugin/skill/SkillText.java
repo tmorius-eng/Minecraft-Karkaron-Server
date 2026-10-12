@@ -23,7 +23,7 @@ public final class SkillText {
             case REQUIRES -> "«" + n + "» — «" + o + "» шаардлагатай";
             case NOT_UNLOCKED -> "«" + n + "» нээгдээгүй байна";
             case WOULD_BREAK -> "«" + o + "» нь «" + n + "»-ээс хамаардаг — түүнийг эхлээд буцаа";
-            case COINS -> "«" + n + "»-г буцаахад " + c.amount() + " ₮ хэрэгтэй";
+            case COINS -> "«" + n + "»-г буцаахад " + c.amount() + " зоос хэрэгтэй";
         };
     }
 
@@ -34,18 +34,25 @@ public final class SkillText {
             case NO_SLOT -> "Бүтцийн слот дүүрсэн (" + r.detail() + "). Нэгийг устга.";
             case NOT_FOUND -> "«" + r.detail() + "» нэртэй бүтэц алга";
             case INVALID -> "Бүтэц одоогийн мод/түвшинд тохирохгүй байна: " + r.detail();
-            case COOLDOWN -> "Дахин тохируулахад " + r.detail() + " секунд хүлээх хэрэгтэй";
+            case COOLDOWN -> "Дахин тохируулахад " + waitText(Integer.parseInt(r.detail())) + " хүлээх хэрэгтэй";
             case NOTHING -> "Өөрчлөх зүйл алга";
         };
     }
 
     public static String reset(SkillTreeService.ResetResult r) {
         return switch (r.outcome()) {
-            case OK -> "Буцаагдлаа: " + r.refunded() + " оноо" + (r.coins() > 0 ? " (−" + r.coins() + " ₮)" : "");
+            case OK -> "Буцаагдлаа: " + r.refunded() + " оноо" + (r.coins() > 0 ? " (−" + r.coins() + " зоос)" : "");
             case NOTHING -> "Буцаах оноо алга";
-            case COOLDOWN -> "Дахин тохируулахад " + r.waitSeconds() + " секунд хүлээх хэрэгтэй";
-            case NO_COINS -> "Мөнгө хүрэлцэхгүй: " + r.coins() + " ₮ хэрэгтэй";
+            case COOLDOWN -> "Дахин тохируулахад " + waitText(r.waitSeconds()) + " хүлээх хэрэгтэй";
+            case NO_COINS -> "Мөнгө хүрэлцэхгүй: " + r.coins() + " зоос хэрэгтэй";
             case NO_CLASS -> "Эхлээд ангиа сонго";
         };
+    }
+
+    /** A wait as people say it: seconds, minutes or hours (the orb waits up to a day, SP-3). */
+    static String waitText(int seconds) {
+        if (seconds < 120) return seconds + " секунд";
+        if (seconds < 7200) return (seconds + 59) / 60 + " минут";
+        return (seconds + 3599) / 3600 + " цаг";
     }
 }

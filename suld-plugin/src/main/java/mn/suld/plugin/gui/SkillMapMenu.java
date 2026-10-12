@@ -558,7 +558,7 @@ public final class SkillMapMenu implements Listener {
         common.add(wait > 0 ? "Хүлээх хугацаа: " + wait + " сек" : "Хүлээлт алга");
         common.add("Мартагдлын Бөмбөрцөг: " + orbs + " ш (үнэгүй, хүлээлтгүй)");
         int all = a.spent();
-        List<String> allLore = new ArrayList<>(List.of("Буцаах: " + all + " оноо", "Үнэ: " + st().respecCost(p, all) + " ₮"));
+        List<String> allLore = new ArrayList<>(List.of("Буцаах: " + all + " оноо", "Үнэ: " + st().respecCost(p, all) + " зоос"));
         allLore.addAll(common);
         m.set(10, bar(Material.TNT, "Бүх модыг буцаах", RED, allLore), (pl, c) -> confirmReset(pl, null));
         SkillCategory[] branches = {SkillCategory.DEFENSE, SkillCategory.SPELL, SkillCategory.OFFENSE};
@@ -566,7 +566,7 @@ public final class SkillMapMenu implements Listener {
         for (int i = 0; i < branches.length; i++) {
             SkillCategory cat = branches[i];
             int refund = a.spent() - a.withoutCategory(cat).spent();
-            List<String> lore = new ArrayList<>(List.of("Буцаах: " + refund + " оноо", "Үнэ: " + st().respecCost(p, refund) + " ₮"));
+            List<String> lore = new ArrayList<>(List.of("Буцаах: " + refund + " оноо", "Үнэ: " + st().respecCost(p, refund) + " зоос"));
             lore.addAll(common);
             m.set(slots[i], bar(Material.REDSTONE, cat.label() + " салбарыг буцаах", ORANGE, lore), (pl, c) -> confirmReset(pl, cat));
         }
@@ -623,7 +623,7 @@ public final class SkillMapMenu implements Listener {
         Menu m = new Menu(3, "Баталгаажуулах", null);
         List<String> lines = new ArrayList<>();
         lines.add((category == null ? "Бүх мод" : category.label() + " салбар") + ": " + refund + " оноо буцна");
-        lines.add(orb ? "Мартагдлын Бөмбөрцөг 1 ширхэг зарцуулна (үнэгүй)" : "Үнэ: " + coins + " ₮");
+        lines.add(orb ? "Мартагдлын Бөмбөрцөг 1 ширхэг зарцуулна (үнэгүй, өдөрт нэг удаа)" : "Үнэ: " + coins + " зоос");
         lines.add("Түвшин, EXP, мөнгө, хийсэн бүтцүүд хэвээр үлдэнэ");
         m.set(11, bar(Material.LIME_CONCRETE, "✔ Баталгаажуулах", GREEN, lines), (pl, c) -> {
             boolean used = false;

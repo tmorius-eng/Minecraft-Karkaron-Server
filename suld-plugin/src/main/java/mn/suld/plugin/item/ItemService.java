@@ -365,7 +365,8 @@ public final class ItemService {
     /**
      * The duplicate sweep, staggered: called every tick, it scans the players due this tick (each one every 30 s), so
      * the cost is spread instead of every inventory of every player on one tick. A non-stacking item seen in two
-     * online inventories stays with whoever held it before; the newer copy is quarantined.
+     * online inventories stays with whoever held it before; the newer copy is quarantined. Two copies inside one
+     * inventory are caught here too (DU-1), not only at join: the first slot keeps it.
      */
     public void sweepTick() {
         long tick = ++sweepTicks;
@@ -378,6 +379,13 @@ public final class ItemService {
                 if (st == null || st.isEmpty() || !st.hasItemMeta()) continue;
                 ItemInstance i = factory.read(st).orElse(null);
                 if (i == null || catalog.item(i.definitionId()).map(ItemDefinition::stackable).orElse(true)) continue;
+                if (mine.contains(i.uuid())) {
+                    // DU-1: a second copy in the same inventory (the join sweep alone used to catch this): keep the first
+                    quarantine(p, st, "inventory#" + slot, "duplicate inside one inventory");
+                    inv.setItem(slot, null);
+                    p.sendMessage(Messages.error("Давхардсан эд зүйлийг хурааж авлаа. Админд хандана уу."));
+                    continue;
+                }
                 UUID holder = holderOf.get(i.uuid());
                 Player other = holder == null || holder.equals(p.getUniqueId()) ? null : Bukkit.getPlayer(holder);
                 if (other != null && holds(other, i.uuid())) {
