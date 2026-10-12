@@ -14,6 +14,9 @@ layer (MythicMobs, MMOItems/MMOCore, Citizens, ItemsAdder, DeluxeMenus, TAB, …
 > Mongolian-*inspired* fantasy archetypes. SULD keeps fantasy lore separate from
 > real history and makes no historical claims — see [GAME_DESIGN.md](GAME_DESIGN.md).
 
+
+**Өөрийн компьютер дээр турших:** [docs/LOCAL_TEST.md](docs/LOCAL_TEST.md) — `git clone`-оос `localhost` руу орох хүртэл.
+
 ## Status — playable
 
 Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (530 tests; PostgreSQL ITs opt-in; the counts below come from `docs/STATUS.md`):
