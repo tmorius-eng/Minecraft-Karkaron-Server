@@ -104,16 +104,19 @@ public final class TaskService implements Listener, TabExecutor {
         st.taskProgress(day, DailyTasks.store(pin, progress));
         if (done >= 0) {
             DailyTasks.Task t = tasks.get(done);
-            int from = pr.progression().level();
-            pr.addCurrency(t.coins());
-            var gained = services.progression().grantExp(pr, t.exp(), ExpSource.OTHER);
-            killer.sendMessage(Messages.success("Өдрийн даалгавар биелэв: " + t.prey().mobName() + " ×" + t.count()
-                    + "  (+" + t.coins() + " зоос, +" + t.exp() + " EXP)"));
-            killer.playSound(killer.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.3f);
-            if (gained.leveledUp()) Presentation.levelUp(killer, from, gained.after().level());
-            services.hud().update(killer, pr);
-            services.profiles().save(pr);
-            services.styles().saveNow(killer.getUniqueId()); // coins and the "done" progress reach storage together
+            // PERS-002: the "done" progress is stored first; the reward follows once it is durable
+            services.styles().guardThen(killer, () -> st.taskProgress(day, stored), () -> {
+                int from = pr.progression().level();
+                pr.addCurrency(t.coins());
+                var gained = services.progression().grantExp(pr, t.exp(), ExpSource.OTHER);
+                services.profiles().save(pr);
+                if (!killer.isOnline()) return;
+                killer.sendMessage(Messages.success("Өдрийн даалгавар биелэв: " + t.prey().mobName() + " ×" + t.count()
+                        + "  (+" + t.coins() + " зоос, +" + t.exp() + " EXP)"));
+                killer.playSound(killer.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.3f);
+                if (gained.leveledUp()) Presentation.levelUp(killer, from, gained.after().level());
+                services.hud().update(killer, pr);
+            });
         } else {
             for (int i = 0; i < tasks.size(); i++) {
                 if (tasks.get(i).prey().mobId().equals(mobId) && progress[i] < tasks.get(i).count()) {

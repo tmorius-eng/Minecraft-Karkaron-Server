@@ -5,7 +5,7 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-11 · **Commit base:** `main` after `56865ba` · **Schema:** V19
+**Last updated:** 2026-10-11 · **Commit base:** `main` after `56865ba` · **Schema:** V20
 
 ## Legend
 
@@ -87,6 +87,10 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Tracker points at the region holding a dungeon's gate (DATA-002) | ✅ | — | ⏳ | `ContentDataTest` |
 | Daily tasks marked «Аянд тусална» when they feed the week's KILL_MOBS campaign | ✅ | ✅ marked during a wolf campaign | ⏳ | plan §3.2 day → week loop |
 | An orphaned campaign row (content removed) is cancelled on start, so the week is never stuck | ✅ | ✅ | — | |
+| Reward guards stored before the reward: daily, tasks, level rewards (PERS-002) | ✅ | — | — | `StyleService.guardThen` |
+| Clan saves never let an older snapshot overwrite a newer row (PERS-006) | ✅ | ✅ PostgreSQL IT | — | `JdbcClanRepositoryIT` |
+| Leaderboard + analytics purge indexes (OPS-007, V20) | ✅ | ✅ 31 JDBC ITs on PostgreSQL 16 | — | |
+| Shop sell labels no longer quote fixed prices (EC-4); PlayerClass javadoc tells the truth (DATA-001) | ✅ | — | ⏳ | |
 | Bot harness in the repo | ✅ | — | — | `tools/loadtest/` (B.4 done) |
 | PvE-only + consented PvP (`/duel`, arenas) | ✅ | ✅ a hit without consent does no damage | ⏳ | owner decision 2026-10-11; `GAME_DESIGN.md` «PvP policy» |
 | Их Хуралдай (weekly vote, V18) | ✅ | ✅ `khuraldai-smoke.js` 22/22 on PostgreSQL | ⏳ | `docs/KHURALDAI.md` |

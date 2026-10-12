@@ -178,6 +178,28 @@ public final class StyleService implements Listener {
         if (s != null) persist(s);
     }
 
+    /**
+     * PERS-002: the claim guard (in the style row) is made durable before the reward (in the profile row) is paid.
+     * {@code grant} runs on the main thread once the style write is stored; when it fails, {@code revert} undoes the
+     * claim in memory and the player is asked to try again, so a crash or a failed write never pays twice.
+     */
+    public void guardThen(Player p, Runnable revert, Runnable grant) {
+        PlayerStyle s = cache.get(p.getUniqueId());
+        java.util.concurrent.CompletableFuture<Void> write = s == null ? null : persist(s);
+        if (write == null) { // nothing pending (already written by a flush that saw the claim)
+            grant.run();
+            return;
+        }
+        write.whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
+            if (err == null) {
+                grant.run();
+                return;
+            }
+            revert.run();
+            if (p.isOnline()) p.sendMessage(Messages.error("Шагналыг хадгалж чадсангүй — хэсэг хугацааны дараа дахин оролдоно уу."));
+        }));
+    }
+
     /** Write a player's style now (e.g. together with a coin change); also used for styles no longer in the cache. */
     public void saveNow(UUID id) {
         save(id);
@@ -397,19 +419,22 @@ public final class StyleService implements Listener {
             p.sendMessage(Messages.error("Түвшин " + level + "-д хүрээгүй байна."));
             return false;
         }
+        long before = s.claimedLevels();
         if (!s.claimLevel(level)) {
             p.sendMessage(Messages.info("Энэ шагналыг авсан."));
             return false;
         }
-        profile.addCurrency(r.coins());
-        String extra = "";
-        if (r.cosmeticId() != null && s.grant(r.cosmeticId())) {
-            extra = " + " + CosmeticCatalog.byId(r.cosmeticId()).map(Cosmetic::name).orElse(r.cosmeticId());
-        }
-        p.sendMessage(Messages.success("Түвшин " + level + " шагнал: +" + r.coins() + " зоос" + extra));
-        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
-        changed(p);
-        saveProfile(p);
+        guardThen(p, () -> s.restoreClaimedLevels(before), () -> {
+            profile.addCurrency(r.coins());
+            String extra = "";
+            if (r.cosmeticId() != null && s.grant(r.cosmeticId())) {
+                extra = " + " + CosmeticCatalog.byId(r.cosmeticId()).map(Cosmetic::name).orElse(r.cosmeticId());
+            }
+            p.sendMessage(Messages.success("Түвшин " + level + " шагнал: +" + r.coins() + " зоос" + extra));
+            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+            changed(p);
+            saveProfile(p);
+        });
         return true;
     }
 

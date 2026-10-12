@@ -11,9 +11,9 @@ import java.util.Optional;
  * are not claims about historical roles; keep historical lore and fantasy lore
  * separate (see {@code GAME_DESIGN.md}).
  *
- * <p>Each constant carries only identity and role metadata here. Concrete
- * balance numbers (base stats, skill trees, scaling) are data-driven and loaded
- * from configuration, never hard-coded into this enum.
+ * <p>Each constant carries its identity, role and base numbers (health, attack, resource, difficulty) right here:
+ * they are code, not data (audit DATA-001). Skill trees are data ({@code skills/*.json}); per-level growth lives in
+ * {@code CombatRules}. Changing a class's base stats means a code change, a rebuild and a simulator run.
  */
 public enum PlayerClass {
 

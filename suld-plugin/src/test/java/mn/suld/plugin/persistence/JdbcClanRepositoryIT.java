@@ -44,6 +44,23 @@ class JdbcClanRepositoryIT {
     }
 
     @Test
+    void anOlderSnapshotNeverOverwritesANewerRow() {
+        // PERS-006: a late retry (or a second server) with an older version leaves the stored clan as it is
+        ClanRegistry reg = new ClanRegistry(Clock.systemUTC(), Duration.ofMinutes(5));
+        UUID a = UUID.randomUUID();
+        Clan wolves = reg.create(a, "Alpha", "Саарал", "СР").clan();
+        var old = wolves.snapshot();
+        reg.contribute(a, 500);
+        var newer = wolves.snapshot();
+        assertTrue(newer.version() > old.version(), "a change moves the version");
+        repo.save(newer).join();
+        repo.save(old).join();
+        Clan back = repo.loadAll().join().stream().filter(x -> x.tag().equals("СР")).findFirst().orElseThrow();
+        assertEquals(500, back.exp(), "the newer row survives the stale save");
+        assertEquals(500, back.member(a).orElseThrow().contribution());
+    }
+
+    @Test
     void saveLoadMoveAndCascade() {
         ClanRegistry reg = new ClanRegistry(Clock.systemUTC(), Duration.ofMinutes(5));
         UUID a = UUID.randomUUID(), b = UUID.randomUUID(), c = UUID.randomUUID();

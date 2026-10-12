@@ -624,7 +624,7 @@ public final class Menus {
         }
         m.set(29, Menu.item(Material.LEATHER, Menu.title("Олз зарах", GOLD), Menu.lore(GOLD,
                 List.of(b("Цүнхэн дэх чонын арьс, баавгайн арьс,"), b("хор, мөсөн чулуу... бүгдийг зарна.")),
-                List.of(Menu.kv("Чонын арьс:", "8 зоос", GOLD), Menu.kv("Баавгайн арьс:", "25 зоос", GOLD)), "Дарж бүгдийг зарах")),
+                List.of(Menu.kv("Үнэ:", "зэрэг, түвшнээс хамаарна", GOLD), Menu.kv("Яг үнэ:", "«Зарах цонх»", GOLD)), "Дарж бүгдийг зарах")),
                 (pl, c) -> {
                     sellAll(pl);
                     shop(pl);

@@ -94,6 +94,16 @@ public final class JdbcClanRepository implements ClanRepository {
                 boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
+                    // PERS-006: a snapshot older than the stored row (a second server, a late retry) never overwrites it
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT version FROM suld_clans WHERE clan_id = ? FOR UPDATE")) {
+                        bindUuid(ps, 1, clan.id());
+                        try (java.sql.ResultSet rs = ps.executeQuery()) {
+                            if (rs.next() && rs.getLong(1) > clan.version()) {
+                                conn.rollback();
+                                return;
+                            }
+                        }
+                    }
                     try (PreparedStatement ps = conn.prepareStatement(dialect.clanUpsert())) {
                         bindUuid(ps, 1, clan.id());
                         ps.setString(2, clan.name());

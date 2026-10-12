@@ -164,6 +164,19 @@ public final class PlayerStyle {
         return true;
     }
 
+    /** Undo a daily claim whose write failed (PERS-002): the previous day and streak come back. */
+    public synchronized void restoreDaily(long day, int streak) {
+        dailyDay = day;
+        dailyStreak = streak;
+        dirty = true;
+    }
+
+    /** Undo level-reward claims whose write failed (PERS-002): the previous claim mask comes back. */
+    public synchronized void restoreClaimedLevels(long mask) {
+        claimedLevels = mask;
+        dirty = true;
+    }
+
     /** Daily-task progress ("3,0,12") for {@code day}; empty for any other day. */
     public synchronized String taskProgress(long day) { return taskDay == day ? taskProgress : ""; }
 

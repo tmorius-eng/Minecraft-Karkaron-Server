@@ -117,22 +117,27 @@ public final class DailyService implements Listener, TabExecutor {
         long today = today();
         int level = profile.progression().level();
         DailyReward.Claim c = DailyReward.claim(style.dailyDay(), style.dailyStreak(), today, level);
+        long prevDay = style.dailyDay();
+        int prevStreak = style.dailyStreak();
         if (!c.allowed() || !style.claimDaily(today, c.day())) {
             p.sendMessage(Messages.info("Өнөөдрийн шагналаа авсан байна. Маргааш дахин ир!"));
             p.closeInventory();
             return;
         }
-        profile.addCurrency(c.coins());
-        var gained = services.progression().grantExp(profile, c.exp(), ExpSource.OTHER);
-        services.profiles().save(profile);
-        services.styles().saveNow(p.getUniqueId()); // the claim flag goes to storage together with the coins
         p.closeInventory();
-        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.6f);
-        p.sendMessage(Messages.success("Өдрийн шагнал (" + c.day() + "/" + DailyReward.CYCLE + "-р өдөр): +"
-                + c.coins() + " зоос, +" + c.exp() + " EXP"));
-        if (gained.leveledUp()) Presentation.levelUp(p, level, gained.after().level());
-        else Presentation.banner(p, "ӨДРИЙН ШАГНАЛ", c.day() + "-р өдөр · +" + c.coins() + " зоос", NamedTextColor.GOLD);
-        services.hud().update(p, profile);
+        // PERS-002: the claim is stored first; the coins and EXP follow once it is durable
+        services.styles().guardThen(p, () -> style.restoreDaily(prevDay, prevStreak), () -> {
+            profile.addCurrency(c.coins());
+            var gained = services.progression().grantExp(profile, c.exp(), ExpSource.OTHER);
+            services.profiles().save(profile);
+            if (!p.isOnline()) return;
+            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.6f);
+            p.sendMessage(Messages.success("Өдрийн шагнал (" + c.day() + "/" + DailyReward.CYCLE + "-р өдөр): +"
+                    + c.coins() + " зоос, +" + c.exp() + " EXP"));
+            if (gained.leveledUp()) Presentation.levelUp(p, level, gained.after().level());
+            else Presentation.banner(p, "ӨДРИЙН ШАГНАЛ", c.day() + "-р өдөр · +" + c.coins() + " зоос", NamedTextColor.GOLD);
+            services.hud().update(p, profile);
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
