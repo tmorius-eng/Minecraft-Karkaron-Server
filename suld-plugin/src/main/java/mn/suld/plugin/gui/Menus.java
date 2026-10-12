@@ -807,7 +807,7 @@ public final class Menus {
     private static final List<Supply> SUPPLIES = List.of(
             new Supply(Material.BREAD, 8, 20, "Боов x8"),
             new Supply(Material.COOKED_MUTTON, 8, 40, "Шарсан хонины мах x8"),
-            new Supply(Material.ARROW, 32, 30, "Сум x32"),
+            new Supply(Material.COOKED_BEEF, 8, 45, "Шарсан үхрийн мах x8"), // the class bow needs no arrows
             new Supply(Material.TORCH, 16, 12, "Бамбар x16"),
             new Supply(Material.SHIELD, 1, 120, "Бамбай"),
             new Supply(Material.GOLDEN_CARROT, 4, 90, "Алтан лууван x4"),

@@ -7,8 +7,8 @@ import java.util.List;
 
 /**
  * The 25 class spells (5 per class). Spells 1–4 are cast with a three-click combo while holding the class weapon (as in
- * Wynncraft); melee classes start combos with a right click, the archer (Мэргэн) with a left click, because the right
- * click draws the bow. The fifth spell has no combo: Shift+F casts it. Unlocked at levels 1, 10, 20, 35 and 50; each
+ * Wynncraft); melee classes start combos with a right click, the archer (Мэргэн) with a left click, because a plain right
+ * click shoots the class bow (it is never drawn: a drawing client sends no left clicks). The fifth spell has no combo: Shift+F casts it. Unlocked at levels 1, 10, 20, 35 and 50; each
  * spends the class resource. Spells grow in rank with the caster's level ({@link #rankAt}): rank II hits 15 % harder,
  * rank III 30 % harder with a 10 % shorter cooldown.
  */

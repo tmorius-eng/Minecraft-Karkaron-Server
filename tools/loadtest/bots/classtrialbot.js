@@ -1,6 +1,6 @@
 // «Ангийн Сорилт» (class trial, docs/CLASS_CHANGE.md), one offline bot:  node classtrialbot.js <srvctl.sh> [port]
 // Баатар opens a Мэргэн trial from the academy: in the arena with the bow, no sword; hitting a dummy (a mannequin)
-// counts damage;
+// counts damage; the bow shoots with no arrows;
 // other commands are refused; /classtrial leave puts Баатар, the sword and the place back, with no coins or EXP
 // gained; a second trial cut by a disconnect is undone by the time the player is back.
 const mineflayer = require('mineflayer');
@@ -58,8 +58,10 @@ async function trial(b) {
   const inArena = b.entity.position.y > 99 && b.entity.position.y < 106 && b.entity.position.distanceTo(origin) > 500;
   check(inArena && items(b).includes('bow') && !items(b).some(n => n.includes('sword')), 'the trial puts the player in the arena as Мэргэн (bow, no sword)', b.entity.position.toString() + ' ' + items(b).join(','));
   const bow = b.inventory.items().find(i => i.name === 'bow');
-  if (bow) { await b.equip(bow, 'hand').catch(() => {}); await sleep(2500); }
-  check(items(b).includes('arrow'), 'holding the SÜLD bow puts one never-ending arrow in the bag', items(b).join(','));
+  if (bow) { await b.equip(bow, 'hand').catch(() => {}); await sleep(1500); }
+  let shot = 0; const onArrow = (e) => { if (e.name === 'arrow') shot++; }; b.on('entitySpawn', onArrow);
+  b.activateItem(); await sleep(60); b.deactivateItem(); await sleep(800); b.removeListener('entitySpawn', onArrow);
+  check(shot === 1 && !items(b).includes('arrow'), 'the trial bow shoots on a right click with no arrow in the bag', shot + ' shot, ' + items(b).join(','));
   const dummy = Object.values(b.entities).find(e => e.name === 'mannequin' && e.position.y > 99 && e.position.y < 106);
   if (dummy) { await b.lookAt(dummy.position.offset(0, 1, 0), true); for (let i = 0; i < 4; i++) { b.attack(dummy); await sleep(700); } }
   await sleep(1500);

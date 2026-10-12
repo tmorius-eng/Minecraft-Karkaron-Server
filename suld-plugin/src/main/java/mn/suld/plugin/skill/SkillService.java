@@ -213,6 +213,44 @@ public final class SkillService implements Listener {
         return true;
     }
 
+    /** Мэргэн: one shot per second (a full draw's pace, so the class balance stays as simulated). */
+    static final long SHOT_MS = 1_000;
+    private final Map<UUID, Long> lastShot = new ConcurrentHashMap<>();
+
+    /**
+     * The class bow is never drawn (as in Wynncraft): while the client draws a bow it drops every left click, which
+     * broke the archer's L-R-L combos. The vanilla draw is refused and a right click shoots at once instead — unless
+     * a combo is under way, then the click is only the combo's R.
+     */
+    @EventHandler(priority = EventPriority.LOW)
+    public void onBowUse(PlayerInteractEvent e) {
+        if (e.getHand() != EquipmentSlot.HAND || e.getItem() == null || e.getItem().getType() != org.bukkit.Material.BOW) return;
+        Action a = e.getAction();
+        if (a != Action.RIGHT_CLICK_AIR && a != Action.RIGHT_CLICK_BLOCK) return;
+        Player p = e.getPlayer();
+        if (clazzOf(p) != PlayerClass.MERGEN || !holdsClassWeapon(p, PlayerClass.MERGEN)) return;
+        e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
+        if (p.isSneaking()) return; // Shift + right click opens the skill map
+        ComboTracker t = combos.get(p.getUniqueId());
+        long now = System.currentTimeMillis();
+        if (t != null && !t.current(now).isEmpty()) return;
+        Long last = lastShot.get(p.getUniqueId());
+        if (last != null && now - last < SHOT_MS) return;
+        if (services.isSoul.test(p.getUniqueId())) return;
+        lastShot.put(p.getUniqueId(), now);
+        shoot(p);
+    }
+
+    /** A fully drawn arrow (speed 3, the vanilla full-draw damage 6 that CombatListener scales from). */
+    private void shoot(Player p) {
+        Arrow a = p.launchProjectile(Arrow.class, p.getEyeLocation().getDirection().multiply(3.0));
+        a.setPickupStatus(org.bukkit.entity.AbstractArrow.PickupStatus.DISALLOWED);
+        a.setDamage(2.0);
+        a.setCritical(false);
+        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.9f, 1.15f);
+        p.getWorld().spawnParticle(org.bukkit.Particle.CRIT, p.getEyeLocation().add(p.getEyeLocation().getDirection().multiply(1.2)), 6, 0.1, 0.1, 0.1, 0.05);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInteract(PlayerInteractEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;

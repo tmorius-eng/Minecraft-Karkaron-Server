@@ -126,6 +126,7 @@ public final class ClassChangeService implements Listener {
             } else {
                 services.classWeapons().recover(p);
             }
+            mn.suld.plugin.item.BowQuiver.give(p);
             services.equipment().dirty(p);
         } catch (RuntimeException ex) {
             plugin.getLogger().severe("[class] " + p.getName() + ": the " + to + " gear failed (/classgear recover rebuilds it): " + ex);
@@ -221,6 +222,7 @@ public final class ClassChangeService implements Listener {
             } else {
                 services.classWeapons().recover(p);
             }
+            mn.suld.plugin.item.BowQuiver.give(p);
             services.equipment().dirty(p);
         } catch (RuntimeException ex) {
             plugin.getLogger().severe("[class] " + p.getName() + ": the " + to + " gear failed (/classgear recover rebuilds it): " + ex);

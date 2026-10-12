@@ -184,7 +184,9 @@ public final class ItemFactory {
                 .decoration(TextDecoration.BOLD, i.rarity().atLeast(ItemRarity.LEGENDARY)));
         List<Component> lore = new ArrayList<>();
         for (int k = 1; k < lines.size(); k++) lore.add(component(lines.get(k), color));
-        if (def.material().endsWith(":bow") || def.material().equals("bow")) {
+        if (def.id().startsWith("weapon.class.mergen.")) {
+            lore.add(Component.text("Баруун товч — шууд харвана, сум хэрэггүй", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
+        } else if (def.material().endsWith(":bow") || def.material().equals("bow")) {
             lore.add(Component.text("∞ Сум дуусахгүй", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
         }
         lore.add(Component.text("SÜLD", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));

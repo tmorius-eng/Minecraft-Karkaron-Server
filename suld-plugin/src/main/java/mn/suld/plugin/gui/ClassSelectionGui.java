@@ -217,6 +217,7 @@ public final class ClassSelectionGui implements Listener {
         }
         // the class armour set (T1), bound and worn (docs/CLASS_ARMOR_SYSTEM.md "Lifecycle")
         if (services.classArmor != null) services.classArmor.ensure(player);
+        mn.suld.plugin.item.BowQuiver.give(player); // Мэргэн: Infinity and the arrow at once
 
         services.events().dispatch(new ClassSelectedEvent(player.getUniqueId(), clazz));
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CLASS_SELECTED, player.getUniqueId(),
