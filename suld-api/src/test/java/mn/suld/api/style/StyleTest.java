@@ -128,4 +128,16 @@ class StyleTest {
         assertFalse(LevelRewards.claimed(mask, 5));
         assertTrue(LevelRewards.claimable(1, 0).isEmpty());
     }
+
+    @Test
+    void aFailedClaimIsUndoneAloneAndLaterClaimsStay() {
+        PlayerStyle s = new PlayerStyle(UUID.randomUUID());
+        assertTrue(s.claimLevel(5));
+        assertTrue(s.claimLevel(10)); // claimed while the level-5 write was still running
+        s.unclaimLevel(5);            // only that write failed (PERS-002)
+        assertFalse(LevelRewards.claimed(s.claimedLevels(), 5));
+        assertTrue(LevelRewards.claimed(s.claimedLevels(), 10), "a claim made meanwhile stays claimed");
+        assertTrue(s.isDirty());
+        assertTrue(s.claimLevel(5), "the failed claim can be made again");
+    }
 }

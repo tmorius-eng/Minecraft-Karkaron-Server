@@ -52,15 +52,23 @@ public final class Mailbox {
         if (kept.isEmpty()) return 0;
         List<ItemStack> left = new ArrayList<>();
         int delivered = 0;
+        long before = amount(kept);
         for (ItemStack it : kept) {
-            var rest = p.getInventory().addItem(it);
+            var rest = p.getInventory().addItem(it.clone());
             if (rest.isEmpty()) delivered++;
             else left.addAll(rest.values());
         }
-        if (delivered == 0 && left.size() == kept.size()) return 0; // nothing fitted: the file stays as it is
+        // compare item counts, not stacks: a stack that only partly fitted moved items too and must shrink the file
+        if (amount(left) == before) return 0; // nothing fitted: the file stays as it is
         mn.suld.plugin.item.PlayerDataSaves.now(p);
         write(p.getUniqueId(), left);
         return delivered;
+    }
+
+    private static long amount(List<ItemStack> stacks) {
+        long n = 0;
+        for (ItemStack it : stacks) n += it.getAmount();
+        return n;
     }
 
     List<ItemStack> read(UUID player) {

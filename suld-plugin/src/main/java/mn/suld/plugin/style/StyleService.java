@@ -185,9 +185,16 @@ public final class StyleService implements Listener {
      */
     public void guardThen(Player p, Runnable revert, Runnable grant) {
         PlayerStyle s = cache.get(p.getUniqueId());
-        java.util.concurrent.CompletableFuture<Void> write = s == null ? null : persist(s);
-        if (write == null) { // nothing pending (already written by a flush that saw the claim)
-            grant.run();
+        if (s == null || !ready(p.getUniqueId())) {
+            // a placeholder style is never written: paying against it would let the claim be made again later
+            revert.run();
+            if (p.isOnline()) p.sendMessage(Messages.error("Таны өгөгдөл бүрэн ачаалагдаагүй байна — дахин нэвтэрч орно уу."));
+            return;
+        }
+        java.util.concurrent.CompletableFuture<Void> write = persist(s);
+        if (write == null) write = inFlightWrite.get(s.player()); // a flush may already carry the claim
+        if (write == null || write.isDone() && !write.isCompletedExceptionally()) {
+            grant.run(); // the claim is stored
             return;
         }
         write.whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
@@ -209,6 +216,9 @@ public final class StyleService implements Listener {
      * Snapshot and write if dirty. Taking the snapshot and queueing the write happen under one lock so snapshots are
      * written in order, and a failed write marks the style dirty again so the next flush retries it.
      */
+    /** The newest style write still running per player (writes are queued in order, so it covers every older one). */
+    private final java.util.Map<UUID, java.util.concurrent.CompletableFuture<Void>> inFlightWrite = new ConcurrentHashMap<>();
+
     private java.util.concurrent.CompletableFuture<Void> persist(PlayerStyle s) {
         if (unsafe.contains(s.player())) return null;
         java.util.concurrent.CompletableFuture<Void> write;
@@ -216,7 +226,10 @@ public final class StyleService implements Listener {
             if (!s.isDirty()) return null;
             write = repository.save(s.snapshotAndClean());
         }
+        java.util.concurrent.CompletableFuture<Void> tracked = write;
+        inFlightWrite.put(s.player(), tracked);
         return write.whenComplete((v, err) -> {
+            inFlightWrite.remove(s.player(), tracked);
             if (err != null) {
                 s.markDirty();
                 plugin.getLogger().warning("style save failed for " + s.player() + " (will retry): " + err.getMessage());
@@ -419,12 +432,11 @@ public final class StyleService implements Listener {
             p.sendMessage(Messages.error("Түвшин " + level + "-д хүрээгүй байна."));
             return false;
         }
-        long before = s.claimedLevels();
         if (!s.claimLevel(level)) {
             p.sendMessage(Messages.info("Энэ шагналыг авсан."));
             return false;
         }
-        guardThen(p, () -> s.restoreClaimedLevels(before), () -> {
+        guardThen(p, () -> s.unclaimLevel(level), () -> {
             profile.addCurrency(r.coins());
             String extra = "";
             if (r.cosmeticId() != null && s.grant(r.cosmeticId())) {

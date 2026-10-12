@@ -413,14 +413,30 @@ public final class TradeService implements Listener, TabExecutor {
             return;
         }
         PlayerProfile payer = net > 0 ? rb : ra, payee = net > 0 ? ra : rb;
-        services.profiles().transfer(payer, payee, Math.abs(net)).whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
-            if (err != null) {
-                plugin.getLogger().severe("[audit] trade coins " + pa.getName() + " <-> " + pb.getName() + " (" + net
-                        + ") NOT saved; balances restored, items returned to their owners: " + err);
-            }
-            settle(pa, pb, fromA, fromB, err == null);
-        }));
+        Settlement st = new Settlement(pa, pb, fromA, fromB, services.profiles().transfer(payer, payee, Math.abs(net)));
+        inFlight.add(st);
+        st.coins.whenComplete((v, err) -> {
+            if (!plugin.isEnabled()) return; // shutdown() settles what is still in flight
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (!inFlight.remove(st)) return; // shutdown() already settled it
+                if (err != null) {
+                    plugin.getLogger().severe("[audit] trade coins " + pa.getName() + " <-> " + pb.getName() + " (" + net
+                            + ") NOT saved; balances restored, items returned to their owners: " + err);
+                }
+                settle(pa, pb, fromA, fromB, err == null);
+            });
+        });
     }
+
+    /**
+     * Goods between "both confirmed" and "coins stored" live only here: a stop in that window must still hand them to
+     * someone (shutdown() settles them), never let them vanish with the scheduler.
+     */
+    private record Settlement(Player pa, Player pb, List<ItemStack> fromA, List<ItemStack> fromB,
+                              java.util.concurrent.CompletableFuture<?> coins) {
+    }
+
+    private final java.util.Set<Settlement> inFlight = new java.util.LinkedHashSet<>();
 
     /** Hand the goods over (or back, when the coins could not be stored); a player who left gets them by mailbox. */
     private void settle(Player pa, Player pb, List<ItemStack> fromA, List<ItemStack> fromB, boolean ok) {
@@ -440,10 +456,11 @@ public final class TradeService implements Listener, TabExecutor {
         }
     }
 
-    private void deliver(Player p, List<ItemStack> items, String why) {
+    private void deliver(Player captured, List<ItemStack> items, String why) {
         if (items.isEmpty()) return;
-        if (!p.isOnline()) {
-            mailbox.keep(p.getUniqueId(), items, why); // given on the next join
+        Player p = Bukkit.getPlayer(captured.getUniqueId()); // a player who rejoined meanwhile is a new Player object
+        if (p == null || !p.isOnline()) {
+            mailbox.keep(captured.getUniqueId(), items, why); // given on the next join
             return;
         }
         for (ItemStack it : items) giveBack(p, it);
@@ -574,6 +591,20 @@ public final class TradeService implements Listener, TabExecutor {
 
     public void shutdown() {
         for (Trade t : List.copyOf(trades.values())) cancel(t, "сервер унтарч байна");
+        for (Settlement st : List.copyOf(inFlight)) {
+            inFlight.remove(st);
+            boolean ok;
+            try {
+                st.coins().get(3, java.util.concurrent.TimeUnit.SECONDS); // the profile pool is still open here
+                ok = true;
+            } catch (Exception ex) {
+                // failed, or not stored in time: each side keeps its own goods (never both the goods and the coins)
+                ok = false;
+                plugin.getLogger().severe("[audit] trade " + st.pa().getName() + " <-> " + st.pb().getName()
+                        + " unsettled at shutdown (" + ex + "); items returned to their owners, check the coin balances");
+            }
+            settle(st.pa(), st.pb(), st.fromA(), st.fromB(), ok);
+        }
         for (Map.Entry<UUID, List<ItemStack>> en : List.copyOf(afterRespawn.entrySet())) {
             Player p = Bukkit.getPlayer(en.getKey());
             if (p == null) {

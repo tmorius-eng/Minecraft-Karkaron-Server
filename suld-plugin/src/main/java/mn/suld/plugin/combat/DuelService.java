@@ -19,6 +19,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
@@ -192,19 +193,53 @@ public final class DuelService implements Listener {
     /**
      * A consented fight is never a hardcore death (no lost loot, EXP or soul time for a friendly duel or a bout on a
      * fighting ground): the killing blow becomes a defeat. HIGHEST, so SÜLD's combat maths (HIGH) already set the
-     * final damage. The loser keeps 4 HP and 3 s of protection, the duel ends, and a relic the loser bears passes to
+     * final damage. The loser keeps a quarter of their health and 3 s of protection, the duel ends, and a relic the loser bears passes to
      * the winner as a consented kill would hand it over.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onLethalConsented(EntityDamageByEntityEvent e) {
+    public void onLethalConsented(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player loser)) return;
-        Player winner = attacker(e.getDamager());
-        if (winner == null || !bout(winner, loser)) return;
+        Player winner;
+        if (e instanceof EntityDamageByEntityEvent byEntity) {
+            winner = attacker(byEntity.getDamager());
+            if (winner == null || !bout(winner, loser)) return;
+            lastHit.put(loser.getUniqueId(), new Hit(winner.getUniqueId(), System.currentTimeMillis()));
+        } else {
+            // the burn, wither or fall a duel hit started is still the duel (never the void, /kill or the border)
+            EntityDamageEvent.DamageCause cause = e.getCause();
+            if (cause == EntityDamageEvent.DamageCause.VOID || cause == EntityDamageEvent.DamageCause.KILL
+                    || cause == EntityDamageEvent.DamageCause.WORLD_BORDER || cause == EntityDamageEvent.DamageCause.SUICIDE) return;
+            Hit h = lastHit.get(loser.getUniqueId());
+            if (h == null || System.currentTimeMillis() - h.at() > LINGER_MS) return;
+            winner = Bukkit.getPlayer(h.by());
+            if (winner == null || !bout(winner, loser)) return;
+        }
         if (e.getFinalDamage() < loser.getHealth() + loser.getAbsorptionAmount()) return;
         e.setCancelled(true);
-        loser.setHealth(Math.max(1.0, Math.min(4.0, maxHealth(loser))));
+        defeat(loser, winner);
+    }
+
+    /** The share of max health a defeated fighter keeps. */
+    static final double DEFEAT_HEALTH = 0.25;
+
+    /** How long after a duel hit its lingering damage (fire, wither, a fall) still counts as the duel. */
+    private static final long LINGER_MS = 10_000;
+
+    private record Hit(UUID by, long at) {
+    }
+
+    private final Map<UUID, Hit> lastHit = new HashMap<>();
+
+    private void defeat(Player loser, Player winner) {
+        lastHit.remove(loser.getUniqueId());
+        lastHit.remove(winner.getUniqueId());
+        // a quarter of their health: SÜLD health runs to ~80, and 4 points would hand the loser to the first mob nearby
+        loser.setHealth(Math.max(1.0, maxHealth(loser) * DEFEAT_HEALTH));
         loser.setNoDamageTicks(60);
         loser.setFireTicks(0);
+        loser.setFallDistance(0f);
+        loser.removePotionEffect(org.bukkit.potion.PotionEffectType.WITHER);
+        loser.removePotionEffect(org.bukkit.potion.PotionEffectType.POISON);
         duels.end(loser.getUniqueId());
         Component line = Messages.accent("⚔ " + winner.getName() + " тулаанд ялав, " + loser.getName() + " бууж өглөө.");
         loser.sendMessage(line);
@@ -221,6 +256,7 @@ public final class DuelService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent e) {
+        lastHit.remove(e.getEntity().getUniqueId());
         duels.end(e.getEntity().getUniqueId()).ifPresent(d -> {
             Player other = Bukkit.getPlayer(d.other(e.getEntity().getUniqueId()));
             if (other != null) other.sendMessage(Messages.success("Тулаанд ялав: " + e.getEntity().getName() + " унасан."));
@@ -230,6 +266,7 @@ public final class DuelService implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent e) {
         lastNotice.remove(e.getPlayer().getUniqueId());
+        lastHit.remove(e.getPlayer().getUniqueId());
         duels.end(e.getPlayer().getUniqueId()).ifPresent(d -> {
             Player other = Bukkit.getPlayer(d.other(e.getPlayer().getUniqueId()));
             if (other != null) other.sendMessage(Messages.info(e.getPlayer().getName() + " гарсан тул тулаан дууслаа."));

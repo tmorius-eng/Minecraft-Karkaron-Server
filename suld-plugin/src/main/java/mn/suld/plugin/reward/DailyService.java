@@ -106,7 +106,7 @@ public final class DailyService implements Listener, TabExecutor {
             m.set(9 + d, it, now ? (pl, click) -> claim(pl) : null);
         }
         m.set(22, Menu.item(Material.CLOCK, Menu.title("Дараалал: " + (ready ? Math.max(0, day - 1) : day) + "/" + DailyReward.CYCLE, GOLD),
-                List.of(Component.text("Өдөр алгасвал 1-р өдрөөс эхэлнэ.", NamedTextColor.WHITE, TextDecoration.BOLD))), null);
+                List.of(Component.text("Өдөр алгасвал нэг л шат буцна.", NamedTextColor.WHITE, TextDecoration.BOLD))), null);
         m.open(p);
     }
 

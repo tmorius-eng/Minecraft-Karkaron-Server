@@ -95,6 +95,19 @@ public final class WorldEventService {
         return pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
     }
 
+    /** How long before an automatic event the guards warn, once a campaign unlocked the warning. */
+    private static final long WARNING_MS = 120_000;
+    /** The event the guards already announced; it is the one that starts. */
+    private WorldEventDefinition upcoming;
+
+    /**
+     * The wolf raid always runs; a campaign that "unlocks" it (UNLOCK_EVENT of the raid itself, «Чонын Их Аян») gives
+     * the guards' early warning instead, as the campaign text promises.
+     */
+    private boolean guardsWarn() {
+        return unlocked.contains(SuldContent.WOLF_RAID.id());
+    }
+
     private WorldEventRun active;
     private BukkitTask ticker;
     private long nextAutoStartMillis;
@@ -185,10 +198,18 @@ public final class WorldEventService {
         if (active == null || !active.isActive()) {
             if (settings.worldEventsEnabled() && now >= nextAutoStartMillis) {
                 if (eligiblePlayers().size() >= settings.worldEventMinPlayers()) {
-                    start(nextAutomatic());
+                    WorldEventDefinition next = upcoming != null ? upcoming : nextAutomatic();
+                    upcoming = null;
+                    start(next);
                 } else {
                     scheduleNextAuto();
                 }
+            } else if (settings.worldEventsEnabled() && upcoming == null && guardsWarn()
+                    && now >= nextAutoStartMillis - WARNING_MS && eligiblePlayers().size() >= settings.worldEventMinPlayers()) {
+                // «Чонын Их Аян» succeeded: the Kharkhorum guards see the next raid coming
+                upcoming = nextAutomatic();
+                Bukkit.broadcast(Messages.accent("⚠ Хархорумын харуул: 2 минутын дараа «" + upcoming.displayName() + "» эхэлнэ — бэлдээрэй!"));
+                for (Player p : Bukkit.getOnlinePlayers()) p.playSound(p.getLocation(), org.bukkit.Sound.EVENT_RAID_HORN, 0.6f, 1.4f);
             }
             return;
         }
@@ -405,6 +426,7 @@ public final class WorldEventService {
     }
 
     private void scheduleNextAuto() {
+        upcoming = null;
         nextAutoStartMillis = System.currentTimeMillis() + settings.worldEventIntervalMin() * 60_000L;
     }
 

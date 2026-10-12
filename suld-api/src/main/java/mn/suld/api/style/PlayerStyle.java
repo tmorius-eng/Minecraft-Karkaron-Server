@@ -171,6 +171,12 @@ public final class PlayerStyle {
         dirty = true;
     }
 
+    /** Undo one level-reward claim whose write failed (PERS-002); claims made meanwhile stay. */
+    public synchronized void unclaimLevel(int level) {
+        if (level >= 1 && level < 64) claimedLevels &= ~(1L << level);
+        dirty = true;
+    }
+
     /** Undo level-reward claims whose write failed (PERS-002): the previous claim mask comes back. */
     public synchronized void restoreClaimedLevels(long mask) {
         claimedLevels = mask;

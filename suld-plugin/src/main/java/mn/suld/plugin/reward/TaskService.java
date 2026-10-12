@@ -105,7 +105,12 @@ public final class TaskService implements Listener, TabExecutor {
         if (done >= 0) {
             DailyTasks.Task t = tasks.get(done);
             // PERS-002: the "done" progress is stored first; the reward follows once it is durable
-            services.styles().guardThen(killer, () -> st.taskProgress(day, stored), () -> {
+            services.styles().guardThen(killer, () -> {
+                // undo only this completion: kills made while the write ran stay counted
+                int[] now = DailyTasks.progress(st.taskProgress(day));
+                if (now[done] >= t.count()) now[done] = t.count() - 1;
+                st.taskProgress(day, DailyTasks.store(pin, now));
+            }, () -> {
                 int from = pr.progression().level();
                 pr.addCurrency(t.coins());
                 var gained = services.progression().grantExp(pr, t.exp(), ExpSource.OTHER);

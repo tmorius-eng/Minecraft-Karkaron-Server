@@ -20,7 +20,7 @@ told how to duel. Kharkhorum stays a sanctuary for everyone, souls are never fou
 consented fight; any other death returns it to its shrine (`RelicRules.onBearerDeath(…, consentedFight)`). The bearer
 stays famous (glow, broadcast, chronicle), not hunted. `pvp.wild-enabled: true` restores the old open steppe.
 A consented fight is never a hardcore death: the killing blow of a duel or a bout on a fighting ground becomes a
-**defeat** (the loser keeps 4 HP, no loot, EXP or soul time is lost, the duel ends) and a relic the loser bears passes
+**defeat** (the loser keeps a quarter of their health, no loot, EXP or soul time is lost, the duel ends) and a relic the loser bears passes
 to the winner (`DuelService.onLethalConsented`). Only the open steppe of `pvp.wild-enabled: true` keeps real deaths.
 
 ## Classes

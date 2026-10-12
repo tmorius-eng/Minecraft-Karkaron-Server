@@ -68,7 +68,12 @@ public final class KhuraldaiService {
 
     public void start() {
         String id = cycle.cycleId(Instant.now());
-        whenDone(repository.voteCycle(id), (row, err) -> {
+        // this week's ballot, else last week's when it was never closed (the server was down over vote-closes):
+        // the tick then closes it, so its votes still decide this week's campaign
+        CompletableFuture<Optional<VoteCycle>> rows = repository.voteCycle(id).thenCompose(row -> row.isPresent()
+                ? CompletableFuture.completedFuture(row)
+                : repository.voteCycle(cycle.previousCycleId(id)).thenApply(prev -> prev.filter(v -> !v.closed())));
+        whenDone(rows, (row, err) -> {
             if (err != null) plugin.getLogger().log(Level.WARNING, "[khuraldai] vote cycle not read: " + root(err));
             else {
                 current = row.orElse(null);
@@ -320,7 +325,12 @@ public final class KhuraldaiService {
 
     /** The campaign the previous cycle's vote chose for {@code cycleId}, if that vote closed. */
     public CompletableFuture<Optional<String>> winnerFor(String cycleId) {
-        return repository.voteCycle(cycle.previousCycleId(cycleId)).thenApply(v -> v.filter(VoteCycle::closed).map(VoteCycle::winner));
+        return repository.voteCycle(cycle.previousCycleId(cycleId)).thenApply(v -> {
+            // a ballot still waiting to be closed (the server was down at vote-closes) is not "no vote": the tick
+            // closes it within a second, and the players' choice must win over the rotation
+            if (v.isPresent() && !v.get().closed()) throw new IllegalStateException("vote " + v.get().cycleId() + " not closed yet");
+            return v.map(VoteCycle::winner);
+        });
     }
 
     // ------------------------------------------------------------------ admin

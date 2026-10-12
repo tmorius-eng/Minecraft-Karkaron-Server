@@ -116,9 +116,29 @@ public final class CampaignService {
         String id = cycleId();
         restoredCycle = id;
         effects.restore(id);
+        restore(id, true);
+    }
+
+    /**
+     * Rebuild the run stored for {@code id}. With {@code thenNext}, a week with no live row also looks at next week's:
+     * an admin force during the weekend interlude is filed under the week it runs into (see {@link #adminForce}).
+     */
+    private void restore(String id, boolean thenNext) {
         whenDone(repository.campaign(id), (row, err) -> {
             if (err != null) {
                 plugin.getLogger().log(Level.WARNING, "[campaign] row not read: " + root(err));
+                return;
+            }
+            boolean live = row.isPresent() && !row.get().state().resolved() && Content.pack().campaign(row.get().campaignId()) != null;
+            if (!live && thenNext && cycle.phase(Instant.now()) != WeeklyCycle.Phase.CAMPAIGN) {
+                String next = cycle.nextCycleId(id);
+                whenDone(repository.campaign(next), (n, e) -> {
+                    if (e == null && n.isPresent() && !n.get().state().resolved() && Content.pack().campaign(n.get().campaignId()) != null) {
+                        restore(next, false);
+                    } else if (row.isPresent()) {
+                        restore(id, false);
+                    }
+                });
                 return;
             }
             if (row.isEmpty()) return; // the tick starts one when the clock says so
@@ -173,8 +193,9 @@ public final class CampaignService {
             resolve("the week ended");
             return;
         }
-        if (active.state() == CampaignState.SUCCEEDED && !resolving) {
-            resolve("the goal was reached");
+        if (!active.isActive() && !resolving && System.currentTimeMillis() - lastResolveTry >= 10_000) {
+            // the goal was reached, or a resolution that could not finish (database, unsaved contributions) retries
+            resolve(active.state() == CampaignState.SUCCEEDED ? "the goal was reached" : "retry");
             return;
         }
         if (!active.isActive()) return;
@@ -182,23 +203,50 @@ public final class CampaignService {
         updateBar();
     }
 
+    private long lastVoteWait;
+    private long lastResolveTry;
+
     /** The clock says a campaign should run this week: the winner of last week's vote, else the rotation's pick. */
     private void startScheduled(String id) {
         starting = true;
         whenDone(khuraldai.winnerFor(id), (winner, err) -> {
-            CampaignDefinition def = winner.map(w -> Content.pack().campaign(w)).orElse(null);
-            if (def == null) {
-                List<CampaignDefinition> all = Content.pack().campaigns();
-                if (all.isEmpty()) {
+            if (err != null) { // unknown or still being closed, not "no vote": a later tick tries again
+                starting = false;
+                long now = System.currentTimeMillis();
+                if (now - lastVoteWait > 60_000) {
+                    lastVoteWait = now;
+                    plugin.getLogger().info("[campaign] waiting for the vote result of " + id + ": " + root(err));
+                }
+                return;
+            }
+            CampaignDefinition voted = winner.map(w -> Content.pack().campaign(w)).orElse(null);
+            if (voted != null) {
+                begin(voted, id, cycle.campaignStarts(id), cycle.campaignEnds(id), "clock");
+                return;
+            }
+            List<CampaignDefinition> all = Content.pack().campaigns();
+            if (all.isEmpty()) {
+                starting = false;
+                startedCycle = id;
+                return;
+            }
+            // the rotation honours the arc like the ballot does: a locked chapter never runs without its vote
+            whenDone(repository.succeededCampaigns(), (succeeded, err2) -> {
+                if (err2 != null) {
+                    starting = false;
+                    plugin.getLogger().log(Level.WARNING, "[campaign] arc state not read: " + root(err2));
+                    return;
+                }
+                List<CampaignDefinition> pick = CampaignRotation.pick(all, List.of(), List.of(), 2, id, succeeded);
+                if (pick.isEmpty()) {
                     starting = false;
                     startedCycle = id;
                     return;
                 }
-                List<CampaignDefinition> pick = CampaignRotation.pick(all, List.of(), List.of(), 2, id);
-                def = pick.get(0);
+                CampaignDefinition def = pick.get(0);
                 plugin.getLogger().info("[campaign] no vote for " + id + ": the rotation picks " + def.id());
-            }
-            begin(def, id, cycle.campaignStarts(id), cycle.campaignEnds(id), "clock");
+                begin(def, id, cycle.campaignStarts(id), cycle.campaignEnds(id), "clock");
+            });
         });
     }
 
@@ -325,6 +373,20 @@ public final class CampaignService {
 
     // ----------------------------------------------------------------- flush
 
+    /** The flush in progress (completed when none is); its callback runs on the main thread. */
+    private CompletableFuture<Void> flight = CompletableFuture.completedFuture(null);
+
+    /**
+     * Everything counted so far is in the database: waits for a flush already running, then writes what the buffer
+     * still holds. True only when nothing is left behind; resolving on less would pay tiers on a short total.
+     */
+    private CompletableFuture<Boolean> drain() {
+        CompletableFuture<Boolean> out = new CompletableFuture<>();
+        flight.whenComplete((v, e) -> Bukkit.getScheduler().runTask(plugin, () ->
+                flushDirty().whenComplete((v2, e2) -> Bukkit.getScheduler().runTask(plugin, () -> out.complete(buffer.isEmpty() && !flushing)))));
+        return out;
+    }
+
     private CompletableFuture<Void> flushDirty() {
         lastFlush = System.currentTimeMillis();
         if (buffer.isEmpty() || flushing || active == null) return CompletableFuture.completedFuture(null);
@@ -333,6 +395,7 @@ public final class CampaignService {
         buffer.clear();
         flushing = true;
         CompletableFuture<Void> done = new CompletableFuture<>();
+        flight = done;
         repository.addContributions(id, deltas).whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             flushing = false;
             if (err != null) {
@@ -369,9 +432,21 @@ public final class CampaignService {
         CampaignRun run = active;
         if (run == null || resolving) return;
         resolving = true;
+        lastResolveTry = System.currentTimeMillis();
         if (run.isActive()) run.expireIfDue(Instant.MAX); // an admin resolve: the clock did not end it
         CampaignState state = run.state();
-        flushDirty().thenRun(() -> whenDone(repository.contributions(run.cycleId()), (totals, err) -> {
+        drain().thenAccept(flushed -> {
+            if (!flushed) { // the last contributions are not stored yet: a later tick resolves again
+                resolving = false;
+                plugin.getLogger().warning("[campaign] " + run.cycleId() + " not resolved yet: contributions still unsaved");
+                return;
+            }
+            resolveStored(run, state, reason);
+        });
+    }
+
+    private void resolveStored(CampaignRun run, CampaignState state, String reason) {
+        whenDone(repository.contributions(run.cycleId()), (totals, err) -> {
             if (err != null) {
                 resolving = false;
                 plugin.getLogger().log(Level.WARNING, "[campaign] totals not read at resolution: " + root(err));
@@ -420,7 +495,7 @@ public final class CampaignService {
                         "campaign", run.definition().id(), "state", finalState.name(), "total", total, "participants", outcome.participants())));
                 finish(run);
             });
-        }));
+        });
     }
 
     private void finish(CampaignRun run) {
@@ -527,7 +602,10 @@ public final class CampaignService {
         starting = true;
         Instant now = Instant.now();
         Instant ends = cycle.campaignEnds(id);
-        if (!ends.isAfter(now)) ends = cycle.campaignEnds(cycle.nextCycleId(id)); // forced during the interlude: runs into next week's end
+        if (!ends.isAfter(now)) { // forced during the interlude: it is next week's campaign, filed under that week
+            id = cycle.nextCycleId(id);
+            ends = cycle.campaignEnds(id);
+        }
         begin(def, id, now, ends, actor);
         return true;
     }
