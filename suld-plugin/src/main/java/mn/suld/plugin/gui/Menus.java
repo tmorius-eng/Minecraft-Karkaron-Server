@@ -18,6 +18,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import mn.suld.api.clazz.PlayerClass;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -110,11 +111,7 @@ public final class Menus {
                 HubMenu.card("/shop", "Дэлгүүрийн цэс.", (pl, c) -> shop(pl)),
                 HubMenu.card("/quest", "Даалгаврын цэс.", (pl, c) -> quests(pl)),
                 HubMenu.card("/rankup", "Ранк ахих нөхцөл.", (pl, c) -> rankup(pl)),
-                HubMenu.card("/class", "Анги сонгох, харах.", (pl, c) -> {
-                    PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
-                    if (pr != null && pr.playerClass().isPresent()) profile(pl);
-                    else services.classSelectionGui().open(pl);
-                }),
+                HubMenu.card("/class", "Ангийн Академи: анги харах, солих.", (pl, c) -> academy(pl)),
                 HubMenu.card("/travel", "Аялал, бүсүүд рүү.", (pl, c) -> travel(pl)),
                 HubMenu.card("/skills", "Ур чадварын цэс.", (pl, c) -> skillsOrMap(pl)),
                 HubMenu.card("/help", "Бүх командын жагсаалт.", (pl, c) -> help(pl)));
@@ -217,6 +214,84 @@ public final class Menus {
     // ================================================================== profile / quests
 
     /** The Тоглогч page of the hub: the player's stats on the ninth tile, eight cards, the row under the title. */
+    // ------------------------------------------------------------------ class academy (docs/CLASS_CHANGE.md)
+
+    /** «Ангийн Академи»: the five classes, what each plays like, and what a change costs this player now. */
+    public void academy(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        PlayerClass current = pr.playerClass().orElse(null);
+        if (current == null) {
+            services.classSelectionGui().open(p);
+            return;
+        }
+        var cc = services.classChange;
+        List<HubMenu.Card> cards = new ArrayList<>();
+        int mask = 0;
+        PlayerClass[] all = PlayerClass.values();
+        for (int i = 0; i < all.length; i++) {
+            PlayerClass c = all[i];
+            boolean mine = c == current;
+            if (mine) mask |= 1 << i;
+            var saved = pr.classMasteries().of(c).orElse(null);
+            List<Component> lore = new ArrayList<>();
+            lore.add(Menu.line("Үүрэг: " + ClassSelectionGui.role(c)));
+            lore.add(Menu.line("Хүндрэл: " + "★".repeat(c.difficulty()) + "☆".repeat(Math.max(0, 5 - c.difficulty())) + " · Нөөц: " + c.resourceName()));
+            lore.add(Menu.line("Эхлэл ур: " + ClassSelectionGui.STARTER_SKILL.getOrDefault(c, "—")));
+            lore.add(Menu.line(ClassSelectionGui.lore(c)));
+            lore.add(Component.empty());
+            if (mine) {
+                lore.add(Menu.line("« Таны одоогийн анги »"));
+            } else {
+                lore.add(Menu.line(saved == null ? "Анх удаа: эхлэлийн зэвсэг, хуяг өгнө."
+                        : "Хадгалсан ахиц: хуяг " + saved.gear().armorLevel() + "-р түвшин, " + saved.gear().tier() + " · ур чадвар хадгалагдсан"));
+                var v = cc == null ? null : cc.verdict(p, c);
+                lore.add(Menu.line(v == null ? "" : v.allowed() ? price(v) : "✖ " + v.refusal().text
+                        + (v.refusal() == mn.suld.api.clazz.ClassChangeRules.Refusal.COOLDOWN ? " (" + mn.suld.api.clazz.ClassChangeRules.format(v.cooldownLeftMs()) + ")" : "")));
+                lore.add(Menu.line("« Дарж сонгоно »"));
+            }
+            cards.add(HubMenu.card(Menu.title(c.displayName(), mine ? HubMenu.GOLD : HubMenu.CYAN), lore,
+                    new ItemStack(ClassSelectionGui.ICONS.getOrDefault(c, Material.PAPER)), mine ? null : (pl, k) -> academyConfirm(pl, c)));
+        }
+        boolean grace = mn.suld.api.clazz.ClassChangeRules.grace(pr.progression().level(), pr.activeMinutes().total());
+        long left = mn.suld.api.clazz.ClassChangeRules.cooldownLeft(System.currentTimeMillis(), pr.lastClassChange());
+        String row = "Одоо: " + current.displayName() + " · " + (grace ? "шинэ тоглогч: солилт үнэгүй"
+                : left > 0 ? "дараагийн солилт " + mn.suld.api.clazz.ClassChangeRules.format(left) + "-ын дараа"
+                : "солилт " + mn.suld.api.clazz.ClassChangeRules.cost(pr.progression().level()) + " зоос")
+                + " · тамга: " + mn.suld.plugin.clazz.ClassSeal.count(p);
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, Menu.line(row), cards, null, this::profile, null, null, mask, "Ангийн Академи"), hubTabs());
+    }
+
+    private static String price(mn.suld.api.clazz.ClassChangeRules.Verdict v) {
+        return switch (v.payment()) {
+            case GRACE -> "Үнэгүй (шинэ тоглогч)";
+            case SEAL -> "1 Хувь Төөргийн Тамга";
+            case COINS -> v.price() + " зоос · дараа нь 6 цаг хүлээнэ";
+        };
+    }
+
+    /** The confirm page: one misclick must not change a class. */
+    void academyConfirm(Player p, PlayerClass to) {
+        var cc = services.classChange;
+        if (cc == null) return;
+        var v = cc.verdict(p, to);
+        List<HubMenu.Card> cards = new ArrayList<>();
+        if (v.allowed()) {
+            cards.add(HubMenu.card(Menu.title("✔ Батлах: " + to.displayName(), HubMenu.CYAN), List.of(Menu.line(price(v)),
+                    Menu.line("Одоогийн ангийн ур чадвар, хуяг хадгалагдана."), Menu.line("Амь нь хувиараа үлдэнэ, ид шид 10 с хүлээнэ.")), null, (pl, k) -> {
+                var done = cc.change(pl, to);
+                if (!done.allowed()) pl.sendMessage(Messages.error(done.refusal().text));
+                else academy(pl);
+            }));
+        } else {
+            cards.add(HubMenu.card(Menu.title("✖ Одоо болохгүй", HubMenu.GOLD), List.of(Menu.line(v.refusal().text
+                    + (v.refusal() == mn.suld.api.clazz.ClassChangeRules.Refusal.COOLDOWN ? " (" + mn.suld.api.clazz.ClassChangeRules.format(v.cooldownLeftMs()) + ")" : ""))), null, null));
+        }
+        cards.add(HubMenu.card("‹ Буцах", "Ангийн Академи руу.", (pl, k) -> academy(pl)));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, Menu.line(to.displayName() + " руу шилжих уу?"), cards, null, this::academy, null, null, 0,
+                "Анги солих"), hubTabs());
+    }
+
     public void profile(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;

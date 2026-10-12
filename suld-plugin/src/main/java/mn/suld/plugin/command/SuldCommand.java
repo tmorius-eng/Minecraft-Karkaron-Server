@@ -42,6 +42,8 @@ public final class SuldCommand implements CommandExecutor {
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
             case "coins" -> giveCoins(sender, args);
+            case "classreset" -> classReset(sender, args);
+            case "classseal" -> classSeal(sender, args);
             case "content" -> content(sender, args);
             case "endgame" -> endgame(sender, args);
             case "badge" -> badge(sender, args);
@@ -188,6 +190,47 @@ public final class SuldCommand implements CommandExecutor {
     }
 
     /** Admin/console: {@code /suld coins <player> <±amount>} — add or remove SÜLD coins (audited). */
+    /** Staff support: clear a player's class-change cooldown (docs/CLASS_CHANGE.md). */
+    private void classReset(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player target = args.length < 2 ? null : Bukkit.getPlayerExact(args[1]);
+        PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
+        if (profile == null) {
+            sender.sendMessage(Messages.info("/suld classreset <онлайн тоглогч>"));
+            return;
+        }
+        profile.clearClassChangeCooldown();
+        services.profiles().save(profile);
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(sender.getName(), "class.admin.reset", target.getUniqueId().toString(), "cooldown cleared"));
+        sender.sendMessage(Messages.success(target.getName() + ": анги солих хүлээлт арилсан."));
+    }
+
+    /** Give class change seals («Хувь Төөргийн Тамга»). */
+    private void classSeal(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player target = args.length < 2 ? null : Bukkit.getPlayerExact(args[1]);
+        int n;
+        try {
+            n = args.length < 3 ? 1 : Integer.parseInt(args[2]);
+        } catch (NumberFormatException e) {
+            n = 0;
+        }
+        if (target == null || n < 1 || n > 64) {
+            sender.sendMessage(Messages.info("/suld classseal <онлайн тоглогч> [1..64]"));
+            return;
+        }
+        target.getInventory().addItem(mn.suld.plugin.clazz.ClassSeal.create(n)).values()
+                .forEach(x -> target.getWorld().dropItemNaturally(target.getLocation(), x));
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(sender.getName(), "class.admin.seal", target.getUniqueId().toString(), "amount=" + n));
+        sender.sendMessage(Messages.success(target.getName() + ": " + n + " Хувь Төөргийн Тамга."));
+    }
+
     private void giveCoins(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
             sender.sendMessage(Messages.error("Эрх алга."));

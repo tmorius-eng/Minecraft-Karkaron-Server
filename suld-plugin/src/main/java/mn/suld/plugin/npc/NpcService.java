@@ -394,7 +394,7 @@ public final class NpcService implements Listener {
         }
         if (id.equals("class_selection")) {
             if (!pr.hasSelectedClass()) services.classSelectionGui().open(p);
-            else p.performCommand("class");
+            else menus.academy(p); // «Ангийн Академи»: look at every class, change here (docs/CLASS_CHANGE.md)
         } else if (id.equals("tutorial")) {
             menus.tutorial(p);
         } else if (id.equals("quest.first_hunt")) {

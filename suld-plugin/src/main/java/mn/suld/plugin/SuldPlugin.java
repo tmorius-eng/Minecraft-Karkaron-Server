@@ -287,6 +287,8 @@ public final class SuldPlugin extends JavaPlugin {
         services.skillTree = skillTree;
         getServer().getPluginManager().registerEvents(skillTree, this);
         skillTree.start();
+        services.classChange = new mn.suld.plugin.clazz.ClassChangeService(this, services, skills);
+        getServer().getPluginManager().registerEvents(services.classChange, this);
         mn.suld.plugin.skill.OrbOfOblivion.registerRecipe(this);
         mn.suld.plugin.gui.SkillMapMenu skillMap = new mn.suld.plugin.gui.SkillMapMenu(this, services);
         skillMap.menus(menus);

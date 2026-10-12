@@ -48,7 +48,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/menu", "Үндсэн цэс (мөн 9-р нүдний цаг)", null),
             e(Group.GAME, "/help [хуудас]", "Тоглоомын гарын авлага", null),
             e(Group.GAME, "/tutorial", "Алхам алхмаар заавар", null),
-            e(Group.GAME, "/class", "Анги сонгох / харах", null),
+            e(Group.GAME, "/class", "Ангийн Академи: анги сонгох, харах, солих (Хархорумд)", null),
             e(Group.GAME, "/classgear", "Ангийн хуяг: түвшин, зэрэг, дараагийн зэргийн шаардлага", "suld.classgear"),
             e(Group.GAME, "/classgear upgrade|enhance", "Хуягийн зэрэг ахиулах / сайжруулах", "suld.classgear"),
             e(Group.GAME, "/classgear recover", "Алдсан ангийн зэвсэг, хуягаа сэргээх (10 мин тутам)", "suld.classgear"),

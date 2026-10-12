@@ -379,7 +379,7 @@ public final class MenuSky implements Listener {
 
         // header
         text(s, 0, 2.78, Component.text("SÜLD", GOLD, TextDecoration.BOLD).append(Component.text("  ◆  ", CYAN))
-                .append(Component.text(pageTitle(spec.page()).toUpperCase(), GOLD, TextDecoration.BOLD)), 1.25f, 400);
+                .append(Component.text((spec.title() != null ? spec.title() : pageTitle(spec.page())).toUpperCase(), GOLD, TextDecoration.BOLD)), 1.25f, 400);
         if (spec.dynamic() != null) text(s, 0, 2.42, spec.dynamic().colorIfAbsent(GREY), 0.7f, 400);
 
         // tabs

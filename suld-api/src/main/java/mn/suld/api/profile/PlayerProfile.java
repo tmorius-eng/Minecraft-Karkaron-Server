@@ -46,6 +46,8 @@ public final class PlayerProfile {
     private mn.suld.api.classgear.ClassGear classGear;
     private mn.suld.api.activity.ActiveMinutes activeMinutes;
     private Endgame endgame;
+    private mn.suld.api.clazz.ClassMasteries classMasteries = mn.suld.api.clazz.ClassMasteries.NONE;
+    private long lastClassChange;
 
     private PlayerProfile(UUID playerId, String name, PlayerClass playerClass,
                           Progression progression, Instant createdAt, Instant lastSeenAt,
@@ -97,6 +99,21 @@ public final class PlayerProfile {
                                         mn.suld.api.activity.@Nullable ActiveMinutes activeMinutes) {
         return restore(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState,
                 equipment, classGear, activeMinutes, null);
+    }
+
+    /** With the other classes' saved progress and the last class change (V22). */
+    public static PlayerProfile restore(UUID playerId, String name, @Nullable PlayerClass playerClass,
+                                        Progression progression, Instant createdAt, Instant lastSeenAt,
+                                        long version, long currency, QuestState questState,
+                                        @Nullable SkillState skillState, @Nullable EquipmentState equipment,
+                                        mn.suld.api.classgear.@Nullable ClassGear classGear,
+                                        mn.suld.api.activity.@Nullable ActiveMinutes activeMinutes, @Nullable Endgame endgame,
+                                        mn.suld.api.clazz.@Nullable ClassMasteries classMasteries, long lastClassChange) {
+        PlayerProfile p = restore(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState,
+                skillState, equipment, classGear, activeMinutes, endgame);
+        p.classMasteries = classMasteries == null ? mn.suld.api.clazz.ClassMasteries.NONE : classMasteries;
+        p.lastClassChange = Math.max(0, lastClassChange);
+        return p;
     }
 
     /** @param endgame null = a row from before progression v2 ({@link Endgame#LEGACY}) */
@@ -273,11 +290,53 @@ public final class PlayerProfile {
     public record Snapshot(UUID playerId, String name, PlayerClass playerClass, Progression progression, Instant createdAt,
                            Instant lastSeenAt, long version, long currency, QuestState questState, SkillState skillState,
                            EquipmentState equipment, mn.suld.api.classgear.ClassGear classGear,
-                           mn.suld.api.activity.ActiveMinutes activeMinutes, Endgame endgame) {
+                           mn.suld.api.activity.ActiveMinutes activeMinutes, Endgame endgame,
+                           mn.suld.api.clazz.ClassMasteries classMasteries, long lastClassChange) {
     }
 
     public synchronized Snapshot snapshot() {
-        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState, equipment, classGear, activeMinutes, endgame);
+        return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState, equipment, classGear, activeMinutes, endgame,
+                classMasteries, lastClassChange);
+    }
+
+    /** The other classes' saved progress (the class being played keeps its own in {@link #skillState()} / {@link #classGear()}). */
+    public synchronized mn.suld.api.clazz.ClassMasteries classMasteries() {
+        return classMasteries;
+    }
+
+    /** Epoch millis of the last class change (0 = never). */
+    public synchronized long lastClassChange() {
+        return lastClassChange;
+    }
+
+    /** Staff support: the class-change cooldown cleared. */
+    public synchronized void clearClassChangeCooldown() {
+        if (lastClassChange != 0) {
+            lastClassChange = 0;
+            touchInternal();
+        }
+    }
+
+    /**
+     * Change class (docs/CLASS_CHANGE.md; the plugin checked {@link mn.suld.api.clazz.ClassChangeRules} first). The
+     * current class's skill tree and class gear are stored under it; {@code to}'s own progress comes back (or a fresh
+     * start the first time). The character's level, EXP, coins, story, equipment and endgame stay as they are.
+     *
+     * @return false when there is no current class or {@code to} is it
+     */
+    public synchronized boolean switchClass(PlayerClass to, long now) {
+        Objects.requireNonNull(to, "to");
+        if (playerClass == null || playerClass == to) return false;
+        mn.suld.api.clazz.ClassMasteries m = classMasteries.with(playerClass,
+                new mn.suld.api.clazz.ClassMasteries.Saved(skillState, classGear, now));
+        mn.suld.api.clazz.ClassMasteries.Saved back = m.of(to).orElse(null);
+        this.skillState = back == null ? SkillState.NONE : back.skills();
+        this.classGear = back == null ? mn.suld.api.classgear.ClassGear.NONE : back.gear();
+        this.classMasteries = m.without(to);
+        this.playerClass = to;
+        this.lastClassChange = now;
+        touchInternal();
+        return true;
     }
 
     /**

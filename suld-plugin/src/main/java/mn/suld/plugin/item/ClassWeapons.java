@@ -141,6 +141,16 @@ public final class ClassWeapons implements Listener {
     }
 
     /** The identity of a player's class weapon, kept on the player (survives in the world's player data). */
+    /**
+     * After a class change: the player's remembered weapon is the NEW class's ({@code ClassGear.weapon}, or none the
+     * first time), never the old class's, so a rebuilt weapon never takes another class's identity.
+     */
+    public void syncRemembered(Player p) {
+        java.util.UUID id = services.profiles().cached(p.getUniqueId()).map(pr -> pr.classGear().weapon()).orElse(null);
+        if (id == null) p.getPersistentDataContainer().remove(weaponKey());
+        else p.getPersistentDataContainer().set(weaponKey(), org.bukkit.persistence.PersistentDataType.STRING, id.toString());
+    }
+
     private org.bukkit.NamespacedKey weaponKey() {
         return new org.bukkit.NamespacedKey(plugin, "class_weapon");
     }

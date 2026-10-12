@@ -29,7 +29,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     private static final String SELECT =
             "SELECT name, class_id, level, exp_into_level, created_at, last_seen_at, version, "
-                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes, endgame "
+                    + "currency, active_quest_id, quest_progress, quest_completed, skill_data, equipment_data, class_gear, active_minutes, endgame, class_mastery, last_class_change "
                     + "FROM suld_profiles WHERE player_uuid = ?";
 
     private final DataSource dataSource;
@@ -75,7 +75,9 @@ public final class JdbcProfileRepository implements ProfileRepository {
                             readEquipment(playerId, rs.getString("equipment_data")),
                             readClassGear(playerId, rs.getString("class_gear")),
                             readActive(playerId, rs.getString("active_minutes")),
-                            readEndgame(playerId, rs.getString("endgame")));
+                            readEndgame(playerId, rs.getString("endgame")),
+                            readMasteries(playerId, rs.getString("class_mastery")),
+                            rs.getLong("last_class_change"));
                     return Optional.of(profile);
                 }
             } catch (SQLException ex) {
@@ -108,6 +110,15 @@ public final class JdbcProfileRepository implements ProfileRepository {
             return mn.suld.api.classgear.ClassGear.fromJson(json);
         } catch (IllegalArgumentException ex) {
             throw new RepositoryException("Class gear of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
+        }
+    }
+
+    /** Unreadable class mastery must stop the load: saving afterwards would erase the other classes' progress. */
+    private static mn.suld.api.clazz.ClassMasteries readMasteries(UUID playerId, String json) {
+        try {
+            return mn.suld.api.clazz.ClassMasteries.fromJson(json);
+        } catch (IllegalArgumentException ex) {
+            throw new RepositoryException("Class mastery of profile " + playerId + " cannot be read: " + ex.getMessage(), ex);
         }
     }
 
@@ -247,6 +258,8 @@ public final class JdbcProfileRepository implements ProfileRepository {
             ps.setString(15, snap.classGear().isEmpty() ? null : snap.classGear().toJson());
             ps.setString(16, snap.activeMinutes().isEmpty() ? null : snap.activeMinutes().toJson());
             ps.setString(17, snap.endgame().toJson());
+            ps.setString(18, snap.classMasteries().toJson());
+            ps.setLong(19, snap.lastClassChange());
             int rows = ps.executeUpdate();
             if (rows == 0 && dialect == SqlDialect.POSTGRESQL) throw stale(snap);
         }

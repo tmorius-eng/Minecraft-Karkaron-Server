@@ -42,10 +42,15 @@ public final class HubMenu {
      * @param cardMask  bit i set = a glow frame over card i (owned rank, chosen setting)
      */
     public record Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
-                       Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask) {
+                       Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask, String title) {
         public Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
                     Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next) {
-            this(page, activeTab, dynamic, cards, ornament, back, prev, next, 0);
+            this(page, activeTab, dynamic, cards, ornament, back, prev, next, 0, null);
+        }
+
+        public Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
+                    Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask) {
+            this(page, activeTab, dynamic, cards, ornament, back, prev, next, cardMask, null);
         }
     }
 

@@ -114,8 +114,8 @@ public final class ProgressCommands {
                 }
                 return true;
             }
-            if (menus != null && s instanceof Player p && a.length == 0) {
-                menus.profile(p);        // the class is on the Тоглогч page; the text stays for the console and lookups
+            if (menus != null && s instanceof Player p && (a.length == 0 || a[0].equalsIgnoreCase("change") || a[0].equalsIgnoreCase("солих"))) {
+                menus.academy(p);        // «Ангийн Академи» (docs/CLASS_CHANGE.md); the text stays for the console and lookups
                 return true;
             }
             s.sendMessage(header("Анги · " + pc.displayName()));
@@ -123,7 +123,7 @@ public final class ProgressCommands {
             s.sendMessage(row("Нөөц", pc.resourceName() + " (" + pc.resourceMax() + ")", NamedTextColor.AQUA));
             s.sendMessage(row("Хүндрэл", "★".repeat(pc.difficulty()) + "☆".repeat(Math.max(0, 5 - pc.difficulty())), NamedTextColor.YELLOW));
             s.sendMessage(row("Суурь", "HP " + (int) pc.baseHealth() + " · ATK " + pc.baseAttack(), NamedTextColor.WHITE));
-            s.sendMessage(Component.text("Анги нэг удаа сонгогдоно — hardcore сервер.", NamedTextColor.GRAY, TextDecoration.BOLD));
+            s.sendMessage(Component.text("Анги солих: Хархорумд /class (Ангийн Бөө).", NamedTextColor.GRAY, TextDecoration.BOLD));
             return true;
         }
     };

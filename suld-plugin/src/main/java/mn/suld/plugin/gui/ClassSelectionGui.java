@@ -43,13 +43,13 @@ public final class ClassSelectionGui implements Listener {
     private static final int[] SLOTS = {10, 11, 12, 13, 14};
     /** Confirm page (ONB-006): the choice is permanent, so one misclick must not decide it. */
     private static final int CONFIRM = 11, CHOSEN = 13, BACK = 15;
-    private static final Map<PlayerClass, Material> ICONS = Map.of(
+    static final Map<PlayerClass, Material> ICONS = Map.of(
             PlayerClass.BAATAR, Material.IRON_SWORD,
             PlayerClass.MERGEN, Material.BOW,
             PlayerClass.BOO, Material.BLAZE_ROD,
             PlayerClass.DARKHAN, Material.NETHERITE_INGOT,
             PlayerClass.KHULEGCHIN, Material.SADDLE);
-    private static final Map<PlayerClass, String> STARTER_SKILL = Map.of(
+    static final Map<PlayerClass, String> STARTER_SKILL = Map.of(
             PlayerClass.BAATAR, "Тэнгэрийн Цавчилт",
             PlayerClass.MERGEN, "Чонын Нүд",
             PlayerClass.BOO, "Сүнсний Залбирал",
@@ -118,7 +118,7 @@ public final class ClassSelectionGui implements Listener {
         return stack;
     }
 
-    private ItemStack icon(PlayerClass clazz) {
+    ItemStack icon(PlayerClass clazz) {
         ItemStack stack = new ItemStack(ICONS.getOrDefault(clazz, Material.PAPER));
         ItemMeta meta = stack.getItemMeta();
         meta.displayName(Component.text(clazz.displayName(), Messages.BRAND, TextDecoration.BOLD)
@@ -237,7 +237,7 @@ public final class ClassSelectionGui implements Listener {
         return Component.text(text, color).decoration(TextDecoration.ITALIC, false);
     }
 
-    private static String role(PlayerClass clazz) {
+    static String role(PlayerClass clazz) {
         return switch (clazz) {
             case BAATAR -> "Хамгаалагч / Берсеркер";
             case MERGEN -> "Харваач / Алуурчин";
@@ -247,7 +247,7 @@ public final class ClassSelectionGui implements Listener {
         };
     }
 
-    private static String lore(PlayerClass clazz) {
+    static String lore(PlayerClass clazz) {
         return switch (clazz) {
             case BAATAR -> "\"Тэнгэрийн дор ганц ч алхам ухрахгүй.\"";
             case MERGEN -> "\"Нэг сум — нэг амь.\"";

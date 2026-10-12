@@ -52,7 +52,8 @@ public final class SchemaMigrator {
             new Migration(18, "campaigns", "V18__campaigns.sql"),
             new Migration(19, "chronicle", "V19__chronicle.sql"),
             new Migration(20, "indexes", "V20__indexes.sql"),
-            new Migration(21, "settings", "V21__settings.sql")
+            new Migration(21, "settings", "V21__settings.sql"),
+            new Migration(22, "class_mastery", "V22__class_mastery.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */

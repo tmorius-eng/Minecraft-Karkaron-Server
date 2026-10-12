@@ -137,6 +137,26 @@ public final class SkillService implements Listener {
         pools.put(p.getUniqueId(), next);
     }
 
+    /**
+     * A class change (docs/CLASS_CHANGE.md): the new class starts with an empty resource pool (Уур does not become
+     * Төвлөрөл), no half-typed combo, and every spell on a {@code lockMs} cooldown, so a spell cast just before the
+     * change is not followed by another one at once.
+     */
+    public void afterClassChange(Player p, long lockMs) {
+        UUID id = p.getUniqueId();
+        combos.remove(id);
+        lastCast.remove(id);
+        castAttack.remove(id);
+        CombatListener.EMPOWERED_ARROWS.remove(id);
+        CombatListener.EMPOWERED_UNTIL.remove(id);
+        ResourcePool empty = new ResourcePool(poolSize(p));
+        empty.spend(empty.max());
+        pools.put(id, empty);
+        long until = System.currentTimeMillis() + lockMs;
+        Map<Spell, Long> ready = spellReady.computeIfAbsent(id, k -> new java.util.EnumMap<>(Spell.class));
+        for (Spell s : Spell.values()) ready.merge(s, until, Math::max);
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
