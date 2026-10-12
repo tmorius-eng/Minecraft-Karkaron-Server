@@ -123,7 +123,10 @@ public final class ItemCommands {
                         else confirmable(p, "salvage", a, () -> salvage(p));
                     }
                     case "filter" -> filterCommand(p, a);
-                    case "recipes" -> recipes(p);
+                    case "recipes" -> {
+                        if (a.length > 1 && a[1].equalsIgnoreCase("list")) recipes(p);
+                        else new mn.suld.plugin.gui.CraftMenu(org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ItemCommands.class), services).open(p);
+                    }
                     case "craft" -> {
                         if (a.length < 2) p.sendMessage(Messages.error("Хэрэглээ: /item craft <жор> (/item recipes)"));
                         else craft(p, a[1]);
@@ -421,67 +424,17 @@ public final class ItemCommands {
             ItemDefinition def = catalog().require(r.resultId());
             boolean ok = level >= r.levelReq();
             p.sendMessage(Component.text("  " + r.id() + " → " + def.displayName() + " (" + r.minRarity().displayName() + ".." + r.maxRarity().displayName()
-                    + ") · түвшин " + r.levelReq() + " · " + r.coins() + " зоос · " + describe(r.materials()), ok ? NamedTextColor.WHITE : NamedTextColor.GRAY));
+                    + ") · түвшин " + r.levelReq() + "–" + r.levelCap() + " · " + r.coins() + " зоос · " + describe(r.materials()), ok ? NamedTextColor.WHITE : NamedTextColor.GRAY));
         }
-    }
-
-    private int count(Player p, String defId) {
-        int n = 0;
-        for (ItemStack s : p.getInventory().getStorageContents()) {
-            ItemInstance i = s == null ? null : items().factory().read(s).orElse(null);
-            if (i != null && i.definitionId().equals(defId)) n += s.getAmount();
-        }
-        return n;
-    }
-
-    private void take(Player p, String defId, int amount) {
-        ItemStack[] inv = p.getInventory().getStorageContents();
-        for (int k = 0; k < inv.length && amount > 0; k++) {
-            ItemInstance i = inv[k] == null ? null : items().factory().read(inv[k]).orElse(null);
-            if (i == null || !i.definitionId().equals(defId)) continue;
-            int use = Math.min(amount, inv[k].getAmount());
-            amount -= use;
-            if (use == inv[k].getAmount()) inv[k] = null;
-            else inv[k].setAmount(inv[k].getAmount() - use);
-        }
-        p.getInventory().setStorageContents(inv);
     }
 
     private void craft(Player p, String recipeId) {
         Recipe r = catalog().recipe(recipeId).orElse(null);
-        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-        if (r == null || pr == null) {
+        if (r == null) {
             p.sendMessage(Messages.error("Жор олдсонгүй: " + recipeId + " (/item recipes)"));
             return;
         }
-        int level = pr.progression().level();
-        if (level < r.levelReq()) {
-            p.sendMessage(Messages.error("Түвшин " + r.levelReq() + " хэрэгтэй."));
-            return;
-        }
-        if (pr.currency() < r.coins()) {
-            p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + r.coins() + " зоос)."));
-            return;
-        }
-        for (Map.Entry<String, Integer> m : r.materials().entrySet()) {
-            if (count(p, m.getKey()) < m.getValue()) {
-                p.sendMessage(Messages.error("Материал дутуу: " + describe(Map.of(m.getKey(), m.getValue()))));
-                return;
-            }
-        }
-        if (p.getInventory().firstEmpty() < 0) {
-            p.sendMessage(Messages.error("Цүнх дүүрэн байна."));
-            return;
-        }
-        r.materials().forEach((id, n) -> take(p, id, n));
-        pr.addCurrency(-r.coins());
-        ItemDefinition def = catalog().require(r.resultId());
-        ItemRarity rarity = catalog().band(LootTier.CRAFT).pick(mn.suld.api.loot.Rng.threadLocal(), r.minRarity(), r.maxRarity());
-        ItemInstance made = items().generate(def, rarity, level, p.getUniqueId(), "craft:" + r.id());
-        items().give(p, List.of(new LootDrop(made, 1)), "craft");
-        services.profiles().save(pr);
-        services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.craft", def.id() + "-" + made.uuid(), r.id()));
-        p.sendMessage(Messages.success("Урлалаа: " + ItemTooltip.name(catalog(), def, made) + " (" + rarity.displayName() + ")"));
+        services.crafting().craft(p, r);
     }
 
     // ------------------------------------------------------------------ /items, /equipment, /loot

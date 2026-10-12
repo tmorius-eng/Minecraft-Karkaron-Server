@@ -1,6 +1,34 @@
 {
  "recipes": [
   {
+   "id": "recipe.esgii_boots",
+   "result": "armor.esgii.boots",
+   "materials": {
+    "item.chonon_arisan": 2,
+    "item.tumriin_kheltarkhii": 2
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.esgii_chestplate",
+   "result": "armor.esgii.chestplate",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
    "id": "recipe.esgii_dugaj",
    "result": "armor.esgii.helmet",
    "materials": {
@@ -14,6 +42,160 @@
    ]
   },
   {
+   "id": "recipe.esgii_leggings",
+   "result": "armor.esgii.leggings",
+   "materials": {
+    "item.chonon_arisan": 3,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.modon_bambai",
+   "result": "offhand.modon_bambai",
+   "materials": {
+    "item.chonon_arisan": 3,
+    "item.tumriin_kheltarkhii": 2
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.zevsegt_ild",
+   "result": "weapon.zevsegt_ild",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.modon_sukh",
+   "result": "weapon.modon_sukh",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 20,
+   "level": 3,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.mungun_bugj",
+   "result": "jewel.mungun_bugj",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 35,
+   "level": 5,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.boogiin_taiag",
+   "result": "weapon.boogiin_taiag",
+   "materials": {
+    "item.khilentsiin_khor": 3,
+    "item.chonon_arisan": 2
+   },
+   "coins": 40,
+   "level": 6,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.govi_khutga",
+   "result": "weapon.govi_khutga",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 40,
+   "level": 6,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.evertei_num",
+   "result": "weapon.evertei_num",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 60,
+   "level": 8,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.morin_jad",
+   "result": "weapon.morin_jad",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 70,
+   "level": 9,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.boogiin_sudar",
+   "result": "offhand.boogiin_sudar",
+   "materials": {
+    "item.khilentsiin_khor": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 65,
+   "level": 10,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.ginjin_boots",
+   "result": "armor.ginjin.boots",
+   "materials": {
+    "item.tumriin_kheltarkhii": 5,
+    "item.chonon_arisan": 2
+   },
+   "coins": 50,
+   "level": 10,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
    "id": "recipe.ginjin_deel",
    "result": "armor.ginjin.chestplate",
    "materials": {
@@ -21,7 +203,156 @@
     "item.chonon_arisan": 4
    },
    "coins": 80,
-   "level": 10
+   "level": 10,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.ginjin_helmet",
+   "result": "armor.ginjin.helmet",
+   "materials": {
+    "item.tumriin_kheltarkhii": 6,
+    "item.chonon_arisan": 3
+   },
+   "coins": 55,
+   "level": 10,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.ginjin_leggings",
+   "result": "armor.ginjin.leggings",
+   "materials": {
+    "item.tumriin_kheltarkhii": 7,
+    "item.chonon_arisan": 3
+   },
+   "coins": 70,
+   "level": 10,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.khangai_sukh",
+   "result": "weapon.khangai_sukh",
+   "materials": {
+    "item.tumriin_kheltarkhii": 8,
+    "item.chonon_arisan": 4
+   },
+   "coins": 90,
+   "level": 11,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.tumur_ild",
+   "result": "weapon.tumur_ild",
+   "materials": {
+    "item.tumriin_kheltarkhii": 8,
+    "item.chonon_arisan": 4
+   },
+   "coins": 100,
+   "level": 12,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.chonyn_soyo",
+   "result": "jewel.chonyn_soyo",
+   "materials": {
+    "item.chonon_arisan": 4,
+    "item.altan_toos": 1
+   },
+   "coins": 140,
+   "level": 15,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.gan_bambai",
+   "result": "offhand.gan_bambai",
+   "materials": {
+    "item.baavgain_arisan": 3,
+    "item.mosun_chuluu": 2,
+    "item.tumriin_kheltarkhii": 6
+   },
+   "coins": 165,
+   "level": 20,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.gan_boots",
+   "result": "armor.gan.boots",
+   "materials": {
+    "item.baavgain_arisan": 2,
+    "item.mosun_chuluu": 1,
+    "item.tumriin_kheltarkhii": 5
+   },
+   "coins": 125,
+   "level": 20,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.gan_chestplate",
+   "result": "armor.gan.chestplate",
+   "materials": {
+    "item.baavgain_arisan": 4,
+    "item.mosun_chuluu": 2,
+    "item.tumriin_kheltarkhii": 8
+   },
+   "coins": 205,
+   "level": 20,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.gan_helmet",
+   "result": "armor.gan.helmet",
+   "materials": {
+    "item.baavgain_arisan": 3,
+    "item.mosun_chuluu": 1,
+    "item.tumriin_kheltarkhii": 6
+   },
+   "coins": 145,
+   "level": 20,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.gan_leggings",
+   "result": "armor.gan.leggings",
+   "materials": {
+    "item.baavgain_arisan": 3,
+    "item.mosun_chuluu": 2,
+    "item.tumriin_kheltarkhii": 7
+   },
+   "coins": 175,
+   "level": 20,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
   },
   {
    "id": "recipe.khash_bugj",
@@ -38,6 +369,36 @@
    ]
   },
   {
+   "id": "recipe.khurdan_num",
+   "result": "weapon.khurdan_num",
+   "materials": {
+    "item.baavgain_arisan": 4,
+    "item.mosun_chuluu": 2,
+    "item.tumriin_kheltarkhii": 8
+   },
+   "coins": 235,
+   "level": 22,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.ongon",
+   "result": "offhand.ongon",
+   "materials": {
+    "item.baavgain_arisan": 3,
+    "item.mosun_chuluu": 2,
+    "item.tumriin_kheltarkhii": 6
+   },
+   "coins": 230,
+   "level": 25,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
    "id": "recipe.tengeriin_taiag",
    "result": "weapon.tengeriin_taiag",
    "materials": {
@@ -50,6 +411,222 @@
     "rare",
     "epic"
    ]
+  },
+  {
+   "id": "recipe.altan_sukh",
+   "result": "weapon.altan_sukh",
+   "materials": {
+    "item.baavgain_arisan": 4,
+    "item.mosun_chuluu": 2,
+    "item.tumriin_kheltarkhii": 8
+   },
+   "coins": 335,
+   "level": 28,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.khaany_ild",
+   "result": "weapon.khaany_ild",
+   "materials": {
+    "item.mosun_chuluu": 5,
+    "item.altan_toos": 3,
+    "item.tumriin_kheltarkhii": 10
+   },
+   "coins": 370,
+   "level": 30,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.tengeriin_num",
+   "result": "weapon.tengeriin_num",
+   "materials": {
+    "item.mosun_chuluu": 5,
+    "item.altan_toos": 3,
+    "item.tumriin_kheltarkhii": 10
+   },
+   "coins": 370,
+   "level": 30,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.ezen_jad",
+   "result": "weapon.ezen_jad",
+   "materials": {
+    "item.mosun_chuluu": 5,
+    "item.altan_toos": 3,
+    "item.tumriin_kheltarkhii": 10
+   },
+   "coins": 410,
+   "level": 32,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.altan_bugj",
+   "result": "jewel.altan_bugj",
+   "materials": {
+    "item.altan_toos": 6,
+    "item.mosun_chuluu": 3
+   },
+   "coins": 465,
+   "level": 35,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.tengeriin_boots",
+   "result": "armor.tengeriin.boots",
+   "materials": {
+    "item.mosun_chuluu": 3,
+    "item.altan_toos": 2,
+    "item.tumriin_kheltarkhii": 6
+   },
+   "coins": 280,
+   "level": 35,
+   "rarity": [
+    "rare",
+    "epic"
+   ],
+   "maxLevel": 49
+  },
+  {
+   "id": "recipe.tengeriin_chestplate",
+   "result": "armor.tengeriin.chestplate",
+   "materials": {
+    "item.mosun_chuluu": 5,
+    "item.altan_toos": 3,
+    "item.tumriin_kheltarkhii": 10
+   },
+   "coins": 465,
+   "level": 35,
+   "rarity": [
+    "rare",
+    "epic"
+   ],
+   "maxLevel": 49
+  },
+  {
+   "id": "recipe.tengeriin_helmet",
+   "result": "armor.tengeriin.helmet",
+   "materials": {
+    "item.mosun_chuluu": 4,
+    "item.altan_toos": 2,
+    "item.tumriin_kheltarkhii": 7
+   },
+   "coins": 325,
+   "level": 35,
+   "rarity": [
+    "rare",
+    "epic"
+   ],
+   "maxLevel": 49
+  },
+  {
+   "id": "recipe.tengeriin_leggings",
+   "result": "armor.tengeriin.leggings",
+   "materials": {
+    "item.mosun_chuluu": 4,
+    "item.altan_toos": 3,
+    "item.tumriin_kheltarkhii": 8
+   },
+   "coins": 395,
+   "level": 35,
+   "rarity": [
+    "rare",
+    "epic"
+   ],
+   "maxLevel": 49
+  },
+  {
+   "id": "recipe.tengeriin_sakhius",
+   "result": "jewel.tengeriin_sakhius",
+   "materials": {
+    "item.altan_toos": 6,
+    "item.mosun_chuluu": 3
+   },
+   "coins": 565,
+   "level": 40,
+   "rarity": [
+    "epic",
+    "legendary"
+   ]
+  },
+  {
+   "id": "recipe.khaany_boots",
+   "result": "armor.khaany.boots",
+   "materials": {
+    "item.altan_toos": 4,
+    "item.tengeriin_chuluu": 1,
+    "item.tumriin_kheltarkhii": 7
+   },
+   "coins": 475,
+   "level": 50,
+   "rarity": [
+    "epic",
+    "legendary"
+   ],
+   "maxLevel": 60
+  },
+  {
+   "id": "recipe.khaany_chestplate",
+   "result": "armor.khaany.chestplate",
+   "materials": {
+    "item.altan_toos": 6,
+    "item.tengeriin_chuluu": 1,
+    "item.tumriin_kheltarkhii": 12
+   },
+   "coins": 790,
+   "level": 50,
+   "rarity": [
+    "epic",
+    "legendary"
+   ],
+   "maxLevel": 60
+  },
+  {
+   "id": "recipe.khaany_helmet",
+   "result": "armor.khaany.helmet",
+   "materials": {
+    "item.altan_toos": 4,
+    "item.tengeriin_chuluu": 1,
+    "item.tumriin_kheltarkhii": 8
+   },
+   "coins": 550,
+   "level": 50,
+   "rarity": [
+    "epic",
+    "legendary"
+   ],
+   "maxLevel": 60
+  },
+  {
+   "id": "recipe.khaany_leggings",
+   "result": "armor.khaany.leggings",
+   "materials": {
+    "item.altan_toos": 5,
+    "item.tengeriin_chuluu": 1,
+    "item.tumriin_kheltarkhii": 10
+   },
+   "coins": 670,
+   "level": 50,
+   "rarity": [
+    "epic",
+    "legendary"
+   ],
+   "maxLevel": 60
   }
  ]
 }

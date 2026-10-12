@@ -440,6 +440,15 @@ public final class SuldServices {
     /** World bosses (docs/WORLD_BOSSES.md); set once the historic sites are placed. */
     public volatile mn.suld.plugin.worldboss.WorldBossService worldBosses;
 
+    private volatile mn.suld.plugin.item.CraftService crafting;
+
+    /** The Дархан's recipes, shared by /item craft and the smith's window (docs/CRAFTING.md). */
+    public mn.suld.plugin.item.CraftService crafting() {
+        mn.suld.plugin.item.CraftService c = crafting;
+        if (c == null) crafting = c = new mn.suld.plugin.item.CraftService(this);
+        return c;
+    }
+
     public mn.suld.plugin.item.ItemService itemService() {
         return itemService;
     }

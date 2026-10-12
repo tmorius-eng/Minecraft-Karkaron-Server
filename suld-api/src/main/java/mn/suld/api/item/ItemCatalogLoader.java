@@ -633,7 +633,11 @@ public final class ItemCatalogLoader {
             if (def != null && lo != null && hi != null && (!def.canRoll(lo) || !def.canRoll(hi) || hi.ordinal() < lo.ordinal())) {
                 issues.add(new Issue(file, at + ".rarity", def.id() + " can only be " + def.rarity().id() + ".." + def.maxRarity().id()));
             }
-            if (issues.size() == before && id != null && def != null) out.add(new Recipe(id, result, mats, coins, Math.max(level, def.levelReq()), lo, hi));
+            int req = def == null ? level : Math.max(level, def.levelReq());
+            int cap = SkillTreeLoader.intIn(file, at, m, "maxLevel", 1, ItemDefinition.MAX_LEVEL, false,
+                    Math.min(ItemDefinition.MAX_LEVEL, req + Recipe.DEFAULT_BAND), issues);
+            if (cap < req) issues.add(new Issue(file, at + ".maxLevel", cap + " is below the recipe's level " + req));
+            if (issues.size() == before && id != null && def != null) out.add(new Recipe(id, result, mats, coins, req, lo, hi, cap));
         }
         return out;
     }

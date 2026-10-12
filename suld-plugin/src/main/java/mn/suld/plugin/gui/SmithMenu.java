@@ -125,6 +125,9 @@ public final class SmithMenu {
                     g.mastery() >= perk.rank() ? NamedTextColor.GREEN : NamedTextColor.GRAY));
         }
         m.set(31, Menu.item(Material.ENCHANTED_BOOK, Menu.title("Хуягийн ур чадвар", NamedTextColor.LIGHT_PURPLE), perks), null);
+        m.set(36, Menu.item(Material.SMITHING_TABLE, Menu.title("Жорын ном — урлах", NamedTextColor.GOLD), List.of(
+                Menu.line("Хуяг, зэвсэг, бөгж, зүүлт: " + services.itemService().catalog().recipes().size() + " жор"))),
+                (pl, ct) -> new CraftMenu(plugin, services).open(pl));
         m.set(40, Menu.item(Material.OAK_DOOR, Menu.title("Хаах", NamedTextColor.GRAY), List.of()), (pl, ct) -> pl.closeInventory());
         m.open(p);
     }

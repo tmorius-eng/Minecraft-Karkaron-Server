@@ -42,6 +42,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | World events | 1 (Чонын Довтолгоо); campaigns can unlock more into the rotation | `content/events.json` |
 | Хуралдай campaigns | 7 (4 open + the 3 chapters of «Эхний аян») | `content/campaigns.json` |
 | World bosses | 2 (Хөвсгөлийн Их Баавгай L20, Алтайн Их Аварга L50) | `content/events.json` `worldBosses` |
+| Recipes | 43 (levels 1–60) | `items/recipes.json` |
 | Relics | 2 | `content/events.json` |
 | Classes / spells / ultimates | 5 / 25 / 15 | `PlayerClass`, `Spell`, `Ultimate` |
 | Skill-tree nodes | 111 per class + 5 universal | `skills/*.json` |
@@ -97,6 +98,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Их Хуралдай (weekly vote, V18) | ✅ | ✅ `khuraldai-smoke.js` 22/22 on PostgreSQL | ⏳ | `docs/KHURALDAI.md` |
 | Campaigns: goals, tiers, flush, resolve, world effects (V18) | ✅ | ✅ deliver → success → reward → effect → chronicle; restart restores; flag re-applies; `campaign-effects.js` 6/6: kills count, PROP and NPC effects placed | ⏳ | 4 campaigns in `content/campaigns.json`; `dungeon-clear.js` 5/5: a clear counts and is chronicled |
 | Integration review 2026-10-12 (12 findings) | ✅ | ✅ duel paths live | — | mailbox partial stacks; trade goods in flight at shutdown; reward guard waits for a loaded style and an in-flight write, undoes one claim; rotation honours the arc; a missed ballot still decides; interlude force survives restarts; resolve waits for the last flush and retries; «Чонын Их Аян» success = guards warn 2 min before a raid; a soul's site visit waits |
+| Дархан recipe book (43 recipes, 9-level bands, smith window) | ✅ | ✅ `craft.js` 6/6 | ⏳ | `docs/CRAFTING.md`; crafted level held to the recipe band (was the crafter's level) |
 | World bosses (weekly hours, crowd-sized, everyone at the fight rewarded) | ✅ | ✅ `world-boss.js` 10/10 | ⏳ | `docs/WORLD_BOSSES.md`; Хроник first/fastest kill |
 | Plaza boards: Хуралдай notice board + Hall of Fame | ✅ | ✅ both stand | ⏳ | `PlazaBoards`, text at GUI scale to check by the owner |
 | Баатрын Хроник (V19), `/chronicle`, «Миний түүх» | ✅ | ✅ | ⏳ | |
