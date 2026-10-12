@@ -8,17 +8,18 @@ the README (local test server).
 
 | Command | What it does |
 |---|---|
-| `/menu` (or the clock in hotbar slot 9) | Main menu: character, class, quests, rank, shop, tutorial |
-| `/help`, `/tutorial` | Guide GUI · step-by-step guide for new players |
-| `/class`, `/profile`, `/exp` | Class GUI · character sheet · level/EXP |
+| `/menu` (or the clock in hotbar slot 9) | «Командын Өргөө» HD hub: 8 tabs (Тоглогч, Даалгавар, Ур чадвар, Дэлгүүр, Rankup, Аялал, Тохиргоо, Тусламж) and 8 command cards (`docs/UI_HUB.md`) |
+| `/help [page]`, `/tutorial`, `/commands` | Тусламж page (8 topics; a topic opens a dialog page) · step-by-step guide · every command, one dialog page per group |
+| `/class`, `/profile`, `/exp` | Class choice (once) · the Тоглогч page of the hub (level, coins, rank, clan; console prints the text) |
 | `/skills`, `/skill <node>` | Skill-tree map (points, passive spells, spell modifiers, ultimate), spells list, builds, respec, search |
-| `/quest` | Storyline board (42 chapters); `/quest info` prints the active chapter; `/quest track` toggles the tracker (boss bar with arrow and distance to the objective's region) |
-| `/rankup`, `/lvlup` | Rank ladder (Ард → Хаан, costs ₮) · level rewards |
-| `/shop`, `/cosmetics`, `/buy` | Supplies and selling loot · tags/colours/join messages/emojis · credit store |
+| `/quest` | Storyline board (42 chapters); `/quest info` opens the book on the active chapter; `/quest track` toggles the tracker (boss bar with arrow and distance to the objective's region) |
+| `/rankup`, `/lvlup` | Rankup page (Ард → Хаан, costs coins; owned ranks glow) · level rewards |
+| `/shop`, `/cosmetics`, `/buy` | Дэлгүүр pages (supplies; page 2: selling, cosmetics, credit store, recipe book, order board) · tags/colours/join messages/emojis · credit store |
+| `/travel`, `/settings` | Аялал page (relays: travel only while standing at one, historic sites, nearest ovoo, `/spawn`) · Тохиргоо page (8 per-player on/off settings, V21) |
 | `/party`, `/dungeon`, `/clan`, `/cc` | Groups, the dungeon window (`/dungeon`: the ten-dungeon ladder, a way-finder to each gate), clans and clan chat |
 | `/mori` | Personal steppe horse from level 5 (faster, finer coat with rank); disappears when you get off |
 | `/trade <player>` | Safe trade window with a player within 24 blocks: items and coins, both confirm (relics and the menu clock cannot be traded; audited in the log) |
-| `/discord`, `/website`, `/vote` | Clickable links from `branding.discord`, `branding.domain`, `branding.vote-url` |
+| `/discord`, `/website`, `/vote` | A link dialog («Нээх» opens the browser) from `branding.discord`, `branding.domain`, `branding.vote-url` |
 | `/top [level\|coins]` | Leaderboards (podium GUI; also works from the console) |
 | `/tasks` | Three daily hunting tasks from the regions your level can handle (coins and EXP, paid on completion) |
 | `/daily` | Daily login reward: 7-day streak of coins and EXP (time zone: `daily.timezone`) |

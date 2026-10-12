@@ -186,7 +186,7 @@ players casting together.
 
 | Item | Status |
 |---|---|
-| 20 spells + 15 ultimates with vanilla VFX | FUNCTIONAL_BUT_INCOMPLETE |
+| 20 spells + 15 ultimates with vanilla VFX (2026-10-07; now 25 spells: the 5th spell at level 50, M2c) | FUNCTIONAL_BUT_INCOMPLETE |
 | Class visual language (§2) | CONCEPT |
 | Budgets (§4) and the 5 over-budget effects | CONCEPT (no code change yet) |
 | Decal models (`slash_arc`, `shock_ring`, `ground_crack`) | NOT_IMPLEMENTED |

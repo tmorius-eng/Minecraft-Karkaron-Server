@@ -16,17 +16,22 @@
     },
     "classArmor": {
       "status": "NOT_IMPLEMENTED",
-      "evidence": "—"
+      "evidence": "—",
+      "statusNow": "IMPLEMENTED",
+      "evidenceNow": "items/class_armor.json (120 items: 5 classes x 6 tiers x 4 pieces), resourcepack/assets/suld/equipment/*_t1..t6.json (30), docs/CLASS_ARMOR_SYSTEM.md"
     },
     "genericArmor": {
       "status": "NOT_IMPLEMENTED",
       "evidence": "armor.json has no model field",
-      "note": "vanilla look"
+      "note": "vanilla look",
+      "statusNow": "NOT_IMPLEMENTED (unchanged: armor.json still has no model field)"
     },
     "bosses": {
       "status": "NOT_IMPLEMENTED",
       "evidence": "MobService.java; SuldContent/DungeonContent",
-      "note": "Хасар = vanilla RAVAGER, others HUSK/POLAR_BEAR/STRAY"
+      "note": "Хасар = vanilla RAVAGER, others HUSK/POLAR_BEAR/STRAY",
+      "statusNow": "IMPLEMENTED",
+      "evidenceNow": "every boss has a Display-Entity rig: resourcepack/assets/suld/models/entity/* (31 rigs), docs/MODEL_RENDERER.md"
     },
     "eliteMobs": {
       "status": "NOT_IMPLEMENTED",
@@ -90,12 +95,16 @@
     "equipmentRendering": {
       "status": "NOT_IMPLEMENTED",
       "evidence": "no DataComponentTypes.EQUIPPABLE use",
-      "note": "plan: Equippable assetId + 3D helmet item models"
+      "note": "plan: Equippable assetId + 3D helmet item models",
+      "statusNow": "IMPLEMENTED",
+      "evidenceNow": "ItemFactory sets the equippable component with the class-armour asset ids"
     },
     "bossRendering": {
       "status": "NOT_IMPLEMENTED",
       "evidence": "—",
-      "note": "owner decision pending: BetterModel (conflicts with CONTRIBUTING.md:5-12 / DEPENDENCIES.md:70) vs own ItemDisplay bone renderer (default)"
+      "note": "owner decision pending: BetterModel (conflicts with CONTRIBUTING.md:5-12 / DEPENDENCIES.md:70) vs own ItemDisplay bone renderer (default)",
+      "statusNow": "IMPLEMENTED",
+      "evidenceNow": "own ItemDisplay bone renderer (mn.suld.plugin.model.ModelService/ModelInstance); BetterModel not used"
     },
     "packBudget": {
       "status": "FUNCTIONAL_BUT_INCOMPLETE",
@@ -116,5 +125,6 @@
   "meshyCredits": {
     "remaining": 1050,
     "spentThisMilestone": 20
-  }
+  },
+  "updated": "2026-10-12: statusNow/evidenceNow record what changed since the 2026-10-07 audit; status/evidence keep the audit as written. docs/STATUS.md wins."
 }

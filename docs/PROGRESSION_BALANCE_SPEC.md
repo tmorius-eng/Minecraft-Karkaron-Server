@@ -23,7 +23,7 @@ See the audit §1 for the full table. In short:
 
 * The curve is `100·L^1.75` (2,757,813 EXP to 60).
 * Mob EXP ignores the level gap.
-* Content stops at level 26, with 4 regions, 4 dungeons and an 18-chapter story.
+* Content stopped at level 26, with 4 regions, 4 dungeons and an 18-chapter story (the problem this spec solved; today: 60 levels, 9 regions, 10 dungeons, 42 chapters, `docs/STATUS.md`).
 * Dungeons are level-gated only, have no lockout, and roll loot at the player's level.
 * Dungeon bosses roll legendary or better.
 * Player health ignores class and level.

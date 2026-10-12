@@ -8,7 +8,7 @@ the test evidence is in [ITEM_SYSTEM_TEST_PLAN.md](ITEM_SYSTEM_TEST_PLAN.md) and
 | Layer | Where | Responsibility |
 |---|---|---|
 | Model (pure, no Bukkit) | `suld-api/.../item/*` | `ItemDefinition`, `ItemInstance` (schema 2), `ItemRarity`, `ItemStat`, `ItemType`, `EquipSlot`, `Binding`, `Affix`/`RolledAffix`, `ItemSet`, `Recipe`, `StatRange` |
-| Content | `suld-api/src/main/resources/items/*.json` | 89 items, 22 affixes, 3 sets, 10 loot-tier rarity bands, 21 loot tables, 4 recipes; loaded and validated by `ItemCatalogLoader` (exact file/field issues, the skill tree's `Issue` type) |
+| Content | `suld-api/src/main/resources/items/*.json` | 226 items (54 weapons, 27 armour, 120 class armour, 10 jewellery, 7 materials, 6 index, 2 relics), 22 affixes, 33 sets (3 + 5 classes × 6 class-armour tiers), 10 loot-tier rarity bands, 46 loot tables, 43 recipes; loaded and validated by `ItemCatalogLoader` (exact file/field issues, the skill tree's `Issue` type) |
 | Rules (pure) | `ItemGenerator`, `ItemValidator`, `ItemCodec`, `Equipment`, `ItemTooltip`, `ItemEconomy`, `loot/LootEngine` | rolling, legality, the stored document, what the equipment adds, tooltip lines, sell/salvage, weighted loot |
 | Plugin | `suld-plugin/.../item/ItemFactory` | the single ItemStack ↔ instance codec (PDC `suld:item`, schema 2; schema-1 stacks migrated on read) |
 | | `item/ItemService` | catalog holder, generation, loot rolls and delivery, validation cache, duplicate guard, quarantine |
@@ -108,7 +108,7 @@ chance = one extra roll" rule), dungeon rewards (`DungeonService`, DUNGEON tier)
 
 Sell (`/item sell`, `/shop` "sell all" for materials) uses `ItemEconomy` (definition value × rarity × level).
 Salvage (`/item salvage`) turns gear into materials by rarity (Түмрийн хэлтархай, Алтан тоос, Тэнгэрийн чулуу).
-Crafting (`/item recipes`, `/item craft <recipe>`): 4 recipes consuming real materials. Upgrade/repair stay at the smith
+Crafting (`/item recipes` opens the recipe book window, `/item craft <recipe>`, `/order` for crafting orders): 43 recipes over levels 1–60 consuming real materials, the crafted level held to the recipe band (`docs/CRAFTING.md`). Upgrade/repair stay at the smith
 NPC (`ItemGenerator.upgrade` keeps the UUID and rolls, adds per-level growth). Every destructive action needs a
 `confirm` within 30 s.
 

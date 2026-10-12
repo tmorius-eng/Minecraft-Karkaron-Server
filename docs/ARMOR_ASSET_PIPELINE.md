@@ -6,6 +6,8 @@ Status: **design document, 2026-10-07. No class armour asset exists.** No `equip
 [ASSET_PRODUCTION_PIPELINE](ASSET_PRODUCTION_PIPELINE.md). The visual targets are in
 [ARMOR_PROGRESSION_VISUAL_SPEC](ARMOR_PROGRESSION_VISUAL_SPEC.md).
 
+> **Update 2026-10-12 (current truth, `docs/STATUS.md`):** class armour now exists for all 5 classes × 6 tiers: 120 items in `items/class_armor.json`, 30 equipment assets in `resourcepack/assets/suld/equipment/`, the equippable component set by `ItemFactory` (`docs/CLASS_ARMOR_SYSTEM.md`). The status line above is the 2026-10-07 starting point this pipeline was written for.
+
 ## 1. Flow
 
 ```

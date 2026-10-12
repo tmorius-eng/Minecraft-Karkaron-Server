@@ -3,6 +3,8 @@
 Status: **design document, 2026-10-07.** Nothing visual described here as "planned", "target" or "slice" exists yet.
 What exists is listed in §1 and in [`assets/registry.json`](../assets/registry.json), measured from `resourcepack/`.
 
+> **Update 2026-10-12 (current truth, `docs/STATUS.md`):** much of this plan is now built: 31 mob/boss rigs, class armour for 5 classes × 6 tiers, 6 weapon tiers, the HD GUI set (quest book, inventory, «Командын Өргөө» hub, tooltips, `docs/UI_HUB.md`). `docs/STATUS.md` is the source of truth for what exists; skill VFX are still vanilla particles.
+
 Related specs: [ARMOR_PROGRESSION_VISUAL_SPEC](ARMOR_PROGRESSION_VISUAL_SPEC.md) ·
 [BOSS_VISUAL_SPEC](BOSS_VISUAL_SPEC.md) · [NPC_VISUAL_SPEC](NPC_VISUAL_SPEC.md) · [SKILL_VFX_SPEC](SKILL_VFX_SPEC.md) ·
 [ASSET_PRODUCTION_PIPELINE](ASSET_PRODUCTION_PIPELINE.md) · [ARMOR_ASSET_PIPELINE](ARMOR_ASSET_PIPELINE.md) ·
@@ -122,7 +124,7 @@ slice gate, the owner can still pick B with real numbers in hand. Build A behind
 | 6 | Scale to the other 4 classes | 24 armour sets, weapons per class | Each class passes the same checklist | NOT_IMPLEMENTED |
 | 7 | Boss ecosystem | Элсний Хаан, Ойн Эзэн, Мөсөн Хаан, later bosses | Rules in BOSS_VISUAL_SPEC §6 | NOT_IMPLEMENTED |
 | 8 | NPC ecosystem | 11-category kit, 3D hats | NPC_VISUAL_SPEC | NOT_IMPLEMENTED |
-| 9 | Skill VFX | 20 spells + 15 ultimates to spec; `sounds.json` | Budgets met, measured | FUNCTIONAL_BUT_INCOMPLETE (vanilla) |
+| 9 | Skill VFX | 25 spells (20 at the time of writing) + 15 ultimates to spec; `sounds.json` | Budgets met, measured | FUNCTIONAL_BUT_INCOMPLETE (vanilla) |
 | 10 | Kharkhorum environment kit | Prop item models on ItemDisplays (banners, tug, braziers, Silver Tree), `.schem` modules | Placement via WorldBuilder | NOT_IMPLEMENTED |
 | 11 | Pack optimisation | Deduplication, atlas review, size report | Under the budget in ASSET_BUDGET | NOT_IMPLEMENTED |
 | 12 | Final client QA | Full checklist pass across classes | All PRODUCTION_READY | NOT_IMPLEMENTED |

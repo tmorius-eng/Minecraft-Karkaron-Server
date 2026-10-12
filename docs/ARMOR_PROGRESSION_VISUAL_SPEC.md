@@ -4,6 +4,8 @@ Status: **design document, 2026-10-07. No class armour visual exists yet** (`aud
 `classArmor` NOT_IMPLEMENTED; no `equipment/` assets in `resourcepack/`). Баатар is specified in full; the other
 four classes get art direction only, to be detailed after the Баатар slice passes client QA.
 
+> **Update 2026-10-12 (current truth, `docs/STATUS.md`):** class armour visuals exist for all 5 classes × 6 tiers (30 equipment assets, `docs/CLASS_ARMOR_SYSTEM.md`). The status line above describes 2026-10-07.
+
 Gameplay numbers come from the armour progression spec and are not changed here. Production steps are in
 [ARMOR_ASSET_PIPELINE](ARMOR_ASSET_PIPELINE.md), palettes and labels in [ASSET_STYLE_GUIDE](ASSET_STYLE_GUIDE.md).
 

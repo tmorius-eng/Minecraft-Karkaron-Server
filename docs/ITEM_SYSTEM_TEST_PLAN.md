@@ -4,7 +4,7 @@
 
 | Test | Proves |
 |---|---|
-| `ItemCatalogLoaderTest` | the bundled catalog loads with 0 issues (89 items, 22 affixes, 3 sets, 21 tables, 10 tier bands, 4 recipes); every broken field is reported with file + JSON path (unknown stat, bad range, unique in loot, relic not unique, unknown set piece, affix on common, duplicate id…) |
+| `ItemCatalogLoaderTest` | the bundled catalog loads with 0 issues (226 items, 22 affixes, 33 sets, 46 tables, 10 tier bands, 43 recipes; the test asserts ≥ 80 items, 33 sets, ≥ 20 tables); every broken field is reported with file + JSON path (unknown stat, bad range, unique in loot, relic not unique, unknown set piece, affix on common, duplicate id…) |
 | `ItemGeneratorTest` | every definition × every allowed rarity × 25 levels (> 3000 items) is generated genuine; affix count per rarity, one affix per stat; roll floors; rarity factor relative to the definition's own rarity; upgrade keeps identity and rolls; whole-number RESOURCE_MAX rolls and legacy fractions |
 | `ItemValidatorCodecTest` | impossible stats/affixes, wrong rarity, too many affixes, unknown ids, missing soulbound are refused; codec round trip; schema-1 migration (crit fractions ×100) |
 | `EquipmentTest` | slot rules, class/level/binding/broken gates, stat sums, set bonuses 2–5 pieces, inactive reasons, gear score |

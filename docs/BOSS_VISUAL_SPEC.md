@@ -5,6 +5,8 @@ with a custom name (`mob/MobService.java`; content in `content/SuldContent.java`
 `WorldContent.java`). Хасар is a vanilla RAVAGER. `dungeon/BossService.java` adds phase escalation, phase damage
 scaling, an enrage timer and a ravager roar on phase change (`BossService.java:122`), nothing visual beyond that.
 
+> **Update 2026-10-12 (current truth, `docs/STATUS.md`):** every boss and custom mob now has a 3D Display-Entity rig (31 rigs under `resourcepack/assets/suld/models/entity/`, renderer in `docs/MODEL_RENDERER.md`, Хасар in `docs/bosses/KHASAR.md`). The status line above describes 2026-10-07.
+
 **Renderer: decided by the owner (Stage D1).** It is SÜLD's own Display-Entity renderer, specified in
 docs/MODEL_RENDERER.md and implemented in `suld-api/.../model` and `suld-plugin/.../model`. BetterModel, ModelEngine,
 MythicMobs and any similar runtime model plugin are excluded. Хасар is its first production rig. The status lines below

@@ -199,7 +199,7 @@ each card is a coloured banner over a painting, framed in gold with gems at the 
 
 - **Welcome:** this is the painting itself, warped so each card sits on its 3x3 slot block (`hd_art.welcome`). The
   labels are pixel-font text on the banners.
-- **Main menu (six cards) and cosmetics (eight portrait cards):** these are built from the painting's pieces
+- **The painted «Сүлд Цэс» (six cards, now behind the hub's «/menu» card) and cosmetics (eight portrait cards):** these are built from the painting's pieces
   (`hd_art.CardKit`): the header, the gem-cornered card frame as a 9-slice, and the knotted banner. A banner is
   recoloured per card. If a label does not fit, the banner drops its knots, or the label is drawn at a smaller pixel
   size. The paintings are the existing `card_*.png`, cropped to fill.
@@ -210,15 +210,16 @@ right (`Menu.TITLE_INDENT`), so they clear the header's corner knot.
 
 The dungeon ladder, the quest map, the quest book and the skill map keep their own paintings.
 
-## Сүлд Цэс (main menu) and every chest screen
+## Сүлд Цэс and every chest screen
 
-- **Main menu.** The source is the owner's painting `assets/art/source/gui_main.webp`, warped onto the 6-row chest
+- **The main menu is the «Командын Өргөө» hub** (`tools/pack/hub_kit.py`, `docs/UI_HUB.md`): the owner's mock-up `gui_hub.png` cut into a 4x kit (frame, pages, tab glow, card glow, footer buttons) layered in the title. The painted Сүлд Цэс below is still in the pack and opens from the hub's «/menu» card (`Menus.classic`).
+- **Сүлд Цэс.** The source is the owner's painting `assets/art/source/gui_main.webp`, warped onto the 6-row chest
   (`hd_art.main_menu`).
   - The title and the card labels are painted. Card 3 opens quests and dungeons, so its painted «ЭРДЭН» is painted
     over and re-lettered «ЭРЭЛ».
   - The bottom bar sits on the chest screen's own "Inventory" label row, so the glyph is 138 px tall. The bar's
     corner knots are cleared where that label is drawn.
-  - `Menus.main` draws no title text, because the title is painted.
+  - `Menus.classic` draws no title text, because the title is painted.
 - **Every chest screen.** `minecraft:textures/gui/container/generic_54.png` (`hd_art.chest`) uses the same
   style: navy cloth and a gold well on every chest slot. The player inventory and hot bar are the survival
   inventory's own, moved 56 px down.

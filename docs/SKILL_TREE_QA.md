@@ -35,7 +35,7 @@ Run with PostgreSQL storage, including a **full server restart**:
 | `/skill l1` | detail with clickable [нээх] [буцаах] [газраас харах] |
 | `/skills info` | summary lines |
 | Orb: admin gives, right click, confirmation screen, confirm | «Буцаагдлаа: 8 оноо», orb consumed, max health back to 20, respec count 1 |
-| `/skillsadmin validate`, `reload` | valid, reloaded (175 nodes for 5 classes) |
+| `/skillsadmin validate`, `reload` | valid, reloaded (175 nodes for 5 classes on 2026-10-07; the tree has since grown to 111 per class + 5 universal, `docs/STATUS.md`) |
 | **Quit, restart the server, rejoin** | `l1=2`, build `tank`, respec count, max health 28, `◆42 оноо` on the action bar all restored from PostgreSQL |
 | F ultimate, all five classes (Баатар Чингисийн Уур, Мэргэн Хэтийн Харваач, Бөө Өвгөдийн Залбирал, Дархан Мянган Алх, Хүлэгчин Салхины Гэгээн) | effects applied (strength/resistance/regeneration/speed…), action bar «✦✦ <name>», second press «— 44 сек», idle bar «F ✦ Ns · ◆N оноо» |
 | Baatar spells with M-branch modifiers learned (`m1…m6`) | combos cast (✦ Хааны Хамгаалалт …), resource spent with the cost modifiers, no errors in the server log |
