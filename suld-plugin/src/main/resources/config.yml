@@ -1,6 +1,8 @@
 # ============================================================================
 #  SULD — Mongolian Hardcore MMORPG  |  core configuration
-#  Every gameplay value is data-driven. Edit here, then /suld reload (or restart)
+#  Every gameplay value is data-driven. Edit here, then restart the server (OPS-003). Content files: check them with
+#  /suld content validate, then restart. Live reloads exist only for the resource pack (/suldpack reload) and items
+#  (/itemsadmin reload).
 # ============================================================================
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.

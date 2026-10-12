@@ -40,7 +40,10 @@ edit never takes the server down and never half-applies.
 - Mob hosts are living vanilla entity types; tiers, hall themes and quest types are known values.
 - Each area owns one discovery bit (`index` 16..63, unique).
 - Boss phases start at 1.0 and go strictly down.
-- Every dungeon has a gate `site` and a `completion` bonus.
+- Every dungeon has a gate `site`. A dungeon outside the ladder (`DungeonLadder`) also needs a `completion` bonus; on a
+  ladder dungeon `completion` is ignored, because its reward comes from the progression rules (PROG-003).
+- `discoveryExp` on regions and areas is ignored: discovery EXP comes from the rules (`Rewards.landmarkExp`,
+  `Rewards.regionDiscoveryExp`) so it scales with the curve (PROG-003).
 - The ids the plugin's code uses by name (tutorial, the first dungeon, boss brains, the outer regions) still exist:
   `ContentLoader.REQUIRED`. They can be edited, but not removed or renamed.
 

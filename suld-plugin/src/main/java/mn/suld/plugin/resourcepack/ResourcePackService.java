@@ -80,6 +80,9 @@ public final class ResourcePackService implements Listener {
             return;
         }
         try {
+            // OPS-004: a stalled reader must not hold a worker forever (read in by the JDK server at its first use)
+            if (System.getProperty("sun.net.httpserver.maxReqTime") == null) System.setProperty("sun.net.httpserver.maxReqTime", "30");
+            if (System.getProperty("sun.net.httpserver.maxRspTime") == null) System.setProperty("sun.net.httpserver.maxRspTime", "120");
             server = HttpServer.create(new InetSocketAddress(settings.hostBind(), settings.hostPort()), 16);
             String path = "/suld-" + bundledSha1 + ".zip";
             server.createContext("/", exchange -> {
@@ -104,11 +107,15 @@ public final class ResourcePackService implements Listener {
                     }
                 }
             });
-            httpPool = Executors.newFixedThreadPool(2, r -> {
+            // up to 8 downloads at once (a wave of new players), idle workers end after 30 s; production uses nginx
+            java.util.concurrent.ThreadPoolExecutor pool = new java.util.concurrent.ThreadPoolExecutor(8, 8, 30,
+                    java.util.concurrent.TimeUnit.SECONDS, new java.util.concurrent.LinkedBlockingQueue<>(), r -> {
                 Thread t = new Thread(r, "SULD-pack-http");
                 t.setDaemon(true);
                 return t;
             });
+            pool.allowCoreThreadTimeOut(true);
+            httpPool = pool;
             server.setExecutor(httpPool);
             server.start();
             plugin.getLogger().info("Resource pack: self-hosting " + bundled.length / 1024 + " KiB (sha1 " + bundledSha1

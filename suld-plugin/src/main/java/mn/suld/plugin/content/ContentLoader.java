@@ -290,7 +290,9 @@ public final class ContentLoader {
                     }
                 }
             }
-            Map<String, Object> c = obj(f, at + ".completion", d.get("completion"), issues);
+            // PROG-003: a ladder dungeon's reward comes from the progression rules (DungeonLadder + Rewards.dungeonExp);
+            // "completion" is read only for a dungeon outside the ladder
+            Map<String, Object> c = d.get("completion") == null ? null : obj(f, at + ".completion", d.get("completion"), issues);
             if (c != null && id != null) completions.put(id, new DungeonContent.Completion(intIn(f, at + ".completion", c, "exp", 0, 10_000_000, true, 0, issues),
                     intIn(f, at + ".completion", c, "coins", 0, 10_000_000, true, 0, issues)));
             Map<String, Object> s = d.get("site") == null ? null : obj(f, at + ".site", d.get("site"), issues);
@@ -550,7 +552,8 @@ public final class ContentLoader {
         }
         for (DungeonDefinition d : dungeons) {
             if (sites.stream().noneMatch(s -> s.dungeonId().equals(d.id()))) issues.add(new Issue("dungeons.json", d.id() + ".site", "a dungeon needs a gate site"));
-            if (!completions.containsKey(d.id())) issues.add(new Issue("dungeons.json", d.id() + ".completion", "missing"));
+            if (!completions.containsKey(d.id()) && mn.suld.api.balance.DungeonLadder.rung(d.id()) == null)
+                issues.add(new Issue("dungeons.json", d.id() + ".completion", "missing: a dungeon outside the ladder needs its completion reward"));
         }
         if (!issues.isEmpty()) return new Result(null, issues, overridden);
         return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, outer, areas, dungeons, sites, completions,
