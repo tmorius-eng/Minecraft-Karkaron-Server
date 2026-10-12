@@ -53,6 +53,48 @@
       "clanSuccessBonus": 1200,
       "effect": {"type": "PROP", "ref": "deer_stone", "anchor": "site.khodoo_aral", "dx": -7, "dz": 0, "yaw": 270},
       "cooldownCycles": 1
+    },
+    {
+      "id": "campaign.khangain_khamgaalal",
+      "name": "Хангайн Хамгаалал",
+      "description": "Эхний аян, 2-р бүлэг. Чонын аяны дараа Хангайн саарал чоно, баавгай хотын зүг шахагдав. Долоо хоногт 2000 ан хийвэл Хар Балгасын дэргэд чулуун яст мэлхий дахин сэргэнэ.",
+      "goal": {"type": "KILL_MOBS", "targets": ["mob.saaral_chono", "mob.khangai_baavgai"], "target": 2000},
+      "tiers": [20, 50, 100],
+      "tierRewards": [{"exp": 800, "coins": 150}, {"exp": 2000, "coins": 320}, {"exp": 4500, "coins": 600}],
+      "podium": [1.5, 1.3, 1.2],
+      "clanExpPerUnit": 3,
+      "clanSuccessBonus": 1800,
+      "effect": {"type": "PROP", "ref": "stone_turtle", "anchor": "site.khar_balgas", "dx": 6, "dz": 0, "yaw": 90},
+      "cooldownCycles": 2,
+      "requires": ["campaign.chonyn_ayan"]
+    },
+    {
+      "id": "campaign.ortooni_zam",
+      "name": "Өртөөний Зам",
+      "description": "Эхний аян, 3-р бүлэг. Жингийн зам сэргэсний дараа дөрвөн зүгийн өртөөг дахин холбоё. Долоо хоногт 150 анхны айлчлал бүртгэгдвэл Дарьгангад хүн чулуу босно.",
+      "goal": {"type": "DISCOVER_SITES", "targets": ["site.urtuu_east", "site.urtuu_south", "site.urtuu_west", "site.urtuu_north"], "target": 150},
+      "tiers": [1, 2, 4],
+      "tierRewards": [{"exp": 600, "coins": 120}, {"exp": 1500, "coins": 260}, {"exp": 3500, "coins": 500}],
+      "podium": [1.5, 1.3, 1.2],
+      "clanExpPerUnit": 25,
+      "clanSuccessBonus": 1500,
+      "effect": {"type": "PROP", "ref": "stone_man", "anchor": "site.dariganga", "dx": 6, "dz": 0, "yaw": 90},
+      "cooldownCycles": 2,
+      "requires": ["campaign.jingiin_zam"]
+    },
+    {
+      "id": "campaign.khuraldain_tug",
+      "name": "Хуралдайн Туг",
+      "description": "Эхний аян, төгсгөл. Хангай хамгаалагдаж, өртөөд холбогдсон бол Баавгайн Үүрийг цэвэрлэж, тугаа мандуулъя. Долоо хоногт 60 удаа цэвэрлэвэл Уушгийн Өвөрт буган чулуу босно.",
+      "goal": {"type": "CLEAR_DUNGEON", "targets": ["dungeon.baavgain_uur"], "target": 60},
+      "tiers": [1, 2, 3],
+      "tierRewards": [{"exp": 1500, "coins": 250}, {"exp": 3500, "coins": 500}, {"exp": 7000, "coins": 900}],
+      "podium": [1.5, 1.3, 1.2],
+      "clanExpPerUnit": 60,
+      "clanSuccessBonus": 2500,
+      "effect": {"type": "PROP", "ref": "deer_stone", "anchor": "site.uushig", "dx": 6, "dz": 0, "yaw": 90},
+      "cooldownCycles": 3,
+      "requires": ["campaign.khangain_khamgaalal", "campaign.ortooni_zam"]
     }
   ]
 }

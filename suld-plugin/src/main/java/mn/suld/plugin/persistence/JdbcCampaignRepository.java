@@ -503,6 +503,22 @@ public final class JdbcCampaignRepository implements CampaignRepository {
     }
 
     @Override
+    public CompletableFuture<java.util.Set<String>> succeededCampaigns() {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                    "SELECT DISTINCT campaign_id FROM suld_campaigns WHERE state = 'SUCCEEDED'")) {
+                java.util.Set<String> out = new java.util.HashSet<>();
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) out.add(rs.getString(1));
+                }
+                return out;
+            } catch (SQLException ex) {
+                throw new RepositoryException("Failed to read succeeded campaigns", ex);
+            }
+        }, executor);
+    }
+
+    @Override
     public CompletableFuture<List<WorldFlag>> flags() {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(

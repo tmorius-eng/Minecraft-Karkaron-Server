@@ -350,6 +350,21 @@ public final class CampaignService {
     // --------------------------------------------------------------- resolve
 
     /** End the week: flush, read the authoritative totals, CAS the state, pay, change the world, write the book. */
+    /** The arc moves on: tell everyone which chapters this success opened for the next Хуралдай. */
+    private void announceUnlocks(CampaignDefinition won) {
+        whenDone(repository.succeededCampaigns(), (succeeded, err) -> {
+            if (err != null) return;
+            java.util.Set<String> done = new java.util.HashSet<>(succeeded);
+            done.add(won.id()); // the success row may not be read back yet
+            for (CampaignDefinition d : Content.pack().campaigns()) {
+                if (d.requires().contains(won.id()) && d.unlocked(done)) {
+                    Bukkit.broadcast(Messages.accent("✦ Шинэ аян нээгдлээ: «" + d.name() + "» — дараагийн Их Хуралдайд гарна."));
+                    plugin.getLogger().info("[campaign] " + won.id() + " unlocked " + d.id());
+                }
+            }
+        });
+    }
+
     private void resolve(String reason) {
         CampaignRun run = active;
         if (run == null || resolving) return;
@@ -394,6 +409,7 @@ public final class CampaignService {
                     }
                     chronicle.campaignResolved(outcome);
                     Bukkit.broadcast(Messages.accent(outcome.headline()));
+                    if (finalState == CampaignState.SUCCEEDED) announceUnlocks(run.definition());
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         p.playSound(p.getLocation(), finalState == CampaignState.SUCCEEDED ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.BLOCK_BELL_USE, 1f, 1f);
                     }

@@ -528,12 +528,23 @@ public final class ContentLoader {
                 campaigns.add(new mn.suld.api.campaign.CampaignDefinition(id, str(f, at, c, "name", true, issues),
                         c.get("description") instanceof String d ? d : "", goal, tiers, rewards, podium,
                         intIn(f, at, c, "clanExpPerUnit", 0, 100_000, false, 0, issues), intIn(f, at, c, "clanSuccessBonus", 0, 10_000_000, false, 0, issues),
-                        effect, intIn(f, at, c, "cooldownCycles", 0, 12, false, 1, issues)));
+                        effect, intIn(f, at, c, "cooldownCycles", 0, 12, false, 1, issues),
+                        c.get("requires") == null ? List.of() : strings(f, at, c, "requires", issues)));
             } catch (IllegalArgumentException ex) {
                 issues.add(new Issue(f, at, ex.getMessage()));
             }
         }
         if (!campaignList.isEmpty() && campaigns.size() < 2) issues.add(new Issue(f, "campaigns", "Их Хуралдай needs at least 2 valid campaigns"));
+        // the arc: every prerequisite exists, and at least two campaigns are open from the start (a first ballot)
+        java.util.Set<String> campaignIds = new java.util.HashSet<>();
+        for (var cd : campaigns) campaignIds.add(cd.id());
+        for (int i = 0; i < campaigns.size(); i++) {
+            for (String req : campaigns.get(i).requires()) {
+                if (!campaignIds.contains(req)) issues.add(new Issue(f, "campaigns[" + i + "].requires", "no campaign " + req));
+            }
+        }
+        if (!campaigns.isEmpty() && campaigns.stream().filter(cd -> cd.requires().isEmpty()).count() < 2)
+            issues.add(new Issue(f, "campaigns", "at least 2 campaigns must need no prerequisite (the first ballot)"));
         for (int i = 0; i < campaigns.size(); i++) {
             for (int j = i + 1; j < campaigns.size(); j++) {
                 if (campaigns.get(i).id().equals(campaigns.get(j).id())) issues.add(new Issue(f, "campaigns[" + j + "].id", "duplicate id " + campaigns.get(j).id()));

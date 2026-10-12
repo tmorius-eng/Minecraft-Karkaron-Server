@@ -25,6 +25,21 @@ public final class CampaignRotation {
      */
     public static List<CampaignDefinition> pick(List<CampaignDefinition> all, List<String> recentWinners, List<String> lastLosers,
                                                 int options, String cycleId) {
+        return pick(all, recentWinners, lastLosers, options, cycleId, null);
+    }
+
+    /**
+     * Like {@link #pick(List, List, List, int, String)}, for an arc: only campaigns whose prerequisites have all
+     * succeeded ({@code succeeded}, ever) stand, and a chapter that just opened and never ran leads the ballot right
+     * after last week's losers, so the story moves on. {@code succeeded == null} ignores prerequisites.
+     */
+    public static List<CampaignDefinition> pick(List<CampaignDefinition> all, List<String> recentWinners, List<String> lastLosers,
+                                                int options, String cycleId, Set<String> succeeded) {
+        if (succeeded != null) {
+            List<CampaignDefinition> open = new ArrayList<>();
+            for (CampaignDefinition d : all) if (d.unlocked(succeeded)) open.add(d);
+            all = open;
+        }
         int want = Math.max(2, Math.min(3, options));
         List<CampaignDefinition> eligible = new ArrayList<>();
         for (CampaignDefinition d : all) if (!resting(d, recentWinners)) eligible.add(d);
@@ -38,6 +53,12 @@ public final class CampaignRotation {
         List<CampaignDefinition> ballot = new ArrayList<>();
         Set<String> losers = new HashSet<>(lastLosers);
         for (CampaignDefinition d : eligible) if (losers.contains(d.id()) && ballot.size() < want) ballot.add(d);
+        if (succeeded != null) { // a newly opened chapter: it has prerequisites, never won and is not resting
+            for (CampaignDefinition d : eligible) {
+                if (ballot.size() >= want) break;
+                if (!d.requires().isEmpty() && !succeeded.contains(d.id()) && !recentWinners.contains(d.id()) && !ballot.contains(d)) ballot.add(d);
+            }
+        }
         List<CampaignDefinition> rest = new ArrayList<>();
         for (CampaignDefinition d : eligible) if (!ballot.contains(d)) rest.add(d);
         java.util.Collections.shuffle(rest, new Random(cycleId.hashCode()));

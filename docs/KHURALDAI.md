@@ -40,11 +40,16 @@ phase, and a boundary that passed while the server was down is performed at star
 | `clanExpPerUnit`, `clanSuccessBonus` | clan EXP per unit a member brings; a bonus once per clan with a tier-1+ member when the week succeeds |
 | `effect` | `UNLOCK_EVENT ref=event id` (joins the automatic world-event rotation) · `PROP ref=prop id, anchor=site id, dx, dz, yaw` (a prop appears by a historic site) · `NPC ref=role id, anchor=city point or "city:x,z"` (an NPC appears in Kharkhorum: `merchant.caravan`, `steward.campaign`) |
 | `cooldownCycles` | weeks the campaign rests after winning |
+| `requires` | campaigns that must each have succeeded once before this one stands (the arc); a newly opened chapter is put on the ballot right after last week's losers, and the success that opens it is announced «Шинэ аян нээгдлээ» |
 
 The loader checks every reference (mobs, dungeons, sites, items, events) and the tier rules; a broken file keeps the
 bundled one, like every other content file. `CulturalNamingTest` scans the names.
 
-**Ballot:** `CampaignRotation` — the last winner never runs again at once, a winner rests its cooldown, last week's
+**Arc «Эхний аян».** Чонын Их Аян opens «Хангайн Хамгаалал» (grey wolves and bears, a stone turtle by Хар Балгас); Жингийн Зам
+opens «Өртөөний Зам» (the four relay stations, a stone man at Дарьганга); both together open the finale «Хуралдайн Туг»
+(Баавгайн Үүр, a deer stone at Уушгийн Өвөр). The new names wait for the native reviewer like every P1 name.
+
+**Ballot:** `CampaignRotation` — campaigns whose `requires` are not all met do not stand; the last winner never runs again at once, a winner rests its cooldown, last week's
 losers lead the ballot (a lost cause comes back), the rest is shuffled with the cycle id as the seed.
 **Tally:** most votes wins; a tie goes to the option that won least recently, then ballot order; below `min-voters`
 the rotation's first option is taken and the broadcast says so. **Eligibility:** a class, `min-level`, and a character

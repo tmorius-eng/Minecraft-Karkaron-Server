@@ -158,6 +158,13 @@ public final class InMemoryCampaignRepository implements CampaignRepository {
     }
 
     @Override
+    public synchronized CompletableFuture<java.util.Set<String>> succeededCampaigns() {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (CampaignSnapshot s : campaigns.values()) if (s.state() == mn.suld.api.campaign.CampaignState.SUCCEEDED) out.add(s.campaignId());
+        return CompletableFuture.completedFuture(out);
+    }
+
+    @Override
     public synchronized CompletableFuture<List<WorldFlag>> flags() {
         return CompletableFuture.completedFuture(new ArrayList<>(flags.values()));
     }

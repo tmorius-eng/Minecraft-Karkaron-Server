@@ -79,4 +79,7 @@ public interface CampaignRepository {
     CompletableFuture<Void> clearFlag(String key);
 
     CompletableFuture<List<WorldFlag>> flags();
+
+    /** Every campaign id that has succeeded in some week (the arc's unlocks). */
+    CompletableFuture<java.util.Set<String>> succeededCampaigns();
 }

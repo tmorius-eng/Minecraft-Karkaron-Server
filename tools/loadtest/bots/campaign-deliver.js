@@ -46,7 +46,9 @@ const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
   check('the delivery is counted', heard(A, 'хүргэв'), A.chatLog.filter(l => l.includes('хүргэв') || l.includes('Хүргэх')).join(' | '));
   check('the campaign succeeds', logged(n, 'resolved SUCCEEDED'), lines().slice(n).filter(l => l.includes('[campaign]')).join(' | '));
   check('the tier reward is paid', heard(A, 'алтан шат') && heard(A, 'EXP'), A.chatLog.filter(l => l.includes('шат')).join(' | '));
-  check('the world effect is applied', logged(n, '[events] unlocked') || logged(n, '[props] dynamic') || logged(n, '[npc] dynamic'), lines().slice(n).filter(l => /\[(events|props|npc)\]/.test(l)).join(' | '));
+  // a first success makes the change live ([events]/[props]/[npc]); a repeat finds it live and records it again
+  check('the world effect is applied', logged(n, '[events] unlocked') || logged(n, '[props] dynamic') || logged(n, '[npc] dynamic')
+      || logged(n, 'campaign.effect_applied actor=server target=effect:campaign.' + campaign), lines().slice(n).filter(l => /\[(events|props|npc)\]|effect_applied/.test(l)).join(' | '));
   check('the outcome is in the chronicle', logged(n, '[chronicle] ✦ Хроник') && logged(n, 'амжилттай'));
   check('everyone hears the headline', heard(A, 'амжилттай'));
   A.quit();

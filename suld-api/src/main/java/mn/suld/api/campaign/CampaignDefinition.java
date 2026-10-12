@@ -13,10 +13,24 @@ import java.util.List;
  * @param clanSuccessBonus clan EXP once per clan with a tier-1+ member when the campaign succeeds
  * @param effect           the world change on success, or null for none
  * @param cooldownCycles   weeks this campaign stays out of the ballot after winning
+ * @param requires         campaigns that must each have succeeded once before this one can stand for election (the
+ *                         arc: a success opens the next chapter, docs/KHURALDAI.md); empty = always eligible
  */
 public record CampaignDefinition(String id, String name, String description, CampaignGoal goal, int[] tiers,
                                  List<TierReward> tierRewards, double[] podium, long clanExpPerUnit, long clanSuccessBonus,
-                                 WorldEffect effect, int cooldownCycles) {
+                                 WorldEffect effect, int cooldownCycles, List<String> requires) {
+
+    /** A campaign with no prerequisite. */
+    public CampaignDefinition(String id, String name, String description, CampaignGoal goal, int[] tiers,
+                              List<TierReward> tierRewards, double[] podium, long clanExpPerUnit, long clanSuccessBonus,
+                              WorldEffect effect, int cooldownCycles) {
+        this(id, name, description, goal, tiers, tierRewards, podium, clanExpPerUnit, clanSuccessBonus, effect, cooldownCycles, List.of());
+    }
+
+    /** Whether every prerequisite has succeeded at least once. */
+    public boolean unlocked(java.util.Set<String> succeeded) {
+        return succeeded.containsAll(requires);
+    }
 
     public record TierReward(long exp, long coins) {
         public TierReward {
@@ -46,6 +60,8 @@ public record CampaignDefinition(String id, String name, String description, Cam
         tiers = tiers.clone();
         podium = podium.clone();
         tierRewards = List.copyOf(tierRewards);
+        requires = requires == null ? List.of() : List.copyOf(requires);
+        if (requires.contains(id)) throw new IllegalArgumentException(id + ": a campaign cannot require itself");
     }
 
     /** The tier (1..3) a personal contribution reaches, 0 for none. */

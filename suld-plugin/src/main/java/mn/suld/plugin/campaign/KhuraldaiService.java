@@ -164,7 +164,10 @@ public final class KhuraldaiService {
                 winners.add(v.winner());
                 if (lastLosers.isEmpty()) lastLosers.addAll(v.losers());
             }
-            List<String> options = CampaignRotation.pick(all, winners, lastLosers, settings.options(), cycle.nextCycleId(id))
+            whenDone(repository.succeededCampaigns(), (succeeded, err2) -> {
+            if (err2 != null) plugin.getLogger().log(Level.WARNING, "[khuraldai] arc unlocks not read, every campaign stands: " + root(err2));
+            List<String> options = CampaignRotation.pick(all, winners, lastLosers, settings.options(), cycle.nextCycleId(id),
+                            err2 == null ? succeeded : null)
                     .stream().map(CampaignDefinition::id).toList();
             long now = System.currentTimeMillis();
             long opensAt = Math.max(cycle.voteOpens(id).toEpochMilli(), Math.min(now, cycle.voteCloses(id).toEpochMilli()));
@@ -191,6 +194,7 @@ public final class KhuraldaiService {
                 if (fresh && !row.closed()) announceOpen(row);
                 plugin.getLogger().info("[khuraldai] vote " + row.cycleId() + (row.closed() ? " already closed: " : " open (" + actor + "): ") + row.options()
                         + " until " + Instant.ofEpochMilli(row.closesAt()));
+            });
             });
         });
     }

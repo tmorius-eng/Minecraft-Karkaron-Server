@@ -16,6 +16,32 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VoteAndRotationTest {
 
+    private static CampaignDefinition arc(String id, String... requires) {
+        return new CampaignDefinition(id, id, "", new CampaignGoal(CampaignGoal.Type.KILL_MOBS, Set.of("mob.x"), 10000), new int[]{10, 20, 30},
+                List.of(new CampaignDefinition.TierReward(1, 1), new CampaignDefinition.TierReward(2, 2), new CampaignDefinition.TierReward(3, 3)),
+                new double[]{1.5, 1.3, 1.2}, 0, 0, null, 1, List.of(requires));
+    }
+
+    @org.junit.jupiter.api.Test
+    void anArcChapterStandsOnlyAfterItsPrerequisitesAndThenLeads() {
+        List<CampaignDefinition> all = List.of(arc("campaign.a"), arc("campaign.b"), arc("campaign.c"),
+                arc("campaign.next", "campaign.a"), arc("campaign.finale", "campaign.next", "campaign.b"));
+        for (int w = 0; w < 30; w++) { // before anything succeeded: the chapters never stand
+            List<String> ids = CampaignRotation.pick(all, List.of(), List.of(), 3, "2026-W" + w, Set.of()).stream().map(CampaignDefinition::id).toList();
+            org.junit.jupiter.api.Assertions.assertFalse(ids.contains("campaign.next") || ids.contains("campaign.finale"), ids.toString());
+        }
+        // a won: next opens and leads (a is resting as the last winner)
+        List<String> after = CampaignRotation.pick(all, List.of("campaign.a"), List.of(), 3, "2026-W40", Set.of("campaign.a"))
+                .stream().map(CampaignDefinition::id).toList();
+        org.junit.jupiter.api.Assertions.assertEquals("campaign.next", after.get(0), after.toString());
+        org.junit.jupiter.api.Assertions.assertFalse(after.contains("campaign.finale"), "finale still needs next and b");
+        // both prerequisites done: the finale stands
+        List<String> end = CampaignRotation.pick(all, List.of("campaign.b"), List.of(), 3, "2026-W45", Set.of("campaign.a", "campaign.next", "campaign.b"))
+                .stream().map(CampaignDefinition::id).toList();
+        org.junit.jupiter.api.Assertions.assertEquals("campaign.finale", end.get(0), end.toString());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> arc("campaign.self", "campaign.self"));
+    }
+
     private static CampaignDefinition def(String id, int cooldown) {
         return new CampaignDefinition(id, id, "", new CampaignGoal(CampaignGoal.Type.KILL_MOBS, Set.of("mob.x"), 10000), new int[]{10, 20, 30},
                 List.of(new CampaignDefinition.TierReward(1, 1), new CampaignDefinition.TierReward(2, 2), new CampaignDefinition.TierReward(3, 3)),
