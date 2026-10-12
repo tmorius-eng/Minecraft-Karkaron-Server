@@ -268,6 +268,7 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("buy", mc.buy());
         registerTab("rankup", mc.rankup());
         registerTab("lvlup", mc.lvlup());
+        registerTab("travel", mc.travel());
         registerTab("credits", mc.credits());
         mn.suld.plugin.skill.SkillService skills = new mn.suld.plugin.skill.SkillService(this, services);
         getServer().getPluginManager().registerEvents(skills, this);
@@ -400,6 +401,7 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.region.OvooService ovoo = new mn.suld.plugin.region.OvooService(this, services);
         getServer().getPluginManager().registerEvents(ovoo, this);
         ovoo.start();
+        services.ovoos = ovoo;
         // the historical places of the Mongol lands in the wild (content/sites.json, docs/world/HISTORIC_SITES.md)
         mn.suld.plugin.region.HistoricSiteService historicSites = new mn.suld.plugin.region.HistoricSiteService(this, services);
         historicSites.start();

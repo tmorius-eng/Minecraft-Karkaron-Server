@@ -47,6 +47,7 @@ PANEL = (-2, -22, 178, 134)  # the framed window
 SLOT_X, SLOT_Y, ROW = 8, 18, 18
 TAB_W, TAB_H = 17, 16        # a tab tile inside its 18 px slot: x slot..slot+17, y 19..35
 SECTION_Y = (36, 41)         # the section title strip, above the first card row
+CARDS = 8
 CARD_H = 12                  # a card tile, at the bottom of its 18 px row (row top + 5 .. + 17)
 CARD_COLS = ((0, 4), (5, 9))  # slot columns of the left and right card
 FOOTER_Y = 108
@@ -411,7 +412,7 @@ class Kit:
 
 @dataclass
 class Card:
-    icon: str
+    icon: object          # a kit icon name, a PIL image for the well, or None: a hole where the slot's real item shows
     title: str
     subtitle: str
 
@@ -461,8 +462,51 @@ HELP = Spec("help", "ТУСЛАМЖ", "Заавар · командууд · д�
     Card("book", "Дүрэм", "Серверийн дүрэм."),
 ])
 
+# mn.suld.api.style.Rank, in ladder order (the badge pills come from the owner's sheet, like the TAB badges)
+RANKS = [("Ард", 1, 0), ("Цэрэг", 5, 150), ("Аравтын дарга", 10, 400), ("Зуутын дарга", 18, 1000),
+         ("Мянгатын ноён", 26, 2500), ("Түмэний ноён", 35, 6000), ("Их ноён", 45, 14000), ("Хаан", 60, 35000)]
+
+
+def _rank_icons() -> list:
+    sheet = os.path.join(ART, "badges.webp")
+    if not os.path.exists(sheet):
+        return ["chart"] * 8
+    pills = hd_art.rank_badges(sheet)[:8]
+    return [hd_art.shrink(p, 9 * S) for p in pills]
+
+
+RANKUP = Spec("rankup", "ЦОЛ · RANKUP", None, "Цолын шат", "Ард → Хаан", [
+    Card(icon, name, f"Түвшин {lvl}" + (f" · {cost:,} зоос".replace(",", " ") if cost else " · эхлэлийн цол"))
+    for icon, (name, lvl, cost) in zip(_rank_icons(), RANKS)])
+
+# gui/Menus.SUPPLIES, the same order: the slot under each card holds the real item, so the well is a hole
+SUPPLIES = [("Боов x8", 20), ("Шарсан хонины мах x8", 40), ("Сум x32", 30), ("Бамбар x16", 12),
+            ("Бамбай", 120), ("Алтан лууван x4", 90), ("Алтан алим", 300), ("Эмээл", 250)]
+SHOP = Spec("shop", "ДЭЛГҮҮР", None, "Хангамж", "Зоосоор", [Card(None, n, f"{c} зоос · дарж авна") for n, c in SUPPLIES])
+SHOP2 = Spec("shop2", "ДЭЛГҮҮР · ЗАХ", None, "Зах · үйлчилгээ", "2-р хуудас", [
+    Card(None, "Чөдөр x2", "40 зоос · дарж авна"),
+    Card("chest", "Олз зарах", "Цүнхний бүх олзыг зарна."),
+    Card("scroll", "Зарах цонх", "Сонгож зарна, үнэтэйгээ."),
+    Card("compass", "Гоёл", "Цол, нэр, чатын өнгө."),
+    Card("chart", "Кредит дэлгүүр", "Сүлд Кредит — зөвхөн гоёлд."),
+    Card("book", "Жорын ном", "Дархны 43 жор, урлах."),
+    Card("swords", "Захиалгын самбар", "Бусдаар урлуулах, хөлс."),
+    Card("map", "Хэтэвч", "Зоос, кредит."),
+])
+
+TRAVEL = Spec("travel", "АЯЛАЛ", None, "Өртөө ба газрууд", "Өртөөнд зогсоод аял", [
+    Card("map", "Төв талбай", "Хархорумын зүрх."),
+    Card("map", "Өмнөд хаалга", "Говь руу."),
+    Card("map", "Баруун хаалга", "Баруун тал руу."),
+    Card("map", "Зүүн хаалга", "Зүүн тал руу."),
+    Card("map", "Хойд хаалга", "Хойд ой, уул руу."),
+    Card("scroll", "Түүхэн газрууд", "Олсон газрууд, зам."),
+    Card("compass", "Овоо", "Хамгийн ойрын овоо."),
+    Card("chest", "Хархорум руу", "/spawn — хот руу буцах."),
+])
+
 PAGES = [HUB, PROFILE]          # the first glyphs; new pages go to EXTRA_PAGES (code points only ever append)
-EXTRA_PAGES = [HELP]
+EXTRA_PAGES = [HELP, RANKUP, SHOP, SHOP2, TRAVEL]
 
 
 def _canvas() -> Image.Image:
@@ -473,6 +517,14 @@ def tab_box(i: int) -> tuple[int, int, int, int]:
     """Tab i's tile, HD canvas px."""
     x = SLOT_X + i * ROW
     return cx(x), cy(SLOT_Y + 1), cx(x + TAB_W), cy(SLOT_Y + 1 + TAB_H)
+
+
+def hole_box(i: int) -> tuple[int, int, int, int]:
+    """The slot under card i's well (HD canvas px): a hole in the frame where that slot's real item shows."""
+    col, row = i % 2, i // 2
+    x = SLOT_X + CARD_COLS[col][0] * ROW
+    y = SLOT_Y + (row + 1) * ROW
+    return cx(x), cy(y), cx(x + ROW), cy(y + ROW)
 
 
 def card_box(i: int) -> tuple[int, int, int, int]:
@@ -534,7 +586,17 @@ def frame(kit: Kit) -> Image.Image:
             _paste_centre(img, diamond(_hd(2), (190, 40, 40), GOLD_DARK), bx)
     # the close button
     img.alpha_composite(kit.button("Хаах"), (cx(CLOSE[0]), cy(CLOSE[1])))
-    return img
+    # a hole under every card's well: pages with item cards let the slot's item show through
+    a = _np(img)
+    for i in range(CARDS):
+        x0, y0, x1, y1 = hole_box(i)
+        a[y0:y1, x0:x1, 3] = 0
+    return _img(a)
+
+
+def card_on(kit: Kit) -> Image.Image:
+    """The glow frame over a card (owned rank, chosen setting): the active tab's frame stretched to a card."""
+    return hd_art._nine(kit.tab_on, (_hd(3),) * 4, ((CARD_COLS[0][1] - CARD_COLS[0][0]) * ROW * S + 2 * S, (CARD_H + 2) * S), 1.0)
 
 
 def page(kit: Kit, spec: Spec) -> Image.Image:
@@ -552,22 +614,35 @@ def page(kit: Kit, spec: Spec) -> Image.Image:
     if spec.subtitle:
         sub = letter(spec.subtitle, _hd(4.2), "semi", GREY, shadow=(0, 0, 0))
         _paste_centre(img, sub, (0, cy(7.5), img.width, cy(16.5)))
-    # section strip
+    # the frame has a hole under every card's well: painted cards cover it with cloth, item cards keep it open
+    cloth = kit.cloth.resize((ROW * S, ROW * S), Image.LANCZOS)
+    for i in range(CARDS):
+        hx0, hy0, _, _ = hole_box(i)
+        img.alpha_composite(cloth, (hx0, hy0))
+    item_page = any(c.icon is None for c in spec.cards)
+    # section strip (on item pages it starts right of the first well's hole and the pill stops before the second)
     sy0, sy1 = cy(SECTION_Y[0]) + _hd(0.5), cy(SECTION_Y[1])
+    sx = SLOT_X + (ROW + 1 if item_page else 0)
     icon = kit.section_icon.resize((_hd(5), round(kit.section_icon.height * _hd(5) / kit.section_icon.width)), Image.LANCZOS)
-    _paste_left(img, icon, cx(SLOT_X), (sy0, sy1))
+    _paste_left(img, icon, cx(sx), (sy0, sy1))
     sec = letter(spec.section, _hd(4.4), "bold", gradient=(GOLD_LIGHT, GOLD), outline=INK)
-    _paste_left(img, sec, cx(SLOT_X + 6), (sy0, sy1))
-    _paste_left(img, diamond(_hd(2), GOLD, GOLD_DARK), cx(SLOT_X + 6) + sec.width + _hd(1.5), (sy0, sy1))
-    pill = kit.pill(spec.pill, _hd(64), _hd(4.5))
+    _paste_left(img, sec, cx(sx + 6), (sy0, sy1))
+    _paste_left(img, diamond(_hd(2), GOLD, GOLD_DARK), cx(sx + 6) + sec.width + _hd(1.5), (sy0, sy1))
+    pill = kit.pill(spec.pill, _hd(46 if item_page else 64), _hd(4.5))
     img.alpha_composite(pill, (cx(SLOT_X + 9 * ROW) - pill.width, round((sy0 + sy1 - pill.height) / 2)))
-    # cards
+    holes = []
     for i, c in enumerate(spec.cards[:8]):
         bx = card_box(i)
         img.alpha_composite(kit.card, (bx[0], bx[1]))
-        well = kit.wells[c.icon]
-        _paste_left(img, well, bx[0] + _hd(2), (bx[1], bx[3]))
-        tx = bx[0] + _hd(2) + well.width + _hd(2)
+        if c.icon is None:
+            holes.append(i)
+            tx = bx[0] + _hd(ROW + 1)
+        else:
+            well = kit.wells[c.icon] if isinstance(c.icon, str) else c.icon
+            if not isinstance(c.icon, str):
+                well = well.resize((round(well.width * 6 * S / well.height), 6 * S), Image.LANCZOS)
+            _paste_left(img, well, bx[0] + _hd(2), (bx[1], bx[3]))
+            tx = bx[0] + _hd(2) + well.width + _hd(2)
         t = letter(c.title, _hd(4.6), "bold", CYAN, shadow=(0, 0, 0), pixel=2)
         img.alpha_composite(t, (tx, bx[1] + _hd(0.6)))
         s = letter(c.subtitle, _hd(3.2), "semi", GREY, shadow=(0, 0, 0))
@@ -576,6 +651,12 @@ def page(kit: Kit, spec: Spec) -> Image.Image:
             s = s.resize((maxw, s.height), Image.LANCZOS)
         img.alpha_composite(s, (tx, bx[1] + _hd(6.6)))
         _paste_centre(img, kit.chevron, (bx[2] - _hd(7), bx[1], bx[2] - _hd(2), bx[3]))
+    if holes:
+        a = _np(img)
+        for i in holes:
+            x0, y0, x1, y1 = hole_box(i)
+            a[y0:y1, x0:x1, 3] = 0
+        img = _img(a)
     return img
 
 
@@ -667,12 +748,22 @@ def build(add_bitmap, preview: str | None, mc_dir: str) -> None:
         pg = page(kit, spec)
         pages[spec.name] = pg
         add_bitmap(f"PAGE_{spec.name.upper()}", pg, f"gui/hub_page_{spec.name}", H, ascent, f"hub page {spec.name} {W}x{H} (HD x4)")
+    glow = card_on(kit)
+    for row in range(4):
+        top = SLOT_Y + (row + 1) * ROW + ROW - 1 - CARD_H - 1       # one px above the card tile
+        # one texture, four providers (only the ascent differs per row)
+        add_bitmap(f"HUB_CARD_ON_R{row + 1}", glow, "gui/hub_card_on", CARD_H + 2, 13 - top,
+                   f"glow frame over a card of row {row + 1} (owned rank, chosen setting), 74x14 (HD x4)")
     button_sprites(mc_dir)
     slot_highlight(mc_dir)
     if preview:
         chest = os.path.join(mc_dir, "textures", "gui", "container", "generic_54.png")
-        for spec, active in ((HUB, -1), (PROFILE, 0), (HELP, 7)):
+        for spec, active in ((HUB, -1), (PROFILE, 0), (HELP, 7), (RANKUP, 4), (SHOP, 3), (TRAVEL, 5)):
             comp = preview_compose(fr, pages[spec.name], tab_on, active, chest)
+            if spec is RANKUP:
+                for i in range(3):
+                    bx = card_box(i)
+                    comp.alpha_composite(glow, (bx[0] - S, bx[1] - S))
             if spec is PROFILE:
                 comp.alpha_composite(back, (cx(BACK[0]), cy(BACK[1])))
                 comp.alpha_composite(prev_, (cx(ARROW[0][0]), cy(ARROW[0][1])))

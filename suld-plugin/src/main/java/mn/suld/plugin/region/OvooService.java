@@ -91,6 +91,20 @@ public final class OvooService implements Listener {
         for (Player p : Bukkit.getOnlinePlayers()) loadBlessing(p);
     }
 
+    /** The nearest ovoo's {x, z} to {@code l}, or null when none is placed. */
+    public int[] nearest(Location l) {
+        int[] best = null;
+        double bestD = Double.MAX_VALUE;
+        for (Ovoo o : ovoos) {
+            double d = (o.x() - l.getX()) * (o.x() - l.getX()) + (o.z() - l.getZ()) * (o.z() - l.getZ());
+            if (d < bestD) {
+                bestD = d;
+                best = new int[]{o.x(), o.z()};
+            }
+        }
+        return best;
+    }
+
     /** Where each area's ovoo is (for maps and the tutorial). */
     public List<int[]> positions() {
         List<int[]> out = new ArrayList<>();

@@ -79,7 +79,60 @@ public final class NpcService implements Listener {
         RELAY_NAMES.put("fast_travel.gate_north", "Хойд хаалга");
     }
 
-    private static final long TRAVEL_COST = 10, BLESSING_COST = 30;
+    public static final long TRAVEL_COST = 10;
+    private static final long BLESSING_COST = 30;
+
+    /** The relay points (id → name), in the order the travel page shows them. */
+    public static Map<String, String> relays() {
+        return java.util.Collections.unmodifiableMap(RELAY_NAMES);
+    }
+
+    /** How close to a relay post a player must stand to travel from it (blocks). */
+    public static final double RELAY_RANGE = 8;
+
+    /** The relay the player stands at (within {@link #RELAY_RANGE}), or null: trips start only at a relay. */
+    public String relayHere(Player p) {
+        String best = null;
+        double bestD = RELAY_RANGE * RELAY_RANGE;
+        for (String key : RELAY_NAMES.keySet()) {
+            Location at = city.pointLocation(key);
+            if (at == null || at.getWorld() != p.getWorld()) continue;
+            double d = at.clone().add(1.5, 0, 1.5).distanceSquared(p.getLocation());
+            if (d < bestD) {
+                bestD = d;
+                best = key;
+            }
+        }
+        return best;
+    }
+
+    /** A paid trip to the relay {@code key}: the coins go first and come back when the teleport fails. */
+    public void travelTo(Player pl, String key) {
+        Location to = city.pointLocation(key);
+        String name = RELAY_NAMES.get(key);
+        if (to == null || name == null) return;
+        PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        if (pr.currency() < TRAVEL_COST) {
+            pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + TRAVEL_COST + " зоос)."));
+            return;
+        }
+        if (!travelling.add(pl.getUniqueId())) return; // a second click while the first trip loads
+        pr.addCurrency(-TRAVEL_COST); // paid up front, refunded if the trip fails
+        mn.suld.plugin.perf.SafeTeleport.to(plugin, pl, to.clone().add(1.5, 0, 1.5),
+                org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.PLUGIN, ok -> {
+                    travelling.remove(pl.getUniqueId());
+                    if (!ok) {
+                        pr.addCurrency(TRAVEL_COST);
+                        services.profiles().save(pr);
+                        pl.sendMessage(Messages.error("Аялал боломжгүй боллоо — зоос буцаагдлаа."));
+                        return;
+                    }
+                    services.profiles().save(pr);
+                    pl.playSound(pl.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1f);
+                    pl.sendMessage(Messages.success("Өртөөгөөр " + name + " хүрлээ (-" + TRAVEL_COST + " зоос)."));
+                });
+    }
     private static final long BLESSING_COOLDOWN_MS = 10 * 60_000L;
 
     private final Plugin plugin;
@@ -356,7 +409,7 @@ public final class NpcService implements Listener {
         } else if (id.equals("blacksmith")) {
             repair(p);
         } else if (id.startsWith("fast_travel.")) {
-            travel(p, id);
+            menus.travel(p);        // the Аялал page of the hub; the player stands at this relay
         } else if (id.equals("shrine.sky")) {
             // at the level cap the priest leads the Тэнгэрийн Зэрэг rite; below it, the blessing
             if ((pr.progression().level() >= mn.suld.api.balance.Balance.MAX_LEVEL || pr.ascension() > 0) && services.ascension != null) {
@@ -495,7 +548,8 @@ public final class NpcService implements Listener {
 
     // ------------------------------------------------------------------ relays
 
-    private void travel(Player p, String here) {
+    @SuppressWarnings("unused")
+    private void travelClassic(Player p, String here) {
         Menu m = new Menu(3, "Өртөө · Хурдан аялал", null);
         int slot = 11;
         for (Map.Entry<String, String> r : RELAY_NAMES.entrySet()) {

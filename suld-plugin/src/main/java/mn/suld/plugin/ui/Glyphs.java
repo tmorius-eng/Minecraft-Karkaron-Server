@@ -170,6 +170,22 @@ public final class Glyphs {
     public static final String HUB_NEXT = "\uE04E";
     /** hub page help 212x244 (HD x4) */
     public static final String PAGE_HELP = "\uE04F";
+    /** hub page rankup 212x244 (HD x4) */
+    public static final String PAGE_RANKUP = "\uE050";
+    /** hub page shop 212x244 (HD x4) */
+    public static final String PAGE_SHOP = "\uE051";
+    /** hub page shop2 212x244 (HD x4) */
+    public static final String PAGE_SHOP2 = "\uE052";
+    /** hub page travel 212x244 (HD x4) */
+    public static final String PAGE_TRAVEL = "\uE053";
+    /** glow frame over a card of row 1 (owned rank, chosen setting), 74x14 (HD x4) */
+    public static final String HUB_CARD_ON_R1 = "\uE054";
+    /** glow frame over a card of row 2 (owned rank, chosen setting), 74x14 (HD x4) */
+    public static final String HUB_CARD_ON_R2 = "\uE055";
+    /** glow frame over a card of row 3 (owned rank, chosen setting), 74x14 (HD x4) */
+    public static final String HUB_CARD_ON_R3 = "\uE056";
+    /** glow frame over a card of row 4 (owned rank, chosen setting), 74x14 (HD x4) */
+    public static final String HUB_CARD_ON_R4 = "\uE057";
 
     private Glyphs() {
     }

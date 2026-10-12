@@ -52,6 +52,9 @@ class HubLayoutTest {
         advance.put(Glyphs.HUB_BACK, HubLayout.BACK_W + 1);
         advance.put(Glyphs.HUB_PREV, HubLayout.ARROW_W + 1);
         advance.put(Glyphs.HUB_NEXT, HubLayout.ARROW_W + 1);
+        for (String g : new String[]{Glyphs.HUB_CARD_ON_R1, Glyphs.HUB_CARD_ON_R2, Glyphs.HUB_CARD_ON_R3, Glyphs.HUB_CARD_ON_R4}) {
+            advance.put(g, HubLayout.CARD_ON_W + 1);
+        }
         Map<String, String> names = new HashMap<>();
         for (Field f : Glyphs.class.getFields()) if (f.getType() == String.class) names.put((String) f.get(null), f.getName());
 
@@ -68,6 +71,11 @@ class HubLayoutTest {
         cursor[0] = HubLayout.TITLE_X;
         walk(HubLayout.title(Glyphs.PAGE_HUB, -1, false, false, false, null), advance, names, drawn, cursor);
         assertEquals(List.of("HUB_FRAME@" + HubLayout.X0, "PAGE_HUB@" + HubLayout.X0), drawn);
+
+        drawn.clear();
+        cursor[0] = HubLayout.TITLE_X;
+        walk(HubLayout.title(Glyphs.PAGE_HUB, -1, 0b1001, false, false, false, null), advance, names, drawn, cursor);
+        assertEquals(List.of("HUB_FRAME@" + HubLayout.X0, "PAGE_HUB@" + HubLayout.X0, "HUB_CARD_ON_R1@7", "HUB_CARD_ON_R2@97"), drawn);
     }
 
     private static void walk(Component c, Map<String, Integer> advance, Map<String, String> names, List<String> drawn, int[] cursor) {

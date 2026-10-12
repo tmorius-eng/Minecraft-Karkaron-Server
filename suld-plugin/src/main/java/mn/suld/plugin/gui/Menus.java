@@ -93,7 +93,7 @@ public final class Menus {
                 new HubMenu.Tab("Ур чадвар", "Чадварын мод, build, шившлэг.", this::skillsOrMap),
                 new HubMenu.Tab("Дэлгүүр", "Хангамж, олз зарах, гоёл.", this::shop),
                 new HubMenu.Tab("Rankup", "Ард → Хаан: цол ахих нөхцөл.", this::rankup),
-                new HubMenu.Tab("Аялал", "Түүхэн газрууд, өртөө, аялал.", pl -> questMenu.open(pl, 3)),
+                new HubMenu.Tab("Аялал", "Өртөө, түүхэн газрууд, овоо.", this::travel),
                 new HubMenu.Tab("Тохиргоо", "HUD, чат, тоглолтын тохиргоо.", null),
                 new HubMenu.Tab("Тусламж", "Заавар, командууд, дүрэм.", this::help));
     }
@@ -115,7 +115,7 @@ public final class Menus {
                     if (pr != null && pr.playerClass().isPresent()) profile(pl);
                     else services.classSelectionGui().open(pl);
                 }),
-                HubMenu.card("/travel", "Аялал, бүсүүд рүү.", (pl, c) -> questMenu.open(pl, 3)),
+                HubMenu.card("/travel", "Аялал, бүсүүд рүү.", (pl, c) -> travel(pl)),
                 HubMenu.card("/skills", "Ур чадварын цэс.", (pl, c) -> skillsOrMap(pl)),
                 HubMenu.card("/help", "Бүх командын жагсаалт.", (pl, c) -> help(pl)));
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_HUB, -1, null, cards, null, null, null, null), hubTabs());
@@ -408,7 +408,39 @@ public final class Menus {
 
     // ================================================================== rank ladder
 
+    /** The Rankup page of the hub: the eight ranks as cards (owned ones glow), the next one climbs on a click. */
     public void rankup(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        PlayerStyle s = styles().of(p.getUniqueId());
+        List<HubMenu.Card> cards = new ArrayList<>();
+        int mask = 0;
+        for (Rank r : Rank.LADDER) {
+            boolean have = r.ordinal() <= s.rank().ordinal();
+            boolean next = s.rank().next().map(n -> n == r).orElse(false);
+            if (have) mask |= 1 << r.ordinal();
+            TextColor c = StyleFormat.hex(r.color());
+            List<Component> info = new ArrayList<>();
+            info.add(Menu.kv("Түвшин:", String.valueOf(r.requiredLevel()), pr.progression().level() >= r.requiredLevel() ? GREEN : RED));
+            info.add(Menu.kv("Үнэ:", fmt(r.cost()) + " зоос", pr.currency() >= r.cost() ? GREEN : RED));
+            String hint = have ? "Танд байгаа ✔" : next ? "Дарж цол ахиулах" : "Өмнөх цолоо ав";
+            List<Component> body = List.of(StyleFormat.rankBadge(r, true), Component.empty(), b(r.lore()));
+            cards.add(HubMenu.card(Component.text(r.displayName(), c, TextDecoration.BOLD).font(StyleFormat.HD), Menu.lore(c, body, info, hint), null,
+                    next ? (pl, ct) -> {
+                        if (styles().rankUp(pl) == Rank.Check.OK) rankup(pl);
+                    } : null));
+        }
+        Component row = Component.text("Таны цол: ", TextColor.fromHexString("#A4B0C8"))
+                .append(Component.text(s.rank().displayName(), StyleFormat.hex(s.rank().color())))
+                .append(Component.text(" · Lv " + pr.progression().level() + " · " + fmt(pr.currency()) + " зоос", TextColor.fromHexString("#A4B0C8")));
+        HubMenu.Card badges = new HubMenu.Card(Menu.title("Бүх тэмдэг", GOLD), List.of(StyleFormat.rankBadge(s.rank(), true), Component.empty(),
+                b("Энэ тэмдэг нэрийн өмнө TAB, чат,"), b("толгой дээрх нэрэнд харагдана."), Component.empty(), Menu.line("« Дарж: тэмдэг бүр, яаж авах вэ »")),
+                (pl, c) -> badgeBook(pl));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_RANKUP, 4, row, cards, badges, this::main, null, null, mask), hubTabs());
+    }
+
+    /** The older four-row rank ladder (kept for the badge book's «« Цол» link). */
+    public void rankupClassic(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         PlayerStyle s = styles().of(p.getUniqueId());
@@ -683,7 +715,107 @@ public final class Menus {
 
     /** Sell prices of SÜLD loot (definition id → coins each). */
 
+    private Component wallet(Player p, PlayerProfile pr) {
+        return Component.text(fmt(pr.currency()) + " зоос · " + fmt(styles().of(p.getUniqueId()).credits()) + " ✦", TextColor.fromHexString("#A4B0C8"));
+    }
+
+    private HubMenu.Card supplyCard(PlayerProfile pr, Supply sup) {
+        ItemStack it = new ItemStack(sup.mat(), Math.min(sup.amount(), sup.mat().getMaxStackSize()));
+        return HubMenu.card(Menu.title(sup.name(), GREEN), Menu.lore(GREEN, List.of(),
+                List.of(Menu.kv("Үнэ:", fmt(sup.price()) + " зоос", pr.currency() >= sup.price() ? GREEN : RED)), "Дарж авах"), it,
+                (pl, c) -> {
+                    buySupply(pl, sup);
+                    if (sup == SUPPLIES.get(SUPPLIES.size() - 1)) shopMore(pl);
+                    else shop(pl);
+                });
+    }
+
+    /** The Дэлгүүр page of the hub: eight supplies, their items in the wells; the second page holds the rest. */
     public void shop(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        List<HubMenu.Card> cards = new ArrayList<>();
+        for (Supply sup : SUPPLIES.subList(0, 8)) cards.add(supplyCard(pr, sup));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP, 3, wallet(p, pr), cards, null, this::main, null, this::shopMore), hubTabs());
+    }
+
+    /** Page two: the last supply, selling, cosmetics, the credit store, the smith's book and board, the wallet. */
+    public void shopMore(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        List<HubMenu.Card> cards = new ArrayList<>();
+        cards.add(supplyCard(pr, SUPPLIES.get(SUPPLIES.size() - 1)));
+        cards.add(HubMenu.card(Menu.title("Олз зарах", GOLD), Menu.lore(GOLD,
+                List.of(b("Цүнхэн дэх чонын арьс, баавгайн арьс,"), b("хор, мөсөн чулуу... бүгдийг зарна.")),
+                List.of(Menu.kv("Үнэ:", "зэрэг, түвшнээс хамаарна", GOLD)), "Дарж бүгдийг зарах"), null, (pl, c) -> {
+            sellAll(pl);
+            shopMore(pl);
+        }));
+        cards.add(HubMenu.card("Зарах цонх", "Олз, зэвсэг, хуяг үнэтэйгээ — сонгоод зарна.", (pl, c) -> sell(pl)));
+        cards.add(HubMenu.card("Гоёл", "Цол, нэрийн өнгө, чатын өнгө...", (pl, c) -> cosmetics(pl)));
+        cards.add(HubMenu.card("Кредит дэлгүүр", "Сүлд Кредит — зөвхөн гоёлд (/buy).", (pl, c) -> buy(pl)));
+        cards.add(HubMenu.card("Жорын ном", "Дархны жорууд, дарж урлана (/item recipes).", (pl, c) -> {
+            pl.closeInventory();
+            pl.performCommand("item recipes");
+        }));
+        cards.add(HubMenu.card("Захиалгын самбар", "Бусдаар урлуулах, хөлс (/order).", (pl, c) -> {
+            pl.closeInventory();
+            pl.performCommand("order");
+        }));
+        cards.add(new HubMenu.Card(Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
+                Menu.kv("Кредит:", fmt(styles().of(p.getUniqueId()).credits()) + " ✦", SKY)), null));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP2, 3, wallet(p, pr), cards, null, this::main, this::shop, null), hubTabs());
+    }
+
+    /**
+     * The Аялал page of the hub ({@code /travel}): the five relays (a trip only from a relay, GAME-001), the
+     * historic sites, the nearest ovoo and the way home.
+     */
+    public void travel(Player p) {
+        var npcs = services.npcs;
+        String here = npcs == null ? null : npcs.relayHere(p);
+        List<HubMenu.Card> cards = new ArrayList<>();
+        for (Map.Entry<String, String> r : mn.suld.plugin.npc.NpcService.relays().entrySet()) {
+            boolean current = r.getKey().equals(here);
+            List<Component> lore = new ArrayList<>();
+            if (current) lore.add(Menu.line("Та энд байна."));
+            else {
+                lore.add(Menu.kv("Үнэ:", mn.suld.plugin.npc.NpcService.TRAVEL_COST + " зоос", GOLD));
+                lore.add(here == null ? Component.text("Аялахын тулд өртөөнд зогс.", NamedTextColor.GRAY).font(StyleFormat.HD) : Menu.line("« Дарж аялах »"));
+            }
+            cards.add(new HubMenu.Card(Menu.title(r.getValue(), current ? GREEN : HubMenu.CYAN), lore, current || npcs == null ? null : (pl, c) -> {
+                String at = npcs.relayHere(pl);
+                if (at == null) {
+                    pl.closeInventory();
+                    pl.sendMessage(Messages.info("Өртөөнд очоод аял: хотын талбай эсвэл дөрвөн хаалга."));
+                    return;
+                }
+                pl.closeInventory();
+                npcs.travelTo(pl, r.getKey());
+            }));
+        }
+        cards.add(HubMenu.card("Түүхэн газрууд", "Олсон газрууд, тэдний түүх.", (pl, c) -> questMenu.open(pl, 3)));
+        var ovoo = services.ovoos == null ? null : services.ovoos.nearest(p.getLocation());
+        cards.add(new HubMenu.Card(Menu.title("Овоо", GOLD), ovoo == null ? List.of(Menu.line("Ойролцоо овоо алга."))
+                : List.of(Menu.kv("Хамгийн ойр:", ovoo[0] + ", " + ovoo[1], GOLD), Menu.kv("Зай:", Math.round(p.getLocation().distance(
+                new org.bukkit.Location(p.getWorld(), ovoo[0], p.getLocation().getY(), ovoo[1]))) + " блок", SKY), Component.empty(),
+                Menu.line("« Дарж луужин заана »")), ovoo == null ? null : (pl, c) -> {
+            pl.setCompassTarget(new org.bukkit.Location(pl.getWorld(), ovoo[0], pl.getLocation().getY(), ovoo[1]));
+            pl.closeInventory();
+            pl.sendMessage(Messages.success("Луужин овоо руу заалаа."));
+        }));
+        cards.add(HubMenu.card("Хархорум руу", "/spawn — хотын талбай руу буцах.", (pl, c) -> {
+            pl.closeInventory();
+            pl.performCommand("spawn");
+        }));
+        String where = services.inCity(p.getLocation()) ? "Хархорум" : "Тал нутаг";
+        Component row = Component.text(where + (here != null ? " · өртөө: " + mn.suld.plugin.npc.NpcService.relays().get(here) : " · өртөөнөөс хол"),
+                TextColor.fromHexString("#A4B0C8"));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_TRAVEL, 5, row, cards, null, this::main, null, null), hubTabs());
+    }
+
+    /** The older shop window. */
+    public void shopClassic(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         Menu m = new Menu(5, "Дэлгүүр · Shop", null);

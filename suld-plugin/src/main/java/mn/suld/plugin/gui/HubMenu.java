@@ -18,8 +18,14 @@ public final class HubMenu {
     static final TextColor CYAN = TextColor.fromHexString("#56E2EC");
     static final TextColor GOLD = TextColor.fromHexString("#ECBE4C");
 
-    /** One command card: tooltip name, lore and what a click does (null = shown, not clickable). */
-    public record Card(Component name, List<Component> lore, Menu.Click click) {
+    /**
+     * One command card: tooltip name, lore and what a click does (null = shown, not clickable). With {@code item},
+     * that stack sits in the card's first slot, where the page art leaves a hole for it (shop supplies).
+     */
+    public record Card(Component name, List<Component> lore, Menu.Click click, org.bukkit.inventory.ItemStack item) {
+        public Card(Component name, List<Component> lore, Menu.Click click) {
+            this(name, lore, click, null);
+        }
     }
 
     /** One tab tile: label, hint and the window it opens (null = not available yet). */
@@ -33,16 +39,21 @@ public final class HubMenu {
      * @param cards     up to 8 cards, in reading order (left, right, next row ...)
      * @param ornament  the tooltip/click of the ninth tile (slot 8), or null
      * @param back      the parent window, or null (no «Буцах» button)
+     * @param cardMask  bit i set = a glow frame over card i (owned rank, chosen setting)
      */
     public record Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
-                       Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next) {
+                       Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask) {
+        public Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
+                    Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next) {
+            this(page, activeTab, dynamic, cards, ornament, back, prev, next, 0);
+        }
     }
 
     private HubMenu() {
     }
 
     public static Menu open(Player p, Spec spec, List<Tab> tabs) {
-        Menu m = new Menu(6, HubLayout.title(spec.page(), spec.activeTab(), spec.back() != null, spec.prev() != null,
+        Menu m = new Menu(6, HubLayout.title(spec.page(), spec.activeTab(), spec.cardMask(), spec.back() != null, spec.prev() != null,
                 spec.next() != null, spec.dynamic()));
         for (int i = 0; i < Math.min(tabs.size(), HubLayout.TABS); i++) {
             Tab t = tabs.get(i);
@@ -61,7 +72,21 @@ public final class HubMenu {
         }
         for (int i = 0; i < Math.min(spec.cards().size(), HubLayout.CARDS); i++) {
             Card c = spec.cards().get(i);
-            if (c != null) m.area(HubLayout.cardSlots(i), c.name(), c.lore(), c.click());
+            if (c == null) continue;
+            int[] slots = HubLayout.cardSlots(i);
+            m.area(slots, c.name(), c.lore(), c.click());
+            if (c.item() != null) {
+                org.bukkit.inventory.ItemStack it = c.item().clone();
+                org.bukkit.inventory.meta.ItemMeta meta = it.getItemMeta();
+                meta.displayName(c.name().decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                List<Component> lore = new ArrayList<>();
+                for (Component l : c.lore()) lore.add(l.decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                meta.lore(lore);
+                meta.addItemFlags(org.bukkit.inventory.ItemFlag.values());
+                meta.setTooltipStyle(new org.bukkit.NamespacedKey("suld", "mongol"));
+                it.setItemMeta(meta);
+                m.set(slots[0], it, c.click());
+            }
         }
         if (spec.back() != null) {
             Consumer<Player> back = spec.back();
@@ -84,5 +109,10 @@ public final class HubMenu {
     /** A card's tooltip: the command in cyan, its line, a click hint. */
     public static Card card(String title, String subtitle, Menu.Click click) {
         return new Card(Menu.title(title, CYAN), List.of(Menu.line(subtitle), Component.empty(), Menu.line("« Дарж нээх »")), click);
+    }
+
+    /** A card with a full tooltip (title colour, info lines, hint) and optionally the item in its well. */
+    public static Card card(Component title, List<Component> lore, org.bukkit.inventory.ItemStack item, Menu.Click click) {
+        return new Card(title, lore, click, item);
     }
 }

@@ -437,6 +437,8 @@ public final class SuldServices {
     public volatile mn.suld.plugin.gui.AscensionMenu ascension;
     /** The historic sites (set by SuldPlugin). */
     public volatile mn.suld.plugin.region.HistoricSiteService historicSites;
+    /** The areas' ovoos (set by SuldPlugin); the travel page points the compass at the nearest. */
+    public volatile mn.suld.plugin.region.OvooService ovoos;
     /** World bosses (docs/WORLD_BOSSES.md); set once the historic sites are placed. */
     public volatile mn.suld.plugin.worldboss.WorldBossService worldBosses;
 

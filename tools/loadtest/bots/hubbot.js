@@ -87,6 +87,20 @@ async function click(b, slot) {
   r = await open(b, '/help');
   check(has(r.w, '\ue04f') && r.w.slots[8], '/help opens the Тусламж page with the tutorial on the ornament tile', r.w ? 'ok' : 'no window');
 
+  r = await open(b, '/rankup');
+  check(has(r.w, '\ue050') && has(r.w, '\ue054'), '/rankup opens the Rankup page with the owned rank glowing', r.w ? 'ok' : 'no window');
+  r = await open(b, '/shop');
+  const bread = r.w && r.w.slots[9] && r.w.slots[9].name === 'bread';
+  check(has(r.w, '\ue051') && bread && r.w.slots[53], '/shop opens the Дэлгүүр page: bread in the first well, a next-page arrow', r.w ? (r.w.slots[9] ? r.w.slots[9].name : 'no item') : 'no window');
+  let w2 = await click(b, 53);
+  check(has(w2, '\ue052') && w2.slots[52], 'the arrow turns to page two (with a previous-page arrow)', w2 ? 'ok' : 'no window');
+  r = await open(b, '/travel');
+  check(has(r.w, '\ue053') && r.w.slots[9] && r.w.slots[36], '/travel opens the Аялал page (relays and the way home)', r.w ? 'ok' : 'no window');
+  const k2 = b.chatLog.length;
+  await b.clickWindow(14, 0, 0).catch(() => {}); await sleep(1500);
+  const said = b.chatLog.slice(k2).join(' | ');
+  check(said.includes('өртөөнд очоод аял') || said.includes('Өртөөнд очоод аял') || said.includes('Та энд байна') || said.includes('хүрлээ'), 'a relay card away from a relay asks the player to stand at one (or travels when at one)', said.slice(0, 160));
+
   console.log(results.every(Boolean) ? `ALL ${results.length} PASSED` : `${results.filter(x => !x).length} FAILED`);
   b.quit(); process.exit(results.every(Boolean) ? 0 : 1);
 })();

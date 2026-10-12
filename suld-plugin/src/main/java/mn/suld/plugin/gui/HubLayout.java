@@ -25,6 +25,7 @@ public final class HubLayout {
     static final int SLOT_X = 8;
     static final int ROW = 18;
     static final int TAB_ON_W = 19;      // the glow tile, drawn one px left of the tab's slot
+    static final int CARD_ON_W = 74;     // the glow frame over a card, one px left of its slots
     static final int BACK_X = 8;
     static final int BACK_W = 38;
     static final int PREV_X = 134;
@@ -75,11 +76,22 @@ public final class HubLayout {
      * @param activeTab 0-7, or -1 for none
      */
     public static Component title(String page, int activeTab, boolean back, boolean prev, boolean next, Component dynamic) {
+        return title(page, activeTab, 0, back, prev, next, dynamic);
+    }
+
+    /** As above, with a glow frame over every card whose bit is set in {@code cardMask} (owned rank, chosen setting). */
+    public static Component title(String page, int activeTab, int cardMask, boolean back, boolean prev, boolean next, Component dynamic) {
         List<Component> parts = new ArrayList<>();
         int cursor = TITLE_X;
         cursor = draw(parts, cursor, X0, Glyphs.HUB_FRAME, W);
         cursor = draw(parts, cursor, X0, page, W);
         if (activeTab >= 0) cursor = draw(parts, cursor, SLOT_X + ROW * tabSlot(activeTab) - 1, Glyphs.HUB_TAB_ON, TAB_ON_W);
+        String[] rows = {Glyphs.HUB_CARD_ON_R1, Glyphs.HUB_CARD_ON_R2, Glyphs.HUB_CARD_ON_R3, Glyphs.HUB_CARD_ON_R4};
+        for (int c = 0; c < CARDS; c++) {
+            if ((cardMask & (1 << c)) == 0) continue;
+            int x = SLOT_X + ROW * (c % 2 == 0 ? 0 : GUTTER_COL + 1) - 1;
+            cursor = draw(parts, cursor, x, rows[c / 2], CARD_ON_W);
+        }
         if (back) cursor = draw(parts, cursor, BACK_X, Glyphs.HUB_BACK, BACK_W);
         if (prev) cursor = draw(parts, cursor, PREV_X, Glyphs.HUB_PREV, ARROW_W);
         if (next) cursor = draw(parts, cursor, NEXT_X, Glyphs.HUB_NEXT, ARROW_W);

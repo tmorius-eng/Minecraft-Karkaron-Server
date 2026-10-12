@@ -596,6 +596,78 @@
    "chars": [
     ""
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_page_rankup.png",
+   "height": 244,
+   "ascent": 35,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_page_shop.png",
+   "height": 244,
+   "ascent": 35,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_page_shop2.png",
+   "height": 244,
+   "ascent": 35,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_page_travel.png",
+   "height": 244,
+   "ascent": 35,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_card_on.png",
+   "height": 14,
+   "ascent": -27,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_card_on.png",
+   "height": 14,
+   "ascent": -45,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_card_on.png",
+   "height": 14,
+   "ascent": -63,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/hub_card_on.png",
+   "height": 14,
+   "ascent": -81,
+   "chars": [
+    ""
+   ]
   }
  ]
 }
