@@ -79,8 +79,8 @@ public abstract class Rules {
 
     /**
      * Effective hits per second of the class's basic attack. Live: SÜLD damage ignores the attack-cooldown charge, so
-     * every melee weapon is capped only by the 0.5 s hurt invulnerability (CombatListener.onHit0); bows need a full
-     * draw (~1 s for full damage).
+     * every melee weapon is capped only by the 0.5 s hurt invulnerability (CombatListener.onHit0); the Мэргэн class
+     * bow shoots a full-draw arrow once a second on a right click (SkillService.SHOT_MS).
      */
     public double hitsPerSecond(PlayerClass c) {
         return c == PlayerClass.MERGEN ? 1.0 : 1.7;

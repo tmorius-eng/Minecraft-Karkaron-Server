@@ -247,6 +247,14 @@ public final class SkillService implements Listener {
         a.setPickupStatus(org.bukkit.entity.AbstractArrow.PickupStatus.DISALLOWED);
         a.setDamage(2.0);
         a.setCritical(false);
+        // a full-draw shot as far as every listener knows (CombatFeel's release ring, logging plugins)
+        var shot = new org.bukkit.event.entity.EntityShootBowEvent(p, p.getInventory().getItemInMainHand(), new org.bukkit.inventory.ItemStack(org.bukkit.Material.ARROW), a,
+                EquipmentSlot.HAND, 1.0f, false);
+        Bukkit.getPluginManager().callEvent(shot);
+        if (shot.isCancelled()) {
+            a.remove();
+            return;
+        }
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.9f, 1.15f);
         p.getWorld().spawnParticle(org.bukkit.Particle.CRIT, p.getEyeLocation().add(p.getEyeLocation().getDirection().multiply(1.2)), 6, 0.1, 0.1, 0.1, 0.05);
     }
