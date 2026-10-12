@@ -551,7 +551,8 @@ final class HudPanel implements Listener {
         int hp = Math.min((int) Math.ceil(p.getHealth()), maxHp);
         int filled = (int) Math.round(pool.fraction() * 10);
         TextColor rc = HudComposer.resourceColor(c);
-        Component bar = Component.empty().append(StyleFormat.glyph(Glyphs.ICON_HEART)).append(Component.text(" " + hp + "/" + maxHp, NamedTextColor.RED, TextDecoration.BOLD))
+        // plain clients have no pack font: a pack glyph here would be a box, so the heart is the Unicode one
+        Component bar = Component.empty().append(Component.text("❤", NamedTextColor.RED)).append(Component.text(" " + hp + "/" + maxHp, NamedTextColor.RED, TextDecoration.BOLD))
                 .append(Component.text("    " + c.resourceName().split(" ")[0] + " ", rc, TextDecoration.BOLD))
                 .append(Component.text("▰".repeat(filled), rc)).append(Component.text("▱".repeat(10 - filled), NamedTextColor.DARK_GRAY))
                 .append(Component.text(" " + pool.value(), rc, TextDecoration.BOLD));

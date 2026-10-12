@@ -211,6 +211,18 @@ public final class ResourcePackService implements Listener {
         }
     }
 
+    /**
+     * Whether a status answers SÜLD's pack: our id, or none / the nil id (some clients and Mineflayer answer that way;
+     * SÜLD sends one pack). Another plugin's pack never decides the HUD or the onboarding gate.
+     */
+    static boolean ours(UUID answered) {
+        return answered == null || PACK_ID.equals(answered) || NIL.equals(answered);
+    }
+
+    static UUID packId() {
+        return PACK_ID;
+    }
+
     static PackGate.Answer answer(PlayerResourcePackStatusEvent.Status s) {
         return switch (s) {
             case SUCCESSFULLY_LOADED, DECLINED, FAILED_DOWNLOAD, INVALID_URL, FAILED_RELOAD, DISCARDED -> PackGate.Answer.TERMINAL;
@@ -242,9 +254,7 @@ public final class ResourcePackService implements Listener {
     public void onStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
         // only SÜLD's pack decides the HUD and the onboarding gate: another plugin's pack must not overwrite it
-        // some clients (and Mineflayer) answer with the nil id: that is ours too (SÜLD sends one pack)
-        UUID answered = event.getID();
-        if (answered != null && !PACK_ID.equals(answered) && !NIL.equals(answered)) {
+        if (!ours(event.getID())) {
             plugin.getLogger().info("Resource pack: " + player.getName() + " -> " + event.getStatus() + " for another pack " + event.getID());
             return;
         }
