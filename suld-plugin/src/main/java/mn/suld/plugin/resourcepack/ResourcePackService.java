@@ -158,6 +158,9 @@ public final class ResourcePackService implements Listener {
         if (base.isBlank()) {
             InetSocketAddress vh = player.getVirtualHost();
             String host = vh != null && vh.getHostString() != null && !vh.getHostString().isBlank() ? vh.getHostString() : "127.0.0.1";
+            // the pack server listens on IPv4 (0.0.0.0): "localhost" resolves to ::1 first on Windows and the
+            // client's download can hang there, so a local player gets the IPv4 loopback
+            if (host.equalsIgnoreCase("localhost") || host.equals("::1") || host.equals("0:0:0:0:0:0:0:1")) host = "127.0.0.1";
             if (host.contains(":") && !host.startsWith("[")) host = "[" + host + "]"; // IPv6 literal
             base = "http://" + host + ":" + settings.hostPort();
         }
@@ -174,7 +177,9 @@ public final class ResourcePackService implements Listener {
         byte[] hash = decodeSha1(sha1());
         Component prompt = Component.text(settings.prompt(), Messages.BRAND);
         try {
-            player.setResourcePack(PACK_ID, urlFor(player), hash, prompt, settings.required());
+            String url = urlFor(player);
+            plugin.getLogger().info("Resource pack: sending " + url + " to " + player.getName());
+            player.setResourcePack(PACK_ID, url, hash, prompt, settings.required());
             player.sendMessage(Messages.info("Дүрс багц илгээж байна…"));
         } catch (Exception ex) {
             plugin.getLogger().warning("Failed to send resource pack to " + player.getName() + ": " + ex.getMessage());
@@ -236,6 +241,9 @@ public final class ResourcePackService implements Listener {
     public void onStatus(PlayerResourcePackStatusEvent event) {
         Player player = event.getPlayer();
         status.put(player.getUniqueId(), event.getStatus());
+        Long t0 = sentAt.get(player.getUniqueId());
+        plugin.getLogger().info("Resource pack: " + player.getName() + " -> " + event.getStatus()
+                + (t0 == null ? "" : " (" + (System.currentTimeMillis() - t0) + " ms after sending)"));
         // the funnel's second step (ANA-001): every status with the time since the pack was sent; a decline on a
         // required pack is where a player is lost before the class menu
         Long sent = sentAt.get(player.getUniqueId());
