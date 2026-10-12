@@ -85,7 +85,44 @@ public final class Menus {
 
     // ================================================================== main / welcome
 
+    /** The tabs of every «Командын Өргөө» window (docs/UI_HUB.md), in the mock-up's order. */
+    private List<HubMenu.Tab> hubTabs() {
+        return List.of(
+                new HubMenu.Tab("Тоглогч", "Таны баатар: түвшин, цол, шагнал, овог.", this::profile),
+                new HubMenu.Tab("Даалгавар", "Эрэлийн ном: түүхийн бүлгүүд, газрууд.", this::quests),
+                new HubMenu.Tab("Ур чадвар", "Чадварын мод, build, шившлэг.", this::skillsOrMap),
+                new HubMenu.Tab("Дэлгүүр", "Хангамж, олз зарах, гоёл.", this::shop),
+                new HubMenu.Tab("Rankup", "Ард → Хаан: цол ахих нөхцөл.", this::rankup),
+                new HubMenu.Tab("Аялал", "Түүхэн газрууд, өртөө, аялал.", pl -> questMenu.open(pl, 3)),
+                new HubMenu.Tab("Тохиргоо", "HUD, чат, тоглолтын тохиргоо.", null),
+                new HubMenu.Tab("Тусламж", "Заавар, командууд, дүрэм.", this::help));
+    }
+
+    private void skillsOrMap(Player p) {
+        if (skillMap != null) skillMap.open(p);
+        else skills(p);
+    }
+
+    /** The «Командын Өргөө» command hub: {@code /menu}, the hotbar item, the welcome screen. */
     public void main(Player p) {
+        List<HubMenu.Card> cards = List.of(
+                HubMenu.card("/menu", "Үндсэн цэсийг нээнэ (Сүлд Цэс).", (pl, c) -> classic(pl)),
+                HubMenu.card("/shop", "Дэлгүүрийн цэс.", (pl, c) -> shop(pl)),
+                HubMenu.card("/quest", "Даалгаврын цэс.", (pl, c) -> quests(pl)),
+                HubMenu.card("/rankup", "Ранк ахих нөхцөл.", (pl, c) -> rankup(pl)),
+                HubMenu.card("/class", "Анги сонгох, харах.", (pl, c) -> {
+                    PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
+                    if (pr != null && pr.playerClass().isPresent()) profile(pl);
+                    else services.classSelectionGui().open(pl);
+                }),
+                HubMenu.card("/travel", "Аялал, бүсүүд рүү.", (pl, c) -> questMenu.open(pl, 3)),
+                HubMenu.card("/skills", "Ур чадварын цэс.", (pl, c) -> skillsOrMap(pl)),
+                HubMenu.card("/help", "Бүх командын жагсаалт.", (pl, c) -> help(pl)));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_HUB, -1, null, cards, null, null, null, null), hubTabs());
+    }
+
+    /** The painted «Сүлд Цэс» (six cards): the hub's «/menu» card and the older entry points. */
+    public void classic(Player p) {
         // the title is painted into the background (resource pack gui/main.png): no text on top of it
         Menu m = new Menu(6, net.kyori.adventure.text.Component.empty(), Glyphs.GUI_MAIN, 0);
         m.area(Menu.card(0), Menu.title("Дүр", SKY), Menu.lore(SKY, List.of(b("Түвшин, ур чадвар, шагнал, статистик.")),
@@ -183,7 +220,49 @@ public final class Menus {
 
     // ================================================================== profile / quests
 
+    /** The Тоглогч page of the hub: the player's stats on the ninth tile, eight cards, the row under the title. */
     public void profile(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null) return;
+        PlayerStyle s = styles().of(p.getUniqueId());
+        Progression prog = pr.progression();
+        String clan = services.clans().tagOf(p.getUniqueId()).map(t -> " · [" + t + "]").orElse("");
+        Component row = Component.text("Lv " + prog.level() + " · " + fmt(pr.currency()) + " зоос · " + s.rank().displayName() + clan,
+                TextColor.fromHexString("#A4B0C8"));
+        int claimable = LevelRewards.claimable(prog.level(), s.claimedLevels()).size();
+        List<Component> stats = List.of(
+                Menu.kv("Анги:", pr.playerClass().map(c -> c.displayName()).orElse("сонгоогүй"), RED),
+                Menu.kv("Цол:", s.rank().displayName(), StyleFormat.hex(s.rank().color())),
+                Menu.kv("Түвшин:", prog.level() + " (" + Math.round(services.progression().engine().progressFraction(prog) * 100) + "%)", GREEN),
+                Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
+                Menu.kv("Кредит:", fmt(s.credits()) + " ✦", SKY),
+                Menu.kv("Овог:", services.clans().tagOf(p.getUniqueId()).map(t -> "[" + t + "]").orElse("—"), NamedTextColor.AQUA),
+                Component.empty(),
+                Menu.line("« Дарж: морь, Хуралдай, хроник »"));
+        HubMenu.Card head = new HubMenu.Card(StyleFormat.name(p, s).decoration(TextDecoration.BOLD, true), stats, (pl, c) -> profileClassic(pl));
+        List<HubMenu.Card> cards = List.of(
+                HubMenu.card("Түвшний шагнал", claimable > 0 ? "Авах боломжтой: " + claimable : "Түвшин бүрийн шагнал авах.", (pl, c) -> lvlup(pl)),
+                HubMenu.card("Цол", "Одоо: " + s.rank().displayName() + " · ранк ахих нөхцөл.", (pl, c) -> rankup(pl)),
+                HubMenu.card("Гоёл", "Гоёл чимэглэл, цол, нэрийн өнгө.", (pl, c) -> cosmetics(pl)),
+                HubMenu.card("Эрэл", "Түүхийн бүлгүүд, явц.", (pl, c) -> quests(pl)),
+                HubMenu.card("Ур чадвар", "Чадварын мод, build.", (pl, c) -> skillsOrMap(pl)),
+                HubMenu.card("Овог", "Овгийн мэдээлэл, гишүүд.", (pl, c) -> {
+                    pl.closeInventory();
+                    pl.performCommand("clan info");
+                }),
+                HubMenu.card("Өдрийн шагнал", "Өдөр бүрийн шагнал, цуваа.", (pl, c) -> {
+                    pl.closeInventory();
+                    pl.performCommand("daily");
+                }),
+                HubMenu.card("Даалгавар", "Өдрийн даалгаврууд.", (pl, c) -> {
+                    pl.closeInventory();
+                    pl.performCommand("tasks");
+                }));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, row, cards, head, this::main, null, null), hubTabs());
+    }
+
+    /** The older five-row profile (horse, Их Хуралдай, «Миний түүх»): behind the hub profile's head tile. */
+    public void profileClassic(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         PlayerStyle s = styles().of(p.getUniqueId());

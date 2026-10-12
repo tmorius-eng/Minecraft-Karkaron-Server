@@ -185,7 +185,10 @@ public final class ItemFactory {
         for (int k = 1; k < lines.size(); k++) lore.add(component(lines.get(k), color));
         lore.add(Component.text("SÜLD", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
         meta.lore(lore);
+        meta.setTooltipStyle(MONGOL_TOOLTIP);   // SÜLD gear wears the pack's navy-and-gold tooltip frame
     }
+
+    private static final org.bukkit.NamespacedKey MONGOL_TOOLTIP = new org.bukkit.NamespacedKey("suld", "mongol");
 
     /** Colour of a tooltip line (also used by the item GUIs for comparison lines). */
     public static Component component(ItemTooltip.Line l, TextColor rarity) {

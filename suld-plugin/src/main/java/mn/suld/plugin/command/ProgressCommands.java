@@ -114,6 +114,10 @@ public final class ProgressCommands {
                 }
                 return true;
             }
+            if (menus != null && s instanceof Player p && a.length == 0) {
+                menus.profile(p);        // the class is on the Тоглогч page; the text stays for the console and lookups
+                return true;
+            }
             s.sendMessage(header("Анги · " + pc.displayName()));
             s.sendMessage(row("Үүрэг", roleName(pc), NamedTextColor.WHITE));
             s.sendMessage(row("Нөөц", pc.resourceName() + " (" + pc.resourceMax() + ")", NamedTextColor.AQUA));
@@ -131,6 +135,10 @@ public final class ProgressCommands {
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
             PlayerProfile profile = profileOf(s, a);
             if (profile == null) return true;
+            if (menus != null && s instanceof Player p && a.length == 0) {
+                menus.profile(p);        // the window; the text stays for the console and «/profile <name>»
+                return true;
+            }
             ProgressionEngine engine = services.progression().engine();
             Progression prog = profile.progression();
             Player online = Bukkit.getPlayer(profile.playerId());
@@ -163,6 +171,10 @@ public final class ProgressCommands {
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
             PlayerProfile profile = profileOf(s, a);
             if (profile == null) return true;
+            if (menus != null && s instanceof Player p && a.length == 0) {
+                menus.profile(p);        // level and EXP are on the Тоглогч page
+                return true;
+            }
             ProgressionEngine engine = services.progression().engine();
             Progression prog = profile.progression();
             int maxLevel = services.config().progression().maxLevel();

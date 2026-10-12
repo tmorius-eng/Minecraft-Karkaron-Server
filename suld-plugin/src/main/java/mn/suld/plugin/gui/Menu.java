@@ -66,6 +66,11 @@ public final class Menu implements InventoryHolder {
         this.inventory = Bukkit.createInventory(this, rows * 9, t);
     }
 
+    /** A menu whose title is already composed (glyph layers and shifts), e.g. {@link HubLayout#title}. */
+    public Menu(int rows, Component composedTitle) {
+        this.inventory = Bukkit.createInventory(this, rows * 9, composedTitle);
+    }
+
     @Override
     public @NotNull Inventory getInventory() {
         return inventory;
@@ -133,6 +138,7 @@ public final class Menu implements InventoryHolder {
         for (Component c : lore) l.add(c.decoration(TextDecoration.ITALIC, false));
         m.lore(l);
         m.addItemFlags(ItemFlag.values());
+        m.setTooltipStyle(MONGOL_TOOLTIP);      // every menu tooltip wears the pack's navy-and-gold frame
         it.setItemMeta(m);
         return it;
     }
