@@ -94,7 +94,7 @@ public final class LeaderboardService implements TabExecutor {
     private static String value(Leaderboard b, Leaderboard.Entry e) {
         return switch (b) {
             case LEVEL -> "Түвшин " + e.level();
-            case COINS -> String.format(Locale.ROOT, "%,d ₮", e.coins());
+            case COINS -> String.format(Locale.ROOT, "%,d зоос", e.coins());
         };
     }
 
@@ -110,7 +110,7 @@ public final class LeaderboardService implements TabExecutor {
             TextColor color = i < PODIUM.length ? PODIUM[i] : NamedTextColor.WHITE;
             ItemStack head = Menu.item(Material.PLAYER_HEAD, Component.text((i + 1) + ". " + e.name(), color, TextDecoration.BOLD), List.of(
                     Menu.kv("Түвшин:", String.valueOf(e.level()), TextColor.fromHexString("#7CE07C")),
-                    Menu.kv("Зоос:", String.format(Locale.ROOT, "%,d ₮", e.coins()), TextColor.fromHexString("#FFD24A"))));
+                    Menu.kv("Зоос:", String.format(Locale.ROOT, "%,d", e.coins()), TextColor.fromHexString("#FFD24A"))));
             if (head.getItemMeta() instanceof SkullMeta sm) {
                 sm.setOwningPlayer(Bukkit.getOfflinePlayer(e.player()));
                 head.setItemMeta(sm);

@@ -193,7 +193,7 @@ public final class Menus {
                 Menu.kv("Анги:", pr.playerClass().map(c -> c.displayName()).orElse("сонгоогүй"), RED),
                 Menu.kv("Цол:", s.rank().displayName(), StyleFormat.hex(s.rank().color())),
                 Menu.kv("Түвшин:", prog.level() + " (" + Math.round(services.progression().engine().progressFraction(prog) * 100) + "%)", GREEN),
-                Menu.kv("Зоос:", fmt(pr.currency()) + " ₮", GOLD),
+                Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
                 Menu.kv("Кредит:", fmt(s.credits()) + " ✦", SKY),
                 Menu.kv("Овог:", services.clans().tagOf(p.getUniqueId()).map(t -> "[" + t + "]").orElse("—"), NamedTextColor.AQUA)));
         if (head.getItemMeta() instanceof SkullMeta sm) {
@@ -347,7 +347,7 @@ public final class Menus {
             TextColor c = StyleFormat.hex(r.color());
             List<Component> info = new ArrayList<>();
             info.add(Menu.kv("Түвшин:", String.valueOf(r.requiredLevel()), pr.progression().level() >= r.requiredLevel() ? GREEN : RED));
-            info.add(Menu.kv("Үнэ:", fmt(r.cost()) + " ₮", pr.currency() >= r.cost() ? GREEN : RED));
+            info.add(Menu.kv("Үнэ:", fmt(r.cost()) + " зоос", pr.currency() >= r.cost() ? GREEN : RED));
             String hint = have ? "Танд байгаа ✔" : next ? "Дарж цол ахиулах" : "Өмнөх цолоо ав";
             // the rank's badge (the one shown before the name in TAB, chat and above the head)
             List<Component> body = List.of(StyleFormat.rankBadge(r, true), Component.empty(), b(r.lore()));
@@ -381,7 +381,7 @@ public final class Menus {
         for (Rank r : Rank.LADDER) {
             boolean have = r.ordinal() <= s.rank().ordinal();
             m.set(slot++, badgeItem(StyleFormat.rankBadge(r, true), r.displayName(), StyleFormat.hex(r.color()), have,
-                    List.of(b("Цол: /rankup"), Menu.kv("Түвшин:", String.valueOf(r.requiredLevel()), SKY), Menu.kv("Үнэ:", fmt(r.cost()) + " ₮", GOLD))), null);
+                    List.of(b("Цол: /rankup"), Menu.kv("Түвшин:", String.valueOf(r.requiredLevel()), SKY), Menu.kv("Үнэ:", fmt(r.cost()) + " зоос", GOLD))), null);
         }
         slot = 9;
         var staff = StyleFormat.staffOf(p).orElse(null);
@@ -434,7 +434,7 @@ public final class Menus {
             Material mat = claimed ? Material.MINECART : ready ? Material.CHEST_MINECART : Material.GRAY_DYE;
             TextColor c = claimed ? NamedTextColor.GRAY : ready ? GREEN : RED;
             List<Component> info = new ArrayList<>();
-            info.add(Menu.kv("Зоос:", "+" + fmt(r.coins()) + " ₮", GOLD));
+            info.add(Menu.kv("Зоос:", "+" + fmt(r.coins()), GOLD));
             if (r.cosmeticId() != null) {
                 CosmeticCatalog.byId(r.cosmeticId()).ifPresent(cos -> info.add(Menu.kv(cos.category().displayName() + ":", cos.name(), PURPLE)));
             }
@@ -485,7 +485,7 @@ public final class Menus {
         }
         m.set(8, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
         m.set(17, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(
-                Menu.kv("Зоос:", fmt(pr == null ? 0 : pr.currency()) + " ₮", GOLD), Menu.kv("Кредит:", fmt(s.credits()) + " ✦", SKY))), null);
+                Menu.kv("Зоос:", fmt(pr == null ? 0 : pr.currency()), GOLD), Menu.kv("Кредит:", fmt(s.credits()) + " ✦", SKY))), null);
         m.set(26, Menu.item(Material.EMERALD, Menu.title("Кредит · /buy", SKY), Menu.lore(SKY,
                 List.of(b("Сүлд Кредитээр гоёл авна.")), List.of(), "Дарж нээх")), (pl, c) -> buy(pl));
         m.set(35, Menu.item(Material.CHEST, Menu.title("Дэлгүүр · /shop", GREEN), List.of()), (pl, c) -> shop(pl));
@@ -554,11 +554,11 @@ public final class Menus {
                 hint = cat == Cosmetic.Category.EMOJI ? "Чатад бичиж ашигла" : on ? "Дарж тайлах" : "Дарж зүүх";
             } else {
                 boolean forCoins = styles().coinBuyable(c);
-                if (forCoins) info.add(Menu.kv("Зоос:", fmt(c.price()) + " ₮", coins >= c.price() ? GREEN : RED));
+                if (forCoins) info.add(Menu.kv("Зоос:", fmt(c.price()), coins >= c.price() ? GREEN : RED));
                 if (c.creditPrice() > 0) info.add(Menu.kv("Кредит:", fmt(c.creditPrice()) + " ✦", s.credits() >= c.creditPrice() ? GREEN : RED));
                 if (c.creditPrice() > 0 && !forCoins) info.add(Menu.kv("Авах:", "Зөвхөн кредитээр · /buy", SKY));
                 if (c.source().startsWith("level:")) info.add(Menu.kv("Авах:", "Түвшин " + c.source().substring(6) + " · /lvlup", PURPLE));
-                hint = forCoins ? "Зүүн: " + fmt(c.price()) + " ₮ зоосоор · Баруун: " + fmt(c.creditPrice()) + " ✦ кредитээр"
+                hint = forCoins ? "Зүүн: " + fmt(c.price()) + " зоос зоосоор · Баруун: " + fmt(c.creditPrice()) + " ✦ кредитээр"
                         : c.creditPrice() > 0 ? "Дарж " + fmt(c.creditPrice()) + " ✦ кредитээр авах" : "Түвшний шагнал";
             }
             body.add(Component.text("Shift + зүүн дарж урьдчилан харна", NamedTextColor.GRAY, TextDecoration.BOLD));
@@ -578,7 +578,7 @@ public final class Menus {
             });
         }
         m.set(45, Menu.item(Material.ARROW, Menu.title("« Гоёл", GOLD), List.of()), (pl, c) -> cosmetics(pl));
-        m.set(49, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(coins) + " ₮", GOLD),
+        m.set(49, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(coins), GOLD),
                 Menu.kv("Кредит:", fmt(s.credits()) + " ✦", SKY))), null);
         if (cat != Cosmetic.Category.EMOJI) {
             m.set(53, Menu.item(Material.BARRIER, Menu.title("Тайлах", RED), List.of(b("Энэ ангиллын гоёлыг тайлна."))), (pl, c) -> {
@@ -612,19 +612,19 @@ public final class Menus {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         Menu m = new Menu(5, "Дэлгүүр · Shop", null);
-        m.set(4, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()) + " ₮", GOLD),
+        m.set(4, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
                 Menu.kv("Кредит:", fmt(styles().of(p.getUniqueId()).credits()) + " ✦", SKY))), null);
         int slot = 10;
         for (Supply sup : SUPPLIES) {
             if (slot == 17) slot = 19;
             ItemStack it = Menu.item(sup.mat(), Menu.title(sup.name(), GREEN), Menu.lore(GREEN, List.of(),
-                    List.of(Menu.kv("Үнэ:", fmt(sup.price()) + " ₮", pr.currency() >= sup.price() ? GREEN : RED)), "Дарж авах"));
+                    List.of(Menu.kv("Үнэ:", fmt(sup.price()) + " зоос", pr.currency() >= sup.price() ? GREEN : RED)), "Дарж авах"));
             it.setAmount(Math.min(sup.amount(), it.getMaxStackSize()));
             m.set(slot++, it, (pl, c) -> buySupply(pl, sup));
         }
         m.set(29, Menu.item(Material.LEATHER, Menu.title("Олз зарах", GOLD), Menu.lore(GOLD,
                 List.of(b("Цүнхэн дэх чонын арьс, баавгайн арьс,"), b("хор, мөсөн чулуу... бүгдийг зарна.")),
-                List.of(Menu.kv("Чонын арьс:", "8 ₮", GOLD), Menu.kv("Баавгайн арьс:", "25 ₮", GOLD)), "Дарж бүгдийг зарах")),
+                List.of(Menu.kv("Чонын арьс:", "8 зоос", GOLD), Menu.kv("Баавгайн арьс:", "25 зоос", GOLD)), "Дарж бүгдийг зарах")),
                 (pl, c) -> {
                     sellAll(pl);
                     shop(pl);
@@ -644,7 +644,7 @@ public final class Menus {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         if (pr.currency() < sup.price()) {
-            p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + sup.price() + " ₮)."));
+            p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + sup.price() + " зоос)."));
             return;
         }
         ItemStack give = new ItemStack(sup.mat(), sup.amount());
@@ -656,7 +656,7 @@ public final class Menus {
         pr.addCurrency(-sup.price());
         mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, p, pr, sup.price(), "buy " + sup.name(), pl -> {
             for (ItemStack left : pl.getInventory().addItem(give.clone()).values()) pl.getWorld().dropItemNaturally(pl.getLocation(), left);
-            pl.sendMessage(Messages.success("Авлаа: " + sup.name() + " (-" + sup.price() + " ₮)"));
+            pl.sendMessage(Messages.success("Авлаа: " + sup.name() + " (-" + sup.price() + " зоос)"));
             shop(pl);
         });
     }
@@ -697,7 +697,7 @@ public final class Menus {
             var meta = icon.getItemMeta();
             List<Component> lore = meta.lore() == null ? new ArrayList<>() : new ArrayList<>(meta.lore());
             lore.add(Component.empty());
-            lore.add(Menu.kv("Зарах үнэ:", fmt(price) + " ₮" + (it.getAmount() > 1 ? "  (" + fmt(unit) + " × " + it.getAmount() + ")" : ""), GOLD));
+            lore.add(Menu.kv("Зарах үнэ:", fmt(price) + " зоос" + (it.getAmount() > 1 ? "  (" + fmt(unit) + " × " + it.getAmount() + ")" : ""), GOLD));
             lore.add(b(armed != null && armed == bag ? "▶ Дахин дарж зарахаа батал" : material(it) ? "Дарж зарах" : "Дарж сонгоод, дахин дарж зарна"));
             meta.lore(lore);
             icon.setItemMeta(meta);
@@ -709,11 +709,11 @@ public final class Menus {
         m.set(45, Menu.item(Material.ARROW, Menu.title("« Дэлгүүр", GOLD), List.of()), (pl, c) -> shop(pl));
         m.set(49, Menu.item(Material.LEATHER, Menu.title("Бүх олзыг зарах", GOLD), Menu.lore(GOLD,
                 List.of(b("Зөвхөн материал (арьс, хор, чулуу...)."), b("Хэрэгслийг нэг нэгээр нь сонгож зарна.")),
-                List.of(Menu.kv("Нийт:", fmt(allMaterials) + " ₮", GOLD)), "Дарж бүгдийг зарах")), (pl, c) -> {
+                List.of(Menu.kv("Нийт:", fmt(allMaterials) + " зоос", GOLD)), "Дарж бүгдийг зарах")), (pl, c) -> {
             sellAll(pl);
             sell(pl);
         });
-        m.set(53, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()) + " ₮", GOLD))), null);
+        m.set(53, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()), GOLD))), null);
         m.open(p);
     }
 
@@ -762,7 +762,7 @@ public final class Menus {
         mn.suld.plugin.item.PlayerDataSaves.itemsForCoins(plugin, services, p, pr, "sell " + (ii == null ? "?" : ii.definitionId())); // item off disk, then the coins
         services.audit().record(mn.suld.api.audit.AuditEvent.of(p.getUniqueId().toString(), "item.sell",
                 (ii == null ? "?" : ii.definitionId() + "-" + ii.uuid()), now.getAmount() + " for " + price));
-        p.sendMessage(Messages.success("Зарагдлаа: +" + fmt(price) + " ₮"));
+        p.sendMessage(Messages.success("Зарагдлаа: +" + fmt(price) + " зоос"));
         services.hud().update(p, pr);
         sell(p);
     }
@@ -794,7 +794,7 @@ public final class Menus {
         }
         pr.addCurrency(total);
         mn.suld.plugin.item.PlayerDataSaves.itemsForCoins(plugin, services, p, pr, "sell all"); // emptied slots off disk, then the coins
-        p.sendMessage(Messages.success(count + " олз зарж +" + fmt(total) + " ₮ авлаа."));
+        p.sendMessage(Messages.success(count + " олз зарж +" + fmt(total) + " зоос авлаа."));
     }
 
     // ================================================================== credit store

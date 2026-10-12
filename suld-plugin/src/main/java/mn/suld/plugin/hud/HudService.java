@@ -235,8 +235,7 @@ public final class HudService {
         }
         lines.add(Component.empty());
         lines.add(section(Glyphs.ICON_COIN, "Хөрөнгө"));
-        lines.add(row("Зоос", Component.text(num(profile.currency()) + " ₮", NamedTextColor.GOLD)));
-        if (style != null) lines.add(row("Кредит", Component.text(num(style.credits()) + " ✦", TextColor.fromHexString("#9FF3FF"))));
+        lines.add(row("Зоос", Component.text(num(profile.currency()), NamedTextColor.GOLD)));
         lines.add(Component.empty());
         lines.add(section(Glyphs.ICON_SCROLL, "Эрэл"));
         var qs = profile.questState();

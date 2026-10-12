@@ -93,7 +93,7 @@ public final class AscensionMenu {
                     Menu.lore(GOLD, checklist, List.of(), null)), null);
             m.set(24, Menu.item(Material.GOLD_INGOT, Menu.title("Ёслолын тахил", GOLD), Menu.lore(GOLD,
                     List.of(Menu.line("Тахилчид өргөх зоос.")),
-                    List.of(Menu.kv("Хэрэгтэй:", fmt(fee) + " ₮", GOLD), Menu.kv("Таны зоос:", fmt(pr.currency()) + " ₮", pr.currency() >= fee ? GREEN : RED)), null)), null);
+                    List.of(Menu.kv("Хэрэгтэй:", fmt(fee) + " зоос", GOLD), Menu.kv("Таны зоос:", fmt(pr.currency()) + " зоос", pr.currency() >= fee ? GREEN : RED)), null)), null);
 
             Ascension.Rite trial = Ascension.rite(curve, rank, pts, pr.currency(), in);
             boolean ready = trial.outcome() == Ascension.Outcome.DONE;
@@ -108,7 +108,7 @@ public final class AscensionMenu {
             }
             m.set(31, ready ? Menu.glow(Menu.item(isArmed ? Material.LIME_CONCRETE : Material.LIGHT_BLUE_CONCRETE,
                     Menu.title(isArmed ? "Дахин дарж батал — Зэрэг " + Ascension.roman(rank + 1) : "Зэрэг " + Ascension.roman(rank + 1) + " авах", isArmed ? GREEN : SKY),
-                    Menu.lore(SKY, body, List.of(Menu.kv("Зарцуулна:", fmt(cost) + " оноо, " + fmt(fee) + " ₮", GOLD)), isArmed ? "Дарж ёслолыг эхлүүл" : "Дарж сонго")))
+                    Menu.lore(SKY, body, List.of(Menu.kv("Зарцуулна:", fmt(cost) + " оноо, " + fmt(fee) + " зоос", GOLD)), isArmed ? "Дарж ёслолыг эхлүүл" : "Дарж сонго")))
                     : Menu.item(Material.GRAY_CONCRETE, Menu.title("Зэрэг " + Ascension.roman(rank + 1) + " — хаалттай", GREY), Menu.lore(GREY, body, List.of(), null)),
                     ready ? (pl, c) -> click(pl) : null);
         }

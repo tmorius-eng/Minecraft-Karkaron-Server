@@ -95,7 +95,7 @@ public final class TaskService implements Listener, TabExecutor {
             pr.addCurrency(t.coins());
             var gained = services.progression().grantExp(pr, t.exp(), ExpSource.OTHER);
             killer.sendMessage(Messages.success("Өдрийн даалгавар биелэв: " + t.prey().mobName() + " ×" + t.count()
-                    + "  (+" + t.coins() + " ₮, +" + t.exp() + " EXP)"));
+                    + "  (+" + t.coins() + " зоос, +" + t.exp() + " EXP)"));
             killer.playSound(killer.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.3f);
             if (gained.leveledUp()) Presentation.levelUp(killer, from, gained.after().level());
             services.hud().update(killer, pr);
@@ -152,7 +152,7 @@ public final class TaskService implements Listener, TabExecutor {
                                     Component.text(t.prey().regionName() + " нутагт ан хий.", NamedTextColor.WHITE, TextDecoration.BOLD),
                                     Component.text("▰".repeat(filled), c).append(Component.text("▱".repeat(10 - filled), NamedTextColor.DARK_GRAY))
                                             .append(Component.text("  " + Math.min(progress[i], t.count()) + "/" + t.count(), NamedTextColor.WHITE, TextDecoration.BOLD))),
-                            List.of(Menu.kv("Шагнал:", t.coins() + " ₮ · " + t.exp() + " EXP", GREEN)), done ? "Биелсэн ✔" : "Идэвхтэй"));
+                            List.of(Menu.kv("Шагнал:", t.coins() + " зоос · " + t.exp() + " EXP", GREEN)), done ? "Биелсэн ✔" : "Идэвхтэй"));
             if (done) Menu.glow(it);
             m.set(slots[i], it, null);
         }

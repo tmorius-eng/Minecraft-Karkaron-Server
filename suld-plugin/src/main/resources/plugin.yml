@@ -58,6 +58,10 @@ commands:
     description: Их Хуралдай — the weekly vote and the week's campaign (vote, status, deliver; admin open/close/force/resolve/cancel).
     usage: /khuraldai [vote <1-3>|status|deliver [amount]]
     aliases: [huraldai, campaign]
+  report:
+    description: Tell the staff about a bug, a cheater or a problem (audit log + online staff).
+    usage: /report <text>
+    aliases: [medegdel, bug]
   chronicle:
     description: Баатрын Хроник — the server's book of firsts, records and campaigns.
     usage: /chronicle [mine|dungeon|relic|site|khuraldai]

@@ -397,7 +397,7 @@ public final class NpcService implements Listener {
         if (damaged) {
             int damage = ((Damageable) it.getItemMeta()).getDamage();
             long cost = 5 + (long) Math.ceil(damage / 8.0);
-            m.set(upgradable ? 14 : 15, Menu.item(Material.ANVIL, Menu.title("Засах · " + cost + " ₮", NamedTextColor.GREEN),
+            m.set(upgradable ? 14 : 15, Menu.item(Material.ANVIL, Menu.title("Засах · " + cost + " зоос", NamedTextColor.GREEN),
                     List.of(Menu.kv("Гэмтэл:", String.valueOf(damage), NamedTextColor.RED), Menu.line("Бүрэн шинэ болгоно."))), (pl, c) -> {
                 PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
                 ItemStack hand = pl.getInventory().getItemInMainHand();
@@ -406,7 +406,7 @@ public final class NpcService implements Listener {
                     return;
                 }
                 if (pr.currency() < cost) {
-                    pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost + " ₮)."));
+                    pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost + " зоос)."));
                     return;
                 }
                 if (hand.getItemMeta() instanceof Damageable hd) {
@@ -414,7 +414,7 @@ public final class NpcService implements Listener {
                     hd.setDamage(0);
                     hand.setItemMeta(hd);
                     pl.playSound(pl.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
-                    pl.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " ₮)."));
+                    pl.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " зоос)."));
                     if (services.classArmor != null) services.classArmor.smithWork(pl);
                 }
                 pl.closeInventory();
@@ -429,7 +429,7 @@ public final class NpcService implements Listener {
             String matName = matDef == null ? cost.materialId() : matDef.displayName();
             m.set(damaged ? 16 : 15, Menu.item(why == null ? Material.SMITHING_TABLE : Material.BARRIER,
                     Menu.title("Сайжруулах → Зэрэг " + (inst.itemLevel() + 1), why == null ? NamedTextColor.GOLD : NamedTextColor.RED), List.of(
-                            Menu.kv("Үнэ:", cost.coins() + " ₮", NamedTextColor.GOLD),
+                            Menu.kv("Үнэ:", cost.coins() + " зоос", NamedTextColor.GOLD),
                             Menu.kv("Материал:", matName + " ×" + cost.materialCount(), NamedTextColor.AQUA),
                             Menu.line(why == null ? "Зэвсгийн хүч нэмэгдэнэ." : why))), why != null ? null : (pl, c) -> {
                 PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
@@ -440,7 +440,7 @@ public final class NpcService implements Listener {
                     return;
                 }
                 if (pr.currency() < cost.coins()) {
-                    pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost.coins() + " ₮)."));
+                    pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost.coins() + " зоос)."));
                     return;
                 }
                 if (countItem(pl, cost.materialId()) < cost.materialCount()) {
@@ -503,13 +503,13 @@ public final class NpcService implements Listener {
             Location to = city.pointLocation(r.getKey());
             Material icon = current ? Material.LIME_BANNER : Material.WHITE_BANNER;
             List<Component> lore = new ArrayList<>();
-            lore.add(current ? Menu.line("Та энд байна.") : Menu.kv("Үнэ:", TRAVEL_COST + " ₮", NamedTextColor.GOLD));
+            lore.add(current ? Menu.line("Та энд байна.") : Menu.kv("Үнэ:", TRAVEL_COST + " зоос", NamedTextColor.GOLD));
             m.set(slot++, Menu.item(icon, Menu.title(r.getValue(), current ? NamedTextColor.GREEN : NamedTextColor.YELLOW), lore),
                     current || to == null ? null : (pl, c) -> {
                         PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
                         if (pr == null) return;
                         if (pr.currency() < TRAVEL_COST) {
-                            pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + TRAVEL_COST + " ₮)."));
+                            pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + TRAVEL_COST + " зоос)."));
                             return;
                         }
                         pl.closeInventory();
@@ -527,7 +527,7 @@ public final class NpcService implements Listener {
                                     long pay = TRAVEL_COST;
                                     services.profiles().save(pr);
                                     pl.playSound(pl.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 1f);
-                                    pl.sendMessage(Messages.success("Өртөөгөөр " + r.getValue() + " хүрлээ (-" + pay + " ₮)."));
+                                    pl.sendMessage(Messages.success("Өртөөгөөр " + r.getValue() + " хүрлээ (-" + pay + " зоос)."));
                                 });
                     });
         }
@@ -544,7 +544,7 @@ public final class NpcService implements Listener {
             return;
         }
         if (pr.currency() < BLESSING_COST) {
-            p.sendMessage(Messages.error("Тахилд " + BLESSING_COST + " ₮ хэрэгтэй."));
+            p.sendMessage(Messages.error("Тахилд " + BLESSING_COST + " зоос хэрэгтэй."));
             return;
         }
         pr.addCurrency(-BLESSING_COST);

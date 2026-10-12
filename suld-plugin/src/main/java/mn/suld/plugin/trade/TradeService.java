@@ -245,10 +245,10 @@ public final class TradeService implements Listener, TabExecutor {
             inv.setItem(CONFIRM, Menu.item(me.confirmed ? Material.LIME_CONCRETE : Material.RED_CONCRETE,
                     Menu.title(me.confirmed ? "Зөвшөөрсөн ✔" : "Зөвшөөрөх", me.confirmed ? NamedTextColor.GREEN : NamedTextColor.RED),
                     List.of(Component.text("Хоёулаа зөвшөөрвөл солилцоно.", NamedTextColor.WHITE, TextDecoration.BOLD))));
-            inv.setItem(COINS, Menu.item(Material.GOLD_NUGGET, Menu.title("Таны зоос: " + me.coins + " ₮", GOLD), List.of(
+            inv.setItem(COINS, Menu.item(Material.GOLD_NUGGET, Menu.title("Таны зоос: " + me.coins, GOLD), List.of(
                     Component.text("Зүүн: +10 · Баруун: −10", NamedTextColor.WHITE, TextDecoration.BOLD),
                     Component.text("Shift: ×100", NamedTextColor.WHITE, TextDecoration.BOLD))));
-            inv.setItem(THEIR_COINS, Menu.item(Material.GOLD_INGOT, Menu.title("Тэдний зоос: " + them.coins + " ₮", GOLD), List.of()));
+            inv.setItem(THEIR_COINS, Menu.item(Material.GOLD_INGOT, Menu.title("Тэдний зоос: " + them.coins, GOLD), List.of()));
             inv.setItem(THEIR_CONFIRM, Menu.item(them.confirmed ? Material.LIME_CONCRETE : Material.GRAY_CONCRETE,
                     Menu.title(them.confirmed ? "Тэд зөвшөөрсөн ✔" : "Тэд хүлээж байна", them.confirmed ? NamedTextColor.GREEN : NamedTextColor.GRAY),
                     List.of()));

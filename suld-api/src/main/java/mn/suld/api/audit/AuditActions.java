@@ -26,4 +26,6 @@ public final class AuditActions {
     public static final String CAMPAIGN_ADMIN_CANCEL = "campaign.admin.cancel";
     public static final String CAMPAIGN_EFFECT_APPLIED = "campaign.effect_applied";
     public static final String CHRONICLE_ADMIN_HIDE = "chronicle.admin.hide";
+    /** A player's {@code /report}: target = world and block position, detail = the text. */
+    public static final String PLAYER_REPORT = "player.report";
 }

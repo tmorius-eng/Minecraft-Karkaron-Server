@@ -209,7 +209,7 @@ public final class SuldCommand implements CommandExecutor {
         services.profiles().save(profile);
         services.hud().update(target, profile);
         plugin.getLogger().info("[audit] coins " + (amount > 0 ? "+" : "") + amount + " target=" + target.getName() + " by=" + sender.getName());
-        sender.sendMessage(Messages.success(target.getName() + ": " + (amount > 0 ? "+" : "") + amount + " ₮ → " + now + " ₮"));
+        sender.sendMessage(Messages.success(target.getName() + ": " + (amount > 0 ? "+" : "") + amount + " зоос → " + now + " зоос"));
     }
 
     /**

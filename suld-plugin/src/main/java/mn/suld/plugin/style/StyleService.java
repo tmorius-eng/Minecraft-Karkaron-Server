@@ -306,7 +306,7 @@ public final class StyleService implements Listener {
             }
             PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
             if (profile == null || profile.currency() < c.price()) {
-                p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + (profile == null ? 0 : profile.currency()) + "/" + c.price() + " ₮)."));
+                p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + (profile == null ? 0 : profile.currency()) + "/" + c.price() + " зоос)."));
                 return;
             }
             profile.addCurrency(-c.price());
@@ -368,7 +368,7 @@ public final class StyleService implements Listener {
             case MAX_RANK -> p.sendMessage(Messages.info("Та хамгийн дээд цолтой — Хаан!"));
             case LEVEL_TOO_LOW -> p.sendMessage(Messages.error("Түвшин " + next.requiredLevel() + " хэрэгтэй (одоо "
                     + profile.progression().level() + "). /exp"));
-            case NOT_ENOUGH_COINS -> p.sendMessage(Messages.error("Зоос " + next.cost() + " ₮ хэрэгтэй (одоо " + profile.currency() + ")."));
+            case NOT_ENOUGH_COINS -> p.sendMessage(Messages.error("Зоос " + next.cost() + " зоос хэрэгтэй (одоо " + profile.currency() + ")."));
         }
         return check;
     }
@@ -406,7 +406,7 @@ public final class StyleService implements Listener {
         if (r.cosmeticId() != null && s.grant(r.cosmeticId())) {
             extra = " + " + CosmeticCatalog.byId(r.cosmeticId()).map(Cosmetic::name).orElse(r.cosmeticId());
         }
-        p.sendMessage(Messages.success("Түвшин " + level + " шагнал: +" + r.coins() + " ₮" + extra));
+        p.sendMessage(Messages.success("Түвшин " + level + " шагнал: +" + r.coins() + " зоос" + extra));
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
         changed(p);
         saveProfile(p);

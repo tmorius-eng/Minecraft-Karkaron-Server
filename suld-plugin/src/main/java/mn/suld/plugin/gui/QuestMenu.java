@@ -205,7 +205,7 @@ public final class QuestMenu {
             body.add(Component.empty());
             body.add(Component.text("Шагнал", c, TextDecoration.BOLD));
             body.add(info("+" + def.expReward(), "EXP", GREEN));
-            body.add(info("+" + def.currencyReward(), "₮", GOLD));
+            body.add(info("+" + def.currencyReward(), "зоос", GOLD));
             if (active && !lore.hint().isEmpty()) {
                 body.add(Component.empty());
                 for (String line : wrap("➜ " + lore.hint(), 38)) body.add(Component.text(line, NamedTextColor.WHITE, TextDecoration.BOLD));
@@ -376,7 +376,7 @@ public final class QuestMenu {
             if (where != null) body.add(Menu.kv("Хаана:", where, SKY));
             if (active) body.add(Menu.kv("Явц:", bar(state.progress(), def.requiredCount()) + " " + state.progress() + "/" + def.requiredCount(), GOLD));
             body.add(Menu.kv("Өгсөн:", lore.giver(), SKY));
-            body.add(Menu.kv("Шагнал:", def.expReward() + " EXP · " + def.currencyReward() + " ₮", GREEN));
+            body.add(Menu.kv("Шагнал:", def.expReward() + " EXP · " + def.currencyReward() + " зоос", GREEN));
             if (active && !lore.hint().isEmpty()) body.add(Component.text("➜ " + lore.hint(), NamedTextColor.WHITE, TextDecoration.BOLD));
         } else {
             body.add(Component.text("Өмнөх бүлгүүдээ дуусгахад нээгдэнэ.", GREY));

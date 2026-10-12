@@ -298,7 +298,7 @@ public final class CityCommands implements Listener {
                 return true;
             }
             s.sendMessage(Messages.info((who == s ? "Таны" : who.getName() + "-ийн") + " зоос: ")
-                    .append(Component.text(profile.currency() + " ₮", NamedTextColor.GOLD, TextDecoration.BOLD)));
+                    .append(Component.text(profile.currency() + " зоос", NamedTextColor.GOLD, TextDecoration.BOLD)));
             return true;
         }
 
@@ -358,8 +358,8 @@ public final class CityCommands implements Listener {
                     if (from.isOnline()) from.sendMessage(Messages.error("Шилжүүлэг хадгалагдсангүй — зоос буцаалаа."));
                     return;
                 }
-                if (from.isOnline()) from.sendMessage(Messages.success(to.getName() + "-д " + sum + " ₮ шилжүүллээ."));
-                if (to.isOnline()) to.sendMessage(Messages.success(from.getName() + " танд " + sum + " ₮ илгээлээ."));
+                if (from.isOnline()) from.sendMessage(Messages.success(to.getName() + "-д " + sum + " зоос шилжүүллээ."));
+                if (to.isOnline()) to.sendMessage(Messages.success(from.getName() + " танд " + sum + " зоос илгээлээ."));
             }));
             return true;
         }

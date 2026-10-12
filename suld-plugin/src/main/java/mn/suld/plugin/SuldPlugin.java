@@ -405,6 +405,7 @@ public final class SuldPlugin extends JavaPlugin {
         services.campaigns().start();
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
+        java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));
         worldCommand.sites(historicSites);
         pregen.start();
 

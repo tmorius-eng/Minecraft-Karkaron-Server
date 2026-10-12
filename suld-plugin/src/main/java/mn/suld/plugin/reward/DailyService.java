@@ -95,7 +95,7 @@ public final class DailyService implements Listener, TabExecutor {
             boolean now = ready && d == day;
             TextColor color = done ? GREEN : now ? GOLD : NamedTextColor.GRAY;
             List<Component> info = new ArrayList<>();
-            info.add(Menu.kv("Зоос:", DailyReward.coins(d) + " ₮", GOLD));
+            info.add(Menu.kv("Зоос:", String.valueOf(DailyReward.coins(d)), GOLD));
             info.add(Menu.kv("EXP:", String.valueOf(DailyReward.exp(d, level)), GREEN));
             Material icon = done ? Material.LIME_STAINED_GLASS_PANE : now ? Material.CHEST
                     : d == DailyReward.CYCLE ? Material.ENDER_CHEST : Material.GRAY_STAINED_GLASS_PANE;
@@ -129,9 +129,9 @@ public final class DailyService implements Listener, TabExecutor {
         p.closeInventory();
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.6f);
         p.sendMessage(Messages.success("Өдрийн шагнал (" + c.day() + "/" + DailyReward.CYCLE + "-р өдөр): +"
-                + c.coins() + " ₮, +" + c.exp() + " EXP"));
+                + c.coins() + " зоос, +" + c.exp() + " EXP"));
         if (gained.leveledUp()) Presentation.levelUp(p, level, gained.after().level());
-        else Presentation.banner(p, "ӨДРИЙН ШАГНАЛ", c.day() + "-р өдөр · +" + c.coins() + " ₮", NamedTextColor.GOLD);
+        else Presentation.banner(p, "ӨДРИЙН ШАГНАЛ", c.day() + "-р өдөр · +" + c.coins() + " зоос", NamedTextColor.GOLD);
         services.hud().update(p, profile);
     }
 

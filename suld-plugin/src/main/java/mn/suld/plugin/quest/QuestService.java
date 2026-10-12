@@ -181,7 +181,7 @@ public final class QuestService {
                 Component.text(chapter + "/" + chain.size() + " · " + def.title(), NamedTextColor.WHITE, TextDecoration.BOLD),
                 Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(600))));
         player.sendMessage(Messages.success("Эрэл дууслаа: " + def.title()
-                + "  (+" + def.expReward() + " EXP, +" + def.currencyReward() + " ₮)"));
+                + "  (+" + def.expReward() + " EXP, +" + def.currencyReward() + " зоос)"));
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
         int from = profile.progression().level();
         var gained = progression.grantExp(profile, def.expReward(), ExpSource.QUEST);

@@ -312,7 +312,7 @@ public final class CombatListener implements Listener {
         long coins = summoned ? 0 : Math.max(0, Math.round(def.coins() * farm));
         if (coins > 0) profile.addCurrency(coins);
         killer.sendMessage(Messages.info("+" + expAmount + " EXP" + (gain[1] > 0 ? " (амарсан +" + gain[1] + ")" : "")
-                + (coins > 0 ? " · +" + coins + " ₮" : "") + " (" + def.displayName() + ")"
+                + (coins > 0 ? " · +" + coins + " зоос" : "") + " (" + def.displayName() + ")"
                 + (gap <= -5 ? " · хэт сул мангас: EXP бага" : "")
                 + (farm < 1 ? " · нэг газарт хэт олон агнасан ×" + Math.round(farm * 100) / 100.0 + " — өөр газар оч" : "")));
         for (Player m : sharers) {

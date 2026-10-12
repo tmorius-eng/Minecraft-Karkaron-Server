@@ -235,7 +235,7 @@ public final class ItemCommands {
         String what = switch (action) {
             case "sell" -> {
                 long price = ItemEconomy.sellPrice(def, c.item()) * p.getInventory().getItemInMainHand().getAmount();
-                yield price <= 0 ? null : "Зарах уу? " + price + " ₮";
+                yield price <= 0 ? null : "Зарах уу? " + price + " зоос";
             }
             case "destroy" -> "Устгах уу? Буцаах боломжгүй.";
             case "bind" -> c.item().bound() ? null : "Өөртөө холбох уу? Холбосон зүйлийг бусад авч, арилжиж чадахгүй.";
@@ -278,7 +278,7 @@ public final class ItemCommands {
         mn.suld.plugin.item.PlayerDataSaves.itemsForCoins(org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ItemCommands.class), services, p, pr,
                 "sell " + def.id()); // item off disk, then the coins
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.sell", def.id() + "-" + c.item().uuid(), amount + " for " + price));
-        p.sendMessage(Messages.success(def.displayName() + (amount > 1 ? " ×" + amount : "") + " зарагдлаа: +" + price + " ₮"));
+        p.sendMessage(Messages.success(def.displayName() + (amount > 1 ? " ×" + amount : "") + " зарагдлаа: +" + price + " зоос"));
         services.hud().update(p, pr);
     }
 
@@ -421,7 +421,7 @@ public final class ItemCommands {
             ItemDefinition def = catalog().require(r.resultId());
             boolean ok = level >= r.levelReq();
             p.sendMessage(Component.text("  " + r.id() + " → " + def.displayName() + " (" + r.minRarity().displayName() + ".." + r.maxRarity().displayName()
-                    + ") · түвшин " + r.levelReq() + " · " + r.coins() + " ₮ · " + describe(r.materials()), ok ? NamedTextColor.WHITE : NamedTextColor.GRAY));
+                    + ") · түвшин " + r.levelReq() + " · " + r.coins() + " зоос · " + describe(r.materials()), ok ? NamedTextColor.WHITE : NamedTextColor.GRAY));
         }
     }
 
@@ -460,7 +460,7 @@ public final class ItemCommands {
             return;
         }
         if (pr.currency() < r.coins()) {
-            p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + r.coins() + " ₮)."));
+            p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + r.coins() + " зоос)."));
             return;
         }
         for (Map.Entry<String, Integer> m : r.materials().entrySet()) {

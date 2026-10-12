@@ -93,13 +93,13 @@ public final class SmithMenu {
                 lore.add(Menu.kv("Таньд:", armor().holdings(p, pr).materials() + "/" + next.materials() + " " + armor().displayName(next.material()),
                         NamedTextColor.AQUA));
             }
-            lore.add(Menu.kv("Зоос:", pr.currency() + "/" + next.coins() + " ₮", NamedTextColor.GOLD));
+            lore.add(Menu.kv("Зоос:", pr.currency() + "/" + next.coins(), NamedTextColor.GOLD));
             boolean ok = gates.stream().allMatch(ArmorRules.Gate::met);
             m.set(20, shown(p, c, g.withTier(next), ArmorPiece.CHESTPLATE, next), null);
             m.set(22, Menu.item(ok ? Material.ANVIL : Material.BARRIER, Menu.title("Дараагийн зэрэг: " + next.name() + " "
                     + next.displayName(), ok ? NamedTextColor.GREEN : NamedTextColor.RED), lore), !ok ? null
                     : (pl, ct) -> confirm(pl, smith, "Зэрэг ахиулах → " + next.name() + " " + next.displayName(),
-                            List.of(next.coins() + " ₮" + (next.material() != null ? " · " + next.materials() + " × " + armor().displayName(next.material()) : ""),
+                            List.of(next.coins() + " зоос" + (next.material() != null ? " · " + next.materials() + " × " + armor().displayName(next.material()) : ""),
                                     "Хуяг шинэ төрхтэй болж, сайжруулалт 0 болно"), true));
         }
 
@@ -107,10 +107,10 @@ public final class SmithMenu {
         if (g.enhance() < ArmorRules.MAX_ENHANCE) {
             long cost = ArmorRules.enhanceCost(g.armorLevel(), g.enhance() + 1, g.tier());
             boolean ok = pr.currency() >= cost;
-            m.set(24, Menu.item(ok ? Material.GRINDSTONE : Material.BARRIER, Menu.title("Сайжруулах +" + (g.enhance() + 1) + " · " + cost + " ₮",
+            m.set(24, Menu.item(ok ? Material.GRINDSTONE : Material.BARRIER, Menu.title("Сайжруулах +" + (g.enhance() + 1) + " · " + cost + " зоос",
                     ok ? NamedTextColor.GREEN : NamedTextColor.RED), List.of(Menu.line("Ангийн хуягийн хүч +2 %"),
-                    Menu.kv("Зоос:", pr.currency() + "/" + cost + " ₮", NamedTextColor.GOLD))), !ok ? null
-                    : (pl, ct) -> confirm(pl, smith, "Сайжруулах +" + (g.enhance() + 1), List.of(cost + " ₮", "Хүч +2 %"), false));
+                    Menu.kv("Зоос:", pr.currency() + "/" + cost, NamedTextColor.GOLD))), !ok ? null
+                    : (pl, ct) -> confirm(pl, smith, "Сайжруулах +" + (g.enhance() + 1), List.of(cost + " зоос", "Хүч +2 %"), false));
         } else {
             m.set(24, Menu.item(Material.GRINDSTONE, Menu.title("Сайжруулалт дүүрэн (+" + ArmorRules.MAX_ENHANCE + ")", NamedTextColor.GOLD), List.of()), null);
         }

@@ -108,7 +108,7 @@ public final class ItemTooltip {
         if (!def.lore().isEmpty()) out.add(new Line(Style.FLAVOR, def.lore()));
         if (i.rarity().isServerUnique()) out.add(new Line(Style.UNIQUE, "✦ ДЭЛХИЙД ГАНЦ · 1 / 1"));
         long price = ItemEconomy.sellPrice(def, i);
-        if (price > 0) out.add(new Line(Style.INFO, "Үнэ: " + price + " ₮"));
+        if (price > 0) out.add(new Line(Style.INFO, "Үнэ: " + price + " зоос"));
         if (compareTo != null) out.addAll(compare(catalog, i, compareTo));
         return out;
     }

@@ -147,7 +147,7 @@ public final class ProgressCommands {
                 AttributeInstance armor = online.getAttribute(Attribute.ARMOR);
                 s.sendMessage(row("Хуяг", armor != null ? String.valueOf(Math.round(armor.getValue())) : "0", NamedTextColor.WHITE));
             }
-            s.sendMessage(row("Зоос", profile.currency() + " ₮", NamedTextColor.GOLD));
+            s.sendMessage(row("Зоос", String.valueOf(profile.currency()), NamedTextColor.GOLD));
             s.sendMessage(row("Овог", services.clans().tagOf(profile.playerId()).map(t -> "[" + t + "]").orElse("—"), NamedTextColor.AQUA));
             double bonus = services.boosts().bonus(profile.playerId());
             if (bonus > 0) s.sendMessage(row("EXP нэмэгдэл", "+" + Math.round(bonus * 100) + "%", NamedTextColor.GREEN));
@@ -231,7 +231,7 @@ public final class ProgressCommands {
             s.sendMessage(Component.text("Явц ", NamedTextColor.WHITE, TextDecoration.BOLD)
                     .append(bar((double) q.progress() / def.requiredCount(), NamedTextColor.GOLD))
                     .append(Component.text("  " + q.progress() + "/" + def.requiredCount(), NamedTextColor.WHITE, TextDecoration.BOLD)));
-            s.sendMessage(row("Шагнал", def.expReward() + " EXP, " + def.currencyReward() + " ₮", NamedTextColor.GREEN));
+            s.sendMessage(row("Шагнал", def.expReward() + " EXP, " + def.currencyReward() + " зоос", NamedTextColor.GREEN));
             if (!lore.hint().isEmpty()) s.sendMessage(Component.text("➜ " + lore.hint(), NamedTextColor.GRAY, TextDecoration.BOLD));
             return true;
         }

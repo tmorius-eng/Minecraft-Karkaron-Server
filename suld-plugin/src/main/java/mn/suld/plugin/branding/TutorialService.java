@@ -185,7 +185,7 @@ public final class TutorialService implements Listener, TabExecutor {
             services.progression().grantExp(pr, s.exp(), ExpSource.QUEST);
             pr.addCurrency(s.coins());
             services.profiles().save(pr);
-            p.sendMessage(Messages.success("Заавар: «" + s.title() + "» ✔  +" + s.exp() + " EXP, +" + s.coins() + " ₮"));
+            p.sendMessage(Messages.success("Заавар: «" + s.title() + "» ✔  +" + s.exp() + " EXP, +" + s.coins() + " зоос"));
         } else {
             p.sendMessage(Messages.success("Заавар: «" + s.title() + "» ✔"));
         }
@@ -199,7 +199,7 @@ public final class TutorialService implements Listener, TabExecutor {
                 services.progression().grantExp(pr, TutorialProgress.FINISH_EXP, ExpSource.QUEST);
                 pr.addCurrency(TutorialProgress.FINISH_COINS);
                 services.profiles().save(pr);
-                p.sendMessage(Messages.success("Заавар дууслаа! +" + TutorialProgress.FINISH_EXP + " EXP, +" + TutorialProgress.FINISH_COINS + " ₮"));
+                p.sendMessage(Messages.success("Заавар дууслаа! +" + TutorialProgress.FINISH_EXP + " EXP, +" + TutorialProgress.FINISH_COINS + " зоос"));
             }
             save(p, next);
             // only send them to the first dungeon when its gates are open (audit 2026-10-11 ONB-005: the gate usually

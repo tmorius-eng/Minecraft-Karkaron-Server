@@ -93,7 +93,7 @@ public final class Ascension {
         long cost = cost(c, rank);
         if (points < cost) return new Rite(Outcome.NOT_ENOUGH_POINTS, rank, points, coins, "Тэнгэрийн оноо хүрэлцэхгүй (" + points + "/" + cost + ").");
         long fee = riteCoins(rank);
-        if (coins < fee) return new Rite(Outcome.NOT_ENOUGH_COINS, rank, points, coins, "Ёслолын зоос хүрэлцэхгүй (" + coins + "/" + fee + " ₮).");
+        if (coins < fee) return new Rite(Outcome.NOT_ENOUGH_COINS, rank, points, coins, "Ёслолын зоос хүрэлцэхгүй (" + coins + "/" + fee + " зоос).");
         return new Rite(Outcome.DONE, rank + 1, points - cost, coins - fee, null);
     }
 

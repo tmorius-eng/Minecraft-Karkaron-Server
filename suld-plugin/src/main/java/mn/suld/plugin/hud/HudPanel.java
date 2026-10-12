@@ -386,7 +386,7 @@ final class HudPanel implements Listener {
         if (clazz == null) return List.of(new HudState.Run("Ангиа сонго — /class", COMBO));
         List<HudState.Run> runs = new ArrayList<>();
         runs.add(new HudState.Run(clazz.displayName(), HudComposer.resourceColor(clazz)));
-        runs.add(new HudState.Run("  ₮ " + String.format("%,d", pr.currency()), COIN));
+        runs.add(new HudState.Run(String.format("  %,d зоос", pr.currency()), COIN));
         SkillTreeService tree = services.skillTree();
         int points = tree == null ? 0 : tree.available(p);
         if (points > 0) runs.add(new HudState.Run("  ◆ " + points, POINTS));
