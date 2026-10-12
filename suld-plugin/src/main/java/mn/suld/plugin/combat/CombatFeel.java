@@ -170,7 +170,7 @@ public final class CombatFeel implements Listener {
     private void lock(Player p, UUID except) {
         LivingEntity t = pick(p, except);
         if (t == null) {
-            p.sendActionBar(Messages.info("Түгжих бай алга — харсан зүгт 24 блок дотор"));
+            mn.suld.plugin.hud.HudService.notice(p, Messages.info("Түгжих бай алга — харсан зүгт 24 блок дотор"));
             return;
         }
         ItemDisplay reticle = decal(t.getLocation().add(0, t.getHeight() + 0.6, 0), "reticle", 0xFFD25A, 0.7f);

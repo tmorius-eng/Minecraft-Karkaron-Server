@@ -44,7 +44,7 @@ public final class DodgeService implements Listener {
         long now = System.currentTimeMillis();
         Long at = ready.get(p.getUniqueId());
         if (at != null && now < at) {
-            p.sendActionBar(Component.text("Сөхрөх — " + String.format(java.util.Locale.ROOT, "%.1f", (at - now) / 1000.0) + " с", NamedTextColor.GRAY));
+            mn.suld.plugin.hud.HudService.notice(p, Component.text("Сөхрөх — " + String.format(java.util.Locale.ROOT, "%.1f", (at - now) / 1000.0) + " с", NamedTextColor.GRAY));
             return;
         }
         PlayerClass c = services.profiles().cached(p.getUniqueId()).flatMap(pr -> pr.playerClass()).orElse(null);

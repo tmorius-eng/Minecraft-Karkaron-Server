@@ -190,7 +190,7 @@ public final class DuelService implements Listener {
         Long last = lastNotice.get(attacker.getUniqueId());
         if (last == null || now - last > NOTICE_COOLDOWN_MS) {
             lastNotice.put(attacker.getUniqueId(), now);
-            attacker.sendActionBar(Component.text(PvpRules.reason(v), NamedTextColor.GRAY));
+            mn.suld.plugin.hud.HudService.notice(attacker, Component.text(PvpRules.reason(v), NamedTextColor.GRAY));
         }
     }
 

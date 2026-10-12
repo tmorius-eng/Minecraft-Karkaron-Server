@@ -58,7 +58,7 @@ import java.util.function.Consumer;
  * private stage high above where they stand, and the page is built in front of the locked camera out of display
  * entities only they can see. Text is real text (TextDisplay), so nothing depends on the client's GUI scale, the
  * way the chest-title art did. The crosshair is the cursor: the card under it lights up and shows its tooltip, a left
- * click runs it, the hotbar wheel turns pages, Shift closes.
+ * click runs it, the wheel zooms, A / D turn pages, Shift closes.
  * <p>
  * Every page is still a {@link HubMenu.Spec}: {@link HubMenu#open} hands it here. A click that opens another hub page
  * rebuilds the scene in place; a click that does anything else (a chest window, a dialog, a teleport) closes the sky
@@ -68,7 +68,8 @@ import java.util.function.Consumer;
 public final class MenuSky implements Listener {
 
     static final String TAG = "suld_menusky";
-    static final double DIST = 5.8;
+    /** The panel stands PLANE blocks ahead of the stage; the camera sits DIST0 from it, the wheel zooms DIST_MIN … DIST_MAX. */
+    static final double PLANE = 7.5, DIST0 = 3.2, DIST_MIN = 1.8, DIST_MAX = 7.0, ZOOM_STEP = 0.45;
     static final long COMBAT_MS = 8000;
     static final float BOX_W = 40, BOX_H = 24, BOX_D = 16;
 
@@ -119,6 +120,8 @@ public final class MenuSky implements Listener {
         HubMenu.Spec captured;
         List<HubMenu.Tab> capturedTabs;
         long lastClick;
+        double dist = DIST0;
+        boolean left, right;
 
         Session(Player p) {
             this.p = p;
@@ -168,7 +171,9 @@ public final class MenuSky implements Listener {
     private String blocked(Player p) {
         if (services.dungeons().isInAnyRun(p.getUniqueId())) return "dungeon";
         if (System.currentTimeMillis() - lastCombat.getOrDefault(p.getUniqueId(), 0L) < COMBAT_MS) return "combat";
-        if (p.isInsideVehicle() || p.isGliding() || !p.isOnGround() && !p.isFlying()) return "air";
+        // falling (the return teleport would cancel the fall): the client's on-ground flag alone is too strict (slabs,
+        // a step, just after joining)
+        if (p.isInsideVehicle() || p.isGliding() || !p.isFlying() && (p.getFallDistance() > 1.5f || p.getVelocity().getY() < -0.6)) return "air";
         if (p.isDead()) return "dead";
         return null;
     }
@@ -191,7 +196,7 @@ public final class MenuSky implements Listener {
         p.teleport(stage);
         s.seat = w.spawn(stage, ItemDisplay.class, d -> {
             hidden(d);
-            d.setTeleportDuration(0);
+            d.setTeleportDuration(3);
         });
         s.stage.add(s.seat);
         p.showEntity(plugin, s.seat);
@@ -199,6 +204,7 @@ public final class MenuSky implements Listener {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (sessions.get(p.getUniqueId()) != s || !p.isOnline()) return;
             buildStage(s);
+            moveCamera(s);
             buildPage(s, s.spec, s.tabs);
             s.ready = true;
             p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.8f, 1.2f);
@@ -261,14 +267,23 @@ public final class MenuSky implements Listener {
         return e;
     }
 
+    /** The seat (and the camera on it) {@code dist} blocks in front of the panel; the box rides along. */
+    private void moveCamera(Session s) {
+        Location cam = s.plane.clone().add(0, -s.eyeOff, -s.dist);
+        cam.setYaw(s.p.getLocation().getYaw());
+        cam.setPitch(s.p.getLocation().getPitch());
+        s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+    }
+
     /** The box around the camera: navy everywhere, the panel in front. Built once per opening. */
     private void buildStage(Session s) {
         Player p = s.p;
         s.eyeOff = p.getEyeLocation().getY() - s.seat.getLocation().getY();
-        s.plane = s.seat.getLocation().clone().add(0, s.eyeOff, DIST);
+        s.plane = s.seat.getLocation().clone().add(0, s.eyeOff, PLANE);
         float hx = BOX_W, hy = BOX_H, hz = BOX_D, ey = (float) s.eyeOff;
         Quaternionf ry = new Quaternionf().rotateY((float) (Math.PI / 2)), rx = new Quaternionf().rotateX((float) (Math.PI / 2));
-        backdrop(s, "line", 0x060A16, new Vector3f(0, ey, (float) DIST + 0.6f), new Quaternionf(), new Vector3f(hx * 2, hy * 2, 1));
+        // the far wall stays behind the panel (not a passenger: the seat moves when the player zooms)
+        rect(s, s.stage, 0, 0, hx * 2, hy * 2, 0x060A16, -0.6);
         backdrop(s, "line", NAVY, new Vector3f(hx, ey, 0), ry, new Vector3f(hz * 2, hy * 2, 1));
         backdrop(s, "line", NAVY, new Vector3f(-hx, ey, 0), ry, new Vector3f(hz * 2, hy * 2, 1));
         backdrop(s, "line", NAVY, new Vector3f(0, ey + hy, 0), rx, new Vector3f(hx * 2, hz * 2, 1));
@@ -286,7 +301,7 @@ public final class MenuSky implements Listener {
             t.setShadowed(true);
             t.setRotation(180f, 0f);
             t.text(Component.empty());
-            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.62f), new Quaternionf()));
+            t.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.72f), new Quaternionf()));
         }));
     }
 
@@ -321,7 +336,7 @@ public final class MenuSky implements Listener {
             t.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
             t.setShadowed(true);
             t.setLineWidth(width);
-            t.text(c);
+            t.text(c.font() == null ? c.font(mn.suld.plugin.ui.StyleFormat.HD) : c);
             // a TextDisplay grows up from its origin: drop it by half a line per line so (u, v) is its middle
             int lines = 1 + (int) PlainLines.count(c);
             t.setTransformation(new Transformation(new Vector3f(0, (float) (-0.125 * scale * lines), 0), new Quaternionf(),
@@ -373,7 +388,7 @@ public final class MenuSky implements Listener {
             double u = -tabsW / 2 + TAB_W / 2 + i * (TAB_W + TAB_GAP);
             int rgb = active ? TAB_ON : TAB;
             ItemDisplay bg = rect(s, s.page, u, TAB_V, TAB_W, TAB_H, rgb, 0.03);
-            text(s, u, TAB_V, Component.text(t.label(), active ? NamedTextColor.WHITE : GOLD, TextDecoration.BOLD), 0.5f, 120);
+            text(s, u, TAB_V, Component.text(t.label(), active ? NamedTextColor.WHITE : GOLD, TextDecoration.BOLD), 0.62f, 100);
             Consumer<Player> open = t.open();
             Runnable click = open == null || active ? null : () -> open.accept(s.p);
             List<Component> lore = List.of(Component.text(t.hint(), GREY),
@@ -396,7 +411,7 @@ public final class MenuSky implements Listener {
             double tu = hasIcon ? u + 0.3 : u;
             Component body = c.name();
             if (!c.lore().isEmpty()) body = body.append(Component.newline()).append(c.lore().get(0).colorIfAbsent(GREY));
-            text(s, tu, v, body, 0.62f, (int) ((CARD_W - (hasIcon ? 0.9 : 0.3)) / 0.62 / 0.025));
+            text(s, tu, v, body, 0.8f, (int) ((CARD_W - (hasIcon ? 0.9 : 0.3)) / 0.8 / 0.025));
             Menu.Click click = c.click();
             s.hits.add(new Hit(u, v, CARD_W, CARD_H, click == null ? null : () -> click.accept(s.p, ClickType.LEFT), c.name(), c.lore(), bg, rgb,
                     click == null ? rgb : CARD_HOVER));
@@ -420,13 +435,13 @@ public final class MenuSky implements Listener {
         button(s, 0, FOOT_V, 2.2, "✕ Хаах", CLOSE, () -> close(s.p), "Цонхыг хаана (Shift).");
         if (spec.prev() != null) {
             Consumer<Player> prev = spec.prev();
-            button(s, 2.55, FOOT_V, 1.9, "‹ Өмнөх", BUTTON, () -> prev.accept(s.p), "Өмнөх хуудас (дугуйгаар ч болно).");
+            button(s, 2.55, FOOT_V, 1.9, "‹ Өмнөх", BUTTON, () -> prev.accept(s.p), "Өмнөх хуудас (A товч).");
         }
         if (spec.next() != null) {
             Consumer<Player> next = spec.next();
-            button(s, 4.0, FOOT_V, 1.9, "Дараах ›", TAB_ON, () -> next.accept(s.p), "Дараагийн хуудас (дугуйгаар ч болно).");
+            button(s, 4.0, FOOT_V, 1.9, "Дараах ›", TAB_ON, () -> next.accept(s.p), "Дараагийн хуудас (D товч).");
         }
-        text(s, 0, -2.85, Component.text("Хараагаар заагаад зүүн товш · Дугуй: хуудас · Shift: хаах", GREY), 0.55f, 400);
+        text(s, 0, -2.85, Component.text("Хараагаар заагаад зүүн товш · Дугуй: томруулах · A / D: хуудас · Shift: хаах", GREY), 0.6f, 420);
     }
 
     private void button(Session s, double u, double v, double w, String label, int rgb, Runnable click, String hint) {
@@ -543,6 +558,7 @@ public final class MenuSky implements Listener {
         if (sessions.containsKey(e.getPlayer().getUniqueId())) e.setCancelled(true);
     }
 
+    /** The wheel zooms: the camera moves toward the panel or away from it. */
     @EventHandler(priority = EventPriority.HIGH)
     public void onWheel(PlayerItemHeldEvent e) {
         Session s = sessions.get(e.getPlayer().getUniqueId());
@@ -551,7 +567,22 @@ public final class MenuSky implements Listener {
         int d = e.getNewSlot() - e.getPreviousSlot();
         if (d > 4) d -= 9;
         if (d < -4) d += 9;
-        Consumer<Player> go = d > 0 ? s.spec.next() : s.spec.prev();
+        double to = Math.max(DIST_MIN, Math.min(DIST_MAX, s.dist + d * ZOOM_STEP));
+        if (to == s.dist) return;
+        s.dist = to;
+        moveCamera(s);
+    }
+
+    /** A / D turn the page (the «‹ Өмнөх» / «Дараах ›» buttons do the same). */
+    @EventHandler
+    public void onInput(org.bukkit.event.player.PlayerInputEvent e) {
+        Session s = sessions.get(e.getPlayer().getUniqueId());
+        if (s == null || !s.ready) return;
+        var in = e.getInput();
+        boolean prev = in.isLeft() && !s.left, next = in.isRight() && !s.right;
+        s.left = in.isLeft();
+        s.right = in.isRight();
+        Consumer<Player> go = prev ? s.spec.prev() : next ? s.spec.next() : null;
         if (go == null) return;
         s.capturing = true;
         s.captured = null;

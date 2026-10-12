@@ -96,7 +96,7 @@ public final class DungeonGuide implements Listener {
         double dx = gate.getX() - l.getX(), dz = gate.getZ() - l.getZ();
         long dist = Math.round(Math.hypot(dx, dz));
         if (dist <= ARRIVED) {
-            p.sendActionBar(Component.text("⚔ " + def.displayName() + " — хаалга энд! Хаалгыг дар", NamedTextColor.GREEN, TextDecoration.BOLD));
+            mn.suld.plugin.hud.HudService.notice(p, Component.text("⚔ " + def.displayName() + " — хаалга энд! Хаалгыг дар", NamedTextColor.GREEN, TextDecoration.BOLD));
             stop(p);
             return;
         }

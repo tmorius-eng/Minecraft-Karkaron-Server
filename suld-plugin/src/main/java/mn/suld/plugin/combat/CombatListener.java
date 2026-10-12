@@ -303,7 +303,7 @@ public final class CombatListener implements Listener {
             return;
         }
         if (profile.playerClass().isEmpty()) { // GAME-002: like vanilla kills, no rewards before a class is chosen
-            killer.sendActionBar(Messages.info("Эхлээд ангиа сонго: /class"));
+            mn.suld.plugin.hud.HudService.notice(killer, Messages.info("Эхлээд ангиа сонго: /class"));
             return;
         }
 
@@ -346,7 +346,7 @@ public final class CombatListener implements Listener {
             int mFrom = mp.progression().level();
             long[] mg = killExp(m, mp, def, share, summoned ? 0.2 : 1.0);
             ExpGainResult mr = services.progression().grantExp(mp, mg[0], ExpSource.MOB_KILL);
-            m.sendActionBar(Messages.info("+" + mg[0] + " EXP · бүлэг (" + def.displayName() + ")"));
+            mn.suld.plugin.hud.HudService.notice(m, Messages.info("+" + mg[0] + " EXP · бүлэг (" + def.displayName() + ")"));
             if (mr.leveledUp()) {
                 Presentation.levelUp(m, mFrom, mr.after().level());
                 services.profiles().save(mp);
@@ -427,7 +427,7 @@ public final class CombatListener implements Listener {
         int from = profile.progression().level();
         long exp = Math.max(1, Math.round(services.boosts().apply(killer.getUniqueId(), Math.round(30 + 10.0 * from + 0.05 * from * from)) * 0.25));
         ExpGainResult r = services.progression().grantExp(profile, exp, ExpSource.MOB_KILL);
-        killer.sendActionBar(Messages.info("+" + exp + " EXP"));
+        mn.suld.plugin.hud.HudService.notice(killer, Messages.info("+" + exp + " EXP"));
         if (r.leveledUp()) {
             Presentation.levelUp(killer, from, r.after().level());
             services.profiles().save(profile);

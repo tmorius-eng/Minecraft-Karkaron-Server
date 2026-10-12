@@ -112,7 +112,7 @@ public final class VillageProtection implements Listener {
         if (e.getCause() == EntityDamageEvent.DamageCause.VOID || e.getCause() == EntityDamageEvent.DamageCause.KILL) return;
         e.setCancelled(true);
         if (e instanceof org.bukkit.event.entity.EntityDamageByEntityEvent by && by.getDamager() instanceof Player p) {
-            p.sendActionBar(Messages.error("Тосгоны иргэд Тэнгэрийн ивээлд — тэднийг хөнөөж болохгүй."));
+            mn.suld.plugin.hud.HudService.notice(p, Messages.error("Тосгоны иргэд Тэнгэрийн ивээлд — тэднийг хөнөөж болохгүй."));
         }
     }
 
@@ -125,7 +125,7 @@ public final class VillageProtection implements Listener {
     public void onBreak(BlockBreakEvent e) {
         if (!bypass(e.getPlayer()) && guarded(e.getBlock())) {
             e.setCancelled(true);
-            e.getPlayer().sendActionBar(Messages.error("Энэ газар хамгаалалттай — эвдэж болохгүй."));
+            mn.suld.plugin.hud.HudService.notice(e.getPlayer(), Messages.error("Энэ газар хамгаалалттай — эвдэж болохгүй."));
         }
     }
 

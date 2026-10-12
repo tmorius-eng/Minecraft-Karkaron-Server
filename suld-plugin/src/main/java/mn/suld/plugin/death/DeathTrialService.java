@@ -142,7 +142,7 @@ public final class DeathTrialService implements Listener, TabExecutor {
         double elapsed = (System.currentTimeMillis() - r.startedAt) / 1000.0;
         DeathTrial.Outcome o = rules.outcome(r.killed, elapsed, r.fallen, p == null || !p.isOnline());
         if (o == DeathTrial.Outcome.RUNNING) {
-            if (p != null) p.sendActionBar(Component.text("Сорил: " + r.killed + "/" + rules.wolves() + " · "
+            if (p != null) mn.suld.plugin.hud.HudService.notice(p, Component.text("Сорил: " + r.killed + "/" + rules.wolves() + " · "
                     + Math.max(0, (int) (rules.seconds() - elapsed)) + " с", NamedTextColor.AQUA));
             for (UUID w : r.wolves) if (Bukkit.getEntity(w) instanceof Wolf wolf && p != null && wolf.getTarget() != p) wolf.setTarget(p);
             return;

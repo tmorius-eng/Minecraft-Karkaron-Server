@@ -140,7 +140,7 @@ public final class QuestMenu {
                 m.set(9 + i - first, bookCard(p, def, i, finished, active, state), active ? (pl, c) -> {
                     if (tracker != null && !tracker.shown(pl)) tracker.toggle(pl);
                     pl.closeInventory();
-                    pl.sendActionBar(Component.text("✦ Эрлийн заагч дээд талд — зүг, зайг нь дага", GOLD, TextDecoration.BOLD));
+                    mn.suld.plugin.hud.HudService.notice(pl, Component.text("✦ Эрлийн заагч дээд талд — зүг, зайг нь дага", GOLD, TextDecoration.BOLD));
                 } : null);
             }
         }
@@ -331,7 +331,7 @@ public final class QuestMenu {
             m.set(slots[i - first], card(p, def, i, finished, active, state), active ? (pl, c) -> {
                 if (tracker != null && !tracker.shown(pl)) tracker.toggle(pl);
                 pl.closeInventory();
-                pl.sendActionBar(Component.text("✦ Эрлийн заагч дээд талд — зүг, зайг нь дага", GOLD, TextDecoration.BOLD));
+                mn.suld.plugin.hud.HudService.notice(pl, Component.text("✦ Эрлийн заагч дээд талд — зүг, зайг нь дага", GOLD, TextDecoration.BOLD));
             } : null);
         }
         // toolbar (row 5)

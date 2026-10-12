@@ -542,7 +542,7 @@ public final class DungeonHalls implements Listener {
     public void onBreak(BlockBreakEvent e) {
         if (guarded(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("suld.admin.world")) {
             e.setCancelled(true);
-            e.getPlayer().sendActionBar(mn.suld.plugin.ui.Messages.error("Агуйн хаалга, танхим хамгаалалттай."));
+            mn.suld.plugin.hud.HudService.notice(e.getPlayer(), mn.suld.plugin.ui.Messages.error("Агуйн хаалга, танхим хамгаалалттай."));
         }
     }
 

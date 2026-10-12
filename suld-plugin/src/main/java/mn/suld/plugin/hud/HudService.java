@@ -65,7 +65,20 @@ public final class HudService {
         this.glow = source;
     }
 
+    private static volatile HudService current;
+
+    /**
+     * A notice for {@code p} in the HUD's text line (never a raw action bar: that would replace the HUD panel, the
+     * health and resource bars, until the next redraw). For classes that hold no {@code SuldServices}.
+     */
+    public static void notice(Player p, Component message) {
+        HudService h = current;
+        if (h != null) h.toast(p, message);
+        else p.sendActionBar(message);
+    }
+
     public HudService(ProgressionService progression) {
+        current = this;
         this.progression = progression;
     }
 

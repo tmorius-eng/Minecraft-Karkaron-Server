@@ -244,7 +244,7 @@ public final class EquipmentService implements Listener {
             if (e.getValue() == Equipment.Inactive.WRONG_SLOT && e.getKey() == EquipSlot.OFF_HAND) continue;
             ItemInstance i = worn.get(e.getKey());
             String name = i == null ? "" : SuldContent.items().item(i.definitionId()).map(ItemDefinition::displayName).orElse(i.definitionId());
-            p.sendActionBar(net.kyori.adventure.text.Component.text("✖ " + name + ": " + e.getValue().text() + " — нөлөөгүй", net.kyori.adventure.text.format.NamedTextColor.RED));
+            mn.suld.plugin.hud.HudService.notice(p, net.kyori.adventure.text.Component.text("✖ " + name + ": " + e.getValue().text() + " — нөлөөгүй", net.kyori.adventure.text.format.NamedTextColor.RED));
         }
     }
 
