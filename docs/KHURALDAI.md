@@ -139,5 +139,7 @@ entering a dungeon leaves the board. `/party find` also opens a window: one card
 * `tools/loadtest/bots/campaign-effects.js` **6/6** (2026-10-12, dev campaigns `test_kill`, `test_prop`, `test_npc`):
   both plaza boards stand, wolf kills by a player count toward a KILL_MOBS campaign, a PROP effect places the
   stone man at Хөдөө Арал, an NPC effect places the caravan merchant by `merchant.general`.
-* Not yet bot-exercised: the dungeon-clear contribution hook (needs a full dungeon run).
+* `tools/loadtest/bots/dungeon-clear.js` **5/5** (2026-10-12): a Саарлын Агуй run counts toward a CLEAR_DUNGEON
+  campaign and writes the first clear and the fastest-clear record. A bot at the plaza saw the notice board change
+  within 5 s of the campaign's state changing.
 * Real client (owner): `/khuraldai` GUI voting, the Аян card, `/chronicle mine`, the boss bar text at GUI scale 2–4.
