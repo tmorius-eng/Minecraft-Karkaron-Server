@@ -246,6 +246,10 @@ public final class KhuraldaiService {
             }
             switch (r) {
                 case CAST -> {
+                    // the board and the screen show the vote at once; the 30 s refresh from the database corrects drift
+                    Map<String, Integer> t = new java.util.HashMap<>(tally);
+                    t.merge(chosen, 1, Integer::sum);
+                    tally = Map.copyOf(t);
                     player.sendMessage(Messages.success("Санал бүртгэгдлээ: «" + (def == null ? chosen : def.name()) + "». Баярлалаа!"));
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1.4f);
                     services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.VOTE_CAST, player.getUniqueId(),

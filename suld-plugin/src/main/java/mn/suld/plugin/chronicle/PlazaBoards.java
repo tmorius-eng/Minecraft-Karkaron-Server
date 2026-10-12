@@ -136,7 +136,7 @@ public final class PlazaBoards {
             int max = services.config().chronicle().hallEntries();
             for (var e : chronicle.latest()) {
                 if (lines.size() >= Math.min(max, 8)) break;
-                lines.add(chronicle.headline(e).replace("✦ ", ""));
+                lines.add(chronicle.headline(e).replace("✦ ", "").replaceFirst("^Хроник: ", ""));
             }
         }
         return hallText(lines);
