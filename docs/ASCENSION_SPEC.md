@@ -24,10 +24,20 @@ for their content (heroic and mythic modes, mastery tracks, a world boss).
   (`CombatListener.attackOf`); rank III opens T6 class armour (`ClassArmor.holdings`).
 * **What it costs in hardcore:** an ascended character's death lock is the longest one (`DeathLock`, `DeathService`).
 * **Shown:** the sidebar's «Зэрэг» row at the cap (rank and оноо); the /ascend window.
+* **Gate steps are milestones** (`Ascension.steps`/`totalSteps`): every dungeon, chapter, palace clear and armour
+  mastery rank counted by a gate (and each met yes/no gate) is a step. `AscensionMenu.watch` looks every 10 s and a
+  level-60 player whose steps rose hears «✔ Тэнгэрийн Зэрэг II-ийн нөхцөл: 7/18 (/ascend)».
+* **«Тэнгэрийн Од» after rank III** (`Ascension.stars`, `starCost` = the cost a rank IV would have,
+  0.6 · need(59) · 4 ≈ 4.57 M оноо): the оноо keep coming at the top and each `starCost` of them is a star — a count
+  in the window («Тэнгэрийн Од: N», bar to the next) and a line when it rises. Derived from the unspent оноо (nothing
+  stored, nothing spent), **no power**. Before it, a hardcore player who reached rank III around day 17–19 had no
+  measurable progress for the rest of the first 30 days (L9 87 %).
 * **Counting:** Тэнгэрийн Ордон clears are counted per character at completion (`Endgame.palaceClears`, an optional
   field of the version-1 endgame JSON, so older rows read as 0).
 * **Staff/QA:** `/suld endgame <player> rank|points|palace <n>` (audited).
-* **Simulator:** `Engine.ascensionReady` uses the same `Ascension.blocked` for the live rules.
+* **Simulator:** `Engine.ascensionReady` uses the same `Ascension.blocked` for the live rules; `Engine.ascensionSteps`
+  counts a rise of `steps` (or of `stars` at rank III) as the day's milestone, and the day's level fraction at the cap
+  is the rank plus the share of the next rank's оноо (then the stars), the /ascend bar.
 
 Client QA to do: open /ascend below and at 60, check the checklist and the two-click rite, the priest at level 60,
 the sidebar row, +1 skill point in /skills, and that T6 shows as open at rank III.

@@ -83,9 +83,10 @@ public final class Engine {
         for (e.day = 0; e.day < days; e.day++) {
             e.p.milestonesToday = 0;
             e.session();
+            e.ascensionSteps();
             e.p.dayLevel.add(e.p.level);
             e.p.dayMilestones.add(e.p.milestonesToday);
-            e.p.dayLevelFraction.add(e.p.level + (e.p.level >= 60 ? 0 : (double) e.p.expInto / Math.max(1, e.r.curve().expForLevel(e.p.level))));
+            e.p.dayLevelFraction.add(e.p.level + (e.p.level >= 60 ? e.capProgress() : (double) e.p.expInto / Math.max(1, e.r.curve().expForLevel(e.p.level))));
             while (next < CHECKPOINTS.length && CHECKPOINTS[next] == e.day + 1) {
                 e.snaps.add(e.snapshot(e.day + 1));
                 next++;
@@ -1216,8 +1217,7 @@ public final class Engine {
             // the live game: ranks I–III with its gates and stand-ins (mn.suld.api.balance.Ascension): palace clears for
             // the heroic and world-boss gates, the class (armour) mastery track for the others
             if (rank > mn.suld.api.balance.Ascension.MAX_RANK) return false;
-            var in = new mn.suld.api.balance.Ascension.Inputs(p.level, p.distinctClears(), w.dungeons().size(),
-                    p.clears.getOrDefault("dungeon.tengeriin_ordon", 0), gp, p.chapters, w.story().size(), p.mastery[SimPlayer.M_CLASS]);
+            var in = liveInputs();
             return mn.suld.api.balance.Ascension.blocked(rank - 1, in) == null
                     && p.overflowExp >= pr.ascensionCost(rank - 1) && p.coins >= ProposedRules.ascensionCoins(rank - 1);
         }
@@ -1235,6 +1235,38 @@ public final class Engine {
             default -> false;
         };
         return ok && p.overflowExp >= pr.ascensionCost(rank - 1) && p.coins >= ProposedRules.ascensionCoins(rank - 1);
+    }
+
+    private int stepsRank = -1, stepsDone;
+
+    /**
+     * Live game at the cap: each step on the /ascend checklist (a dungeon, a palace clear, a mastery rank…) and, after
+     * the last rank, each «Тэнгэрийн Од» is a milestone, as the plugin announces it (AscensionMenu.watch).
+     */
+    void ascensionSteps() {
+        if (!(r instanceof LiveRules) || p.level < 60) return;
+        int s = p.ascension >= mn.suld.api.balance.Ascension.MAX_RANK
+                ? (int) Math.min(Integer.MAX_VALUE, mn.suld.api.balance.Ascension.stars(r.curve(), p.ascension, p.overflowExp))
+                : mn.suld.api.balance.Ascension.steps(p.ascension, liveInputs());
+        if (stepsRank == p.ascension && s > stepsDone) p.milestonesToday++;
+        stepsRank = p.ascension;
+        stepsDone = s;
+    }
+
+    /** At the cap: the rank plus the share of the next rank's Тэнгэрийн оноо (the /ascend bar), then the stars. */
+    double capProgress() {
+        if (pr == null) return 0;
+        if (r instanceof LiveRules && p.ascension >= mn.suld.api.balance.Ascension.MAX_RANK) {
+            // the stars after the last rank: one per starCost оноо
+            return p.ascension + p.overflowExp / (double) Math.max(1, mn.suld.api.balance.Ascension.starCost(r.curve()));
+        }
+        if (p.ascension >= 10) return p.ascension;
+        return p.ascension + Math.min(1.0, p.overflowExp / Math.max(1.0, pr.ascensionCost(p.ascension)));
+    }
+
+    private mn.suld.api.balance.Ascension.Inputs liveInputs() {
+        return new mn.suld.api.balance.Ascension.Inputs(p.level, p.distinctClears(), w.dungeons().size(),
+                p.clears.getOrDefault("dungeon.tengeriin_ordon", 0), p.gear.gearPower(), p.chapters, w.story().size(), p.mastery[SimPlayer.M_CLASS]);
     }
 
     private double parRatingCache = -1;

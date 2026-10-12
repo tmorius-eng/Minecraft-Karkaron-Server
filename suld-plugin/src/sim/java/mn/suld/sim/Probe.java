@@ -32,6 +32,9 @@ public final class Probe {
                     s.get("endgamePct"), s.get("dps"), s.get("hp"));
         }
         SimPlayer p = res.player();
+        StringBuilder perDay = new StringBuilder("days (level fraction / milestones): ");
+        for (int i = 0; i < p.dayMilestones.size(); i++) perDay.append(i + 1).append(':').append(String.format("%.2f", p.dayLevelFraction.get(i))).append('/').append(p.dayMilestones.get(i)).append(' ');
+        System.out.println(perDay);
         System.out.println("hours at level: " + new java.util.TreeMap<>(p.hoursAtLevel));
         System.out.println("exp by source: " + p.expBySource);
         System.out.println("minutes by source: " + p.minutesBySource);

@@ -72,6 +72,44 @@ public final class Ascension {
         return g;
     }
 
+    /**
+     * Gate steps done toward rank {@code rank} → {@code rank + 1}: every counted gate adds {@code min(have, need)}
+     * (each dungeon, chapter, palace clear and mastery rank is a step), every yes/no gate 1 when met. It rises with
+     * each visible step on the /ascend checklist, so a step is a milestone even while the rank stays shut.
+     */
+    public static int steps(int rank, Inputs in) {
+        if (rank >= MAX_RANK) return 0;
+        int n = in.level() >= Balance.MAX_LEVEL ? 1 : 0;
+        switch (rank) {
+            case 0 -> {
+                n += Math.min(in.distinctClears(), Math.min(9, in.ladderSize()));
+                n += Math.min(in.chapters(), in.storySize());
+                n += in.gearPower() >= 0.9 * GearPower.par(60) ? 1 : 0;
+            }
+            case 1 -> {
+                n += Math.min(in.distinctClears(), in.ladderSize());
+                n += Math.min(in.palaceClears(), 2);
+                n += Math.min(in.armorMastery(), 5);
+            }
+            default -> {
+                n += Math.min(in.palaceClears(), 4);
+                n += in.gearPower() >= GearPower.par(60) ? 1 : 0;
+                n += Math.min(in.armorMastery(), 7);
+            }
+        }
+        return n;
+    }
+
+    /** All the steps of rank {@code rank} → {@code rank + 1} ({@link #steps} equals it once every gate is met). */
+    public static int totalSteps(int rank, int ladderSize, int storySize) {
+        if (rank >= MAX_RANK) return 0;
+        return 1 + switch (rank) {
+            case 0 -> Math.min(9, ladderSize) + storySize + 1;
+            case 1 -> ladderSize + 2 + 5;
+            default -> 4 + 1 + 7;
+        };
+    }
+
     /** Why rank {@code rank} → {@code rank + 1} is not open yet, or null when only the оноо and coins remain. */
     public static String blocked(int rank, Inputs in) {
         if (rank >= MAX_RANK) return "Тэнгэрийн Зэргийн дээд шат.";
@@ -95,6 +133,19 @@ public final class Ascension {
         long fee = riteCoins(rank);
         if (coins < fee) return new Rite(Outcome.NOT_ENOUGH_COINS, rank, points, coins, "Ёслолын зоос хүрэлцэхгүй (" + coins + "/" + fee + " зоос).");
         return new Rite(Outcome.DONE, rank + 1, points - cost, coins - fee, null);
+    }
+
+    /** Тэнгэрийн оноо per «Тэнгэрийн Од» after the last rank (the cost of a rank IV that does not exist). */
+    public static long starCost(LevelCurve c) {
+        return cost(c, MAX_RANK);
+    }
+
+    /**
+     * «Тэнгэрийн Од» (sky stars): at the last rank the оноо keep coming and every {@link #starCost} of them is a star
+     * — a visible count with no power, so EXP at the top still shows. Derived from the unspent оноо, never spent.
+     */
+    public static long stars(LevelCurve c, int rank, long points) {
+        return rank < MAX_RANK ? 0 : points / Math.max(1, starCost(c));
     }
 
     /** Roman numeral of a rank (I–III), "—" for none. */

@@ -43,8 +43,48 @@ public final class AscensionMenu {
     /** Players who clicked the rite once (the second click performs it). */
     private final Map<UUID, Long> armed = new ConcurrentHashMap<>();
 
+    /** Last seen (rank, gate steps or stars) per player: a rise is announced, the first look is not. */
+    private final Map<UUID, long[]> seen = new ConcurrentHashMap<>();
+
     public AscensionMenu(SuldServices services) {
         this.services = services;
+    }
+
+    /**
+     * Every 10 s: a level-60 player whose /ascend checklist moved (a dungeon, a palace clear, a mastery rank, the
+     * gear) hears the step, and at the last rank each new «Тэнгэрийн Од» — so the days at the cap show progress.
+     */
+    public void watch(org.bukkit.plugin.Plugin plugin) {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                try {
+                    watch(p);
+                } catch (RuntimeException ex) {
+                    plugin.getLogger().warning("[ascend] watch " + p.getName() + ": " + ex);
+                }
+            }
+            seen.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
+        }, 200L, 200L);
+    }
+
+    private void watch(Player p) {
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (pr == null || pr.progression().level() < mn.suld.api.balance.Balance.MAX_LEVEL) return;
+        int rank = pr.ascension();
+        boolean top = rank >= Ascension.MAX_RANK;
+        Ascension.Inputs in = top ? null : inputs(p, pr);
+        long now = top ? Ascension.stars(services.curve(), rank, pr.endgame().tengeriPoints()) : Ascension.steps(rank, in);
+        long[] last = seen.put(p.getUniqueId(), new long[]{rank, now});
+        if (last == null || last[0] != rank || now <= last[1]) return;
+        Component line;
+        if (top) {
+            line = Component.text("✦ Тэнгэрийн Од " + now + " — 60-р түвшний EXP тань одоор гэрэлтэнэ.", SKY, TextDecoration.BOLD);
+        } else {
+            int total = Ascension.totalSteps(rank, in.ladderSize(), in.storySize());
+            line = Component.text("✔ Тэнгэрийн Зэрэг " + Ascension.roman(rank + 1) + "-ийн нөхцөл: " + now + "/" + total + " (/ascend)", GREEN, TextDecoration.BOLD);
+        }
+        p.sendMessage(line);
+        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.6f);
     }
 
     /** What the gates need to know about {@code p}. */
@@ -76,6 +116,10 @@ public final class AscensionMenu {
         if (rank >= Ascension.MAX_RANK) {
             m.set(22, Menu.glow(Menu.item(Material.BEACON, Menu.title("Тэнгэрийн Зэргийн дээд шат", GOLD), Menu.lore(GOLD,
                     List.of(Menu.line("Та Тэнгэрийн гурван зэргийг бүгдийг давлаа.")), List.of(), null))), null);
+            long pts = pr.endgame().tengeriPoints(), star = Ascension.starCost(curve);
+            m.set(20, Menu.item(Material.NETHER_STAR, Menu.title("Тэнгэрийн Од: " + Ascension.stars(curve, rank, pts), SKY), Menu.lore(SKY,
+                    List.of(Menu.line("Дээд зэргийн дараа олсон EXP"), Menu.line("бүр од болж гэрэлтэнэ (хүч нэмэхгүй).")),
+                    List.of(Menu.kv("Дараагийн од:", fmt(pts % star) + " / " + fmt(star), SKY), Component.text(bar(pts % star, star), SKY)), null)), null);
         } else {
             long cost = Ascension.cost(curve, rank);
             long pts = pr.endgame().tengeriPoints();
