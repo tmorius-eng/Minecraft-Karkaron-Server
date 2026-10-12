@@ -25,9 +25,9 @@ async function clickOn(label) {
   if (!x) return false;
   // the text's origin is a little under its middle line: aim at the card centre
   // mineflayer sends no rotation while riding: write the look packet like a real client does
-  // the eye: level with the panel centre (the title is 2.78 above it), straight over the seat (which zooms in Z)
+  // the eye: straight over the seat (it pans in X/Y and zooms in Z); its height from the title (2.78 above the panel centre) plus the pan
   const title = find('SÜLD');
-  const eye = title.e.position.offset(0, -2.78, 0); eye.z = seat().position.z; const t = x.e.position;
+  const eye = seat().position.offset(0, 0, 0); eye.y = title.e.position.y - 2.78 + 0; eye.x = seat().position.x; const t = x.e.position;
   const dx = t.x - eye.x, dy = t.y - eye.y, dz = t.z - eye.z;
   const yaw = -Math.atan2(dx, dz) * 180 / Math.PI, pitch = -Math.atan2(dy, Math.hypot(dx, dz)) * 180 / Math.PI;
   b._client.write('look', { yaw, pitch, flags: { onGround: false, hasHorizontalCollision: false } });
@@ -52,8 +52,11 @@ b.once('spawn', async () => {
   check(!!find('ДЭЛГҮҮР · 1/2') && !!find('Дараах'), 'looking at «/shop» and clicking opens the shop page with a «Дараах ›» button', find('ДЭЛГҮҮР') ? 'shop' : 'no shop');
   await clickOn('Дараах');
   check(!!find('ДЭЛГҮҮР · 2/2') && !!find('Өмнөх'), '«Дараах ›» turns to page 2/2', find('2/2') ? '2/2' : 'still ' + (find('1/2') ? '1/2' : '?'));
-  b._client.write('player_input', { inputs: { left: true } }); await sleep(300); b._client.write('player_input', { inputs: {} }); await sleep(1200);
-  check(!!find('ДЭЛГҮҮР · 1/2'), 'A turns back to page 1/2', find('1/2') ? '1/2' : 'no');
+  await clickOn('Өмнөх');
+  check(!!find('ДЭЛГҮҮР · 1/2'), '«‹ Өмнөх» turns back to page 1/2', find('1/2') ? '1/2' : 'no');
+  const x0 = seat().position.x;
+  b._client.write('player_input', { inputs: { right: true } }); await sleep(800); b._client.write('player_input', { inputs: {} }); await sleep(600);
+  check(seat().position.x < x0 - 0.5, 'D pans the camera to the right', 'seat x ' + x0.toFixed(2) + ' -> ' + seat().position.x.toFixed(2));
   const z0 = seat().position.z;
   b.setQuickBarSlot((b.quickBarSlot + 8) % 9); await sleep(400); b.setQuickBarSlot((b.quickBarSlot + 8) % 9); await sleep(1200);
   const z1 = seat().position.z;

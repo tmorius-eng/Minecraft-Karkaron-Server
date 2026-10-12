@@ -58,7 +58,7 @@ import java.util.function.Consumer;
  * private stage high above where they stand, and the page is built in front of the locked camera out of display
  * entities only they can see. Text is real text (TextDisplay), so nothing depends on the client's GUI scale, the
  * way the chest-title art did. The crosshair is the cursor: the card under it lights up and shows its tooltip, a left
- * click runs it, the wheel zooms, A / D turn pages, Shift closes.
+ * click runs it, W / A / S / D pan, the wheel zooms, Shift closes.
  * <p>
  * Every page is still a {@link HubMenu.Spec}: {@link HubMenu#open} hands it here. A click that opens another hub page
  * rebuilds the scene in place; a click that does anything else (a chest window, a dialog, a teleport) closes the sky
@@ -69,6 +69,7 @@ public final class MenuSky implements Listener {
 
     static final String TAG = "suld_menusky";
     /** The panel stands PLANE blocks ahead of the stage; the camera sits DIST0 from it, the wheel zooms DIST_MIN … DIST_MAX. */
+    static final double PAN_U = 5.0, PAN_V = 3.2;
     static final double PLANE = 7.5, DIST0 = 3.2, DIST_MIN = 1.8, DIST_MAX = 7.0, ZOOM_STEP = 0.45;
     static final long COMBAT_MS = 8000;
     static final float BOX_W = 40, BOX_H = 24, BOX_D = 16;
@@ -120,8 +121,8 @@ public final class MenuSky implements Listener {
         HubMenu.Spec captured;
         List<HubMenu.Tab> capturedTabs;
         long lastClick;
-        double dist = DIST0;
-        boolean left, right;
+        double dist = DIST0, camU, camV;
+        boolean up, down, left, right, moved;
 
         Session(Player p) {
             this.p = p;
@@ -269,7 +270,8 @@ public final class MenuSky implements Listener {
 
     /** The seat (and the camera on it) {@code dist} blocks in front of the panel; the box rides along. */
     private void moveCamera(Session s) {
-        Location cam = s.plane.clone().add(0, -s.eyeOff, -s.dist);
+        s.moved = false;
+        Location cam = s.plane.clone().add(-s.camU, s.camV - s.eyeOff, -s.dist);
         cam.setYaw(s.p.getLocation().getYaw());
         cam.setPitch(s.p.getLocation().getPitch());
         s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
@@ -435,13 +437,13 @@ public final class MenuSky implements Listener {
         button(s, 0, FOOT_V, 2.2, "✕ Хаах", CLOSE, () -> close(s.p), "Цонхыг хаана (Shift).");
         if (spec.prev() != null) {
             Consumer<Player> prev = spec.prev();
-            button(s, 2.55, FOOT_V, 1.9, "‹ Өмнөх", BUTTON, () -> prev.accept(s.p), "Өмнөх хуудас (A товч).");
+            button(s, 2.55, FOOT_V, 1.9, "‹ Өмнөх", BUTTON, () -> prev.accept(s.p), "Өмнөх хуудас.");
         }
         if (spec.next() != null) {
             Consumer<Player> next = spec.next();
-            button(s, 4.0, FOOT_V, 1.9, "Дараах ›", TAB_ON, () -> next.accept(s.p), "Дараагийн хуудас (D товч).");
+            button(s, 4.0, FOOT_V, 1.9, "Дараах ›", TAB_ON, () -> next.accept(s.p), "Дараагийн хуудас.");
         }
-        text(s, 0, -2.85, Component.text("Хараагаар заагаад зүүн товш · Дугуй: томруулах · A / D: хуудас · Shift: хаах", GREY), 0.6f, 420);
+        text(s, 0, -2.85, Component.text("Хараагаар заагаад зүүн товш · W A S D: гүйлгэх · Дугуй: томруулах · Shift: хаах", GREY), 0.6f, 420);
     }
 
     private void button(Session s, double u, double v, double w, String label, int rgb, Runnable click, String hint) {
@@ -460,6 +462,14 @@ public final class MenuSky implements Listener {
                 close(s.p);
                 continue;
             }
+            // W / A / S / D pan the camera over the window, like the skill tree
+            double step = 0.1 + 0.02 * s.dist;
+            if (s.up) s.camV = Math.min(PAN_V, s.camV + step);
+            if (s.down) s.camV = Math.max(-PAN_V, s.camV - step);
+            if (s.left) s.camU = Math.max(-PAN_U, s.camU - step);
+            if (s.right) s.camU = Math.min(PAN_U, s.camU + step);
+            if (s.up || s.down || s.left || s.right) s.moved = true;
+            if (s.moved && Bukkit.getCurrentTick() % 2 == 0) moveCamera(s);
             hover(s);
         }
     }
@@ -573,28 +583,16 @@ public final class MenuSky implements Listener {
         moveCamera(s);
     }
 
-    /** A / D turn the page (the «‹ Өмнөх» / «Дараах ›» buttons do the same). */
+    /** W / A / S / D pan (held keys; the tick moves the camera). */
     @EventHandler
     public void onInput(org.bukkit.event.player.PlayerInputEvent e) {
         Session s = sessions.get(e.getPlayer().getUniqueId());
-        if (s == null || !s.ready) return;
+        if (s == null) return;
         var in = e.getInput();
-        boolean prev = in.isLeft() && !s.left, next = in.isRight() && !s.right;
+        s.up = in.isForward();
+        s.down = in.isBackward();
         s.left = in.isLeft();
         s.right = in.isRight();
-        Consumer<Player> go = prev ? s.spec.prev() : next ? s.spec.next() : null;
-        if (go == null) return;
-        s.capturing = true;
-        s.captured = null;
-        try {
-            go.accept(s.p);
-        } finally {
-            s.capturing = false;
-        }
-        if (s.captured != null) {
-            buildPage(s, s.captured, s.capturedTabs);
-            s.p.playSound(s.p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.8f, 1f);
-        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
