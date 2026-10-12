@@ -73,7 +73,15 @@ public final class DuelService implements Listener {
     /** True when {@code a} hurting {@code b} is a consented fight (duel or fighting ground); the relic seize rule asks. */
     public boolean consented(Player a, Player b) {
         if (a == null || b == null || a.equals(b)) return false;
-        return verdict(a, b).allowed() && verdict(a, b) != PvpRules.Verdict.ALLOWED_WILD || settings.wildEnabled() && verdict(a, b).allowed();
+        PvpRules.Verdict v = verdict(a, b);
+        return v.allowed() && (v != PvpRules.Verdict.ALLOWED_WILD || settings.wildEnabled());
+    }
+
+    /** A duel or a fighting ground, never the open steppe of {@code pvp.wild-enabled: true}, where deaths stay real. */
+    private boolean bout(Player a, Player b) {
+        if (a == null || b == null || a.equals(b)) return false;
+        PvpRules.Verdict v = verdict(a, b);
+        return v.allowed() && v != PvpRules.Verdict.ALLOWED_WILD;
     }
 
     private PvpRules.Verdict verdict(Player attacker, Player victim) {
@@ -179,6 +187,36 @@ public final class DuelService implements Listener {
             lastNotice.put(attacker.getUniqueId(), now);
             attacker.sendActionBar(Component.text(PvpRules.reason(v), NamedTextColor.GRAY));
         }
+    }
+
+    /**
+     * A consented fight is never a hardcore death (no lost loot, EXP or soul time for a friendly duel or a bout on a
+     * fighting ground): the killing blow becomes a defeat. HIGHEST, so SÜLD's combat maths (HIGH) already set the
+     * final damage. The loser keeps 4 HP and 3 s of protection, the duel ends, and a relic the loser bears passes to
+     * the winner as a consented kill would hand it over.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onLethalConsented(EntityDamageByEntityEvent e) {
+        if (!(e.getEntity() instanceof Player loser)) return;
+        Player winner = attacker(e.getDamager());
+        if (winner == null || !bout(winner, loser)) return;
+        if (e.getFinalDamage() < loser.getHealth() + loser.getAbsorptionAmount()) return;
+        e.setCancelled(true);
+        loser.setHealth(Math.max(1.0, Math.min(4.0, maxHealth(loser))));
+        loser.setNoDamageTicks(60);
+        loser.setFireTicks(0);
+        duels.end(loser.getUniqueId());
+        Component line = Messages.accent("⚔ " + winner.getName() + " тулаанд ялав, " + loser.getName() + " бууж өглөө.");
+        loser.sendMessage(line);
+        winner.sendMessage(line);
+        winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
+        loser.playSound(loser.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1f, 0.8f);
+        if (services.relics() != null) services.relics().onConsentedDefeat(loser, winner);
+    }
+
+    private static double maxHealth(Player p) {
+        var a = p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH);
+        return a == null ? 20.0 : a.getValue();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

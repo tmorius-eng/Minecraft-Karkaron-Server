@@ -536,31 +536,56 @@ public final class RelicService {
                 killer == null ? null : killer.getUniqueId(), killerBears, services.duels().consented(killer, victim));
         removeAllCopies(victim);
         if (outcome == RelicRules.DeathOutcome.SEIZE_BY_KILLER) {
-            UUID kid = killer.getUniqueId();
-            whenDone(repository.apply(RelicTransition.claim(rec, kid, killer.getName(), RelicEvent.SEIZED, kid.toString(),
-                    "killed " + victim.getName())), (cas, err) -> {
-                if (cas != null) {
-                    records.put(rec.key(), cas.current());
-                }
-                if (err != null || !cas.success()) {
-                    // Only fall back to the shrine if the dead bearer still holds it; if anyone else
-                    // changed it meanwhile (admin grant, ...), their newer state wins untouched.
-                    returnToShrine(rec.key(), victim.getUniqueId(), "seize failed");
-                    return;
-                }
-                records.put(rec.key(), cas.current());
-                services.audit().record(AuditEvent.of(kid.toString(), "relic.seized", rec.key(),
-                        "from " + victim.getUniqueId() + " (" + victim.getName() + ")"));
-                if (killer.isOnline()) {
-                    validate(killer);
-                    refreshHud(killer);
-                }
-                refreshHud(victim);
-                announce(Component.text("⚔ " + killer.getName() + " " + victim.getName() + "-ээс " + def.displayName()
-                        + "-ийг булааж авлаа!", NamedTextColor.RED), Sound.ENTITY_WITHER_SPAWN);
-            });
+            seize(rec, def, victim, killer);
         } else {
             returnToShrine(rec.key(), victim.getUniqueId(), "bearer " + victim.getName() + " died");
+        }
+    }
+
+    /** The winner of a consented fight takes the loser's relic (a duel defeat or a death on a fighting ground). */
+    private void seize(RelicRecord rec, RelicDefinition def, Player victim, Player killer) {
+        UUID kid = killer.getUniqueId();
+        whenDone(repository.apply(RelicTransition.claim(rec, kid, killer.getName(), RelicEvent.SEIZED, kid.toString(),
+                "killed " + victim.getName())), (cas, err) -> {
+            if (cas != null) {
+                records.put(rec.key(), cas.current());
+            }
+            if (err != null || !cas.success()) {
+                // Only fall back to the shrine if the dead bearer still holds it; if anyone else
+                // changed it meanwhile (admin grant, ...), their newer state wins untouched.
+                returnToShrine(rec.key(), victim.getUniqueId(), "seize failed");
+                return;
+            }
+            records.put(rec.key(), cas.current());
+            services.audit().record(AuditEvent.of(kid.toString(), "relic.seized", rec.key(),
+                    "from " + victim.getUniqueId() + " (" + victim.getName() + ")"));
+            if (killer.isOnline()) {
+                validate(killer);
+                refreshHud(killer);
+            }
+            refreshHud(victim);
+            announce(Component.text("⚔ " + killer.getName() + " " + victim.getName() + "-ээс " + def.displayName()
+                    + "-ийг булааж авлаа!", NamedTextColor.RED), Sound.ENTITY_WITHER_SPAWN);
+        });
+    }
+
+    /**
+     * A consented fight ended without a death (DuelService turns the killing blow into a defeat): the relic the loser
+     * bears passes to the winner exactly as a consented kill would hand it over (a winner who already bears one sends it home).
+     */
+    public void onConsentedDefeat(Player loser, Player winner) {
+        Optional<RelicRecord> borne = borneBy(loser.getUniqueId());
+        if (borne.isEmpty()) return;
+        RelicRecord rec = borne.get();
+        RelicDefinition def = SuldContent.relicFor(rec.key());
+        interruptRitual(loser, "тулаанд ялагдлаа");
+        int winnerBears = borneBy(winner.getUniqueId()).isPresent() ? 1 : 0;
+        RelicRules.DeathOutcome outcome = RelicRules.onBearerDeath(loser.getUniqueId(), winner.getUniqueId(), winnerBears, true);
+        removeAllCopies(loser);
+        if (outcome == RelicRules.DeathOutcome.SEIZE_BY_KILLER) {
+            seize(rec, def, loser, winner);
+        } else {
+            returnToShrine(rec.key(), loser.getUniqueId(), "bearer " + loser.getName() + " lost a fight to a bearer");
         }
     }
 
