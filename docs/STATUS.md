@@ -5,7 +5,7 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `b44a694` · **Schema:** V24 · **Bot sweep:**
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `cd2000b` · **Schema:** V25 · **Bot sweep:**
 `DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` (34 runs) — 2026-10-13 on the heroic-dungeons build: **34/34, 315 checks,
 ALL GREEN** (with `heroicbot.js` 19/19). On the death-reform build before it: 31/33; hubbot (one chat line of unknown
 source in the `/profile` window, 2 standalone reruns 31/31; the bot now prints the line it saw) and campaign-effects
@@ -126,10 +126,13 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Self-audit 2026-10-13 fixes: a lock that ends mid-trial stops the trial (BUG-DEATH-01); the class confirm page no longer calls the pick permanent (BUG-ONB-01); tutorial mask before its reward; one writer per state file; no idle quiver saves; ITs refuse a non-test DB | ✅ | ✅ `trial-lockend.js` 5/5, `permbot.js` 20/20 (staff commands refuse a player) | ⏳ | unit: `DeathTrialTest`, `ClassConfirmNoteTest`, `AtomicYamlOrderTest`, `TestDbGuardTest` |
 | «Тэнгэрийн сорил» fought with the class (soul hits/shoots/casts at its wolves, wolf HP = 5 × attack) | ✅ | ✅ `trialclassbot.js` 4/4 × 5 classes | ⏳ | `docs/DEATH_AND_RECOVERY.md`; since 2026-10-13 the wolves spawn on the ground, never on a tree's crown (a forest's leaves had put them out of reach of the soul and its arrows); the trial bots count only spirit wolves (a natural pack lives at the test spot) |
 | Heroic dungeons «Тэнгэрийн Гэсгээлт Агуй» (directive 2026-10-13 Phase 3, V24 `suld_heroic_keys` / `suld_heroic_runs`): keys +1…+20 at level 60, hall mobs at Lv 60 (+10 % health, +8 % damage a key), a clock with 15 s a death, four steppe affixes rotating weekly, «Эртний Хас Чулуу» for a timed key, spent at the smith to reroll an endgame item's affixes; `/dungeon heroic`, the keys window, Shift + gate | ✅ | ✅ `heroicbot.js` 19/19 | ⏳ | `docs/HEROIC_DUNGEONS.md` (concurrency audit included); api `HeroicLadderTest`, `HeroicKeyTest`, `AffixRerollTest`, `MobDefinitionLevelTest`; `JdbcHeroicRepositoryIT` (H2, PostgreSQL 16); the halls' lanterns do not warm against «Цагаан Зуд» (the bot found every spot warm before) |
+| Weapon mastery 1–50 (directive Phase 4, V25 `suld_weapon_mastery`): five tracks levelled by damage dealt to SÜLD mobs with that kind of weapon (points = damage ÷ the player's basic hit; stand-ins and dummies earn nothing), +0.05 % hit a level (2.5 % at 50), titles, `/mastery`; additive writes every 30 s, at quit and at shutdown | ✅ | ⏳ | ⏳ | api `WeaponMasteryTest`; `JdbcWeaponMasteryIT` (H2, PostgreSQL 16); the doc `docs/MASTERY_AND_PROFESSIONS.md` is still to write; professions not built |
+| Тэнгэрийн Зэрэг IV–X (owner: small power + prestige): no оноо after III; each rank needs Тэнгэрийн Од, a timed heroic key and a weapon mastery level, then the rite fee (25 000 × the new rank); names get a ✧ rank mark | ⏳ | ⏳ | ⏳ | api `AscensionHonorTest`; the shrine menu shows the gates and the rite; **the IV–VI perks (PvP guard, fortune, lightning), the VII–IX aura and the X monument are not wired yet** |
+| World map «Сүлдийн Атлас» | — | — | — | **designed only** (2026-10-13): `docs/world-map/` (current state, architecture decision, GDD, technical design, test plan, roadmap); waits on the owner's gates D1–D3 |
 | Death reform (directive 2026-10-13, config v8, V23 `suld_soul_beacons`): levels 1–10 lose nothing; a soul without a timer rises by the nearest ovoo; «Сүнсний Гэрэлт» 10 min, 70 % of the lost EXP back once (compare-and-set); «Овооны цацал» (3 sunwise rounds + 90 s); «Сүнсний Хэлтэрхий» heals 60 active minutes | ✅ | ✅ `soulreform.js` 19/19, `trialbot.js` 9/9, `trial-lockend.js` 5/5 | ⏳ | `docs/DEATH_AND_RECOVERY.md` (concurrency audit included); api `DeathReformTest`, `SoulBeaconTest`, `OvooRitualTest`, `SoulShardTest`; `JdbcDeathRepositoryIT` 24 concurrent claims → 1 (H2, PostgreSQL 16); full simulation: live L1–L10 pass (147 h to 60); the reference model's C9 is 88 % (was 90 %) with the same death design; loot loss and wear unchanged (the owner may turn them off) |
 
 ## Not built (and said so)
 
 Achievements, battle pass, emotes/pets/mount skins/UI themes, resurrection quests, instant revive
-(design only, stays unbuilt), payment provider, web dashboard, Ascension IV–X, mastery tracks other than armour,
-player housing.
+(design only, stays unbuilt), payment provider, web dashboard, the Ascension IV–X perks, professions, the world map
+(designed: `docs/world-map/`), player housing.
