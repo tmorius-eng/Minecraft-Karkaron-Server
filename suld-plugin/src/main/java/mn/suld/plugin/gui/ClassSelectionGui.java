@@ -147,6 +147,24 @@ public final class ClassSelectionGui implements Listener {
         return stack;
     }
 
+    /**
+     * Nothing can be dragged into the class window (external audit 2026-10-13 F02): it is not a {@code Menu}, so
+     * MenuListener's drag guard missed it, and the window is cleared on a pick or «Буцах», which deleted the stack.
+     */
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST)
+    public void onDrag(org.bukkit.event.inventory.InventoryDragEvent event) {
+        if (cancelsDrag(event.getView().getTopInventory().getHolder(), event.getRawSlots(), event.getView().getTopInventory().getSize())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /** A drag touching any slot of the class window (raw slots below its size) is refused. */
+    static boolean cancelsDrag(Object topHolder, java.util.Set<Integer> rawSlots, int topSize) {
+        if (!(topHolder instanceof ClassSelectionHolder)) return false;
+        for (int raw : rawSlots) if (raw < topSize) return true;
+        return false;
+    }
+
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         if (!(event.getInventory().getHolder() instanceof ClassSelectionHolder holder)) {
