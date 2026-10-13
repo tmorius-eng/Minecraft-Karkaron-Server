@@ -89,6 +89,12 @@ class AscensionHonorTest {
         assertEquals(0.02, AscensionHonor.lightningChance(10), 1e-12);
         assertTrue(AscensionHonor.has(7, AscensionHonor.Perk.AURA) && !AscensionHonor.has(6, AscensionHonor.Perk.AURA));
         assertTrue(AscensionHonor.has(10, AscensionHonor.Perk.MONUMENT) && !AscensionHonor.has(9, AscensionHonor.Perk.MONUMENT));
+        // the back aura brightens with VII, VIII and IX, and X keeps it
+        assertEquals(0, AscensionHonor.auraTier(6));
+        assertEquals(1, AscensionHonor.auraTier(7));
+        assertEquals(2, AscensionHonor.auraTier(8));
+        assertEquals(3, AscensionHonor.auraTier(9));
+        assertEquals(3, AscensionHonor.auraTier(10));
         // the owner's line: IV–X add at most 3 % of power against mobs (here 1 %), and no skill point or flat power
         assertTrue(AscensionHonor.MAX_PVE_POWER <= 0.03, "" + AscensionHonor.MAX_PVE_POWER);
         assertEquals(Ascension.powerBonus(3), Ascension.powerBonus(10), 1e-12, "the +1 % a rank stops at III");

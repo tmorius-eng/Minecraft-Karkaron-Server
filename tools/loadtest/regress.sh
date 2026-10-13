@@ -49,6 +49,7 @@ RUNS=(
   "featbot|$CTL $LOG"
   "permbot|$CTL $LOG $PORT"
   "questregionbot|$CTL $PORT"
+  "honorbot|$CTL $PORT"
   "healthbot|$CTL $PORT"
   "sitesbot|$CTL $LOG $PORT"
 )

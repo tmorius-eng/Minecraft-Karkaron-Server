@@ -139,6 +139,20 @@ public final class ChronicleService {
         whenDone(repository.claimFirst(e), (w, err) -> written("first site", w, err));
     }
 
+    /**
+     * A player reached Тэнгэрийн Зэрэг X («Мөнх Тэнгэрийн Элч»): once each (claimed by the player's id), so the name stands
+     * in the book and on Kharkhorum's monument for good; {@code written} runs on the main thread once it is stored.
+     */
+    public void heavenlyEnvoy(Player p, Runnable written) {
+        if (!settings.enabled()) return;
+        ChronicleEntry e = ChronicleEntry.of(ChronicleKind.HEAVENLY_ENVOY, p.getUniqueId().toString(), p.getUniqueId(), p.getName(), List.of(p.getName()),
+                services.clans().tagOf(p.getUniqueId()).orElse(""), null, "Тэнгэрийн Зэрэг X", cycleId.get(), System.currentTimeMillis());
+        whenDone(repository.claimFirst(e), (w, err) -> {
+            written("heavenly envoy", w, err);
+            if (err == null && written != null) written.run();
+        });
+    }
+
     /** A relic was claimed at its shrine (the relic history keeps the full ledger; this is the player-facing line). */
     public void relicClaimed(String key, String displayName, Player p) {
         if (!settings.enabled()) return;
@@ -242,6 +256,7 @@ public final class ChronicleService {
             case KHURALDAI_RESULT -> NamedTextColor.WHITE;
             case FIRST_WORLD_BOSS_KILL -> NamedTextColor.RED;
             case FASTEST_WORLD_BOSS_KILL -> NamedTextColor.DARK_AQUA;
+            case HEAVENLY_ENVOY -> NamedTextColor.YELLOW;
         };
     }
 }

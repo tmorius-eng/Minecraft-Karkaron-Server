@@ -20,7 +20,9 @@ public enum ChronicleKind {
     /** subject = world boss id; the first crowd to bring it down (party = the top three) */
     FIRST_WORLD_BOSS_KILL(Shape.FIRST),
     /** subject = world boss id; value = seconds; the fastest kill so far */
-    FASTEST_WORLD_BOSS_KILL(Shape.RECORD);
+    FASTEST_WORLD_BOSS_KILL(Shape.RECORD),
+    /** subject = player uuid; a player who reached Тэнгэрийн Зэрэг X, «Мөнх Тэнгэрийн Элч» (once each; the monument reads them) */
+    HEAVENLY_ENVOY(Shape.FIRST);
 
     public enum Shape { FIRST, RECORD, LOG }
 

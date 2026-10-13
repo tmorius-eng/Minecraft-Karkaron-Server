@@ -36,6 +36,8 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # questregionbot.js: each Act II kill chapter's quest bar names the region it is played in (staff /suld quest); 7 checks.
 # healthbot.js: the health survives a relog and a server restart (it restarts the dev server once); 3 checks.
 # sitesbot.js: a historic site (Аураг) is built once and remembered across a restart (it restarts the dev server once); 2 checks.
+# honorbot.js: Тэнгэрийн Зэрэг IV–X — the VII–IX back aura, IV's lighter duel hits, the VI lightning (none at V), X by the
+# real rite on the monument and in the Chronicle, the entry hidden again; 7 checks (it leaves a hidden Chronicle row).
 # firstbootbot.js <srvctl.sh> <server dir>: a fresh world's first boot (NOT in regress.sh: it DELETES the world of <server dir>
 # and refuses unless the directory holds a FIRSTBOOT_SCRATCH file — a throwaway copy with the default config, never a real
 # world): every dungeon gate built once and only after Kharkhorum sets the spawn, the sites and ovoos move with it, a restart

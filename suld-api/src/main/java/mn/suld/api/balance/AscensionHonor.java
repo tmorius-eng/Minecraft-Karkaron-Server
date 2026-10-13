@@ -177,6 +177,13 @@ public final class AscensionHonor {
         return has(rank, Perk.LIGHTNING) ? LIGHTNING_CHANCE : 0;
     }
 
+    /** VII–IX: how bright the back aura is — 1 at VII, 2 at VIII, 3 at IX and X (X keeps IX's), 0 below VII. */
+    public static int auraTier(int rank) {
+        int n = 0;
+        for (Rank r : Rank.values()) if (r.perk() == Perk.AURA && rank >= r.number()) n++;
+        return n;
+    }
+
     /** The name of rank {@code rank}: the honour's own from IV, else null (I–III have none). */
     public static String title(int rank) {
         Rank r = Rank.of(rank);

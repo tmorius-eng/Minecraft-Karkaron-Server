@@ -1,7 +1,8 @@
 # SÜLD Ascension — Тэнгэрийн Зэрэг
 
-**Ranks I–III are in the game** (status: MANUAL_QA_REQUIRED, see below). Ranks IV–X are the proposed design and wait
-for their content (heroic and mythic modes, mastery tracks, a world boss).
+**Ranks I–X are in the game.** I–III are bought with Тэнгэрийн оноо (status: MANUAL_QA_REQUIRED, see below);
+IV–X are the honour ranks of the owner's «бага хүч + нэр хүнд» (small power and a name), `AscensionHonor`, below.
+The full proposed design further down is kept for its history and its simulation.
 
 ## In the game: ranks I–III
 
@@ -41,6 +42,33 @@ for their content (heroic and mythic modes, mastery tracks, a world boss).
 
 Client QA to do: open /ascend below and at 60, check the checklist and the two-click rite, the priest at level 60,
 the sidebar row, +1 skill point in /skills, and that T6 shows as open at rank III.
+
+## In the game: ranks IV–X (the honour ranks)
+
+* **Gates** (`AscensionHonor.Rank`): Тэнгэрийн Од (the stars the оноо keep making after III, never spent), a heroic key
+  timed (docs/HEROIC_DUNGEONS.md) and a weapon mastery level (docs/MASTERY_AND_PROFESSIONS.md); then the rite fee,
+  25 000 × the new rank. No оноо, no skill point, no flat power. The shrine window lists the gates and the rite.
+* **What each rank gives**, on top of the ones below it (the shrine window and the rite's message say the same):
+
+| Rank | Title | Perk | Where in the code |
+|---|---|---|---|
+| IV | Атаа Тэнгэрийн Сахиус | damage taken from players in a consented fight (duel, fighting ground) × 0.97 | `DuelService.onLethalConsented` |
+| V | Заяа Тэнгэрийн Хишиг | rare-loot luck +3 (the loot-chance stat, every mob, boss and dungeon roll) | `SkillTreeService.lootPct` |
+| VI | Хурмаст Тэнгэрийн Цахилгаан | 2 % of the hits on a SÜLD mob call the sky's lightning: the same mob takes half the hit again (+1 % power on average, the most IV–X add) | `CombatListener` |
+| VII–IX | Дээд Тэнгэрийн Баатар (I–III) | «Нурууны туяа», a back aura seen by all: gold motes (VII), gold and blue (VIII), a white glow among them (IX) | `HonorAura` |
+| X | Мөнх Тэнгэрийн Элч | the name on Kharkhorum's monument (a plaque before the Khan's statue, the first envoy at the top) and in the Chronicle (`HEAVENLY_ENVOY`, once each) | `EnvoyMonument`, `ChronicleService.heavenlyEnvoy` |
+
+* The lightning is drawn, never a real bolt: a column of sparks, a burst and a near thunder clap (a real bolt's thunder
+  carries far across the server, and its fire burns).
+* The aura hides while the player is invisible, dead, spectating or a training stand-in.
+* Staff set a rank with `/suld endgame <player> rank <n>`, and only the real rite makes an envoy of X. A staff
+  `/chronicle hide <id>` takes an envoy off the monument too; the console's `/chronicle envoy` lists them with their ids.
+* **Bot:** `tools/loadtest/bots/honorbot.js`, 7 checks. No aura at VI and gold motes at VII; the glow at IX. In a
+  duel the same staff hit (`/damage … by` the other fighter) takes 0.97 as much of A's health at IV as at III. No
+  lightning at V in 80 hits, and some at VI in 300 hits (2 % expects about 6; 6, 9 and 5 in three dev-server runs). X by the
+  real rite: the name on the plaque and in the Chronicle, then gone from the plaque once the entry is hidden. V (loot
+  luck) is a one-line use of the tested rule (`AscensionHonorTest`) and is not measured by the bot: a 3-point luck
+  shows only over thousands of rolls.
 
 ## The full design (ranks I–X, proposed)
 

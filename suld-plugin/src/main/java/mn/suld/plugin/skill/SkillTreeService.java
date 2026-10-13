@@ -901,7 +901,10 @@ public final class SkillTreeService implements Listener {
     /** Whether the loot table should be rolled one more time (LOOT_PCT is the chance in percent). */
     /** The loot-chance stat (%), raising rare-drop chances (LootContext.lootBonus). */
     public double lootPct(Player p) {
-        return Math.max(0, build(p).stat(StatKey.LOOT_PCT));
+        // Тэнгэрийн Зэрэг V (AscensionHonor, the shrine promises it): rare-loot luck +3
+        double honour = services.profiles().cached(p.getUniqueId())
+                .map(pr -> mn.suld.api.balance.AscensionHonor.fortune(pr.ascension()) * 100).orElse(0.0);
+        return Math.max(0, build(p).stat(StatKey.LOOT_PCT)) + honour;
     }
 
     public boolean extraLootRoll(Player p) {

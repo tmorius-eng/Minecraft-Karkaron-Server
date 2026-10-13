@@ -522,6 +522,12 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(worldBosses, this);
         worldBosses.start();
         services.worldBosses = worldBosses;
+        // «Нурууны туяа»: the back aura of Тэнгэрийн Зэрэг VII–IX; the monument to the envoys of X (AscensionHonor)
+        new mn.suld.plugin.hud.HonorAura(this, services).start();
+        if (services.chronicle() != null) {
+            services.envoys = new mn.suld.plugin.chronicle.EnvoyMonument(this, services, worldBuild);
+            services.envoys.start();
+        }
         props = new mn.suld.plugin.prop.PropService(this, services);
         props.start();
         services.props = props;

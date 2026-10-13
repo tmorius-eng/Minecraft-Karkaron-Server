@@ -42,6 +42,7 @@ public final class ChronicleRules {
                     + (e.value() == null ? "" : " (" + formatSeconds(e.value()) + ")") + ".";
             case FASTEST_WORLD_BOSS_KILL -> "✦ Хроник: «" + subjectName + "»-г хамгийн хурдан дарсан — " + formatSeconds(e.value() == null ? 0 : e.value())
                     + " (" + who + clan + " тэргүүтэй).";
+            case HEAVENLY_ENVOY -> "✦ Хроник: " + e.playerName() + clan + " Тэнгэрийн Зэрэг X-д хүрч «Мөнх Тэнгэрийн Элч» боллоо; нэр нь Хархорумын хөшөөнд бичигдэв.";
         };
     }
 
@@ -56,6 +57,7 @@ public final class ChronicleRules {
             case KHURALDAI_RESULT -> "Хуралдайн шийдвэр";
             case FIRST_WORLD_BOSS_KILL -> "Анхны ялалт";
             case FASTEST_WORLD_BOSS_KILL -> "Хурдан ялалт";
+            case HEAVENLY_ENVOY -> "Мөнх Тэнгэрийн Элч";
         };
     }
 }

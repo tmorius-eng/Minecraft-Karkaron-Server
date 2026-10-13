@@ -269,6 +269,14 @@ public final class CombatListener implements Listener {
         event.setDamage(result.finalDamage());
         // a mob of the content (never a training Warden or the Academy's dummy: they have no definition) teaches the weapon
         if (mastery != null && target != null) mastery.hit(player, result.finalDamage(), attack);
+        // Тэнгэрийн Зэрэг VI (AscensionHonor, the shrine promises it): 2 % of the hits on a mob call the sky's lightning,
+        // which strikes the same mob for half the hit again
+        int rank = services.profiles().cached(player.getUniqueId()).map(PlayerProfile::ascension).orElse(0);
+        double bolt = target == null ? 0 : mn.suld.api.balance.AscensionHonor.lightningChance(rank);
+        if (bolt > 0 && java.util.concurrent.ThreadLocalRandom.current().nextDouble() < bolt) {
+            event.setDamage(result.finalDamage() * (1 + mn.suld.api.balance.AscensionHonor.LIGHTNING_SHARE));
+            skyLightning(event.getEntity().getLocation());
+        }
         if (result.critical()) {
             CRIT_HITS.add(event.getEntity().getUniqueId());
             long now = System.currentTimeMillis();
@@ -486,6 +494,18 @@ public final class CombatListener implements Listener {
     @EventHandler
     public void onQuitForget(org.bukkit.event.player.PlayerQuitEvent e) {
         lastKillSave.remove(e.getPlayer().getUniqueId());
+    }
+
+    /**
+     * The sky's lightning on a mob (rank VI): a column of sparks from above, a white burst and a near thunder clap. Never a
+     * real bolt: its thunder reaches every player far around, its fire burns, and it hurts what stands near.
+     */
+    static void skyLightning(org.bukkit.Location at) {
+        org.bukkit.World w = at.getWorld();
+        if (w == null) return;
+        for (double y = 0.3; y < 7; y += 0.35) w.spawnParticle(org.bukkit.Particle.ELECTRIC_SPARK, at.getX(), at.getY() + y, at.getZ(), 2, 0.07, 0.05, 0.07, 0);
+        w.spawnParticle(org.bukkit.Particle.END_ROD, at.getX(), at.getY() + 1, at.getZ(), 12, 0.3, 0.5, 0.3, 0.06);
+        w.playSound(at, Sound.ITEM_TRIDENT_THUNDER, 0.7f, 1.3f);
     }
 
     private static double ThreadLocalRandomRoll() {

@@ -294,6 +294,10 @@ public final class AscensionMenu {
         if (r.rank() == AscensionHonor.LAST) {
             Bukkit.broadcast(Component.text("☼ " + p.getName() + " — «" + title + "», Тэнгэрийн аравдугаар зэрэг! Мөнх Тэнгэр түүнийг өргөмжиллөө.",
                     GOLD, TextDecoration.BOLD));
+            // the name goes into the Chronicle and on Kharkhorum's monument for good (the perk the shrine promises)
+            if (services.chronicle() != null) services.chronicle().heavenlyEnvoy(p, () -> {
+                if (services.envoys != null) services.envoys.refresh();
+            });
             for (Player o : Bukkit.getOnlinePlayers()) o.playSound(o.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 0.6f);
         } else {
             Bukkit.broadcast(Component.text("✦ " + p.getName() + " Тэнгэрийн Зэрэг " + Ascension.roman(r.rank()) + " «" + title + "»-д хүрлээ!",

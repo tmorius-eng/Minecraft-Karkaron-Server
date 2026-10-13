@@ -208,6 +208,10 @@ public final class DuelService implements Listener {
             winner = attacker(byEntity.getDamager());
             if (winner == null || !bout(winner, loser)) return;
             lastHit.put(loser.getUniqueId(), new Hit(winner.getUniqueId(), System.currentTimeMillis()));
+            // Тэнгэрийн Зэрэг IV (AscensionHonor, the shrine promises it): a consented fight's hits land 3 % lighter on the bearer
+            int rank = services.profiles().cached(loser.getUniqueId()).map(mn.suld.api.profile.PlayerProfile::ascension).orElse(0);
+            double guard = mn.suld.api.balance.AscensionHonor.pvpTaken(rank);
+            if (guard < 1) e.setDamage(e.getDamage() * guard);
         } else {
             // the burn, wither or fall a duel hit started is still the duel (never the void, /kill or the border)
             EntityDamageEvent.DamageCause cause = e.getCause();

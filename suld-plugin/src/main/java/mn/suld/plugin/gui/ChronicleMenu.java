@@ -108,6 +108,7 @@ public final class ChronicleMenu {
             case KHURALDAI_RESULT -> Material.LECTERN;
             case FIRST_WORLD_BOSS_KILL -> Material.DRAGON_HEAD;
             case FASTEST_WORLD_BOSS_KILL -> Material.RECOVERY_COMPASS;
+            case HEAVENLY_ENVOY -> Material.BEACON;
         };
     }
 }
