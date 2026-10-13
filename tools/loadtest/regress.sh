@@ -2,8 +2,10 @@
 # The whole bot regression in one command, on a local dev Paper (offline mode):
 #   tools/loadtest/regress.sh <srvctl.sh> <server latest.log> [port]
 # Runs every pass/fail bot in a fixed order and prints one table (bot · result · seconds); exit 1 on any failure.
-# DEV_CAMPAIGNS=1 also runs campaign-effects.js and dungeon-clear.js (they need the dev campaigns test_kill/test_prop/
-# test_npc/test_clear in plugins/SULD/content/campaigns.json, see their headers). NODE_PATH must reach mineflayer.
+# DEV_CAMPAIGNS=1 also runs campaign-effects.js, dungeon-clear.js and campaign-deliver.js: dev/make_dev_campaigns.py
+# writes the dev campaigns into the server's plugins/SULD/content/campaigns.json (server dir = two levels over the log),
+# the server restarts (<srvctl> stop|start), and the file is removed and the server restarted after. NODE_PATH must
+# reach mineflayer.
 set -u
 CTL=${1:?srvctl.sh}; LOG=${2:?latest.log}; PORT=${3:-25572}
 DIR=$(cd "$(dirname "$0")/bots" && pwd)
@@ -35,12 +37,14 @@ RUNS=(
   "khuraldai-smoke|$CTL $LOG $PORT"
   "featbot|$CTL $LOG"
 )
-if [ "${DEV_CAMPAIGNS:-0}" = 1 ]; then
-  RUNS+=("campaign-effects|$CTL $LOG $PORT" "dungeon-clear|$CTL $LOG $PORT")
-fi
+DEV_RUNS=("campaign-effects|$CTL $LOG $PORT" "dungeon-clear|$CTL $LOG $PORT"
+  "campaign-deliver|$CTL $LOG test_deliver item.chonon_arisan 60 $PORT")
+SRV=$(cd "$(dirname "$LOG")/.." && pwd)
+GEN="$(cd "$(dirname "$0")" && pwd)/dev/make_dev_campaigns.py"
 bad=0
 printf '%-28s %-8s %6s  %s\n' BOT RESULT SEC DETAIL
-for r in "${RUNS[@]}"; do
+run_all() {
+for r in "$@"; do
   label=${r%%|*}; args=${r#*|}; bot=${label%%:*}
   t0=$(date +%s)
   # shellcheck disable=SC2086
@@ -57,6 +61,14 @@ for r in "${RUNS[@]}"; do
   printf '%-28s %-8s %6s  %s\n' "$label" "$res" "$sec" "$detail"
   sleep 2
 done
+}
+run_all "${RUNS[@]}"
+if [ "${DEV_CAMPAIGNS:-0}" = 1 ]; then
+  # the campaign bots need the dev campaigns: the server's own content copy, read at start
+  python3 "$GEN" "$SRV" > /dev/null && "$CTL" stop > /dev/null && "$CTL" start > /dev/null
+  run_all "${DEV_RUNS[@]}"
+  python3 "$GEN" "$SRV" --remove > /dev/null && "$CTL" stop > /dev/null && "$CTL" start > /dev/null
+fi
 echo "logs: $OUT"
 [ "$bad" -eq 0 ] && echo "ALL GREEN" || echo "$bad FAILED"
 [ "$bad" -eq 0 ]

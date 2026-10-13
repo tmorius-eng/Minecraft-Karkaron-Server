@@ -1,6 +1,6 @@
 // End-to-end success of a DELIVER_ITEMS campaign on the dev server (docs/KHURALDAI.md §9):
 //   node campaign-deliver.js <srv2ctl.sh> <logfile> <campaign id without "campaign."> <item id> <count> [port]
-// Expects the campaign to be running already (console: khuraldai force <id>). The bot gets <count> items from the
+// Starts the campaign itself (console: khuraldai cancel, khuraldai force <id>). The bot gets <count> items from the
 // console, hands them in, and the campaign must succeed: tier reward paid, world effect applied, chronicle written.
 const mineflayer = require('mineflayer');
 const fs = require('fs');
@@ -42,6 +42,8 @@ const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
   await sleep(2500 + count * 30);
   const have = A.inventory.items().reduce((n, it) => n + it.count, 0);
   check('the bot holds the items', have >= count, have + ' items');
+  cmd('khuraldai cancel'); await sleep(2000);
+  cmd(`khuraldai force ${campaign}`); await sleep(2500);
   let n = lines().length;
   A.chat('/khuraldai deliver'); await sleep(6000);
   check('the delivery is counted', heard(A, 'хүргэв'), A.chatLog.filter(l => l.includes('хүргэв') || l.includes('Хүргэх')).join(' | '));

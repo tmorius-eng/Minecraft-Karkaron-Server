@@ -65,9 +65,10 @@ async function pickClass(bot, slot) {
   const done = A.chatLog.slice(from).join(' | ');
   check('the dungeon completes with a reward', /EXP/.test(done) && /(цэвэрлэ|дуусла|ялалт|Ялалт)/i.test(done), done.slice(-300));
 
-  const sfrom = A.chatLog.length;
-  A.chat('/khuraldai status'); await sleep(2500);
-  const status = A.chatLog.slice(sfrom).filter(l => l.includes('/60')).join(' | ');
+  // /khuraldai status is a window for a player (UI-5); the console keeps the text, so read it from the log
+  const sl = lines().length;
+  cmd('khuraldai status'); await sleep(2500);
+  const status = lines().slice(sl).filter(l => l.includes('/60')).join(' | ');
   const m = status.match(/(\d+)\/60/);
   check('the clear counts toward the CLEAR_DUNGEON campaign', m && Number(m[1]) >= 1, status);
   // the first clear is written once per server: a repeat run finds it in the book (console /chronicle prints it)

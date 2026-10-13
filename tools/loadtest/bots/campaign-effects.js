@@ -70,9 +70,10 @@ async function deliverCampaign(A, name, id, effectLog) {
     if (wolf.position.distanceTo(A.entity.position) > 3) { A.setControlState('forward', true); await sleep(250); A.setControlState('forward', false); }
     A.attack(wolf); await sleep(650);
   }
-  const from = A.chatLog.length;
-  A.chat('/khuraldai status'); await sleep(2500);
-  const status = A.chatLog.slice(from).filter(l => l.includes('/60')).join(' | ');
+  // /khuraldai status is a window for a player (UI-5); the console keeps the text, so read it from the log
+  const sl = lines().length;
+  cmd('khuraldai status'); await sleep(2500);
+  const status = lines().slice(sl).filter(l => l.includes('/60')).join(' | ');
   const m = status.match(/(\d+)\/60/);
   check('wolf kills count toward the campaign', m && Number(m[1]) >= 3, status);
 
