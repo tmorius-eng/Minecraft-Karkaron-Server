@@ -230,9 +230,27 @@ public class LiveRules extends ProposedRules {
         return false; // live: enrage only hits harder (BossService.ENRAGE_MULTIPLIER)
     }
 
+    /** Since 2026-10-13 ({@code death.lock.mode: UNTIL_RECOVERY}) a soul has no timer: see {@link #SOUL_RECOVERY_MINUTES}. */
     @Override
     public double deathLockMinutes(int level, int ascension) {
-        return mn.suld.api.death.DeathLock.minutes(DEATH, level, ascension);
+        return DEATH.untilRecovery() ? SOUL_RECOVERY_MINUTES : mn.suld.api.death.DeathLock.minutes(DEATH, level, ascension);
+    }
+
+    @Override
+    public boolean deathProtected(int level, int ascension) {
+        return mn.suld.api.death.DeathRules.protectedDeath(level, ascension, DEATH);
+    }
+
+    @Override
+    public double protectedDeathMinutes() {
+        return 1.0; // a beginner respawns in the city and walks back to the first zones beside it
+    }
+
+    @Override
+    public double deathRefund(String where) {
+        // the beam stands where the body fell (a soul reaches it: it rises at the nearest ovoo), or at the gate for a
+        // death in the halls (the soul is sent there); an idle player does not walk back in time
+        return !where.equals("afk") && DEATH.beaconMinutes() > 0 ? DEATH.beaconRefund() : 0;
     }
 
     @Override

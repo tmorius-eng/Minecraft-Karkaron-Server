@@ -89,7 +89,9 @@ public final class DeathCommands implements TabExecutor {
         deaths.storedWound(id).thenCombine(deaths.history(id, 5), (w, list) -> {
             StringBuilder sb = new StringBuilder("§b☠ " + name + "§7 — ");
             DeathRecord open = list.stream().filter(DeathRecord::locked).findFirst().orElse(null);
-            if (open != null) {
+            if (open != null && open.untilRecovery()) {
+                sb.append("§cСҮНС§7 амилах хүртэл (/trial, овооны цацал эсвэл /deathrevive)");
+            } else if (open != null) {
                 long l = Math.max(left, open.remaining(System.currentTimeMillis()));
                 sb.append("§cТҮГЖЭЭТЭЙ§7 ").append(DeathLock.format(l)).append(" (").append(WHEN.format(Instant.ofEpochMilli(open.lockedUntil()))).append(")");
             } else {
@@ -120,7 +122,8 @@ public final class DeathCommands implements TabExecutor {
                     + "\n§7 үхсэн: §f" + WHEN.format(Instant.ofEpochMilli(r.diedAt())) + "§7 · түвшин §f" + r.level()
                     + "§7 · шалтгаан §f" + r.cause()
                     + "\n§7 газар: §f" + r.world() + " " + r.x() + " " + r.y() + " " + r.z()
-                    + "\n§7 түгжээ: §f" + DeathLock.format(r.lockedUntil() - r.diedAt()) + "§7 → " + WHEN.format(Instant.ofEpochMilli(r.lockedUntil()))
+                    + "\n§7 түгжээ: §f" + (r.untilRecovery() ? "амилах хүртэл (цаггүй)"
+                            : DeathLock.format(r.lockedUntil() - r.diedAt()) + "§7 → " + WHEN.format(Instant.ofEpochMilli(r.lockedUntil())))
                     + "\n§7 төлөв: §f" + r.state() + (r.recoveredAt() == null ? "" : "§7 (" + WHEN.format(Instant.ofEpochMilli(r.recoveredAt())) + ")")
                     + "§7 · шарх дараа нь §f" + r.woundAfter()));
         });

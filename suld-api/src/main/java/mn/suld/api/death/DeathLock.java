@@ -16,6 +16,13 @@ public final class DeathLock {
     public enum Curve { GEOMETRIC, LINEAR, STEP, FIXED }
 
     /**
+     * How a soul's state ends: {@link #TIMED} after the curve's minutes (the lock before 2026-10-13), or
+     * {@link #UNTIL_RECOVERY}: no timer at all, the soul comes back by acting («Тэнгэрийн сорил», the ovoo ritual) or
+     * by staff. The 2026-10-13 directive: no passive waiting after a death.
+     */
+    public enum Mode { TIMED, UNTIL_RECOVERY }
+
+    /**
      * Lock length in minutes for a death at {@code level} (Ascension counts as the top of the curve). Up to
      * {@link DeathSettings#newbieLevels()} the lock is capped at {@link DeathSettings#newbieLockMinutes()}.
      */
@@ -38,13 +45,17 @@ public final class DeathLock {
         };
     }
 
+    /** A remaining time this long is a soul without a timer ({@link DeathRecord#UNTIL_RECOVERY}), or staff-only. */
+    public static final long UNTIL_RECOVERY_SHOWN = 36_500L * 86_400_000L / 2;
+
     /** Lock length in milliseconds (at least one second). */
     public static long millis(DeathSettings s, int level, int ascension) {
         return Math.max(1000L, Math.round(minutes(s, level, ascension) * 60_000));
     }
 
-    /** "3 цаг 05 мин", "12 мин 30 сек" — for the death screen and the admin commands. */
+    /** "3 цаг 05 мин", "12 мин 30 сек" — for the death screen and the admin commands; «амилах хүртэл» for a soul without a timer. */
     public static String format(long millis) {
+        if (millis >= UNTIL_RECOVERY_SHOWN) return "амилах хүртэл";
         long sec = Math.max(0, (millis + 999) / 1000);
         long h = sec / 3600, m = (sec % 3600) / 60, s = sec % 60;
         if (h > 0) return h + " цаг " + String.format("%02d", m) + " мин";

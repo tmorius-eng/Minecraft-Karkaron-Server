@@ -24,7 +24,7 @@ public final class TipsService {
             "<white><bold>5-р түвшнээс өөрийн Монгол морьтой: <aqua><click:run_command:'/mori'>/mori</click></aqua> — цол ахих тусам хурдан!</bold></white>",
             "<white><bold>Өдөр бүр 3 шинэ анчны даалгавар: <aqua><click:run_command:'/tasks'>/tasks</click></aqua></bold></white>",
             "<white><bold>Шинэ нутаг нээх бүрт EXP — Говь, Хангай, Алтайг судал!</bold></white>",
-            "<white><bold>Үхвэл юмныхаа хагасыг алдана. Үнэт зүйлээ хотод хадгал!</bold></white>",
+            "<white><bold>11-р түвшнээс үхвэл EXP, эд зүйлийн хэсгээ алдана: унасан газрынхаа Гэрэлт рүү буцаж EXP-ээ ав, <aqua>/trial</aqua> эсвэл овоогоор амил!</bold></white>",
             "<white><bold>Баг хайх: <aqua><click:run_command:'/party find'>/party find</click></aqua> <gray>·</gray> багаа самбарт тавих: <aqua>/party recruit</aqua> <gray>→</gray> <aqua>/dungeon</aqua></bold></white>",
             "<white><bold>Цолоо ахиул: <aqua><click:run_command:'/rankup'>/rankup</click></aqua> · Түвшний шагнал: <aqua><click:run_command:'/lvlup'>/lvlup</click></aqua></bold></white>",
             "<white><bold>Гоёл, таг, өнгө: <aqua><click:run_command:'/cosmetics'>/cosmetics</click></aqua> · Дэлгүүр: <aqua><click:run_command:'/buy'>/buy</click></aqua></bold></white>");

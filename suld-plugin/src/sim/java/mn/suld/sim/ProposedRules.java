@@ -48,37 +48,64 @@ public class ProposedRules extends Rules {
 
     public static final double LOCK_MIN = 5, LOCK_MAX = 30;   // live cap since config v7 (was 24 h, audit FIND-05)
 
+    /**
+     * The owner's death design of 2026-10-13 (docs/DEATH_AND_RECOVERY.md), modelled the same way in both rule sets: a
+     * soul has no timer and comes back by acting; this is the minutes it spends doing so, a model assumption, not a
+     * measurement (it rises at the ovoo nearest to where it fell, walks to the beam and back at soul speed, ≈ 2.5 min,
+     * and walks the 90-second ritual or fights the ≈ 3-minute trial).
+     */
+    public static final double SOUL_RECOVERY_MINUTES = 4.0;
+    /** Up to this level (no Ascension) a death costs nothing (owner 2026-10-13). */
+    public static final int BEGINNER_LEVELS = 10;
+    /** The beam gives back this share of the EXP a death took. */
+    public static final double BEACON_REFUND = 0.70;
+
     private final double curveBase;
     private final LockCurve lockCurve;
+    /** True for the reference model (the 2026-10-13 death design); false for the timed lock-curve study (C7). */
+    private final boolean reformedDeath;
     private final LevelCurve curve;
     private final World world;
     private final Loot loot;
     private final ItemCatalog catalog;
 
+    /** The reference model: the spec's balance with the owner's 2026-10-13 death design. */
     public ProposedRules() {
-        this(DEFAULT_CURVE_BASE, LockCurve.GEOMETRIC);
+        this(DEFAULT_CURVE_BASE, LockCurve.GEOMETRIC, true, true);
     }
 
+    /** The timed-lock variant of the study: {@code lockCurve} decides how long a death keeps the player out. */
     public ProposedRules(double curveBase, LockCurve lockCurve) {
-        this(curveBase, lockCurve, true);
+        this(curveBase, lockCurve, true, false);
     }
 
     /** For {@link LiveRules}: the proposed rules without building the proposed world (live brings its own). */
     protected ProposedRules(double curveBase, LockCurve lockCurve, boolean proposedWorld) {
+        this(curveBase, lockCurve, proposedWorld, false);
+    }
+
+    private ProposedRules(double curveBase, LockCurve lockCurve, boolean proposedWorld, boolean reformedDeath) {
         this.curveBase = curveBase;
         this.lockCurve = lockCurve;
+        this.reformedDeath = reformedDeath;
         this.curve = new PolynomialLevelCurve(curveBase, CURVE_EXP, 60);
         this.world = proposedWorld ? buildWorld() : null;
         this.catalog = proposedWorld ? catalog(LiveRules.liveCatalog(), world) : null;
         this.loot = proposedWorld ? new Loot(catalog) : null;
     }
 
+    /** The timed death lock of curve {@code c} (the study of 2026-10-08, C7), everything else unchanged. */
     public ProposedRules withLock(LockCurve c) {
-        return new ProposedRules(curveBase, c);
+        return new ProposedRules(curveBase, c, true, false);
     }
 
     public ProposedRules withCurveBase(double b) {
-        return new ProposedRules(b, lockCurve);
+        return new ProposedRules(b, lockCurve, true, reformedDeath);
+    }
+
+    /** True for the 2026-10-13 death design (no lock); false for a timed lock of {@link #lockCurve()}. */
+    public boolean reformedDeath() {
+        return reformedDeath;
     }
 
     public double curveBase() {
@@ -502,6 +529,7 @@ public class ProposedRules extends Rules {
 
     @Override
     public double deathLockMinutes(int level, int ascension) {
+        if (reformedDeath) return SOUL_RECOVERY_MINUTES;
         double f = Math.max(0, Math.min(1, (level - 1) / 59.0));
         return switch (lockCurve) {
             case NONE_30S -> 0.5;
@@ -514,7 +542,24 @@ public class ProposedRules extends Rules {
 
     @Override
     public double deathBarLoss() {
-        return 0.05;
+        return reformedDeath ? 0.10 : 0.05;
+    }
+
+    @Override
+    public boolean deathProtected(int level, int ascension) {
+        return reformedDeath && ascension == 0 && level <= BEGINNER_LEVELS;
+    }
+
+    @Override
+    public double protectedDeathMinutes() {
+        return 1.0; // a beginner respawns and walks back to the first zones
+    }
+
+    @Override
+    public double deathRefund(String where) {
+        // the beam stands where the body fell, or at the gate for a death in the halls; an idle player does not walk
+        // back in time
+        return reformedDeath && !where.equals("afk") ? BEACON_REFUND : 0;
     }
 
     @Override

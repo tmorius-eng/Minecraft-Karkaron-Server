@@ -1,18 +1,43 @@
-# SÜLD death and recovery (proposed)
+# SÜLD death and recovery
 
-**Status: IMPLEMENTED in Stage C1 (FUNCTIONAL_BUT_INCOMPLETE; real-client UX is MANUAL_QA_REQUIRED).** Persistent
-lock (V12), level-scaled geometric lock, wound through `Equipment.Wearer.boundFactor`, audited admin commands, all
-live-tested on Paper 1.21.11 + PostgreSQL including a server restart during a lock. Paid Instant Revive is
-**deferred** (owner decision); see `docs/INSTANT_REVIVE.md`. The current state is in `audit/death-gear-status.json`.
+**Status: IMPLEMENTED (bot-verified on Paper 1.21.11 + PostgreSQL; real-client UX is MANUAL_QA_REQUIRED).** Persistent
+death rows (V12), the soul beacons (V23), the wound through `Equipment.Wearer.boundFactor`, audited admin commands.
+Paid Instant Revive is **deferred** (owner decision); see `docs/INSTANT_REVIVE.md`. There is no paid path, ever.
 
-## Today
+## Today: the reform of 2026-10-13 (config v8)
 
-`DeathRules` + `DeathService` + `DeathLock` (persistent, V12): a death costs 5 % of the level bar and 25 % of the
-droppable stacks, puts the character in a **soul state** for a real-time lock (5 min at level 1 → **30 min** at 60,
-≤ 1 min up to level 5), then a **wound** on the class gear. Since config v7 (2026-10-12, external audit FIND-05) the
-lock is capped at 30 minutes, and a soul can cut it short with **«Тэнгэрийн сорил»** (below). No paid revive, ever.
+The owner's directive: no passive waiting after a death. What a death does now (`config.yml death:`):
 
-## The lock: real time, scaled by level, chosen by simulation
+| Level | What a death costs | How the player comes back |
+|---|---|---|
+| **1–10** (no Ascension) | **nothing**: every stack kept, no EXP, no wear, no soul, no wound (owner: «бүгд хамгаалагдана») | respawns as usual |
+| **11+** | **10 %** of the progress into the level (never a level), **25 %** of the droppable stacks, wear on kept gear, then **one wound step** (−5 %, at most −15 %) | a **soul without a timer**: «Тэнгэрийн сорил» or «Овооны цацал» (or staff) |
+
+1. The soul **rises beside the ovoo nearest to where it fell** (5 blocks south of the cairn, inside the ritual ring).
+   A death in Хархорум or another world keeps the usual respawn; a death in the halls sends the soul to the
+   dungeon's gate (DungeonHalls).
+2. A pale blue **«Сүнсний Гэрэлт»** beam stands for **10 minutes** where the player fell (the player alone sees
+   it); for a death in the halls, which the soul cannot walk back into, it stands at the gate the soul is sent to.
+   Reaching it as a soul gives back **70 %** of the EXP the death took, once (a compare-and-set on
+   `suld_soul_beacons`; the EXP is paid only after it). The soul's boss bar shows the beam's distance, direction and
+   time left. The net EXP cost of a death walked back to is therefore 3 % of the level's progress.
+3. The soul comes back by acting, with no wait in between:
+   * **«Тэнгэрийн сорил»** (`/trial`, below): three spirit wolves, three minutes, tried again at once after a loss.
+     A win also leaves a **«Сүнсний Хэлтэрхий»** in the bag.
+   * **«Овооны цацал»** (the game's own rite, INSPIRED by the milk offering; the sunwise rounds are VERIFIED
+     custom, `docs/world/OVOO.md`): at any ovoo, walk the three sunwise rounds (2–9 blocks out) and stay by the
+     cairn until the ritual has lasted **90 seconds**. Leaving the ring breaks it; it starts over. A soul is never
+     blessed by an ovoo (the blessing is for the living).
+   * staff: `/deathrevive`.
+4. When the soul state ends, the wound step applies. A **«Сүнсний Хэлтэрхий»** (echo shard, bound to its winner,
+   7 days) heals **60 active minutes** of it at once (right-click; the spent shard reaches the player file before the
+   wound is stored, so a crash can lose the healing but never repeat it).
+
+`death.lock.mode: TIMED` brings back the old real-time lock below (the reference for the simulator); `UNTIL_RECOVERY`
+is shipped. Existing timed locks from before v8 still end by their time. The loot loss and the wear are unchanged
+by the reform (`death.drop-loot`, `loot-loss-fraction`, `durability-damage-fraction`: the owner may turn them off).
+
+## The timed lock (`death.lock.mode: TIMED`, before 2026-10-13)
 
 The owner decided the lock scales by level. Five curves were simulated with 3 player types over 90 days (C7,
 `docs/PROGRESSION_SIMULATION.md` §Death lock curves):
@@ -60,24 +85,24 @@ time to level 60 fell from ~200 to ~146 active hours (`SimulationTest`); the own
   (`DeathService.onSoulLaunch`, `SkillService.soulBlocked`) and spells cast and reach the wolves
   (`SkillService.hostile`); `onSoulAttack` still lets them hurt only its own wolves. Before this, a soul hit for ≈ 0
   (weakness V on vanilla damage) and an archer could not shoot at all, so the trial could not be won.
-* Kill all three within **3 minutes** → the lock ends now (`DeathRecord.State.RECOVERED`, actor `trial`); the wound
-  still applies.
-* Time out, a bite that would take the soul to 0 HP, or logging out → the wolves vanish, the soul keeps its timer and
-  may try again after **5 minutes**.
-* **The lock ends during the fight** (its timer runs out, or staff `/deathrevive`) → the trial stops at once
-  (`DeathTrial.Outcome.LOCK_ENDED`): the wolves vanish, no cooldown, «Сүнсний хугацаа дуусч та амилсан тул сорил
-  зогслоо.» Before this (audit 2026-10-13 BUG-DEATH-01) the wolves kept biting the now-living player, who could die
-  for real. `trial-lockend.js` 5/5.
+* Kill all three within **3 minutes** → the soul state ends now (`DeathRecord.State.RECOVERED`, actor `trial`); the
+  wound still applies, and a **«Сүнсний Хэлтэрхий»** (tier FAINT, 60 active minutes of healing) lands in the bag.
+* Time out, a bite that would take the soul to 0 HP, or logging out → the wolves vanish; since 2026-10-13 the soul
+  may call them again at once (`DeathTrial.DEFAULT` cooldown 0), or walk the ovoo ritual. The soul's bar says
+  «сорил бүтсэнгүй, дахин /trial» (`SpiritTrialState.FAILED`).
+* **The soul state ends during the fight** (staff `/deathrevive`, or the timer of an old timed lock) → the trial stops
+  at once (`DeathTrial.Outcome.LOCK_ENDED`): the wolves vanish, «Та амилсан тул сорил зогслоо.» Before this (audit
+  2026-10-13 BUG-DEATH-01) the wolves kept biting the now-living player, who could die for real. `trial-lockend.js`.
 * The wolves are plain vanilla wolves tagged `suld_trial`: no drops, no EXP, no quest/task/campaign credit; they are
   not persistent and are removed on quit and on shutdown.
 
-**Real time, absolute.** The persisted `locked_until` timestamp is compared with the wall clock. Ticks, online time
-and server uptime play no part (directive §5). It survives restarts, reconnects and database reloads.
+**Persisted, absolute.** The soul state is the stored `locked_until` (`Long.MAX_VALUE` for a soul without a timer,
+`DeathRecord.UNTIL_RECOVERY`; a real timestamp in `TIMED` mode). Ticks, online time and server uptime play no part.
+It survives restarts, reconnects and database reloads; so does the beam (`suld_soul_beacons`, read again on join).
 
-**During the lock** the player can log in to a **recovery state**: a spectator-like soul at the death site or the
-Kharkhorum shrine. They cannot fight, loot, trade or join parties. Chat and menus work, and they can see the exact
-recovery time. Refusing login altogether was rejected because players would lose contact with their clan and the
-community. Gameplay is gated, the connection is not.
+**As a soul** the player plays on in a **recovery state**: it cannot fight (except its own trial wolves), be hurt,
+loot, build, open containers, cast, ride, enter dungeons or trade. Chat, menus, NPC talk, `/trial` and the ovoo ritual
+work. Refusing login altogether was rejected because players would lose contact with their clan and the community.
 
 ## The wound (after normal recovery)
 
@@ -88,15 +113,20 @@ community. Gameplay is gated, the connection is not.
   `EquipmentService.fingerprint` so stats recompute when it changes.
 * Visible on the HUD (a wound icon), in the class-gear tooltip, and on the death screen.
 
-## Other death costs (proposed)
+## Other death costs (level 11+)
 
-| Cost | Today | Proposed |
+| Cost | Before 2026-10-13 | Today |
 |---|---|---|
-| EXP | −10 % of the bar | **−5 %** of the bar (the lock is the main cost now) |
-| Materials | 50 % of droppable stacks | **25 %** (the fraction is rounded at random: 3 stacks lose 0 or 1, on average 0.75) |
-| Durability | 25 % wear on kept items | repair cost of 3 hours' wear (class gear is unbreakable; the wound replaces wear) |
-| Class gear | kept | kept, never dropped (`docs/CLASS_GEAR_SYSTEM.md`) |
-| Dungeon | downed members lose the reward | unchanged; a party wipe ends the run (enrage wipes) |
+| EXP | −5 % of the bar, plus the timed lock | **−10 %** of the bar; the beam gives 70 % of it back |
+| Materials | 25 % of droppable stacks | unchanged: **25 %** (rounded at random: 3 stacks lose 0 or 1, on average 0.75) |
+| Durability | 25 % wear on kept items | unchanged |
+| Class gear, the menu item, a Сүнсний Хэлтэрхий | kept | kept, never dropped |
+| Dungeon | downed members lose the reward | unchanged; the soul goes to the gate, where its beam stands |
+
+The simulator mirrors this (`LiveRules`, and the reference model `ProposedRules` the same way): protected deaths cost a
+minute, the refund is assumed walked to (except for an idle player),
+and a soul's way back is modelled as **4 minutes** (an assumption, not a measurement: the walk to the beam and back
+at soul speed plus the 90-second ritual or the 3-minute trial).
 
 ## DeathState (persistent, V12)
 
@@ -108,7 +138,7 @@ Table `suld_death_state`, one row per death, on both PostgreSQL and MySQL:
 | `player_uuid` | UUID, indexed | |
 | `death_seq` | int | per-player sequence; unique `(player_uuid, death_seq)` |
 | `died_at` | timestamp (UTC) | real time |
-| `locked_until` | timestamp (UTC) | from the lock curve at `died_at` |
+| `locked_until` | epoch ms | `Long.MAX_VALUE` for a soul without a timer; in `TIMED` mode from the lock curve at `died_at` |
 | `world`, `x`, `y`, `z` | | death location |
 | `cause` | text ≤ 64 | `EntityDamageEvent.DamageCause` + killer id |
 | `level`, `ascension` | int | inputs of the lock |
@@ -124,37 +154,55 @@ Table `suld_death_state`, one row per death, on both PostgreSQL and MySQL:
 * Multiple-death races (two damage events in one tick) are serialised per player on the profile sequencer that
   already serialises profile access (`DefaultProfileService`).
 * The current `souls` map becomes a cache of the open row.
+* A protected (level ≤ 10) death is stored too, closed at once (`RECOVERED`, `locked_until = died_at`), so the history
+  and the funnel's first death see it.
+
+Table `suld_soul_beacons` (V23): `death_id` PK, `player_uuid` (indexed), `world`, `x`, `y`, `z`, `exp_lost`,
+`created_at`, `expires_at`, `claimed_at` (null until reached). The claim is
+`UPDATE … SET claimed_at = ? WHERE death_id = ? AND claimed_at IS NULL AND expires_at > ?` (one row updated = the one
+claim; `JdbcDeathRepositoryIT`: 24 concurrent claims, one winner, on H2 and PostgreSQL 16).
+
+## Concurrency (audit of the 2026-10-13 reform)
+
+| Shared state | How it stays correct |
+|---|---|
+| The beam's refund | `claimBeacon` is a compare-and-set in storage (`… WHERE claimed_at IS NULL AND expires_at > ?`); the EXP is granted only on the main thread after it returned true. 24 concurrent claims from 8 threads: one winner (`JdbcDeathRepositoryIT`, H2 and PostgreSQL 16). In process, one claim per player is in flight at a time (`claiming`). A rejoin that reads the beam before the claim committed gets `false` from the second claim: never paid twice. |
+| Order of the refund | Guard before value: the claim commits, then the EXP is granted and the profile saved. A crash between the two loses the refund; a quit in that same instant too (the profile is no longer cached). It never pays twice. |
+| Death row, EXP loss | The profile is saved at the death (audit F04); the death row is inserted on the single-threaded death executor after any older open row is closed; one open row per player is a unique index. A protected death's closed row is chained the same way. |
+| Wound saves | The minute flush, the quit save and the shard's save all run on the same single-threaded death executor, in the main thread's order: no older value can overwrite a newer one. |
+| The shard | The spent shard reaches the player file first (`PlayerDataSaves.now`, main thread by the owner's decision), then the wound is stored: a crash can lose the healing, never repeat it. |
+| Beams, rituals, the soul's rise | Main thread only (Bukkit scheduler). The async beacon read on join hops to the main thread before it touches the map. |
+| Main-thread I/O | No database call on the main thread: every read and write is a `CompletableFuture` on the death executor. |
 
 ## Admin commands (all audited through `services.audit()`)
 
 | Command | Permission | Does |
 |---|---|---|
-| `/deathstatus <player>` | `suld.admin.death` | lock state, time left, wound stacks, last 5 deaths |
+| `/deathstatus <player>` | `suld.admin.death` | soul state («амилах хүртэл» or time left), wound stacks, last 5 deaths |
 | `/deathinfo <player> [death#]` | `suld.admin.death` | one death in full (cause, place, level, lock) |
-| `/deathrevive <player>` | `suld.admin.death.revive` | ends the lock now (`ADMIN_REVIVED`); the wound is still applied |
-| `/deathreset <player>` | `suld.admin.death.reset` | clears lock and wound (`RESET`; staff-error recovery only) |
+| `/deathrevive <player>` | `suld.admin.death.revive` | ends the soul state now (`ADMIN_REVIVED`); the wound is still applied |
+| `/deathreset <player>` | `suld.admin.death.reset` | clears soul state and wound (`RESET`; staff-error recovery only) |
+
+Audited without staff: `death.recovered` (actor `trial` or `ovoo`), `death.beacon_claim`, `death.shard_use`.
 
 `/revive` becomes an alias of `/deathrevive`, and its missing audit entry (DT-3) is fixed.
 
 ## Death UI
 
-The screen title reads "ТА УНАЛАА" ("YOU HAVE FALLEN"), then:
+The title reads «ТА УНАЛАА», «/trial эсвэл овоонд цацал өргөж амил»; after the respawn one chat block says what the
+death cost (EXP, stacks, wear), where the beam is and how much it gives back, how to come back and what the wound will
+be. A beginner's death says «❤ Шинэ баатрын хамгаалалт: юу ч алдсангүй». The soul's boss bar: «☠ Сүнс — /trial
+эсвэл овооны цацал · Гэрэлт 230 м З · 7:41 · +700 EXP» (its fill is the beam's time left). The ritual shows
+«Овооны цацал: 2/3 тойрог · 41/90 с» on the action bar. The Instant Revive button is absent until a payment provider
+exists and the owner enables it (`docs/INSTANT_REVIVE.md`).
 
-* death time and recovery time, as local time and the countdown;
-* what the wound will be;
-* class gear: armour, weapon, tier, current wound;
-* "your gear is yours forever; death has a price".
+## Tests
 
-Options are **[ХҮЛЭЭХ / WAIT FOR RECOVERY]** only. The Instant Revive button is absent until a payment provider exists
-and the owner enables it (`docs/INSTANT_REVIVE.md`).
-
-## Tests (Stage C1)
-
-From the death/gear directive §16, items 8–10, 16, 17 and 19:
-
-* unit tests of the lock curve and wound;
-* JDBC IT of `suld_death_state` (insert, one-open-row constraint, restart reload);
-* bots: die, reconnect, restart the server during the lock, admin commands with audit rows;
-* a real client for the death UI.
+* api: `DeathLockTest`, `DeathRulesTest`, `DeathTrialTest`, `DeathReformTest` (beginner protection, the untimed
+  soul, the shipped defaults), `SoulBeaconTest`, `OvooRitualTest`, `SoulShardTest`;
+* JDBC IT of `suld_death_state` and `suld_soul_beacons` (insert, one open row, one beacon claim under 24 threads);
+* bots on the dev server: `soulreform.js` (protection, the beam and its refund, the soul's rise at the ovoo, the ritual
+  and a broken ritual, the shard), `trialbot.js`, `trial-lockend.js`;
+* a real client for the death UI (owner).
 
 Instant-revive tests 11–14 and 18 stay **NOT_IMPLEMENTED** by owner decision.

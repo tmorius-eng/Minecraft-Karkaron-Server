@@ -22,6 +22,13 @@ package mn.suld.api.config;
  * @param woundHealMinutes      active minutes that heal one wound step
  * @param newbieLevels          up to this level the lock is at most {@code newbieLockMinutes} (0 = off)
  * @param newbieLockMinutes     the new-player lock cap (audit 2026-10-11 ONB-002: a 5-minute lock at level 1 is a quit point)
+ * @param beginnerLevels        up to this level (no Ascension) a death costs nothing at all: no soul, EXP, items,
+ *                              wear or wound (2026-10-13, owner: «бүгд хамгаалагдана»; 0 = off)
+ * @param lockMode              {@code UNTIL_RECOVERY}: a soul has no timer, it comes back by «Тэнгэрийн сорил», the
+ *                              ovoo ritual or staff; {@code TIMED}: the old lock curve
+ * @param beaconMinutes         how long the Сүнсний Гэрэлт stands where the player fell
+ * @param beaconRefund          share of the lost EXP the soul gets back by walking to it [0,1]
+ * @param ritualSeconds         the ovoo ritual's least length (three sunwise rounds and the offering)
  */
 public record DeathSettings(
         boolean enabled,
@@ -38,7 +45,12 @@ public record DeathSettings(
         double woundMax,
         int woundHealMinutes,
         int newbieLevels,
-        double newbieLockMinutes) {
+        double newbieLockMinutes,
+        int beginnerLevels,
+        mn.suld.api.death.DeathLock.Mode lockMode,
+        double beaconMinutes,
+        double beaconRefund,
+        int ritualSeconds) {
 
     public DeathSettings {
         expLossFraction = clamp01(expLossFraction);
@@ -59,6 +71,30 @@ public record DeathSettings(
         if (woundHealMinutes < 1) {
             throw new IllegalArgumentException("woundHealMinutes must be >= 1: " + woundHealMinutes);
         }
+        if (lockMode == null) lockMode = mn.suld.api.death.DeathLock.Mode.TIMED;
+        beaconRefund = clamp01(beaconRefund);
+        if (beginnerLevels < 0 || beaconMinutes < 0 || ritualSeconds < 0) {
+            throw new IllegalArgumentException("beginner levels, beacon minutes and ritual seconds must be >= 0: "
+                    + beginnerLevels + " / " + beaconMinutes + " / " + ritualSeconds);
+        }
+    }
+
+    /**
+     * The settings before the 2026-10-13 reform (a timed lock, no beginner protection, no beacon refund, no ritual):
+     * every older caller keeps the rules it was written for.
+     */
+    public DeathSettings(boolean enabled, int soulStateSeconds, double expLossFraction, double durabilityDamageFraction,
+                         boolean dropLoot, double lootLossFraction, boolean allowFreeRevive,
+                         mn.suld.api.death.DeathLock.Curve lockCurve, double lockMinMinutes, double lockMaxMinutes,
+                         double woundPerDeath, double woundMax, int woundHealMinutes, int newbieLevels, double newbieLockMinutes) {
+        this(enabled, soulStateSeconds, expLossFraction, durabilityDamageFraction, dropLoot, lootLossFraction, allowFreeRevive,
+                lockCurve, lockMinMinutes, lockMaxMinutes, woundPerDeath, woundMax, woundHealMinutes, newbieLevels, newbieLockMinutes,
+                0, mn.suld.api.death.DeathLock.Mode.TIMED, 0, 0, 0);
+    }
+
+    /** True when a soul has no timer and comes back only by acting (the 2026-10-13 reform). */
+    public boolean untilRecovery() {
+        return lockMode == mn.suld.api.death.DeathLock.Mode.UNTIL_RECOVERY;
     }
 
     /** Without the new-player lock levers: defaults {@link #NEWBIE_LEVELS} / {@link #NEWBIE_LOCK_MINUTES}. */
@@ -81,11 +117,22 @@ public record DeathSettings(
                 mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 30, 0.05, 0.15, 180);
     }
 
-    /** The approved balance (docs/DEATH_AND_RECOVERY.md): geometric 5 min → 24 h lock, −5 % wound per death (max −15 %). */
+    /**
+     * The shipped balance (docs/DEATH_AND_RECOVERY.md, reform of 2026-10-13): levels 1–10 lose nothing; from 11 a death
+     * costs 10 % of the level's progress, a quarter of the droppable stacks and one wound step (−5 %, at most −15 %),
+     * and the soul has no timer: «Тэнгэрийн сорил», the ovoo ritual (90 s) or staff bring it back. The Сүнсний Гэрэлт
+     * stands 10 minutes where the player fell and gives back 70 % of the lost EXP once.
+     */
     public static DeathSettings defaults() {
-        return new DeathSettings(true, 30, 0.05, 0.25, true, 0.25, true,
-                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 30, 0.05, 0.15, 180, NEWBIE_LEVELS, NEWBIE_LOCK_MINUTES);
+        return new DeathSettings(true, 30, 0.10, 0.25, true, 0.25, true,
+                mn.suld.api.death.DeathLock.Curve.GEOMETRIC, 5, 30, 0.05, 0.15, 180, NEWBIE_LEVELS, NEWBIE_LOCK_MINUTES,
+                BEGINNER_LEVELS, mn.suld.api.death.DeathLock.Mode.UNTIL_RECOVERY, BEACON_MINUTES, BEACON_REFUND, RITUAL_SECONDS);
     }
+
+    public static final int BEGINNER_LEVELS = 10;
+    public static final double BEACON_MINUTES = 10;
+    public static final double BEACON_REFUND = 0.70;
+    public static final int RITUAL_SECONDS = 90;
 
     private static double clamp01(double v) {
         return Math.max(0.0, Math.min(1.0, v));

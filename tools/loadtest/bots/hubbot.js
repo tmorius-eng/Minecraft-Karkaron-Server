@@ -80,7 +80,8 @@ async function click(b, slot) {
   check(!b.currentWindow, '«✕ Хаах» closes the window', String(!!b.currentWindow));
 
   r = await open(b, '/profile');
-  check(has(r.w, G.PROFILE) && r.chat.length === 0, '/profile opens the window and prints no chat', 'chat lines ' + r.chat.length);
+  check(has(r.w, G.PROFILE) && r.chat.length === 0, '/profile opens the window and prints no chat', 'chat lines ' + r.chat.length
+    + (r.chat.length ? ' :: ' + r.chat.join(' | ').slice(0, 160) : ''));
 
   // text pages are dialogs (mineflayer cannot read them): the proof is that no chat lines follow the command
   cmd(`suld coins ${name} 500`);

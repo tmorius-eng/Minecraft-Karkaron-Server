@@ -1,12 +1,14 @@
 // «Тэнгэрийн сорил» on the dev server (docs/DEATH_AND_RECOVERY.md), one offline bot:
 //   node trialbot.js <srvctl.sh> [port]
-// A living player is refused, a level-20 soul (30-min-capped lock) outside the city starts the trial, three
-// «Сүнсний чоно» spawn and are killed by the bot, the lock ends (no boss bar, «Тэнгэр ивээлээ»), the wolves are gone.
+// A living player is refused, a level-20 soul (no timer since 2026-10-13) outside the city starts the trial, three
+// «Сүнсний чоно» spawn and are killed by the bot, the soul state ends («Тэнгэр ивээлээ»), the wolves are gone, and the
+// win leaves a «Сүнсний Хэлтэрхий» that heals 60 minutes of the death wound when used (database).
 const mineflayer = require('mineflayer');
 const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
+const psql = (q) => execFileSync('runuser', ['-u', 'postgres', '--', 'psql', '-d', process.env.SULD_DB || 'suldit', '-At', '-c', q], { cwd: '/tmp' }).toString().trim();
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
 const name = 'T' + Math.floor(Math.random() * 90000 + 10000);
@@ -61,6 +63,23 @@ b.once('spawn', async () => {
   check(wolves().length === 0, 'no trial wolf is left in the world', 'wolves ' + wolves().length);
   k = chat.length; b.chat('/trial'); await sleep(1500);
   check(said(k, 'та амьд байна'), 'after the win the player is alive again (/trial refused)', chat.slice(k).join(' | ').slice(0, 100));
+
+  // the win's shard: in the bag, and it heals 60 active minutes of the wound the death left (stored at once)
+  const shard = b.inventory.items().find(i => i.name === 'echo_shard');
+  check(!!shard, 'the win leaves a Сүнсний Хэлтэрхий in the bag', shard ? shard.name + ' x' + shard.count : b.inventory.items().map(i => i.name).join(','));
+  const wound = () => psql(`select r.wound_stacks, r.heal_minutes from suld_death_recovery r join suld_profiles p on p.player_uuid = r.player_uuid where p.name='${name}'`);
+  await sleep(1500);
+  const w0 = wound();
+  if (shard) {
+    await b.equip(shard, 'hand').catch(() => {});
+    await sleep(500);
+    k = chat.length; b.activateItem(); await sleep(400); b.deactivateItem(); await sleep(2500);
+    const w1 = wound().split('|');
+    // 60 minutes at once (an active minute or two of the fight may have healed already: 60 ≤ heal < 63)
+    check(said(k, 'Сүнсний Хэлтэрхий: шарх 60 минутаар эдгэв') && Number(w1[0]) >= 1 && Number(w1[1]) >= 60 && Number(w1[1]) < 63,
+      'using it heals 60 minutes of the wound (database)', `${w0} -> ${w1.join('|')} :: ` + chat.slice(k).filter(l => l.length > 3).join(' | ').slice(0, 120));
+    check(!b.inventory.items().some(i => i.name === 'echo_shard'), 'the shard is spent', b.inventory.items().filter(i => i.name === 'echo_shard').length + ' left');
+  }
 
   console.log(results.every(Boolean) ? `ALL ${results.length} PASSED` : `${results.filter(x => !x).length} FAILED`);
   b.quit(); process.exit(results.every(Boolean) ? 0 : 1);

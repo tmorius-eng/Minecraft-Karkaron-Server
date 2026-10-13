@@ -89,9 +89,9 @@ public final class GuideBoards {
                     + line("{regions} нутаг, {areas} газар, түүхэн {sites} дурсгал:")
                     + line("Туул, Онон, Орхон, Сэлэнгэ, Говь...")
                     + line("Шинэ газрыг анх нээхэд EXP!")
-                    + GAP + "<bold><red>HARDCORE:</red><white> үхвэл юмныхаа</white></bold>\n"
-                    + line("дөрөвний нэг, EXP-ийн 5 хувийг алдана.")
-                    + line("Сүнс: 1–5-р түвшинд 1 мин, дараа нь урт.")
+                    + GAP + "<bold><red>HARDCORE:</red><white> 1–10-р түвшинд үхэл үнэгүй</white></bold>\n"
+                    + line("11-ээс: эд зүйлийн 1/4, EXP-ийн 10 %.")
+                    + line("Сүнс: /trial эсвэл овооны цацлаар амилна.")
                     + line("Хот аюулгүй: PvP, мангас үгүй. «/spawn»")
                     + line("Агуй (бүлгээрээ): «/dungeon»")),
             new Board(16, 4.8, -2, title("КОМАНДУУД") + GAP

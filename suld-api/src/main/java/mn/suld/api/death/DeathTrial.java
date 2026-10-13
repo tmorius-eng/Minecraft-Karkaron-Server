@@ -1,8 +1,9 @@
 package mn.suld.api.death;
 
 /**
- * «Тэнгэрийн сорил»: the active way out of a death lock (external audit FIND-05). A soul calls the spirit wolves and
- * fights them; beating all of them in time ends the lock at once (the wound still applies). Pure rules, no Bukkit.
+ * «Тэнгэрийн сорил»: the active way back from the soul state (external audit FIND-05; since 2026-10-13 a soul has no
+ * timer, so this, the ovoo ritual or staff end it). A soul calls the spirit wolves and fights them; beating all of them
+ * in time ends the soul state at once (the wound still applies). Pure rules, no Bukkit.
  *
  * @param wolves   how many spirit wolves must fall
  * @param seconds  time limit
@@ -10,7 +11,8 @@ package mn.suld.api.death;
  */
 public record DeathTrial(int wolves, int seconds, int cooldownSeconds) {
 
-    public static final DeathTrial DEFAULT = new DeathTrial(3, 180, 300);
+    /** Three wolves, three minutes, no wait after a failed trial (2026-10-13: a soul may try again at once). */
+    public static final DeathTrial DEFAULT = new DeathTrial(3, 180, 0);
 
     /** {@code LOCK_ENDED}: the lock ran out (or staff revived) while the trial ran; the player is alive and the trial stops. */
     public enum Outcome { RUNNING, WON, TIMED_OUT, FALLEN, LEFT, LOCK_ENDED }

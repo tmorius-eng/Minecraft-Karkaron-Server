@@ -34,6 +34,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.style.CosmeticEffects effects;
     private mn.suld.plugin.death.DeathService deaths;
     private mn.suld.plugin.death.DeathTrialService deathTrial;
+    private mn.suld.plugin.death.SoulBeaconService soulBeacons;
     private mn.suld.plugin.gui.SkillSky skillSky;
     private mn.suld.plugin.gui.MenuSky menuSky;
     private mn.suld.plugin.training.TrainingService training;
@@ -177,6 +178,14 @@ public final class SuldPlugin extends JavaPlugin {
         services.inDeathTrial = deathTrial::inTrial;
         getServer().getPluginManager().registerEvents(deathTrial, this);
         registerTab("trial", deathTrial);
+        // the death reform of 2026-10-13: the beam where a player fell, and the trial's shard
+        soulBeacons = new mn.suld.plugin.death.SoulBeaconService(this, services);
+        deaths.beacons = soulBeacons;
+        getServer().getPluginManager().registerEvents(soulBeacons, this);
+        soulBeacons.start();
+        mn.suld.plugin.death.SoulShardService soulShards = new mn.suld.plugin.death.SoulShardService(this, services, deaths);
+        deathTrial.shards = soulShards;
+        getServer().getPluginManager().registerEvents(soulShards, this);
         // the Display-Entity model renderer (docs/MODEL_RENDERER.md): rigged SÜLD mobs are dressed on spawn
         mn.suld.plugin.model.ModelService models = new mn.suld.plugin.model.ModelService(this);
         models.load();
@@ -438,6 +447,7 @@ public final class SuldPlugin extends JavaPlugin {
         // ovoo at the heart of every area (docs/world/OVOO.md): circle three times clockwise for Тэнгэрийн ивээл
         mn.suld.plugin.region.OvooService ovoo = new mn.suld.plugin.region.OvooService(this, services);
         getServer().getPluginManager().registerEvents(ovoo, this);
+        ovoo.deaths = deaths; // a soul's «Овооны цацал» ends the soul state
         ovoo.start();
         services.ovoos = ovoo;
         // the historical places of the Mongol lands in the wild (content/sites.json, docs/world/HISTORIC_SITES.md)
@@ -486,6 +496,7 @@ public final class SuldPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (deathTrial != null) deathTrial.shutdown();
+        if (soulBeacons != null) soulBeacons.shutdown(); // the beams go; the beacons are stored and read again
         if (props != null) props.stop();
         if (combatFeel != null) combatFeel.shutdown();
         if (halls != null) halls.shutdown();
@@ -557,6 +568,26 @@ public final class SuldPlugin extends JavaPlugin {
         if (getConfig().getInt("config-version", 1) < 5) migrateCurve();
         if (getConfig().getInt("config-version", 1) < 6) migrateActTwoCurve();
         if (getConfig().getInt("config-version", 1) < 7) migrateDeathCap();
+        if (getConfig().getInt("config-version", 1) < 8) migrateDeathReform();
+    }
+
+    /**
+     * v8, the death reform of 2026-10-13: no timed lock (a soul comes back by «Тэнгэрийн сорил», the ovoo ritual or
+     * staff), levels 1–10 lose nothing, a death from level 11 takes 10 % of the bar instead of 5 % (the Сүнсний Гэрэлт
+     * gives 70 % of it back). A server that set its own EXP fraction keeps it; the lock mode is set unless already chosen.
+     */
+    private void migrateDeathReform() {
+        if (getConfig().getDouble("death.exp-loss-fraction", 0.05) == 0.05) getConfig().set("death.exp-loss-fraction", 0.10);
+        if (!getConfig().isSet("death.lock.mode")) getConfig().set("death.lock.mode", "UNTIL_RECOVERY");
+        if (!getConfig().isSet("death.beginner-levels")) getConfig().set("death.beginner-levels", 10);
+        if (!getConfig().isSet("death.ritual-seconds")) getConfig().set("death.ritual-seconds", 90);
+        if (!getConfig().isSet("death.beacon.minutes")) getConfig().set("death.beacon.minutes", 10);
+        if (!getConfig().isSet("death.beacon.refund")) getConfig().set("death.beacon.refund", 0.70);
+        getLogger().warning("config.yml migrated to v8 (death reform): no timed lock; a soul comes back by /trial or the ovoo"
+                + " ritual; levels 1-10 lose nothing; a death takes " + getConfig().getDouble("death.exp-loss-fraction")
+                + " of the bar and the soul beacon gives 70 % back. Souls locked before keep their end time.");
+        getConfig().set("config-version", 8);
+        saveConfig();
     }
 
     /**

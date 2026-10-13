@@ -5,13 +5,16 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `be358e7` · **Schema:** V22 · **Bot sweep:**
-`DEV_CAMPAIGNS=1 DEV_CRASH=1 tools/loadtest/regress.sh` (33 runs) — 2026-10-13 on the training-payouts build: 29/33; the
-4 red were two trial class bots (in both failing runs the spirit wolves stood on tree crowns at the forest test spot,
-y 87–89 over the ground at 84; the game now spawns them on the ground), world-boss (the bot's resistance came 4 s after the spread and the boss killed it: bot fixed)
-and trainingpay (an admin give is a 64-stack, the week resolved early: bot fixed); those 9 runs again on the final jar
-9/9. A sweep with a missing log directory had printed «ALL GREEN» without running a bot: `regress.sh` now fails that
-(regress1–6 had real logs). Unit api 464 + plugin 149; PostgreSQL ITs run in CI on every push · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `5fe583a` · **Schema:** V23 · **Bot sweep:**
+`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` (33 runs) — 2026-10-13 on the death-reform build: 31/33 (259 checks in the
+passing runs). The 2 red: hubbot (one chat line of unknown source fell inside the `/profile` window; 2 standalone reruns
+31/31, one of them as the first bot after a restart; the bot now prints the line it saw) and campaign-effects (the bot
+killed 1 of 3 wolves in 45 s: the server logged one death and counted one kill, so the count was right; a rerun showed
+the bot in a pit 10 blocks under the wolves; it now brings a wolf beyond melee reach to itself: 3 reruns 6/6). Earlier on
+the training-payouts build: 29/33, the 4 red fixed in the game or the bots and 9/9 on the final jar. A sweep with a
+missing log directory had printed «ALL GREEN» without running a bot: `regress.sh` now fails that. Unit api 478 +
+plugin 150 + sim 13; PostgreSQL 16 ITs 33/33 (16 files), and in CI on every push · **Owner's one-sitting client test:**
+`docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
 
@@ -55,7 +58,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Class weapon tiers | 6 (levels 1/12/24/36/48/60) | `WeaponTiers` |
 | Level cap | 60; Ascension I–III | `Balance`, `Ascension` |
 | Level curve | 242·L^2.2 (live), legacy 100·L^1.75 rescaled on load | `config.yml` |
-| Death loss | 5 % of the level's progress, 25 % of droppable stacks; lock 5 min → 30 min (cap since config v7), ≤ 1 min up to level 5; `/trial` «Тэнгэрийн сорил» ends it early | `config.yml death:` |
+| Death loss | levels 1–10 (no Ascension): nothing; from 11: 10 % of the level's progress (the beam gives 70 % back), 25 % of droppable stacks, one wound step; no timer since config v8: a soul comes back by `/trial` or the 90-s ovoo ritual | `config.yml death:` |
 
 ## Systems
 
@@ -67,7 +70,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Skill tree, builds, respec | ✅ | ✅ (312/313 QA) | 👤 | SP-3 ✅ the Orb's free respec waits a day since the last respec |
 | Story 42 chapters, tracker | ✅ | 🤖 first chapters | ⏳ | PROG-004 ✅ gate by chapter id; PROG-005 ✅ chapter EXP never below the previous chapter |
 | Dungeon ladder 10, halls, boss brains | ✅ | 🤖 | ⏳ | DG-7 ✅ enrage + 60 s wipes the run; PROG-004 ✅ the loader refuses a story that softlocks a gate |
-| Hardcore death, lock, wound | ✅ | ✅ | ⏳ | |
+| Hardcore death, soul state, wound | ✅ | ✅ | ⏳ | the reform of 2026-10-13: see the row «Death reform» |
 | Relics (2), seize rule | ✅ | ✅ | ⏳ | seize moves to consented fights only (PvP policy, this slice) |
 | Clans, parties, chat channels | ✅ | ✅ | ⏳ | party finder: this slice |
 | World events | ✅ (1 event; no raid while a world boss stands) | ✅ | ⏳ | «Чонын Их Аян» success: guards warn 2 min before a raid; raid wolves spawn on the ground, not on leaves (2026-10-13; probe: 4 raid wolves at the forest spot, 0 on leaves) |
@@ -115,7 +118,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Баатрын Хроник (V19), `/chronicle`, «Миний түүх» | ✅ | ✅ | ⏳ | |
 | Party finder (`/party find|join|recruit|role`) | ✅ | ✅ | ⏳ | chat board + a window with click-to-join cards |
 | External audit 2026-10-12 (FIND-01…10) | ✅ | ✅ | — | `docs/audits/2026-10-12-external/RESPONSE.md`: H2 shaded (boots offline), mailbox stuck-file guard, scoped spell flag, `player.save_data` probe, Java-only deploy |
-| «Тэнгэрийн сорил» (`/trial`), lock cap 30 min (config v7) | ✅ | ✅ `trialbot.js` 6/6 | ⏳ | `docs/DEATH_AND_RECOVERY.md`; time to 60 now ~146 h simulated (was ~200), accepted by the owner 2026-10-12 |
+| «Тэнгэрийн сорил» (`/trial`), no wait after a loss since 2026-10-13, a win leaves a «Сүнсний Хэлтэрхий» | ✅ | ✅ `trialbot.js` 9/9 | ⏳ | `docs/DEATH_AND_RECOVERY.md`; time to 60 ~147 h simulated (owner's band 130–170 h) |
 | /menu sky window (`MenuSky`, every hub page; chest window only in combat/runs/mid-air) | ✅ | ✅ `skymenubot.js` 8/8 | ⏳ | `docs/UI_HUB.md` §0; owner to check look and text size on the real client |
 | Class change + «Ангийн Академи» (V22 class_mastery: each class keeps its tree and gear) | ✅ | ✅ `classchangebot.js` 10/10, `classreconnectbot.js` 6/6 | ⏳ | `docs/CLASS_CHANGE.md` |
 | Class trial «Турших» (5 min arena, dummies, nothing kept) + SÜLD bows with Infinity | ✅ | ✅ `classtrialbot.js` 7/7 | ⏳ | `docs/CLASS_CHANGE.md` §Сорилт, §Нум; since 2026-10-13 the dummies are SÜLD targets: spells, crits, passives and named numbers reach them (they used to be skipped, and a big hit was zeroed) |
@@ -124,9 +127,10 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | External audit 2026-10-13 (`docs/audits/2026-10-13-external/RESPONSE.md`): class window refuses drags; death EXP saved with the lock; dungeon clears/sites restored from the DB into a file that lost them; boss HP by the party that entered (≤ recommended) | ✅ | ✅ dbfix check (EXP in SQL 4 s after death; DB clear restored), featbot 16/16 (dungeon clear) | ⏳ | `ClassMenuDragTest`, `PlayerMarksMergeTest`, `BalanceRulesTest` |
 | Self-audit 2026-10-13 fixes: a lock that ends mid-trial stops the trial (BUG-DEATH-01); the class confirm page no longer calls the pick permanent (BUG-ONB-01); tutorial mask before its reward; one writer per state file; no idle quiver saves; ITs refuse a non-test DB | ✅ | ✅ `trial-lockend.js` 5/5, `permbot.js` 20/20 (staff commands refuse a player) | ⏳ | unit: `DeathTrialTest`, `ClassConfirmNoteTest`, `AtomicYamlOrderTest`, `TestDbGuardTest` |
 | «Тэнгэрийн сорил» fought with the class (soul hits/shoots/casts at its wolves, wolf HP = 5 × attack) | ✅ | ✅ `trialclassbot.js` 4/4 × 5 classes | ⏳ | `docs/DEATH_AND_RECOVERY.md`; since 2026-10-13 the wolves spawn on the ground, never on a tree's crown (a forest's leaves had put them out of reach of the soul and its arrows); the trial bots count only spirit wolves (a natural pack lives at the test spot) |
+| Death reform (directive 2026-10-13, config v8, V23 `suld_soul_beacons`): levels 1–10 lose nothing; a soul without a timer rises by the nearest ovoo; «Сүнсний Гэрэлт» 10 min, 70 % of the lost EXP back once (compare-and-set); «Овооны цацал» (3 sunwise rounds + 90 s); «Сүнсний Хэлтэрхий» heals 60 active minutes | ✅ | ✅ `soulreform.js` 19/19, `trialbot.js` 9/9, `trial-lockend.js` 5/5 | ⏳ | `docs/DEATH_AND_RECOVERY.md` (concurrency audit included); api `DeathReformTest`, `SoulBeaconTest`, `OvooRitualTest`, `SoulShardTest`; `JdbcDeathRepositoryIT` 24 concurrent claims → 1 (H2, PostgreSQL 16); full simulation: live L1–L10 pass (147 h to 60); the reference model's C9 is 88 % (was 90 %) with the same death design; loot loss and wear unchanged (the owner may turn them off) |
 
 ## Not built (and said so)
 
-Achievements, battle pass, emotes/pets/mount skins/UI themes, resurrection quests, soul shards, instant revive
+Achievements, battle pass, emotes/pets/mount skins/UI themes, resurrection quests, instant revive
 (design only, stays unbuilt), payment provider, web dashboard, Ascension IV–X, mastery tracks other than armour,
 heroic dungeon mode, player housing.

@@ -25,9 +25,24 @@ class DeathTrialTest {
 
     @Test
     void cooldownCountsDown() {
-        assertEquals(300, t.waitSeconds(0));
-        assertEquals(1, t.waitSeconds(299.5));
-        assertEquals(0, t.waitSeconds(301));
+        // a configured wait counts down (the rule itself)
+        DeathTrial waits = new DeathTrial(3, 180, 300);
+        assertEquals(300, waits.waitSeconds(0));
+        assertEquals(1, waits.waitSeconds(299.5));
+        assertEquals(0, waits.waitSeconds(301));
+    }
+
+    @Test
+    void theShippedTrialHasNoWaitAfterAFailure() {
+        // 2026-10-13 death reform: a soul may try again at once (no passive waiting)
+        assertEquals(0, t.cooldownSeconds());
+        assertEquals(0, t.waitSeconds(0));
+        assertEquals(SpiritTrialState.FAILED, SpiritTrialState.of(DeathTrial.Outcome.TIMED_OUT));
+        assertTrue(SpiritTrialState.FAILED.mayStart());
+        assertFalse(SpiritTrialState.FIGHTING.mayStart());
+        assertEquals(SpiritTrialState.PASSED, SpiritTrialState.of(DeathTrial.Outcome.WON));
+        assertEquals(SpiritTrialState.NOT_IN_TRIAL, SpiritTrialState.of(DeathTrial.Outcome.LOCK_ENDED));
+        assertEquals(SpiritTrialState.FIGHTING, SpiritTrialState.of(DeathTrial.Outcome.RUNNING));
     }
 
     @Test

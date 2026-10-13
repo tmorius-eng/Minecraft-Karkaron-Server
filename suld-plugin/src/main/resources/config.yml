@@ -7,7 +7,7 @@
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
 # Schema version of this file (SULD migrates older files on start; do not edit).
-config-version: 7
+config-version: 8
 locale: mn
 
 # ---------------------------------------------------------------------------
@@ -54,14 +54,25 @@ database:
 # ---------------------------------------------------------------------------
 death:
   enabled: true
-  soul-state-seconds: 30        # minimum soul time (also the floor of the lock)
-  exp-loss-fraction: 0.05       # of the progress into the current level (never a level)
+  # Reform of 2026-10-13 (docs/DEATH_AND_RECOVERY.md): no passive waiting. Up to beginner-levels a death costs nothing
+  # (no soul, EXP, items, wear or wound). From there the player is a soul until it comes back by acting:
+  # «Тэнгэрийн сорил» (/trial, three spirit wolves, retry at once) or the ovoo ritual (three sunwise rounds, at least
+  # ritual-seconds), or staff (/deathrevive). The Сүнсний Гэрэлт stands beacon.minutes where the player fell; walking
+  # back to it as a soul gives back beacon.refund of the lost EXP, once.
+  beginner-levels: 10
+  ritual-seconds: 90
+  beacon:
+    minutes: 10
+    refund: 0.70
+  soul-state-seconds: 30        # minimum soul time with lock.mode TIMED (also the floor of the lock)
+  exp-loss-fraction: 0.10       # of the progress into the current level (never a level)
   durability-damage-fraction: 0.25
   drop-loot: true
   loot-loss-fraction: 0.25      # of the droppable (non-soulbound) stacks
   allow-free-revive: true       # false = the lock only ends by /deathrevive
   lock:
-    curve: GEOMETRIC            # GEOMETRIC (approved) | LINEAR | STEP | FIXED
+    mode: UNTIL_RECOVERY        # UNTIL_RECOVERY: no timer (trial, ritual or staff) | TIMED: the curve below (before 2026-10-13)
+    curve: GEOMETRIC            # TIMED only: GEOMETRIC | LINEAR | STEP | FIXED
     min-minutes: 5              # level 1   (geometric: 5 min · 6^((L−1)/59) → 9 min @20, 17 min @40, 30 min @60)
     max-minutes: 30             # level 60 and Ascension (was 1440 = 24 h; external audit FIND-05). /trial ends a lock sooner
     newbie-levels: 5            # up to this level the lock is at most newbie-minutes (0 = off)

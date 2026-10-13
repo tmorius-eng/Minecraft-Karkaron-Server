@@ -147,17 +147,20 @@ class SimulationTest {
     }
 
     /**
-     * Phase F parity (plan): live hardcore p50 within 130–170 active hours since the 30-min lock cap, and near the
-     * proposed design. This is a coarse guard on 20 runs (±20 %); the exact ±10 % parity is the full simulation's L1 (calibrated, many seeds).
+     * Phase F parity (plan): live hardcore p50 within the owner's 130–170 active hours, and not far from the reference
+     * model. A coarse guard on 20 runs; the band itself is the full simulation's L1 (calibrated, many seeds).
      */
     @Test
     void liveAndProposedReachSixtyAtTheSamePace() {
         double live = medianHoursTo60(LIVE), proposed = medianHoursTo60(PROPOSED);
         // The 30-minute lock cap (config v7, audit FIND-05) took the waiting out of the top levels: live p50 fell from
         // ~200 h to ~146 h and the proposed model (same cap) to ~179 h. The owner accepted ~146 h (2026-10-12,
-        // docs/audits/2026-10-12-external/RESPONSE.md).
+        // docs/audits/2026-10-12-external/RESPONSE.md): the reference model is a reference only since then (its own
+        // C1 is a reported FAIL). The death reform (owner, 2026-10-13: no lock, levels 1–10 free, the beam's refund),
+        // modelled the same way in both rule sets, moved live to ~140 h and the reference to ~180 h: the gap grew from
+        // 18 % to 22 %. The guard was ±20 % and is ±25 % since then; the band above is what binds live.
         assertTrue(live >= 130 && live <= 170, "live hardcore p50 " + live + " h");
-        assertTrue(Math.abs(live - proposed) <= 0.20 * proposed, "live " + live + " h vs proposed " + proposed + " h");
+        assertTrue(Math.abs(live - proposed) <= 0.25 * proposed, "live " + live + " h vs proposed " + proposed + " h");
     }
 
     private static double medianHoursTo60(ProposedRules rules) {
@@ -176,8 +179,13 @@ class SimulationTest {
     void afkEarnsNoArmour() {
         Engine.Result r = Engine.run(PROPOSED, Profile.hardcore().exploit(Profile.Exploit.AFK), PlayerClass.DARKHAN, 3, 3);
         assertEquals(1, r.player().armorLevel);
-        // only the 4-minute town walks count (15 of them in three days since a death waits at most 30 min)
-        assertTrue(r.player().activeMinutes % 4 == 0 && r.player().activeMinutes <= 90, "AFK time is not active time: " + r.player().activeMinutes);
+        // only the deliberate actions count: the 4-minute town walks and the daily tasks, exactly; the idle standing adds
+        // nothing. (The bound "≤ 90 minutes" before this was how many of them fit between 30-minute death locks in three
+        // days; since 2026-10-13 a soul has no timer, so more fit: they are counted now instead of guessed.)
+        double deliberate = 4.0 * r.player().townVisits + r.player().minutesBySource.values().stream().mapToDouble(Double::doubleValue).sum();
+        assertTrue(r.player().townVisits > 0, "an AFK player still walks to town");
+        assertFalse(r.player().minutesBySource.containsKey("afk"), "idle time is no source of active minutes");
+        assertEquals(deliberate, r.player().activeMinutes, 1e-6, "AFK time is not active time");
     }
 
     @Test

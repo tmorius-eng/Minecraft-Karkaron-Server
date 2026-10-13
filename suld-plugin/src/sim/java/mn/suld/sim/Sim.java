@@ -792,7 +792,7 @@ public final class Sim {
         double lo = 150, hi = 900;
         for (int it = 0; it < 7; it++) {
             double mid = (lo + hi) / 2;
-            ProposedRules r = new ProposedRules(mid, ProposedRules.LockCurve.GEOMETRIC);
+            ProposedRules r = new ProposedRules().withCurveBase(mid);
             Sim s = new Sim(true, r);
             List<Engine.Result> rs = s.run(new Cell("tune", r, Profile.hardcore(), 40, 3));
             double h = pct(col(rs, x -> hoursTo(x, 60)), 0.5);

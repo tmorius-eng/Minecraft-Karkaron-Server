@@ -227,7 +227,7 @@ public final class TrainingService implements Listener, TabExecutor {
         if (pr == null) return "Профайл ачааллагдаж байна, түр хүлээгээд дахин оролдоно уу.";
         if (yard.centreOrNull() == null) return "Дасгалын талбай бэлэн биш байна.";
         if (p.isDead()) return "Амилсны дараа.";
-        if (services.isSoul != null && services.isSoul.test(id)) return "Сүнс дасгал хийхгүй: эхлээд амил (/trial эсвэл хугацаа дуусахыг хүлээ).";
+        if (services.isSoul != null && services.isSoul.test(id)) return "Сүнс дасгал хийхгүй: эхлээд амил (/trial эсвэл овооны цацал).";
         if (services.inDeathTrial.test(id)) return "Тэнгэрийн сорилын үеэр боломжгүй.";
         if (pr.classTrial() != null || services.classTrial != null && services.classTrial.inTrial(id)) return "Ангийн Сорилтын үеэр боломжгүй.";
         if (services.dungeons() != null && services.dungeons().isInAnyRun(id)) return "Агуйн дотор боломжгүй.";

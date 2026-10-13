@@ -1,6 +1,7 @@
 package mn.suld.api.persistence;
 
 import mn.suld.api.death.DeathRecord;
+import mn.suld.api.death.SoulBeacon;
 import mn.suld.api.death.Wound;
 
 import java.util.List;
@@ -32,4 +33,16 @@ public interface DeathRepository {
     CompletableFuture<Wound> wound(UUID player);
 
     CompletableFuture<Void> saveWound(UUID player, Wound wound);
+
+    /** Store a new «Сүнсний Гэрэлт» (V23 {@code suld_soul_beacons}); a second one for the same death is a no-op. */
+    CompletableFuture<Void> saveBeacon(SoulBeacon beacon);
+
+    /** The player's newest beacon that is unclaimed and still standing at {@code now}, if any. */
+    CompletableFuture<Optional<SoulBeacon>> openBeacon(UUID player, long now);
+
+    /**
+     * Claim the beacon of {@code deathId} at {@code now}: true for exactly one caller, and only while it is unclaimed
+     * and standing (a compare-and-set in storage; the refund is paid only after it).
+     */
+    CompletableFuture<Boolean> claimBeacon(UUID deathId, long now);
 }

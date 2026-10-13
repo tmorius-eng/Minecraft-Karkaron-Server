@@ -1,6 +1,7 @@
 package mn.suld.plugin.persistence;
 
 import mn.suld.api.death.DeathRecord;
+import mn.suld.api.death.SoulBeacon;
 import mn.suld.api.death.Wound;
 import mn.suld.api.persistence.DeathRepository;
 import mn.suld.api.persistence.RepositoryException;
@@ -142,6 +143,74 @@ public final class JdbcDeathRepository implements DeathRepository {
                 ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RepositoryException("save wound " + player, e);
+            }
+        }, executor);
+    }
+
+    // ---- «Сүнсний Гэрэлт» (V23) ---------------------------------------------------------------------------------
+
+    @Override
+    public CompletableFuture<Void> saveBeacon(SoulBeacon b) {
+        return CompletableFuture.runAsync(() -> {
+            String sql = switch (dialect) {
+                case POSTGRESQL -> "INSERT INTO suld_soul_beacons (death_id, player_uuid, world, x, y, z, exp_lost, created_at, expires_at, claimed_at) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (death_id) DO NOTHING";
+                // MySQL/H2: a second insert of the same death leaves the stored row as it is
+                case MYSQL -> "INSERT INTO suld_soul_beacons (death_id, player_uuid, world, x, y, z, exp_lost, created_at, expires_at, claimed_at) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE death_id = death_id";
+            };
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindUuid(ps, 1, b.deathId());
+                bindUuid(ps, 2, b.player());
+                ps.setString(3, b.world());
+                ps.setInt(4, b.x());
+                ps.setInt(5, b.y());
+                ps.setInt(6, b.z());
+                ps.setLong(7, b.expLost());
+                ps.setLong(8, b.createdAt());
+                ps.setLong(9, b.expiresAt());
+                if (b.claimedAt() == null) ps.setNull(10, Types.BIGINT);
+                else ps.setLong(10, b.claimedAt());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RepositoryException("save beacon " + b.deathId(), e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public CompletableFuture<Optional<SoulBeacon>> openBeacon(UUID player, long now) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                    "SELECT death_id, player_uuid, world, x, y, z, exp_lost, created_at, expires_at, claimed_at FROM suld_soul_beacons "
+                            + "WHERE player_uuid = ? AND claimed_at IS NULL AND expires_at > ? ORDER BY created_at DESC")) {
+                bindUuid(ps, 1, player);
+                ps.setLong(2, now);
+                ps.setMaxRows(1);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) return Optional.<SoulBeacon>empty();
+                    long claimed = rs.getLong(10);
+                    Long claimedAt = rs.wasNull() ? null : claimed;
+                    return Optional.of(new SoulBeacon(uuid(rs, 1), uuid(rs, 2), rs.getString(3), rs.getInt(4), rs.getInt(5), rs.getInt(6),
+                            rs.getLong(7), rs.getLong(8), rs.getLong(9), claimedAt));
+                }
+            } catch (SQLException e) {
+                throw new RepositoryException("load beacon " + player, e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> claimBeacon(UUID deathId, long now) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE suld_soul_beacons SET claimed_at = ? WHERE death_id = ? AND claimed_at IS NULL AND expires_at > ?")) {
+                ps.setLong(1, now);
+                bindUuid(ps, 2, deathId);
+                ps.setLong(3, now);
+                return ps.executeUpdate() == 1;
+            } catch (SQLException e) {
+                throw new RepositoryException("claim beacon " + deathId, e);
             }
         }, executor);
     }

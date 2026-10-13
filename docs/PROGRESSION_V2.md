@@ -9,15 +9,17 @@ Status of everything below: **MANUAL_QA_REQUIRED** (bots and simulation, not yet
 
 ## Measured (full simulate, `./gradlew :suld-plugin:simulate`)
 
-* Live hardcore p50: **147 active hours to level 60** since the 30-minute death-lock cap (2026-10-12; was 207 h with
-  the 24-hour lock). The owner accepted ~146 h as the target; L1 now checks 130–170 h (PASS). The proposed design
-  takes 179 h (C1, a reference model, FAILs its 130–170 h band). With Act II (42 chapters) the live curve base is
-  242 (`Balance.CURVE_BASE`, curve version 3); the design's 315 (`Balance.DESIGN_BASE`) also counts band raids and a
-  world boss.
-* Classes, live: Баатар 154 h, Мэргэн 138 h, Бөө 167 h, Дархан 148 h, Хүлэгчин 121 h. With the short lock the spread
-  widened: Хүлэгчин is ~18 % faster and Бөө ~13 % slower than the median (was ±10 % in M2) — a class-balance follow-up.
-* L1–L10 pass except **L9**: a live hardcore player reaches 60 around day 20 and then waits on the Ascension I–III
-  gates, so 87 % (not 90 %) of the first 30 days bring a milestone. C2–C13 pass (C9 at 90 %).
+* Live hardcore p50: **147 active hours to level 60** (full run of 2026-10-13, after the death reform: no timed lock,
+  levels 1–10 free, the beam's 70 % refund; it was 147.4 h with the 30-minute lock cap of 2026-10-12, and 207 h with
+  the 24-hour lock). The owner accepted ~146 h as the target; L1 checks 130–170 h (PASS). The proposed design takes
+  178 h (C1, a reference model, FAILs its 130–170 h band). With Act II (42 chapters) the live curve base is 242
+  (`Balance.CURVE_BASE`, curve version 3); the design's 315 (`Balance.DESIGN_BASE`) also counts band raids and a world
+  boss.
+* Classes, live: Баатар 148 h, Мэргэн 132 h, Бөө 159 h, Дархан 149 h, Хүлэгчин 136 h (median 148 h: Мэргэн −11 %,
+  Бөө +7 %).
+* L1–L10 all pass (L9 at 97 %). Of the reference model's checks, C1 and **C9** fail: with the death reform modelled the
+  same way (no lock to slow the reference player), 88 % (was 90 %) of its hardcore player's first 30 days bring a
+  milestone. C2–C8 and C10–C13 pass.
 * The simulator's per-class hours move a few percent with any small change, because the simulated player's choices
   flip. With spells counted as a flat share of hits, a share of 0.2 gave Баатар 201 h, 0.3 gave 214 h, 0.45 gave 198 h
   and 1.0 gave 162 h. M2's spell model (gear and tree spell damage, Бөө's trait, ranks, the fifth spell) raised DPS at

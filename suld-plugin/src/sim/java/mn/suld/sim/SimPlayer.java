@@ -45,6 +45,7 @@ public final class SimPlayer {
     public long coinsSpent;
     public final Map<String, Integer> materials = new HashMap<>();
     public long bagValue; // sale value of unequipped drops waiting for a town visit
+    public int townVisits; // the 4-minute walks to town (the only active time of an AFK player with the tracker)
     public int salvaged, crafted, reforges, tempers;
     public int temper; // proposed post-60 tempering on all worn gear, 0..10
 

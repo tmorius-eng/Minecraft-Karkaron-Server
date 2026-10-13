@@ -56,7 +56,12 @@ public final class SuldConfigFactory {
                 view.getDouble("death.wound.max", dd.woundMax()),
                 view.getInt("death.wound.heal-minutes", dd.woundHealMinutes()),
                 view.getInt("death.lock.newbie-levels", dd.newbieLevels()),
-                view.getDouble("death.lock.newbie-minutes", dd.newbieLockMinutes()));
+                view.getDouble("death.lock.newbie-minutes", dd.newbieLockMinutes()),
+                view.getInt("death.beginner-levels", dd.beginnerLevels()),
+                lockMode(view.getString("death.lock.mode", dd.lockMode().name()), dd.lockMode()),
+                view.getDouble("death.beacon.minutes", dd.beaconMinutes()),
+                view.getDouble("death.beacon.refund", dd.beaconRefund()),
+                view.getInt("death.ritual-seconds", dd.ritualSeconds()));
 
         AnalyticsSettings ad = d.analytics();
         AnalyticsSettings.Sink sink;
@@ -148,6 +153,14 @@ public final class SuldConfigFactory {
                 view.getInt("chronicle.hall-entries", chd.hallEntries()));
 
         return new SuldConfig(locale, progression, database, death, analytics, resourcePack, social, auth, relics, world, pvp, campaign, chronicle);
+    }
+
+    private static mn.suld.api.death.DeathLock.Mode lockMode(String v, mn.suld.api.death.DeathLock.Mode fallback) {
+        try {
+            return mn.suld.api.death.DeathLock.Mode.valueOf(v.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (RuntimeException ex) {
+            return fallback;
+        }
     }
 
     private static mn.suld.api.death.DeathLock.Curve lockCurve(String v, mn.suld.api.death.DeathLock.Curve fallback) {

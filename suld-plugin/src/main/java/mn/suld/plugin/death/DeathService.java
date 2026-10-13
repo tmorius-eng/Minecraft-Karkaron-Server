@@ -68,15 +68,21 @@ import java.util.concurrent.TimeUnit;
  * The hardcore death system (docs/DEATH_AND_RECOVERY.md; {@code death:} in config.yml).
  *
  * <ul>
+ *   <li><b>Beginners</b> (level ≤ {@code death.beginner-levels}, no Ascension; reform of 2026-10-13): a death costs
+ *       nothing — every stack kept, no EXP, no wear, no soul, no wound.</li>
  *   <li><b>Cost</b> ({@link DeathRules}): soulbound gear is always kept; a fraction of the other stacks drops; a
  *       fraction of the progress into the current level is lost (never a level); kept gear wears.</li>
- *   <li><b>Lock</b>: every death is a persisted {@link DeathRecord} ({@code suld_death_state}). The player is a
- *       <b>Сүнс</b> (soul) until {@code locked_until} — a real-world timestamp that grows with level
- *       ({@link DeathLock}); restarts, reconnects and offline time do not change it. A soul cannot fight, be hurt,
- *       loot, build, open containers, cast, ride, enter dungeons or trade; chat, menus and NPCs work.</li>
- *   <li><b>Wound</b>: when the lock ends, the class gear carries one more {@link Wound} step (−5 % effective stats,
- *       at most −15 %, through {@code Equipment.Wearer.boundFactor}). Each step heals after active play
- *       ({@code death.wound.heal-minutes} active minutes, validated by the ActivePlaytime tracker).</li>
+ *   <li><b>Soul</b>: every death is a persisted {@link DeathRecord} ({@code suld_death_state}). The player is a
+ *       <b>Сүнс</b> (soul) until {@code locked_until}. Since 2026-10-13 ({@code death.lock.mode: UNTIL_RECOVERY})
+ *       that is {@link DeathRecord#UNTIL_RECOVERY}: no timer, the soul comes back by acting — «Тэнгэрийн сорил»
+ *       ({@link DeathTrialService}), the ovoo ritual (OvooService) or staff. The soul rises beside the ovoo nearest
+ *       to where it fell, and the {@link SoulBeaconService} beam at that spot gives back part of the lost EXP. In
+ *       {@code TIMED} mode the old real-world timestamp of the {@link DeathLock} curve applies. A soul cannot fight,
+ *       be hurt, loot, build, open containers, cast, ride, enter dungeons or trade; chat, menus and NPCs work.</li>
+ *   <li><b>Wound</b>: when the soul state ends, the class gear carries one more {@link Wound} step (−5 % effective
+ *       stats, at most −15 %, through {@code Equipment.Wearer.boundFactor}). Each step heals after active play
+ *       ({@code death.wound.heal-minutes} active minutes, validated by the ActivePlaytime tracker); a Сүнсний
+ *       Хэлтэрхий from a won trial heals part of it at once.</li>
  * </ul>
  * Admin actions ({@code /deathrevive}, {@code /deathreset}) are audited. There is no paid path.
  */
@@ -103,6 +109,11 @@ public final class DeathService implements Listener {
     private final Map<UUID, BossBar> bars = new ConcurrentHashMap<>();
     /** What the last death cost, shown after respawn. */
     private final Map<UUID, Component> summaries = new ConcurrentHashMap<>();
+    /** Where a soul without a timer fell: it rises beside the nearest ovoo (read once, at the respawn). */
+    private final Map<UUID, Location> fellAt = new ConcurrentHashMap<>();
+
+    /** «Сүнсний Гэрэлт» (set by SuldPlugin): the beam where a player fell. */
+    public volatile SoulBeaconService beacons;
 
     public DeathService(Plugin plugin, SuldServices services) {
         this.WHEN = DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(services.zone());
@@ -175,6 +186,10 @@ public final class DeathService implements Listener {
         }
         if (until <= System.currentTimeMillis()) {
             recover(p.getUniqueId(), DeathRecord.State.RECOVERED, "system");
+        } else if (until == DeathRecord.UNTIL_RECOVERY) {
+            enterSoul(p, until);
+            p.sendMessage(Messages.error("Та сүнс хэвээр байна. Амилах: /trial (Тэнгэрийн сорил) эсвэл ойрын овоог нар зөв "
+                    + "гурвантаа тойрч цацал өргө."));
         } else {
             enterSoul(p, until);
             p.sendMessage(Messages.error("Та үхсэн хэвээр байна. Сэргэх: " + WHEN.format(Instant.ofEpochMilli(until))
@@ -190,6 +205,16 @@ public final class DeathService implements Listener {
         if (!s.enabled() || e.getKeepInventory()) return;
         Player p = e.getEntity();
         services.session(p.getUniqueId()).deaths++;
+        // SÜLD progression replaces vanilla EXP: no orbs, keep the vanilla bar (the HUD drives it).
+        e.setDroppedExp(0);
+        e.setKeepLevel(true);
+        PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
+        int level = profile == null ? 1 : profile.progression().level();
+        int ascension = profile == null ? 0 : profile.ascension(); // an ascended character's lock is the longest
+        if (profile != null && DeathRules.protectedDeath(level, ascension, s)) {
+            protectedDeath(e, p, level, ascension, s);
+            return;
+        }
 
         // Everything still in the drop list at HIGHEST (relics are already taken out by the relic system) is either
         // soulbound (kept), lost (dropped) or kept.
@@ -216,15 +241,9 @@ public final class DeathService implements Listener {
         drops.addAll(dropped);
         e.getItemsToKeep().addAll(keep);
 
-        // SÜLD progression replaces vanilla EXP: no orbs, keep the vanilla bar (the HUD drives it).
-        e.setDroppedExp(0);
-        e.setKeepLevel(true);
         long expLost = 0;
-        int level = 1;
-        PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (profile != null) {
             Progression before = profile.progression();
-            level = before.level();
             Progression after = DeathRules.afterDeath(before, s);
             expLost = before.expIntoLevel() - after.expIntoLevel();
             if (expLost > 0) {
@@ -236,26 +255,86 @@ public final class DeathService implements Listener {
         }
 
         long now = System.currentTimeMillis();
-        int ascension = profile == null ? 0 : profile.ascension(); // an ascended character's lock is the longest
-        long lockMs = s.allowFreeRevive() ? Math.max(s.soulStateSeconds() * 1000L, DeathLock.millis(s, level, ascension)) : FOREVER;
-        long until = now + lockMs;
-        lock(p, level, ascension, now, until, cause(p));
+        // a soul without a timer (2026-10-13): it comes back by «Тэнгэрийн сорил», the ovoo ritual or staff
+        boolean untimed = s.untilRecovery() && s.allowFreeRevive();
+        long lockMs = untimed ? 0 : s.allowFreeRevive() ? Math.max(s.soulStateSeconds() * 1000L, DeathLock.millis(s, level, ascension)) : FOREVER;
+        long until = untimed ? DeathRecord.UNTIL_RECOVERY : now + lockMs;
+        Location where = p.getLocation();
+        UUID deathId = lock(p, level, ascension, now, until, cause(p));
+        SoulBeaconService b = beacons;
+        // a soul cannot walk back into a hall (it is closed to it afterwards): the beam stands at the gate it is sent to
+        mn.suld.plugin.dungeon.DungeonHalls halls = services.dungeons().halls().orElse(null);
+        Location beamAt = halls != null && halls.inHalls(where) ? halls.exitFor(p.getUniqueId()) : where;
+        mn.suld.api.death.SoulBeacon beacon = b == null || expLost <= 0 ? null : b.place(p, deathId, beamAt, expLost);
+        if (untimed) fellAt.put(p.getUniqueId(), where.clone());
 
         int droppedItems = dropped.stream().mapToInt(ItemStack::getAmount).sum();
         Wound next = wound(p.getUniqueId()).add(s);
         Component summary = Component.text("☠ Үхлийн үнэ: ", NamedTextColor.RED, TextDecoration.BOLD)
                 .append(Component.text("-" + expLost + " EXP", NamedTextColor.WHITE, TextDecoration.BOLD))
                 .append(Component.text(" · " + dropped.size() + " багц (" + droppedItems + " ш) унасан", NamedTextColor.WHITE, TextDecoration.BOLD))
-                .append(Component.text(worn > 0 ? " · " + worn + " хэрэгсэл элэгдсэн" : "", NamedTextColor.WHITE, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.text("⌛ Сэргэх: ", SOUL, TextDecoration.BOLD))
-                .append(Component.text(s.allowFreeRevive() ? WHEN.format(Instant.ofEpochMilli(until)) + " (" + DeathLock.format(lockMs) + ")"
-                        : "админ амилуулна", NamedTextColor.WHITE))
-                .append(Component.text(" · дараа нь ангийн хуяг/зэвсэг −" + next.percent(s) + " % (шарх, идэвхтэй тоглолтоор эдгэнэ)",
-                        NamedTextColor.GRAY));
+                .append(Component.text(worn > 0 ? " · " + worn + " хэрэгсэл элэгдсэн" : "", NamedTextColor.WHITE, TextDecoration.BOLD));
+        if (beacon != null) {
+            summary = summary.append(Component.newline())
+                    .append(Component.text("✦ Сүнсний Гэрэлт: ", SOUL, TextDecoration.BOLD))
+                    .append(Component.text((beamAt == where ? "унасан газарт тань " : "агуйн хаалган дээр ") + Math.round(s.beaconMinutes()) + " минут гэрэлтэнэ — хүрвэл +"
+                            + beacon.refund(s) + " EXP буцна (алдсаны " + Math.round(s.beaconRefund() * 100) + " %).", NamedTextColor.WHITE));
+        }
+        summary = summary.append(Component.newline());
+        if (untimed) {
+            summary = summary.append(Component.text("⌛ Амилах: ", SOUL, TextDecoration.BOLD))
+                    .append(Component.text("/trial — Тэнгэрийн сорил, эсвэл овоог нар зөв гурвантаа тойрч цацал өргө (" + s.ritualSeconds() + " с)",
+                            NamedTextColor.WHITE));
+        } else {
+            summary = summary.append(Component.text("⌛ Сэргэх: ", SOUL, TextDecoration.BOLD))
+                    .append(Component.text(s.allowFreeRevive() ? WHEN.format(Instant.ofEpochMilli(until)) + " (" + DeathLock.format(lockMs) + ")"
+                            : "админ амилуулна", NamedTextColor.WHITE));
+        }
+        summary = summary.append(Component.text(" · дараа нь ангийн хуяг/зэвсэг −" + next.percent(s) + " % (шарх, идэвхтэй тоглолтоор эдгэнэ)",
+                NamedTextColor.GRAY));
         summaries.put(p.getUniqueId(), summary);
-        services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of("player_death", p.getUniqueId(),
-                Map.<String, Object>of("exp_lost", expLost, "stacks_dropped", dropped.size(), "lock_ms", lockMs, "level", level)));
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("exp_lost", expLost);
+        data.put("stacks_dropped", dropped.size());
+        data.put("lock_ms", untimed ? -1L : lockMs); // -1: no timer, the soul comes back by acting
+        data.put("level", level);
+        data.put("beacon", beacon != null);
+        services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of("player_death", p.getUniqueId(), data));
+    }
+
+    /**
+     * A beginner's death (level ≤ {@code death.beginner-levels}, no Ascension; owner 2026-10-13: «бүгд хамгаалагдана»):
+     * nothing is lost — every stack is kept as it is (no wear), no EXP, no soul, no wound. Relics are already out of the
+     * drop list (they go home as on any death). It is still stored, closed at once, so the history and the funnel's
+     * first death see it.
+     */
+    private void protectedDeath(PlayerDeathEvent e, Player p, int level, int ascension, DeathSettings s) {
+        List<ItemStack> drops = e.getDrops();
+        for (ItemStack it : drops) {
+            if (it != null && !it.getType().isAir()) e.getItemsToKeep().add(it);
+        }
+        drops.clear();
+        UUID id = p.getUniqueId();
+        long now = System.currentTimeMillis();
+        Location l = p.getLocation();
+        String cause = cause(p);
+        DeathRecord rec = new DeathRecord(UUID.randomUUID(), id, 0, now, now, l.getWorld() == null ? "" : l.getWorld().getName(),
+                l.getBlockX(), l.getBlockY(), l.getBlockZ(), cause, level, ascension, wound(id).stacks(), DeathRecord.State.RECOVERED, now, 0);
+        CompletableFuture<DeathRecord> prev = locks.get(id); // one write at a time per player (the death number)
+        (prev == null ? CompletableFuture.<DeathRecord>completedFuture(null) : prev.exceptionally(ex -> null))
+                .thenCompose(x -> repo.insert(rec))
+                .whenComplete((r, ex) -> {
+                    if (ex != null) plugin.getLogger().warning("protected death of " + p.getName() + " not stored: " + ex);
+                    else if (r != null && r.seq() == 1) services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(
+                            mn.suld.api.analytics.AnalyticsEventType.FIRST_DEATH, id, Map.<String, Object>of("level", level, "cause", cause)));
+                });
+        summaries.put(id, Component.text("❤ Шинэ баатрын хамгаалалт: ", NamedTextColor.GREEN, TextDecoration.BOLD)
+                .append(Component.text("юу ч алдсангүй — EXP, эд зүйл, хуяг бүтэн, сүнс болохгүй.", NamedTextColor.WHITE, TextDecoration.BOLD))
+                .append(Component.newline())
+                .append(Component.text(s.beginnerLevels() + "-р түвшин хүртэл үхэл үнэгүй. " + (s.beginnerLevels() + 1)
+                        + "-ээс: EXP-ийн хэсэг, зарим эд зүйл, шарх; сүнс /trial эсвэл овооны цацлаар амилна.", NamedTextColor.GRAY)));
+        services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of("player_death", id,
+                Map.<String, Object>of("exp_lost", 0L, "stacks_dropped", 0, "lock_ms", 0L, "level", level, "protected", true)));
     }
 
     private static String cause(Player p) {
@@ -270,8 +349,8 @@ public final class DeathService implements Listener {
         return c;
     }
 
-    /** Store the lock (async, ordered); the in-memory state is authoritative for this server right away. */
-    private void lock(Player p, int level, int ascension, long now, long until, String cause) {
+    /** Store the lock (async, ordered); the in-memory state is authoritative for this server right away. Returns its id. */
+    private UUID lock(Player p, int level, int ascension, long now, long until, String cause) {
         UUID id = p.getUniqueId();
         Location l = p.getLocation();
         DeathRecord rec = new DeathRecord(UUID.randomUUID(), id, 0, now, until, l.getWorld() == null ? "" : l.getWorld().getName(),
@@ -292,13 +371,17 @@ public final class DeathService implements Listener {
         });
         locks.put(id, stored);
         lockedUntil.put(id, until);
+        DeathTrialService t = trial;
+        if (t != null) t.forget(id); // a new death: no earlier trial speaks for it
+        return rec.deathId();
     }
 
-    /** Class weapons, armour and the menu item never drop. */
+    /** Class weapons, armour, the menu item and a Сүнсний Хэлтэрхий (bound to its winner) never drop. */
     private boolean isSoulbound(ItemStack it) {
         if (it.hasItemMeta() && it.getItemMeta().getPersistentDataContainer().has(menuKey, PersistentDataType.BYTE)) {
             return true;
         }
+        if (SoulShardService.isShard(it)) return true;
         ItemInstance ii = services.items().read(it).orElse(null);
         if (ii == null) {
             // vanilla armour without a SÜLD document (not SÜLD loot) keeps the old rule
@@ -328,6 +411,22 @@ public final class DeathService implements Listener {
 
     // ---- soul state --------------------------------------------------------------------------------------------
 
+    /**
+     * A soul without a timer rises beside the ovoo nearest to where it fell (2026-10-13): the beam at that spot is a
+     * walk away, the ovoo ritual is right there, and the trial can be called anywhere outside the city. A death in the
+     * city, in the halls (DungeonHalls sends the soul to the gate) or in another world keeps the usual respawn.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onSoulRise(PlayerRespawnEvent e) {
+        Player p = e.getPlayer();
+        Location fell = fellAt.remove(p.getUniqueId());
+        if (fell == null || fell.getWorld() == null || !fell.getWorld().equals(Bukkit.getWorlds().get(0))) return;
+        if (!isSoul(p.getUniqueId()) || services.inCity(fell)) return;
+        mn.suld.plugin.region.OvooService ovoos = services.ovoos;
+        Location rise = ovoos == null ? null : ovoos.soulRise(fell);
+        if (rise != null) e.setRespawnLocation(rise);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent e) {
         DeathSettings s = settings();
@@ -350,10 +449,11 @@ public final class DeathService implements Listener {
         p.showBossBar(bar);
         updateBar(p, bar, until);
         boolean forever = until - System.currentTimeMillis() > FOREVER / 2;
+        String sub = until == DeathRecord.UNTIL_RECOVERY ? "/trial эсвэл овоонд цацал өргөж амил"
+                : forever ? "Админ таныг амилуулахыг хүлээ" : "Сүнс тань " + DeathLock.format(until - System.currentTimeMillis()) + " дараа буцна";
         p.showTitle(Title.title(
                 Component.text("ТА УНАЛАА", SOUL, TextDecoration.BOLD),
-                Component.text(forever ? "Админ таныг амилуулахыг хүлээ" : "Сүнс тань " + DeathLock.format(until - System.currentTimeMillis()) + " дараа буцна",
-                        NamedTextColor.WHITE, TextDecoration.BOLD),
+                Component.text(sub, NamedTextColor.WHITE, TextDecoration.BOLD),
                 Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(4), Duration.ofMillis(700))));
         p.playSound(p.getLocation(), Sound.PARTICLE_SOUL_ESCAPE, 1f, 0.8f);
     }
@@ -371,7 +471,20 @@ public final class DeathService implements Listener {
     }
 
     private void updateBar(Player p, BossBar bar, long until) {
-        long left = Math.max(0, until - System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        long left = Math.max(0, until - now);
+        if (until == DeathRecord.UNTIL_RECOVERY) {
+            // no timer: the bar says how to come back, and while the beam stands, where it is and how long it stays
+            SoulBeaconService b = beacons;
+            mn.suld.api.death.SoulBeacon beacon = b == null ? null : b.of(p.getUniqueId());
+            String where = beacon == null ? null : b.status(p);
+            DeathTrialService t = trial;
+            String trialState = t != null && t.state(p.getUniqueId()) == mn.suld.api.death.SpiritTrialState.FAILED ? " · сорил бүтсэнгүй, дахин /trial" : "";
+            bar.name(Component.text("☠ Сүнс — /trial эсвэл овооны цацал" + (where == null ? trialState : " · " + where), SOUL, TextDecoration.BOLD));
+            bar.progress(beacon == null ? 1f
+                    : Math.max(0f, Math.min(1f, beacon.remaining(now) / (float) Math.max(1, beacon.expiresAt() - beacon.createdAt()))));
+            return;
+        }
         if (left > FOREVER / 2) {
             bar.name(Component.text("☠ Сүнс — админ амилуулахыг хүлээж байна", SOUL, TextDecoration.BOLD));
             bar.progress(1f);
@@ -426,6 +539,27 @@ public final class DeathService implements Listener {
             p.sendMessage(Messages.success(healed.stacks() == 0 ? "Шарх бүрэн эдгэлээ — ангийн хуяг, зэвсэг бүрэн хүчтэй."
                     : "Шарх эдгэж байна: одоо −" + healed.percent(s) + " %."));
         }
+    }
+
+    /**
+     * A Сүнсний Хэлтэрхий used: {@code minutes} of active-play healing at once. The wound is stored now (the caller has
+     * already put the spent shard on disk, so a crash between the two can only lose the healing, never repeat it).
+     */
+    public Wound healWound(Player p, double minutes) {
+        UUID id = p.getUniqueId();
+        Wound w = wounds.getOrDefault(id, Wound.NONE);
+        if (w.stacks() == 0 || minutes <= 0) return w;
+        Wound healed = w.heal(settings(), minutes);
+        wounds.put(id, healed);
+        dirtyWounds.remove(id);
+        repo.saveWound(id, healed).whenComplete((v, ex) -> {
+            if (ex != null) {
+                dirtyWounds.add(id); // the minute flush tries again
+                plugin.getLogger().warning("wound of " + id + " not saved: " + ex);
+            }
+        });
+        if (healed.stacks() < w.stacks()) services.equipment().dirty(p);
+        return healed;
     }
 
     private void flushWounds() {
@@ -650,7 +784,14 @@ public final class DeathService implements Listener {
         String name = c == null ? label : c.getName().toLowerCase(java.util.Locale.ROOT);
         if (SOUL_COMMANDS.contains(name) || SOUL_COMMANDS.contains(label)) return;
         e.setCancelled(true);
-        p.sendMessage(Messages.error("Сүнс байхдаа энэ тушаалыг ашиглахгүй. Сэргэх хүртэл: " + DeathLock.format(lockRemaining(p.getUniqueId()))));
+        p.sendMessage(Messages.error("Сүнс байхдаа энэ тушаалыг ашиглахгүй. " + wayBack(p.getUniqueId())));
+    }
+
+    /** How a soul comes back, for the refusals: «Амилах: /trial …» or, with a timer, how long is left. */
+    private String wayBack(UUID id) {
+        Long until = lockedUntil.get(id);
+        if (until != null && until == DeathRecord.UNTIL_RECOVERY) return "Амилах: /trial эсвэл овооны цацал.";
+        return "Сэргэх хүртэл: " + DeathLock.format(lockRemaining(id));
     }
 
     /** What a soul may still run: death and revive, chat and messages, help and reading its own state. */
@@ -668,7 +809,7 @@ public final class DeathService implements Listener {
         if (e.getInventory().getHolder() instanceof mn.suld.plugin.gui.Menu) return;
         if (e.getInventory().getHolder() instanceof mn.suld.plugin.gui.ClassSelectionHolder) return;
         e.setCancelled(true);
-        p.sendMessage(Messages.error("Сүнс эд зүйлд хүрч чадахгүй. Сэргэх хүртэл: " + DeathLock.format(lockRemaining(p.getUniqueId()))));
+        p.sendMessage(Messages.error("Сүнс эд зүйлд хүрч чадахгүй. " + wayBack(p.getUniqueId())));
     }
 
     @EventHandler
@@ -677,6 +818,7 @@ public final class DeathService implements Listener {
         BossBar bar = bars.remove(id);
         if (bar != null) e.getPlayer().hideBossBar(bar);
         summaries.remove(id);
+        fellAt.remove(id);
         if (dirtyWounds.remove(id)) repo.saveWound(id, wound(id));
         // keep the lock and the wound cached: the timestamp keeps running, and a quick rejoin reuses them
     }

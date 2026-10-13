@@ -385,9 +385,10 @@ public final class Engine {
         return lock * prof.hoursPerDay() / 24 + s / 2 * (1 - prof.hoursPerDay() / 24);
     }
 
-    private double deathCost(double expPerMin) {
+    private double deathCost(double expPerMin, String where) {
+        if (r.deathProtected(p.level, p.ascension)) return r.protectedDeathMinutes() * expPerMin;
         double lock = r.deathLockMinutes(p.level, p.ascension);
-        double bar = r.deathBarLoss() * p.expInto;
+        double bar = r.deathBarLoss() * p.expInto * (1 - r.deathRefund(where));
         double wound = r.woundPerDeath() > 0 ? 0.05 * r.woundHealHours() * 60 * expPerMin * 0.5 : 0;
         return lostPlayMinutes(lock) * expPerMin + bar + wound;
     }
@@ -413,7 +414,7 @@ public final class Engine {
         perMin = Math.min(perMin, exp * expMultiplier(true) * 18); // spawn ceiling: 18 kills per minute
         if (rawExpOnly) return perMin;
         double hazPerMin = haz / Math.max(1e-6, time);
-        double v = perMin - hazPerMin * deathCost(perMin);
+        double v = perMin - hazPerMin * deathCost(perMin, "grind:" + z.id());
         if (worst > prof.dangerTolerance() * 1.6) v *= 0.2; // players do not willingly farm what kills them
         return v;
     }
@@ -539,7 +540,7 @@ public final class Engine {
         if (pr == null && p.level >= 60) lootValue = 0.03 * need() * useful; // live endgame = loot farming
         double v = (exp * ok * expWorth() + lootValue + first) / rp.minutes;
         double hazPerMin = (1 - rp.alive) / rp.minutes;
-        return v - hazPerMin * deathCost(v);
+        return v - hazPerMin * deathCost(v, "dungeon:" + d.id());
     }
 
     // ================================================================================================= activities
@@ -990,6 +991,7 @@ public final class Engine {
     private void town() {
         sinceTown = 0;
         afkFatigueKills = 0;
+        p.townVisits++;
         t += 4;
         p.activeMinutes += 4;
         todayActive += 4;
@@ -1333,7 +1335,14 @@ public final class Engine {
     private void die(String where) {
         p.deaths++;
         p.deathsBy.merge(where.contains(":") ? where.substring(0, where.indexOf(':')) + "@L" + (p.level / 10 * 10) : where, 1, Integer::sum);
+        if (r.deathProtected(p.level, p.ascension)) { // a beginner loses nothing: respawn and walk back
+            double back = r.protectedDeathMinutes();
+            p.lockUntil = t + back;
+            p.lockedMinutes += Math.min(back, Math.max(0, end - t));
+            return;
+        }
         long lost = Math.round(p.expInto * r.deathBarLoss());
+        lost -= (long) Math.floor(lost * r.deathRefund(where)); // the beam's share, walked back to
         p.expInto -= lost;
         p.expLostToDeath += lost;
         for (Map.Entry<String, Integer> e : p.materials.entrySet()) e.setValue((int) Math.floor(e.getValue() * (1 - r.deathMaterialLoss())));

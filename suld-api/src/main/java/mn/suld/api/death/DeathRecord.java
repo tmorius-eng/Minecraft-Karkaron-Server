@@ -22,8 +22,19 @@ public record DeathRecord(UUID deathId, UUID player, int seq, long diedAt, long 
         world = world == null ? "" : world.length() > 64 ? world.substring(0, 64) : world;
     }
 
+    /**
+     * {@code lockedUntil} of a soul without a timer ({@code death.lock.mode: UNTIL_RECOVERY}): it stays a soul until
+     * «Тэнгэрийн сорил», the ovoo ritual or staff end it.
+     */
+    public static final long UNTIL_RECOVERY = Long.MAX_VALUE;
+
     public boolean locked() {
         return state == State.LOCKED;
+    }
+
+    /** True for a soul that has no timer: it comes back only by acting (or staff). */
+    public boolean untilRecovery() {
+        return lockedUntil == UNTIL_RECOVERY;
     }
 
     /** Time left of the lock at {@code now} (0 once over or not locked). */

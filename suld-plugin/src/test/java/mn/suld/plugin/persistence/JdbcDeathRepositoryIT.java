@@ -1,6 +1,7 @@
 package mn.suld.plugin.persistence;
 
 import mn.suld.api.death.DeathRecord;
+import mn.suld.api.death.SoulBeacon;
 import mn.suld.api.death.Wound;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,5 +78,34 @@ class JdbcDeathRepositoryIT {
         assertEquals(new Wound(2, 37.5), repo.wound(p).join());
         repo.saveWound(p, Wound.NONE).join();
         assertEquals(Wound.NONE, repo.wound(p).join());
+    }
+
+    /** «Сүнсний Гэрэлт» (V23): stored once per death, open until it fades, claimed by exactly one of many callers. */
+    @Test
+    void aSoulBeaconIsClaimedOnceAndOnlyWhileItStands() throws Exception {
+        UUID p = UUID.randomUUID(), death = UUID.randomUUID();
+        SoulBeacon b = new SoulBeacon(death, p, "world", 120, 70, -40, 900, 1_000, 601_000, null);
+        repo.saveBeacon(b).join();
+        repo.saveBeacon(new SoulBeacon(death, p, "world", 0, 0, 0, 5, 1_000, 2_000, null)).join(); // the same death again: no-op
+        SoulBeacon read = repo.openBeacon(p, 10_000).join().orElseThrow();
+        assertEquals(900, read.expLost(), "the first beacon of a death stands");
+        assertEquals(120, read.x());
+        assertTrue(repo.openBeacon(p, 601_000).join().isEmpty(), "gone once it fades");
+        assertFalse(repo.claimBeacon(death, 601_000).join(), "a faded beacon cannot be claimed");
+
+        // 24 claims at once on 8 storage threads (real concurrent UPDATEs): exactly one wins
+        ExecutorService pool = Executors.newFixedThreadPool(8);
+        try {
+            JdbcDeathRepository many = new JdbcDeathRepository(ds, testDb.dialect(), pool);
+            java.util.List<java.util.concurrent.CompletableFuture<Boolean>> claims = new java.util.ArrayList<>();
+            for (int i = 0; i < 24; i++) claims.add(many.claimBeacon(death, 20_000));
+            int won = 0;
+            for (var f : claims) if (f.join()) won++;
+            assertEquals(1, won, "the refund is paid to one claim only");
+        } finally {
+            pool.shutdownNow();
+        }
+        assertTrue(repo.openBeacon(p, 30_000).join().isEmpty(), "claimed: no longer open");
+        assertFalse(repo.claimBeacon(UUID.randomUUID(), 20_000).join(), "an unknown death has no beacon");
     }
 }

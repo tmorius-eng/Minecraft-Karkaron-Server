@@ -28,6 +28,7 @@ RUNS=(
   "masterybot|$CTL $PORT"
   "trialbot|$CTL $PORT"
   "trial-lockend|$CTL $PORT"
+  "soulreform|$CTL $PORT"
   "trialclassbot:baatar|$CTL $PORT 10"
   "trialclassbot:mergen|$CTL $PORT 11"
   "trialclassbot:boo|$CTL $PORT 12"

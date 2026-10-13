@@ -35,10 +35,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * «Тэнгэрийн сорил» ({@code /trial}, docs/DEATH_AND_RECOVERY.md): a soul calls three spirit wolves where it stands and
- * fights them. Win in time → the lock ends now (state RECOVERED, actor "trial", the wound still applies). Time out, fall
- * or leave → the wolves vanish and the soul waits out its lock or tries again after the cooldown. The wolves are vanilla
- * wolves tagged for one soul: no SÜLD mob, so no loot, EXP, quest, task or campaign credit; nobody else can hit them and
- * they bite nobody else. During the trial {@link DeathService} lets the soul fight them and be bitten (never below 1 HP).
+ * fights them. Win in time → the soul state ends now (state RECOVERED, actor "trial", the wound still applies) and a
+ * {@link SoulShardService Сүнсний Хэлтэрхий} lands in the bag. Time out, fall or leave → the wolves vanish; since
+ * 2026-10-13 there is no wait: the soul may call them again at once, or walk the ovoo ritual instead. The wolves are
+ * vanilla wolves tagged for one soul: no SÜLD mob, so no loot, EXP, quest, task or campaign credit; nobody else can hit
+ * them and they bite nobody else. During the trial {@link DeathService} lets the soul fight them and be bitten (never
+ * below 1 HP).
  */
 public final class DeathTrialService implements Listener, TabExecutor {
 
@@ -51,6 +53,10 @@ public final class DeathTrialService implements Listener, TabExecutor {
 
     private final Map<UUID, Run> runs = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastFail = new ConcurrentHashMap<>();
+    /** How the soul's last trial ended (cleared by a new death). */
+    private final Map<UUID, mn.suld.api.death.SpiritTrialState> last = new ConcurrentHashMap<>();
+    /** The won trial's reward (set by SuldPlugin). */
+    public volatile SoulShardService shards;
 
     private static final class Run {
         final List<UUID> wolves = new ArrayList<>();
@@ -69,6 +75,18 @@ public final class DeathTrialService implements Listener, TabExecutor {
     /** True while {@code soul} fights its trial. */
     public boolean inTrial(UUID soul) {
         return runs.containsKey(soul);
+    }
+
+    /** The soul's trial seen from outside: fighting now, or how the last one since its death ended. */
+    public mn.suld.api.death.SpiritTrialState state(UUID soul) {
+        return runs.containsKey(soul) ? mn.suld.api.death.SpiritTrialState.FIGHTING
+                : last.getOrDefault(soul, mn.suld.api.death.SpiritTrialState.NOT_IN_TRIAL);
+    }
+
+    /** A new death: the last trial no longer speaks for this soul. */
+    void forget(UUID soul) {
+        last.remove(soul);
+        lastFail.remove(soul);
     }
 
     /** The soul whose trial wolf {@code e} is, or null. */
@@ -166,6 +184,7 @@ public final class DeathTrialService implements Listener, TabExecutor {
             if (e != null) e.remove();
         }
         Player p = Bukkit.getPlayer(id);
+        last.put(id, mn.suld.api.death.SpiritTrialState.of(o));
         if (o == DeathTrial.Outcome.WON) {
             deaths.recover(id, DeathRecord.State.RECOVERED, "trial").thenAccept(had -> Bukkit.getScheduler().runTask(plugin, () -> {
                 Player pl = Bukkit.getPlayer(id);
@@ -173,18 +192,22 @@ public final class DeathTrialService implements Listener, TabExecutor {
                 pl.sendMessage(Messages.success("Тэнгэр ивээлээ: сорилыг давж, сүнс бие махбодтоо буцлаа (шарх үлдэнэ)."));
                 pl.getWorld().spawnParticle(Particle.END_ROD, pl.getLocation().add(0, 1, 0), 60, 0.5, 1, 0.5, 0.02);
                 pl.playSound(pl.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.2f);
+                SoulShardService sh = shards;
+                if (sh != null && had) sh.give(pl, mn.suld.api.death.SoulShard.Tier.FAINT);
             }));
             return;
         }
         if (o == DeathTrial.Outcome.LOCK_ENDED) {
-            // the lock ran out during the fight: the wolves go, no cooldown, nothing lost
-            if (p != null) p.sendMessage(Messages.info("Сүнсний хугацаа дуусч та амилсан тул сорил зогслоо."));
+            // the soul state ended during the fight (its timer, staff): the wolves go, nothing lost
+            if (p != null) p.sendMessage(Messages.info("Та амилсан тул сорил зогслоо."));
             return;
         }
         lastFail.put(id, System.currentTimeMillis());
+        String again = rules.cooldownSeconds() > 0 ? rules.cooldownSeconds() / 60 + " минутын дараа дахин /trial."
+                : "Дахин /trial хийж болно, эсвэл ойрын овоог гурвантаа тойрч цацал өргө.";
         if (p != null) p.sendMessage(Messages.error(switch (o) {
-            case TIMED_OUT -> "Хугацаа дууслаа: сорил бүтсэнгүй. " + rules.cooldownSeconds() / 60 + " минутын дараа дахин /trial.";
-            case FALLEN -> "Сүнсний чоно дийлэв: сорил бүтсэнгүй. " + rules.cooldownSeconds() / 60 + " минутын дараа дахин /trial.";
+            case TIMED_OUT -> "Хугацаа дууслаа: сорил бүтсэнгүй. " + again;
+            case FALLEN -> "Сүнсний чоно дийлэв: сорил бүтсэнгүй. " + again;
             default -> "Сорил тасарлаа.";
         }));
     }
@@ -206,7 +229,9 @@ public final class DeathTrialService implements Listener, TabExecutor {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        if (runs.containsKey(e.getPlayer().getUniqueId())) end(e.getPlayer().getUniqueId(), DeathTrial.Outcome.LEFT);
+        UUID id = e.getPlayer().getUniqueId();
+        if (runs.containsKey(id)) end(id, DeathTrial.Outcome.LEFT);
+        last.remove(id);
     }
 
     /** Plugin disable: no wolf outlives the server (they are not persistent either). */

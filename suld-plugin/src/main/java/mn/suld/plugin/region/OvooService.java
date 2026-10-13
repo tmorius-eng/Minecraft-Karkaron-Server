@@ -41,7 +41,12 @@ import java.util.UUID;
  * to walk around it three times clockwise and add a stone (VERIFIED tradition). Walking the three turns grants
  * «Тэнгэрийн ивээл»: +5 % EXP for 30 minutes and a minute of regeneration, once per ovoo per day; the first visit
  * of each ovoo also pays a little EXP. The cairns are built when their chunk is first loaded by a player (never a
- * forced load) and remembered in ovoo.yml. Checks run every 10 ticks, only for players within 10 blocks of an ovoo.
+ * forced load) and remembered in ovoo.yml. Checks run every 10 ticks, only for players within 14 blocks of an ovoo.
+ * <p>
+ * A soul is not blessed: it walks «Овооны цацал» instead (docs/DEATH_AND_RECOVERY.md, 2026-10-13; the game's own
+ * rite, INSPIRED by the milk offering): the same three sunwise rounds, then it stays by the cairn until the ritual
+ * has lasted {@code death.ritual-seconds}; then it lives again ({@link mn.suld.api.death.OvooRitual}). A soul without
+ * a timer rises beside the ovoo nearest to where it fell ({@link #soulRise}).
  */
 public final class OvooService implements Listener {
 
@@ -63,6 +68,11 @@ public final class OvooService implements Listener {
     private final Map<UUID, Map<String, OvooCircle>> walking = new HashMap<>();
     private final Map<UUID, String> hinted = new HashMap<>();
     private final NamespacedKey blessKey;
+    /** A soul's «Овооны цацал» in progress, and the ovoo it is at. */
+    private final Map<UUID, mn.suld.api.death.OvooRitual> rituals = new HashMap<>();
+    private final Map<UUID, String> ritualAt = new HashMap<>();
+    /** The death system (set by SuldPlugin): a finished ritual ends the soul state. */
+    public volatile mn.suld.plugin.death.DeathService deaths;
 
     public OvooService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
@@ -103,6 +113,45 @@ public final class OvooService implements Listener {
             }
         }
         return best;
+    }
+
+    /**
+     * Where a soul rises after a death at {@code fell} (DeathService, 2026-10-13): five blocks south of the ovoo nearest
+     * to it, inside the ritual ring, on the ground, facing the cairn; null when no ovoo is placed. The chunk is loaded
+     * by the respawn anyway.
+     */
+    public Location soulRise(Location fell) {
+        World w = Bukkit.getWorlds().get(0);
+        if (fell.getWorld() == null || !fell.getWorld().equals(w)) return null;
+        Ovoo best = null;
+        double bestD = Double.MAX_VALUE;
+        for (Ovoo o : ovoos) {
+            double d = (o.x() - fell.getX()) * (o.x() - fell.getX()) + (o.z() - fell.getZ()) * (o.z() - fell.getZ());
+            if (d < bestD) {
+                bestD = d;
+                best = o;
+            }
+        }
+        if (best == null) return null;
+        int x = best.x(), z = best.z() + 5;
+        int y = w.getHighestBlockYAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1;
+        Location at = new Location(w, x + 0.5, y, z + 0.5);
+        at.setYaw(180f); // facing north, toward the cairn
+        return at;
+    }
+
+    /** The name of the area whose ovoo is nearest to {@code l} (for the soul's messages), or null. */
+    public String nearestName(Location l) {
+        Ovoo best = null;
+        double bestD = Double.MAX_VALUE;
+        for (Ovoo o : ovoos) {
+            double d = (o.x() - l.getX()) * (o.x() - l.getX()) + (o.z() - l.getZ()) * (o.z() - l.getZ());
+            if (d < bestD) {
+                bestD = d;
+                best = o;
+            }
+        }
+        return best == null ? null : best.area().name();
     }
 
     /** Where each area's ovoo is (for maps and the tutorial). */
@@ -191,6 +240,7 @@ public final class OvooService implements Listener {
 
     private void track() {
         World w = Bukkit.getWorlds().get(0);
+        java.util.Set<UUID> stepped = new java.util.HashSet<>();
         for (Ovoo o : ovoos) {
             int[] b = built.get(o.id());
             if (b == null || !w.isChunkLoaded(o.x() >> 4, o.z() >> 4)) continue;
@@ -198,6 +248,11 @@ public final class OvooService implements Listener {
                 double dx = p.getLocation().getX() - (b[0] + 0.5), dz = p.getLocation().getZ() - (b[2] + 0.5);
                 if (dx * dx + dz * dz > 14 * 14 || Math.abs(p.getLocation().getY() - b[1]) > 6) continue;
                 if (services.training != null && services.training.training(p.getUniqueId())) continue; // the day's mark would stay, its EXP not
+                if (services.isSoul.test(p.getUniqueId())) { // a soul is not blessed: it walks the ritual back to life
+                    stepped.add(p.getUniqueId());
+                    ritual(p, o, b, dx, dz);
+                    continue;
+                }
                 OvooCircle c = walking.computeIfAbsent(p.getUniqueId(), k -> new HashMap<>()).computeIfAbsent(o.id(), k -> new OvooCircle());
                 if (c.step(dx, dz)) {
                     bless(p, o, b);
@@ -207,6 +262,63 @@ public final class OvooService implements Listener {
                         services.hud().toast(p, Component.text("Овоо — нар зөв (цагийн зүүний дагуу) гурвантаа тойрвол Тэнгэр ивээнэ", NamedTextColor.AQUA), 5000);
                     }
                 }
+            }
+        }
+        // a ritual whose soul was not by its ovoo this pass is broken, whatever took the soul away (a walk, a fall, a
+        // teleport, a revive elsewhere): it is walked in one go
+        for (java.util.Iterator<Map.Entry<UUID, mn.suld.api.death.OvooRitual>> it = rituals.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<UUID, mn.suld.api.death.OvooRitual> en = it.next();
+            if (stepped.contains(en.getKey())) continue;
+            it.remove();
+            ritualAt.remove(en.getKey());
+            Player p = Bukkit.getPlayer(en.getKey());
+            if (en.getValue().started() && p != null && services.isSoul.test(en.getKey())) {
+                p.sendMessage(Messages.error("Цацал тасарлаа: овооны дэргэдээс холдсон тул дахин эхэлнэ."));
+            }
+        }
+    }
+
+    /** One step of a soul's «Овооны цацал» at {@code o} (every 10 ticks while it is within 14 blocks). */
+    private void ritual(Player p, Ovoo o, int[] b, double dx, double dz) {
+        UUID id = p.getUniqueId();
+        mn.suld.plugin.death.DeathService d = deaths;
+        if (d == null || p.isDead()) return;
+        if (services.inDeathTrial.test(id)) { // fighting its trial: the ritual starts over afterwards
+            rituals.remove(id);
+            ritualAt.remove(id);
+            return;
+        }
+        mn.suld.api.death.OvooRitual r = rituals.get(id);
+        if (r == null || !o.id().equals(ritualAt.get(id))) {
+            r = new mn.suld.api.death.OvooRitual(services.config().death().ritualSeconds());
+            rituals.put(id, r);
+            ritualAt.put(id, o.id());
+        }
+        long now = System.currentTimeMillis();
+        mn.suld.api.death.OvooRitual.Step step = r.step(dx, dz, now);
+        switch (step) {
+            case IDLE -> {
+                if (!("ritual:" + o.id()).equals(hinted.get(id))) {
+                    hinted.put(id, "ritual:" + o.id());
+                    p.sendMessage(Messages.info("Овооны цацал: овоог нар зөв (цагийн зүүний дагуу) гурвантаа тойроод, "
+                            + r.seconds() + " секунд хүртэл дэргэд нь бай — сүнс тань амилна."));
+                }
+            }
+            case WALKING, OFFERING -> mn.suld.plugin.hud.HudService.notice(p, Component.text("Овооны цацал: "
+                    + (int) Math.floor(r.rounds()) + "/" + (int) OvooCircle.TURNS + " тойрог · "
+                    + Math.min(r.elapsedSeconds(now), r.seconds()) + "/" + r.seconds() + " с"
+                    + (step == mn.suld.api.death.OvooRitual.Step.OFFERING ? " · өргөл: овооны дэргэд бай" : ""), NamedTextColor.AQUA));
+            case BROKEN -> p.sendMessage(Messages.error("Цацал тасарлаа: овооны дэргэдээс холдсон тул дахин эхэлнэ."));
+            case DONE -> {
+                rituals.remove(id);
+                ritualAt.remove(id);
+                Location top = new Location(p.getWorld(), b[0] + 0.5, b[1] + 6, b[2] + 0.5);
+                d.recover(id, mn.suld.api.death.DeathRecord.State.RECOVERED, "ovoo").thenAccept(had -> Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (!had || !p.isOnline()) return;
+                    p.sendMessage(Messages.success("«" + o.area().name() + "»-ийн овоонд цацал өргөлөө: Тэнгэр сүнсийг тань бие рүү буцаалаа (шарх үлдэнэ)."));
+                    p.getWorld().spawnParticle(Particle.END_ROD, top, 40, 1.2, 1.5, 1.2, 0.02);
+                    p.playSound(top, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.2f);
+                }));
             }
         }
     }
@@ -265,6 +377,8 @@ public final class OvooService implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         walking.remove(e.getPlayer().getUniqueId());
         hinted.remove(e.getPlayer().getUniqueId());
+        rituals.remove(e.getPlayer().getUniqueId()); // a ritual is walked in one go
+        ritualAt.remove(e.getPlayer().getUniqueId());
         services.boosts().forget(e.getPlayer().getUniqueId());
     }
 }

@@ -145,8 +145,10 @@ public final class AscensionMenu {
             List<Component> body = new ArrayList<>();
             if (ready) {
                 body.add(Menu.line("Бүх нөхцөл биеллээ."));
-                body.add(Component.text("⚠ Зэрэгтэй баатрын сүнс үхвэл хамгийн", RED, TextDecoration.BOLD));
-                body.add(Component.text("   урт хугацаагаар түгжигдэнэ.", RED, TextDecoration.BOLD));
+                if (!services.config().death().untilRecovery()) { // a timed lock is longest for an ascended soul
+                    body.add(Component.text("⚠ Зэрэгтэй баатрын сүнс үхвэл хамгийн", RED, TextDecoration.BOLD));
+                    body.add(Component.text("   урт хугацаагаар түгжигдэнэ.", RED, TextDecoration.BOLD));
+                }
             } else {
                 body.add(Component.text(trial.reason(), RED, TextDecoration.BOLD));
             }
@@ -157,11 +159,13 @@ public final class AscensionMenu {
                     ready ? (pl, c) -> click(pl) : null);
         }
 
-        m.set(40, Menu.item(Material.WRITABLE_BOOK, Menu.title("Зэрэг бүр юу өгөх вэ", GOLD), Menu.lore(GOLD, List.of(
+        List<Component> gives = new java.util.ArrayList<>(List.of(
                 Menu.line("+1 чадварын оноо (/skills)"),
                 Menu.line("+1 % хүч (цохилт, ид шид, сум)"),
-                Menu.line("Зэрэг III: T6 ангийн хуяг нээгдэнэ"),
-                Component.text("Үхлийн түгжээ хамгийн урт болно", RED, TextDecoration.BOLD)), List.of(), null)), null);
+                Menu.line("Зэрэг III: T6 ангийн хуяг нээгдэнэ")));
+        // a timed lock (death.lock.mode: TIMED) is longest for an ascended character; without a timer it is the same for all
+        if (!services.config().death().untilRecovery()) gives.add(Component.text("Үхлийн түгжээ хамгийн урт болно", RED, TextDecoration.BOLD));
+        m.set(40, Menu.item(Material.WRITABLE_BOOK, Menu.title("Зэрэг бүр юу өгөх вэ", GOLD), Menu.lore(GOLD, gives, List.of(), null)), null);
         m.set(36, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> pl.performCommand("menu"));
         m.set(44, Menu.item(Material.BARRIER, Menu.title("Хаах", RED), List.of()), (pl, c) -> pl.closeInventory());
         m.open(p);

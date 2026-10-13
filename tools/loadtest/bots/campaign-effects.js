@@ -63,19 +63,29 @@ async function deliverCampaign(A, name, id, effectLog) {
   cmd(`effect give ${name} minecraft:resistance 120 4 true`);
   cmd(`suld spawnmob ${name} mob.goviin_chono 3`); await sleep(1500);
   const deadline = Date.now() + 45000;
+  let swings = 0;
   while (Date.now() < deadline) {
     const wolf = A.nearestEntity(e => e.name === 'wolf' && e.position.distanceTo(A.entity.position) < 16);
     if (!wolf) break;
+    // a wolf beyond melee reach is brought to the bot: walking straight ahead does not always get there (2026-10-13
+    // a sweep run killed 1 of 3 in 45 s, wolves still within 16 blocks), and the check is that player kills count
+    if (wolf.position.distanceTo(A.entity.position) > 3) {
+      cmd(`execute at ${name} run minecraft:tp @e[type=wolf,distance=..16,limit=1,sort=nearest] ~1.5 ~ ~`); await sleep(300);
+    }
     await A.lookAt(wolf.position.offset(0, 0.5, 0), true);
-    if (wolf.position.distanceTo(A.entity.position) > 3) { A.setControlState('forward', true); await sleep(250); A.setControlState('forward', false); }
-    A.attack(wolf); await sleep(650);
+    A.attack(wolf); swings++; await sleep(650);
   }
+  // where the fight ended: a failed count says whether the wolves were out of reach, gone, or never hit
+  const here = A.entity.position;
+  const left = Object.values(A.entities).filter(e => e.name === 'wolf' && e.position.distanceTo(here) < 32)
+    .map(e => `${e.position.distanceTo(here).toFixed(1)}m dy${(e.position.y - here.y).toFixed(1)}`).join(', ');
+  const fight = `swings ${swings}, bot ${here.x.toFixed(0)},${here.y.toFixed(0)},${here.z.toFixed(0)}, wolves near: ${left || 'none'}`;
   // /khuraldai status is a window for a player (UI-5); the console keeps the text, so read it from the log
   const sl = lines().length;
   cmd('khuraldai status'); await sleep(2500);
   const status = lines().slice(sl).filter(l => l.includes('/60')).join(' | ');
   const m = status.match(/(\d+)\/60/);
-  check('wolf kills count toward the campaign', m && Number(m[1]) >= 3, status);
+  check('wolf kills count toward the campaign', m && Number(m[1]) >= 3, status + ' :: ' + fight);
 
   // ---------------------------------------------------------------- world effects
   await deliverCampaign(A, name, 'test_prop', '[props] dynamic stone_man');

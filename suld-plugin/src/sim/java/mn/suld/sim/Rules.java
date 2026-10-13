@@ -154,6 +154,24 @@ public abstract class Rules {
         return 0.10;
     }
 
+    /** A death that costs nothing (live since 2026-10-13: levels 1–10 without Ascension); never in the reference model. */
+    public boolean deathProtected(int level, int ascension) {
+        return false;
+    }
+
+    /** Minutes a protected death keeps the player away (respawn and walk back). */
+    public double protectedDeathMinutes() {
+        return 0.5;
+    }
+
+    /**
+     * Share of the EXP a death took that comes back, by where it happened ("grind:…", "dungeon:…", "afk"): live, the
+     * Сүнсний Гэрэлт of an open-world death; none in the reference model.
+     */
+    public double deathRefund(String where) {
+        return 0;
+    }
+
     /** Effective-stat penalty added per death on class gear (proposed death wound; live 0). */
     public double woundPerDeath() {
         return 0;

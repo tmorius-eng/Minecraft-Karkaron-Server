@@ -18,6 +18,14 @@ public final class DeathRules {
     private DeathRules() {
     }
 
+    /**
+     * A beginner's death (level ≤ {@code beginnerLevels}, no Ascension): it costs nothing at all — no soul, no EXP,
+     * no dropped stacks, no wear, no wound (owner 2026-10-13: the first ten levels are fully protected).
+     */
+    public static boolean protectedDeath(int level, int ascension, DeathSettings s) {
+        return s.enabled() && ascension == 0 && level <= s.beginnerLevels();
+    }
+
     /** Progress after a death: {@code expIntoLevel} reduced by the configured fraction; the level never drops. */
     public static Progression afterDeath(Progression p, DeathSettings s) {
         if (!s.enabled()) return p;

@@ -1,6 +1,7 @@
 package mn.suld.api.persistence;
 
 import mn.suld.api.death.DeathRecord;
+import mn.suld.api.death.SoulBeacon;
 import mn.suld.api.death.Wound;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public final class InMemoryDeathRepository implements DeathRepository {
 
     private final Map<UUID, List<DeathRecord>> deaths = new ConcurrentHashMap<>();
     private final Map<UUID, Wound> wounds = new ConcurrentHashMap<>();
+    private final Map<UUID, SoulBeacon> beacons = new ConcurrentHashMap<>();
 
     @Override
     public synchronized CompletableFuture<DeathRecord> insert(DeathRecord d) {
@@ -67,5 +69,26 @@ public final class InMemoryDeathRepository implements DeathRepository {
     public CompletableFuture<Void> saveWound(UUID player, Wound wound) {
         wounds.put(player, wound);
         return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public synchronized CompletableFuture<Void> saveBeacon(SoulBeacon beacon) {
+        beacons.putIfAbsent(beacon.deathId(), beacon);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public synchronized CompletableFuture<Optional<SoulBeacon>> openBeacon(UUID player, long now) {
+        return CompletableFuture.completedFuture(beacons.values().stream()
+                .filter(b -> b.player().equals(player) && b.open(now))
+                .max(Comparator.comparingLong(SoulBeacon::createdAt)));
+    }
+
+    @Override
+    public synchronized CompletableFuture<Boolean> claimBeacon(UUID deathId, long now) {
+        SoulBeacon b = beacons.get(deathId);
+        if (b == null || !b.open(now)) return CompletableFuture.completedFuture(false);
+        beacons.put(deathId, b.claim(now));
+        return CompletableFuture.completedFuture(true);
     }
 }

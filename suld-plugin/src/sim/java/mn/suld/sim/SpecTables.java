@@ -30,7 +30,7 @@ public final class SpecTables {
         write("docs/MASTERY_SPEC.md", "mastery-need", masteryNeed());
         write("docs/ASCENSION_SPEC.md", "ascension-cost", ascensionCost(r));
         write("docs/PROGRESSION_BALANCE_SPEC.md", "curve", curve(r));
-        write("docs/DEATH_AND_RECOVERY.md", "lock", lock(r));
+        write("docs/DEATH_AND_RECOVERY.md", "lock", lock(r.withLock(r.lockCurve()))); // the timed curve (TIMED mode)
         System.out.println("spec tables written");
     }
 
