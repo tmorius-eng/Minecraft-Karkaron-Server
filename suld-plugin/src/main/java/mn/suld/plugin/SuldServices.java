@@ -439,6 +439,8 @@ public final class SuldServices {
     /** Class change and the academy (docs/CLASS_CHANGE.md); null until the plugin enabled it. */
     public volatile mn.suld.plugin.clazz.ClassChangeService classChange;
     public volatile mn.suld.plugin.clazz.ClassTrialService classTrial;
+    /** «Дайчдын Дасгалын Талбай» (docs/TRAINING_GROUNDS.md). */
+    public volatile mn.suld.plugin.training.TrainingService training;
     /** Тэнгэрийн Зэрэг window and rite (set by SuldPlugin). */
     public volatile mn.suld.plugin.gui.AscensionMenu ascension;
     /** The historic sites (set by SuldPlugin). */

@@ -138,6 +138,16 @@ public final class MobService implements org.bukkit.event.Listener {
         refreshSoon(e.getEntity());
     }
 
+    /**
+     * Mark an entity the plugin spawned itself as the SÜLD mob {@code mobId} (the training grounds' Wardens, set in the
+     * spawn callback so it is one before it enters the world): the combat code treats it as one (the SÜLD hit formula,
+     * spells, lock-on, numbers). An id that is not in the content has no definition, so it has no loot, EXP, level gap or
+     * name plate of its own, and no kill of it counts for anything.
+     */
+    public void tagAs(LivingEntity living, String mobId) {
+        living.getPersistentDataContainer().set(keyMobId, PersistentDataType.STRING, mobId);
+    }
+
     public Optional<String> mobId(Entity entity) {
         if (entity == null) {
             return Optional.empty();

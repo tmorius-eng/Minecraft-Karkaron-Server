@@ -43,6 +43,14 @@ public final class ClassSelectionGui implements Listener {
     private static final int[] SLOTS = {10, 11, 12, 13, 14};
     /** Confirm page (ONB-006): the choice is permanent, so one misclick must not decide it. */
     private static final int CONFIRM = 11, CHOSEN = 13, BACK = 15;
+    /** «⚔ Туршиж үзэх»: the class at level 60 with its top gear on the training grounds, before choosing it. */
+    private static final int TRY = 22;
+
+    /**
+     * Opens the training grounds with a class (docs/TRAINING_GROUNDS.md); true when the player went there. Set by the
+     * plugin; until then the try button explains that the yard is not ready.
+     */
+    public volatile java.util.function.BiPredicate<Player, PlayerClass> tryOut = (p, c) -> false;
     static final Map<PlayerClass, Material> ICONS = Map.of(
             PlayerClass.BAATAR, Material.IRON_SWORD,
             PlayerClass.MERGEN, Material.BOW,
@@ -113,6 +121,16 @@ public final class ClassSelectionGui implements Listener {
                 clazz.displayName() + " ангийг сонгоно.", CHANGE_NOTE[0], CHANGE_NOTE[1]));
         inv.setItem(BACK, button(Material.RED_CONCRETE, "✖ Буцах", NamedTextColor.RED,
                 "Таван ангийг дахин харах."));
+        inv.setItem(TRY, button(Material.NETHERITE_SWORD, "⚔ Туршиж үзэх", NamedTextColor.AQUA,
+                clazz.displayName() + " ангийг 60-р түвшинд, хамгийн сайн хуяг, зэвсэгтэй",
+                "Дасгалын талбайд Warden дээр туршина: хохирол, DPS, идэвхгүй чадвар.",
+                "Юу ч хадгалагдахгүй; гарахад энэ цонх буцаж нээгдэнэ."));
+    }
+
+    /** The confirm page of {@code clazz} (after the training grounds: «Батлах» is one click away). */
+    public void openConfirm(Player player, PlayerClass clazz) {
+        open(player);
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ClassSelectionHolder holder) showConfirm(holder, clazz);
     }
 
     private static ItemStack button(Material material, String name, NamedTextColor color, String... text) {
@@ -179,6 +197,17 @@ public final class ClassSelectionGui implements Listener {
         if (pending != null) {
             if (slot == CONFIRM) select(player, pending);
             else if (slot == BACK) showClasses(holder);
+            else if (slot == TRY) {
+                // the yard owns the player now: no reopen when this window closes
+                mustChoose.remove(player.getUniqueId());
+                player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
+                if (!tryOut.test(player, pending)) {
+                    player.sendMessage(Messages.error("Дасгалын талбай одоохондоо бэлэн биш байна."));
+                    plugin.getServer().getScheduler().runTask(plugin, () -> {
+                        if (player.isOnline()) openConfirm(player, pending);
+                    });
+                }
+            }
             return;
         }
         PlayerClass[] classes = PlayerClass.values();

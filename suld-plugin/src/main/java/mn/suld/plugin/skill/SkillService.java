@@ -157,6 +157,45 @@ public final class SkillService implements Listener {
         for (Spell s : Spell.values()) ready.merge(s, until, Math::max);
     }
 
+    /** A player's spell waits and resource, kept aside while they train and put back after (docs/TRAINING_GROUNDS.md). */
+    public record Held(Map<Spell, Long> ready, int resource) {
+    }
+
+    public Held hold(Player p) {
+        Map<Spell, Long> m = spellReady.get(p.getUniqueId());
+        ResourcePool pool = pools.get(p.getUniqueId());
+        return new Held(m == null ? Map.of() : Map.copyOf(m), pool == null ? 0 : pool.value());
+    }
+
+    /** The training grounds: no spell waits, a full pool, no half-typed combo, no empowered arrows. */
+    public void fresh(Player p) {
+        UUID id = p.getUniqueId();
+        combos.remove(id);
+        lastCast.remove(id);
+        castAttack.remove(id);
+        spellReady.remove(id);
+        CombatListener.EMPOWERED_ARROWS.remove(id);
+        CombatListener.EMPOWERED_UNTIL.remove(id);
+        pools.remove(id);
+        pool(p).gain(1e9);
+    }
+
+    /** Back from the training grounds: the waits and the resource the player had (capped by the pool of their class). */
+    public void restore(Player p, Held h) {
+        UUID id = p.getUniqueId();
+        combos.remove(id);
+        lastCast.remove(id);
+        castAttack.remove(id);
+        CombatListener.EMPOWERED_ARROWS.remove(id);
+        CombatListener.EMPOWERED_UNTIL.remove(id);
+        spellReady.remove(id);
+        if (!h.ready().isEmpty()) spellReady.put(id, new java.util.EnumMap<>(h.ready()));
+        pools.remove(id);
+        ResourcePool pool = pool(p);
+        pool.spend(pool.value());
+        pool.gain(Math.min(pool.max(), h.resource()));
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
@@ -362,7 +401,7 @@ public final class SkillService implements Listener {
         }
     }
 
-    /** Told about every spell that was cast (the training grounds explain it), after its effect ran. Main thread. */
+    /** Told about every spell cast, just before its effect runs (the training grounds count its hits). Main thread. */
     public volatile java.util.function.BiConsumer<Player, Spell> castListener = (p, s) -> { };
 
     /** The damage factor of {@code s} for this player now: spell × modifiers × spell damage × rank (0 for a spell without damage). */
@@ -407,6 +446,7 @@ public final class SkillService implements Listener {
         castAttack.put(p.getUniqueId(), CombatListener.attackOf(services, p));
         int rank = s.rankAt(pr.progression().level());
         say(p, "§e✦ " + s.displayName() + (rank > 1 ? " " + Spell.roman(rank) : ""));
+        castListener.accept(p, s); // before the effect: the training grounds count the hits of this cast
         run(p, s);
         double echo = build.mod(s, ModKey.ECHO_PCT);
         if (echo > 0 && java.util.concurrent.ThreadLocalRandom.current().nextDouble() * 100 < echo) {
@@ -422,7 +462,6 @@ public final class SkillService implements Listener {
         double haste = build.mod(s, ModKey.HASTE);
         if (haste > 0) p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) (haste * 20), 1, false, false, true));
         services.skillTree().fire(p, TriggerEvent.CAST, null);
-        castListener.accept(p, s);
         return CastResult.CAST;
     }
 

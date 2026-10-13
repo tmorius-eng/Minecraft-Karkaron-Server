@@ -4,8 +4,9 @@
 # Runs every pass/fail bot in a fixed order and prints one table (bot · result · seconds); exit 1 on any failure.
 # DEV_CAMPAIGNS=1 also runs campaign-effects.js, dungeon-clear.js and campaign-deliver.js: dev/make_dev_campaigns.py
 # writes the dev campaigns into the server's plugins/SULD/content/campaigns.json (server dir = two levels over the log),
-# the server restarts (<srvctl> stop|start), and the file is removed and the server restarted after. NODE_PATH must
-# reach mineflayer.
+# the server restarts (<srvctl> stop|start), and the file is removed and the server restarted after. DEV_CRASH=1 also
+# runs trainingcrash.js last: it kills the server with SIGKILL during training and starts it again (dev server only).
+# NODE_PATH must reach mineflayer.
 set -u
 CTL=${1:?srvctl.sh}; LOG=${2:?latest.log}; PORT=${3:-25572}
 DIR=$(cd "$(dirname "$0")/bots" && pwd)
@@ -21,6 +22,7 @@ RUNS=(
   "classreconnectbot:nil|$CTL nil $PORT"
   "classreconnectbot:none|$CTL none $PORT"
   "classtrialbot|$CTL $PORT"
+  "trainingbot|$CTL $PORT"
   "mergenbowbot|$CTL $PORT"
   "masterybot|$CTL $PORT"
   "trialbot|$CTL $PORT"
@@ -70,6 +72,9 @@ if [ "${DEV_CAMPAIGNS:-0}" = 1 ]; then
   python3 "$GEN" "$SRV" > /dev/null && "$CTL" stop > /dev/null && "$CTL" start > /dev/null
   run_all "${DEV_RUNS[@]}"
   python3 "$GEN" "$SRV" --remove > /dev/null && "$CTL" stop > /dev/null && "$CTL" start > /dev/null
+fi
+if [ "${DEV_CRASH:-0}" = 1 ]; then
+  run_all "trainingcrash|$CTL $PORT"
 fi
 echo "logs: $OUT"
 [ "$bad" -eq 0 ] && echo "ALL GREEN" || echo "$bad FAILED"

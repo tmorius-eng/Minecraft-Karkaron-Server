@@ -289,11 +289,12 @@ public final class HudComposer {
             case NORMAL -> HudGlyphs.TGT_FRAME;
         };
         c.glyphAt(x0, frame);
-        int hpW = px(t.hp(), t.maxHp(), TARGET_INNER);
-        int chipW = px(Math.max(t.recentHp(), t.hp()), t.maxHp(), TARGET_INNER);
+        boolean endless = Double.isInfinite(t.maxHp()); // a training Warden: always full, «∞»
+        int hpW = endless ? TARGET_INNER : px(t.hp(), t.maxHp(), TARGET_INNER);
+        int chipW = endless ? hpW : px(Math.max(t.recentHp(), t.hp()), t.maxHp(), TARGET_INNER);
         c.at(x0 + 1).fill(HudGlyphs.FILL_TGT, hpW);
         if (chipW > hpW) c.at(x0 + 1 + hpW).fill(HudGlyphs.FILL_TGT_CHIP, chipW - hpW);
-        c.centred(HudGlyphs.TARGET, 0, n(t.hp()) + "/" + n(t.maxHp()), WHITE);
+        c.centred(HudGlyphs.TARGET, 0, endless ? "∞" : n(t.hp()) + "/" + n(t.maxHp()), WHITE);
         return c.build();
     }
 }

@@ -742,6 +742,28 @@ public final class SkillTreeService implements Listener {
         refreshRuntime(p, pr, r);
     }
 
+    /** The ultimate's and the passives' timers of a player, kept aside while they train (docs/TRAINING_GROUNDS.md). */
+    public record Timers(long ultReady, Map<Integer, Long> procReady) {
+    }
+
+    public Timers timers(Player p) {
+        Runtime r = runtime.get(p.getUniqueId());
+        if (r == null) return new Timers(ultHeld.getOrDefault(p.getUniqueId(), 0L), Map.of());
+        return new Timers(r.ultReady, Map.copyOf(r.procReady));
+    }
+
+    /** Put timers back (after {@link #attach}: the indices are the real class's tree again). */
+    public void timers(Player p, Timers t) {
+        Runtime r = runtime.get(p.getUniqueId());
+        if (r == null) {
+            if (t.ultReady() > System.currentTimeMillis()) ultHeld.put(p.getUniqueId(), t.ultReady());
+            return;
+        }
+        r.ultReady = t.ultReady();
+        r.procReady.clear();
+        r.procReady.putAll(t.procReady());
+    }
+
     /** Make every passive spell and the ultimate ready again. */
     public void qaResetTimers(Player p) {
         Runtime r = runtime.get(p.getUniqueId());

@@ -57,9 +57,17 @@ public final class CombatFeedback implements Listener {
     private final Plugin plugin;
     private final MobService mobs;
 
+    private static volatile CombatFeedback instance;
+
     public CombatFeedback(Plugin plugin, MobService mobs) {
         this.plugin = plugin;
         this.mobs = mobs;
+        instance = this;
+    }
+
+    /** The running instance (the training grounds show burn ticks through it), or null before enable. */
+    public static CombatFeedback instance() {
+        return instance;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

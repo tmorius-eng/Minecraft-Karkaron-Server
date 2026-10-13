@@ -36,6 +36,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.death.DeathTrialService deathTrial;
     private mn.suld.plugin.gui.SkillSky skillSky;
     private mn.suld.plugin.gui.MenuSky menuSky;
+    private mn.suld.plugin.training.TrainingService training;
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.dungeon.DungeonGuide dungeonGuide;
     private mn.suld.plugin.worldbuild.WorldBuildService worldBuild;
@@ -312,6 +313,20 @@ public final class SuldPlugin extends JavaPlugin {
         menuSky = new mn.suld.plugin.gui.MenuSky(this, services);
         getServer().getPluginManager().registerEvents(menuSky, this);
         menuSky.start();
+        // «Дайчдын Дасгалын Талбай» (docs/TRAINING_GROUNDS.md): every class at level 60 on the training Wardens, nothing kept
+        training = new mn.suld.plugin.training.TrainingService(this, services, skills, skillTree);
+        mn.suld.plugin.gui.MenuSky trainingMenuSky = menuSky;
+        mn.suld.plugin.gui.SkillSky trainingSkillSky = skillSky;
+        training.closeWindows = pl -> {
+            if (trainingMenuSky.isOpen(pl)) trainingMenuSky.close(pl);
+            if (trainingSkillSky.isOpen(pl)) trainingSkillSky.close(pl);
+        };
+        services.training = training;
+        getServer().getPluginManager().registerEvents(training, this);
+        registerTab("dasgal", training);
+        mn.suld.plugin.training.TrainingService trainingForMenu = training;
+        services.classSelectionGui().tryOut = (pl, c) -> trainingForMenu.enter(pl, c, 0);
+        training.start();
         mn.suld.plugin.command.SkillCommands skillCommands = new mn.suld.plugin.command.SkillCommands(services, skillMap, menus,
                 new mn.suld.plugin.skill.qa.SkillQa(this, services, skillTree, skills));
         registerTab("skills", skillCommands.skills());
@@ -474,6 +489,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (props != null) props.stop();
         if (combatFeel != null) combatFeel.shutdown();
         if (halls != null) halls.shutdown();
+        if (training != null) training.shutdown(); // trainees back to their own character and things, before the last saves
         if (services != null && services.classTrial != null) services.classTrial.shutdown(); // trial players back to their class
         if (menuSky != null) menuSky.shutdown(); // players in the menu's sky window go back where they stood
         if (skillSky != null) skillSky.shutdown(); // players on the tree stage go back where they stood

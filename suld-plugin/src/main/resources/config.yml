@@ -72,6 +72,20 @@ death:
     heal-minutes: 180           # active minutes per healed step
 
 # ---------------------------------------------------------------------------
+# «Дайчдын Дасгалын Талбай» (docs/TRAINING_GROUNDS.md): any player — even before choosing a class — tries any class at
+# level 60 with its top gear on the training Wardens (∞ health, never move, never despawn) and sees every hit, spell
+# and passive explained. The character is a stand-in that is never saved; leaving gives everything back.
+#   world/x/y/z: the yard's centre (plot A, west of the spawn); staff move it with /dasgal yard set
+#   blocks: only placed by staff, /dasgal yard build (undo: /dasgal yard undo) — the city is built by hand
+# ---------------------------------------------------------------------------
+training:
+  enabled: true
+  world: ""                     # empty = the main world
+  x: -63
+  y: 72
+  z: -92
+
+# ---------------------------------------------------------------------------
 # Analytics. sink: log | database  (database requires a configured DB above)
 # ---------------------------------------------------------------------------
 analytics:

@@ -40,6 +40,10 @@ commands:
     description: Тэнгэрийн сорил — as a soul, fight three spirit wolves to end the death lock now (the wound stays).
     usage: /trial
     aliases: [soril, сорил]
+  dasgal:
+    description: Дайчдын Дасгалын Талбай — try any class at level 60 with its top gear on the training Wardens; nothing of it stays.
+    usage: /dasgal [class] [a|b] | leave | stats
+    aliases: [дасгал, training]
   classtrial:
     description: Ангийн Сорилт — try another class for 5 minutes on practice dummies; nothing of it stays.
     usage: /classtrial <class>|leave
@@ -320,6 +324,7 @@ permissions:
       suld.admin.skills: true
       suld.admin.items: true
       suld.admin.perf: true
+      suld.admin.training: true
       suld.anticheat.alerts: true
   suld.anticheat.alerts:
     description: Hear SÜLD's own anticheat notes (menu clicks faster than a person). Grim's alerts use grim.alerts.
@@ -353,6 +358,9 @@ permissions:
     default: true
   suld.admin.classgear:
     description: Recover another player's class gear (audited).
+    default: op
+  suld.admin.training:
+    description: Place, move or build the training grounds (/dasgal yard set|respawn|build|undo, audited).
     default: op
   suld.admin.death:
     description: View death locks, wounds and death history.
