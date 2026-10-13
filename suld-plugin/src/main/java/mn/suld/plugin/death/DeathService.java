@@ -227,7 +227,12 @@ public final class DeathService implements Listener {
             level = before.level();
             Progression after = DeathRules.afterDeath(before, s);
             expLost = before.expIntoLevel() - after.expIntoLevel();
-            if (expLost > 0) profile.progression(after);
+            if (expLost > 0) {
+                profile.progression(after);
+                // saved now, with the lock row (external audit 2026-10-13 F04): a crash before the next autosave
+                // gave the lost EXP back while the lock stayed
+                services.profiles().save(profile);
+            }
         }
 
         long now = System.currentTimeMillis();

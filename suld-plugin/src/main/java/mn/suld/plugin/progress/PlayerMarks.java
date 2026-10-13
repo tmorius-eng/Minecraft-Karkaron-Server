@@ -88,6 +88,53 @@ public final class PlayerMarks {
         if (!marks.isEmpty()) plugin.getLogger().fine("marks: backfilling " + marks.size() + " marks of " + p.getName());
     }
 
+    /**
+     * The other way round, on every login: clears and sites the table holds but the player file lost (a player file
+     * restored from a backup, rolled back by a crash, or reset by staff) are written back into the file, so the
+     * dungeon gates, which read the file, never lock a player out of what they already cleared (external audit
+     * 2026-10-13 F05). Only adds; never removes a mark the file has. Ovoo days are not restored (a lost day only lets
+     * the blessing be taken again).
+     */
+    public void restore(Player p) {
+        UUID id = p.getUniqueId();
+        repository.load(id).whenComplete((marks, err) -> {
+            if (err != null) {
+                plugin.getLogger().log(Level.WARNING, "marks: restore of " + id + " failed: " + root(err));
+                return;
+            }
+            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                Player again = org.bukkit.Bukkit.getPlayer(id);
+                if (again == null || marks == null) return;
+                PersistentDataContainer pdc = again.getPersistentDataContainer();
+                int added = merge(pdc, DUNGEON_CLEARS, marks.getOrDefault(MarkKind.DUNGEON_CLEAR, java.util.Map.of()).keySet())
+                        + merge(pdc, new NamespacedKey(plugin, SITES_SEEN), marks.getOrDefault(MarkKind.SITE_SEEN, java.util.Map.of()).keySet());
+                if (added > 0) {
+                    mn.suld.plugin.item.PlayerDataSaves.now(again);
+                    plugin.getLogger().info("marks: restored " + added + " clear/site mark(s) of " + again.getName() + " from the database");
+                }
+            });
+        });
+    }
+
+    private static int merge(PersistentDataContainer pdc, NamespacedKey key, java.util.Set<String> fromDb) {
+        String before = pdc.get(key, PersistentDataType.STRING);
+        String after = merged(before, fromDb);
+        if (after.equals(before == null ? "" : before)) return 0;
+        pdc.set(key, PersistentDataType.STRING, after);
+        return after.split(",").length - (before == null || before.isBlank() ? 0 : before.split(",").length);
+    }
+
+    /** {@code csv} (the file's comma list) with every id of {@code add} it lacks appended, in a stable order. */
+    static String merged(String csv, java.util.Set<String> add) {
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        if (csv != null) for (String x : csv.split(",")) if (!x.isBlank()) out.add(x);
+        java.util.List<String> extra = new java.util.ArrayList<>();
+        for (String x : add) if (x != null && !x.isBlank() && x.length() <= 64 && !x.contains(",") && !out.contains(x)) extra.add(x);
+        java.util.Collections.sort(extra);
+        out.addAll(extra);
+        return String.join(",", out);
+    }
+
     private static String root(Throwable t) {
         Throwable c = t;
         while (c.getCause() != null && c.getCause() != c) c = c.getCause();

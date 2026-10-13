@@ -53,6 +53,7 @@ public final class PlayerLifecycleListener implements Listener {
         if (services.items().refreshModels(ender) > 0) player.getEnderChest().setContents(ender);
         services.relics().scheduleTease(player, profile);
         services.marks().backfill(player); // V17: the player file's clears / sites / ovoo days into the database, once
+        services.marks().restore(player); // …and the database's clears / sites back into a file that lost them
         services.campaigns().onJoin(player); // the campaign's boss bar; a tier reward owed from last week
         player.sendMessage(Messages.accent("Тавтай морил, " + player.getName() + "! — SÜLD"));
         if (!profile.hasSelectedClass()) {
