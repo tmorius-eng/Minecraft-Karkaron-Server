@@ -5,8 +5,9 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `f1b7ce6` · **Schema:** V22 · **Bot sweep:**
-`tools/loadtest/regress.sh` — 2026-10-13 on `f1b7ce6`: 25/25 runs, 203 checks green; 16 PostgreSQL ITs green · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `c5f426b` · **Schema:** V22 · **Bot sweep:**
+`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` — 2026-10-13 on `c5f426b`: 27/28 runs green, featbot's
+tutorial-timing race then fixed and green 3 runs in a row (28 bots incl. the 3 campaign bots); 16 PostgreSQL ITs green · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
 

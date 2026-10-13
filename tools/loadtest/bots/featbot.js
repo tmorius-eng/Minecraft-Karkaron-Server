@@ -17,7 +17,12 @@ function join(name) {
     const bot = mineflayer.createBot({ host: '127.0.0.1', port: Number(process.env.PORT || 25571), username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
     bot.chatLog = []; bot.bars = new Map();
     bot.on('messagestr', (m) => bot.chatLog.push(m));
-    bot._client.on('boss_bar', (pk) => { if (pk.title) bot.bars.set(String(pk.entityUUID), flat(pk.title)); });
+    bot._client.on('boss_bar', (pk) => {
+      if (!pk.title) return;
+      const t = flat(pk.title);
+      bot.bars.set(String(pk.entityUUID), t);
+      if (!bot.firstTutorial && t.includes('Заавар')) bot.firstTutorial = t; // the first tutorial bar ever shown
+    });
     bot.on('error', () => {});
     // accept the pack like a player does (PackGate holds the class menu while a pack answer is missing)
     bot.on('resourcePack', () => { try { bot.acceptResourcePack(); } catch (e) {} });
@@ -37,8 +42,10 @@ const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
   const tag = 'F' + Math.floor(Math.random() * 900 + 100);
   // ---------------------------------------------------------------- tutorial (fresh player)
   const A = await join(tag + 'a');
-  await sleep(7000);
-  const bars0 = [...A.bars.values()].join(' | ');
+  // the tutorial begins 120 ticks after a first join (longer on a busy server): wait for its bar before the class pick
+  for (let i = 0; i < 40 && !A.firstTutorial; i++) await sleep(500);
+  // the first tutorial bar a fresh player sees is step 1 (a snapshot after a fixed wait races the class pick)
+  const bars0 = A.firstTutorial || [...A.bars.values()].join(' | ');
   check('tutorial starts on first join', /Заавар 1\/7/.test(bars0), bars0);
   await pickClass(A, 10);
   await sleep(2500);
