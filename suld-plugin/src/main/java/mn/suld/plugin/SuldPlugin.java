@@ -328,6 +328,8 @@ public final class SuldPlugin extends JavaPlugin {
         menuSky = new mn.suld.plugin.gui.MenuSky(this, services);
         getServer().getPluginManager().registerEvents(menuSky, this);
         menuSky.start();
+        // a click in a sky window is the window's: no combo, no shot (the atlas is made later, so read the field then)
+        skills.paused = pl -> menuSky.isOpen(pl) || skillSky.isOpen(pl) || atlas != null && atlas.isOpen(pl);
         // «Дайчдын Дасгалын Талбай» (docs/TRAINING_GROUNDS.md): every class at level 60 on the training Wardens, nothing kept
         training = new mn.suld.plugin.training.TrainingService(this, services, skills, skillTree);
         mn.suld.plugin.gui.MenuSky trainingMenuSky = menuSky;

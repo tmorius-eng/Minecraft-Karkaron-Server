@@ -269,7 +269,7 @@ public final class SkillService implements Listener {
         Player p = e.getPlayer();
         if (clazzOf(p) != PlayerClass.MERGEN || !holdsClassWeapon(p, PlayerClass.MERGEN)) return;
         e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
-        if (p.isSneaking()) return; // Shift + right click opens the skill map
+        if (p.isSneaking() || paused.test(p)) return; // Shift + right click opens the skill map; a sky window's click is its own
         ComboTracker t = combos.get(p.getUniqueId());
         long now = System.currentTimeMillis();
         if (t != null && !t.current(now).isEmpty()) return;
@@ -338,7 +338,15 @@ public final class SkillService implements Listener {
         }
     }
 
+    /**
+     * Set by SuldPlugin: true while the player is in a sky window (the menu, the skill tree, the atlas). Its clicks are
+     * the window's own: none of them makes a combo or shoots (the windows cancel the interaction, but the swing still
+     * reached here, and a click on a tab could cast a spell up on the stage — map inspection 2026-10-13).
+     */
+    public volatile java.util.function.Predicate<Player> paused = p -> false;
+
     private void click(Player p, char c) {
+        if (paused.test(p)) return;
         PlayerClass clazz = clazzOf(p);
         if (clazz == null || !holdsClassWeapon(p, clazz)) return;
         long now = System.currentTimeMillis();
