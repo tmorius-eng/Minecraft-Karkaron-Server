@@ -47,8 +47,10 @@ function join(name) {
   const [, x, , z] = rose.match(/rose at (-?\d+) (-?\d+) (-?\d+)/);
   check(A.chatLog.some(l => l.includes('бослоо')), 'the server is told', A.chatLog.filter(l => l.includes('бослоо')).slice(-1).join(''));
 
+  // the bots only have to stand there: resistance first (2026-10-13 the boss killed a fresh bot in the 4 s before it
+  // came, and the dead bot was back at spawn, 2141 blocks away)
+  cmd('effect give @a minecraft:resistance 600 4 true');
   cmd(`spreadplayers ${x} ${z} 1 8 false @a`); await sleep(4000);
-  cmd('effect give @a minecraft:resistance 600 4 true'); // the bots only have to stand there
   const dist = Math.hypot(A.entity.position.x - Number(x), A.entity.position.z - Number(z));
   check(dist < 40, 'the fighters stand at the boss', 'A is ' + Math.round(dist) + ' blocks away');
   await sleep(20000); // presence for both

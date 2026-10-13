@@ -16,7 +16,10 @@ b.on('messagestr', m => chat.push(m));
 b.on('error', () => {});
 b.on('resourcePack', () => { try { b.acceptResourcePack(); } catch (e) {} });
 const said = (k, s) => chat.slice(k).some(l => l.includes(s));
-const wolves = () => Object.values(b.entities).filter(e => e.name === 'wolf' && b.entity && e.position.distanceTo(b.entity.position) < 32);
+// a spirit wolf is named «Сүнсний чоно» and glows; a wild wolf of the steppe (a natural pack spawned at the test spot,
+// seen 2026-10-13) is neither, and is never one of the trial's three
+const spirit = e => { let n = null; try { n = e.getCustomName && e.getCustomName(); } catch (x) {} return (n != null && String(n).includes('Сүнсний')) || ((e.metadata && e.metadata[0]) & 0x40) !== 0; };
+const wolves = () => Object.values(b.entities).filter(e => e.name === 'wolf' && spirit(e) && b.entity && e.position.distanceTo(b.entity.position) < 32);
 const hp = (e) => { const m = e.metadata || []; return typeof m[9] === 'number' ? m[9] : null; };
 
 b.once('spawn', async () => {

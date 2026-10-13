@@ -11,6 +11,7 @@ set -u
 CTL=${1:?srvctl.sh}; LOG=${2:?latest.log}; PORT=${3:-25572}
 DIR=$(cd "$(dirname "$0")/bots" && pwd)
 OUT=${REGRESS_OUT:-$(mktemp -d)}
+mkdir -p "$OUT" || { echo "cannot create $OUT" >&2; exit 2; }
 RUNS=(
   "hubbot|$CTL $LOG $PORT"
   "skymenubot|$CTL $PORT"
@@ -55,8 +56,11 @@ for r in "$@"; do
   PORT=$PORT timeout "${BOT_TIMEOUT:-420}" node "$DIR/$bot.js" $args > "$OUT/$label.log" 2>&1
   rc=$?
   sec=$(( $(date +%s) - t0 ))
-  pass=$(grep -c '^PASS' "$OUT/$label.log"); fail=$(grep -c '^FAIL' "$OUT/$label.log")
-  if [ "$fail" -gt 0 ] || [ "$pass" -eq 0 ] || { [ "$rc" -ne 0 ] && [ "$rc" -ne 1 ]; } || { [ "$rc" -eq 1 ] && [ "$fail" -eq 0 ]; }; then
+  # a bot that never ran (no log: the redirect failed) is a FAIL, never a silent green (2026-10-13: a missing
+  # REGRESS_OUT directory printed 28 «PASS 0» rows and «ALL GREEN»)
+  pass=$(grep -c '^PASS' "$OUT/$label.log" 2>/dev/null); pass=${pass:-0}
+  fail=$(grep -c '^FAIL' "$OUT/$label.log" 2>/dev/null); fail=${fail:-0}
+  if [ ! -s "$OUT/$label.log" ] || [ "$fail" -gt 0 ] || [ "$pass" -eq 0 ] || { [ "$rc" -ne 0 ] && [ "$rc" -ne 1 ]; } || { [ "$rc" -eq 1 ] && [ "$fail" -eq 0 ]; }; then
     res=FAIL; bad=$((bad + 1))
     detail=$(grep -m1 '^FAIL' "$OUT/$label.log" | cut -c1-90); [ -z "$detail" ] && detail="exit $rc, $pass pass lines"
   else
