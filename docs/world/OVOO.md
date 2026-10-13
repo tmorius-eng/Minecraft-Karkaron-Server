@@ -4,8 +4,10 @@ An ovoo is a cairn of stones, often with a pole and blue silk khadag. It is a sa
 mountains, and the custom is to walk around it **three times clockwise** (нар зөв, the way the sun goes) and add a
 stone. This custom is VERIFIED as a living tradition. SÜLD's ovoo and their blessing are game fiction built on it.
 
-* **Where:** one ovoo at the heart of each of the 24 named areas (docs/world/AREAS.md), at the same point as the
-  pre-generator's P3 area hearts. That is 24 places worth finding.
+* **Where:** one ovoo at the heart of each of the 40 named areas (docs/world/AREAS.md), at the same point as the
+  pre-generator's P3 area hearts. That is 40 places worth finding. The place is measured from the spawn: on a fresh
+  world no cairn is built until Kharkhorum has moved the spawn onto its plaza, and if the spawn moves later
+  (`/setworldspawn`) the ovoos move with it.
 * **The cairn:**
   * a cone of mixed stones, 5 blocks wide and 4 high;
   * a foundation under it on uneven ground;

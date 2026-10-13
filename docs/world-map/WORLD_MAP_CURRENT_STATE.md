@@ -99,6 +99,14 @@ words from the gap between the spot's level and the player's: ≤ −6 «Хял�
 | 5 | Possible: spell combos may still fire inside a sky window (the swing is not cancelled and `SkillService.click()` does not check for an open window). From reading only, not tested | `SkillService.java:341-361` | the atlas must cancel swings it consumes |
 | 6 | Stale docs: `PREGENERATION.md` (24 areas, ~9 000 chunks, relic shrines in P2), `OVOO.md:7` (24), `WORLD_BORDER.md` (1500–5000 ring); `docs/MASTERY_AND_PROFESSIONS.md` is cited by code but missing, and `STATUS.md` still says schema V24 | the files named | none (documentation) |
 
+**All six are fixed (2026-10-13), each with its test or bot:**
+- #1 `0d08f98`, `sitesbot.js`;
+- #2 `7a62f41`, `firstbootbot.js` on a fresh world;
+- #3 `3c1badf`, `questregionbot.js`;
+- #4 `080474a`, `ContentDataTest`;
+- #5 `20f93f5`, `skyclickbot.js`;
+- #6 the docs named above, plus the new `docs/MASTERY_AND_PROFESSIONS.md`. `STATUS.md` was already at V26.
+
 ## 7. Tests and tools available
 
 * Unit tests: suld-api 517, suld-plugin 155 (H2 ITs included), sim 13 (local results of 2026-10-13); 18 `Jdbc*IT` run on

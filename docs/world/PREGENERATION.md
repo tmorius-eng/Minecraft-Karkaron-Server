@@ -9,14 +9,18 @@ to. The wilderness generates as it is explored, under Paper's per-player rate li
 | Level | What | Size |
 |---|---|---|
 | P0 | Spawn + Kharkhorum | `spawn-radius` 384 blocks around the spawn |
-| P1 | Routes from the city to the 16 inner areas (ring 1–2) | corridors ±2 chunks |
-| P2 | Relic shrines, dungeon grounds (registered by their services) | per point |
-| P3 | The heart of every named area (24) | `area-radius` 128 blocks |
-| P4 | Routes to the 8 outer areas (ring 3) | corridors ±2 chunks (off by default) |
+| P1 | Routes from the city to the 16 inner areas (rings 1–2, out to 1 500 blocks) | corridors ±2 chunks |
+| P2 | The ground of the 10 dungeon gates (registered by the dungeon halls) | 96 blocks around each |
+| P3 | The heart of every named area (40), where its ovoo stands | `area-radius` 128 blocks |
+| P4 | Routes to the 24 outer areas (rings 3–5, 1 500–5 000 blocks) | corridors ±2 chunks (off by default) |
 | P5 | Everything inside the border | only `/suldworld pregen full confirm` |
 
-The default plan is about 9 000 distinct chunks. Overlapping jobs never generate a chunk twice: the pure
-`PregenPlan` skips any chunk an earlier job covers, and chunks outside the border.
+The default plan (P0–P3) is 67 jobs and **14 936 distinct chunks**: 2 401 for P0 alone, and 21 876 with P4 as well
+(counted with the pure `PregenPlan` over the bundled content, 2026-10-13). Overlapping jobs never generate a chunk
+twice: the pure `PregenPlan` skips any chunk an earlier job covers, and chunks outside the border.
+
+The plan starts only once Kharkhorum is built: it is centred on the plaza, where the city moves the spawn. On a fresh
+world the first boot builds the city first, then the plan.
 
 ## Throttling
 
@@ -57,5 +61,5 @@ over. Chunks that already exist are then only re-read, not generated again.
 | New terrain | 13–45 chunks/s | 4.5 / 28.7 ms |
 
 * Loaded chunks after the run: 1.
-* The plan was 9 033 distinct chunks.
+* The plan was 9 033 distinct chunks then, when the world had 24 named areas.
 * Chunky is no longer driven by SÜLD. It stays an optional manual tool and must not run alongside.

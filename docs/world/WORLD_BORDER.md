@@ -1,8 +1,8 @@
 # World border
 
 The overworld is a **10 000 × 10 000** block square (radius 5 000), centred on the **world spawn**: Kharkhorum's plaza.
-Every region ring and named area (docs/world/AREAS.md) is measured from the spawn, so the outer ring (1500–5000) ends
-exactly at the border.
+Every region ring and named area (docs/world/AREAS.md) is measured from the spawn: five rings of 8 areas (51–700,
+700–1 500, 1 500–2 600, 2 600–3 800, 3 800–5 000 blocks), so the last ring ends exactly at the border.
 
 | Setting (`config.yml` → `world.border`) | Default | Meaning |
 |---|---|---|
