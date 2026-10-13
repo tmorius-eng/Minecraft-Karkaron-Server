@@ -6,7 +6,8 @@ const { execFileSync } = require('child_process');
 const [ctl, logfile] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
-const lines = () => fs.readFileSync(logfile, 'utf8').split('\n');
+// the last element after the final newline is '' (or a half-written line): never count it, or slice(n) skips a line
+const lines = () => { const a = fs.readFileSync(logfile, 'utf8').split('\n'); a.pop(); return a; };
 const results = [];
 const check = (name, ok, detail) => { results.push({ name, ok: !!ok, detail }); console.error((ok ? 'PASS ' : 'FAIL ') + name + (detail ? ' :: ' + detail : '')); };
 const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') return c; const v = c.value || c; let s = ''; if (v.text) s += (v.text.value ?? v.text); const ex = v.extra && (v.extra.value?.value || v.extra.value || v.extra); if (Array.isArray(ex)) ex.forEach(e => s += flat(e.value ? e : { value: e })); return s; };

@@ -7,7 +7,8 @@ const { execFileSync } = require('child_process');
 const [ctl, logfile, port = '25572'] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
-const lines = () => fs.readFileSync(logfile, 'utf8').split('\n');
+// the last element after the final newline is '' (or a half-written line): never count it, or slice(n) skips a line
+const lines = () => { const a = fs.readFileSync(logfile, 'utf8').split('\n'); a.pop(); return a; };
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
 
@@ -36,7 +37,8 @@ function join(name) {
 const diedSince = (n, name) => [...lines().slice(n)].some(l => l.includes(name) && /(died|was slain|burned|үхэв|нас бар|сүнс)/i.test(l));
 
 // the steppe has mobs: one could finish a defeated fighter and spoil the next check
-const clearMobs = () => cmd('execute at @a run kill @e[type=!player,type=!item,distance=..48]');
+// minecraft:kill: EssentialsX takes over a bare /kill and reads the selector as a player name
+const clearMobs = () => cmd('execute at @a run minecraft:kill @e[type=!player,type=!item,distance=..48]');
 
 async function duel(A, B) {
   const k = B.chatLog.length;
@@ -72,8 +74,10 @@ async function duel(A, B) {
 
   n = lines().length;
   clearMobs();
-  cmd(`damage ${bn} 1000 minecraft:player_attack by ${an}`); await sleep(2500);
-  const refused = lines().slice(n).some(l => l.includes('invulnerable')); // the PvP policy cancelled the hit
+  cmd(`damage ${bn} 1000 minecraft:player_attack by ${an}`); await sleep(1000);
+  // the PvP policy cancelled the hit; the server log can lag a few seconds behind, so wait for the line
+  let refused = false;
+  for (let i = 0; i < 12 && !refused; i++) { refused = lines().slice(n).some(l => l.includes('invulnerable')); if (!refused) await sleep(500); }
   check(refused && B.health > hp1 - 20 && !diedSince(n, bn), 'after the defeat the duel is over: a hit does nothing', 'hp=' + B.health + ' refused=' + refused);
 
   // a duel hit that leaves a burn, then the burn would kill: still the duel
@@ -89,7 +93,9 @@ async function duel(A, B) {
   check(!diedSince(n, bn) && B.health > 0 && B.chatLog.slice(k).some(l => l.includes('тулаанд ялав')), 'a burn after a duel hit is a defeat too', 'hp=' + B.health);
 
   // no duel and no recent duel hit: the same burn is a real hardcore death
-  await sleep(8000); // past the defeat's 60 ticks of protection (a slow dev server ticks below 20/s)
+  // past the defeat's 60 ticks of protection (a slow dev server ticks below 20/s); keep the wild mobs off B meanwhile
+  // (a mob kill here would make B a soul, and a soul cannot be burnt)
+  for (let i = 0; i < 4; i++) { clearMobs(); await sleep(2000); }
   const d0 = B.deaths;
   cmd(`damage ${bn} 1000 minecraft:on_fire`); await sleep(2500);
   check(B.deaths > d0, 'outside a duel the burn kills for real', 'deaths ' + d0 + ' -> ' + B.deaths);

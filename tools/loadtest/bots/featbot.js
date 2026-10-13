@@ -6,7 +6,8 @@ const { execFileSync } = require('child_process');
 const [ctl, logfile] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
-const lines = () => fs.readFileSync(logfile, 'utf8').split('\n');
+// the last element after the final newline is '' (or a half-written line): never count it, or slice(n) skips a line
+const lines = () => { const a = fs.readFileSync(logfile, 'utf8').split('\n'); a.pop(); return a; };
 const results = [];
 const check = (name, ok, detail) => { results.push({ name, ok: !!ok, detail }); console.error((ok ? 'PASS ' : 'FAIL ') + name + (detail ? ' :: ' + detail : '')); };
 const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') return c; const v = c.value || c; let s = ''; if (v.text) s += (v.text.value ?? v.text); const ex = v.extra && (v.extra.value?.value || v.extra.value || v.extra); if (Array.isArray(ex)) ex.forEach(e => s += flat(e.value ? e : { value: e })); return s; };
@@ -18,6 +19,8 @@ function join(name) {
     bot.on('messagestr', (m) => bot.chatLog.push(m));
     bot._client.on('boss_bar', (pk) => { if (pk.title) bot.bars.set(String(pk.entityUUID), flat(pk.title)); });
     bot.on('error', () => {});
+    // accept the pack like a player does (PackGate holds the class menu while a pack answer is missing)
+    bot.on('resourcePack', () => { try { bot.acceptResourcePack(); } catch (e) {} });
     bot.once('spawn', async () => { await sleep(3500); resolve(bot); });
     setTimeout(() => resolve(null), 30000);
   });
@@ -62,7 +65,8 @@ const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
   const tagLine = B.chatLog.find(l => l.includes('party-hello-' + tag)) || '';
   check('channel tag in front of the line', /\[Б\]/.test(tagLine), tagLine);
   // ---------------------------------------------------------------- lock-on (Q with the class weapon)
-  cmd(`tp ${tag}c -16 75 -46`); await sleep(1500);
+  // outside Хархорум: the city sanctuary takes every hostile mob away at once
+  cmd(`spreadplayers 1500 1500 1 4 false ${tag}c`); await sleep(4000);
   cmd(`execute at ${tag}c run summon minecraft:zombie ~ ~ ~5 {NoAI:1b,Tags:["featlock"]}`); await sleep(800);
   await C.lookAt(C.entity.position.offset(0, 1.6, 5)).catch(() => {});
   const weapon = C.inventory.items().find(i => /sword|bow|stick|axe|trident|mace|spear|blaze_rod/.test(i.name)) || C.heldItem;
@@ -84,15 +88,20 @@ const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
   if (m) { cmd(`tp ${tag}c ${+m[1] + 0.5} ${+m[2] + 2} ${+m[3] + 3.5}`); }
   check('gate of Хасарын Агуй known', !!m, gate.slice(-80));
   await sleep(3000);
+  // «Саарлын Агуй» opens after story chapter 4 (PROG-004): put the bot at chapter 5 first
+  cmd(`suld quest ${tag}c 5`); await sleep(1000);
+  const titles = []; C._client.on('set_title_text', (pk) => titles.push(JSON.stringify(pk.text)));
   C.chat('/dungeon enter khasar_den'); await sleep(6000);
-  const inHall = C.game && C.entity && lines().slice(n0).some(l => /built den slot|Dungeon halls/.test(l));
-  check('run starts in a hall', heard(C, 'ХАСАРЫН АГУЙ') || heard(C, 'Танхим') || inHall, C.entity && C.entity.position.toString());
+  const gp = C.entity && m ? Math.hypot(C.entity.position.x - +m[1], C.entity.position.z - +m[3]) : 0;
+  // in the run: the halls world (a dimension change) or far from the gate
+  const inHall = !!(C.game && /halls/.test(String(C.game.dimension))) || gp > 50 || lines().slice(n0).some(l => /built den slot/.test(l));
+  check('run starts in a hall', inHall, (C.entity && C.entity.position.toString()) + ' dim ' + (C.game && C.game.dimension) + ' ' + C.chatLog.slice(-2).join(' | ').slice(0, 200));
   for (let w = 0; w < 10; w++) { cmd('execute in minecraft:suld_halls run minecraft:kill @e[tag=suld_dungeon]'); await sleep(3000); }
   await sleep(9000);
   const p = C.entity.position;
   const near = m ? Math.hypot(p.x - +m[1], p.z - +m[3]) : -1;
-  check('after the run the party is back at the gate', m && near < 20, 'distance ' + near.toFixed(1));
-  check('dungeon completed', heard(C, 'АГУЙ ДУУСЛАА') || heard(C, 'EXP'), C.chatLog.slice(-4).join(' / '));
+  check('after the run the party is back at the gate', inHall && m && near < 20, 'distance ' + near.toFixed(1));
+  check('dungeon completed', titles.some(t => t.includes('АГУЙ ДУУСЛАА')), titles.slice(-2).join(' / ').slice(0, 160));
   // ---------------------------------------------------------------- models on mobs
   cmd(`execute at ${tag}b run summon minecraft:zombie ~ ~ ~`); // vanilla: no rig
   const modelLines = lines().filter(l => /model [a-z_]+: \d+ bones/.test(l));

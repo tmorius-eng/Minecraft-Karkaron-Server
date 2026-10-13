@@ -9,7 +9,8 @@ const { execFileSync } = require('child_process');
 const [ctl, logfile, port = '25571'] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
-const lines = () => fs.readFileSync(logfile, 'utf8').split('\n');
+// the last element after the final newline is '' (or a half-written line): never count it, or slice(n) skips a line
+const lines = () => { const a = fs.readFileSync(logfile, 'utf8').split('\n'); a.pop(); return a; };
 const results = [];
 const check = (name, ok, detail) => { results.push({ name, ok: !!ok, detail }); console.error((ok ? 'PASS ' : 'FAIL ') + name + (detail ? ' :: ' + detail : '')); };
 const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') return c; const v = c.value || c; let s = ''; if (v.text) s += (v.text.value ?? v.text); const ex = v.extra && (v.extra.value?.value || v.extra.value || v.extra); if (Array.isArray(ex)) ex.forEach(e => s += flat(e.value ? e : { value: e })); return s; };
@@ -77,8 +78,14 @@ const logged = (from, text) => lines().slice(from).some(l => l.includes(text));
   // ------------------------------------------------------------ party finder
   A.chat('/party recruit khasar_den'); await sleep(1500);
   check('recruiting is announced', heard(A, 'Баг хайлтад орлоо'), A.chatLog.slice(-2).join(' | '));
-  B.chat('/party find'); await sleep(1500);
-  check('the board lists the party', heard(B, tag + 'a') && heard(B, 'нэгдэх'), B.chatLog.slice(-3).join(' | '));
+  // /party find opens the board window (one card per recruiting party, a click joins)
+  const board = new Promise((res) => { const t = setTimeout(() => res(null), 5000); B.once('windowOpen', (w) => { clearTimeout(t); res(w); }); });
+  B.chat('/party find');
+  const w = await board; await sleep(600);
+  const cards = w ? w.slots.filter(Boolean).map(i => JSON.stringify(i.customName || i.displayName || '') + JSON.stringify(i.nbt || i.components || '')) : [];
+  check('the board lists the party', !!w && cards.some(c => c.includes(tag + 'a')), w ? cards.filter(c => c.includes('баг')).slice(0, 2).join(' | ').slice(0, 160) : 'no window');
+  if (B.currentWindow) B.closeWindow(B.currentWindow);
+  await sleep(500);
   B.chat('/party join ' + tag + 'a'); await sleep(1500);
   check('joining through the finder works', heard(B, 'багт нэгдлээ'), B.chatLog.slice(-2).join(' | '));
   B.chat('/party role healer'); await sleep(1000);
