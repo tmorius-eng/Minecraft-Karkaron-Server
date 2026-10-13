@@ -15,8 +15,9 @@ exactly at the border.
 ## How it works
 
 * It is Minecraft's own world border, stored in `level.dat`. SÜLD sets it **once** on start, and again only when the
-  config or the spawn changes (the city build moves the spawn and calls `WorldBorderService.apply`). Nothing runs per
-  tick, and no `/worldborder` command is repeated.
+  config or the spawn changes (Paper's `SpawnChangeEvent`: the city's first build moves the spawn onto the plaza, a
+  rollback puts it back, staff `/setworldspawn`). The dungeon gates, the ovoos and the historic sites follow the spawn
+  at the same moment. Nothing runs per tick, and no `/worldborder` command is repeated.
 * The vanilla client draws it, and vanilla collision keeps walkers, riders, horses and boats inside.
 * What vanilla lets through is closed by events only (no per-player scans):
   * **Teleports** (ender pearl, chorus fruit, commands, plugins) whose destination is outside are cancelled, with the

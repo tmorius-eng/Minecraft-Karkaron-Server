@@ -94,9 +94,11 @@ public final class MapPois {
         }
         Map<String, int[]> sites = new HashMap<>();
         Map<String, String> siteNames = new HashMap<>();
+        var placed = services.historicSites; // where the sites stand (it follows the spawn), never recomputed here
         for (HistoricSite s : Content.pack().historicSites()) {
+            Location at = placed == null ? null : placed.where(s.id()).orElse(null);
             int[] o = s.offset();
-            int x = spawn.getBlockX() + o[0], z = spawn.getBlockZ() + o[1];
+            int x = at != null ? at.getBlockX() : spawn.getBlockX() + o[0], z = at != null ? at.getBlockZ() : spawn.getBlockZ() + o[1];
             sites.put(s.id(), new int[]{x, z});
             siteNames.put(s.id(), s.name());
             out.add(new Poi(s.id(), Kind.SITE, s.name(), x, z, areaName(s.areaId())));

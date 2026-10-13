@@ -63,7 +63,8 @@ public final class OvooService implements Listener {
     private final Plugin plugin;
     private final SuldServices services;
     private final File stateFile;
-    private final List<Ovoo> ovoos = new ArrayList<>();
+    /** Where every area's ovoo stands, by the spawn (replaced whole when the spawn moves; read from any thread). */
+    private volatile List<Ovoo> ovoos = List.of();
     private final Map<String, int[]> built = new HashMap<>(); // id → x, y, z
     private final Map<UUID, Map<String, OvooCircle>> walking = new HashMap<>();
     private final Map<UUID, String> hinted = new HashMap<>();
@@ -81,16 +82,42 @@ public final class OvooService implements Listener {
         this.blessKey = new NamespacedKey(plugin, "ovoo_bless_until");
     }
 
-    public void start() {
+    /**
+     * False while the city is on its way and will move the spawn (SuldPlugin: WorldBuildService.spawnSettled): no cairn
+     * is built until it is (the pre-generator loads the hearts of the areas), or it would stand by the first spawn of a
+     * fresh world and again by the city's.
+     */
+    public volatile java.util.function.BooleanSupplier spawnSettled = () -> true;
+
+    private static List<Ovoo> place() {
         World w = Bukkit.getWorlds().get(0);
         Location sp = w.getSpawnLocation();
         double border = w.getWorldBorder().getSize() / 2;
+        List<Ovoo> out = new ArrayList<>();
         for (Area a : WorldContent.AREAS) {
             double span = ((a.toDeg() - a.fromDeg()) % 360 + 360) % 360;
             double mid = Math.toRadians(a.fromDeg() + (span == 0 ? 360 : span) / 2);
             double r = (a.minRadius() + Math.min(a.maxRadius(), border - 64)) / 2;
-            ovoos.add(new Ovoo(a, sp.getBlockX() + (int) Math.round(Math.sin(mid) * r), sp.getBlockZ() + (int) Math.round(-Math.cos(mid) * r)));
+            out.add(new Ovoo(a, sp.getBlockX() + (int) Math.round(Math.sin(mid) * r), sp.getBlockZ() + (int) Math.round(-Math.cos(mid) * r)));
         }
+        return List.copyOf(out);
+    }
+
+    /**
+     * The spawn moved (SuldPlugin, SpawnChangeEvent: the city's first build, a rollback, /setworldspawn): every ovoo
+     * stands at the heart of its area by the new spawn, as the area rings do; a cairn built by the old spawn is built
+     * again by the new one when someone comes near.
+     */
+    public void spawnMoved() {
+        List<Ovoo> next = place();
+        if (next.equals(ovoos)) return;
+        ovoos = next;
+        Location sp = Bukkit.getWorlds().get(0).getSpawnLocation();
+        plugin.getLogger().info("[ovoo] the spawn moved to " + sp.getBlockX() + " " + sp.getBlockZ() + ": " + next.size() + " ovoos stand by it");
+    }
+
+    public void start() {
+        ovoos = place();
         YamlConfiguration st = YamlConfiguration.loadConfiguration(stateFile);
         for (String k : st.getKeys(false)) {
             built.put(k, new int[]{st.getInt(k + ".x"), st.getInt(k + ".y"), st.getInt(k + ".z")});
@@ -164,6 +191,7 @@ public final class OvooService implements Listener {
     // ------------------------------------------------------------------ building
 
     private void buildLoaded() {
+        if (!spawnSettled.getAsBoolean()) return;
         World w = Bukkit.getWorlds().get(0);
         for (Ovoo o : ovoos) {
             int[] b = built.get(o.id());
@@ -174,6 +202,7 @@ public final class OvooService implements Listener {
             built.put(o.id(), new int[]{o.x(), y + 1, o.z()});
             guard(o.id(), built.get(o.id()));
             save();
+            plugin.getLogger().info("[ovoo] built " + o.id() + " at " + o.x() + " " + (y + 1) + " " + o.z());
         }
     }
 

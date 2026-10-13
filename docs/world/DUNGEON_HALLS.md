@@ -20,7 +20,10 @@ blocks were there.
   stones.
   * The chunk is loaded asynchronously before building.
   * The position and blueprint version are stored in `plugins/SULD/halls.yml`. A gate whose spawn-relative position
-    moved is built again at the new place.
+    moved is built again at the new place (the old one is not removed).
+  * On a fresh world the gates wait until Kharkhorum is built: the city moves the spawn onto its plaza, and gates
+    built before that stood a second time 18 blocks off (`WorldBuildService.spawnSettled`; the ovoos and historic
+    sites wait the same way; `tools/loadtest/bots/firstbootbot.js`).
 * A floating title ("⚔ Говийн Булш · Түвшин 8+") and a clickable doorway (an `Interaction` entity) are respawned
   whenever the gate's chunk is loaded. They are not persistent.
 * The ground around every gate is pre-generated: priority **P2**, radius 96 (docs/world/PREGENERATION.md).

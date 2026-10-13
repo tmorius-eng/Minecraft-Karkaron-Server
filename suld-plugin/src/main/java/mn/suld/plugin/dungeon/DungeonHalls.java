@@ -432,8 +432,22 @@ public final class DungeonHalls implements Listener {
         return g != null && g.getWorld().equals(p.getWorld()) && g.distanceSquared(p.getLocation()) <= GATE_RANGE * GATE_RANGE;
     }
 
+    /**
+     * False while the city is on its way and will move the spawn (SuldPlugin: WorldBuildService.spawnSettled). The gates
+     * wait for it: built around the first spawn of a fresh world, all ten stood a second time 18 blocks south once the
+     * city set its own (map inspection, 2026-10-13).
+     */
+    public volatile java.util.function.BooleanSupplier spawnSettled = () -> true;
+    private boolean gatesWaiting;
+
     /** Builds every gate that is missing at its current spawn-relative place (also after the spawn moved). */
     public void placeGates() {
+        if (!spawnSettled.getAsBoolean()) {
+            if (!gatesWaiting) plugin.getLogger().info("Dungeon gates wait for Kharkhorum to set the spawn (the city is being built)");
+            gatesWaiting = true;
+            return;
+        }
+        gatesWaiting = false;
         World ow = Bukkit.getWorlds().get(0);
         for (DungeonSite s : sites) {
             int[] xz = gateXZ(s);

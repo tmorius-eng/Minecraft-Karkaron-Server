@@ -449,10 +449,20 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.worldbuild.WorldBorderService border = new mn.suld.plugin.worldbuild.WorldBorderService(this);
         getServer().getPluginManager().registerEvents(border, this);
         border.apply("start");
-        worldBuild.onSpawnChanged(() -> {
-            border.apply("spawn moved");
-            halls.placeGates(); // gates follow the spawn like every region ring
-        });
+        // what stands by the spawn follows it when it moves (the city's first build, a rollback, /setworldspawn), like
+        // every region ring; what is built in the world waits until the city has set it (map inspection, 2026-10-13)
+        halls.spawnSettled = worldBuild::spawnSettled;
+        mn.suld.plugin.dungeon.DungeonHalls spawnHalls = halls;
+        getServer().getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler
+            public void onSpawnMoved(org.bukkit.event.world.SpawnChangeEvent e) {
+                if (!e.getWorld().equals(org.bukkit.Bukkit.getWorlds().get(0))) return;
+                border.apply("spawn moved");
+                spawnHalls.placeGates();
+                if (services.ovoos != null) services.ovoos.spawnMoved();
+                if (services.historicSites != null) services.historicSites.spawnMoved();
+            }
+        }, this);
         if (getConfig().getBoolean("map.enabled", true)) {
             // «Сүлдийн Атлас» (docs/WORLD_MAP.md): after the border, whose square the map covers
             services.map = new mn.suld.plugin.map.MapService(this);
@@ -497,12 +507,14 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("suldworld", worldCommand);
         // ovoo at the heart of every area (docs/world/OVOO.md): circle three times clockwise for Тэнгэрийн ивээл
         mn.suld.plugin.region.OvooService ovoo = new mn.suld.plugin.region.OvooService(this, services);
+        ovoo.spawnSettled = worldBuild::spawnSettled;
         getServer().getPluginManager().registerEvents(ovoo, this);
         ovoo.deaths = deaths; // a soul's «Овооны цацал» ends the soul state
         ovoo.start();
         services.ovoos = ovoo;
         // the historical places of the Mongol lands in the wild (content/sites.json, docs/world/HISTORIC_SITES.md)
         mn.suld.plugin.region.HistoricSiteService historicSites = new mn.suld.plugin.region.HistoricSiteService(this, services);
+        historicSites.spawnSettled = worldBuild::spawnSettled;
         historicSites.start();
         services.historicSites = historicSites;
         // world bosses rise at historic sites at the weekly hours of worldboss.times (docs/WORLD_BOSSES.md)

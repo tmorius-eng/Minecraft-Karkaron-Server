@@ -145,6 +145,7 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
                 plugin.getLogger().info("[worldbuild] slice plan v" + state.sliceVersion + " → v" + specVersion
                         + ": rolling back the old build and rebuilding the new plan at the same anchor");
                 int[] anchor = {state.anchorX, state.anchorY, state.anchorZ};
+                cityComing = true; // the rollback puts the first spawn back for a moment; the new build moves it again
                 Bukkit.getScheduler().runTaskLater(plugin, () -> rollback(null, () -> plan(null, anchor)), 40L);
                 return;
             }
@@ -166,8 +167,35 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
             return;
         }
         if (settings.autoBuildKharkhorum()) {
+            cityComing = true;
             Bukkit.getScheduler().runTaskLater(plugin, () -> plan(null), 40L);
         }
+    }
+
+    /** True from the moment a city is decided on until its plan exists (then {@link BuildState#status} tells). */
+    private volatile boolean cityComing;
+
+    /**
+     * Whether the world spawn is where it stays. False while Kharkhorum is on its way: from the decision to build it
+     * (a fresh world with auto-build, a plan upgraded in place) until it is built, or while a build is planned, running
+     * or paused. The city moves the spawn onto its plaza when it is built, and what stands by the spawn (the dungeon
+     * gates, the ovoos, the historic sites) waits for that, or it would stand twice a few blocks apart: on a fresh world
+     * all ten gates were built around the first spawn and again 18 blocks south when the city set its own (map
+     * inspection, 2026-10-13). A world without a city on its way (auto-build off, a failed or rolled-back build) is
+     * settled where it is.
+     */
+    public boolean spawnSettled() {
+        BuildState s = state;
+        return spawnSettled(cityComing, s == null ? null : s.status);
+    }
+
+    /** @param status the build's, or null when there is no build */
+    static boolean spawnSettled(boolean cityComing, BuildState.Status status) {
+        if (cityComing) return false;
+        return status == null || switch (status) {
+            case PLANNED, BUILDING, PAUSED -> false;
+            case BUILT, APPROVED, LOCKED, ROLLED_BACK, FAILED -> true;
+        };
     }
 
     public void stop() {
@@ -222,10 +250,12 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
         Consumer<String> say = msg(feedback);
         if (state != null && (state.status == BuildState.Status.APPROVED || state.status == BuildState.Status.LOCKED)) {
             say.accept("Барилга баталгаажсан/түгжигдсэн тул дахин барихгүй (/worldbuild unlock).");
+            cityComing = false;
             return;
         }
         if (task != null) {
             say.accept("Барилга аль хэдийн явагдаж байна.");
+            cityComing = false;
             return;
         }
         World world = Bukkit.getWorlds().get(0);
@@ -236,29 +266,44 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
         int f = spec.terrain().feather() + 1;
         area = new Footprint(b.minX() - f, 0, b.minZ() - f, b.maxX() + f, 0, b.maxZ() + f);
         say.accept("Газрын өндрийг хэмжиж байна (" + ((area.maxX() - area.minX()) / 16 + 1) * ((area.maxZ() - area.minZ()) / 16 + 1) + " chunk)…");
+        cityComing = true;
         loadChunks(world, ax, az).thenRun(() -> Bukkit.getScheduler().runTask(plugin, () -> {
-            int[] raw = sampleHeights(world, ax, az);
-            int anchorY = anchor != null ? anchor[1] : medianPlaza(raw);
-            heights = new int[raw.length];
-            for (int i = 0; i < raw.length; i++) heights[i] = raw[i] - anchorY;
-            state = new BuildState();
-            state.slice = SLICE;
-            state.world = world.getName();
-            state.anchorX = ax;
-            state.anchorY = anchorY;
-            state.anchorZ = az;
-            state.originalSpawn = new int[]{sp.getBlockX(), sp.getBlockY(), sp.getBlockZ()};
-            state.sliceVersion = specVersion;
             try {
-                Files.createDirectories(dir);
-                writeHeights();
-            } catch (IOException e) {
-                say.accept("Өндрийн зураг хадгалж чадсангүй: " + e.getMessage());
-                return;
+                startPlan(say, world, sp, ax, az, anchor);
+            } finally {
+                cityComing = false; // the plan exists (its status tells from here), or it failed: no city this time
             }
-            say.accept("Анхны цэг " + ax + " " + anchorY + " " + az + ". Хотыг эмхэтгэж байна…");
-            compileAsync(say, true);
-        }));
+        })).exceptionally(e -> {
+            cityComing = false;
+            plugin.getLogger().warning("[worldbuild] the city's ground could not be loaded: " + e);
+            return null;
+        });
+    }
+
+    private void startPlan(Consumer<String> say, World world, Location sp, int ax, int az, int[] anchor) {
+        int[] raw = sampleHeights(world, ax, az);
+        int anchorY = anchor != null ? anchor[1] : medianPlaza(raw);
+        heights = new int[raw.length];
+        for (int i = 0; i < raw.length; i++) heights[i] = raw[i] - anchorY;
+        state = new BuildState();
+        state.slice = SLICE;
+        state.world = world.getName();
+        state.anchorX = ax;
+        state.anchorY = anchorY;
+        state.anchorZ = az;
+        state.originalSpawn = new int[]{sp.getBlockX(), sp.getBlockY(), sp.getBlockZ()};
+        state.sliceVersion = specVersion;
+        try {
+            Files.createDirectories(dir);
+            writeHeights();
+        } catch (IOException e) {
+            state.status = BuildState.Status.FAILED;
+            state.note = "height map not written: " + e.getMessage();
+            say.accept("Өндрийн зураг хадгалж чадсангүй: " + e.getMessage());
+            return;
+        }
+        say.accept("Анхны цэг " + ax + " " + anchorY + " " + az + ". Хотыг эмхэтгэж байна…");
+        compileAsync(say, true);
     }
 
     private CompletableFuture<Void> loadChunks(World world, int ax, int az) {
@@ -333,8 +378,22 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
     private void compileAsync(Consumer<String> say, boolean fresh) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             long t0 = System.nanoTime();
-            CompiledCity compiled = CityCompiler.compile(spec, library, this::natural);
-            ValidationReport report = CityValidator.validate(compiled);
+            CompiledCity compiled;
+            ValidationReport report;
+            try {
+                compiled = CityCompiler.compile(spec, library, this::natural);
+                report = CityValidator.validate(compiled);
+            } catch (RuntimeException e) {
+                // a plan that cannot compile is a failed build, not one still on its way (spawnSettled)
+                plugin.getLogger().severe("[worldbuild] the city plan does not compile: " + e);
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    state.status = BuildState.Status.FAILED;
+                    state.note = "compile failed: " + e;
+                    saveState();
+                    say.accept("Хотын төлөвлөгөө эмхэтгэгдсэнгүй: " + e.getMessage());
+                });
+                return;
+            }
             long ms = (System.nanoTime() - t0) / 1_000_000;
             Bukkit.getScheduler().runTask(plugin, () -> {
                 city = compiled;
@@ -831,20 +890,12 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
         return null;
     }
 
-    private Runnable spawnChanged = () -> { };
-
-    /** Runs (main thread) after the city moves the world spawn, e.g. to re-centre the world border on it. */
-    public void onSpawnChanged(Runnable r) {
-        spawnChanged = r == null ? () -> { } : r;
-    }
-
     @SuppressWarnings("removal")
     private void applySpawn() {
         Location spawn = point("spawn");
         if (spawn == null) return;
         World world = spawn.getWorld();
-        world.setSpawnLocation(spawn);
-        spawnChanged.run();
+        world.setSpawnLocation(spawn); // fires SpawnChangeEvent: the border, the gates, the ovoos and the sites follow
         try {
             world.setGameRule(GameRule.SPAWN_RADIUS, 0); // renamed/data-driven in newer versions; best effort
         } catch (RuntimeException ignored) {

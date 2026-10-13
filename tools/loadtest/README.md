@@ -34,6 +34,10 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # questregionbot.js: each Act II kill chapter's quest bar names the region it is played in (staff /suld quest); 7 checks.
 # healthbot.js: the health survives a relog and a server restart (it restarts the dev server once); 3 checks.
 # sitesbot.js: a historic site (Аураг) is built once and remembered across a restart (it restarts the dev server once); 2 checks.
+# firstbootbot.js <srvctl.sh> <server dir>: a fresh world's first boot (NOT in regress.sh: it DELETES the world of <server dir>
+# and refuses unless the directory holds a FIRSTBOOT_SCRATCH file — a throwaway copy with the default config, never a real
+# world): every dungeon gate built once and only after Kharkhorum sets the spawn, the sites and ovoos move with it, a restart
+# builds nothing again; 6 checks.
 node bots/featbot.js ./srv2ctl.sh server.log     # the functional sweep (tutorial, chat, lock-on, dungeon hall, ...)
 node bots/khuraldai-smoke.js ./srv2ctl.sh server.log 25572   # Их Хуралдай: ballot, vote, close, force, finder, resolve, chronicle, PvP policy
 node bots/campaign-deliver.js ./srv2ctl.sh server.log test_deliver item.chonon_arisan 60 25572   # a DELIVER_ITEMS campaign to success

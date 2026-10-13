@@ -61,7 +61,8 @@ public final class HistoricSiteService {
     private final SuldServices services;
     private final File stateFile;
     private final NamespacedKey seenKey, plateKey;
-    private final List<Placed> sites = new ArrayList<>();
+    /** Where every site stands, by the spawn (replaced whole when the spawn moves; read from any thread). */
+    private volatile List<Placed> sites = List.of();
     /** id → x, y, z, build version. */
     private final Map<String, int[]> built = new HashMap<>();
     private final Map<String, UUID> plates = new HashMap<>();
@@ -79,13 +80,42 @@ public final class HistoricSiteService {
         return k.blocks().hashCode();
     }
 
-    public void start() {
-        World w = Bukkit.getWorlds().get(0);
-        Location sp = w.getSpawnLocation();
+    /**
+     * False while the city is on its way and will move the spawn (SuldPlugin: WorldBuildService.spawnSettled): no site is
+     * built until it is, or it would stand by the first spawn of a fresh world and again by the city's.
+     */
+    public volatile java.util.function.BooleanSupplier spawnSettled = () -> true;
+
+    private static List<Placed> place() {
+        Location sp = Bukkit.getWorlds().get(0).getSpawnLocation();
+        List<Placed> out = new ArrayList<>();
         for (HistoricSite s : Content.pack().historicSites()) {
             int[] o = s.offset();
-            sites.add(new Placed(s, sp.getBlockX() + o[0], sp.getBlockZ() + o[1]));
+            out.add(new Placed(s, sp.getBlockX() + o[0], sp.getBlockZ() + o[1]));
         }
+        return List.copyOf(out);
+    }
+
+    /**
+     * The spawn moved (SuldPlugin, SpawnChangeEvent: the city's first build, a rollback, /setworldspawn): every site
+     * stands by the new spawn, as the region rings do. The quest marker, the atlas and the world bosses read the new
+     * place at once; a site built by the old spawn is built again by the new one when someone comes near.
+     */
+    public void spawnMoved() {
+        List<Placed> next = place();
+        if (next.equals(sites)) return;
+        sites = next;
+        for (UUID id : plates.values()) {
+            Entity e = Bukkit.getEntity(id);
+            if (e != null) e.remove();
+        }
+        plates.clear();
+        Location sp = Bukkit.getWorlds().get(0).getSpawnLocation();
+        plugin.getLogger().info("[sites] the spawn moved to " + sp.getBlockX() + " " + sp.getBlockZ() + ": " + next.size() + " sites stand by it");
+    }
+
+    public void start() {
+        sites = place();
         java.util.Set<String> ids = new java.util.HashSet<>();
         for (Placed p : sites) ids.add(p.site().id());
         built.putAll(readBuilt(YamlConfiguration.loadConfiguration(stateFile), ids));
@@ -134,6 +164,7 @@ public final class HistoricSiteService {
     // ------------------------------------------------------------------------------------------------ building
 
     private void buildLoaded() {
+        if (!spawnSettled.getAsBoolean()) return;
         World w = Bukkit.getWorlds().get(0);
         for (Placed p : sites) {
             SiteKind k = p.site().kind();
