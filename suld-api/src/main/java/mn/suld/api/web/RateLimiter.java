@@ -58,6 +58,19 @@ public final class RateLimiter {
         }
     }
 
+    /**
+     * How long {@code client} waits for its next token at {@code now} (0 if it may go now, or is not remembered): the
+     * armory's Retry-After (docs/ARMORY_API.md).
+     */
+    public long retryAfterMs(String client, long now) {
+        Bucket b = buckets.get(client == null ? "" : client);
+        if (b == null) return 0;
+        synchronized (b) {
+            double tokens = Math.min(capacity, b.tokens + Math.max(0, now - b.last) / 1000.0 * perSecond);
+            return tokens >= 1 ? 0 : (long) Math.ceil((1 - tokens) / perSecond * 1000);
+        }
+    }
+
     /** Forgets the clients whose bucket is full again (they have been idle long enough). */
     public void evictIdle(long now) {
         for (Iterator<Map.Entry<String, Bucket>> it = buckets.entrySet().iterator(); it.hasNext(); ) {

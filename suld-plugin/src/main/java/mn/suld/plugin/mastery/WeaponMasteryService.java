@@ -147,6 +147,11 @@ public final class WeaponMasteryService implements Listener {
         return loaded.contains(id);
     }
 
+    /** A player's stored totals, read on the io pool (the armory's offline sheets; any thread). */
+    public CompletableFuture<Map<WeaponMastery.Track, Double>> totalsOf(UUID id) {
+        return repo.totals(id);
+    }
+
     /** The track of what the player holds in the main hand: a SÜLD weapon of one of the five kinds, else empty. */
     public Optional<WeaponMastery.Track> trackOf(Player p) {
         ItemStack hand = p.getInventory().getItemInMainHand();

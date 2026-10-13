@@ -432,3 +432,18 @@ anticheat:
     # handful; a Fly/Speed client that keeps casting SÜLD movement to hide inside the windows runs dry in seconds.
     budget-burst: 60
     budget-per-second: 6
+
+# The read-only armory API for a web page (docs/ARMORY_API.md): GET /api/player/{uuid}, /api/clans/leaderboard,
+# /api/khuraldai/active, as JSON cached for cache-seconds. Off by default. Bind it to 127.0.0.1 and put a reverse proxy
+# (TLS) in front of it; each client address gets a token bucket (burst, then per-minute). Nothing private is served.
+web:
+  armory:
+    enabled: false
+    bind: 127.0.0.1
+    port: 8086
+    cache-seconds: 30
+    burst: 20
+    per-minute: 60
+    allow-origin: "*"
+    # a reverse proxy on this host (e.g. "127.0.0.1"): its X-Forwarded-For names the client the rate limit counts
+    trusted-proxies: []

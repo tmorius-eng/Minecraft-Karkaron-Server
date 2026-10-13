@@ -39,6 +39,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.gui.MenuSky menuSky;
     private mn.suld.plugin.map.AtlasSky atlas;
     private mn.suld.plugin.map.WaypointGuide waypoints;
+    private mn.suld.plugin.web.ArmoryServer armory;
     private mn.suld.plugin.map.MinimapService minimap;
     private mn.suld.plugin.training.TrainingService training;
     private mn.suld.plugin.quest.QuestTracker tracker;
@@ -565,6 +566,9 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.item.MaterialGuard(services), this);
         services.professions.start();
         registerTab("mergejil", new mn.suld.plugin.command.ProfessionCommand(services));
+        // the read-only armory API for the web (docs/ARMORY_API.md): off unless web.armory.enabled
+        armory = new mn.suld.plugin.web.ArmoryServer(this, services);
+        armory.start();
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
         java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));
@@ -627,6 +631,7 @@ public final class SuldPlugin extends JavaPlugin {
         }
         if (minimap != null) minimap.shutdown(); // the minimaps' frames go
         if (waypoints != null) waypoints.shutdown(); // the waypoint bars and labels go
+        if (armory != null) armory.stop();
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
         if (services != null && services.map != null) services.map.shutdown(); // the map's regions to disk
         if (worldBuild != null) {

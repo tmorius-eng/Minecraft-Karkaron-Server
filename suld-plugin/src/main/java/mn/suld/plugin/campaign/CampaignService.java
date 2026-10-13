@@ -106,6 +106,11 @@ public final class CampaignService {
         return lastOutcome;
     }
 
+    /** The world effects campaigns have left that are live now (their flag keys). */
+    public List<String> worldMarks() {
+        return effects.liveKeys();
+    }
+
     public String cycleId() {
         return cycle.cycleId(Instant.now());
     }

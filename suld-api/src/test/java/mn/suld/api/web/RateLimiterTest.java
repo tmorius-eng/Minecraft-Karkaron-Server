@@ -36,6 +36,17 @@ class RateLimiterTest {
     }
 
     @Test
+    void aClientIsToldHowLongToWait() {
+        RateLimiter r = new RateLimiter(2, 2, 100); // a token every 500 ms
+        assertEquals(0, r.retryAfterMs("a", 0), "an unknown client waits for nothing");
+        assertTrue(r.allow("a", 0));
+        assertTrue(r.allow("a", 0));
+        assertEquals(500, r.retryAfterMs("a", 0));
+        assertEquals(200, r.retryAfterMs("a", 300));
+        assertEquals(0, r.retryAfterMs("a", 500));
+    }
+
+    @Test
     void concurrentRequestsNeverTakeMoreThanTheBurst() throws Exception {
         RateLimiter r = new RateLimiter(50, 0.001, 10);
         AtomicInteger ok = new AtomicInteger();
