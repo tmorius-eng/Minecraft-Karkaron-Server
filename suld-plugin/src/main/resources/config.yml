@@ -359,7 +359,7 @@ skills:
 shutdown:
   budget-seconds: 20
 
-# Cosmetics (/cosmetics). Shop cosmetics no rarer than coin-max-rarity can be bought with in-game coins (₮) as well
+# Cosmetics (/cosmetics). Shop cosmetics no rarer than coin-max-rarity can be bought with in-game coins (зоос) as well
 # as credits; rarer ones (and every store-only one) need Сүлд Кредит. COMMON | RARE | EPIC | LEGENDARY.
 cosmetics:
   coin-max-rarity: COMMON

@@ -42,9 +42,13 @@ b.once('spawn', async () => {
   await sleep(4000);
   check(said(k, 'сорил зогслоо'), 'the trial stops when the lock ends', chat.slice(k).filter(l => l.length > 3).join(' | ').slice(0, 160));
   check(wolves().length === 0, 'no spirit wolf is left near the living player', 'wolves ' + wolves().length);
-  // stand still 12 s: a living player must not be bitten
+  // stand still 12 s: a living player must not be bitten by its spirit wolves. The steppe's own mobs are cleared
+  // meanwhile (wolves excepted, so a trial wolf left behind still bites and fails this check): a stray mob is
+  // not the trial (a pillager took 88 -> 57 here once, wolves 0)
+  const clearOthers = () => cmd(`execute at ${name} run minecraft:kill @e[type=!player,type=!wolf,type=!item,distance=..48]`);
+  clearOthers();
   const hp0 = b.health;
-  await sleep(12000);
+  for (let i = 0; i < 6; i++) { await sleep(2000); clearOthers(); }
   check(deaths === before && b.health >= hp0, 'the living player is not hurt after the lock ended', `hp ${hp0} -> ${b.health}, deaths ${deaths - before}`);
   check(!said(k, 'минутын дараа дахин /trial'), 'no failed-trial cooldown for an ended lock', chat.slice(k).filter(l => l.length > 3).slice(-2).join(' | ').slice(0, 140));
 
