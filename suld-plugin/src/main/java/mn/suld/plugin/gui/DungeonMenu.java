@@ -83,6 +83,11 @@ public final class DungeonMenu {
         m.set(47, Menu.item(Material.PLAYER_HEAD, Menu.title("Бүлэг", SKY), Menu.lore(SKY,
                 List.of(Menu.kv("Одоо:", size == 1 ? "ганцаараа" : size + " хүн", SKY),
                         Menu.line("Найзаа урих: /party invite <нэр>")), List.of(), null)), null);
+        if (level >= mn.suld.api.dungeon.heroic.HeroicLadder.PLAYER_LEVEL) { // the heroic keys open at 60
+            m.set(48, Menu.item(Material.ECHO_SHARD, Menu.title("Баатарлаг Агуй", PURPLE), Menu.lore(PURPLE,
+                    List.of(Menu.line("Түлхүүр +1…+20, долоо хоногийн нөхцөл, цаг"),
+                            Menu.line("Шагнал: «Эртний Хас Чулуу»")), List.of(), "Нээх")), (pl, c) -> pl.performCommand("dungeon heroic"));
+        }
         m.set(49, Menu.item(Material.NETHER_STAR, Menu.title("Таны аян", GOLD), List.of(
                 Menu.kv("Түвшин:", String.valueOf(level), GOLD),
                 Menu.kv("Давсан агуй:", cleared + " / " + ladder.size(), cleared == ladder.size() ? GREEN : GOLD),

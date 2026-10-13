@@ -515,8 +515,67 @@ public final class NpcService implements Listener {
                 if (services.classArmor != null) services.classArmor.smithWork(pl);
                 pl.closeInventory();
             });
+            reroll(m, p, inst);
         }
         m.open(p);
+    }
+
+    /**
+     * «Эртний Хас Чулуу» (docs/HEROIC_DUNGEONS.md): an endgame item's affixes rolled again for jade by rarity and the
+     * reforge coins of its level ({@link mn.suld.api.item.AffixReroll}). The same item, rarity, level and base stats.
+     */
+    private void reroll(Menu m, Player p, mn.suld.api.item.ItemInstance inst) {
+        mn.suld.api.item.ItemDefinition def0 = mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId());
+        String why = mn.suld.api.item.AffixReroll.blocked(inst, def0);
+        int jade = mn.suld.api.item.AffixReroll.jade(inst.rarity());
+        long coins = mn.suld.api.item.AffixReroll.coins(inst.itemLevel());
+        int have = countItem(p, mn.suld.api.item.AffixReroll.JADE);
+        List<Component> lore = new ArrayList<>();
+        if (why == null) {
+            lore.add(Menu.kv("Үнэ:", jade + " Эртний Хас Чулуу · " + coins + " зоос", NamedTextColor.GOLD));
+            lore.add(Menu.kv("Танд:", have + " хас чулуу", have >= jade ? NamedTextColor.GREEN : NamedTextColor.RED));
+            lore.add(Menu.line("Зэрэглэл, түвшин, үндсэн хүч хэвээр; шинжүүд шинээр сугалагдана."));
+            lore.add(Menu.line("Хас чулууг баатарлаг агуйг хугацаанд нь давж олно."));
+        } else {
+            lore.add(Menu.line(why));
+        }
+        m.set(17, Menu.item(why == null ? Material.EMERALD : Material.BARRIER,
+                Menu.title("Шинж дахин сугалах", why == null ? NamedTextColor.GREEN : NamedTextColor.RED), lore), why != null ? null : (pl, c) -> {
+            PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
+            ItemStack hand = pl.getInventory().getItemInMainHand();
+            mn.suld.api.item.ItemInstance now = services.items().read(hand).orElse(null);
+            // the very item the window was opened for, unchanged since (a second click finds new affixes and stops)
+            if (pr == null || now == null || !now.uuid().equals(inst.uuid()) || !now.affixes().equals(inst.affixes()) || hand.getAmount() != 1) {
+                pl.closeInventory();
+                return;
+            }
+            mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(now.definitionId());
+            if (mn.suld.api.item.AffixReroll.blocked(now, def) != null) {
+                pl.closeInventory();
+                return;
+            }
+            if (pr.currency() < coins) {
+                pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + coins + " зоос)."));
+                return;
+            }
+            if (countItem(pl, mn.suld.api.item.AffixReroll.JADE) < jade) {
+                pl.sendMessage(Messages.error("Эртний Хас Чулуу ×" + jade + " хэрэгтэй: баатарлаг агуйг хугацаанд нь дав (/dungeon heroic)."));
+                return;
+            }
+            mn.suld.api.item.ItemInstance rolled = services.itemService().rerollAffixes(now, def);
+            takeItem(pl, mn.suld.api.item.AffixReroll.JADE, jade);
+            pr.addCurrency(-coins);
+            ItemStack out = hand.clone();
+            services.items().rewrite(out, rolled, services.itemService().viewer(pl)); // keeps durability and identity
+            pl.getInventory().setItemInMainHand(out);
+            pl.playSound(pl.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_RESONATE, 1f, 1.2f);
+            pl.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, pl.getLocation().add(0, 1.2, 0), 24, 0.4, 0.5, 0.4, 0);
+            pl.sendMessage(Messages.success(def.displayName() + ": шинжүүд шинэчлэгдлээ (-" + jade + " хас чулуу, -" + coins + " зоос)."));
+            services.audit().record(mn.suld.api.audit.AuditEvent.of(pl.getUniqueId().toString(), "item.affix_reroll",
+                    now.definitionId() + "-" + now.uuid(), now.rarity().name() + " L" + now.itemLevel()));
+            services.profiles().save(pr);
+            pl.closeInventory();
+        });
     }
 
     /** Where the smith stands (the purchase confirmation checks the player is still there). */

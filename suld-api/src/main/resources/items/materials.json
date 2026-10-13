@@ -78,6 +78,19 @@
    "stack": 64,
    "sell": 4,
    "lore": "Алдарт зэвсгээс үлдсэн тэнгэрийн чулуу."
+  },
+  {
+   "id": "item.ertnii_khas",
+   "name": "Эртний Хас Чулуу",
+   "material": "minecraft:emerald",
+   "type": "MATERIAL",
+   "rarity": "epic",
+   "level": 1,
+   "stack": 64,
+   "sell": 0,
+   "tradable": false,
+   "lootable": false,
+   "lore": "Баатарлаг агуйг хугацаанд нь давсны шагнал: дарханд эд зүйлийн шинжийг дахин сугална."
   }
  ]
 }

@@ -500,7 +500,14 @@ public final class DungeonHalls implements Listener {
         int lvl = def == null ? 1 : def.minLevel();
         return Component.text("⚔ " + name, NamedTextColor.GOLD, TextDecoration.BOLD)
                 .append(Component.newline())
-                .append(Component.text("Түвшин " + lvl + "+ · Хаалгыг дарж оръё", NamedTextColor.GRAY));
+                .append(Component.text("Түвшин " + lvl + "+ · Хаалгыг дарж оръё · Shift: баатарлаг (60)", NamedTextColor.GRAY));
+    }
+
+    /** Who a Shift + click on a gate takes into the heroic key (SuldPlugin: level 60). */
+    private java.util.function.Predicate<org.bukkit.entity.Player> heroicGate = p -> false;
+
+    public void heroicGate(java.util.function.Predicate<org.bukkit.entity.Player> who) {
+        this.heroicGate = who;
     }
 
     @EventHandler
@@ -509,7 +516,9 @@ public final class DungeonHalls implements Listener {
         for (Map.Entry<String, UUID[]> en : gateEntities.entrySet()) {
             if (en.getValue()[1].equals(e.getRightClicked().getUniqueId())) {
                 e.setCancelled(true);
-                site(en.getKey()).ifPresent(s -> e.getPlayer().performCommand("dungeon enter " + s.shortId()));
+                // Shift + click by a level-60 player: the heroic key (docs/HEROIC_DUNGEONS.md); anyone else enters normally
+                boolean heroic = e.getPlayer().isSneaking() && heroicGate.test(e.getPlayer());
+                site(en.getKey()).ifPresent(s -> e.getPlayer().performCommand((heroic ? "dungeon heroic " : "dungeon enter ") + s.shortId()));
                 return;
             }
         }

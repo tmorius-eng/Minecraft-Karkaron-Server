@@ -5,16 +5,14 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `5fe583a` · **Schema:** V23 · **Bot sweep:**
-`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` (33 runs) — 2026-10-13 on the death-reform build: 31/33 (259 checks in the
-passing runs). The 2 red: hubbot (one chat line of unknown source fell inside the `/profile` window; 2 standalone reruns
-31/31, one of them as the first bot after a restart; the bot now prints the line it saw) and campaign-effects (the bot
-killed 1 of 3 wolves in 45 s: the server logged one death and counted one kill, so the count was right; a rerun showed
-the bot in a pit 10 blocks under the wolves; it now brings a wolf beyond melee reach to itself: 3 reruns 6/6). Earlier on
-the training-payouts build: 29/33, the 4 red fixed in the game or the bots and 9/9 on the final jar. A sweep with a
-missing log directory had printed «ALL GREEN» without running a bot: `regress.sh` now fails that. Unit api 478 +
-plugin 150 + sim 13; PostgreSQL 16 ITs 33/33 (16 files), and in CI on every push · **Owner's one-sitting client test:**
-`docs/qa/LAPTOP_TEST_2026-10.md`
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `b44a694` · **Schema:** V24 · **Bot sweep:**
+`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` (34 runs) — 2026-10-13 on the heroic-dungeons build: **34/34, 315 checks,
+ALL GREEN** (with `heroicbot.js` 19/19). On the death-reform build before it: 31/33; hubbot (one chat line of unknown
+source in the `/profile` window, 2 standalone reruns 31/31; the bot now prints the line it saw) and campaign-effects
+(1 of 3 wolves killed: the kill was counted, the bot sat in a pit under the others; it now brings a wolf beyond melee
+reach to itself). A sweep with a missing log directory had printed «ALL GREEN» without running a bot: `regress.sh`
+now fails that. Unit api 490 + plugin 153 + sim 13; PostgreSQL 16 ITs 36/36 (17 files), and in CI on every push ·
+**Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
 
@@ -127,10 +125,11 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | External audit 2026-10-13 (`docs/audits/2026-10-13-external/RESPONSE.md`): class window refuses drags; death EXP saved with the lock; dungeon clears/sites restored from the DB into a file that lost them; boss HP by the party that entered (≤ recommended) | ✅ | ✅ dbfix check (EXP in SQL 4 s after death; DB clear restored), featbot 16/16 (dungeon clear) | ⏳ | `ClassMenuDragTest`, `PlayerMarksMergeTest`, `BalanceRulesTest` |
 | Self-audit 2026-10-13 fixes: a lock that ends mid-trial stops the trial (BUG-DEATH-01); the class confirm page no longer calls the pick permanent (BUG-ONB-01); tutorial mask before its reward; one writer per state file; no idle quiver saves; ITs refuse a non-test DB | ✅ | ✅ `trial-lockend.js` 5/5, `permbot.js` 20/20 (staff commands refuse a player) | ⏳ | unit: `DeathTrialTest`, `ClassConfirmNoteTest`, `AtomicYamlOrderTest`, `TestDbGuardTest` |
 | «Тэнгэрийн сорил» fought with the class (soul hits/shoots/casts at its wolves, wolf HP = 5 × attack) | ✅ | ✅ `trialclassbot.js` 4/4 × 5 classes | ⏳ | `docs/DEATH_AND_RECOVERY.md`; since 2026-10-13 the wolves spawn on the ground, never on a tree's crown (a forest's leaves had put them out of reach of the soul and its arrows); the trial bots count only spirit wolves (a natural pack lives at the test spot) |
+| Heroic dungeons «Тэнгэрийн Гэсгээлт Агуй» (directive 2026-10-13 Phase 3, V24 `suld_heroic_keys` / `suld_heroic_runs`): keys +1…+20 at level 60, hall mobs at Lv 60 (+10 % health, +8 % damage a key), a clock with 15 s a death, four steppe affixes rotating weekly, «Эртний Хас Чулуу» for a timed key, spent at the smith to reroll an endgame item's affixes; `/dungeon heroic`, the keys window, Shift + gate | ✅ | ✅ `heroicbot.js` 19/19 | ⏳ | `docs/HEROIC_DUNGEONS.md` (concurrency audit included); api `HeroicLadderTest`, `HeroicKeyTest`, `AffixRerollTest`, `MobDefinitionLevelTest`; `JdbcHeroicRepositoryIT` (H2, PostgreSQL 16); the halls' lanterns do not warm against «Цагаан Зуд» (the bot found every spot warm before) |
 | Death reform (directive 2026-10-13, config v8, V23 `suld_soul_beacons`): levels 1–10 lose nothing; a soul without a timer rises by the nearest ovoo; «Сүнсний Гэрэлт» 10 min, 70 % of the lost EXP back once (compare-and-set); «Овооны цацал» (3 sunwise rounds + 90 s); «Сүнсний Хэлтэрхий» heals 60 active minutes | ✅ | ✅ `soulreform.js` 19/19, `trialbot.js` 9/9, `trial-lockend.js` 5/5 | ⏳ | `docs/DEATH_AND_RECOVERY.md` (concurrency audit included); api `DeathReformTest`, `SoulBeaconTest`, `OvooRitualTest`, `SoulShardTest`; `JdbcDeathRepositoryIT` 24 concurrent claims → 1 (H2, PostgreSQL 16); full simulation: live L1–L10 pass (147 h to 60); the reference model's C9 is 88 % (was 90 %) with the same death design; loot loss and wear unchanged (the owner may turn them off) |
 
 ## Not built (and said so)
 
 Achievements, battle pass, emotes/pets/mount skins/UI themes, resurrection quests, instant revive
 (design only, stays unbuilt), payment provider, web dashboard, Ascension IV–X, mastery tracks other than armour,
-heroic dungeon mode, player housing.
+player housing.

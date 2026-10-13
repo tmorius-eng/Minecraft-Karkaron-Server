@@ -10,7 +10,6 @@ import mn.suld.api.skill.ResourcePool;
 import mn.suld.api.skill.Spell;
 import mn.suld.plugin.SuldServices;
 import mn.suld.plugin.combat.CombatListener;
-import mn.suld.plugin.content.SuldContent;
 import mn.suld.plugin.perf.PerfProbe;
 import mn.suld.plugin.skill.SkillService;
 import mn.suld.plugin.skill.SkillTreeService;
@@ -456,8 +455,7 @@ final class HudPanel implements Listener {
             int lvl = warden ? 60 : 0; // the Academy's dummy has no level: the trial is about the class, not a fight
             return new HudComposer.Target(name, lvl, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, HudComposer.Tier.ELITE, true);
         }
-        String id = services.mobs() == null ? null : services.mobs().mobId(le).orElse(null);
-        MobDefinition def = id == null ? null : SuldContent.mobFor(id);
+        MobDefinition def = services.mobs() == null ? null : services.mobs().definition(le).orElse(null);
         if (def != null) {
             HudComposer.Tier tier = switch (def.tier()) {
                 case NORMAL -> HudComposer.Tier.NORMAL;

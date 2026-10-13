@@ -36,6 +36,26 @@ public record MobDefinition(
                 mn.suld.api.balance.MobScaling.baseDamage(level), mn.suld.api.balance.MobScaling.baseExp(level), lootTableId);
     }
 
+    /**
+     * The same mob lifted (or lowered) to {@code newLevel}: health, attack and EXP follow the curves to that level, the
+     * id, name, kind, tier and loot table kept. A mob whose content overrides a number keeps its ratio to the curve (one
+     * with twice the curve's health at its own level has twice the curve's health at the new level). A heroic hall
+     * (docs/HEROIC_DUNGEONS.md) runs every mob at 60.
+     */
+    public MobDefinition atLevel(int newLevel) {
+        if (newLevel == level) return this;
+        return new MobDefinition(id, displayName, backingEntity, tier, newLevel,
+                follow(baseHealth, mn.suld.api.balance.MobScaling.baseHealth(level), mn.suld.api.balance.MobScaling.baseHealth(newLevel)),
+                follow(baseAttack, mn.suld.api.balance.MobScaling.baseDamage(level), mn.suld.api.balance.MobScaling.baseDamage(newLevel)),
+                Math.round(follow(baseExp, mn.suld.api.balance.MobScaling.baseExp(level), mn.suld.api.balance.MobScaling.baseExp(newLevel))),
+                lootTableId);
+    }
+
+    /** {@code value} moved from where the curve stood ({@code from}) to where it stands ({@code to}), its ratio kept. */
+    private static double follow(double value, double from, double to) {
+        return from > 0 ? to * (value / from) : to;
+    }
+
     public double scaledHealth() {
         return baseHealth * tier.healthMultiplier();
     }

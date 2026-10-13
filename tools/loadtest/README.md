@@ -12,11 +12,14 @@ cd tools/loadtest/bots && npm install            # mineflayer 4.x
 scripts/run-test-server.sh 1.21.11               # the dev Paper (see TESTING.md), console control: srv2ctl.sh
 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 25572   # every pass/fail bot in order, one table, exit 1 on a FAIL
 DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 25572   # + the 4 dev-campaign bots (dev/make_dev_campaigns.py, server restarts)
-# 29 runs (+4 with DEV_CAMPAIGNS, +1 with DEV_CRASH). Bot names use 5 random digits: an offline UUID comes from the name, and a reused
+# 30 runs (+4 with DEV_CAMPAIGNS, +1 with DEV_CRASH). Bot names use 5 random digits: an offline UUID comes from the name, and a reused
 # name is an old profile, not a fresh player. trial-lockend.js: the lock ends mid-trial; permbot.js: staff commands refuse a player.
 # soulreform.js: the death reform (docs/DEATH_AND_RECOVERY.md) — a free beginner death, the beam and its 70 % refund, the soul's
 # rise at an ovoo, a broken and a finished ovoo ritual, 19 checks; trialbot.js also checks the won trial's Сүнсний Хэлтэрхий.
 # trainingbot.js: the training grounds (docs/TRAINING_GROUNDS.md) from the class window to leaving, 24 checks;
+# heroicbot.js: heroic keys (docs/HEROIC_DUNGEONS.md) — the gates, a timed +1 and +3 (Цагаан Зуд forced, ops the bot for
+# the run, deops after), a failed +2, the jade spent at the smith (it answers the smith's dialog with a raw
+# custom_click_action packet), 19 checks; it leaves the pack prompt unanswered so the HUD is plain text it can read.
 # trainingpay.js (DEV_CAMPAIGNS=1): a campaign resolved during training pays the real character on leaving; a trainee hurts no mob;
 # trainingcrash.js (DEV_CRASH=1): SIGKILL during training, restart, the bag and spot come back — KILLS THE DEV SERVER.
 # Trial bots count only spirit wolves (named «Сүнсний чоно», glowing): a natural wolf pack can live at the test spot.

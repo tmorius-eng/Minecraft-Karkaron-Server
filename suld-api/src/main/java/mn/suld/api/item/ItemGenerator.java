@@ -84,6 +84,14 @@ public final class ItemGenerator {
         return out;
     }
 
+    /**
+     * «Эртний Хас Чулуу» at the smith ({@link AffixReroll}): the same item (identity, rarity, level, base stats,
+     * binding) with its affixes rolled again by the rules of a new drop of that rarity and level.
+     */
+    public ItemInstance rerollAffixes(ItemInstance i, ItemDefinition def, Rng rng) {
+        return i.withAffixes(rollAffixes(def, i.rarity(), i.itemLevel(), rng));
+    }
+
     /** One level up at the smith: same item and rolls, the per-level growth added. */
     public ItemInstance upgrade(ItemInstance i, ItemDefinition def) {
         int lvl = Math.min(ItemDefinition.MAX_LEVEL, i.itemLevel() + 1);

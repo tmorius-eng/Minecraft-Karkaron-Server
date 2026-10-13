@@ -125,6 +125,11 @@ public final class ItemInstance {
         return new ItemInstance(definitionId, uuid, rarity, itemLevel, stats, affixes, soulbound, owner, upgradeLevel, provenance, schemaVersion);
     }
 
+    /** Same item (uuid, rarity, level, base stats, binding) with other affixes: an «Эртний Хас Чулуу» reroll. */
+    public ItemInstance withAffixes(List<RolledAffix> newAffixes) {
+        return new ItemInstance(definitionId, uuid, rarity, itemLevel, stats, newAffixes, soulbound, boundTo, upgradeLevel, provenance, schemaVersion);
+    }
+
     /** Same item (uuid, rarity, affixes, binding) at another level with other base stats. */
     public ItemInstance reforged(int newItemLevel, Map<ItemStat, Double> newStats, int newUpgradeLevel) {
         return new ItemInstance(definitionId, uuid, rarity, newItemLevel, newStats, affixes, soulbound, boundTo, newUpgradeLevel, provenance, schemaVersion);

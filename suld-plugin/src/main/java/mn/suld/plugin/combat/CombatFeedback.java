@@ -1,7 +1,6 @@
 package mn.suld.plugin.combat;
 
 import mn.suld.api.mob.MobDefinition;
-import mn.suld.plugin.content.SuldContent;
 import mn.suld.plugin.mob.MobService;
 import mn.suld.plugin.ui.Messages;
 import net.kyori.adventure.text.Component;
@@ -182,8 +181,7 @@ public final class CombatFeedback implements Listener {
     private void nameBar(LivingEntity mob) {
         if (!mob.isValid() || mob.isDead() || labelled.test(mob)) return; // a training dummy keeps its own name
         if (mob.getScoreboardTags().contains(mn.suld.plugin.model.ModelService.HOST_TAG)) return; // a rig: no name over its invisible host
-        String id = mobs.mobId(mob).orElse(null);
-        MobDefinition def = id == null ? null : SuldContent.mobFor(id);
+        MobDefinition def = mobs.definition(mob).orElse(null);
         if (def == null) return;
         double max = MobService.maxHealth(mob);
         double frac = max <= 0 ? 0 : Math.max(0, Math.min(1, mob.getHealth() / max));

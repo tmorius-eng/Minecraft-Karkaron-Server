@@ -123,7 +123,7 @@ public final class MobService implements org.bukkit.event.Listener {
         if (!(e instanceof LivingEntity living) || !isSuldMob(e)) return;
         org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
             if (!living.isValid() || living.isDead()) return;
-            MobDefinition def = mobId(living).map(mn.suld.plugin.content.SuldContent::mobFor).orElse(null);
+            MobDefinition def = definition(living).orElse(null);
             if (def != null) nameplate(living, def, living.getHealth(), maxHealth(living));
         });
     }
@@ -146,6 +146,29 @@ public final class MobService implements org.bukkit.event.Listener {
      */
     public void tagAs(LivingEntity living, String mobId) {
         living.getPersistentDataContainer().set(keyMobId, PersistentDataType.STRING, mobId);
+    }
+
+    /**
+     * The definition a live SÜLD mob stands at: its content definition at the level stored on it at spawn (a heroic
+     * hall's mob stands at 60, docs/HEROIC_DUNGEONS.md; every other mob at its content level). Empty for an entity that
+     * is not a SÜLD mob or whose id is not in the content (a training Warden). Its level, health, EXP and loot level are
+     * the lifted ones; its hits are lifted where they land (HeroicDungeonService), the hit code reads the content one.
+     */
+    public Optional<MobDefinition> definition(Entity entity) {
+        MobDefinition def = mobId(entity).map(mn.suld.plugin.content.SuldContent::mobFor).orElse(null);
+        if (def == null) return Optional.empty();
+        Integer level = entity.getPersistentDataContainer().get(keyMobLevel, PersistentDataType.INTEGER);
+        return Optional.of(level == null || level == def.level() ? def : def.atLevel(level));
+    }
+
+    /**
+     * Stand a live SÜLD mob at {@code level} (a boss's add that joins a heroic run): its stored level, which
+     * {@link #definition} reads, and its name plate. Its health is set apart ({@link #resize}).
+     */
+    public void standAt(LivingEntity living, int level) {
+        if (mobId(living).isEmpty()) return;
+        living.getPersistentDataContainer().set(keyMobLevel, PersistentDataType.INTEGER, level);
+        definition(living).ifPresent(def -> nameplate(living, def, living.getHealth(), maxHealth(living)));
     }
 
     public Optional<String> mobId(Entity entity) {
@@ -216,8 +239,7 @@ public final class MobService implements org.bukkit.event.Listener {
     public void onEntitiesLoad(org.bukkit.event.world.EntitiesLoadEvent e) {
         for (Entity entity : e.getEntities()) {
             if (!(entity instanceof LivingEntity living)) continue;
-            String id = living.getPersistentDataContainer().get(keyMobId, PersistentDataType.STRING);
-            MobDefinition def = id == null ? null : mn.suld.plugin.content.SuldContent.mobFor(id);
+            MobDefinition def = definition(living).orElse(null);
             if (def == null) continue;
             AttributeInstance maxHealth = living.getAttribute(maxHealthAttribute());
             double design = living.getPersistentDataContainer().getOrDefault(keyMaxHp, PersistentDataType.DOUBLE, def.scaledHealth());

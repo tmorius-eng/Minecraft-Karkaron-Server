@@ -266,6 +266,11 @@ public final class SuldServices {
             this.campaignService = new mn.suld.plugin.campaign.CampaignService(plugin, this, campaignRepository, cs, weeklyCycle, khuraldaiService,
                     chronicleService, effects);
             this.hudService.addStatusLine(campaignService::hudLine);
+            // Heroic keys (V24, docs/HEROIC_DUNGEONS.md): every write only raises a key or appends a run, so the order of
+            // the writes does not matter and the shared pool is fine
+            this.heroic = new mn.suld.plugin.dungeon.heroic.HeroicDungeonService(plugin, this, dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryHeroicRepository()
+                    : new mn.suld.plugin.persistence.JdbcHeroicRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
         } catch (RuntimeException | Error ex) {
             for (int i = opened.size() - 1; i >= 0; i--) {
                 try {
@@ -279,6 +284,8 @@ public final class SuldServices {
     }
 
     private final ExecutorService campaignExecutor;
+    /** Heroic keys, affixes and the clock of a heroic run (docs/HEROIC_DUNGEONS.md). */
+    public final mn.suld.plugin.dungeon.heroic.HeroicDungeonService heroic;
     private final mn.suld.api.campaign.WeeklyCycle weeklyCycle;
     private final mn.suld.plugin.chronicle.ChronicleService chronicleService;
     private final mn.suld.plugin.campaign.KhuraldaiService khuraldaiService;

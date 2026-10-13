@@ -157,6 +157,8 @@ public final class CombatListener implements Listener {
             projectile = true;
         }
         if (src instanceof Player || !mobs.isSuldMob(src)) return;
+        // the content definition on purpose: a heroic hall's lift to level 60 is applied once, at HIGH, to every hit
+        // of its mobs (HeroicDungeonService.onHeroicHit), the bosses' and their abilities' too
         MobDefinition def = mobs.mobId(src).map(SuldContent::mobFor).orElse(null);
         if (def == null || def.tier() == mn.suld.api.mob.MobTier.BOSS || def.tier() == mn.suld.api.mob.MobTier.WORLD_BOSS) return;
         if (event.getCause() != org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK
@@ -179,7 +181,7 @@ public final class CombatListener implements Listener {
     private int attackerLevel(org.bukkit.entity.Entity damager, Player victim) {
         org.bukkit.entity.Entity src = damager;
         if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof org.bukkit.entity.Entity shooter) src = shooter;
-        MobDefinition def = mobs.mobId(src).map(SuldContent::mobFor).orElse(null);
+        MobDefinition def = mobs.definition(src).orElse(null); // a heroic hall's mob is a level-60 attacker
         return def != null ? def.level() : levelOf(victim);
     }
 
@@ -257,7 +259,7 @@ public final class CombatListener implements Listener {
         }
         mn.suld.plugin.skill.SkillTreeService skillTree = services.skillTree();
         // level suppression: −4 % per level the mob is above the player (floor 40 %)
-        MobDefinition target = mobs.mobId(event.getEntity()).map(SuldContent::mobFor).orElse(null);
+        MobDefinition target = mobs.definition(event.getEntity()).orElse(null);
         if (target != null) scale *= mn.suld.api.balance.CombatRules.gapDealt(target.level() - levelOf(player));
         DamageResult result = calculator.compute(attackOf(services, player) * scale, critOf(player),
                 skillTree == null ? 1.5 : skillTree.critMultiplier(player), 0.0, ThreadLocalRandomRoll());
@@ -296,7 +298,7 @@ public final class CombatListener implements Listener {
         // a world boss is everyone's kill: WorldBossService pays every fighter by the fight, not the last hit
         if (services.worldBosses != null && services.worldBosses.owns(entity.getUniqueId())) return;
         String mobId = mobs.mobId(entity).orElse(null);
-        MobDefinition def = mobId == null ? null : SuldContent.mobFor(mobId);
+        MobDefinition def = mobs.definition(entity).orElse(null); // a heroic hall's mob pays EXP and loot as a level-60 one
         Player killer = entity.getKiller();
         if (def == null || killer == null) {
             return;

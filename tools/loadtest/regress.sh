@@ -40,6 +40,7 @@ RUNS=(
   "craft-orders|$CTL $LOG $PORT"
   "world-boss|$CTL $LOG $PORT"
   "khuraldai-smoke|$CTL $LOG $PORT"
+  "heroicbot|$CTL $LOG $PORT"
   "featbot|$CTL $LOG"
   "permbot|$CTL $LOG $PORT"
 )

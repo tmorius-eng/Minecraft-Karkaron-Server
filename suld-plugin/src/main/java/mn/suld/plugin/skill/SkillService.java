@@ -1175,8 +1175,10 @@ public final class SkillService implements Listener {
             case KHULEGCHIN -> p.isSprinting() ? 9 : 4;
         };
         SkillBuild b = buildOf(p);
+        // «Галт Ган» in a heroic run halves it (docs/HEROIC_DUNGEONS.md)
+        double drought = services.heroic == null ? 1.0 : services.heroic.regenFactor(p);
         pool(p).gain((rate + b.stat(StatKey.RESOURCE_REGEN) + (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH) ? 3 : 0))
-                * mn.suld.api.classgear.MasteryPerks.resourceRegen(c, masteryRank(p)));
+                * mn.suld.api.classgear.MasteryPerks.resourceRegen(c, masteryRank(p)) * drought);
         double hp = b.stat(StatKey.HEALTH_REGEN);
         if (hp > 0 && services.skillTree() != null) services.skillTree().regenerate(p, hp);
     }

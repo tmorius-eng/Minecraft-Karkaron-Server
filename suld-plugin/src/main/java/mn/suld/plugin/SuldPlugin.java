@@ -115,7 +115,9 @@ public final class SuldPlugin extends JavaPlugin {
         dungeonGuide = new mn.suld.plugin.dungeon.DungeonGuide(this, services);
         getServer().getPluginManager().registerEvents(dungeonGuide, this);
         dungeonGuide.start();
-        registerCommand("dungeon", new mn.suld.plugin.command.DungeonCommand(services, new mn.suld.plugin.gui.DungeonMenu(services, dungeonGuide)));
+        mn.suld.plugin.gui.DungeonMenu dungeonMenu = new mn.suld.plugin.gui.DungeonMenu(services, dungeonGuide);
+        registerCommand("dungeon", new mn.suld.plugin.command.DungeonCommand(services, dungeonMenu,
+                new mn.suld.plugin.gui.HeroicMenu(services, dungeonGuide, dungeonMenu)));
         getServer().getPluginManager().registerEvents(services.styles(), this);
         services.styles().start();
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.clan.ChatGuardListener(this), this);
@@ -429,6 +431,8 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(halls, this);
         halls.start();
         services.dungeons().halls(halls);
+        halls.heroicGate(p -> services.profiles().cached(p.getUniqueId())
+                .map(pr -> pr.progression().level() >= mn.suld.api.dungeon.heroic.HeroicLadder.PLAYER_LEVEL).orElse(false));
         if (tutorial != null) tutorial.hooks(p -> combatFeel == null ? java.util.Optional.empty() : combatFeel.target(p), halls::gate);
         for (mn.suld.api.dungeon.hall.DungeonSite site : mn.suld.plugin.content.DungeonContent.SITES) {
             int[] xz = halls.gateXZ(site); // the ground around every gate is generated ahead (P2)
@@ -468,6 +472,9 @@ public final class SuldPlugin extends JavaPlugin {
         services.chronicle().start();
         services.khuraldai().start();
         services.campaigns().start();
+        // heroic keys (docs/HEROIC_DUNGEONS.md): the hit lift, the affixes and the keys of the players online
+        getServer().getPluginManager().registerEvents(services.heroic, this);
+        services.heroic.start();
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
         java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));

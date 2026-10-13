@@ -76,6 +76,8 @@ public final class DungeonService {
         DungeonHalls.Hall hall;
         String phaseName = "";
         BukkitTask ticker;
+        /** The heroic key's part of the run (docs/HEROIC_DUNGEONS.md), or null for a normal run. */
+        mn.suld.plugin.dungeon.heroic.HeroicRun heroic;
 
         ActiveRun(DungeonRun run, DungeonDefinition def, Party party, Location origin) {
             this.run = run;
@@ -136,6 +138,14 @@ public final class DungeonService {
 
     /** @return an error message for the player, or {@code null} when the run started. */
     public Component start(Player leader, DungeonDefinition def) {
+        return start(leader, def, 0);
+    }
+
+    /**
+     * A run of {@code def}: normal for {@code key} 0, else heroic at that key (HeroicDungeonService decides who may).
+     * @return an error message for the player, or {@code null} when the run started.
+     */
+    public Component start(Player leader, DungeonDefinition def, int key) {
         PlayerProfile leaderProfile = services.profiles().cached(leader.getUniqueId()).orElse(null);
         if (leaderProfile == null || leaderProfile.playerClass().isEmpty()) {
             return Messages.error("Эхлээд анги сонгоно уу.");
@@ -164,6 +174,8 @@ public final class DungeonService {
             if (services.training != null && services.training.training(id)) {
                 return Messages.error(p.getName() + " дасгалын талбайд байна — гарсны дараа агуйд орно.");
             }
+            members.add(id);
+            if (key > 0) continue; // a heroic key has its own, stricter gates (level 60, this dungeon cleared): below
             if (profile.progression().level() < def.minLevel()) {
                 return Messages.error(p.getName() + " түвшин " + def.minLevel() + "-д хүрээгүй байна.");
             }
@@ -175,7 +187,12 @@ public final class DungeonService {
             // A dungeon already cleared once stays open whatever changed since.
             Component gate = v2Gate(p, def);
             if (gate != null && !cleared(p, def.id()) && !leader.hasPermission("suld.admin.world")) return gate;
-            members.add(id);
+        }
+        mn.suld.plugin.dungeon.heroic.HeroicDungeonService heroic = services.heroic;
+        if (key > 0) {
+            if (heroic == null) return Messages.error("Баатарлаг агуй энэ серверт идэвхгүй.");
+            Component no = heroic.refusal(leader, def, key, members);
+            if (no != null) return no;
         }
 
         if (halls != null && halls.ready()) {
@@ -197,7 +214,7 @@ public final class DungeonService {
                     if (leader.isOnline()) leader.sendMessage(Messages.error("Бүх танхим завгүй байна — хэдэн минутын дараа дахин оролдоно уу."));
                     return;
                 }
-                Component again = begin(leader, def, fParty, members, hall.get());
+                Component again = begin(leader, def, fParty, members, hall.get(), key);
                 if (again != null) {
                     halls.release(hall.get());
                     if (leader.isOnline()) leader.sendMessage(again);
@@ -210,11 +227,11 @@ public final class DungeonService {
         if (services.city().near(here.getWorld().getName(), here.getBlockX(), here.getBlockZ(), 24)) {
             return Messages.error("Хархорумд агуйн аян эхлэхгүй. Хотын хаалгаар гараад тал нутагт /dungeon enter.");
         }
-        return begin(leader, def, party, members, null);
+        return begin(leader, def, party, members, null, key);
     }
 
     /** Starts the run (main thread); with a hall the party is moved into it, otherwise it fights where the leader stands. */
-    private Component begin(Player leader, DungeonDefinition def, Party party, Set<UUID> members, DungeonHalls.Hall hall) {
+    private Component begin(Player leader, DungeonDefinition def, Party party, Set<UUID> members, DungeonHalls.Hall hall, int key) {
         if (!leader.isOnline()) return Messages.error("Ахлагч гарсан.");
         if (party.isDisbanded() || party.state() == PartyState.IN_DUNGEON || runsByParty.containsKey(party.id())) {
             return Messages.error("Баг аль хэдийн агуйд явж байна.");
@@ -227,6 +244,7 @@ public final class DungeonService {
         Location origin = hall == null ? leader.getLocation().clone() : hall.at(mn.suld.api.dungeon.hall.HallBlueprint.WAVE_CENTER);
         ActiveRun ar = new ActiveRun(new DungeonRun(def.id(), party.id(), def.totalWaves()), def, party, origin);
         ar.hall = hall;
+        if (key > 0 && services.heroic != null) ar.heroic = services.heroic.open(def, key, leader.getUniqueId());
         ar.participants.addAll(members);
         for (UUID id : members) services.session(id).dungeonRuns++;
         for (UUID id : members) services.dismissHorse.accept(id); // no riding an invulnerable horse through the run
@@ -244,7 +262,9 @@ public final class DungeonService {
             }
             p.showBossBar(ar.bar);
             Presentation.banner(p, def.displayName().toUpperCase(java.util.Locale.ROOT),
-                    "Бэлдэцгээ — эхний давалгаа ирж байна", NamedTextColor.GOLD);
+                    ar.heroic == null ? "Бэлдэцгээ — эхний давалгаа ирж байна" : "Баатарлаг +" + ar.heroic.key + " — цаг явж эхэллээ",
+                    NamedTextColor.GOLD);
+            if (ar.heroic != null) p.sendMessage(services.heroic.intro(ar.heroic));
             p.playSound(p.getLocation(), Sound.EVENT_RAID_HORN, 1f, 1f);
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_DUNGEON, id));
         }
@@ -270,7 +290,10 @@ public final class DungeonService {
                 ar.run.recordWaveKill(); // keep the state machine consistent
                 continue;
             }
-            LivingEntity mob = mobs.spawn(mobDef, ringLocation(ar.origin, i, mobIds.size()));
+            // a heroic hall's mob stands at level 60: its level is stored on it (MobService.definition reads it back)
+            LivingEntity mob = ar.heroic == null ? mobs.spawn(mobDef, ringLocation(ar.origin, i, mobIds.size()))
+                    : mobs.spawn(mobDef.atLevel(mn.suld.api.dungeon.heroic.HeroicLadder.MOB_LEVEL),
+                            ringLocation(ar.origin, i, mobIds.size()), ar.heroic.health(mobDef));
             mob.setRemoveWhenFarAway(false);
             mob.addScoreboardTag(DUNGEON_TAG);
             ar.waveMobs.add(mob.getUniqueId());
@@ -305,8 +328,10 @@ public final class DungeonService {
         MobDefinition bossMob = ar.def.bossDefinition().mob();
         // boss health is tuned for the party that entered, never above the dungeon's recommended one (×0.44 solo …
         // ×1.0 for four): a solo player in a four-player dungeon no longer faces a four-player boss (audit 2026-10-13)
-        double bossHp = bossMob.scaledHealth() * mn.suld.api.balance.MobScaling.bossPartyScale(ar.def.recommendedParty(), ar.participants.size());
-        LivingEntity boss = mobs.spawn(bossMob, ar.hall == null ? ar.origin.clone() : ar.hall.at(mn.suld.api.dungeon.hall.HallBlueprint.BOSS_SPAWN), bossHp);
+        double bossHp = (ar.heroic == null ? bossMob.scaledHealth() : ar.heroic.health(bossMob))
+                * mn.suld.api.balance.MobScaling.bossPartyScale(ar.def.recommendedParty(), ar.participants.size());
+        LivingEntity boss = mobs.spawn(ar.heroic == null ? bossMob : bossMob.atLevel(mn.suld.api.dungeon.heroic.HeroicLadder.MOB_LEVEL),
+                ar.hall == null ? ar.origin.clone() : ar.hall.at(mn.suld.api.dungeon.hall.HallBlueprint.BOSS_SPAWN), bossHp);
         boss.setRemoveWhenFarAway(false);
         boss.addScoreboardTag(DUNGEON_TAG);
         ar.bossId = boss.getUniqueId();
@@ -344,7 +369,25 @@ public final class DungeonService {
         if (ar == null || !ar.run.isActive()) return false;
         runsByEntity.put(add.getUniqueId(), ar);
         add.addScoreboardTag(DUNGEON_TAG);
+        if (ar.heroic != null) { // an add of a heroic boss stands at level 60 too, with the run's health
+            MobDefinition d = mobs.mobId(add).map(SuldContent::mobFor).orElse(null);
+            if (d != null) {
+                mobs.resize(add, ar.heroic.health(d));
+                mobs.standAt(add, mn.suld.api.dungeon.heroic.HeroicLadder.MOB_LEVEL);
+            }
+        }
         return true;
+    }
+
+    /** The heroic part of the run an entity (a hall mob) belongs to, if that run is heroic. */
+    public Optional<mn.suld.plugin.dungeon.heroic.HeroicRun> heroicOf(UUID entity) {
+        ActiveRun ar = runsByEntity.get(entity);
+        return ar == null || !ar.run.isActive() ? Optional.empty() : Optional.ofNullable(ar.heroic);
+    }
+
+    /** The heroic part of the run a player takes part in, if that run is heroic. */
+    public Optional<mn.suld.plugin.dungeon.heroic.HeroicRun> heroicOfPlayer(UUID player) {
+        return runOf(player).filter(ar -> ar.run.isActive()).map(ar -> ar.heroic);
     }
 
     private final org.bukkit.NamespacedKey clearsKey = new org.bukkit.NamespacedKey("suld", "dungeon_clears");
@@ -464,6 +507,7 @@ public final class DungeonService {
         if (ar == null || !ar.run.isActive()) {
             return;
         }
+        if (ar.heroic != null && services.heroic != null) services.heroic.mobDied(ar.heroic, entity, onlineParticipants(ar));
         UUID id = entity.getUniqueId();
         if (id.equals(ar.bossId)) {
             bosses.unregister(id);
@@ -481,7 +525,8 @@ public final class DungeonService {
         if (ar == null || !ar.run.isActive() || !ar.downed.add(player)) {
             return;
         }
-        broadcast(ar, Messages.error(nameOf(player) + " унав!"));
+        if (ar.heroic != null) ar.heroic.deaths++;
+        broadcast(ar, Messages.error(nameOf(player) + " унав!" + (ar.heroic == null ? "" : " (+" + mn.suld.api.dungeon.heroic.HeroicLadder.DEATH_PENALTY_SECONDS + " с)")));
         checkWipe(ar);
     }
 
@@ -574,7 +619,8 @@ public final class DungeonService {
             mn.suld.plugin.item.ItemService items = services.itemService();
             // reward items at the player's own level (wearable now), capped at the dungeon's band: an over-levelled player
             // farming an early dungeon gets that dungeon's gear (DungeonDefinition.rewardLevel)
-            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(ar.def.rewardLevel(profile.progression().level()),
+            int lootLevel = ar.heroic != null ? mn.suld.api.dungeon.heroic.HeroicLadder.MOB_LEVEL : ar.def.rewardLevel(profile.progression().level());
+            mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(lootLevel,
                     mn.suld.api.loot.LootTier.DUNGEON, profile.playerClass().orElse(null), lootBonus(p), id, provenance);
             java.util.List<mn.suld.api.loot.LootDrop> rewards = new java.util.ArrayList<>(items == null ? java.util.List.of() : items.roll(ar.def.rewardTableId(), ctx));
             double fatigue = clearFatigue(id, ar.def.id(), System.currentTimeMillis());
@@ -607,10 +653,12 @@ public final class DungeonService {
                     Map.of("boss", ar.def.bossDefinition().id(), "dungeon", ar.def.id(), "seconds", seconds, "first", firstClear)));
             services.profiles().save(profile);
         }
-        if (!rewarded.isEmpty()) {
+        if (!rewarded.isEmpty() && ar.heroic == null) {
+            // the chronicle's firsts and fastest clears are the normal dungeon's: a heroic key has its own board
             services.chronicle().dungeonCleared(ar.def, rewarded, seconds); // first clear, fastest clear
-            services.campaigns().onDungeonCleared(ar.def.id(), rewarded, ar.run.runId());
         }
+        if (!rewarded.isEmpty()) services.campaigns().onDungeonCleared(ar.def.id(), rewarded, ar.run.runId());
+        if (ar.heroic != null && services.heroic != null) services.heroic.finished(ar.heroic, ar.def, ar.participants, rewarded, true);
         cleanup(ar);
     }
 
@@ -625,11 +673,13 @@ public final class DungeonService {
         int top = 1;
         for (UUID m : ar.participants) top = Math.max(top, services.profiles().cached(m).map(x -> x.progression().level()).orElse(1));
         double f = mn.suld.api.balance.DungeonRules.repeatFactor(profile.classGear().recent(), ar.def.id())
-                * mn.suld.api.balance.DungeonRules.carryFactor(profile.progression().level(), top, rung.max());
+                * (ar.heroic != null ? 1.0 : mn.suld.api.balance.DungeonRules.carryFactor(profile.progression().level(), top, rung.max()));
         var curve = services.progression().engine().curve();
+        // a heroic hall is a level-60 hall: its completion pays as one
+        int level = ar.heroic != null ? mn.suld.api.dungeon.heroic.HeroicLadder.MOB_LEVEL : rung.contentLevel();
         return new mn.suld.plugin.content.DungeonContent.Completion(
-                Math.max(1, Math.round(mn.suld.api.balance.Rewards.dungeonExp(curve, rung.contentLevel()) * f)),
-                Math.max(1, Math.round(mn.suld.api.balance.Rewards.dungeonCoins(rung.contentLevel()) * f)));
+                Math.max(1, Math.round(mn.suld.api.balance.Rewards.dungeonExp(curve, level) * f)),
+                Math.max(1, Math.round(mn.suld.api.balance.Rewards.dungeonCoins(level) * f)));
     }
 
     private double lootBonus(Player p) {
@@ -644,6 +694,7 @@ public final class DungeonService {
         ar.run.fail();
         broadcast(ar, Messages.error("Агуй бүтэлгүйтлээ: " + reason));
         playAll(ar, Sound.ENTITY_WITHER_DEATH, 0.6f, 1f);
+        if (ar.heroic != null && services.heroic != null) services.heroic.finished(ar.heroic, ar.def, ar.participants, List.of(), false);
         cleanup(ar);
     }
 
@@ -739,6 +790,11 @@ public final class DungeonService {
             MobService.keepHostile(boss, onlineParticipants(ar), 48);
         }
         List<Player> fighters = onlineParticipants(ar);
+        if (ar.heroic != null && services.heroic != null) {
+            List<Player> standing = new java.util.ArrayList<>();
+            for (Player p : fighters) if (!ar.downed.contains(p.getUniqueId()) && !p.isDead() && present(ar, p)) standing.add(p);
+            services.heroic.tick(ar.heroic, standing, ar.run.state() == DungeonRunState.BOSS);
+        }
         for (UUID id : ar.waveMobs) {
             if (Bukkit.getEntity(id) instanceof LivingEntity mob) {
                 MobService.keepHostile(mob, fighters, 32); // vanilla wolves are neutral otherwise

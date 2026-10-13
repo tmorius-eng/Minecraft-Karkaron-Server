@@ -149,6 +149,11 @@ public final class ItemService {
         return generator().generate(def, rarity == null ? def.rarity() : rarity, level, rng, source, owner);
     }
 
+    /** «Эртний Хас Чулуу» at the smith: the same item with its affixes rolled again (docs/HEROIC_DUNGEONS.md). */
+    public ItemInstance rerollAffixes(ItemInstance i, ItemDefinition def) {
+        return generator().rerollAffixes(i, def, rng);
+    }
+
     /** Roll a loot table. */
     public List<LootDrop> roll(String tableId, LootContext ctx) {
         LootTable t = catalog.lootTable(tableId).orElse(null);
