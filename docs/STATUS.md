@@ -5,9 +5,11 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `c5f426b` · **Schema:** V22 · **Bot sweep:**
-`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` — 2026-10-13 on `c5f426b`: 27/28 runs green, featbot's
-tutorial-timing race then fixed and green 3 runs in a row (28 bots incl. the 3 campaign bots); 16 PostgreSQL ITs green · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `b066572` · **Schema:** V22 · **Bot sweep:**
+`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` — 2026-10-13 on `b066572`: 27/28 runs green; the red one (`duel-defeat`) was the
+bot comparing with current instead of max HP (game right: 25 % of max), fixed and 7/7; audit fixes then re-run green on
+the fixed jar (trial-lockend 5/5, trialbot, trialclassbot, mergenbowbot, featbot, classchangebot, duel-defeat, permbot 20/20);
+33 PostgreSQL IT/guard tests green; unit tests api 453 + plugin 145 green · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
 
@@ -116,6 +118,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Class change + «Ангийн Академи» (V22 class_mastery: each class keeps its tree and gear) | ✅ | ✅ `classchangebot.js` 10/10, `classreconnectbot.js` 6/6 | ⏳ | `docs/CLASS_CHANGE.md` |
 | Class trial «Турших» (5 min arena, dummies, nothing kept) + SÜLD bows with Infinity | ✅ | ✅ `classtrialbot.js` 7/7 | ⏳ | `docs/CLASS_CHANGE.md` §Сорилт, §Нум |
 | «Ангийн Мастер» (class armour level = per-class mastery 1–60, milestones 20/40/60, «Таван Ангийн Эзэн») | ✅ | ✅ `masterybot.js` 3/3 | ⏳ | `docs/CLASS_CHANGE.md` §Ангийн Мастер |
+| Self-audit 2026-10-13 fixes: a lock that ends mid-trial stops the trial (BUG-DEATH-01); the class confirm page no longer calls the pick permanent (BUG-ONB-01); tutorial mask before its reward; one writer per state file; no idle quiver saves; ITs refuse a non-test DB | ✅ | ✅ `trial-lockend.js` 5/5, `permbot.js` 20/20 (staff commands refuse a player) | ⏳ | unit: `DeathTrialTest`, `ClassConfirmNoteTest`, `AtomicYamlOrderTest`, `TestDbGuardTest` |
 | «Тэнгэрийн сорил» fought with the class (soul hits/shoots/casts at its wolves, wolf HP = 5 × attack) | ✅ | ✅ `trialclassbot.js` 4/4 × 5 classes | ⏳ | `docs/DEATH_AND_RECOVERY.md` |
 
 ## Not built (and said so)
