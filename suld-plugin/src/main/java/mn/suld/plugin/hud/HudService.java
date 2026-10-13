@@ -398,6 +398,12 @@ public final class HudService {
                 } else if (mn.suld.api.clazz.ClassMastery.isMaster(pr.classGear())) {
                     out = out.append(Component.text(" ✦", TextColor.fromHexString("#FFD24A")));
                 }
+                // Тэнгэрийн Зэрэг IV–X (the honours): ✧ and the rank, sky blue (X in gold)
+                if (!pr.ephemeral() && pr.ascension() >= mn.suld.api.balance.AscensionHonor.FIRST) {
+                    boolean top = pr.ascension() >= mn.suld.api.balance.AscensionHonor.LAST;
+                    out = out.append(Component.text(" ✧" + mn.suld.api.balance.Ascension.roman(pr.ascension()),
+                            TextColor.fromHexString(top ? "#FFD24A" : "#9FF3FF")));
+                }
             }
         }
         if (clan && services.clans() != null) {

@@ -261,9 +261,14 @@ public final class CombatListener implements Listener {
         // level suppression: −4 % per level the mob is above the player (floor 40 %)
         MobDefinition target = mobs.definition(event.getEntity()).orElse(null);
         if (target != null) scale *= mn.suld.api.balance.CombatRules.gapDealt(target.level() - levelOf(player));
-        DamageResult result = calculator.compute(attackOf(services, player) * scale, critOf(player),
+        mn.suld.plugin.mastery.WeaponMasteryService mastery = services.weaponMastery;
+        if (mastery != null) scale *= 1 + mastery.bonus(player); // Зэвсгийн ур чадвар: up to +2.5 % with the held kind
+        double attack = attackOf(services, player);
+        DamageResult result = calculator.compute(attack * scale, critOf(player),
                 skillTree == null ? 1.5 : skillTree.critMultiplier(player), 0.0, ThreadLocalRandomRoll());
         event.setDamage(result.finalDamage());
+        // a mob of the content (never a training Warden or the Academy's dummy: they have no definition) teaches the weapon
+        if (mastery != null && target != null) mastery.hit(player, result.finalDamage(), attack);
         if (result.critical()) {
             CRIT_HITS.add(event.getEntity().getUniqueId());
             long now = System.currentTimeMillis();

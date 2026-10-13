@@ -262,6 +262,10 @@ commands:
   daily:
     description: The daily login reward (7-day streak; coins and EXP).
     aliases: [odor, bonus]
+  mastery:
+    description: Зэвсгийн ур чадвар - the five weapon tracks, levels 1-50, the bonus and the titles.
+    usage: /mastery
+    aliases: [urchadvar, zevseg]
   ascend:
     description: Тэнгэрийн Зэрэг (Ascension I-III) after level 60 - points, gates and the rite.
     usage: /ascend

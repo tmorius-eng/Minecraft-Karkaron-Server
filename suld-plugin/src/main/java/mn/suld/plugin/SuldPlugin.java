@@ -475,6 +475,14 @@ public final class SuldPlugin extends JavaPlugin {
         // heroic keys (docs/HEROIC_DUNGEONS.md): the hit lift, the affixes and the keys of the players online
         getServer().getPluginManager().registerEvents(services.heroic, this);
         services.heroic.start();
+        // weapon mastery (docs/MASTERY_AND_PROFESSIONS.md): CombatListener feeds it, /mastery shows it
+        getServer().getPluginManager().registerEvents(services.weaponMastery, this);
+        services.weaponMastery.start();
+        java.util.Objects.requireNonNull(getCommand("mastery")).setExecutor((sender, command, label, args) -> {
+            if (sender instanceof org.bukkit.entity.Player p) services.weaponMastery.show(p);
+            else sender.sendMessage(mn.suld.plugin.ui.Messages.error("Зөвхөн тоглогч."));
+            return true;
+        });
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
         java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));

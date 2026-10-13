@@ -2,6 +2,7 @@ package mn.suld.plugin.gui;
 
 import mn.suld.api.audit.AuditEvent;
 import mn.suld.api.balance.Ascension;
+import mn.suld.api.balance.AscensionHonor;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.plugin.SuldServices;
 import mn.suld.plugin.content.DungeonContent;
@@ -25,11 +26,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Тэнгэрийн Зэрэг (Ascension I–III, docs/ASCENSION_SPEC.md): {@code /ascend}, or the Тэнгэрийн Тахилч in
- * Kharkhorum at level 60. The window shows the rank, the Тэнгэрийн оноо (EXP earned at the cap) against the rank's
- * cost, the rite fee, every content gate with its progress, and what a rank gives and costs. The rite takes two
- * clicks on the same button; it is all-or-nothing ({@link Ascension#rite}): points and coins are spent only when every
- * gate is met.
+ * Тэнгэрийн Зэрэг (Ascension I–III and the honours IV–X, docs/ASCENSION_SPEC.md): {@code /ascend}, or the Тэнгэрийн
+ * Тахилч in Kharkhorum at level 60. Below III the window shows the Тэнгэрийн оноо (EXP earned at the cap) against the
+ * rank's cost, the rite fee, every content gate with its progress, and what a rank gives. From III it shows the stars
+ * and the next honour's gates (stars, a timed heroic key, a weapon mastery level; {@link AscensionHonor}). The rite
+ * takes two clicks on the same button; it is all-or-nothing: nothing is spent unless every gate is met.
  */
 public final class AscensionMenu {
 
@@ -98,6 +99,15 @@ public final class AscensionMenu {
                 gp == Double.MAX_VALUE ? 0 : gp, chapters, QuestContent.STORY.chapters().size(), pr.classGear().mastery());
     }
 
+    /** What the honour gates (IV–X) need to know about {@code p}. */
+    public AscensionHonor.Inputs honorInputs(Player p, PlayerProfile pr) {
+        int rank = pr.ascension();
+        long stars = Ascension.stars(services.curve(), Math.max(rank, Ascension.MAX_RANK), pr.endgame().tengeriPoints());
+        int key = services.heroic == null ? 0 : services.heroic.bestKey(p.getUniqueId());
+        int mastery = services.weaponMastery == null ? 0 : services.weaponMastery.best(p.getUniqueId());
+        return new AscensionHonor.Inputs(rank, rank < Ascension.MAX_RANK ? 0 : stars, key, mastery);
+    }
+
     public void open(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
@@ -109,17 +119,18 @@ public final class AscensionMenu {
         List<Component> now = new ArrayList<>();
         now.add(Menu.line("Мөнх Тэнгэрийн шат — 60-р түвшний"));
         now.add(Menu.line("дараах гурван зэрэг."));
-        m.set(4, Menu.glow(Menu.item(Material.NETHER_STAR, Menu.title("Тэнгэрийн Зэрэг: " + Ascension.roman(rank), SKY), Menu.lore(SKY, now,
+        String honour = AscensionHonor.title(rank);
+        m.set(4, Menu.glow(Menu.item(Material.NETHER_STAR, Menu.title("Тэнгэрийн Зэрэг: " + Ascension.roman(rank)
+                + (honour == null ? "" : " · " + honour), SKY), Menu.lore(SKY, now,
                 List.of(Menu.kv("Одоогийн хүч:", "+" + Math.round(Ascension.powerBonus(rank) * 100) + " %", GREEN),
-                        Menu.kv("Нэмэлт чадварын оноо:", "+" + rank, GREEN)), null))), null);
+                        Menu.kv("Нэмэлт чадварын оноо:", "+" + Math.min(Ascension.MAX_RANK, rank), GREEN)), null))), null);
 
         if (rank >= Ascension.MAX_RANK) {
-            m.set(22, Menu.glow(Menu.item(Material.BEACON, Menu.title("Тэнгэрийн Зэргийн дээд шат", GOLD), Menu.lore(GOLD,
-                    List.of(Menu.line("Та Тэнгэрийн гурван зэргийг бүгдийг давлаа.")), List.of(), null))), null);
             long pts = pr.endgame().tengeriPoints(), star = Ascension.starCost(curve);
             m.set(20, Menu.item(Material.NETHER_STAR, Menu.title("Тэнгэрийн Од: " + Ascension.stars(curve, rank, pts), SKY), Menu.lore(SKY,
-                    List.of(Menu.line("Дээд зэргийн дараа олсон EXP"), Menu.line("бүр од болж гэрэлтэнэ (хүч нэмэхгүй).")),
+                    List.of(Menu.line("III-ын дараа олсон EXP бүр од болж"), Menu.line("гэрэлтэнэ (зарцуулагдахгүй, хүч нэмэхгүй).")),
                     List.of(Menu.kv("Дараагийн од:", fmt(pts % star) + " / " + fmt(star), SKY), Component.text(bar(pts % star, star), SKY)), null)), null);
+            honours(m, p, pr);
         } else {
             long cost = Ascension.cost(curve, rank);
             long pts = pr.endgame().tengeriPoints();
@@ -160,9 +171,13 @@ public final class AscensionMenu {
         }
 
         List<Component> gives = new java.util.ArrayList<>(List.of(
-                Menu.line("+1 чадварын оноо (/skills)"),
-                Menu.line("+1 % хүч (цохилт, ид шид, сум)"),
-                Menu.line("Зэрэг III: T6 ангийн хуяг нээгдэнэ")));
+                Menu.line("I–III: +1 чадварын оноо, +1 % хүч"),
+                Menu.line("Зэрэг III: T6 ангийн хуяг нээгдэнэ"),
+                Menu.line("IV: тулаанд тоглогчоос −3 % гэмтэл"),
+                Menu.line("V: ховор олзны аз +3"),
+                Menu.line("VI: цохилт бүрт 2 % аянга (+50 %)"),
+                Menu.line("VII–IX: нурууны туяа, цол"),
+                Menu.line("X: «Мөнх Тэнгэрийн Элч», хөшөө")));
         // a timed lock (death.lock.mode: TIMED) is longest for an ascended character; without a timer it is the same for all
         if (!services.config().death().untilRecovery()) gives.add(Component.text("Үхлийн түгжээ хамгийн урт болно", RED, TextDecoration.BOLD));
         m.set(40, Menu.item(Material.WRITABLE_BOOK, Menu.title("Зэрэг бүр юу өгөх вэ", GOLD), Menu.lore(GOLD, gives, List.of(), null)), null);
@@ -192,6 +207,10 @@ public final class AscensionMenu {
             return;
         }
         int rank = pr.ascension();
+        if (rank >= Ascension.MAX_RANK) {
+            honourRite(p, pr);
+            return;
+        }
         Ascension.Rite r = Ascension.rite(services.curve(), rank, pr.endgame().tengeriPoints(), pr.currency(), inputs(p, pr));
         if (r.outcome() != Ascension.Outcome.DONE) {
             p.sendMessage(Messages.error(r.reason()));
@@ -208,6 +227,82 @@ public final class AscensionMenu {
         p.sendMessage(Messages.success("Тэнгэрийн Зэрэг " + Ascension.roman(r.rank()) + ": +1 чадварын оноо, хүч +" + Math.round(Ascension.powerBonus(r.rank()) * 100) + " %."));
         Bukkit.broadcast(Component.text("✦ " + p.getName() + " Тэнгэрийн Зэрэг " + Ascension.roman(r.rank()) + "-д хүрлээ!", Messages.BRAND, TextDecoration.BOLD));
         services.hud().update(p, pr);
+    }
+
+    /** From III: the next honour's gates, its fee and the two-click rite (slots 22, 24, 31), or the top at X. */
+    private void honours(Menu m, Player p, PlayerProfile pr) {
+        int rank = pr.ascension();
+        AscensionHonor.Rank next = AscensionHonor.next(rank);
+        if (next == null) {
+            m.set(22, Menu.glow(Menu.item(Material.BEACON, Menu.title("Тэнгэрийн Зэргийн дээд шат", GOLD), Menu.lore(GOLD,
+                    List.of(Menu.line("Мөнх Тэнгэрийн Элч: Тэнгэрийн аравдугаар зэрэг.")), List.of(), null))), null);
+            return;
+        }
+        AscensionHonor.Inputs in = honorInputs(p, pr);
+        List<Component> checklist = new ArrayList<>();
+        for (AscensionHonor.Gate g : AscensionHonor.gates(in)) {
+            checklist.add(Component.text((g.met() ? "✔ " : "✘ ") + g.label(), g.met() ? GREEN : RED, TextDecoration.BOLD));
+        }
+        boolean gatesMet = AscensionHonor.blocked(in) == null;
+        m.set(22, Menu.item(gatesMet ? Material.ENCHANTED_BOOK : Material.BOOK,
+                Menu.title("Зэрэг " + Ascension.roman(next.number()) + " «" + next.title() + "»", gatesMet ? GREEN : GOLD),
+                Menu.lore(GOLD, checklist, List.of(Menu.line(perk(next))), null)), null);
+        long fee = AscensionHonor.riteCoins(rank);
+        m.set(24, Menu.item(Material.GOLD_INGOT, Menu.title("Ёслолын тахил", GOLD), Menu.lore(GOLD,
+                List.of(Menu.line("Тахилчид өргөх зоос (оноо зарцуулахгүй).")),
+                List.of(Menu.kv("Хэрэгтэй:", fmt(fee) + " зоос", GOLD), Menu.kv("Таны зоос:", fmt(pr.currency()) + " зоос", pr.currency() >= fee ? GREEN : RED)), null)), null);
+        AscensionHonor.Rite trial = AscensionHonor.rite(in, pr.currency());
+        boolean ready = trial.outcome() == Ascension.Outcome.DONE;
+        boolean isArmed = ready && armed.containsKey(p.getUniqueId());
+        List<Component> body = new ArrayList<>();
+        body.add(ready ? Menu.line("Бүх нөхцөл биеллээ.") : Component.text(trial.reason(), RED, TextDecoration.BOLD));
+        m.set(31, ready ? Menu.glow(Menu.item(isArmed ? Material.LIME_CONCRETE : Material.LIGHT_BLUE_CONCRETE,
+                Menu.title(isArmed ? "Дахин дарж батал — Зэрэг " + Ascension.roman(next.number()) : "Зэрэг " + Ascension.roman(next.number()) + " авах", isArmed ? GREEN : SKY),
+                Menu.lore(SKY, body, List.of(Menu.kv("Зарцуулна:", fmt(fee) + " зоос", GOLD)), isArmed ? "Дарж ёслолыг эхлүүл" : "Дарж сонго")))
+                : Menu.item(Material.GRAY_CONCRETE, Menu.title("Зэрэг " + Ascension.roman(next.number()) + " — хаалттай", GREY), Menu.lore(GREY, body, List.of(), null)),
+                ready ? (pl, c) -> click(pl) : null);
+    }
+
+    private static String perk(AscensionHonor.Rank r) {
+        return switch (r.perk()) {
+            case PVP_GUARD -> "Өгөх нь: зөвшөөрсөн тулаанд тоглогчоос −3 % гэмтэл";
+            case FORTUNE -> "Өгөх нь: ховор олзны аз +3";
+            case LIGHTNING -> "Өгөх нь: мангас цохиход 2 %-д Тэнгэрийн аянга (+50 %)";
+            case AURA -> "Өгөх нь: нурууны туяа, «" + r.title() + "» цол";
+            case MONUMENT -> "Өгөх нь: «Мөнх Тэнгэрийн Элч» цол, Хархорумд хөшөө";
+        };
+    }
+
+    /** The honour rite (III → IV … IX → X): re-checked from fresh state; only the fee is spent. */
+    private void honourRite(Player p, PlayerProfile pr) {
+        int rank = pr.ascension();
+        AscensionHonor.Rite r = AscensionHonor.rite(honorInputs(p, pr), pr.currency());
+        if (r.outcome() != Ascension.Outcome.DONE) {
+            p.sendMessage(Messages.error(r.reason()));
+            return;
+        }
+        pr.endgame(pr.endgame().withAscension(r.rank()));
+        pr.addCurrency(r.coins() - pr.currency());
+        services.profiles().save(pr);
+        services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "ascension.honour_rite", p.getUniqueId().toString(),
+                "rank " + rank + " -> " + r.rank()));
+        String title = AscensionHonor.title(r.rank());
+        Presentation.banner(p, "ТЭНГЭРИЙН ЗЭРЭГ " + Ascension.roman(r.rank()), title, NamedTextColor.AQUA);
+        p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation().add(0, 1, 0), 160, 0.6, 1.8, 0.6, 0.06);
+        p.getWorld().playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 0.8f);
+        p.sendMessage(Messages.success("Тэнгэрийн Зэрэг " + Ascension.roman(r.rank()) + " «" + title + "»: " + perk(AscensionHonor.Rank.of(r.rank())).replace("Өгөх нь: ", "") + "."));
+        if (r.rank() == AscensionHonor.LAST) {
+            Bukkit.broadcast(Component.text("☼ " + p.getName() + " — «" + title + "», Тэнгэрийн аравдугаар зэрэг! Мөнх Тэнгэр түүнийг өргөмжиллөө.",
+                    GOLD, TextDecoration.BOLD));
+            for (Player o : Bukkit.getOnlinePlayers()) o.playSound(o.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 0.6f);
+        } else {
+            Bukkit.broadcast(Component.text("✦ " + p.getName() + " Тэнгэрийн Зэрэг " + Ascension.roman(r.rank()) + " «" + title + "»-д хүрлээ!",
+                    Messages.BRAND, TextDecoration.BOLD));
+        }
+        services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of("ascension_honour", p.getUniqueId(),
+                Map.<String, Object>of("rank", r.rank())));
+        services.hud().update(p, pr);
+        services.hud().teamChanged(p); // the ✧ mark after the name
     }
 
     private static String fmt(long v) {

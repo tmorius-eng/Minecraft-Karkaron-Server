@@ -47,6 +47,8 @@ public final class SuldCommand implements CommandExecutor {
             case "classseal" -> classSeal(sender, args);
             case "content" -> content(sender, args);
             case "endgame" -> endgame(sender, args);
+            case "mastery" -> mastery(sender, args);
+            case "heroic" -> heroic(sender, args);
             case "badge" -> badge(sender, args);
             case "props" -> {
                 if (!sender.hasPermission("suld.admin")) {
@@ -462,7 +464,7 @@ public final class SuldCommand implements CommandExecutor {
         }
         var e = pr.endgame();
         switch (args[2].toLowerCase(java.util.Locale.ROOT)) {
-            case "rank" -> e = e.withAscension((int) Math.min(mn.suld.api.balance.Ascension.MAX_RANK, n));
+            case "rank" -> e = e.withAscension((int) Math.min(mn.suld.api.balance.AscensionHonor.LAST, n));
             case "points" -> e = e.withPoints(n);
             case "palace" -> e = new mn.suld.api.profile.Endgame(e.ascension(), e.tengeriPoints(), e.restedExp(), e.curveVersion(), (int) Math.min(1000, n));
             default -> {
@@ -475,6 +477,63 @@ public final class SuldCommand implements CommandExecutor {
         services.audit().record(mn.suld.api.audit.AuditEvent.of(sender instanceof org.bukkit.entity.Player p ? p.getUniqueId().toString() : "console",
                 "admin.endgame", t.getUniqueId().toString(), args[2] + "=" + n));
         sender.sendMessage(Messages.success(t.getName() + ": " + e.toJson()));
+    }
+
+    /** Staff/QA: {@code /suld mastery <player> <SCIMITAR|COMPOSITE_BOW|SHAMANIC_STAFF|HAMMER|LANCE> <level>}. Audited. */
+    private void mastery(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player t = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : null;
+        if (training(sender, t)) return;
+        mn.suld.api.mastery.WeaponMastery.Track track = null;
+        int level = -1;
+        try {
+            if (args.length > 3) {
+                track = mn.suld.api.mastery.WeaponMastery.Track.valueOf(args[2].toUpperCase(java.util.Locale.ROOT));
+                level = Integer.parseInt(args[3]);
+            }
+        } catch (IllegalArgumentException e) {
+            track = null;
+        }
+        if (t == null || track == null || level < 1 || level > mn.suld.api.mastery.WeaponMastery.MAX_LEVEL || services.weaponMastery == null) {
+            sender.sendMessage(Messages.error("/suld mastery <онлайн тоглогч> SCIMITAR|COMPOSITE_BOW|SHAMANIC_STAFF|HAMMER|LANCE <1-50>"));
+            return;
+        }
+        services.weaponMastery.set(t.getUniqueId(), track, level);
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(sender instanceof Player p ? p.getUniqueId().toString() : "console",
+                "admin.weapon_mastery", t.getUniqueId().toString(), track.name() + "=" + level));
+        sender.sendMessage(Messages.success(t.getName() + ": " + track.displayName() + " " + level));
+    }
+
+    /** Staff/QA: {@code /suld heroic <player> <dungeon> <open> <best>} raises a player's heroic keys (never lowers). Audited. */
+    private void heroic(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player t = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : null;
+        if (training(sender, t)) return;
+        mn.suld.api.dungeon.DungeonDefinition def = args.length > 2
+                ? mn.suld.plugin.content.SuldContent.dungeonFor(args[2].startsWith("dungeon.") ? args[2] : "dungeon." + args[2]) : null;
+        int open = -1, best = -1;
+        try {
+            if (args.length > 4) {
+                open = Integer.parseInt(args[3]);
+                best = Integer.parseInt(args[4]);
+            }
+        } catch (NumberFormatException ignored) {
+            // the usage line below
+        }
+        if (t == null || def == null || open < 1 || best < 0 || services.heroic == null) {
+            sender.sendMessage(Messages.error("/suld heroic <онлайн тоглогч> <агуй> <нээлттэй 1-20> <шилдэг 0-20>"));
+            return;
+        }
+        services.heroic.grant(t.getUniqueId(), def.id(), open, best);
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(sender instanceof Player p ? p.getUniqueId().toString() : "console",
+                "admin.heroic_keys", t.getUniqueId().toString(), def.id() + " open=" + open + " best=" + best));
+        sender.sendMessage(Messages.success(t.getName() + ": «" + def.displayName() + "» +" + open + " нээлттэй, шилдэг +" + best));
     }
 
     private void info(CommandSender sender) {

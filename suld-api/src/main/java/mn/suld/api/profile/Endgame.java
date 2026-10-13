@@ -9,7 +9,7 @@ import java.util.Map;
  * Character-wide progression v2 state (docs/ASCENSION_SPEC.md, docs/PROGRESSION_BALANCE_SPEC.md), stored as one
  * versioned JSON document in {@code suld_profiles.endgame}.
  *
- * @param ascension     Тэнгэрийн Зэрэг rank, 0..{@link mn.suld.api.balance.Ascension#MAX_RANK}
+ * @param ascension     Тэнгэрийн Зэрэг rank, 0..{@link mn.suld.api.balance.AscensionHonor#LAST} (I–III bought with оноо, IV–X the honours)
  * @param tengeriPoints Тэнгэрийн оноо: EXP earned at the level cap, spent on Ascension ranks
  * @param restedExp     rested-EXP pool (offline hours fill it, kills spend it)
  * @param curveVersion  the level curve the stored bar belongs to (1 = the old 100·L^1.75 curve, 2 = progression v2 at
@@ -31,7 +31,7 @@ public record Endgame(int ascension, long tengeriPoints, long restedExp, int cur
     public static final Endgame FRESH = new Endgame(0, 0, 0, CURVE_CURRENT, 0);
 
     public Endgame {
-        ascension = Math.max(0, Math.min(mn.suld.api.balance.Ascension.MAX_RANK, ascension));
+        ascension = Math.max(0, Math.min(mn.suld.api.balance.AscensionHonor.LAST, ascension)); // I–III and the honours IV–X
         tengeriPoints = Math.max(0, tengeriPoints);
         restedExp = Math.max(0, restedExp);
         palaceClears = Math.max(0, palaceClears);

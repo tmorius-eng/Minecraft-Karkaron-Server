@@ -127,6 +127,26 @@ public final class HeroicDungeonService implements Listener {
         return k == null ? HeroicRepository.Key.fresh(dungeonId) : k;
     }
 
+    /** The best heroic key a player has timed, in any dungeon (0 = none): the Ascension IV–X gates read it. */
+    public int bestKey(UUID player) {
+        Map<String, HeroicRepository.Key> m = keys.get(player);
+        int best = 0;
+        if (m != null) for (HeroicRepository.Key k : m.values()) best = Math.max(best, k.best());
+        return best;
+    }
+
+    /** Staff/QA: raises a player's keys in a dungeon (never lowers them; a best key gets a 1-second time if it had none). */
+    public void grant(UUID player, String dungeonId, int open, int best) {
+        HeroicRepository.Key mine = key(player, dungeonId);
+        HeroicRepository.Key raised = mine.max(new HeroicRepository.Key(dungeonId, HeroicLadder.clamp(open),
+                Math.max(0, Math.min(HeroicLadder.MAX_KEY, best)), best > 0 ? 1 : 0));
+        keys.computeIfAbsent(player, x -> new ConcurrentHashMap<>()).put(dungeonId, raised);
+        repo.raise(player, dungeonId, raised.open(), raised.best(), raised.bestSeconds(), System.currentTimeMillis())
+                .whenComplete((v, ex) -> {
+                    if (ex != null) plugin.getLogger().log(Level.WARNING, "[heroic] granted keys of " + player + " not stored", ex);
+                });
+    }
+
     /** The week the affixes rotate by (the campaign week). */
     public String weekId() {
         return services.campaigns().cycleId();

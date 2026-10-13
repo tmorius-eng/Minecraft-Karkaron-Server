@@ -55,7 +55,8 @@ public final class SchemaMigrator {
             new Migration(21, "settings", "V21__settings.sql"),
             new Migration(22, "class_mastery", "V22__class_mastery.sql"),
             new Migration(23, "soul_beacons", "V23__soul_beacons.sql"),
-            new Migration(24, "heroic_keys", "V24__heroic_keys.sql")
+            new Migration(24, "heroic_keys", "V24__heroic_keys.sql"),
+            new Migration(25, "weapon_mastery", "V25__weapon_mastery.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */

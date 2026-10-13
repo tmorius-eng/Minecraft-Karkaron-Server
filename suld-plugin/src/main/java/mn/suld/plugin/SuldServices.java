@@ -271,6 +271,10 @@ public final class SuldServices {
             this.heroic = new mn.suld.plugin.dungeon.heroic.HeroicDungeonService(plugin, this, dataSource == null
                     ? new mn.suld.api.persistence.InMemoryHeroicRepository()
                     : new mn.suld.plugin.persistence.JdbcHeroicRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
+            // Weapon mastery (V25, docs/MASTERY_AND_PROFESSIONS.md): writes only add points, so the shared pool is fine
+            this.weaponMastery = new mn.suld.plugin.mastery.WeaponMasteryService(plugin, this, dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryWeaponMasteryRepository()
+                    : new mn.suld.plugin.persistence.JdbcWeaponMasteryRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
         } catch (RuntimeException | Error ex) {
             for (int i = opened.size() - 1; i >= 0; i--) {
                 try {
@@ -286,6 +290,8 @@ public final class SuldServices {
     private final ExecutorService campaignExecutor;
     /** Heroic keys, affixes and the clock of a heroic run (docs/HEROIC_DUNGEONS.md). */
     public final mn.suld.plugin.dungeon.heroic.HeroicDungeonService heroic;
+    /** Зэвсгийн ур чадвар: the five weapon tracks (docs/MASTERY_AND_PROFESSIONS.md). */
+    public final mn.suld.plugin.mastery.WeaponMasteryService weaponMastery;
     private final mn.suld.api.campaign.WeeklyCycle weeklyCycle;
     private final mn.suld.plugin.chronicle.ChronicleService chronicleService;
     private final mn.suld.plugin.campaign.KhuraldaiService khuraldaiService;
@@ -556,8 +562,9 @@ public final class SuldServices {
         java.util.concurrent.CompletableFuture<Void> clans = clanService.shutdown();
         java.util.concurrent.CompletableFuture<Void> stats = analytics.flush();
         java.util.concurrent.CompletableFuture<Void> campaigns = campaignService.shutdown();
+        java.util.concurrent.CompletableFuture<Void> mastery = weaponMastery.shutdown();
         try {
-            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats, campaigns)
+            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats, campaigns, mastery)
                     .get(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
         } catch (Exception ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();

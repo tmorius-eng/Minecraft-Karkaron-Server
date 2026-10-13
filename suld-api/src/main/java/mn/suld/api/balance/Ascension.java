@@ -148,12 +148,19 @@ public final class Ascension {
         return rank < MAX_RANK ? 0 : points / Math.max(1, starCost(c));
     }
 
-    /** Roman numeral of a rank (I–III), "—" for none. */
+    /** Roman numeral of a rank (I–III, and the honour ranks IV–X of {@link AscensionHonor}), "—" for none. */
     public static String roman(int rank) {
         return switch (rank) {
             case 1 -> "I";
             case 2 -> "II";
             case 3 -> "III";
+            case 4 -> "IV";
+            case 5 -> "V";
+            case 6 -> "VI";
+            case 7 -> "VII";
+            case 8 -> "VIII";
+            case 9 -> "IX";
+            case 10 -> "X";
             default -> "—";
         };
     }

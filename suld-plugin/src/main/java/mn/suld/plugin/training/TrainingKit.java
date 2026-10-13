@@ -154,7 +154,8 @@ final class TrainingKit {
         s.equipment(accessories);
         s.currency(0);
         TrainingBuilds.Build b = TrainingBuilds.of(tree, variant);
-        int base = SkillPoints.total(TrainingBuilds.LEVEL, realContext.finishedChapters(), realContext.discoveredRegions(), 0) + s.ascension();
+        int base = SkillPoints.total(TrainingBuilds.LEVEL, realContext.finishedChapters(), realContext.discoveredRegions(), 0)
+                + Math.min(mn.suld.api.balance.Ascension.MAX_RANK, s.ascension()); // the honours IV–X give no point
         s.skillState(mn.suld.api.skill.tree.SkillState.NONE.withRanks(b.allocation().encode())
                 .withGranted(Math.max(0, TrainingBuilds.maxPoints() - base)));
         return s;
