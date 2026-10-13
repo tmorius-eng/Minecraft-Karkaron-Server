@@ -406,7 +406,7 @@ public final class WorldEventService {
             if (!world.isChunkLoaded(x >> 4, z >> 4)) {
                 continue;
             }
-            int y = world.getHighestBlockYAt(x, z);
+            int y = world.getHighestBlockYAt(x, z, org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES); // the ground, not a tree's crown
             org.bukkit.block.Block ground = world.getBlockAt(x, y, z);
             if (ground.isLiquid() || Math.abs(y - center.getY()) > 12) {
                 continue;

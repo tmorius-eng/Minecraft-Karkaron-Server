@@ -51,8 +51,9 @@ time to level 60 fell from ~200 to ~146 active hours (`SimulationTest`); the own
 
 `/trial` (`/soril`, `/сорил`), `DeathTrialService` + pure `api/death/DeathTrial`:
 
-* Only a soul, outside Хархорум. Three glowing **«Сүнсний чоно»** spawn around it and hunt only that soul; nobody
-  else can hit them, they bite nobody else. HP = max(10 + 1.6·L, 5 × the soul's SÜLD attack) — about five of its
+* Only a soul, outside Хархорум. Three glowing **«Сүнсний чоно»** spawn around it, on the ground (never on a tree's
+  crown: in a forest the leaves are the highest block, and a wolf up there could not reach the soul nor be shot through
+  the leaves — fixed 2026-10-13), and hunt only that soul; nobody else can hit them, they bite nobody else. HP = max(10 + 1.6·L, 5 × the soul's SÜLD attack) — about five of its
   hits each, at any level and gear (`DeathTrial.wolfHealth(level, attack)`); bite 2 + 0.25·L.
 * **The soul fights with its whole class** while the trial runs: the soul's slowness and weakness are lifted, its
   hits use the SÜLD attack (`CombatListener.isTarget` counts trial wolves), Мэргэн's bow shoots

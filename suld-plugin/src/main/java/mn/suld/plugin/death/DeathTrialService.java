@@ -111,7 +111,9 @@ public final class DeathTrialService implements Listener, TabExecutor {
         for (int i = 0; i < rules.wolves(); i++) {
             double a = Math.PI * 2 * i / rules.wolves();
             Location l = at.clone().add(Math.cos(a) * 6, 0, Math.sin(a) * 6);
-            l.setY(l.getWorld().getHighestBlockYAt(l) + 1);
+            // on the ground, never on a tree's crown (a forest's leaves are the highest block): a wolf up there cannot
+            // reach the soul, and an arrow does not reach it through the leaves (2026-10-13, trial bots at 900 900)
+            l.setY(l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ(), org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1);
             Wolf w = l.getWorld().spawn(l, Wolf.class, wolf -> {
                 wolf.setPersistent(false);
                 wolf.setRemoveWhenFarAway(false);
