@@ -35,7 +35,7 @@ function join(name) {
 }
 
 (async () => {
-  const an = 'W' + Math.floor(Math.random() * 900 + 100), bn = 'H' + Math.floor(Math.random() * 900 + 100);
+  const an = 'W' + Math.floor(Math.random() * 90000 + 10000), bn = 'H' + Math.floor(Math.random() * 90000 + 10000);
   const A = await join(an), B = await join(bn);
   cmd('suldevent boss stop'); await sleep(1000); // a leftover from an earlier run
 

@@ -35,7 +35,7 @@ async function pickClass(bot, slot) {
 const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
 
 (async () => {
-  const name = 'D' + Math.floor(Math.random() * 900 + 100);
+  const name = 'D' + Math.floor(Math.random() * 90000 + 10000);
   const A = await join(name); await pickClass(A, 10);
   cmd(`suld exp ${name} 30000`); await sleep(1000);
   for (let i = 0; i < count; i++) cmd(`itemsadmin give ${name} ${item}`);

@@ -9,7 +9,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
-const name = 'T' + Math.floor(Math.random() * 900 + 100);
+const name = 'T' + Math.floor(Math.random() * 90000 + 10000);
 const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
 const chat = [];
 b.on('messagestr', m => chat.push(m));

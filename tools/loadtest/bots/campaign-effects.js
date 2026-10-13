@@ -47,7 +47,7 @@ async function deliverCampaign(A, name, id, effectLog) {
 }
 
 (async () => {
-  const name = 'E' + Math.floor(Math.random() * 900 + 100);
+  const name = 'E' + Math.floor(Math.random() * 90000 + 10000);
   const A = await join(name); await pickClass(A, 10);
   cmd(`suld exp ${name} 30000`); await sleep(1500);
 

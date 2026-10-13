@@ -37,7 +37,7 @@ const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
 const logged = (from, text) => lines().slice(from).some(l => l.includes(text));
 
 (async () => {
-  const tag = 'K' + Math.floor(Math.random() * 900 + 100);
+  const tag = 'K' + Math.floor(Math.random() * 90000 + 10000);
   const A = await join(tag + 'a'); await pickClass(A, 10);
   const B = await join(tag + 'b'); await pickClass(B, 11);
   cmd(`suld exp ${tag}a 30000`); // level 5 needs about 9,100 EXP on the 242·L^2.2 curve: well past khuraldai.min-level

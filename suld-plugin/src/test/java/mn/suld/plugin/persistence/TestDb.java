@@ -28,8 +28,22 @@ final class TestDb {
         return url != null && url.startsWith("jdbc:postgresql:");
     }
 
+    /**
+     * fresh() drops the whole public schema: refuse any database not named as a test one ({@code *_it} or containing
+     * {@code test}), so a URL pointed at a dev or live server's database cannot wipe it (audit 2026-10-13).
+     */
+    static void requireTestDatabase(String url) {
+        String path = url.replaceFirst("^jdbc:postgresql://[^/]*/", "");
+        String db = path.split("[?;]", 2)[0].toLowerCase(java.util.Locale.ROOT);
+        if (!(db.endsWith("_it") || db.contains("test"))) {
+            throw new IllegalStateException("SULD_TEST_PG_URL names database '" + db + "': the ITs drop its schema, so it must be a "
+                    + "throwaway database named *_it or *test* (e.g. suld_it)");
+        }
+    }
+
     static Db fresh() throws SQLException {
         if (postgres()) {
+            requireTestDatabase(System.getenv("SULD_TEST_PG_URL"));
             PGSimpleDataSource ds = new PGSimpleDataSource();
             ds.setUrl(System.getenv("SULD_TEST_PG_URL"));
             ds.setUser(System.getenv("SULD_TEST_PG_USER"));

@@ -4,7 +4,7 @@
 const mineflayer = require('mineflayer');
 const [ctl, port = '25572'] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username: 'D' + Math.floor(Math.random() * 900 + 100), version: '1.21.11', auth: 'offline', hideErrors: true });
+const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username: 'D' + Math.floor(Math.random() * 90000 + 10000), version: '1.21.11', auth: 'offline', hideErrors: true });
 b.on('error', () => {});
 b.on('resourcePack', () => { try { b.acceptResourcePack(); } catch (e) {} });
 const bars = [];

@@ -39,7 +39,7 @@ async function pickClass(bot, slot) {
 const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
 
 (async () => {
-  const tag = 'F' + Math.floor(Math.random() * 900 + 100);
+  const tag = 'F' + Math.floor(Math.random() * 90000 + 10000);
   // ---------------------------------------------------------------- tutorial (fresh player)
   const A = await join(tag + 'a');
   // the tutorial begins 120 ticks after a first join (longer on a busy server): wait for its bar before the class pick

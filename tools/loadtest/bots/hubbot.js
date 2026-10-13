@@ -52,7 +52,7 @@ async function click(b, slot) {
 }
 
 (async () => {
-  const name = 'H' + Math.floor(Math.random() * 900 + 100);
+  const name = 'H' + Math.floor(Math.random() * 90000 + 10000);
   const b = await join(name);
   cmd(`suld exp ${name} 20000`);
   await sleep(1500);

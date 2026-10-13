@@ -34,7 +34,7 @@ const title = (w) => { try { return w ? JSON.stringify(w.title) : ''; } catch (e
 const stacks = (b, name) => b.inventory.items().filter(i => JSON.stringify(i.customName || i.displayName || '').includes(name)).reduce((n, i) => n + i.count, 0);
 
 (async () => {
-  const name = 'D' + Math.floor(Math.random() * 900 + 100);
+  const name = 'D' + Math.floor(Math.random() * 90000 + 10000);
   const B = await join(name);
   cmd(`suld exp ${name} 6000000`); await sleep(1500);
   cmd(`suld coins ${name} 5000`); await sleep(500);

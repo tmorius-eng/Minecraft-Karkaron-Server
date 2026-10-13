@@ -35,7 +35,7 @@ async function pickClass(bot, slot) {
 }
 
 (async () => {
-  const name = 'G' + Math.floor(Math.random() * 900 + 100);
+  const name = 'G' + Math.floor(Math.random() * 90000 + 10000);
   const A = await join(name); await pickClass(A, 10);
   cmd(`suld exp ${name} 2500`); cmd(`suld quest ${name} 5`); await sleep(1500);
   cmd(`effect give ${name} minecraft:resistance 600 4 true`);

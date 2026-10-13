@@ -50,7 +50,7 @@ async function duel(A, B) {
 }
 
 (async () => {
-  const an = 'A' + Math.floor(Math.random() * 900 + 100), bn = 'B' + Math.floor(Math.random() * 900 + 100);
+  const an = 'A' + Math.floor(Math.random() * 90000 + 10000), bn = 'B' + Math.floor(Math.random() * 90000 + 10000);
   const A = await join(an), B = await join(bn);
   for (let i = 0; i < 3 && !(Math.abs(B.entity.position.x) > 800); i++) {
     cmd(`spreadplayers 1500 1500 1 12 false @a`); await sleep(5000);
@@ -63,6 +63,10 @@ async function duel(A, B) {
 
   check(await duel(A, B), 'the duel starts', B.chatLog.slice(-1).join(''));
   clearMobs();
+  // full health first: a steppe mob may have hit B before the Resistance landed, and the check below is
+  // "a quarter of max health", so it must start from max (regress4 2026-10-13: B stood at 43.5 of 86.4)
+  cmd(`effect give ${bn} minecraft:instant_health 1 20`); await sleep(1500);
+  const maxHp = (() => { const a = B.entity.attributes || {}; const m = a['minecraft:max_health'] || a['generic.max_health'] || a['max_health']; return m ? m.value : null; })();
   let n = lines().length;
   const full = B.health;
   cmd(`damage ${bn} 1000 minecraft:player_attack by ${an}`); await sleep(2500);
@@ -70,7 +74,7 @@ async function duel(A, B) {
   const yielded = B.chatLog.some(l => l.includes('тулаанд ялав'));
   // the defeat cancels the hit, so /damage reports the target as invulnerable: the yield line is the proof
   check(yielded && !diedSince(n, bn) && hp1 > 0 && hp1 < full * 0.35, 'a lethal duel hit is a defeat, not a death',
-      'hp ' + full + ' -> ' + hp1 + ' | ' + A.chatLog.filter(l => l.includes('ялав')).join(''));
+      'hp ' + full + ' (max ' + maxHp + ') -> ' + hp1 + ' | ' + A.chatLog.filter(l => l.includes('ялав')).join(''));
 
   n = lines().length;
   clearMobs();

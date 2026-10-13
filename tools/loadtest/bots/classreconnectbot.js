@@ -7,7 +7,7 @@ const [ctl, pack = 'nil', port = '25572'] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + '[' + pack + '] ' + what + ' :: ' + info); };
-const name = 'R' + pack[0] + Math.floor(Math.random() * 900 + 100);
+const name = 'R' + pack[0] + Math.floor(Math.random() * 90000 + 10000);
 
 function join() {
   return new Promise((res) => {

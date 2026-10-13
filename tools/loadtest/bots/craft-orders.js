@@ -49,7 +49,7 @@ async function boardClick(b, slot) { // open /order, click a slot, confirm
 }
 
 (async () => {
-  const pn = 'P' + Math.floor(Math.random() * 900 + 100), cn = 'C' + Math.floor(Math.random() * 900 + 100);
+  const pn = 'P' + Math.floor(Math.random() * 90000 + 10000), cn = 'C' + Math.floor(Math.random() * 90000 + 10000);
   let P = await join(pn);
   const C = await join(cn);
   for (const n of [pn, cn]) { cmd(`suld exp ${n} 6000000`); cmd(`suld coins ${n} 2000`); }

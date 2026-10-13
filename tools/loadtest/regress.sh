@@ -24,6 +24,7 @@ RUNS=(
   "mergenbowbot|$CTL $PORT"
   "masterybot|$CTL $PORT"
   "trialbot|$CTL $PORT"
+  "trial-lockend|$CTL $PORT"
   "trialclassbot:baatar|$CTL $PORT 10"
   "trialclassbot:mergen|$CTL $PORT 11"
   "trialclassbot:boo|$CTL $PORT 12"
@@ -36,6 +37,7 @@ RUNS=(
   "world-boss|$CTL $LOG $PORT"
   "khuraldai-smoke|$CTL $LOG $PORT"
   "featbot|$CTL $LOG"
+  "permbot|$CTL $LOG $PORT"
 )
 DEV_RUNS=("campaign-effects|$CTL $LOG $PORT" "dungeon-clear|$CTL $LOG $PORT"
   "campaign-deliver|$CTL $LOG test_deliver item.chonon_arisan 60 $PORT")
