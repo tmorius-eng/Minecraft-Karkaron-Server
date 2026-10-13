@@ -69,8 +69,10 @@ function join(name) {
   check(B.chatLog.some(l => /⚔ #2 /.test(l)), 'the healer gets the full reward', B.chatLog.filter(l => l.includes('⚔ #')).join(''));
   let chron = since(n, /\[chronicle\].*Их Баавгай/);
   if (!chron.length) { // a repeat run: the first kill is claimed already and the record stands, so the book has it
+    // by its kind: the plain /chronicle lists the latest entries only, and a dev server's book grows with every sweep
+    // (regress9 2026-10-13: the first kill had slid out of it)
     const k = lines().length;
-    cmd('chronicle'); await sleep(1500);
+    cmd('chronicle boss'); await sleep(1500);
     chron = since(k, /Их Баавгай/);
   }
   check(chron.length > 0, 'the kill is in the chronicle', chron.join(' | ').slice(0, 200));

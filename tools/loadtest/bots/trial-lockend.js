@@ -8,6 +8,10 @@ const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
+// the server log (the console's answers), under the control script's server directory (its SRV= line)
+const fs = require('fs'), path = require('path');
+const LOG = (() => { const t = fs.readFileSync(ctl, 'utf8').match(/SRV=(\S+)/); return t ? path.join(t[1], 'logs', 'latest.log') : null; })();
+const lines = () => { if (!LOG) return []; const a = fs.readFileSync(LOG, 'utf8').split('\n'); a.pop(); return a; };
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
 const name = 'L' + Math.floor(Math.random() * 90000 + 10000);
@@ -45,14 +49,25 @@ b.once('spawn', async () => {
   await sleep(4000);
   check(said(k, 'сорил зогслоо'), 'the trial stops when the lock ends', chat.slice(k).filter(l => l.length > 3).join(' | ').slice(0, 160));
   check(wolves().length === 0, 'no spirit wolf is left near the living player', 'wolves ' + wolves().length);
-  // stand still 12 s: a living player must not be bitten by its spirit wolves. The steppe's own mobs are cleared
-  // meanwhile (wolves excepted, so a trial wolf left behind still bites and fails this check): a stray mob is
-  // not the trial (a pillager took 88 -> 57 here once, wolves 0)
-  const clearOthers = () => cmd(`execute at ${name} run minecraft:kill @e[type=!player,type=!wolf,type=!item,distance=..48]`);
+  // stand still 12 s: a living player must not be bitten by its spirit wolves. Everything else near is cleared
+  // meanwhile, every wolf but a spirit wolf (tag suld_trial) too, so one left behind still bites and fails this
+  // check; a stray mob is not the trial (a pillager took 88 -> 57 here once, wolves 0; regress9 2026-10-13 lost
+  // 96 -> 30 with no spirit wolf near while other wolves were spared, the cause not seen). The server is asked too:
+  // no spirit wolf may be left anywhere in the world (the bot only sees 24 blocks).
+  const clearOthers = () => cmd(`execute at ${name} run minecraft:kill @e[type=!player,type=!item,tag=!suld_trial,distance=..48]`);
   clearOthers();
+  await sleep(500);
   const hp0 = b.health;
-  for (let i = 0; i < 6; i++) { await sleep(2000); clearOthers(); }
+  let anywhere = 0;
+  for (let i = 0; i < 6; i++) {
+    await sleep(2000);
+    clearOthers();
+    const n = lines().length;
+    cmd('execute if entity @e[tag=suld_trial]'); await sleep(400);
+    if (lines().slice(n).some(l => /Test passed/.test(l))) anywhere++;
+  }
   check(deaths === before && b.health >= hp0, 'the living player is not hurt after the lock ended', `hp ${hp0} -> ${b.health}, deaths ${deaths - before}`);
+  check(!!LOG && anywhere === 0, 'no spirit wolf is left anywhere in the world', LOG ? anywhere + ' of 6 looks found one' : 'no server log to read');
   check(!said(k, 'минутын дараа дахин /trial'), 'no failed-trial cooldown for an ended lock', chat.slice(k).filter(l => l.length > 3).slice(-2).join(' | ').slice(0, 140));
 
   console.log(results.every(Boolean) ? `ALL ${results.length} PASSED` : `${results.filter(x => !x).length} FAILED`);
