@@ -461,6 +461,7 @@ public final class SuldPlugin extends JavaPlugin {
                 spawnHalls.placeGates();
                 if (services.ovoos != null) services.ovoos.spawnMoved();
                 if (services.historicSites != null) services.historicSites.spawnMoved();
+                services.professions.spawnMoved(); // after the ovoos and sites: its nodes keep clear of them
             }
         }, this);
         if (getConfig().getBoolean("map.enabled", true)) {
@@ -548,6 +549,22 @@ public final class SuldPlugin extends JavaPlugin {
             else sender.sendMessage(mn.suld.plugin.ui.Messages.error("Зөвхөн тоглогч."));
             return true;
         });
+        // the crafts (docs/MASTERY_AND_PROFESSIONS.md): veins, herb patches and herders' pens in the wild, after the
+        // ovoos, sites and gates they keep clear of; /mergejil shows them and refines
+        mn.suld.plugin.dungeon.DungeonHalls craftHalls = halls;
+        services.professions.spawnSettled = worldBuild::spawnSettled;
+        services.professions.keepAway = () -> {
+            java.util.List<int[]> out = new java.util.ArrayList<>();
+            for (mn.suld.plugin.map.MapPois.Poi poi : mn.suld.plugin.map.MapPois.collect(services, worldBuild, craftHalls, getConfig())) {
+                if (poi.kind() != mn.suld.plugin.map.MapPois.Kind.CITY) out.add(new int[]{poi.x(), poi.z()});
+            }
+            return out;
+        };
+        services.professions.guide = waypoints;
+        getServer().getPluginManager().registerEvents(services.professions, this);
+        getServer().getPluginManager().registerEvents(new mn.suld.plugin.item.MaterialGuard(services), this);
+        services.professions.start();
+        registerTab("mergejil", new mn.suld.plugin.command.ProfessionCommand(services));
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
         java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));

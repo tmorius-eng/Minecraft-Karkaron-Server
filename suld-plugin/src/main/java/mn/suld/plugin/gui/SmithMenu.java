@@ -128,6 +128,12 @@ public final class SmithMenu {
         m.set(36, Menu.item(Material.SMITHING_TABLE, Menu.title("Жорын ном — урлах", NamedTextColor.GOLD), List.of(
                 Menu.line("Хуяг, зэвсэг, бөгж, зүүлт: " + services.itemService().catalog().recipes().size() + " жор"))),
                 (pl, ct) -> new CraftMenu(plugin, services).open(pl));
+        m.set(38, Menu.item(Material.BLAST_FURNACE, Menu.title("Түүхий эд боловсруулах", NamedTextColor.GOLD), List.of(
+                Menu.line("Хүдрээс төмөр, алт; ноосноос эсгий"), Menu.line("Мэргэжил: /mergejil"))),
+                (pl, ct) -> {
+                    pl.closeInventory();
+                    services.professions.show(pl);
+                });
         m.set(40, Menu.item(Material.OAK_DOOR, Menu.title("Хаах", NamedTextColor.GRAY), List.of()), (pl, ct) -> pl.closeInventory());
         m.open(p);
     }

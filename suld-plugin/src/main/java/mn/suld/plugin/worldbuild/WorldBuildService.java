@@ -848,6 +848,14 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
     }
 
     @Override
+    public java.util.Optional<int[]> footprint(String world) {
+        BuildState s = state;
+        if (s == null || spec == null || !isBuilt() || !s.world.equals(world)) return java.util.Optional.empty();
+        Footprint b = spec.bounds();
+        return java.util.Optional.of(new int[]{s.anchorX + b.minX(), s.anchorZ + b.minZ(), s.anchorX + b.maxX(), s.anchorZ + b.maxZ()});
+    }
+
+    @Override
     public java.util.Optional<int[]> origin(String world) {
         BuildState s = state;
         if (s == null || !isBuilt() || !s.world.equals(world)) return java.util.Optional.empty();

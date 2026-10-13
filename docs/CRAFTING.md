@@ -5,7 +5,7 @@ mastery); everything else a player wears or wields can also be made from a recip
 
 ## The recipe book
 
-`suld-api/src/main/resources/items/recipes.json` — 43 recipes over the existing items, no new art:
+`suld-api/src/main/resources/items/recipes.json` — 52 recipes (43, and 9 alternatives) over the existing items, no new art:
 
 | Band | What | Materials |
 |---|---|---|
@@ -14,9 +14,18 @@ mastery); everything else a player wears or wields can also be made from a recip
 | 30–49 | Тэнгэрийн armour, Хааны Илд, Тэнгэрийн Нум, Эзэн Жад, the gold ring, the sky charm | ice stone, gold dust, iron shards |
 | 50–60 | Хааны armour | gold dust, a sky stone, iron shards |
 
-Every material comes from loot or salvage (`RecipeCatalogTest`): salvage turns common/uncommon gear into iron shards,
-rare/epic into gold dust, legendary and above into sky stone. Drop-only prestige (the Хаадын set, Хаадын Тамга,
-Саарлын Соёо/Зүрх, the class sets) is never crafted.
+Every material comes from loot, salvage or the crafts (`RecipeCatalogTest`): salvage turns common/uncommon gear into
+iron shards, rare/epic into gold dust, legendary and above into sky stone; the crafts' ore is smelted into iron shards
+and gold dust (docs/MASTERY_AND_PROFESSIONS.md). Drop-only prestige (the Хаадын set, Хаадын Тамга, Саарлын Соёо/Зүрх,
+the class sets) is never crafted.
+
+Nine recipes have an alternative («…_alt») that takes a craft's material instead of a looted one, for the same item,
+band, coins and rarity:
+* felt for the wolf pelts of the four Эсгий pieces;
+* Ганга for the venom of the Бөө staff and tome;
+* Алтан Гагнуур for the ice stone of the Онгон;
+* Хялгас for the pelts of the Морин Жад;
+* Хүлгийн Дэл for the ice stone of the Эзэн Жад.
 
 Fields: `id`, `result`, `materials` (1–64 each), `coins`, `level`, `rarity` ([min, max] within the item's range),
 `maxLevel` (optional, default `level + 9`).

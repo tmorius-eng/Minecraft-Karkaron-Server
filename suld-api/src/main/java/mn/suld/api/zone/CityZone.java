@@ -17,6 +17,11 @@ public interface CityZone {
         return java.util.Optional.empty();
     }
 
+    /** The city's bounds as world blocks {minX, minZ, maxX, maxZ} (walls included), if built: what {@link #contains} tests. */
+    default java.util.Optional<int[]> footprint(String world) {
+        return java.util.Optional.empty();
+    }
+
     CityZone NONE = new CityZone() {
         public boolean contains(String world, int x, int z) { return false; }
         public boolean near(String world, int x, int z, int margin) { return false; }

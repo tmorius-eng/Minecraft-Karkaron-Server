@@ -627,6 +627,133 @@
     "legendary"
    ],
    "maxLevel": 60
+  },
+  {
+   "id": "recipe.esgii_boots_alt",
+   "result": "armor.esgii.boots",
+   "materials": {
+    "item.esgii": 2,
+    "item.tumriin_kheltarkhii": 2
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.esgii_chestplate_alt",
+   "result": "armor.esgii.chestplate",
+   "materials": {
+    "item.esgii": 4,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.esgii_dugaj_alt",
+   "result": "armor.esgii.helmet",
+   "materials": {
+    "item.esgii": 4
+   },
+   "coins": 20,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.esgii_leggings_alt",
+   "result": "armor.esgii.leggings",
+   "materials": {
+    "item.esgii": 3,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 10,
+   "level": 1,
+   "rarity": [
+    "common",
+    "uncommon"
+   ]
+  },
+  {
+   "id": "recipe.boogiin_taiag_alt",
+   "result": "weapon.boogiin_taiag",
+   "materials": {
+    "item.ganga": 8,
+    "item.chonon_arisan": 2
+   },
+   "coins": 40,
+   "level": 6,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.boogiin_sudar_alt",
+   "result": "offhand.boogiin_sudar",
+   "materials": {
+    "item.ganga": 10,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 65,
+   "level": 10,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.morin_jad_alt",
+   "result": "weapon.morin_jad",
+   "materials": {
+    "item.khyalgas": 8,
+    "item.tumriin_kheltarkhii": 3
+   },
+   "coins": 70,
+   "level": 9,
+   "rarity": [
+    "uncommon",
+    "rare"
+   ]
+  },
+  {
+   "id": "recipe.ongon_alt",
+   "result": "offhand.ongon",
+   "materials": {
+    "item.altan_gagnuur": 3,
+    "item.baavgain_arisan": 3,
+    "item.tumriin_kheltarkhii": 6
+   },
+   "coins": 230,
+   "level": 25,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
+  },
+  {
+   "id": "recipe.ezen_jad_alt",
+   "result": "weapon.ezen_jad",
+   "materials": {
+    "item.khulgiin_del": 6,
+    "item.altan_toos": 3,
+    "item.tumriin_kheltarkhii": 10
+   },
+   "coins": 410,
+   "level": 32,
+   "rarity": [
+    "rare",
+    "epic"
+   ]
   }
  ]
 }

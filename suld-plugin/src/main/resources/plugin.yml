@@ -270,6 +270,10 @@ commands:
     description: Зэвсгийн ур чадвар - the five weapon tracks, levels 1-50, the bonus and the titles.
     usage: /mastery
     aliases: [urchadvar, zevseg]
+  mergejil:
+    description: Мэргэжил - the four crafts, their levels, the nearest veins, herbs and pens, and refining.
+    usage: /mergejil [near | refine <id> [all]]
+    aliases: [professions, profession, crafts]
   ascend:
     description: Тэнгэрийн Зэрэг (Ascension I-III) after level 60 - points, gates and the rite.
     usage: /ascend

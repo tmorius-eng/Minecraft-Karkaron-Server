@@ -81,6 +81,42 @@ public enum Profession {
         return 1 + (level >= 20 ? 1 : 0) + (level >= 40 ? 1 : 0);
     }
 
+    /** The level and progress that {@code total} points ever earned make. */
+    public static State fromTotal(long total) {
+        return State.START.add(total);
+    }
+
+    /** The points ever earned that make {@code s} (the inverse of {@link #fromTotal}, below the top). */
+    public static long totalOf(State s) {
+        long t = s.points();
+        for (int l = 1; l < s.level(); l++) t += need(l);
+        return t;
+    }
+
+    /** The levels that bring a title: «Шавь» at 10, «Мэргэжилтэн» at 25, «Мастер» at 50. */
+    public static final int[] TITLE_LEVELS = {10, 25, 50};
+
+    /** The title a level brings («Төмрийн Дарханы Шавь» …), or null. */
+    public static String title(Profession p, int level) {
+        String rank = switch (level) {
+            case 10 -> "Шавь";
+            case 25 -> "Мэргэжилтэн";
+            case 50 -> "Мастер";
+            default -> null;
+        };
+        return rank == null ? null : p.genitive() + " " + rank;
+    }
+
+    /** The craft's name in the genitive, for its titles («Төмрийн Дарханы», «Эмийн Бариачийн», «Адуучны», «Эсгийчийн»). */
+    public String genitive() {
+        return switch (this) {
+            case TOMRIIN_DARKHAN -> "Төмрийн Дарханы";
+            case EMIIN_BARIACH -> "Эмийн Бариачийн";
+            case ADUUCHIN -> "Адуучны";
+            case ESGIICH -> "Эсгийчийн";
+        };
+    }
+
     /** A craft's level and its points toward the next one ({@link WeaponMastery.State}'s twin, with this curve). */
     public record State(int level, long points) {
 

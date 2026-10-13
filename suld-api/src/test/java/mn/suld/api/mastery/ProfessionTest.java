@@ -44,6 +44,28 @@ class ProfessionTest {
     }
 
     @Test
+    void aTotalMakesItsLevelAndBack() {
+        assertEquals(Profession.State.START, Profession.fromTotal(0));
+        Profession.State s = Profession.fromTotal(Profession.need(1) + Profession.need(2) + 7);
+        assertEquals(3, s.level());
+        assertEquals(7, s.points());
+        assertEquals(Profession.need(1) + Profession.need(2) + 7, Profession.totalOf(s));
+        long all = 0;
+        for (int l = 1; l < Profession.MAX_LEVEL; l++) all += Profession.need(l);
+        assertEquals(243_098, all, "the doc's 243 098 points to 50");
+        assertEquals(Profession.MAX_LEVEL, Profession.fromTotal(all).level());
+        assertEquals(Profession.MAX_LEVEL - 1, Profession.fromTotal(all - 1).level());
+    }
+
+    @Test
+    void titlesAtTenTwentyFiveAndFifty() {
+        assertEquals("Төмрийн Дарханы Шавь", Profession.title(Profession.TOMRIIN_DARKHAN, 10));
+        assertEquals("Эсгийчийн Мэргэжилтэн", Profession.title(Profession.ESGIICH, 25));
+        assertEquals("Адуучны Мастер", Profession.title(Profession.ADUUCHIN, 50));
+        assertEquals(null, Profession.title(Profession.EMIIN_BARIACH, 11));
+    }
+
+    @Test
     void levelsClimbToFiftyAndStop() {
         Profession.State s = Profession.State.START.add(Profession.need(1) + Profession.need(2));
         assertEquals(3, s.level());

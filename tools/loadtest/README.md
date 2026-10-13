@@ -38,6 +38,10 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # sitesbot.js: a historic site (Аураг) is built once and remembered across a restart (it restarts the dev server once); 2 checks.
 # honorbot.js: Тэнгэрийн Зэрэг IV–X — the VII–IX back aura, IV's lighter duel hits, the VI lightning (none at V), X by the
 # real rite on the monument and in the Chronicle, the entry hidden again; 7 checks (it leaves a hidden Chronicle row).
+# professionbot.js: Мэргэжил in the wild — a tier-I vein gathers one ore and is then spent, walking away breaks a gather,
+# tier II asks for level 13, a herb patch, a herder's pen (a horse's hair, a sheep's wool, the sheep shorn), refining
+# once and all, a SÜLD wool block never placed, the crafts after a relog and the pen after a restart (it restarts the
+# dev server once); 16 checks.
 # firstbootbot.js <srvctl.sh> <server dir>: a fresh world's first boot (NOT in regress.sh: it DELETES the world of <server dir>
 # and refuses unless the directory holds a FIRSTBOOT_SCRATCH file — a throwaway copy with the default config, never a real
 # world): every dungeon gate built once and only after Kharkhorum sets the spawn, the sites and ovoos move with it, a restart

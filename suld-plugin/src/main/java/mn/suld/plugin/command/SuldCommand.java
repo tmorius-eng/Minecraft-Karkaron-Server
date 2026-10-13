@@ -48,6 +48,8 @@ public final class SuldCommand implements CommandExecutor {
             case "content" -> content(sender, args);
             case "endgame" -> endgame(sender, args);
             case "mastery" -> mastery(sender, args);
+            case "profession" -> profession(sender, args);
+            case "gather" -> gather(sender, args);
             case "heroic" -> heroic(sender, args);
             case "badge" -> badge(sender, args);
             case "props" -> {
@@ -515,6 +517,88 @@ public final class SuldCommand implements CommandExecutor {
         services.audit().record(mn.suld.api.audit.AuditEvent.of(sender instanceof Player p ? p.getUniqueId().toString() : "console",
                 "admin.weapon_mastery", t.getUniqueId().toString(), track.name() + "=" + level));
         sender.sendMessage(Messages.success(t.getName() + ": " + track.displayName() + " " + level));
+    }
+
+    /** Staff/QA: {@code /suld profession <player> <craft> <1-50>} sets a craft's level. Audited. */
+    private void profession(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        Player t = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : null;
+        if (t != null && args.length == 2 && services.professions != null) {
+            // the four crafts of a player: level and points toward the next (the bots read this line)
+            StringBuilder b = new StringBuilder("crafts " + t.getName() + (services.professions.loaded(t.getUniqueId()) ? "" : " (loading)") + ":");
+            for (mn.suld.api.mastery.Profession c : mn.suld.api.mastery.Profession.values()) {
+                mn.suld.api.mastery.Profession.State st = services.professions.state(t.getUniqueId(), c);
+                b.append(' ').append(c.name()).append('=').append(st.level()).append('/').append(st.points());
+            }
+            sender.sendMessage(Messages.info(b.toString()));
+            return;
+        }
+        if (training(sender, t)) return;
+        mn.suld.api.mastery.Profession craft = null;
+        int level = -1;
+        try {
+            if (args.length > 3) {
+                craft = mn.suld.api.mastery.Profession.valueOf(args[2].toUpperCase(java.util.Locale.ROOT));
+                level = Integer.parseInt(args[3]);
+            }
+        } catch (IllegalArgumentException e) {
+            craft = null;
+        }
+        if (t == null || craft == null || level < 1 || level > mn.suld.api.mastery.Profession.MAX_LEVEL || services.professions == null) {
+            sender.sendMessage(Messages.error("/suld profession <онлайн тоглогч> TOMRIIN_DARKHAN|EMIIN_BARIACH|ADUUCHIN|ESGIICH <1-50>"));
+            return;
+        }
+        services.professions.set(t.getUniqueId(), craft, level);
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(sender instanceof Player p ? p.getUniqueId().toString() : "console",
+                "admin.profession", t.getUniqueId().toString(), craft.name() + "=" + level));
+        sender.sendMessage(Messages.success(t.getName() + ": " + craft.displayName() + " " + level));
+    }
+
+    /**
+     * Staff/QA: {@code /suld gather list <player> [n]} prints the gathering places nearest a player (id, kind, tier, where,
+     * state, distance); {@code /suld gather tp <player> <id>} takes the player beside one; {@code /suld gather respawn}
+     * brings every spent node and animal back.
+     */
+    private void gather(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        var ps = services.professions;
+        String sub = args.length > 1 ? args[1].toLowerCase(java.util.Locale.ROOT) : "";
+        Player t = args.length > 2 ? Bukkit.getPlayerExact(args[2]) : sender instanceof Player p ? p : null;
+        switch (sub) {
+            case "list" -> {
+                if (t == null) {
+                    sender.sendMessage(Messages.error("/suld gather list <онлайн тоглогч> [тоо]"));
+                    return;
+                }
+                int n = 12;
+                try {
+                    if (args.length > 3) n = Math.max(1, Math.min(500, Integer.parseInt(args[3])));
+                } catch (NumberFormatException ignored) {
+                    // the default
+                }
+                for (String line : ps.describe(t, n)) sender.sendMessage(Messages.info(line));
+            }
+            case "tp" -> {
+                org.bukkit.Location at = t == null || args.length < 4 ? null : ps.where(args[3]);
+                if (at == null) {
+                    sender.sendMessage(Messages.error("/suld gather tp <онлайн тоглогч> <node id>"));
+                    return;
+                }
+                t.teleportAsync(at.clone().add(1.5, 0.2, 0));
+                sender.sendMessage(Messages.success(t.getName() + " → " + args[3]));
+            }
+            case "respawn" -> {
+                ps.respawnAll();
+                sender.sendMessage(Messages.success("Бүх цэг, мал сэргэлээ."));
+            }
+            default -> sender.sendMessage(Messages.error("/suld gather list|tp|respawn"));
+        }
     }
 
     /** Staff/QA: {@code /suld heroic <player> <dungeon> <open> <best>} raises a player's heroic keys (never lowers). Audited. */

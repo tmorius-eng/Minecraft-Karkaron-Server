@@ -91,6 +91,105 @@
    "tradable": false,
    "lootable": false,
    "lore": "Баатарлаг агуйг хугацаанд нь давсны шагнал: дарханд эд зүйлийн шинжийг дахин сугална."
+  },
+  {
+   "id": "item.tumriin_khudar",
+   "name": "Төмрийн Хүдэр",
+   "material": "minecraft:raw_iron",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 1,
+   "lore": "Хадны судлаас олборлосон төмрийн хүдэр. Гурвыг нь хайлуулбал хоёр Төмрийн Хэлтэрхий болно (/mergejil)."
+  },
+  {
+   "id": "item.altan_khudar",
+   "name": "Алтан Хүдэр",
+   "material": "minecraft:raw_gold",
+   "type": "MATERIAL",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 64,
+   "sell": 3,
+   "lore": "Алс нутгийн хаднаас олборлосон алтан хүдэр. Хоёрыг нь хайлуулбал Алтан Тоос болно (/mergejil)."
+  },
+  {
+   "id": "item.ganga",
+   "name": "Ганга",
+   "material": "minecraft:allium",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 2,
+   "lore": "Талын анхилуун ганга. Бөөгийн таяг, судрын нэг жорд орно."
+  },
+  {
+   "id": "item.altan_gagnuur",
+   "name": "Алтан Гагнуур",
+   "material": "minecraft:dandelion",
+   "type": "MATERIAL",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 64,
+   "sell": 6,
+   "lore": "Өндөр уулын ховор ургамал. Онгоны нэг жорд орно."
+  },
+  {
+   "id": "item.khyalgas",
+   "name": "Хялгас",
+   "material": "minecraft:string",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 2,
+   "lore": "Адууны дэл, сүүлний хялгас. Морин жадны нэг жорд орно."
+  },
+  {
+   "id": "item.khulgiin_del",
+   "name": "Хүлгийн Дэл",
+   "material": "minecraft:lead",
+   "type": "MATERIAL",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 64,
+   "sell": 6,
+   "lore": "Сайн хүлгийн урт, бат дэл. Эзэн жадны нэг жорд орно."
+  },
+  {
+   "id": "item.khoniny_noos",
+   "name": "Хонины Ноос",
+   "material": "minecraft:white_wool",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 2,
+   "lore": "Хонины ноос. Дөрвөөс нь нэг эсгий хийнэ (/mergejil)."
+  },
+  {
+   "id": "item.nariin_noos",
+   "name": "Нарийн Ноос",
+   "material": "minecraft:light_gray_wool",
+   "type": "MATERIAL",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 64,
+   "sell": 4,
+   "lore": "Сайн хонины нарийн ноос. Хоёроос нь нэг эсгий хийнэ (/mergejil)."
+  },
+  {
+   "id": "item.esgii",
+   "name": "Эсгий",
+   "material": "minecraft:white_carpet",
+   "type": "MATERIAL",
+   "rarity": "common",
+   "level": 1,
+   "stack": 64,
+   "sell": 8,
+   "lore": "Ноосыг дэвтээж, нухаж хийсэн эсгий. Эсгий хуягийн нэг жорд Чонын Арьсны оронд орно."
   }
  ]
 }
