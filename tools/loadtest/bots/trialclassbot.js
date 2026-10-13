@@ -24,7 +24,10 @@ b.once('spawn', async () => {
   for (let i = 0; i < 40 && !b.currentWindow; i++) await sleep(500);
   if (b.currentWindow) { await b.clickWindow(slot, 0, 0).catch(() => {}); await sleep(600); await b.clickWindow(11, 0, 0).catch(() => {}); await sleep(1200); }
   if (b.currentWindow) b.closeWindow(b.currentWindow);
-  cmd(`suld exp ${name} 200000`); await sleep(1500);
+  // level ~35: the dev server's lock (min-minutes 0.5, geometric to 30) then lasts > 5 min, longer than the 3-min
+  // trial. At level 12 it was 64 s: the lock ended mid-fight and the trial stopped (LOCK_ENDED, audit 2026-10-13),
+  // so a slow archer could never "win" (regress5). The win check below is unchanged.
+  cmd(`suld exp ${name} 8000000`); await sleep(1500);
   cmd(`execute in minecraft:overworld run tp ${name} 900 200 900`); await sleep(4000);
   cmd(`kill ${name}`); await sleep(1500);
   if (b.health <= 0 || b.isAlive === false) b.respawn();

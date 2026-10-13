@@ -5,11 +5,10 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `b066572` · **Schema:** V22 · **Bot sweep:**
-`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` — 2026-10-13 on `b066572`: 27/28 runs green; the red one (`duel-defeat`) was the
-bot comparing with current instead of max HP (game right: 25 % of max), fixed and 7/7; audit fixes then re-run green on
-the fixed jar (trial-lockend 5/5, trialbot, trialclassbot, mergenbowbot, featbot, classchangebot, duel-defeat, permbot 20/20);
-33 PostgreSQL IT/guard tests green; unit tests api 453 + plugin 145 green · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `8f2de03` · **Schema:** V22 · **Bot sweep:**
+`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` (30 runs) — 2026-10-13 on `8f2de03`: 29/30 green; the red one, trialclassbot
+(Мэргэн), was the bot's level: the dev lock (64 s at L12) ended mid-fight, which now stops the trial — at L37 all 5 classes
+4/4. On `b066572` 27/28 (duel-defeat bot bug, fixed). Unit api 453 + plugin 145, 33 PostgreSQL IT/guard tests green · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
 
