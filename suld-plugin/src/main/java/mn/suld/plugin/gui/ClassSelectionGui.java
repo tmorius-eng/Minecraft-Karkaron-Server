@@ -96,13 +96,21 @@ public final class ClassSelectionGui implements Listener {
         }
     }
 
+    /**
+     * What the confirm page says about changing later (audit 2026-10-13 BUG-ONB-01: it said the pick was permanent,
+     * while the Academy changes class for free in the first levels and hours, then for coins or a seal).
+     */
+    static final String[] CHANGE_NOTE = {"Дараа нь Ангийн Академид (/class) солиж болно:",
+            mn.suld.api.clazz.ClassChangeRules.GRACE_MAX_LEVEL + "-р түвшин хүртэл, эхний "
+                    + mn.suld.api.clazz.ClassChangeRules.GRACE_MAX_MINUTES / 60 + " цагт үнэгүй."};
+
     private void showConfirm(ClassSelectionHolder holder, PlayerClass clazz) {
         Inventory inv = holder.getInventory();
         inv.clear();
         holder.pending(clazz);
         inv.setItem(CHOSEN, icon(clazz));
         inv.setItem(CONFIRM, button(Material.LIME_CONCRETE, "✔ Батлах", NamedTextColor.GREEN,
-                clazz.displayName() + " ангийг сонгоно.", "Анги сонголт байнгын: дараа солигдохгүй."));
+                clazz.displayName() + " ангийг сонгоно.", CHANGE_NOTE[0], CHANGE_NOTE[1]));
         inv.setItem(BACK, button(Material.RED_CONCRETE, "✖ Буцах", NamedTextColor.RED,
                 "Таван ангийг дахин харах."));
     }
