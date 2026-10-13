@@ -69,7 +69,8 @@ public final class QuestTracker implements Listener {
 
     /** The wild region an objective points at, if it has one. */
     public static Optional<RegionDefinition> targetRegion(QuestDefinition d) {
-        String id = switch (d.type()) {
+        String own = mn.suld.plugin.content.QuestContent.lore(d.id()).region();
+        String id = own != null ? own : switch (d.type()) {
             case DISCOVER_LOCATION -> d.targetId().startsWith("site.") ? siteRegion(d.targetId()) : d.targetId();
             case COMPLETE_DUNGEON -> DungeonContent.regionOf(d.targetId());
             case KILL_MOB -> regionWithMob(d.targetId());

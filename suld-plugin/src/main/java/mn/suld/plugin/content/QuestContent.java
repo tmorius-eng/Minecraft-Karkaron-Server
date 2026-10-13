@@ -15,8 +15,11 @@ public final class QuestContent {
     private QuestContent() {
     }
 
-    /** Who gives the chapter and where to go — shown in /quest and the quest menu. */
-    public record Lore(String giver, String hint) {
+    /**
+     * Who gives the chapter and where to go — shown in /quest and the quest menu; {@code region} (or null) is where it
+     * is played when its target lives in more than one region (Act II's mobs roam all four outer regions).
+     */
+    public record Lore(String giver, String hint, String region) {
     }
 
     /** The chapters in order, with the EXP the rules give each one (ContentLoader: 35 % of a level at its level). */
@@ -28,6 +31,6 @@ public final class QuestContent {
     }
 
     public static Lore lore(String questId) {
-        return Content.pack().lore().getOrDefault(questId, new Lore("Хархорум", ""));
+        return Content.pack().lore().getOrDefault(questId, new Lore("Хархорум", "", null));
     }
 }

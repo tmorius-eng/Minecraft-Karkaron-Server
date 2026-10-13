@@ -48,6 +48,22 @@ class ContentDataTest {
     }
 
     @Test
+    void aChapterOnAMobOfSeveralRegionsSaysWhereItIsPlayed() throws Exception {
+        // Act II's mobs roam all four outer regions: without the chapter's region the quest marker pointed at the first
+        // region listing the mob (Хэнтий) for every one of them (map inspection 2026-10-13)
+        ContentPack bundled = load(ContentLoader.classpath()).pack();
+        assertEquals("region.zuungar", bundled.lore().get("quest.tangut_ghosts").region());
+        assertEquals("region.otgon", bundled.lore().get("quest.sky_soldiers").region());
+        assertEquals("region.khuvsgul", bundled.lore().get("quest.water_lus").region());
+        ContentLoader.Result missing = load(edited("quests.json", root -> list(root, "story").stream()
+                .filter(c -> "quest.tangut_ghosts".equals(c.get("id"))).forEach(c -> c.remove("region"))));
+        assertTrue(has(missing, "quests.json", "lives in several regions"), () -> missing.issues().toString());
+        ContentLoader.Result wrong = load(edited("quests.json", root -> list(root, "story").stream()
+                .filter(c -> "quest.tangut_ghosts".equals(c.get("id"))).forEach(c -> c.put("region", "region.nowhere"))));
+        assertTrue(has(wrong, "quests.json", "no region region.nowhere"), () -> wrong.issues().toString());
+    }
+
+    @Test
     void theBundledContentIsValidAndEveryLootTableExists() {
         ContentLoader.Result r = load(ContentLoader.classpath());
         assertTrue(r.ok(), () -> r.issues().stream().map(Issue::toString).reduce("", (a, b) -> a + "\n" + b));

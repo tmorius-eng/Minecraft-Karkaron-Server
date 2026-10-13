@@ -244,6 +244,7 @@
     },
     {
       "id": "quest.water_lus",
+      "region": "region.khuvsgul",
       "title": "Усны Лус",
       "description": "Хөвсгөлийн тайгад 8 усны лусыг номхруул.",
       "type": "KILL_MOB",
@@ -304,6 +305,7 @@
     },
     {
       "id": "quest.tangut_ghosts",
+      "region": "region.zuungar",
       "title": "Тангудын Сүнснүүд",
       "description": "Элсэн нутагт 10 Тангудын сүнсийг тайвшруул.",
       "type": "KILL_MOB",
@@ -316,6 +318,7 @@
     },
     {
       "id": "quest.ruin_scorpions",
+      "region": "region.zuungar",
       "title": "Балгасны Хилэнц",
       "description": "Балгасны 4 аварга хилэнцийг устга.",
       "type": "KILL_MOB",
@@ -352,6 +355,7 @@
     },
     {
       "id": "quest.redrock_raiders",
+      "region": "region.khentii",
       "title": "Хүрээний Харуул",
       "description": "Улаан хадны хүрээний 10 харуулыг ял.",
       "type": "KILL_MOB",
@@ -364,6 +368,7 @@
     },
     {
       "id": "quest.war_wolves",
+      "region": "region.khentii",
       "title": "Дайны Чоно",
       "description": "Хүрээний 5 дайны чоныг ан.",
       "type": "KILL_MOB",
@@ -412,6 +417,7 @@
     },
     {
       "id": "quest.mountain_spirits",
+      "region": "region.khentii",
       "title": "Уулын Савдаг",
       "description": "Хэнтийн 10 уулын савдгийг номхруул.",
       "type": "KILL_MOB",
@@ -460,6 +466,7 @@
     },
     {
       "id": "quest.sky_soldiers",
+      "region": "region.otgon",
       "title": "Тэнгэрийн Цэрэг",
       "description": "Тэнгэрийн шатыг сахидаг 10 тэнгэрийн цэргийг ял.",
       "type": "KILL_MOB",

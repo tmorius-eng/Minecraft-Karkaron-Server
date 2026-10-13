@@ -28,6 +28,7 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # mapcbot.js: the corner minimap, pins and the waypoint (docs/WORLD_MAP.md part C) — the three owner-only frames facing up,
 # the map's marker row, the frames follow a teleport and a turn, /map minimap, hidden in the atlas, the waypoint bar and
 # label, /map stop, a pin stored, back after a relog (database), removed; 12 checks.
+# questregionbot.js: each Act II kill chapter's quest bar names the region it is played in (staff /suld quest); 7 checks.
 # healthbot.js: the health survives a relog and a server restart (it restarts the dev server once); 3 checks.
 # sitesbot.js: a historic site (Аураг) is built once and remembered across a restart (it restarts the dev server once); 2 checks.
 node bots/featbot.js ./srv2ctl.sh server.log     # the functional sweep (tutorial, chat, lock-on, dungeon hall, ...)

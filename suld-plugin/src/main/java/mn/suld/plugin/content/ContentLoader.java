@@ -396,7 +396,16 @@ public final class ContentLoader {
             } catch (IllegalArgumentException e) {
                 issues.add(new Issue(f, at, e.getMessage()));
             }
-            lore.put(id, new QuestContent.Lore(q.get("giver") instanceof String g ? g : "Хархорум", q.get("hint") instanceof String h ? h : ""));
+            // a mob that lives in several regions (Act II's roam all four outer ones) needs the chapter's own region,
+            // or the quest marker points at the first region that lists it (map inspection 2026-10-13)
+            String region = q.get("region") instanceof String r ? r : null;
+            if (region != null && regions.stream().noneMatch(x -> x.id().equals(region))) {
+                issues.add(new Issue(f, at + ".region", "no region " + region + " in world.json"));
+            }
+            if (region == null && type == QuestType.KILL_MOB && regions.stream().filter(x -> x.mobIds().contains(target)).count() > 1) {
+                issues.add(new Issue(f, at + ".region", target + " lives in several regions: say which one the chapter is played in"));
+            }
+            lore.put(id, new QuestContent.Lore(q.get("giver") instanceof String g ? g : "Хархорум", q.get("hint") instanceof String h ? h : "", region));
             if (q.get("story") instanceof String s) story.put(id, s);
         }
         // PROG-004: the ladder gates a dungeon on "chapters done >= gate + 1". An edited story that moves a dungeon's
