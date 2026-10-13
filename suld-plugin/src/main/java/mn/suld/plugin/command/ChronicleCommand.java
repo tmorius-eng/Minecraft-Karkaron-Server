@@ -47,10 +47,6 @@ public final class ChronicleCommand implements TabExecutor {
                             : ok ? Messages.success("Хроникийн " + id + "-р мөрийг нуулаа.") : Messages.error("Ийм мөр алга."))));
             return true;
         }
-        if (!(sender instanceof Player p)) {
-            for (ChronicleEntry e : services.chronicle().latest()) sender.sendMessage(Component.text(services.chronicle().headline(e)));
-            return true;
-        }
         ChronicleKind kind = switch (sub) {
             case "dungeon", "агуй" -> ChronicleKind.FIRST_DUNGEON_CLEAR;
             case "record", "амжилт" -> ChronicleKind.FASTEST_DUNGEON_CLEAR;
@@ -60,6 +56,19 @@ public final class ChronicleCommand implements TabExecutor {
             case "boss", "босс" -> ChronicleKind.FIRST_WORLD_BOSS_KILL;
             default -> null;
         };
+        if (!(sender instanceof Player p)) {
+            // the console reads the book as text: the latest entries, or one kind's (a first clear stays findable
+            // however many campaign results came after it)
+            if (kind == null) {
+                for (ChronicleEntry e : services.chronicle().latest()) sender.sendMessage(Component.text(services.chronicle().headline(e)));
+                return true;
+            }
+            services.chronicle().byKind(kind, 60).whenComplete((list, err) -> Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("SULD"), () -> {
+                if (err != null) sender.sendMessage(Messages.error("Алдаа: " + err.getMessage()));
+                else for (ChronicleEntry e : list) sender.sendMessage(Component.text(services.chronicle().headline(e)));
+            }));
+            return true;
+        }
         if (sub.equals("mine") || sub.equals("миний")) menus.chronicleMine(p);
         else menus.chronicle(p, kind);
         return true;

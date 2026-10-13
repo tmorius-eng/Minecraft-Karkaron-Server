@@ -71,9 +71,11 @@ async function pickClass(bot, slot) {
   const status = lines().slice(sl).filter(l => l.includes('/60')).join(' | ');
   const m = status.match(/(\d+)\/60/);
   check('the clear counts toward the CLEAR_DUNGEON campaign', m && Number(m[1]) >= 1, status);
-  // the first clear is written once per server: a repeat run finds it in the book (console /chronicle prints it)
+  // the first clear is written once per server: a repeat run finds it in the book's dungeon page (console
+  // /chronicle dungeon; the plain /chronicle shows the latest 60 entries, and repeated sweeps' campaign results had
+  // pushed the first clear out of them, 2026-10-13)
   const c0 = lines().length;
-  cmd('chronicle'); await sleep(2000);
+  cmd('chronicle dungeon'); await sleep(2000);
   const book = lines().slice(c0).filter(l => l.includes('Саарлын Агуй')).join(' | ');
   check('the chronicle holds the first clear', /Саарлын Агуй»-ийг анх цэвэрлэв/.test(book), (grab(n, /\[chronicle\]/) || book).slice(0, 300));
   cmd('khuraldai cancel');
