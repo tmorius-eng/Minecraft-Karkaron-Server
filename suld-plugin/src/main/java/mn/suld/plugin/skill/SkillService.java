@@ -362,6 +362,15 @@ public final class SkillService implements Listener {
         }
     }
 
+    /** Told about every spell that was cast (the training grounds explain it), after its effect ran. Main thread. */
+    public volatile java.util.function.BiConsumer<Player, Spell> castListener = (p, s) -> { };
+
+    /** The damage factor of {@code s} for this player now: spell × modifiers × spell damage × rank (0 for a spell without damage). */
+    public double powerOf(Player p, Spell s) {
+        SkillBuild b = buildOf(p);
+        return s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p) * rankPower(p, s);
+    }
+
     private CastResult castDirect0(Player p, Spell s, boolean ignoreTiming) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return CastResult.NO_PROFILE;
@@ -413,6 +422,7 @@ public final class SkillService implements Listener {
         double haste = build.mod(s, ModKey.HASTE);
         if (haste > 0) p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) (haste * 20), 1, false, false, true));
         services.skillTree().fire(p, TriggerEvent.CAST, null);
+        castListener.accept(p, s);
         return CastResult.CAST;
     }
 
@@ -649,7 +659,7 @@ public final class SkillService implements Listener {
         double mult = s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p)
                 * rankPower(p, s);
         double dmg = (fresh ? snap : CombatListener.attackOf(services, p)) * mult;
-        CombatListener.asSpell(() -> target.damage(dmg, p));
+        mn.suld.plugin.combat.HitSource.run(mn.suld.plugin.combat.HitSource.spell(s), () -> CombatListener.asSpell(() -> target.damage(dmg, p)));
         riders(p, target, s);
         services.skillTree().fire(p, TriggerEvent.SPELL_HIT, target);
     }

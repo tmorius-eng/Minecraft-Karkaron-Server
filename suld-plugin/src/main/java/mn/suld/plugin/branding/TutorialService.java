@@ -165,6 +165,9 @@ public final class TutorialService implements Listener, TabExecutor {
     private void tick() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!bars.containsKey(p.getUniqueId())) continue; // only players in the tutorial
+            // the training grounds' max character (docs/TRAINING_GROUNDS.md) completes no step: its class, weapon and
+            // lock-on are not the player's, and a reward paid to it would be lost with it
+            if (services.profiles().cached(p.getUniqueId()).map(PlayerProfile::ephemeral).orElse(false)) continue;
             TutorialProgress t = progress(p);
             Step s = t.current();
             if (s == null) {

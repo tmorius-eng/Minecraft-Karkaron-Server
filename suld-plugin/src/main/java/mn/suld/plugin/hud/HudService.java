@@ -178,6 +178,12 @@ public final class HudService {
         return b;
     }
 
+    /**
+     * Lines that replace a player's sidebar while they are somewhere special (the training grounds' numbers,
+     * docs/TRAINING_GROUNDS.md), or null for the ordinary sidebar. At most 15 lines.
+     */
+    public volatile Function<Player, List<Component>> sidebar = p -> null;
+
     public void update(Player player, PlayerProfile profile) {
         Scoreboard board = board(player);
         if (!services.styles().setting(player.getUniqueId(), mn.suld.api.style.PlayerSetting.SIDEBAR)) {
@@ -186,7 +192,8 @@ public final class HudService {
             lastLines.remove(player.getUniqueId());
             return;
         }
-        List<Component> lines = buildLines(player, profile);
+        List<Component> special = sidebar.apply(player);
+        List<Component> lines = special != null ? special : buildLines(player, profile);
         if (lines.equals(lastLines.get(player.getUniqueId()))) return;
         lastLines.put(player.getUniqueId(), lines);
         Objective obj = board.getObjective("suld");
@@ -382,8 +389,11 @@ public final class HudService {
             var c = pr == null ? null : pr.playerClass().orElse(null);
             if (c != null) {
                 out = out.append(Component.text(" ")).append(StyleFormat.classBadge(c, true));
-                // «Ангийн Мастер»: ✦ for a mastered class, «✦ ЭЗЭН» once all five are (plain text, no pack needed)
-                if (mn.suld.api.clazz.ClassMastery.title(mn.suld.api.clazz.ClassMastery.masters(pr)) != null) {
+                // «Ангийн Мастер»: ✦ for a mastered class, «✦ ЭЗЭН» once all five are (plain text, no pack needed);
+                // a trainee's max character (docs/TRAINING_GROUNDS.md) is marked as training, never as a master
+                if (pr.ephemeral()) {
+                    out = out.append(Component.text(" ⚔ дасгал", NamedTextColor.GRAY));
+                } else if (mn.suld.api.clazz.ClassMastery.title(mn.suld.api.clazz.ClassMastery.masters(pr)) != null) {
                     out = out.append(Component.text(" ✦ ЭЗЭН", TextColor.fromHexString("#FFD24A"), net.kyori.adventure.text.format.TextDecoration.BOLD));
                 } else if (mn.suld.api.clazz.ClassMastery.isMaster(pr.classGear())) {
                     out = out.append(Component.text(" ✦", TextColor.fromHexString("#FFD24A")));

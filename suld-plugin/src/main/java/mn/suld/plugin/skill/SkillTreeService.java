@@ -898,12 +898,17 @@ public final class SkillTreeService implements Listener {
             Effect.Proc proc = ip.proc();
             Long ready = r.procReady.get(ip.node());
             if (ready != null && now < ready) continue;
-            if (proc.chance() < 100 && ThreadLocalRandom.current().nextDouble() * 100 >= proc.chance()) continue;
+            boolean fired = proc.chance() >= 100 || ThreadLocalRandom.current().nextDouble() * 100 < proc.chance();
+            ProcListener listener = procListener;
+            String name = listener == null ? null : passiveName(p, ip.node());
+            if (listener != null) listener.rolled(p, name, proc, fired);
+            if (!fired) continue;
             if (proc.cooldown() > 0) r.procReady.put(ip.node(), now + (long) (proc.cooldown() * 1000 * (1 - cdr)));
             activations.computeIfAbsent(event, k -> new java.util.concurrent.atomic.AtomicInteger()).incrementAndGet();
             dispatching = true;
             try {
-                run(p, proc, target);
+                mn.suld.plugin.combat.HitSource.run(mn.suld.plugin.combat.HitSource.passive(name == null ? passiveName(p, ip.node()) : name),
+                        () -> run(p, proc, target));
             } finally {
                 dispatching = false;
             }
@@ -1230,6 +1235,28 @@ public final class SkillTreeService implements Listener {
         r.ultReady = now + (long) (Ultimate.COOLDOWN_SECONDS * 1000L * (1 - cdr));
         skills.say(p, "§6✦✦ " + r.build.ultimate().displayName());
         ultimates.cast(p, r.build.ultimate());
+        ultimateListener.accept(p, r.build.ultimate());
+    }
+
+    /** Told about every ultimate that was cast (the training grounds explain it). Main thread. */
+    public volatile java.util.function.BiConsumer<Player, Ultimate> ultimateListener = (p, u) -> { };
+
+    /**
+     * Told about every passive roll (the training grounds count how often each passive fires): the trigger happened while
+     * the passive was ready, and it fired or not. Main thread.
+     */
+    public interface ProcListener {
+        void rolled(Player p, String name, Effect.Proc proc, boolean fired);
+    }
+
+    public volatile ProcListener procListener = (p, n, proc, fired) -> { };
+
+    /** A passive's name: its node's (tree passives), «Эдлэлийн чадвар» for an item's, «Хуягийн чадвар» for mastery perks. */
+    public String passiveName(Player p, int index) {
+        if (index >= MASTERY_PROC_INDEX) return "Хуягийн чадвар";
+        if (index >= ITEM_PROC_INDEX) return "Эдлэлийн чадвар";
+        Runtime r = runtime.get(p.getUniqueId());
+        return r == null || r.tree == null || index < 0 || index >= r.tree.nodes().size() ? "Идэвхгүй чадвар" : r.tree.node(index).name();
     }
 
     // ------------------------------------------------------------------ search / lookup (commands and the map)

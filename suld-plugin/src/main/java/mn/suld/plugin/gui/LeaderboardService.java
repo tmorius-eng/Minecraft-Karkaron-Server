@@ -67,7 +67,8 @@ public final class LeaderboardService implements TabExecutor {
         List<Leaderboard.Entry> rows = new ArrayList<>(stored.get(b));
         for (Player p : Bukkit.getOnlinePlayers()) {
             PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-            if (pr == null || !pr.hasSelectedClass()) continue;
+            // a trainee's max character is not theirs: their stored row stands (docs/TRAINING_GROUNDS.md)
+            if (pr == null || !pr.hasSelectedClass() || pr.ephemeral()) continue;
             rows.add(new Leaderboard.Entry(pr.playerId(), pr.name(), pr.progression().level(), pr.progression().expIntoLevel(), pr.currency()));
         }
         return b.rank(rows, SIZE);

@@ -151,7 +151,10 @@ public final class ActivePlaytimeService implements Listener {
     private void closeMinute() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             ActivityTracker t = tracker(p.getUniqueId());
-            if (services.isSoul.test(p.getUniqueId())) t.exclude();
+            // a soul is not playing; neither is a trainee's max character (docs/TRAINING_GROUNDS.md): no active minute,
+            // so no wound healing, armour XP or retention mark comes from the training grounds
+            if (services.isSoul.test(p.getUniqueId())
+                    || services.profiles().cached(p.getUniqueId()).map(PlayerProfile::ephemeral).orElse(false)) t.exclude();
             ActivityTracker.Verdict v = t.closeMinute();
             if (v.active()) {
                 mn.suld.api.analytics.SessionTotals st = services.session(p.getUniqueId());

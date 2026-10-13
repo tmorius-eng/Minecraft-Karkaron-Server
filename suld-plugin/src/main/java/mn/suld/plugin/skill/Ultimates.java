@@ -61,6 +61,12 @@ final class Ultimates {
         return 30;
     }
 
+    /** Ultimate damage, labelled for the training grounds' numbers (a build has one ultimate). */
+    private void hit(Player p, LivingEntity e, double amount) {
+        Ultimate u = tree.ultimateOf(p);
+        mn.suld.plugin.combat.HitSource.run(u == null ? null : mn.suld.plugin.combat.HitSource.ultimate(u), () -> skills.damage(p, e, amount));
+    }
+
     private double atk(Player p) {
         return CombatListener.attackOf(services, p) * tree.spellDamageMultiplier(p);
     }
@@ -80,7 +86,7 @@ final class Ultimates {
             case BUKHNII_NURAL -> {
                 Location c = p.getLocation();
                 for (LivingEntity e : skills.enemiesAround(p, c, 8)) {
-                    skills.damage(p, e, atk(p) * 6);
+                    hit(p, e, atk(p) * 6);
                     e.setVelocity(new Vector(0, 0.9, 0));
                 }
                 ring(c, 8, Particle.EXPLOSION, 14);
@@ -130,7 +136,7 @@ final class Ultimates {
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
                         if (!p.isOnline() || !e.isValid()) return;
                         e.getWorld().strikeLightningEffect(e.getLocation());
-                        skills.damage(p, e, atk(p) * 5);
+                        hit(p, e, atk(p) * 5);
                     }, 6L * i++);
                 }
             }
@@ -193,7 +199,7 @@ final class Ultimates {
                     Location hit = c.clone().add(ThreadLocalRandom.current().nextDouble(-5, 5), 0, ThreadLocalRandom.current().nextDouble(-5, 5));
                     for (double h = 8; h > 0; h -= 2) hit.getWorld().spawnParticle(Particle.CRIT, hit.clone().add(0, h, 0), 1, 0, 0, 0, 0);
                     hit.getWorld().spawnParticle(Particle.ENCHANTED_HIT, hit, 6, 0.3, 0.1, 0.3, 0.1);
-                    for (LivingEntity e : skills.enemiesAround(p, hit, 1.8)) skills.damage(p, e, atk(p) * 0.9);
+                    for (LivingEntity e : skills.enemiesAround(p, hit, 1.8)) hit(p, e, atk(p) * 0.9);
                 }
                 if (t % 4 == 0) c.getWorld().playSound(c, Sound.ENTITY_ARROW_HIT, 0.8f, 1.2f);
             }
@@ -212,7 +218,7 @@ final class Ultimates {
                 }
                 Location c = p.getLocation();
                 for (LivingEntity e : skills.enemiesAround(p, c, radius)) {
-                    skills.damage(p, e, atk(p) * mult);
+                    hit(p, e, atk(p) * mult);
                     if (burn) e.setFireTicks(80);
                 }
                 ring(c, radius, fx, 24);
@@ -241,7 +247,7 @@ final class Ultimates {
                     at = p.getLocation().add(ThreadLocalRandom.current().nextDouble(-6, 6), 0, ThreadLocalRandom.current().nextDouble(-6, 6));
                 }
                 for (double h = 7; h > 0; h -= 1.5) at.getWorld().spawnParticle(Particle.DUST, at.clone().add(0, h, 0), 3, 0.2, 0.1, 0.2, 0, new Particle.DustOptions(Color.fromRGB(110, 110, 120), 1.6f));
-                for (LivingEntity e : skills.enemiesAround(p, at, 2.5)) skills.damage(p, e, atk(p) * 3);
+                for (LivingEntity e : skills.enemiesAround(p, at, 2.5)) hit(p, e, atk(p) * 3);
                 at.getWorld().spawnParticle(Particle.EXPLOSION, at, 1);
                 at.getWorld().playSound(at, Sound.BLOCK_ANVIL_LAND, 1f, 0.6f);
             }
@@ -272,7 +278,7 @@ final class Ultimates {
                 }
                 step++;
                 for (LivingEntity e : skills.enemiesAround(p, p.getLocation(), 2.2)) {
-                    if (hit.add(e.getUniqueId())) skills.damage(p, e, atk(p) * 2);
+                    if (hit.add(e.getUniqueId())) hit(p, e, atk(p) * 2);
                 }
                 p.getWorld().spawnParticle(Particle.CLOUD, p.getLocation(), 4, 0.3, 0.1, 0.3, 0.02);
             }
@@ -302,7 +308,7 @@ final class Ultimates {
                     at.getWorld().spawnParticle(Particle.DUST, at.clone().add(0, 1, 0), 2, 0.3, 0.3, 0.3, 0, new Particle.DustOptions(Color.fromRGB(200, 230, 255), 1.4f));
                     for (LivingEntity e : skills.enemiesAround(p, at, 2.2)) {
                         if (hit.add(e.getUniqueId())) {
-                            skills.damage(p, e, atk(p) * 2.5);
+                            hit(p, e, atk(p) * 2.5);
                             e.setVelocity(d.clone().multiply(0.8).setY(0.4));
                         }
                     }
