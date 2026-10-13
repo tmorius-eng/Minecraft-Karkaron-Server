@@ -446,6 +446,13 @@ public final class SuldPlugin extends JavaPlugin {
             border.apply("spawn moved");
             halls.placeGates(); // gates follow the spawn like every region ring
         });
+        if (getConfig().getBoolean("map.enabled", true)) {
+            // «Сүлдийн Атлас» (docs/WORLD_MAP.md): after the border, whose square the map covers
+            services.map = new mn.suld.plugin.map.MapService(this);
+            mn.suld.plugin.dungeon.DungeonHalls mapHalls = halls;
+            services.map.pois = () -> mn.suld.plugin.map.MapPois.collect(services, worldBuild, mapHalls, getConfig());
+            services.map.start();
+        }
         mn.suld.plugin.worldbuild.SuldWorldCommand worldCommand = new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls);
         registerTab("suldworld", worldCommand);
         // ovoo at the heart of every area (docs/world/OVOO.md): circle three times clockwise for Тэнгэрийн ивээл
@@ -543,6 +550,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (pregen != null) {
             pregen.stop();
         }
+        if (services != null && services.map != null) services.map.shutdown(); // the map's regions to disk
         if (worldBuild != null) {
             worldBuild.stop();
         }

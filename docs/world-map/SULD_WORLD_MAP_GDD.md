@@ -1,5 +1,7 @@
 # «Сүлдийн Атлас» — the world map (game design)
 
+> **SUPERSEDED (2026-10-13).** The owner chose real data only (no predicted terrain) and a map drawn from map items; the current design and what is built are in [`docs/WORLD_MAP.md`](../WORLD_MAP.md). This file is kept as the record of the first proposal.
+
 **Status: DESIGN (2026-10-13), awaiting the owner's approval.** Architecture: `WORLD_MAP_ARCHITECTURE_DECISION.md`.
 Look: the owner's references — a parchment map frame, an open atlas book drawn in ink, in-world waypoint labels.
 

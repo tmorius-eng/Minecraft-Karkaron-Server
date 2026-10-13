@@ -115,6 +115,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.STAFF, "/deathreset <нэр>", "Түгжээ ба шархыг арилгах", "suld.admin.death.reset"),
 
             e(Group.ADMIN, "/suld exp|coins|quest|guide|auth", "EXP, зоос, эрлийн бүлэг, самбар шинэчлэх, нэвтрэлт", "suld.admin"),
+            e(Group.ADMIN, "/suld map status|scan|export|pois|refresh", "Газрын зураг: бодит ертөнцийг уншуулах, PNG гаргах", "suld.admin"),
             e(Group.ADMIN, "/credits give|take <нэр|uuid> <тоо>", "Дэлгүүрийн кредит", "suld.admin.credits"),
             e(Group.ADMIN, "/skillsadmin inspect|grantpoints|unlock|reset|orb|reload|validate", "Чадварын мод удирдах", "suld.admin.skills"),
             e(Group.ADMIN, "/suldevent  /suldpack", "Дэлхийн үйл явдал, дүрс багц", "suld.admin.event"),

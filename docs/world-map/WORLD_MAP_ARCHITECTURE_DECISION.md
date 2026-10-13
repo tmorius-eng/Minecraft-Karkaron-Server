@@ -1,5 +1,7 @@
 # World map — architecture decision
 
+> **SUPERSEDED (2026-10-13).** The owner chose real data only (no predicted terrain) and a map drawn from map items; the current design and what is built are in [`docs/WORLD_MAP.md`](../WORLD_MAP.md). This file is kept as the record of the first proposal.
+
 **Status: PROPOSED (2026-10-13), awaiting the owner's approval.** Facts and citations: `WORLD_MAP_CURRENT_STATE.md`.
 
 ## Товч (Mongolian summary)

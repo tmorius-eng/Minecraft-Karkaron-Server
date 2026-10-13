@@ -362,6 +362,30 @@ world:
     pause-mspt: 45
 
 # ---------------------------------------------------------------------------
+# «Сүлдийн Атлас», the world map (docs/WORLD_MAP.md). Real blocks only: every generated chunk inside the border is
+# read the way a vanilla map reads it and kept in plugins/SULD/map/columns (about 1 MB per 512 x 512 blocks); land
+# never generated stays blank. The scan reads the world already on disk once (it starts by itself, throttled by the
+# tick time like the pre-generator, and only new chunks after that). Staff: /suld map status|scan|export|refresh.
+# ---------------------------------------------------------------------------
+map:
+  enabled: true
+  # natural: grass, leaves and water take the colour of the biome they really stand in (as the game draws them);
+  # vanilla: the colours of a vanilla map. Changing it makes the scan read the world again.
+  colors: natural
+  snapshot-budget-ms: 2.0       # main-thread time per tick for chunk snapshots
+  workers: 2                    # threads that work out the colours and draw tiles
+  max-regions: 32               # 512 x 512-block regions kept in memory (1 MB each)
+  max-tiles: 512                # 128 x 128 map tiles kept in memory (16 KB each)
+  max-diameter: 20000           # the map never covers more than this, whatever the border
+  scan:
+    auto-start: true
+    auto-delay-seconds: 60
+    max-in-flight: 8
+    max-per-tick: 6
+    target-mspt: 30
+    pause-mspt: 45
+
+# ---------------------------------------------------------------------------
 # Skill tree (/skills). The node data lives in plugins/SULD/skills/*.json (copied from the jar on first start,
 # validated on every start and on /skillsadmin reload; a broken class keeps its previous tree and the exact file and
 # field are logged). Points come from levels, finished story chapters, discovered regions and admin grants.

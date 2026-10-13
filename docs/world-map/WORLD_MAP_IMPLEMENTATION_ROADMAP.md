@@ -1,5 +1,7 @@
 # World map — implementation roadmap
 
+> **SUPERSEDED (2026-10-13).** The owner chose real data only (no predicted terrain) and a map drawn from map items; the current design and what is built are in [`docs/WORLD_MAP.md`](../WORLD_MAP.md). This file is kept as the record of the first proposal.
+
 **Status: PLAN (2026-10-13), starts when the owner approves the architecture (gate D1–D3).** Efforts are working-day
 estimates for one developer; they are not measurements and will be corrected after Phase 0.
 

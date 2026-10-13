@@ -1,5 +1,7 @@
 # World map — current state of the repository
 
+> **SUPERSEDED (2026-10-13).** The owner chose real data only (no predicted terrain) and a map drawn from map items; the current design and what is built are in [`docs/WORLD_MAP.md`](../WORLD_MAP.md). This file is kept as the record of the first proposal.
+
 **Status: INSPECTION REPORT (2026-10-13), no application code changed.** Read-only inspection of `main` @ `cd2000b`
 for the world-map feature (the owner's master prompt of 2026-10-13 and three reference pictures: a parchment map
 frame, an open atlas book with hand-drawn terrain and marker tabs, and in-world waypoint labels with distances).

@@ -68,6 +68,15 @@ public final class SuldCommand implements CommandExecutor {
                     }
                 }
             }
+            case "map" -> {
+                if (!sender.hasPermission("suld.admin")) {
+                    sender.sendMessage(Messages.error("Эрх алга."));
+                } else if (services.map == null) {
+                    sender.sendMessage(Messages.error("Газрын зураг унтраастай (config map.enabled)."));
+                } else {
+                    services.map.command(sender, args);
+                }
+            }
             case "setrank" -> setRank(sender, args);
             case "grim" -> {
                 if (!sender.hasPermission("suld.admin")) {
@@ -383,6 +392,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld setrank <тоглогч> <ard|tsereg|aravt|zuut|myangat|tumen|noyon|khaan> — цол"));
             sender.sendMessage(Messages.info("/suld props [tp <id>] — 3D дурсгалууд хаана байгаа / тийш очих"));
             sender.sendMessage(Messages.info("/suld grim [reset] — GrimAC: SÜLD хөдөлгөөнд уучилсан flag-ууд"));
+            sender.sendMessage(Messages.info("/suld map status|scan [full|stop]|export <zoom> [x z r]|pois|flush|refresh [r] — газрын зураг"));
             sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));
