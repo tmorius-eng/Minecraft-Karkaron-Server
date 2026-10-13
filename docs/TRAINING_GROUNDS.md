@@ -23,21 +23,22 @@ on the training Wardens in Хархорум, and sees what every hit, spell and 
     after every hit; the target bar shows ∞;
   * never despawns: not saved with the world (so no copy can pile up), held by a plugin chunk ticket on the yard's chunks,
     and a watchdog (every 5 s) puts back any entity of the yard that went missing.
-* **One centre, three rings** (owner, 2026-10-13):
-  * **the class weapons:** the five classes' T6 weapons float round the big Warden's shoulders (radius 2.4, 3.3 above
-    its ground), each spinning, the ring turning once in 36 s, each with its name in the class colour and its role. A
-    click on a weapon (its box, 1.0 × 1.3, moves with it) opens the class page: role, resource, spells with their keys,
-    build A and B (keystone, ultimate, passives), and «⚔ Build A / B-ээр турших»;
-  * **the group:** five small Wardens (×0.6) round its feet (radius 3.4, facing out): any area spell of 3.5 blocks or
-    more cast on the big one reaches all six. The ring is open to the south, where the way in and Мэргэн's line are;
-  * **the walking one:** a Warden (×0.85, «Хөдөлгөөнт бай ∞») walking a 7-block circle round all of it at ~2.2 blocks/s
-    (aim and spells on the move).
-* **Labels:** the gate board at the south (what each ring is for), the 10 m and 15 m marks for Мэргэн.
+* **Round it** (owner, 2026-10-13, after the concept picture):
+  * **the class stations:** an arc on the big Warden's north side, 5 blocks out (Баатар west, Мэргэн north-west, Бөө
+    north, Дархан north-east, Хүлэгчин east): each class's T6 weapon floats 1.5 up and spins, its name in the class
+    colour and its role over it. They stand still. A click on one opens the class page: role, resource, spells with
+    their keys, build A and B (keystone, ultimate, passives), and «⚔ Build A / B-ээр турших»;
+  * **the group:** five small Wardens (×0.6) close together (1.7 round) on the spot the owner stood on east of the big
+    one (`-18.6 69 -84.3`, kept as an offset from the centre), facing it, under «Бүлэг бай»: an area spell of 2.4
+    blocks or more on the middle reaches all five;
+  * **the walking one:** a Warden (×0.85, «Хөдөлгөөнт бай ∞») walking an 8-block circle round the big one at
+    ~2.2 blocks/s (aim and spells on the move).
+* **Labels:** the gate board at the south, «Бүлэг бай», the 10 m and 15 m marks for Мэргэн.
 * **HD Warden:** the pack's Warden textures are the vanilla sheets at 4× with a voxel bevel (`tools/pack/hd_warden.py`);
   every Warden on the server looks this way.
 * **Blocks:** the city is built by hand, so the plugin places none on its own. `/dasgal yard build` lays the pedestal
-  (an octagon of radius 5 under the big Warden and the group, four lights under the weapons' ring), the walking
-  Warden's track (a ring of polished andesite) and the range marks, **on open ground only**
+  (octagon, four lights), the five station pads in the class colours, the walking Warden's track (a ring of polished
+  andesite) and the range marks, **on open ground only**
   (air, grass, flowers, dirt; a built block is kept and reported), after writing every changed block to
   `plugins/SULD/training-yard-undo.txt`; `/dasgal yard undo` puts each one back. Without the blocks the yard works on the
   grass.
@@ -49,7 +50,8 @@ on the training Wardens in Хархорум, and sees what every hit, spell and 
 * The class window's confirm page: **«⚔ Туршиж үзэх»** (slot 22) — a player without a class tries the class first. On
   leaving, the class window opens again on that class's confirm page («Батлах» one click away).
 * Refused: a soul, «Тэнгэрийн сорил», a class trial, a dungeon run, a duel, a relic bearer, a world event fighter, and for
-  60 s after combat (the class-change rule). The player is moved only if they are not in the yard already; the spot they
+  60 s after combat when the player is outside the yard (the class-change rule: no running from a fight into it; the
+  refusal counts down the seconds left). A player already in the yard starts at once. The player is moved only if they are not in the yard already; the spot they
   came from is where they go back.
 
 ## The max character

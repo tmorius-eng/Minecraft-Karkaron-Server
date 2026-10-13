@@ -88,26 +88,28 @@ b.once('spawn', async () => {
     await sleep(2500);
     const tab = b.players[name] && b.players[name].displayName ? JSON.stringify(b.players[name].displayName) : '';
     check(tab.includes('дасгал'), 'TAB marks the trainee «⚔ дасгал» (no mastery mark)', tab.slice(0, 160));
-    // the yard's shape (owner, 2026-10-13): the big Warden on the spot, the five class weapons floating round its
-    // shoulders and turning, five small Wardens round its feet, one walking a wide circle round all of it
+    // the yard's shape (owner, 2026-10-13): the big Warden on the spot, the five class weapons floating still in an arc
+    // 5 blocks north of it, five small Wardens close together on the owner's second spot (+10.93, -5.85), one walking
+    // an 8-block circle round the big one
     const big = centreWarden();
-    const ring = wardens().filter(e => Math.abs(dist(e) - 3.4) < 0.35);
-    const walker = wardens().find(e => Math.abs(dist(e) - 7.0) < 0.5);
-    const weapons = Object.values(b.entities).filter(e => e.name === 'item_display' && Math.abs(dist(e) - 2.4) < 0.3);
+    const G = { x: CENTRE.x + 10.93, z: CENTRE.z - 5.85 };
+    const group = wardens().filter(e => Math.hypot(e.position.x - G.x, e.position.z - G.z) < 2.1);
+    const walker = wardens().find(e => Math.abs(dist(e) - 8.0) < 0.5);
+    const weapons = Object.values(b.entities).filter(e => e.name === 'item_display' && Math.abs(dist(e) - 5.0) < 0.3 && e.position.z < CENTRE.z + 0.3);
     const lift = big ? weapons.map(e => +(e.position.y - big.position.y).toFixed(2)) : [];
     const was = weapons.map(e => e.position.clone()), walkerWas = walker ? walker.position.clone() : null;
     await sleep(2000);
-    const turned = weapons.filter((e, i) => e.position.distanceTo(was[i]) > 0.3).length;
-    check(!!big && dist(big) < 0.3 && ring.length === 5 && weapons.length === 5 && lift.every(h => Math.abs(h - 3.3) < 0.3) && turned === 5
+    const still = weapons.filter((e, i) => e.position.distanceTo(was[i]) < 0.05).length;
+    check(!!big && dist(big) < 0.3 && group.length === 5 && weapons.length === 5 && lift.every(h => Math.abs(h - 1.5) < 0.6) && still === 5
       && !!walker && walker.position.distanceTo(walkerWas) > 1.5,
-      'the yard: the big Warden on its spot, five weapons floating round it and turning, five Wardens round its feet, one walking round',
-      `big ${big ? dist(big).toFixed(2) : '-'} · ring ${ring.length} · weapons ${weapons.length} at +${lift.join('/')} turned ${turned} · walker ${walker ? dist(walker).toFixed(1) + ' moved ' + walker.position.distanceTo(walkerWas).toFixed(1) : '-'}`);
+      'the yard: the big Warden on its spot, five weapons floating still in an arc north of it, the group of five on its spot, one walking round',
+      `big ${big ? dist(big).toFixed(2) : '-'} · group ${group.length} · weapons ${weapons.length} at +${lift.join('/')} still ${still} · walker ${walker ? dist(walker).toFixed(1) + ' moved ' + walker.position.distanceTo(walkerWas).toFixed(1) : '-'}`);
     // a floating weapon is its class's station: a click opens the class page
-    cmd(`tp ${name} ${CENTRE.x} ${big ? Math.round(big.position.y) : 70} ${CENTRE.z + 3.6} 180 0`); await sleep(1200);
+    cmd(`tp ${name} ${CENTRE.x} ${big ? Math.round(big.position.y) : 70} ${CENTRE.z - 2.6} 0 0`); await sleep(1200);
     dialog = null;
-    const boxes = Object.values(b.entities).filter(e => e.name === 'interaction' && Math.abs(dist(e) - 2.4) < 0.3);
+    const boxes = Object.values(b.entities).filter(e => e.name === 'interaction' && Math.abs(dist(e) - 5.0) < 0.3);
     const box = boxes.sort((a, c) => a.position.distanceTo(b.entity.position) - c.position.distanceTo(b.entity.position))[0];
-    if (box) { await b.lookAt(box.position.offset(0, 0.65, 0), true); b.activateEntity(box); }
+    if (box) { await b.lookAt(box.position.offset(0, 1.3, 0), true); b.activateEntity(box); }
     await sleep(1500);
     const page = JSON.stringify((dialog && dialog.dialog) || '');
     check(boxes.length === 5 && !!dialog && page.includes('Build A'), 'a click on a floating weapon opens its class page', `boxes ${boxes.length}, dialog ${dialog ? page.length + ' chars' : 'none'}`);

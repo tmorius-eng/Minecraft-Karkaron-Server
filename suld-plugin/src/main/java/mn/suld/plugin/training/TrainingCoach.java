@@ -165,7 +165,7 @@ final class TrainingCoach {
         Long last = hints.get(p.getUniqueId());
         if (last != null && now - last < 5000) return;
         hints.put(p.getUniqueId(), now);
-        p.sendMessage(Messages.info("Дасгал эхлүүлэх: том Warden-ийг тойрон хөвөх ангийн зэвсэг дээр дар, эсвэл /dasgal."));
+        p.sendMessage(Messages.info("Дасгал эхлүүлэх: том Warden-ий хажууд хөвөх ангийн зэвсэг дээр дар, эсвэл /dasgal."));
     }
 
     private static String line(SkillNode n, EffectText.Kind kind) {

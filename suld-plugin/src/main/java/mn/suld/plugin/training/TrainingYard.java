@@ -39,10 +39,10 @@ import java.util.UUID;
  * built by hand, so blocks come only from staff ({@code /dasgal yard build}). In the middle stands the big training
  * Warden: no AI, so it never moves, digs, roars or darkens anyone; health that is topped up after every hit, so it never
  * dies; not saved with the world, held in place by a chunk ticket, and put back by a watchdog if anything removes it.
- * One centre, three rings: the five class weapons float round its shoulders and turn slowly (a click on one is the
- * class's station), five small Wardens stand round its feet (inside any area spell cast on it), and one Warden walks a
- * wide circle round all of it (aim and spells on the move). The ring of five is open to the south, where the way in and
- * Мэргэн's range marks are.
+ * Round it (owner, 2026-10-13): the five class stations in an arc on its north side, each class's weapon floating and
+ * spinning over it (a click is the class page); five small Wardens close together on the spot the owner chose east of
+ * it (area spells); one Warden walking a circle round the big one (aim and spells on the move). The south is open: the
+ * way in and Мэргэн's range marks.
  */
 final class TrainingYard {
 
@@ -58,16 +58,15 @@ final class TrainingYard {
     /** Health in design units (MobService: real 1024, every hit divided by the rest): no hit can kill it. */
     static final double DESIGN_HEALTH = 10_000_000;
     static final int RADIUS = 20;
-    /** The class weapons round the big Warden: the ring's radius, the weapons' height over its ground, one turn (s). */
-    static final double HALO_RADIUS = 2.4, HALO_HEIGHT = 3.3, HALO_TURN_SECONDS = 36;
-    /** The five small Wardens round its feet: inside every area spell of 3.5 blocks or more cast on the big one. */
-    static final double GROUP_RADIUS = 3.4;
-    /** The walking Warden's circle round all of it, and its pace (blocks a second). */
-    static final double WALK_RADIUS = 7.0, WALK_SPEED = 2.2;
-    /** A weapon's click box (Interaction): width and height, centred on the weapon. */
-    private static final float HIT_WIDTH = 1.0f, HIT_HEIGHT = 1.3f;
-    /** A weapon's name, this much over the weapon. */
-    private static final double LABEL_UP = 0.62;
+    /** The class stations' arc on the big Warden's north side (west, north-west, north, north-east, east). */
+    static final double STATION_RADIUS = 5.0;
+    /**
+     * The group's middle, from the big Warden: the spot the owner stood on (2026-10-13, -18.571 69 -84.348 with the
+     * Warden at -29.5 -78.5); five small Wardens 1.7 round it, inside any area spell of 2.4 blocks or more.
+     */
+    static final double GROUP_DX = 10.93, GROUP_DZ = -5.85, GROUP_RADIUS = 1.7;
+    /** The walking Warden's circle round the big one, and its pace (blocks a second). */
+    static final double WALK_RADIUS = 8.0, WALK_SPEED = 2.2;
 
     enum Role { CENTRE, GROUP, MOVING }
 
@@ -96,10 +95,6 @@ final class TrainingYard {
     private final List<UUID> props = new ArrayList<>();
     private final Map<UUID, PlayerClass> stations = new HashMap<>();
     private final List<UUID> spinners = new ArrayList<>();
-    /** The class weapons that turn round the big Warden: the click box, the weapon and its name, in class order. */
-    private final List<UUID[]> halo = new ArrayList<>();
-    /** The ring's centre and height, set when the yard goes up. */
-    private double haloX, haloY, haloZ, haloAngle;
     private final List<int[]> tickets = new ArrayList<>();
     private BukkitTask watchdog, mover;
     private double angle;
@@ -188,7 +183,6 @@ final class TrainingYard {
         props.clear();
         stations.clear();
         spinners.clear();
-        halo.clear();
         if (centre != null) for (int[] t : tickets) centre.getWorld().removePluginChunkTicket(t[0], t[1], plugin);
         tickets.clear();
     }
@@ -201,72 +195,60 @@ final class TrainingYard {
     private void spawnAll() {
         double cx = centre.getX() + 0.5, cz = centre.getZ() + 0.5;
         // the big Warden in the middle, facing the way in (south); a giant: ×1.6
-        Location mid = ground(cx, cz);
-        put("centre", Role.CENTRE, mid, 0f, 1.6, true);
-        // the group: five small Wardens round its feet, facing out; the ring's gap is to the south
+        put("centre", Role.CENTRE, ground(cx, cz), 0f, 1.6, true);
+        // the group: five small Wardens close together on the owner's spot, facing the big one
+        double gx = cx + GROUP_DX, gz = cz + GROUP_DZ;
+        float towardCentre = (float) Math.toDegrees(Math.atan2(gx - cx, cz - gz));
         for (int i = 0; i < 5; i++) {
-            double a = Math.PI * 2 * i / 5; // 0 = north, clockwise
-            put("group" + i, Role.GROUP, ground(cx + Math.sin(a) * GROUP_RADIUS, cz - Math.cos(a) * GROUP_RADIUS),
-                    (float) Math.toDegrees(a) + 180f, 0.6, false);
+            double a = Math.PI * 2 * i / 5;
+            put("group" + i, Role.GROUP, ground(gx + Math.sin(a) * GROUP_RADIUS, gz - Math.cos(a) * GROUP_RADIUS), towardCentre, 0.6, false);
         }
-        // the walking one, round all of it
+        label(ground(gx, gz).add(0, 2.4, 0), Component.text("Бүлэг бай", CYAN, TextDecoration.BOLD),
+                Component.text("олон дайсныг нэг дор: AoE ид шид", NamedTextColor.WHITE));
+        // the walking one, round the big Warden
         Location walk = walkerAt(angle);
         put("moving", Role.MOVING, walk, walk.getYaw(), 0.85, true);
         // the gate board
-        label(ground(cx, cz + RADIUS - 2).add(0, 2.6, 0), 1f,
+        label(ground(cx, cz + RADIUS - 2).add(0, 2.6, 0),
                 Component.text("ДАЙЧДЫН ДАСГАЛЫН ТАЛБАЙ", GOLD, TextDecoration.BOLD),
                 Component.text("Хөвөх зэвсэг дээр дарж ангиа турш", NamedTextColor.WHITE),
                 Component.text("60-р түвшин · дээд хуяг, зэвсэг", NamedTextColor.WHITE),
-                Component.text("Тойрон 5 Warden — AoE ид шид", NamedTextColor.WHITE),
+                Component.text("Бүлэг бай (5 Warden) — AoE ид шид", NamedTextColor.WHITE),
                 Component.text("Тойрч алхагч — хөдөлгөөнт бай", NamedTextColor.WHITE),
                 Component.text("Гарахад бүх зүйл буцна · /dasgal", NamedTextColor.GRAY));
         // Мэргэн's range marks south of the Warden
         for (int m : new int[]{10, 15}) {
-            label(ground(cx, cz + m).add(0, 0.25, 0), 1f, Component.text(m + " м", NamedTextColor.YELLOW, TextDecoration.BOLD));
+            label(ground(cx, cz + m).add(0, 0.25, 0), Component.text(m + " м", NamedTextColor.YELLOW, TextDecoration.BOLD));
         }
-        // the class weapons, floating round the big Warden's shoulders and turning slowly; a click on one is its station
-        haloX = cx;
-        haloZ = cz;
-        haloY = mid.getY() + HALO_HEIGHT;
+        // the class stations: an arc on the big Warden's north side, each class's weapon floating and spinning over it
         PlayerClass[] classes = PlayerClass.values();
         for (int i = 0; i < classes.length; i++) {
             PlayerClass c = classes[i];
-            Location at = haloPoint(i, classes.length);
-            Interaction hit = at.getWorld().spawn(at.clone().subtract(0, HIT_HEIGHT / 2.0, 0), Interaction.class, it -> {
-                it.setInteractionWidth(HIT_WIDTH);
-                it.setInteractionHeight(HIT_HEIGHT);
+            double a = Math.toRadians(-90 + 180.0 * i / (classes.length - 1)); // west … north … east
+            Location at = ground(cx + Math.sin(a) * STATION_RADIUS, cz - Math.cos(a) * STATION_RADIUS);
+            Interaction hit = at.getWorld().spawn(at, Interaction.class, it -> {
+                it.setInteractionWidth(1.6f);
+                it.setInteractionHeight(2.6f);
                 it.setResponsive(true);
                 own(it);
             });
             stations.put(hit.getUniqueId(), c);
             props.add(hit.getUniqueId());
-            TextDisplay name = label(at.clone().add(0, LABEL_UP, 0), 0.7f,
-                    Component.text(c.displayName().toUpperCase(java.util.Locale.ROOT), COLOUR.get(c), TextDecoration.BOLD),
-                    Component.text(ROLE.get(c), NamedTextColor.WHITE));
-            name.setTeleportDuration(2);
-            UUID item = null;
+            label(at.clone().add(0, 3.0, 0), Component.text(c.displayName().toUpperCase(java.util.Locale.ROOT), COLOUR.get(c), TextDecoration.BOLD),
+                    Component.text(ROLE.get(c), NamedTextColor.WHITE), Component.text("дарж турш", NamedTextColor.GRAY));
             ItemStack icon = weaponIcon.apply(c);
             if (icon != null) {
-                ItemDisplay d = at.getWorld().spawn(at, ItemDisplay.class, it -> {
+                ItemDisplay d = at.getWorld().spawn(at.clone().add(0, 1.5, 0), ItemDisplay.class, it -> {
                     it.setItemStack(icon);
                     it.setBillboard(Display.Billboard.FIXED);
                     it.setBrightness(new Display.Brightness(15, 15));
-                    it.setTeleportDuration(2);
                     it.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1.1f, 1.1f, 1.1f), new AxisAngle4f()));
                     own(it);
                 });
                 props.add(d.getUniqueId());
                 spinners.add(d.getUniqueId());
-                item = d.getUniqueId();
             }
-            halo.add(new UUID[]{hit.getUniqueId(), item, name.getUniqueId()});
         }
-    }
-
-    /** Where weapon {@code i} of {@code n} floats now (its centre). */
-    private Location haloPoint(int i, int n) {
-        double a = haloAngle + Math.PI * 2 * i / n;
-        return new Location(centre.getWorld(), haloX + Math.sin(a) * HALO_RADIUS, haloY, haloZ - Math.cos(a) * HALO_RADIUS);
     }
 
     private void own(Entity e) {
@@ -274,7 +256,7 @@ final class TrainingYard {
         e.addScoreboardTag(TAG);
     }
 
-    private TextDisplay label(Location at, float scale, Component... lines) {
+    private TextDisplay label(Location at, Component... lines) {
         Component text = Component.empty();
         for (int i = 0; i < lines.length; i++) text = text.append(i == 0 ? lines[i] : Component.newline().append(lines[i]));
         Component t = text;
@@ -284,8 +266,7 @@ final class TrainingYard {
             it.setShadowed(true);
             it.setAlignment(TextDisplay.TextAlignment.CENTER);
             it.setLineWidth(240);
-            it.setBackgroundColor(Color.fromARGB(scale < 1f ? 80 : 110, 10, 14, 24));
-            if (scale != 1f) it.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(scale, scale, scale), new AxisAngle4f()));
+            it.setBackgroundColor(Color.fromARGB(110, 10, 14, 24));
             own(it);
         });
         props.add(d.getUniqueId());
@@ -355,7 +336,7 @@ final class TrainingYard {
         return l;
     }
 
-    /** The walking Warden (about 2.2 blocks a second), the class weapons turning round the big one and spinning. */
+    /** The walking Warden (about 2.2 blocks a second), and the station weapons turning slowly. */
     private void move() {
         ticks++;
         UUID id = dummies.get("moving");
@@ -363,14 +344,6 @@ final class TrainingYard {
         if (e != null && e.isValid()) {
             angle += WALK_SPEED / WALK_RADIUS / 20.0;
             e.teleport(walkerAt(angle));
-        }
-        haloAngle += Math.PI * 2 / (HALO_TURN_SECONDS * 20);
-        for (int i = 0; i < halo.size(); i++) {
-            Location at = haloPoint(i, halo.size());
-            UUID[] s = halo.get(i);
-            if (Bukkit.getEntity(s[0]) instanceof Interaction hit) hit.teleport(at.clone().subtract(0, HIT_HEIGHT / 2.0, 0));
-            if (s[1] != null && Bukkit.getEntity(s[1]) instanceof ItemDisplay d) d.teleport(at);
-            if (Bukkit.getEntity(s[2]) instanceof TextDisplay t) t.teleport(at.clone().add(0, LABEL_UP, 0));
         }
         if (ticks % 40 == 0) {
             float rot = (float) ((ticks / 40 % 4) * Math.PI / 2);

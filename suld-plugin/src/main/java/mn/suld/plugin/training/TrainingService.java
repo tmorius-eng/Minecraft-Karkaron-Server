@@ -240,8 +240,13 @@ public final class TrainingService implements Listener, TabExecutor {
             return "Ертөнцийн үйл явдлын үеэр боломжгүй.";
         }
         if (services.worldBosses != null && services.worldBosses.fighting(id)) return "Дэлхийн боссын тулаан дуустал боломжгүй.";
+        // the class-change rule (no running from a fight into the yard): only for a player who would be moved in; one
+        // already in the yard escapes nothing (the city has no fights), so starts at once. The wait counts in seconds.
         long since = services.classChange == null ? Long.MAX_VALUE : System.currentTimeMillis() - services.classChange.lastCombat(id);
-        if (since < ClassChangeRules.COMBAT_MS) return "Тулаанаас гараад " + ClassChangeRules.format(ClassChangeRules.COMBAT_MS - since) + "-ын дараа.";
+        if (since < ClassChangeRules.COMBAT_MS && !yard.inside(p.getLocation(), 0)) {
+            long left = (ClassChangeRules.COMBAT_MS - since + 999) / 1000;
+            return "Тулаанаас гараад " + ClassChangeRules.COMBAT_MS / 1000 + " сек хүлээнэ: " + left + " сек үлдлээ (дасгалын талбай дотроос шууд эхэлнэ).";
+        }
         return null;
     }
 
