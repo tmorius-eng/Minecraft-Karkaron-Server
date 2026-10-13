@@ -97,6 +97,8 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     private static final TextColor GOLD = TextColor.fromHexString("#ECBE4C"), CREAM = TextColor.fromHexString("#F4E8C8"),
             GREY = TextColor.fromHexString("#B9B3A4"), CYAN = TextColor.fromHexString("#56E2EC");
+    /** The regions' names on the widest views: an old gold that reads on snow, steppe and sea alike. */
+    private static final TextColor REGION_INK = TextColor.fromHexString("#E8C66A");
     private static final NamespacedKey RETURN = new NamespacedKey("suld", "atlas_return");
     private static final byte[] BLANK = new byte[TileComposer.PIXELS];
 
@@ -453,7 +455,12 @@ public final class AtlasSky implements Listener, TabExecutor {
     }
 
     private TextDisplay text(Session s, List<Entity> into, double u, double v, Component c, float scale, int width, int background) {
-        return own(s, into, s.p.getWorld().spawn(at(s, u, v, 0.06), TextDisplay.class, t -> {
+        return text(s, into, u, v, c, scale, width, background, 0.06);
+    }
+
+    private TextDisplay text(Session s, List<Entity> into, double u, double v, Component c, float scale, int width, int background,
+                             double towardViewer) {
+        return own(s, into, s.p.getWorld().spawn(at(s, u, v, towardViewer), TextDisplay.class, t -> {
             hidden(t);
             t.setBillboard(Display.Billboard.FIXED);
             t.setRotation(180f, 0f);
@@ -647,6 +654,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (s.hover != null && !s.tabs.contains(s.hover)) s.hover = null;
         AtlasView v = s.view;
         int zoom = v.zoom();
+        if (zoom >= REGION_NAMES_ZOOM) regionNames(s);
         List<double[]> boxes = new ArrayList<>(); // labels already placed (u0, v0, u1, v1)
         List<MapPois.Poi> pois = new ArrayList<>(map.pois.get());
         pois.sort((a, b) -> Integer.compare(rank(b.kind()), rank(a.kind())));
@@ -700,6 +708,31 @@ public final class AtlasSky implements Listener, TabExecutor {
             // the arrow points up (north) unturned; yaw 0 looks south: turn clockwise on screen by yaw + 180°
             float turn = (float) Math.toRadians(s.origin.getYaw() + 180);
             picture(s, s.marks, "marker_player", pu, pv, MARKER_BIG, MARKER_BIG, 0.035, turn);
+        }
+    }
+
+    /** From this zoom (8 blocks a pixel) out the atlas writes the regions' names across their lands. */
+    static final int REGION_NAMES_ZOOM = 3;
+
+    /**
+     * The regions' names across their lands, as an atlas names its countries: at the two widest zooms, faint gold
+     * capitals at the middle of each wild region (half way out its ring, half way round its arc), behind the places and
+     * their labels. The city keeps its own label.
+     */
+    private void regionNames(Session s) {
+        World w = s.p.getWorld();
+        Location sp = w.getSpawnLocation();
+        double edge = w.getWorldBorder().getSize() / 2 - 100;
+        for (mn.suld.api.region.RegionDefinition r : WorldContent.REGIONS) {
+            if (!(r.shape() instanceof mn.suld.api.region.RegionShape.Sector sec)) continue;
+            double from = (sec.fromDeg() % 360 + 360) % 360, to = (sec.toDeg() % 360 + 360) % 360;
+            double mid = Math.toRadians(from + (from <= to ? to - from : to + 360 - from) / 2);
+            double rr = (sec.minRadius() + Math.min(sec.maxRadius(), edge)) / 2;
+            double u = s.view.u(sp.getX() + Math.sin(mid) * rr), vv = s.view.v(sp.getZ() - Math.cos(mid) * rr);
+            if (!s.view.onWall(u, vv)) continue;
+            TextDisplay t = text(s, s.marks, u, vv, Component.text(r.displayName().toUpperCase(java.util.Locale.ROOT), REGION_INK,
+                    TextDecoration.BOLD), 0.62f, 400, 0, 0.02);
+            t.setTextOpacity((byte) 190);
         }
     }
 

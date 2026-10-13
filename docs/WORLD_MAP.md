@@ -151,8 +151,12 @@ stood on the next login.
 * **Where it does not open:** outside the overworld, in a dungeon run, within 8 s of a fight, falling or riding.
 * **Art:** `tools/map/atlas_art.py pack` writes the textures at 128 px a block like the maps (sizes multiples of 16),
   the models and the item definitions (`suld:entity/atlas/*`).
+* **Region names.** From 8 blocks a pixel out (the two widest views), the eight wild regions are named across
+  their lands, as an atlas names its countries: faint gold capitals («ГОВЬ», «ХӨВСГӨЛИЙН ТАЙГА»…) half way out the
+  region's ring and half way round its arc, behind the places and their labels. The city keeps its own label.
 * **Bot:** `tools/loadtest/bots/atlasbot.js` (in `regress.sh`): the stage, the 25 frames and their map packets with
-  real pixels, pan, zoom, the «Агуй» filter, Shift; 10 checks pass on the dev server (2026-10-13).
+  real pixels, pan, zoom, no region named close up and all eight at the whole world, the «Агуй» filter, Shift.
+  12 checks pass on the dev server and on a second one (2026-10-13).
 
 ## Part C — pins, waypoints, minimap (built)
 
