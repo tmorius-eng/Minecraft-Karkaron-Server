@@ -38,7 +38,9 @@ edit never takes the server down and never half-applies.
 - References resolve: a region's and a wave's mobs, a boss, an area's region, a dungeon's region, a quest's target
   (mob, dungeon, region or item), an event's target mobs, loot tables (on `validate`).
 - Mob hosts are living vanilla entity types; tiers, hall themes and quest types are known values.
-- Each area owns one discovery bit (`index` 16..63, unique).
+- Each region owns one discovery bit (`bit` 0..15, unique) and each area one (`index` 16..63, unique): a player's
+  discoveries are stored by these numbers, so a region or area can move in the list, and a new one goes in with a
+  free number. Never renumber one that players may have discovered.
 - Boss phases start at 1.0 and go strictly down.
 - Every dungeon has a gate `site`. A dungeon outside the ladder (`DungeonLadder`) also needs a `completion` bonus; on a
   ladder dungeon `completion` is ignored, because its reward comes from the progression rules (PROG-003).

@@ -22,6 +22,7 @@ import java.util.Set;
  * @param mobs        every mob by id, in file order
  * @param mobRoles    mob id → role (core, wild, ladder, boss)
  * @param models      mob id → model rig id, for the mobs that have one
+ * @param regionBits  region id → its discovery bit 0..15 in the player's style row (world.json "bit")
  * @param outer       ids of the outer regions (their level grows with the distance)
  * @param chapters    the story, with the EXP the rules give each chapter already filled in
  * @param sites         the dungeon gates (dungeons.json)
@@ -36,6 +37,7 @@ public record ContentPack(
         double innerEdge,
         double worldEdge,
         List<RegionDefinition> regions,
+        Map<String, Integer> regionBits,
         Set<String> outer,
         List<Area> areas,
         List<DungeonDefinition> dungeons,
@@ -58,6 +60,7 @@ public record ContentPack(
         mobRoles = Map.copyOf(mobRoles);
         models = Map.copyOf(models);
         regions = List.copyOf(regions);
+        regionBits = Map.copyOf(regionBits);
         outer = Set.copyOf(outer);
         areas = List.copyOf(areas);
         dungeons = List.copyOf(dungeons);
@@ -95,6 +98,12 @@ public record ContentPack(
 
     public MobDefinition mob(String id) {
         return mobs.get(id);
+    }
+
+    /** The region's discovery bit 0..15, or -1 for a region the content does not know. */
+    public int regionBit(String id) {
+        Integer b = regionBits.get(id);
+        return b == null ? -1 : b;
     }
 
     public RegionDefinition region(String id) {

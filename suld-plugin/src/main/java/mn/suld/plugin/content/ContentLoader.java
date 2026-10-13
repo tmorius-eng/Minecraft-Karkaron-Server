@@ -173,6 +173,11 @@ public final class ContentLoader {
         if (inner >= edge) issues.add(new Issue(f, "innerEdge", "must be less than worldEdge"));
         List<RegionDefinition> regions = new ArrayList<>();
         Set<String> outer = new HashSet<>();
+        // each region owns one discovery bit 0..15 of the player's style row (areas own 16..63): by its own number, so
+        // reordering or inserting regions never moves a player's discoveries onto another region (map inspection,
+        // 2026-10-13); an older server copy without numbers keeps the list order it always had
+        Map<String, Integer> regionBits = new HashMap<>();
+        Set<Integer> usedRegionBits = new HashSet<>();
         List<Object> regionList = list(f, "", world, "regions", issues);
         for (int i = 0; i < regionList.size(); i++) {
             String at = "regions[" + i + "]";
@@ -184,8 +189,11 @@ public final class ContentLoader {
             for (int k = 0; k < ids.size(); k++) {
                 if (!mobs.containsKey(ids.get(k))) issues.add(new Issue(f, at + ".mobs[" + k + "]", "no mob " + ids.get(k) + " in mobs.json"));
             }
+            int bit = intIn(f, at, r, "bit", 0, 15, false, i, issues);
+            if (!usedRegionBits.add(bit)) issues.add(new Issue(f, at + ".bit", "bit " + bit + " is used twice (each region owns one discovery bit 0..15)"));
             if (id == null || shape == null) continue;
             if (regions.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
+            regionBits.put(id, bit);
             try {
                 regions.add(new RegionDefinition(id, str(f, at, r, "name", true, issues), r.get("description") instanceof String desc ? desc : "", shape, intIn(f, at, r, "priority", 0, 1000, true, 10, issues),
                         intIn(f, at, r, "minLevel", 1, 100, true, 1, issues), intIn(f, at, r, "maxLevel", 1, 100, true, 1, issues),
@@ -621,7 +629,7 @@ public final class ContentLoader {
             if (historic.stream().noneMatch(x -> x.id().equals(site))) issues.add(new Issue("events.json", at, "no site " + site + " in sites.json"));
         });
         if (!issues.isEmpty()) return new Result(null, issues, overridden);
-        return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, outer, areas, dungeons, sites, completions,
+        return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, regionBits, outer, areas, dungeons, sites, completions,
                 dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns, worldBosses), issues, overridden);
     }
 

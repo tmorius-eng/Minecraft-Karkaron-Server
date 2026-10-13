@@ -324,7 +324,7 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
 
     /** First visit ever to a wild region: its discovery EXP, once per player (persisted with the style row). */
     private boolean discover(Player p, mn.suld.api.profile.PlayerProfile pr, RegionDefinition r) {
-        int index = WorldContent.REGIONS.indexOf(r);
+        int index = mn.suld.plugin.content.Content.pack().regionBit(r.id()); // world.json "bit", never the list position
         var style = services.styles().cached(p.getUniqueId()).orElse(null);
         if (index < 0 || style == null || !style.discover(index)) return false;
         int from = pr.progression().level();

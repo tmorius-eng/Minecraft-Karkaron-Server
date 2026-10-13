@@ -48,6 +48,27 @@ class ContentDataTest {
     }
 
     @Test
+    void everyRegionOwnsItsDiscoveryBitWhereverItStandsInTheList() throws Exception {
+        // the bits a player's style row already holds were the list positions: the numbers keep them there
+        List<String> order = List.of("region.kharkhorum", "region.kherlen", "region.gobi", "region.khangai", "region.altai",
+                "region.khentii", "region.zuungar", "region.otgon", "region.khuvsgul");
+        ContentPack bundled = load(ContentLoader.classpath()).pack();
+        for (int i = 0; i < order.size(); i++) assertEquals(i, bundled.regionBit(order.get(i)), order.get(i));
+        // moving a region to the end of the list moves no discovery (map inspection 2026-10-13: it used to)
+        ContentLoader.Result moved = load(edited("world.json", root -> {
+            List<Map<String, Object>> regions = list(root, "regions");
+            regions.add(regions.remove(1));
+        }));
+        assertTrue(moved.issues().isEmpty(), () -> moved.issues().toString());
+        assertEquals(1, moved.pack().regionBit("region.kherlen"));
+        assertEquals(2, moved.pack().regionBit("region.gobi"));
+        ContentLoader.Result twice = load(edited("world.json", root -> list(root, "regions").get(2).put("bit", 1)));
+        assertTrue(has(twice, "world.json", "bit 1 is used twice"), () -> twice.issues().toString());
+        ContentLoader.Result areaBit = load(edited("world.json", root -> list(root, "regions").get(2).put("bit", 16)));
+        assertTrue(has(areaBit, "world.json", "16 is outside 0..15"), () -> areaBit.issues().toString());
+    }
+
+    @Test
     void aChapterOnAMobOfSeveralRegionsSaysWhereItIsPlayed() throws Exception {
         // Act II's mobs roam all four outer regions: without the chapter's region the quest marker pointed at the first
         // region listing the mob (Хэнтий) for every one of them (map inspection 2026-10-13)

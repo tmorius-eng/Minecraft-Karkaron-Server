@@ -6,6 +6,7 @@
   "regions": [
     {
       "id": "region.kharkhorum",
+      "bit": 0,
       "name": "Хархорум",
       "description": "Их Монгол Улсын нийслэл — аюулгүй бүс",
       "shape": {"type": "square", "half": 51},
@@ -20,6 +21,7 @@
     },
     {
       "id": "region.kherlen",
+      "bit": 1,
       "name": "Хэрлэнгийн Тал",
       "description": "Зүүн зүгийн өргөн тал — чоно, дээрэмчид",
       "shape": {"type": "sector", "minRadius": 0, "maxRadius": 2600, "fromDeg": 45, "toDeg": 135},
@@ -34,6 +36,7 @@
     },
     {
       "id": "region.gobi",
+      "bit": 2,
       "name": "Говь",
       "description": "Өмнөд зүгийн элсэн цөл — хилэнц, элсний сүнс",
       "shape": {"type": "sector", "minRadius": 0, "maxRadius": 2600, "fromDeg": 135, "toDeg": 225},
@@ -48,6 +51,7 @@
     },
     {
       "id": "region.khangai",
+      "bit": 3,
       "name": "Хангай",
       "description": "Хойд зүгийн ой, уул — саарал чоно, баавгай",
       "shape": {"type": "sector", "minRadius": 0, "maxRadius": 2600, "fromDeg": 315, "toDeg": 45},
@@ -62,6 +66,7 @@
     },
     {
       "id": "region.altai",
+      "bit": 4,
       "name": "Алтай",
       "description": "Баруун зүгийн мөсөн оргилууд — мөсөн сүнс, аварга",
       "shape": {"type": "sector", "minRadius": 0, "maxRadius": 2600, "fromDeg": 225, "toDeg": 315},
@@ -76,6 +81,7 @@
     },
     {
       "id": "region.khentii",
+      "bit": 5,
       "name": "Хэнтийн Нуруу",
       "description": "Бурхан Халдуны ариун нуруу, алс зүүн тал — хүрээний харуул, уулын савдаг",
       "shape": {"type": "sector", "minRadius": 2600, "maxRadius": 5000, "fromDeg": 45, "toDeg": 135},
@@ -103,6 +109,7 @@
     },
     {
       "id": "region.zuungar",
+      "bit": 6,
       "name": "Зүүнгарын Говь",
       "description": "Тангудын балгас, элсэн шуурга — сүнс, аварга хилэнц",
       "shape": {"type": "sector", "minRadius": 2600, "maxRadius": 5000, "fromDeg": 135, "toDeg": 225},
@@ -130,6 +137,7 @@
     },
     {
       "id": "region.otgon",
+      "bit": 7,
       "name": "Отгонтэнгэрийн Оргил",
       "description": "Тэнгэрт тулсан мөнх цаст оргилууд — тэнгэрийн цэрэг",
       "shape": {"type": "sector", "minRadius": 2600, "maxRadius": 5000, "fromDeg": 225, "toDeg": 315},
@@ -157,6 +165,7 @@
     },
     {
       "id": "region.khuvsgul",
+      "bit": 8,
       "name": "Хөвсгөлийн Тайга",
       "description": "Далай ээжийн хойд тайга, ертөнцийн хязгаар — усны лус, далайн чоно",
       "shape": {"type": "sector", "minRadius": 2600, "maxRadius": 5000, "fromDeg": 315, "toDeg": 45},
