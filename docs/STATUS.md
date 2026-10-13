@@ -5,7 +5,8 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-12 · **Commit base:** `main` after `7cad18a` · **Schema:** V21
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `0a9f08f` · **Schema:** V22 · **Bot sweep:**
+`tools/loadtest/regress.sh` · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
 

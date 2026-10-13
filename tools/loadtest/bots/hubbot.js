@@ -3,6 +3,8 @@
 // /menu opens the hub (title carries HUB_FRAME + PAGE_HUB, 8 tab tiles and 8 cards), the Тоглогч tab opens the
 // profile page (PAGE_PROFILE, the tab glow, a «Буцах» button), «Буцах» returns to the hub, «✕ Хаах» closes it, and
 // /profile opens the window instead of printing chat.
+// /menu normally opens the sky window (MenuSky, tested by skymenubot.js); this bot checks the chest window that is the
+// fallback whenever the sky cannot open (in a vehicle, in combat, in a run, falling): the bot sits in a minecart.
 const mineflayer = require('mineflayer');
 const { execFileSync } = require('child_process');
 const [ctl, logfile, port = '25572'] = process.argv.slice(2);
@@ -54,6 +56,10 @@ async function click(b, slot) {
   const b = await join(name);
   cmd(`suld exp ${name} 20000`);
   await sleep(1500);
+  cmd(`execute at ${name} run summon minecraft:minecart ~ ~ ~`); await sleep(1200);
+  const cart = Object.values(b.entities).find(e => e.name === 'minecart' && e.position.distanceTo(b.entity.position) < 3);
+  if (cart) { b.mount(cart); await sleep(1500); }
+  check(!!b.vehicle, 'the bot sits in a minecart (the sky window cannot open there)', cart ? 'cart ' + cart.id : 'no cart');
 
   let r = await open(b, '/menu');
   check(has(r.w, G.FRAME) && has(r.w, G.HUB), '/menu opens the hub (frame + page glyphs in the title)', r.w ? JSON.stringify(r.w.title).slice(0, 120) : 'no window');

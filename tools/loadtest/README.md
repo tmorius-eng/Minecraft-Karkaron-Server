@@ -10,6 +10,7 @@ this folder is the copy, so "16/16 bots pass" is reproducible.
 ```bash
 cd tools/loadtest/bots && npm install            # mineflayer 4.x
 scripts/run-test-server.sh 1.21.11               # the dev Paper (see TESTING.md), console control: srv2ctl.sh
+tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 25572   # every pass/fail bot in order, one table, exit 1 on a FAIL
 node bots/featbot.js ./srv2ctl.sh server.log     # the functional sweep (tutorial, chat, lock-on, dungeon hall, ...)
 node bots/khuraldai-smoke.js ./srv2ctl.sh server.log 25572   # Их Хуралдай: ballot, vote, close, force, finder, resolve, chronicle, PvP policy
 node bots/campaign-deliver.js ./srv2ctl.sh server.log test_deliver item.chonon_arisan 60 25572   # a DELIVER_ITEMS campaign to success

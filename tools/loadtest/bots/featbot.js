@@ -13,7 +13,7 @@ const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') retur
 
 function join(name) {
   return new Promise((resolve) => {
-    const bot = mineflayer.createBot({ host: '127.0.0.1', port: 25571, username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
+    const bot = mineflayer.createBot({ host: '127.0.0.1', port: Number(process.env.PORT || 25571), username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
     bot.chatLog = []; bot.bars = new Map();
     bot.on('messagestr', (m) => bot.chatLog.push(m));
     bot._client.on('boss_bar', (pk) => { if (pk.title) bot.bars.set(String(pk.entityUUID), flat(pk.title)); });
