@@ -1,9 +1,12 @@
 # «Сүлдийн Атлас» — the world map
 
-**Status (2026-10-13):** the terrain pipeline (part A) and the atlas screen `/map` (part B) are built and running on
-the dev server; pins, waypoints and the corner minimap (C) are next. Owner's rules for this feature: **real data only** — the map
-draws the blocks the server has really generated, never a guess from the world generator; Mongolian look; the whole
-world visible with `/map`; pins and waypoints; a minimap at the top left when `/map` is closed.
+**Status (2026-10-13):** the terrain pipeline (part A), the atlas screen `/map` (part B) and the pins, the waypoint and
+the corner minimap (part C) are built and running on the dev server. Parts B and C were seen on a real 1.21.11 client
+(the vanilla client run headless on the dev machine: Xvfb + Mesa software rendering, scripted keys and mouse; the
+screenshots went to the owner) — that run found and fixed three things a bot cannot see (below). A human check on the
+owner's own PC is still owed. Owner's rules for this feature: **real data only** — the map draws the blocks the server
+has really generated, never a guess from the world generator; Mongolian look; the whole world visible with `/map`;
+pins and waypoints; a minimap at the top left when `/map` is closed.
 
 The earlier proposals in `docs/world-map/` (tile glyphs, predicted biomes) are **superseded** by this document.
 
@@ -16,6 +19,10 @@ The earlier proposals in `docs/world-map/` (tile glyphs, predicted biomes) are *
 * Одоо байгаа ертөнцийг сервер өөрөө нэг удаа уншина (`/suld map scan`, асаахаас 1 минутын дараа өөрөө эхэлнэ,
   tick-ийн ачааллаар удаашрана). Шинэ газар, барилга, нурсан блок нь автоматаар шинэчлэгдэнэ.
 * Ажилтан: `/suld map status | scan [full|stop] | export <zoom> [x z r] | pois | flush | refresh [r]`.
+* Тоглогч: `/map` — атлас · `/map pin [нэр]` — энд тэмдэг тавих (30 хүртэл, өгөгдлийн санд) · `/map pins` — жагсаалт
+  ([Чиглэх] [Устгах]) · `/map unpin <нэр|#>` · `/map guide <нэр|# | x z>` — чиглэл (дээд талын зурвас, хана нэвт
+  харагдах шошго «◆ Нэр · 412 м») · `/map stop` · `/map minimap` — зүүн дээд буланд мини газрын зураг асаах/унтраах
+  (мөн «Тохиргоо»-нд; SÜLD дүрс багцтай үед л харагдана).
 
 ## Part A — terrain (built)
 
@@ -111,6 +118,16 @@ drawn around them by display quads from the pack, places and labels stand in fro
 is visible to its owner only and is never saved. A crash while the atlas is open puts the player back where they
 stood on the next login.
 
+* **The camera** sits 6 blocks in front of the wall and 0.25 above its middle: at the default 70° field of view one
+  map pixel is one screen pixel at 1080p (the sharpest a map can be drawn), and the whole frame — title plaque to
+  cartouche — fits between two boss bars and the hotbar at GUI scale 3 and 4.
+* **While it is open** the player's weather is clear (no rain or snow across the map; their own weather comes back on
+  close), the HUD panel and the target frame step aside (`HudService.quiet`) and so do the waypoint's bar and label.
+* **The map plane.** An invisible item frame draws its map flush with the block behind it — the client's item frame
+  renderer puts it 0.5 from the block centre, a visible frame's 0.4375 — one map pixel (1/128) in front of that face.
+  The parchment, the frame art and the labels are placed against that plane. (Placed against a visible frame's plane,
+  the parchment hid all 25 maps on the real client although every map packet arrived — the bot could not tell.)
+
 * **Maps.** 25 map views are created once and kept for good (`plugins/SULD/map/views.yml`; marked by a centre no
   real map has, so a stale id is never mistaken for a player's map). Each view's renderer is per player, so every
   open atlas shows its own place in the same 25 ids. A frame is cut from up to four world tiles (`AtlasView.copy`)
@@ -131,12 +148,76 @@ stood on the next login.
 * **Art:** `tools/map/atlas_art.py pack` writes the textures at 128 px a block like the maps (sizes multiples of 16),
   the models and the item definitions (`suld:entity/atlas/*`).
 * **Bot:** `tools/loadtest/bots/atlasbot.js` (in `regress.sh`): the stage, the 25 frames and their map packets with
-  real pixels, pan, zoom, the «Агуй» filter, Shift; 10 checks pass on the dev server (2026-10-13). The look on a real
-  client (frame alignment, text size at each GUI scale) is still the owner's check.
+  real pixels, pan, zoom, the «Агуй» filter, Shift; 10 checks pass on the dev server (2026-10-13).
 
-## Part C — pins, waypoints, minimap (next)
+## Part C — pins, waypoints, minimap (built)
 
-Personal pins (name, icon, colour; stored in the database), a waypoint with a guide line and see-through world labels
-«Нэр (123 м)», the latest death as a marker, and a minimap at the top left of the screen when `/map` is closed: a map
-in an item frame placed in the corner of the screen by a core shader in the resource pack (the technique of the
-open-source NMinimap, written fresh for SÜLD), with the coordinates and the area drawn into it.
+### Pins «Миний тэмдэг»
+
+`/map pin [нэр]` (or «Тэмдэг тавих» on the atlas, then a click on the map: a dialog asks the name) stores a pin at the
+block: name up to 24 letters (a blank name becomes «Тэмдэг N»), one of five colours in turn, at most
+`MapPin.MAX_PINS` = 30 a player (`suld-api` `MapPin`). Table `suld_map_pins` (V26, PostgreSQL / MySQL); the insert
+counts the player's pins in the same statement (`INSERT … SELECT … WHERE (SELECT COUNT(*) …) < 30`), and `PinService`
+lets a player have one change in flight, so the limit holds exactly. Pins are read when a player joins and kept for
+the atlas (a pin marker with its name; shown under «Бүгд» and «Миний тэмдэг») and the minimap while they are online. `/map pins` lists them with
+clickable «[Чиглэх]» «[Устгах]»; a pin on the atlas opens «Чиглэх / Устгах».
+
+### The waypoint
+
+`/map guide <нэр|#|x z>`, a click on a place or a pin in the atlas (`WaypointGuide`): one per player.
+
+* A **yellow boss bar** «◆ Нэр  ↗ зүүн хойд · 412 м» — the arrow relative to where the player faces, the compass point
+  and the distance (`api.region.Navigation`, like the dungeon guide); the compass points there too.
+* A **label** «◆ Нэр / 412 м», seen through blocks and by its owner only: at the place itself within 24 blocks,
+  otherwise 24 blocks along the way at eye height; it grows with the distance (×0.125 a block, ×3 at 24) so it reads
+  the same on screen (≈ 20 px at 1080p).
+* Within 6 blocks «ирлээ!» and it ends; `/map stop` ends it; it never outlives the session (a crash leaves no label:
+  the tag is swept when entities load).
+
+### The latest death
+
+The atlas reads the player's latest death (`deathRepository().recent`) when it opens and marks it «Сүүлд унасан газар»
+(under «Бүгд»); a click on it starts the waypoint there. The minimap marks a standing soul beacon.
+
+### The minimap (top left, while `/map` is closed)
+
+* **Picture** (`suld-api` `Minimap`, pure): one 128 × 128 map image — a 120 × 98 window of the real land at one block
+  a pixel (the zoom-0 tiles of part A, so it shows exactly what the atlas shows), north up; a black-gold-blue-gold
+  frame with a gold north notch; places within 72 blocks (city, dungeons and bosses, ovoos, sites and relays, the
+  player's pins, the soul beacon); the waypoint as a gold diamond, or a gold arrow on the rim pointing to it; the
+  player's white arrow in the middle, turned the way they look; under the map a navy panel with «X 326  Z 92» and the
+  area's name in the pack's 5 × 7 pixel font (`PixelFont`, generated from `tools/pack/pixelfont.py` by
+  `tools/map/gen_pixel_font.py`).
+* **On the screen:** the map hangs in three invisible glow item frames that only its owner sees, facing up, 7.5
+  blocks out, all above the look (`MinimapService.SLOTS`): one 14° up straight ahead, always in view (a 16:9 screen
+  sees ±51° across and ±35° up and down), and two 50° to the sides, which come into view while the player turns
+  faster than the server moves the frames. None is within reach of a click, and none is on the line of fire: an
+  arrow leaves 0.1 under the eye along the look and only drops (a frame snaps to its block, so a side frame stands
+  at least 0.33 over the eye). A frame is still a real entity on the server, and Paper lets a projectile hit what its
+  shooter can see (a mob sees everything): such a hit is cancelled and the frame steps 4 blocks up for a second, so
+  the projectile flies on — a cancelled hit alone would hold a plain arrow on the frame's face — and a frame never
+  shields its owner. The pack's own `rendertype_text`
+  core shader (written fresh from vanilla 1.21.11's; NMinimap showed the technique, its GPL code is not used) checks
+  every 128 × 128 texture it draws for the four marker colours of row 0 (`Minimap.MARK`); that quad is moved into the
+  top-left corner in screen space at a whole number of screen pixels per map pixel (2 at 1080p, 3 at 1440p, 4 at
+  2160p, 1 below 900 px high), drawn with the map's own colours (no light, no fog), and row 0 is hidden. Every other
+  text, sign and map is drawn exactly as vanilla draws it.
+* **When:** only with the SÜLD pack loaded (without the shader the map would hang in the air), the «Мини газрын
+  зураг» setting on (`PlayerSetting.MINIMAP`, `/map minimap`), in the overworld, alive, and outside the sky windows
+  (atlas, menu, skill tree). Redrawn on the map's workers when the player moves to another block or turns (at most
+  every 4 ticks, at least every 10 s) and at once when the waypoint or a pin changes; the frames follow the player
+  (the server moves them when their block changes).
+* **Seen on the 1.21.11 client:** the corner map in the city, by night (no lightmap: it stays bright) and in the
+  steppe; hidden while dead and in the atlas, back after; with this layout drawn in all 72 screen grabs taken during
+  fast turns (~33° and ~90° a step, looking up and down). A two-frame layout at ±28° blinked in the same test and the
+  first layout had a frame on the line of fire, so neither was kept. A modded client that culls entities by occlusion (Sodium's entity culling) or replaces the core shaders
+  (an Iris shader pack) may hide it — vanilla and plain Fabric are fine.
+
+### Bots
+
+`tools/loadtest/bots/mapcbot.js` (in `regress.sh`): the three frames facing up out of reach, the marker row, the frames
+follow a 30-block teleport and a turn and stay above the line of fire, an arrow shot through a frame flies on past it,
+`/map minimap` off and on, hidden in the atlas, the waypoint bar with the distance and the label 24 blocks out,
+`/map stop`, a pin stored, still there after a relog (PostgreSQL), removed — 13 checks pass on the dev server
+(2026-10-13). `JdbcMapPinRepositoryIT` (the limit under concurrency), api
+`MapPinTest`, `MinimapTest`.

@@ -149,6 +149,8 @@ final class HudPanel implements Listener {
 
     /** Measurement switch (/suldperf hud off): skips drawing so the HUD's cost can be A/B-measured. */
     volatile boolean enabled = true;
+    /** True while the player is in a full-screen sky window (the atlas): the panel is cleared, not drawn over it. */
+    volatile java.util.function.Predicate<Player> quiet = p -> false;
 
     void start() {
         Bukkit.getScheduler().runTaskTimer(plugin, this::flushDirty, 1L, 1L);
@@ -246,6 +248,15 @@ final class HudPanel implements Listener {
         if (!enabled) return;
         if (!p.isOnline() || p.isDead() || p.getGameMode() == GameMode.SPECTATOR) {
             hideTarget(p);
+            return;
+        }
+        if (quiet.test(p)) {
+            hideTarget(p);
+            Sent last = sent.get(p.getUniqueId());
+            if (last == null || !last.line().equals(Component.empty())) {
+                p.sendActionBar(Component.empty());
+                sent.put(p.getUniqueId(), new Sent(Component.empty(), System.currentTimeMillis()));
+            }
             return;
         }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);

@@ -80,8 +80,12 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     static final String TAG = "suld_atlas";
     static final int COLS = 5, ROWS = 5;
-    /** The camera stands DIST blocks in front of the wall; the stage stands RISE blocks over the world's top. */
-    static final double DIST = 5.0;
+    /**
+     * The camera stands DIST blocks in front of the wall, EYE_UP above its middle; the stage stands RISE blocks over
+     * the world's top. At 6 blocks (70° field of view) one map pixel is one screen pixel at 1080p, the sharpest a map
+     * can be, and the whole frame fits between the boss bars and the hotbar (seen on a 1.21.11 client at GUI scale 3).
+     */
+    static final double DIST = 6.0, EYE_UP = 0.25;
     static final int RISE = 144;
     static final long COMBAT_MS = 8000;
     /** Panel layout (blocks, u right, v up, (0, 0) the middle of the wall), measured from the pack's textures (128 px a block). */
@@ -132,7 +136,7 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     private static final List<Tool> TOOLS = List.of(new Tool("world", "Бүх ертөнц", "Бүх нутгийг нэг дор"),
             new Tool("me", "Миний байр", "Таны зогсож буй газар руу"), new Tool("plus", "Ойртуулах", "Дугуйгаар ч болно"),
-            new Tool("minus", "Холдуулах", "Дугуйгаар ч болно"), new Tool("pin_add", "Тэмдэг тавих", "Удахгүй"));
+            new Tool("minus", "Холдуулах", "Дугуйгаар ч болно"), new Tool("pin_add", "Тэмдэг тавих", "Дараа нь газрын зураг дээр дарж тэмдэг тавина"));
 
     /** A thing under the cursor: a tab or a place. */
     private record Hit(double u, double v, double w, double h, Runnable click, Component name, List<Component> lore, ItemDisplay bg, String model,
@@ -146,6 +150,8 @@ public final class AtlasSky implements Listener, TabExecutor {
         final Player p;
         final Location origin;
         final boolean invulnerable;
+        /** The player's own weather before the atlas (null: the world's); the atlas is always clear. */
+        org.bukkit.WeatherType weather;
         final List<Entity> stage = new ArrayList<>(), marks = new ArrayList<>();
         final List<Hit> tabs = new ArrayList<>(), places = new ArrayList<>();
         ItemDisplay seat;
@@ -157,7 +163,9 @@ public final class AtlasSky implements Listener, TabExecutor {
         Hit hover;
         String lastCursor = "";
         int gen;
-        boolean ready, closing, dirty, up, down, left, right;
+        boolean ready, closing, dirty, pinMode, up, down, left, right;
+        /** The latest death's {x, z} (read when the atlas opens), or null. */
+        int[] death;
         int heldTicks;
         long lastClick;
 
@@ -176,6 +184,13 @@ public final class AtlasSky implements Listener, TabExecutor {
     private final Map<UUID, Long> lastCombat = new HashMap<>();
     /** Set by SuldPlugin: true while another sky window is open for the player (it is closed first). */
     public volatile java.util.function.Consumer<Player> closeOthers = p -> { };
+    /** Set by SuldPlugin: the players' pins and the waypoint guide. */
+    public volatile PinService pins;
+    public volatile WaypointGuide guide;
+    /** Set by SuldPlugin: turns the minimap setting (the /map minimap shortcut). */
+    public volatile java.util.function.Consumer<Player> toggleMinimap = p -> { };
+    private static final net.kyori.adventure.text.event.ClickCallback.Options ONCE =
+            net.kyori.adventure.text.event.ClickCallback.Options.builder().uses(1).lifetime(java.time.Duration.ofMinutes(5)).build();
 
     public AtlasSky(Plugin plugin, SuldServices services, MapService map) {
         this.plugin = plugin;
@@ -202,6 +217,10 @@ public final class AtlasSky implements Listener, TabExecutor {
             sender.sendMessage(Messages.error("Тоглогч л газрын зураг нээнэ."));
             return true;
         }
+        if (args.length > 0) {
+            sub(p, args);
+            return true;
+        }
         if (isOpen(p)) {
             close(p);
             return true;
@@ -217,7 +236,90 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        List<String> subs = List.of("pin", "pins", "unpin", "guide", "stop", "minimap");
+        if (args.length == 1) return subs.stream().filter(x -> x.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
+        if (args.length == 2 && (args[0].equalsIgnoreCase("unpin") || args[0].equalsIgnoreCase("guide")) && sender instanceof Player p && pins != null) {
+            List<String> out = new ArrayList<>();
+            for (mn.suld.api.map.MapPin pin : pins.pins(p.getUniqueId())) out.add(pin.name());
+            return out.stream().filter(x -> x.toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
+        }
         return List.of();
+    }
+
+    /** {@code /map pin [нэр] | pins | unpin <нэр|#> | guide <нэр|#|x z> | stop | minimap}. */
+    private void sub(Player p, String[] args) {
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        String rest = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).strip();
+        switch (sub) {
+            case "pin" -> {
+                if (p.getWorld() != Bukkit.getWorlds().get(0)) {
+                    p.sendMessage(Messages.error("Тэмдэг зөвхөн Их Монголын нутагт тавигдана."));
+                    return;
+                }
+                Location l = p.getLocation();
+                pins.add(p, rest, l.getBlockX(), l.getBlockY(), l.getBlockZ(), pin -> refreshFor(p));
+            }
+            case "pins" -> listPins(p);
+            case "unpin" -> {
+                var pin = mn.suld.api.map.MapPin.find(pins.pins(p.getUniqueId()), rest);
+                if (pin.isEmpty()) {
+                    p.sendMessage(Messages.error("Ийм тэмдэг алга: /map pins"));
+                    return;
+                }
+                pins.remove(p, pin.get(), () -> refreshFor(p));
+            }
+            case "guide" -> {
+                String[] xz = rest.split("\\s+");
+                if (xz.length == 2 && xz[0].matches("-?\\d+") && xz[1].matches("-?\\d+")) {
+                    int x = Integer.parseInt(xz[0]), z = Integer.parseInt(xz[1]);
+                    guide.guide(p, new WaypointGuide.Target("x " + x + ", z " + z, "◆", Bukkit.getWorlds().get(0).getName(), x + 0.5, WaypointGuide.GROUND, z + 0.5));
+                    return;
+                }
+                var pin = mn.suld.api.map.MapPin.find(pins.pins(p.getUniqueId()), rest);
+                if (pin.isEmpty()) {
+                    p.sendMessage(Messages.error("Ийм тэмдэг алга: /map pins, эсвэл /map guide <x> <z>"));
+                    return;
+                }
+                guidePin(p, pin.get());
+            }
+            case "stop" -> {
+                guide.stop(p);
+                p.sendMessage(Messages.success("Чиглэл зогслоо."));
+            }
+            case "minimap" -> toggleMinimap.accept(p);
+            default -> p.sendMessage(Messages.info("/map — газрын зураг · /map pin [нэр] · /map pins · /map unpin <нэр> · /map guide <нэр|x z> · /map stop · /map minimap"));
+        }
+    }
+
+    private void listPins(Player p) {
+        List<mn.suld.api.map.MapPin> list = pins.pins(p.getUniqueId());
+        if (list.isEmpty()) {
+            p.sendMessage(Messages.info("Тэмдэг алга. Тавих: /map pin <нэр>, эсвэл газрын зураг дээрх «Тэмдэг тавих»."));
+            return;
+        }
+        p.sendMessage(Messages.accent("◆ Миний тэмдэг (" + list.size() + "/" + mn.suld.api.map.MapPin.MAX_PINS + ")"));
+        Location l = p.getLocation();
+        for (int i = 0; i < list.size(); i++) {
+            var pin = list.get(i);
+            long d = Math.round(Math.hypot(pin.x() + 0.5 - l.getX(), pin.z() + 0.5 - l.getZ()));
+            int n = i + 1;
+            p.sendMessage(Component.text(n + ". ", GREY).append(Component.text(pin.name(), CREAM, TextDecoration.BOLD))
+                    .append(Component.text("  x " + pin.x() + ", z " + pin.z() + " · " + d + " м  ", GREY))
+                    .append(Component.text("[Чиглэх]", CYAN).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/map guide " + n)))
+                    .append(Component.text(" "))
+                    .append(Component.text("[Устгах]", NamedTextColor.RED).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/map unpin " + n))));
+        }
+    }
+
+    private void guidePin(Player p, mn.suld.api.map.MapPin pin) {
+        guide.guide(p, new WaypointGuide.Target(pin.name(), "◆", Bukkit.getWorlds().get(0).getName(), pin.x() + 0.5, pin.y(), pin.z() + 0.5));
+        p.sendMessage(Messages.success("◆ «" + pin.name() + "» руу чиглэлээ. Зогсоох: /map stop"));
+    }
+
+    /** The player's atlas, if open, shows their pins again. */
+    private void refreshFor(Player p) {
+        Session s = sessions.get(p.getUniqueId());
+        if (s != null && s.ready) placeMarkers(s);
     }
 
     /** Why the atlas cannot open now, or null. */
@@ -246,6 +348,9 @@ public final class AtlasSky implements Listener, TabExecutor {
         Location stage = new Location(w, Math.floor(o.getX()) + 0.5, w.getMaxHeight() + RISE, Math.floor(o.getZ()) + 0.5, 0f, 0f);
         p.setInvulnerable(true);
         p.setFallDistance(0);
+        // no rain or snow falling across the map (the stage stands in the open sky)
+        s.weather = p.getPlayerWeather();
+        p.setPlayerWeather(org.bukkit.WeatherType.CLEAR);
         services.movement.hold(p.getUniqueId(), "atlas seat");
         p.teleport(stage);
         s.seat = w.spawn(stage, ItemDisplay.class, d -> {
@@ -258,6 +363,16 @@ public final class AtlasSky implements Listener, TabExecutor {
         frames.open(p.getUniqueId());
         MapGeometry g = map.geometry();
         s.view = new AtlasView(COLS, ROWS, o.getX(), o.getZ(), 2).clamp(g);
+        String home = w.getName();
+        services.deathRepository().recent(p.getUniqueId(), 1).whenComplete((list, err) -> {
+            if (err != null || list == null || list.isEmpty() || !plugin.isEnabled()) return;
+            var last = list.get(0);
+            if (!home.equals(last.world())) return;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                s.death = new int[]{last.x(), last.z()};
+                if (s.ready && sessions.get(p.getUniqueId()) == s) placeMarkers(s);
+            });
+        });
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (sessions.get(p.getUniqueId()) != s || !p.isOnline()) return;
             build(s);
@@ -282,6 +397,8 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (goBack) p.teleport(s.origin);
         p.setFallDistance(0);
         p.setInvulnerable(s.invulnerable);
+        if (s.weather == null) p.resetPlayerWeather();
+        else p.setPlayerWeather(s.weather);
         services.movement.release(p.getUniqueId(), "atlas seat");
         services.movement.exempt(p.getUniqueId(), 20, "atlas return");
         p.getPersistentDataContainer().remove(RETURN);
@@ -353,9 +470,12 @@ public final class AtlasSky implements Listener, TabExecutor {
         int bx = (int) Math.floor(st.getX());
         int by = (int) Math.floor(st.getY() + s.eyeOff);
         int bz = (int) Math.floor(st.getZ() + DIST);
-        double faceZ = bz + 15.0 / 16;
+        // an invisible frame draws its map flush with the block behind it (the client's item frame renderer: 0.5
+        // from the block centre instead of a visible frame's 0.4375), one map pixel's depth (1/128) in front of it;
+        // the parchment, the frame art and the labels are placed against that plane (seen on a 1.21.11 client)
+        double faceZ = bz + 1 - 1.0 / 128;
         s.plane = new Location(w, bx + 0.5, by + 0.5, faceZ - 0.004);
-        Location cam = new Location(w, bx + 0.5, by + 0.5 - s.eyeOff, faceZ - DIST, p.getLocation().getYaw(), p.getLocation().getPitch());
+        Location cam = new Location(w, bx + 0.5, by + 0.5 + EYE_UP - s.eyeOff, faceZ - DIST, p.getLocation().getYaw(), p.getLocation().getPitch());
         s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
         // the map wall: column 0 is on the viewer's left (world +x, the viewer faces +z)
         for (int row = 0; row < ROWS; row++) {
@@ -409,6 +529,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 case "me" -> () -> setView(s, s.view.centreOn(s.origin.getX(), s.origin.getZ(), map.geometry()));
                 case "plus" -> () -> setView(s, s.view.zoomAt(s.view.zoom() - 1, 0, 0, map.geometry()));
                 case "minus" -> () -> setView(s, s.view.zoomAt(s.view.zoom() + 1, 0, 0, map.geometry()));
+                case "pin_add" -> () -> togglePinMode(s);
                 default -> null;
             };
             s.tabs.add(new Hit(TAB_U, v, TAB_W, TAB_H, click, Component.text(t.label(), GOLD, TextDecoration.BOLD),
@@ -544,6 +665,29 @@ public final class AtlasSky implements Listener, TabExecutor {
                 }
             }
         }
+        // the player's own pins and the latest death
+        if (pins != null && (s.filter == Filter.ALL || s.filter == Filter.PIN)) {
+            for (mn.suld.api.map.MapPin pin : pins.pins(s.p.getUniqueId())) {
+                double u = v.u(pin.x() + 0.5), vv = v.v(pin.z() + 0.5);
+                if (Math.abs(u) > COLS / 2.0 - 0.05 || Math.abs(vv) > ROWS / 2.0 - 0.05) continue;
+                picture(s, s.marks, "marker_pin", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
+                long d = Math.round(Math.hypot(pin.x() + 0.5 - s.origin.getX(), pin.z() + 0.5 - s.origin.getZ()));
+                s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> pinDialog(s, pin), Component.text("◆ " + pin.name(), GOLD, TextDecoration.BOLD),
+                        List.of(Component.text("Миний тэмдэг · " + d + " м", GREY), Component.text("Дарж: чиглэх эсвэл устгах", CYAN)), null, null, null));
+                text(s, s.marks, u, vv - MARKER_BIG / 2 - 0.07, Component.text(pin.name(), CREAM), 0.42f, 300, 0x99000000);
+            }
+        }
+        if (s.death != null && s.filter == Filter.ALL) {
+            double u = v.u(s.death[0] + 0.5), vv = v.v(s.death[1] + 0.5);
+            if (Math.abs(u) <= COLS / 2.0 - 0.05 && Math.abs(vv) <= ROWS / 2.0 - 0.05) {
+                picture(s, s.marks, "marker_death", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
+                int[] at = s.death;
+                s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> guide.guide(s.p, new WaypointGuide.Target("Сүүлд унасан газар", "☠",
+                        s.origin.getWorld().getName(), at[0] + 0.5, WaypointGuide.GROUND, at[1] + 0.5)), Component.text("☠ Сүүлд унасан газар", GOLD, TextDecoration.BOLD),
+                        List.of(Component.text("x " + at[0] + ", z " + at[1], GREY), Component.text("Дарж чиглэх", CYAN)), null, null, null));
+                text(s, s.marks, u, vv - MARKER_BIG / 2 - 0.07, Component.text("Сүүлд унасан газар", CREAM), 0.42f, 300, 0x99000000);
+            }
+        }
         // where the player stood, and which way they looked
         double pu = v.u(s.origin.getX()), pv = v.v(s.origin.getZ());
         if (v.onWall(pu, pv)) {
@@ -585,15 +729,82 @@ public final class AtlasSky implements Listener, TabExecutor {
         out.add(Component.text(poi.kind().label() + (poi.area().isEmpty() ? "" : " · " + poi.area()), GREY));
         double d = Math.hypot(poi.x() + 0.5 - s.origin.getX(), poi.z() + 0.5 - s.origin.getZ());
         out.add(Component.text(Math.round(d) + " м · x " + poi.x() + ", z " + poi.z(), GREY));
-        out.add(Component.text("Дарж луужингаа энд заалгах", CYAN));
+        out.add(Component.text("Дарж чиглэх (луужин, зам заагч)", CYAN));
         return out;
     }
 
-    /** Points the player's compass at a place. */
+    /** Makes a place the player's waypoint (the guide's bar and label, and the compass). */
     private void point(Session s, MapPois.Poi poi) {
-        s.p.setCompassTarget(new Location(s.origin.getWorld(), poi.x() + 0.5, 64, poi.z() + 0.5));
-        s.p.sendActionBar(Component.text("Луужин: " + poi.name(), GOLD));
-        s.p.playSound(s.p.getLocation(), Sound.ITEM_LODESTONE_COMPASS_LOCK, 0.8f, 1.2f);
+        guide.guide(s.p, new WaypointGuide.Target(poi.name(), "◆", s.origin.getWorld().getName(), poi.x() + 0.5, WaypointGuide.GROUND, poi.z() + 0.5));
+        s.p.sendActionBar(Component.text("◆ Чиглэл: " + poi.name(), GOLD));
+    }
+
+    private void togglePinMode(Session s) {
+        s.pinMode = !s.pinMode;
+        for (Hit h : s.tabs) {
+            if (!"tab_pin_add".equals(h.model()) || !h.bg().isValid()) continue;
+            h.bg().setItemStack(quad(s.pinMode ? h.model() + "_on" : h.model()));
+        }
+        s.p.sendActionBar(Component.text(s.pinMode ? "◆ Тэмдэг тавих газраа газрын зураг дээр дарна уу" : "Тэмдэг тавихаа болилоо", GOLD));
+    }
+
+    /** A pin at block (x, z) of the map: its name is asked in a dialog over the atlas. */
+    private void pinAt(Session s, int x, int z) {
+        Player p = s.p;
+        World w = s.origin.getWorld();
+        int y = w.isChunkLoaded(x >> 4, z >> 4) ? w.getHighestBlockYAt(x, z) + 1 : 64;
+        String def = mn.suld.api.map.MapPin.defaultName(pins.pins(p.getUniqueId()));
+        io.papermc.paper.dialog.Dialog d = io.papermc.paper.dialog.Dialog.create(f -> f.empty()
+                .base(io.papermc.paper.registry.data.dialog.DialogBase.builder(Component.text("◆ Шинэ тэмдэг", GOLD, TextDecoration.BOLD))
+                        .canCloseWithEscape(true)
+                        .pause(false)
+                        .afterAction(io.papermc.paper.registry.data.dialog.DialogBase.DialogAfterAction.CLOSE)
+                        .body(List.of(io.papermc.paper.registry.data.dialog.body.DialogBody.plainMessage(
+                                Component.text(place(x, z), GREY), 300)))
+                        .inputs(List.of(io.papermc.paper.registry.data.dialog.input.DialogInput.text("name", Component.text("Нэр", GREY))
+                                .width(300).maxLength(mn.suld.api.map.MapPin.MAX_NAME).initial(def).build()))
+                        .build())
+                .type(io.papermc.paper.registry.data.dialog.type.DialogType.confirmation(
+                        io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Хадгалах ◆", NamedTextColor.GREEN, TextDecoration.BOLD),
+                                null, 120, io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((view, who) -> {
+                                    String name = view.getText("name");
+                                    Bukkit.getScheduler().runTask(plugin, () -> {
+                                        if (who instanceof Player pl && pl.isOnline()) pins.add(pl, name, x, y, z, pin -> refreshFor(pl));
+                                    });
+                                }, ONCE)),
+                        io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Болих"), null, 100, null))));
+        s.pinMode = false;
+        togglePinModeOff(s);
+        p.showDialog(d);
+    }
+
+    private void togglePinModeOff(Session s) {
+        for (Hit h : s.tabs) if ("tab_pin_add".equals(h.model()) && h.bg().isValid()) h.bg().setItemStack(quad(h.model()));
+    }
+
+    /** A pin's own window: guide to it or remove it. */
+    private void pinDialog(Session s, mn.suld.api.map.MapPin pin) {
+        Player p = s.p;
+        io.papermc.paper.dialog.Dialog d = io.papermc.paper.dialog.Dialog.create(f -> f.empty()
+                .base(io.papermc.paper.registry.data.dialog.DialogBase.builder(Component.text("◆ " + pin.name(), GOLD, TextDecoration.BOLD))
+                        .canCloseWithEscape(true)
+                        .pause(false)
+                        .afterAction(io.papermc.paper.registry.data.dialog.DialogBase.DialogAfterAction.CLOSE)
+                        .body(List.of(io.papermc.paper.registry.data.dialog.body.DialogBody.plainMessage(Component.text(place(pin.x(), pin.z()), GREY), 300)))
+                        .build())
+                .type(io.papermc.paper.registry.data.dialog.type.DialogType.multiAction(List.of(
+                        io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Чиглэх ◆", CYAN, TextDecoration.BOLD), null, 100,
+                                io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((view, who) -> Bukkit.getScheduler().runTask(plugin, () -> {
+                                    if (who instanceof Player pl && pl.isOnline()) guidePin(pl, pin);
+                                }), ONCE)),
+                        io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Устгах ✕", NamedTextColor.RED), null, 100,
+                                io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((view, who) -> Bukkit.getScheduler().runTask(plugin, () -> {
+                                    if (who instanceof Player pl && pl.isOnline()) pins.remove(pl, pin, () -> refreshFor(pl));
+                                }), ONCE))))
+                        .columns(2)
+                        .exitAction(io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Болих"), null, 100, null))
+                        .build()));
+        p.showDialog(d);
     }
 
     // ------------------------------------------------------------------------------------------------ the cursor
@@ -710,6 +921,14 @@ public final class AtlasSky implements Listener, TabExecutor {
         s.lastClick = now;
         cursor(s, false);
         Hit h = s.hover;
+        if (s.pinMode && (h == null || !s.tabs.contains(h))) {
+            double[] a = aim(s);
+            if (a != null && s.view.onWall(a[0], a[1])) {
+                s.p.playSound(s.p.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.2f);
+                pinAt(s, (int) Math.floor(s.view.worldX(a[0])), (int) Math.floor(s.view.worldZ(a[1])));
+            }
+            return;
+        }
         if (h == null || h.click() == null) return;
         s.p.playSound(s.p.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.2f);
         h.click().run();

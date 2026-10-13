@@ -38,6 +38,8 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.gui.SkillSky skillSky;
     private mn.suld.plugin.gui.MenuSky menuSky;
     private mn.suld.plugin.map.AtlasSky atlas;
+    private mn.suld.plugin.map.WaypointGuide waypoints;
+    private mn.suld.plugin.map.MinimapService minimap;
     private mn.suld.plugin.training.TrainingService training;
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.dungeon.DungeonGuide dungeonGuide;
@@ -183,6 +185,7 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("trial", deathTrial);
         // the death reform of 2026-10-13: the beam where a player fell, and the trial's shard
         soulBeacons = new mn.suld.plugin.death.SoulBeaconService(this, services);
+        services.soulBeacons = soulBeacons;
         deaths.beacons = soulBeacons;
         getServer().getPluginManager().registerEvents(soulBeacons, this);
         soulBeacons.start();
@@ -465,6 +468,28 @@ public final class SuldPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(atlas, this);
             atlas.start();
             registerTab("map", atlas);
+            // pins, the waypoint and the corner minimap (docs/WORLD_MAP.md part C)
+            mn.suld.plugin.map.PinService mapPins = new mn.suld.plugin.map.PinService(this, services.mapPins());
+            getServer().getPluginManager().registerEvents(mapPins, this);
+            mapPins.start();
+            waypoints = new mn.suld.plugin.map.WaypointGuide(this);
+            getServer().getPluginManager().registerEvents(waypoints, this);
+            waypoints.start();
+            atlas.pins = mapPins;
+            atlas.guide = waypoints;
+            mn.suld.plugin.map.AtlasSky openAtlas = atlas;
+            waypoints.busy = openAtlas::isOpen; // the bar and the label stay off the atlas
+            services.hud().quiet(openAtlas::isOpen); // so do the HUD panel and the target frame
+            atlas.toggleMinimap = pl -> {
+                boolean on = services.styles().toggleSetting(pl, mn.suld.api.style.PlayerSetting.MINIMAP);
+                pl.sendMessage(on ? mn.suld.plugin.ui.Messages.success("Мини газрын зураг асаалттай (зүүн дээд буланд, SÜLD дүрс багцтай үед).")
+                        : mn.suld.plugin.ui.Messages.info("Мини газрын зураг унтраалттай (/map minimap — асаах)."));
+            };
+            minimap = new mn.suld.plugin.map.MinimapService(this, services, services.map, mapPins, waypoints);
+            mn.suld.plugin.map.AtlasSky minimapAtlas = atlas;
+            minimap.busy = pl -> minimapAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
+            getServer().getPluginManager().registerEvents(minimap, this);
+            minimap.start();
         }
         mn.suld.plugin.worldbuild.SuldWorldCommand worldCommand = new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls);
         registerTab("suldworld", worldCommand);
@@ -563,6 +588,8 @@ public final class SuldPlugin extends JavaPlugin {
         if (pregen != null) {
             pregen.stop();
         }
+        if (minimap != null) minimap.shutdown(); // the minimaps' frames go
+        if (waypoints != null) waypoints.shutdown(); // the waypoint bars and labels go
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
         if (services != null && services.map != null) services.map.shutdown(); // the map's regions to disk
         if (worldBuild != null) {

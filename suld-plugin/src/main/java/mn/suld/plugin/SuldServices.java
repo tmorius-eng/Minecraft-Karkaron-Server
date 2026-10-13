@@ -275,6 +275,9 @@ public final class SuldServices {
             this.weaponMastery = new mn.suld.plugin.mastery.WeaponMasteryService(plugin, this, dataSource == null
                     ? new mn.suld.api.persistence.InMemoryWeaponMasteryRepository()
                     : new mn.suld.plugin.persistence.JdbcWeaponMasteryRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
+            this.mapPins = dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryMapPinRepository()
+                    : new mn.suld.plugin.persistence.JdbcMapPinRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor);
         } catch (RuntimeException | Error ex) {
             for (int i = opened.size() - 1; i >= 0; i--) {
                 try {
@@ -460,8 +463,17 @@ public final class SuldServices {
     public volatile mn.suld.plugin.region.HistoricSiteService historicSites;
     /** The areas' ovoos (set by SuldPlugin); the travel page points the compass at the nearest. */
     public volatile mn.suld.plugin.region.OvooService ovoos;
+    private final mn.suld.api.persistence.MapPinRepository mapPins;
+
+    /** Players' map pins (V26, docs/WORLD_MAP.md). */
+    public mn.suld.api.persistence.MapPinRepository mapPins() {
+        return mapPins;
+    }
+
     /** «Сүлдийн Атлас»: the world map's real-block picture (docs/WORLD_MAP.md); null while map.enabled is false. */
     public volatile mn.suld.plugin.map.MapService map;
+    /** The souls' beacons (set by SuldPlugin): the minimap and the atlas mark a standing one. */
+    public volatile mn.suld.plugin.death.SoulBeaconService soulBeacons;
     /** World bosses (docs/WORLD_BOSSES.md); set once the historic sites are placed. */
     public volatile mn.suld.plugin.worldboss.WorldBossService worldBosses;
 

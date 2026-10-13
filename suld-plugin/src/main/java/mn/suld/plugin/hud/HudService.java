@@ -84,6 +84,11 @@ public final class HudService {
 
     private HudPanel panel;
 
+    /** While true for a player (the atlas is open) the HUD panel and the target frame stay off the screen. */
+    public void quiet(java.util.function.Predicate<org.bukkit.entity.Player> q) {
+        if (panel != null) panel.quiet = q;
+    }
+
     /** The lock-on target source (CombatFeel): the target frame shows it before whatever the crosshair touches. */
     public void lockOn(java.util.function.Function<org.bukkit.entity.Player, java.util.Optional<? extends org.bukkit.entity.Entity>> f) {
         if (panel != null) panel.lockOn(f);

@@ -25,6 +25,10 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # Trial bots count only spirit wolves (named «Сүнсний чоно», glowing): a natural wolf pack can live at the test spot.
 # atlasbot.js: /map (docs/WORLD_MAP.md) — the stage, the 25 map frames and their pixels (map packets), D pans, the wheel zooms,
 # the «Агуй» tab filters, Shift closes; 10 checks.
+# mapcbot.js: the corner minimap, pins and the waypoint (docs/WORLD_MAP.md part C) — the three owner-only frames facing up,
+# the map's marker row, the frames follow a teleport and a turn, /map minimap, hidden in the atlas, the waypoint bar and
+# label, /map stop, a pin stored, back after a relog (database), removed; 12 checks.
+# healthbot.js: the health survives a relog and a server restart (it restarts the dev server once); 3 checks.
 node bots/featbot.js ./srv2ctl.sh server.log     # the functional sweep (tutorial, chat, lock-on, dungeon hall, ...)
 node bots/khuraldai-smoke.js ./srv2ctl.sh server.log 25572   # Их Хуралдай: ballot, vote, close, force, finder, resolve, chronicle, PvP policy
 node bots/campaign-deliver.js ./srv2ctl.sh server.log test_deliver item.chonon_arisan 60 25572   # a DELIVER_ITEMS campaign to success

@@ -359,24 +359,34 @@ public final class Menus {
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, row, cards, head, this::main, null, null), hubTabs());
     }
 
-    /** The Тохиргоо page of the hub ({@code /settings}): eight on/off settings; the ones that are on glow. */
+    /** The Тохиргоо page of the hub ({@code /settings}): the on/off settings, eight a page; the ones that are on glow. */
     public void settings(Player p) {
+        settings(p, 0);
+    }
+
+    private void settings(Player p, int page) {
         PlayerStyle s = styles().of(p.getUniqueId());
+        mn.suld.api.style.PlayerSetting[] all = mn.suld.api.style.PlayerSetting.values();
+        int pages = (all.length + HubLayout.CARDS - 1) / HubLayout.CARDS, pg = Math.max(0, Math.min(pages - 1, page));
         List<HubMenu.Card> cards = new ArrayList<>();
-        int mask = 0;
-        for (mn.suld.api.style.PlayerSetting st : mn.suld.api.style.PlayerSetting.values()) {
+        int mask = 0, onAll = 0;
+        for (mn.suld.api.style.PlayerSetting st : all) if (s.setting(st)) onAll++;
+        for (int i = pg * HubLayout.CARDS; i < Math.min(all.length, (pg + 1) * HubLayout.CARDS); i++) {
+            mn.suld.api.style.PlayerSetting st = all[i];
             boolean on = s.setting(st);
-            if (on) mask |= 1 << st.ordinal();
+            if (on) mask |= 1 << cards.size();
             cards.add(new HubMenu.Card(Menu.title(st.label(), on ? GREEN : NamedTextColor.GRAY), List.of(Menu.line(st.description()),
                     Component.empty(), Menu.kv("Одоо:", on ? "асаалттай ✔" : "унтраалттай ✘", on ? GREEN : RED),
                     Menu.line("« Дарж солих »")), (pl, c) -> {
                 styles().toggleSetting(pl, st);
-                settings(pl);
+                settings(pl, pg);
             }));
         }
-        int on = Integer.bitCount(mask);
-        Component row = Component.text(on + " / " + cards.size() + " асаалттай · гэрэлтсэн карт = асаалттай", TextColor.fromHexString("#A4B0C8"));
-        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SETTINGS, 6, row, cards, null, this::main, null, null, mask), hubTabs());
+        Component row = Component.text(onAll + " / " + all.length + " асаалттай · гэрэлтсэн карт = асаалттай" + (pages > 1 ? " · " + (pg + 1) + "/" + pages : ""),
+                TextColor.fromHexString("#A4B0C8"));
+        java.util.function.Consumer<Player> prev = pg > 0 ? pl -> settings(pl, pg - 1) : null;
+        java.util.function.Consumer<Player> next = pg < pages - 1 ? pl -> settings(pl, pg + 1) : null;
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SETTINGS, 6, row, cards, null, this::main, prev, next, mask), hubTabs());
     }
 
     /** The older five-row profile (horse, Их Хуралдай, «Миний түүх»): behind the hub profile's head tile. */

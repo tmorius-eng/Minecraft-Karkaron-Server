@@ -6,6 +6,7 @@
 # writes the dev campaigns into the server's plugins/SULD/content/campaigns.json (server dir = two levels over the log),
 # the server restarts (<srvctl> stop|start), and the file is removed and the server restarted after. DEV_CRASH=1 also
 # runs trainingcrash.js last: it kills the server with SIGKILL during training and starts it again (dev server only).
+# healthbot.js (last of the main runs) restarts the server once with <srvctl> stop|start.
 # NODE_PATH must reach mineflayer.
 set -u
 CTL=${1:?srvctl.sh}; LOG=${2:?latest.log}; PORT=${3:-25572}
@@ -16,6 +17,7 @@ RUNS=(
   "hubbot|$CTL $LOG $PORT"
   "skymenubot|$CTL $PORT"
   "atlasbot|$CTL $PORT"
+  "mapcbot|$CTL $PORT"
   "dodgehudbot|$CTL $PORT"
   "packmodesbot:nil|$CTL nil $PORT"
   "packmodesbot:foreign|$CTL foreign $PORT"
@@ -44,6 +46,7 @@ RUNS=(
   "heroicbot|$CTL $LOG $PORT"
   "featbot|$CTL $LOG"
   "permbot|$CTL $LOG $PORT"
+  "healthbot|$CTL $PORT"
 )
 DEV_RUNS=("campaign-effects|$CTL $LOG $PORT" "dungeon-clear|$CTL $LOG $PORT"
   "campaign-deliver|$CTL $LOG test_deliver item.chonon_arisan 60 $PORT" "trainingpay|$CTL $LOG $PORT")

@@ -15,8 +15,8 @@ const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username
 b.on('error', () => {});
 b.on('resourcePack', () => { try { b.acceptResourcePack(); } catch (e) {} });
 
-// the layout of AtlasSky (blocks on the wall): the camera is DIST in front of the wall's middle
-const DIST = 5.0, TITLE_V = 391 / 128, TAB_U = 406 / 128, TAB_STEP = 58 / 128, FILTERS = 7;
+// the layout of AtlasSky (blocks on the wall): the camera is DIST in front of the wall's middle, EYE_UP above it
+const DIST = 6.0, EYE_UP = 0.25, TITLE_V = 391 / 128, TAB_U = 406 / 128, TAB_STEP = 58 / 128, FILTERS = 7;
 const maps = new Map(); // map id -> { packets, nonZero }
 b._client.on('map', (pk) => {
   if (!pk.data || pk.columns !== 128) return;
@@ -60,7 +60,7 @@ b.once('spawn', async () => {
   if (!title) { b.quit(); process.exit(1); }
   // the wall's middle and the eye, from the title's position (AtlasSky: text at plane + (-u, v, -0.06))
   const plane = title.e.position.offset(0, -TITLE_V, 0.06);
-  const eye = plane.offset(0, 0, -DIST);
+  const eye = plane.offset(0, EYE_UP, -DIST);
   // D pans east: new pixels arrive
   let p0 = packetsNow();
   b._client.write('player_input', { inputs: { right: true } }); await sleep(400); b._client.write('player_input', { inputs: {} }); await sleep(2500);

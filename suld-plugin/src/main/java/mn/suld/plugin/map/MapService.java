@@ -195,6 +195,11 @@ public final class MapService implements Listener {
         return tiles;
     }
 
+    /** The map's worker threads (pictures are composed there, never on the main thread). */
+    ExecutorService workers() {
+        return workers;
+    }
+
     public MapGeometry geometry() {
         return tiles.geometry();
     }
