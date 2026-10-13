@@ -1,7 +1,7 @@
 // «Ангийн Мастер» (docs/CLASS_CHANGE.md): the class armour level is each class's mastery, 1–60.
 //   node masterybot.js <srvctl.sh> [port]
 // A level-60 Баатар goes 39 → 40 (a milestone line), 59 → 60 (a server-wide «Мастер» line), and after the five
-// classes are at 60 the «Таван Ангийн Эзэн» line goes out.
+// classes are at 60 the «Таван Ангийн Эзэн» line goes out; the TAB name carries ✦, then «✦ ЭЗЭН».
 const mineflayer = require('mineflayer');
 const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
@@ -14,6 +14,8 @@ const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username
 const chat = []; b.on('messagestr', m => chat.push(m)); b.on('error', () => {});
 b.on('resourcePack', () => { try { b.acceptResourcePack(); } catch (e) {} });
 const said = (k, s) => chat.slice(k).some(l => l.includes(s));
+// the bot's own TAB name (player_info display name): the ✦ / «✦ ЭЗЭН» after the class badge
+const tabName = () => { const e = b.players[name]; return e && e.displayName ? e.displayName.toString() : ''; };
 const CLASSES = ['baatar', 'mergen', 'boo', 'darkhan', 'khulegchin'];
 b.once('spawn', async () => {
   await sleep(3500);
@@ -28,6 +30,8 @@ b.once('spawn', async () => {
   check(said(k, 'Ангийн Мастер 40 / 60') && !said(k, 'Мастер боллоо'), 'passing 40 tells the player «Ангийн Мастер 40 / 60» (not the server)', chat.slice(k).filter(l => l.includes('Мастер')).slice(-2).join(' | ').slice(0, 160));
   k = chat.length; cmd(`classgear set ${name} xp 100000`); await sleep(1500);
   check(said(k, 'Мастер боллоо'), 'reaching 60 is announced to the server', chat.slice(k).filter(l => l.includes('Мастер')).join(' | ').slice(0, 160));
+  await sleep(1500);
+  check(tabName().includes('✦') && !tabName().includes('ЭЗЭН'), 'a mastered class puts ✦ after the name in TAB', tabName().slice(-40));
   // the other four: change class (the staff reset clears the wait), set 59 and push over
   let last = '';
   for (const c of CLASSES.slice(1)) {
@@ -39,6 +43,8 @@ b.once('spawn', async () => {
     last = chat.slice(k).join(' | ');
   }
   check(last.includes('Таван Ангийн Эзэн'), 'the fifth mastered class gives «Таван Ангийн Эзэн»', last.slice(0, 200));
+  await sleep(1500);
+  check(tabName().includes('ЭЗЭН'), 'all five mastered: «✦ ЭЗЭН» after the name in TAB', tabName().slice(-40));
   b.quit();
   console.log(results.every(Boolean) ? `ALL ${results.length} PASSED` : `${results.filter(x => !x).length} FAILED`);
   process.exit(results.every(Boolean) ? 0 : 1);

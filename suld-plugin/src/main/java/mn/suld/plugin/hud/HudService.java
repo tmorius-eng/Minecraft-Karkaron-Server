@@ -378,8 +378,17 @@ public final class HudService {
         boolean cls = plugin == null || plugin.getConfig().getBoolean("ui.badges.class", true);
         boolean clan = plugin == null || plugin.getConfig().getBoolean("ui.badges.clan", true);
         if (cls) {
-            var c = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
-            if (c != null) out = out.append(Component.text(" ")).append(StyleFormat.classBadge(c, true));
+            PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+            var c = pr == null ? null : pr.playerClass().orElse(null);
+            if (c != null) {
+                out = out.append(Component.text(" ")).append(StyleFormat.classBadge(c, true));
+                // «Ангийн Мастер»: ✦ for a mastered class, «✦ ЭЗЭН» once all five are (plain text, no pack needed)
+                if (mn.suld.api.clazz.ClassMastery.title(mn.suld.api.clazz.ClassMastery.masters(pr)) != null) {
+                    out = out.append(Component.text(" ✦ ЭЗЭН", TextColor.fromHexString("#FFD24A"), net.kyori.adventure.text.format.TextDecoration.BOLD));
+                } else if (mn.suld.api.clazz.ClassMastery.isMaster(pr.classGear())) {
+                    out = out.append(Component.text(" ✦", TextColor.fromHexString("#FFD24A")));
+                }
+            }
         }
         if (clan && services.clans() != null) {
             var tag = services.clans().tagOf(p.getUniqueId()).orElse(null);

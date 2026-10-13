@@ -107,6 +107,7 @@ public final class ClassChangeService implements Listener {
         if (!pr.switchClass(to, now)) return new ClassChangeRules.Verdict(ClassChangeRules.Refusal.SAME_CLASS, null, 0, 0);
         // a free change while new starts no cooldown: the 6 hours count from the first paid (or sealed) change
         if (v.payment() == ClassChangeRules.Payment.GRACE) pr.clearClassChangeCooldown();
+        if (services.hud() != null) services.hud().teamChanged(p); // the new class badge next to the name, now
         // from here the profile is the new class: anything below that fails is logged and the change still stands
         // (saved below); a missing piece of gear is what /classgear recover rebuilds, so nothing is left half-way
         try {
@@ -206,6 +207,7 @@ public final class ClassChangeService implements Listener {
     public void applyClass(Player p, PlayerProfile pr, double share) {
         PlayerClass to = pr.playerClass().orElse(null);
         if (to == null) return;
+        if (services.hud() != null) services.hud().teamChanged(p); // the class badge (and ✦) next to the name, now
         try {
             services.classWeapons().syncRemembered(p);
             for (PotionEffect e : p.getActivePotionEffects()) p.removePotionEffect(e.getType());
