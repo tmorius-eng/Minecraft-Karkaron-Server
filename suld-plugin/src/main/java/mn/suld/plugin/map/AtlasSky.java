@@ -154,6 +154,10 @@ public final class AtlasSky implements Listener, TabExecutor {
         org.bukkit.WeatherType weather;
         final List<Entity> stage = new ArrayList<>(), marks = new ArrayList<>();
         final List<Hit> tabs = new ArrayList<>(), places = new ArrayList<>();
+        /** The party mates' markers and their hits (redrawn every second when one moved). */
+        final List<Entity> mateMarks = new ArrayList<>();
+        final List<Hit> mateHits = new ArrayList<>();
+        int matesKey;
         ItemDisplay seat;
         Location plane;
         double eyeOff;
@@ -391,6 +395,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (s == null) return;
         s.closing = true;
         for (Entity e : s.marks) if (e.isValid()) e.remove();
+        for (Entity e : s.mateMarks) if (e.isValid()) e.remove();
         for (Entity e : s.stage) if (e.isValid()) e.remove();
         frames.close(p.getUniqueId());
         if (p.isInsideVehicle()) p.leaveVehicle();
@@ -688,12 +693,45 @@ public final class AtlasSky implements Listener, TabExecutor {
                 text(s, s.marks, u, vv - MARKER_BIG / 2 - 0.07, Component.text("Сүүлд унасан газар", CREAM), 0.42f, 300, 0x99000000);
             }
         }
+        placeMates(s);
         // where the player stood, and which way they looked
         double pu = v.u(s.origin.getX()), pv = v.v(s.origin.getZ());
         if (v.onWall(pu, pv)) {
             // the arrow points up (north) unturned; yaw 0 looks south: turn clockwise on screen by yaw + 180°
             float turn = (float) Math.toRadians(s.origin.getYaw() + 180);
             picture(s, s.marks, "marker_player", pu, pv, MARKER_BIG, MARKER_BIG, 0.035, turn);
+        }
+    }
+
+    /**
+     * The party's other members where they are now, light blue arrows the way they look with their names, under every
+     * tab (they are not a kind of place); a click starts the waypoint to where the mate stands. Placed with the
+     * places, and again every second when one moved a block or turned.
+     */
+    private void placeMates(Session s) {
+        for (Entity e : s.mateMarks) if (e.isValid()) e.remove();
+        s.mateMarks.clear();
+        s.places.removeAll(s.mateHits);
+        if (s.hover != null && s.mateHits.contains(s.hover)) s.hover = null;
+        s.mateHits.clear();
+        s.matesKey = MinimapService.matesKey(services, s.p);
+        AtlasView v = s.view;
+        for (Player m : MinimapService.mates(services, s.p)) {
+            Location l = m.getLocation();
+            double u = v.u(l.getX()), vv = v.v(l.getZ());
+            if (!v.onWall(u, vv)) continue;
+            picture(s, s.mateMarks, "marker_party", u, vv, MARKER, MARKER, 0.034, (float) Math.toRadians(l.getYaw() + 180));
+            long d = Math.round(Math.hypot(l.getX() - s.origin.getX(), l.getZ() - s.origin.getZ()));
+            String name = m.getName(), world = l.getWorld().getName();
+            double x = l.getX(), z = l.getZ();
+            Hit h = new Hit(u, vv, MARKER * 1.4, MARKER * 1.4, () -> {
+                guide.guide(s.p, new WaypointGuide.Target(name, "◆", world, x, WaypointGuide.GROUND, z));
+                s.p.sendActionBar(Component.text("◆ Чиглэл: " + name, GOLD));
+            }, Component.text("◆ " + name, CYAN, TextDecoration.BOLD),
+                    List.of(Component.text("Багийн гишүүн · " + d + " м", GREY), Component.text("Дарж чиглэх (одоо байгаа газар нь)", CYAN)), null, null, null);
+            s.mateHits.add(h);
+            s.places.add(h);
+            text(s, s.mateMarks, u, vv - MARKER / 2 - 0.07, Component.text(name, CYAN), 0.42f, 300, 0x99000000);
         }
     }
 
@@ -910,6 +948,8 @@ public final class AtlasSky implements Listener, TabExecutor {
             if (s.dirty && Bukkit.getCurrentTick() % 20 == 0) {
                 s.dirty = false;
                 redraw(s);
+            } else if (Bukkit.getCurrentTick() % 20 == 10 && MinimapService.matesKey(services, s.p) != s.matesKey) {
+                placeMates(s); // a party mate moved: only their markers
             }
             if (Bukkit.getCurrentTick() % 2 == 0) cursor(s, false);
         }

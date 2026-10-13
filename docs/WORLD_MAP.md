@@ -142,6 +142,10 @@ stood on the next login.
 * **Places.** The real places of part A as marker quads (ger, cave, cairn, stele, horned skull, banner, crossed
   swords) with labels where they fit (city, dungeons and bosses always; sites up to zoom 2; ovoos, relays and the
   training yard up to zoom 1); the player's own arrow points the way they faced.
+* **The party.** The other members of the player's party where they are now: light blue arrows the way they look,
+  with their names, under every tab (they are not a kind of place). Their markers move within a second when one
+  moves a block or turns. A click on one starts the waypoint to where that mate stands. Only the player's own party
+  shows, and only members online in the same world who are not standing in for themselves in the training yard.
 * **Tabs.** Left: Бүгд, Хот+өртөө, Агуй, Овоо, Түүхэн газар, Аварга дайсан, Миний тэмдэг (which places show). Right:
   Бүх ертөнц, Миний байр, Ойртуулах, Холдуулах, Тэмдэг тавих (part C).
 * **Where it does not open:** outside the overworld, in a dungeon run, within 8 s of a fight, falling or riding.
@@ -184,7 +188,9 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
 * **Picture** (`suld-api` `Minimap`, pure): one 128 × 128 map image — a 120 × 98 window of the real land at one block
   a pixel (the zoom-0 tiles of part A, so it shows exactly what the atlas shows), north up; a black-gold-blue-gold
   frame with a gold north notch; places within 72 blocks (city, dungeons and bosses, ovoos, sites and relays, the
-  player's pins, the soul beacon); the waypoint as a gold diamond, or a gold arrow on the rim pointing to it; the
+  player's pins, the soul beacon); the party's other members as light blue arrows the way they look, or a light blue
+  arrow on the rim toward a mate out of view (a mate who moves or turns redraws it, at the same pace as the player's
+  own moves); the waypoint as a gold diamond, or a gold arrow on the rim pointing to it; the
   player's white arrow in the middle, turned the way they look; under the map a navy panel with «X 326  Z 92» and the
   area's name in the pack's 5 × 7 pixel font (`PixelFont`, generated from `tools/pack/pixelfont.py` by
   `tools/map/gen_pixel_font.py`).
@@ -221,3 +227,8 @@ follow a 30-block teleport and a turn and stay above the line of fire, an arrow 
 `/map stop`, a pin stored, still there after a relog (PostgreSQL), removed — 13 checks pass on the dev server
 (2026-10-13). `JdbcMapPinRepositoryIT` (the limit under concurrency), api
 `MapPinTest`, `MinimapTest`.
+
+`tools/loadtest/bots/partymapbot.js` (in `regress.sh`): two bots in one party, floating over the steppe. A's minimap
+shows B as a light blue arrow where B is (none before the party), and an arrow on the east rim when B is 2 000 blocks
+east. A's atlas shows B's name at B's place and moves it when B moves. Once B leaves the party, neither the atlas nor
+the minimap shows B. 7 checks pass (2026-10-13).

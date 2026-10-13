@@ -22,6 +22,12 @@ class MinimapTest {
         return n;
     }
 
+    /** The highest row with a party mate's colour within 6 pixels of (x, y). */
+    private static int top(byte[] img, int x, int y) {
+        for (int r = y - 6; r <= y + 6; r++) for (int c = x - 6; c <= x + 6; c++) if (img[r * 128 + c] == Minimap.MATE) return r;
+        return Integer.MAX_VALUE;
+    }
+
     @Test
     void rowZeroCarriesTheMarkAndNothingElseIsUnknown() {
         byte[] img = Minimap.draw(WEST, 0, 0, 0, List.of(), null, "x -30 z -79", "Хархорум");
@@ -45,6 +51,23 @@ class MinimapTest {
         assertEquals(Minimap.WHITE, north[(cy - 3) * 128 + cx], "looking north: the arrow's tip is up");
         assertNotEquals(Minimap.WHITE, north[(cy + 4) * 128 + cx]);
         assertEquals(Minimap.WHITE, south[(cy + 3) * 128 + cx], "looking south: the tip is down");
+    }
+
+    @Test
+    void partyMatesShowWhereTheyLookOrTheWayToThem() {
+        int cx = Minimap.VIEW_X + Minimap.VIEW_W / 2, cy = Minimap.VIEW_Y + Minimap.VIEW_H / 2;
+        // a mate 20 blocks north, looking north: a light blue arrow there, its tip up
+        byte[] near = Minimap.draw(WEST, 0, 0, 0, List.of(new Minimap.Marker(0, -20, Minimap.Kind.PARTY, 180f)), null, "", "");
+        assertTrue(count(near, cx - 5, cy - 26, cx + 6, cy - 14, Minimap.MATE) >= 4, "the mate's arrow");
+        // its tip reaches higher than the tip of a mate on the same spot looking south
+        byte[] southward = Minimap.draw(WEST, 0, 0, 0, List.of(new Minimap.Marker(0, -20, Minimap.Kind.PARTY, 0f)), null, "", "");
+        assertTrue(top(near, cx, cy - 20) < top(southward, cx, cy - 20), "it points north: " + top(near, cx, cy - 20) + " vs " + top(southward, cx, cy - 20));
+        // a mate 5 000 blocks west: an arrow on the west rim, nothing in the middle
+        byte[] far = Minimap.draw(WEST, 0, 0, 0, List.of(new Minimap.Marker(-5000, 0, Minimap.Kind.PARTY, 0f)), null, "", "");
+        assertTrue(count(far, Minimap.VIEW_X, Minimap.VIEW_Y, Minimap.VIEW_X + 12, Minimap.VIEW_Y + Minimap.VIEW_H, Minimap.MATE) >= 3, "rim arrow");
+        assertEquals(0, count(far, cx - 30, cy - 30, cx + 30, cy + 30, Minimap.MATE));
+        // the player's own arrow stays white on top
+        assertEquals(Minimap.WHITE, Minimap.draw(WEST, 0, 0, 0, List.of(new Minimap.Marker(0, 0, Minimap.Kind.PARTY, 90f)), null, "", "")[(cy + 3) * 128 + cx]);
     }
 
     @Test

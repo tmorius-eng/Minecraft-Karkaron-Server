@@ -19,6 +19,7 @@ RUNS=(
   "atlasbot|$CTL $PORT"
   "mapcbot|$CTL $PORT"
   "skyclickbot|$CTL $PORT"
+  "partymapbot|$CTL $PORT"
   "dodgehudbot|$CTL $PORT"
   "packmodesbot:nil|$CTL nil $PORT"
   "packmodesbot:foreign|$CTL foreign $PORT"

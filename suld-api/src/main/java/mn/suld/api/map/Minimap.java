@@ -5,8 +5,9 @@ import java.util.List;
 /**
  * The corner minimap's picture (docs/WORLD_MAP.md): one 128 × 128 map image, north up, drawn the way the atlas draws
  * the world (real blocks only; land never generated is plain parchment), with a thin Mongolian frame, the player's
- * arrow in the middle, nearby places, the waypoint (or an arrow on the rim pointing to it) and two lines of text under
- * the map: the coordinates and the area's name.
+ * arrow in the middle, nearby places, the party's mates (light blue arrows the way they look, or on the rim toward a
+ * mate out of view), the waypoint (or an arrow on the rim pointing to it) and two lines of text under the map: the
+ * coordinates and the area's name.
  * <p>
  * Row 0 starts with {@link #MARK}: the resource pack's text shader looks for these four colours to draw this map in
  * the screen's top-left corner instead of in the world (and hides row 0). Nothing else ever paints row 0.
@@ -29,6 +30,8 @@ public final class Minimap {
     static final byte GREY = MapColors.pixel(MapColors.STONE, MapColors.SHADE_HIGH);
     static final byte BROWN = MapColors.pixel(MapColors.WOOD, MapColors.SHADE_HIGH);
     static final byte GREEN = MapColors.pixel(33, MapColors.SHADE_NORMAL);         // emerald
+    /** A party mate's arrow: light blue, apart from the gold waypoint and the white player. */
+    static final byte MATE = MapColors.pixel(17, MapColors.SHADE_HIGH);
 
     /** The four colours that mark the minimap for the shader (magenta, dark diamond, dark gold, darkest red). */
     public static final byte[] MARK = {MapColors.pixel(16, MapColors.SHADE_HIGH), MapColors.pixel(31, MapColors.SHADE_LOWEST),
@@ -40,10 +43,14 @@ public final class Minimap {
         byte at(int x, int z);
     }
 
-    /** A place near the player. */
-    public enum Kind { CITY, DUNGEON, OVOO, SITE, BOSS, RELAY, PIN, DEATH }
+    /** A place near the player, or a party mate ({@link #PARTY}). */
+    public enum Kind { CITY, DUNGEON, OVOO, SITE, BOSS, RELAY, PIN, DEATH, PARTY }
 
-    public record Marker(int x, int z, Kind kind) {
+    /** {@code yaw} is a party mate's look (Minecraft's); a place has none. */
+    public record Marker(int x, int z, Kind kind, float yaw) {
+        public Marker(int x, int z, Kind kind) {
+            this(x, z, kind, 0f);
+        }
     }
 
     private Minimap() {
@@ -72,11 +79,23 @@ public final class Minimap {
         // north: a gold notch on the top edge
         for (int i = -2; i <= 2; i++) img[2 * SIZE + VIEW_X + VIEW_W / 2 + i] = GOLD;
         img[1 * SIZE + VIEW_X + VIEW_W / 2] = GOLD;
-        // places, then the waypoint, then the player on top
+        // places, the party, then the waypoint, then the player on top
         for (Marker m : markers) {
+            if (m.kind() == Kind.PARTY) continue;
             int px = VIEW_X + m.x() - x0, py = VIEW_Y + m.z() - z0;
             if (px < VIEW_X + 2 || px >= VIEW_X + VIEW_W - 2 || py < VIEW_Y + 2 || py >= VIEW_Y + VIEW_H - 2) continue;
             marker(img, px, py, m.kind());
+        }
+        for (Marker m : markers) {
+            if (m.kind() != Kind.PARTY) continue;
+            int px = VIEW_X + m.x() - x0, py = VIEW_Y + m.z() - z0;
+            if (px >= VIEW_X + 4 && px < VIEW_X + VIEW_W - 4 && py >= VIEW_Y + 4 && py < VIEW_Y + VIEW_H - 4) {
+                double a = Math.toRadians(m.yaw());
+                triangle(img, px + 0.5, py + 0.5, -Math.sin(a), Math.cos(a), 4.0, OUTLINE);
+                triangle(img, px + 0.5, py + 0.5, -Math.sin(a), Math.cos(a), 2.8, MATE);
+            } else {
+                rimArrow(img, m.x() - cx, m.z() - cz, MATE, 3.5, 2.3); // which way to the mate
+            }
         }
         if (target != null) {
             int tx = VIEW_X + target[0] - x0, ty = VIEW_Y + target[1] - z0;
@@ -84,7 +103,7 @@ public final class Minimap {
                 diamond(img, tx, ty, 3, OUTLINE);
                 diamond(img, tx, ty, 2, GOLD);
             } else {
-                rimArrow(img, target[0] - cx, target[1] - cz);
+                rimArrow(img, target[0] - cx, target[1] - cz, GOLD, 4.5, 3.0);
             }
         }
         arrow(img, VIEW_X + VIEW_W / 2, VIEW_Y + VIEW_H / 2, yaw);
@@ -166,16 +185,16 @@ public final class Minimap {
         }
     }
 
-    /** A gold arrow on the window's rim, pointing toward a waypoint (dx, dz) blocks away. */
-    private static void rimArrow(byte[] img, int dx, int dz) {
+    /** An arrow on the window's rim, pointing toward something (dx, dz) blocks away: the waypoint, a party mate. */
+    private static void rimArrow(byte[] img, int dx, int dz, byte colour, double outer, double inner) {
         double len = Math.hypot(dx, dz);
         if (len < 1) return;
         double ux = dx / len, uz = dz / len;
         double halfW = VIEW_W / 2.0 - 4, halfH = VIEW_H / 2.0 - 4;
         double t = Math.min(halfW / Math.max(1e-9, Math.abs(ux)), halfH / Math.max(1e-9, Math.abs(uz)));
         double px = VIEW_X + VIEW_W / 2.0 + ux * t, py = VIEW_Y + VIEW_H / 2.0 + uz * t;
-        triangle(img, px, py, ux, uz, 4.5, OUTLINE);
-        triangle(img, px, py, ux, uz, 3.0, GOLD);
+        triangle(img, px, py, ux, uz, outer, OUTLINE);
+        triangle(img, px, py, ux, uz, inner, colour);
     }
 
     /** The player's arrow: Minecraft yaw 0 looks south (+z, down on the map), 90 west (left). */

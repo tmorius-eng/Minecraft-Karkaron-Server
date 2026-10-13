@@ -527,8 +527,9 @@ class Atlas:
 
 # --------------------------------------------------------------------------------------------- map content
 
-def player_arrow(dr: ImageDraw.ImageDraw, x: float, y: float, yaw: float, size: float = 11):
-    """Minecraft yaw: 0 = south (+z), 90 = west, 180 = north; the arrow points where the player looks."""
+def player_arrow(dr: ImageDraw.ImageDraw, x: float, y: float, yaw: float, size: float = 11, fill=None):
+    """Minecraft yaw: 0 = south (+z), 90 = west, 180 = north; the arrow points where the player looks.
+    ``fill`` colours the inside (the player's own arrow is light gold, a party mate's light blue)."""
     a = math.radians(yaw)
     fwd = (-math.sin(a), math.cos(a))  # +z is down on the map
     side = (-fwd[1], fwd[0])
@@ -542,7 +543,7 @@ def player_arrow(dr: ImageDraw.ImageDraw, x: float, y: float, yaw: float, size: 
     l2 = (x - fwd[0] * size * 0.6 + side[0] * size * 0.5, y - fwd[1] * size * 0.6 + side[1] * size * 0.5)
     r2 = (x - fwd[0] * size * 0.6 - side[0] * size * 0.5, y - fwd[1] * size * 0.6 - side[1] * size * 0.5)
     back2 = (x - fwd[0] * size * 0.35, y - fwd[1] * size * 0.35)
-    dr.polygon([tip2, l2, back2, r2], fill=C["gold_lt"])
+    dr.polygon([tip2, l2, back2, r2], fill=fill or C["gold_lt"])
 
 
 def compose(atlas: Atlas, map_png: str, origin, scale: float, pois, *, player=None, pins=(), death=None,
@@ -758,7 +759,8 @@ def tab_texture(name: str, state: str, left_side: bool) -> Image.Image:
     return p
 
 
-MARKERS = ["city", "relay", "dungeon", "ovoo", "site", "boss", "training", "pin", "death", "player"]
+MARKERS = ["city", "relay", "dungeon", "ovoo", "site", "boss", "training", "pin", "death", "player", "party"]
+PARTY_BLUE = (110, 182, 246)
 
 
 def marker_texture(name: str) -> Image.Image:
@@ -766,6 +768,9 @@ def marker_texture(name: str) -> Image.Image:
     im = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
     if name == "player":
         player_arrow(ImageDraw.Draw(im), 16, 16, 180, 13)  # pointing up (north); the display turns it
+        return im
+    if name == "party":  # a party mate: the same arrow, a little smaller, light blue
+        player_arrow(ImageDraw.Draw(im), 16, 16, 180, 11, PARTY_BLUE)
         return im
     g = icon(name, 2)
     if g.width > 32 or g.height > 32:

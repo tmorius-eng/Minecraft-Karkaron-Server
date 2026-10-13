@@ -76,7 +76,7 @@ public final class MinimapService implements Listener {
         final int[] parkedUntil = new int[SLOTS.length];
         byte[] image;
         int version, painted = -1;
-        int lastX = Integer.MIN_VALUE, lastZ, lastTurn = -1, lastTick, lastPins = -1;
+        int lastX = Integer.MIN_VALUE, lastZ, lastTurn = -1, lastTick, lastPins = -1, lastMates;
         WaypointGuide.Target lastTarget;
         boolean drawing;
     }
@@ -175,7 +175,8 @@ public final class MinimapService implements Listener {
             place(p, s);
             Location l = p.getLocation();
             int x = l.getBlockX(), z = l.getBlockZ(), turn = Math.floorMod(Math.round(l.getYaw() / 22.5f), 16);
-            boolean moved = x != s.lastX || z != s.lastZ || turn != s.lastTurn;
+            int mates = matesKey(p); // a party mate who moves or turns redraws it too, at the same pace
+            boolean moved = x != s.lastX || z != s.lastZ || turn != s.lastTurn || mates != s.lastMates;
             // a new waypoint or pin shows at once
             WaypointGuide.Target target = guide.target(id);
             int pinCount = pins.pins(id).size();
@@ -184,6 +185,7 @@ public final class MinimapService implements Listener {
                 s.lastX = x;
                 s.lastZ = z;
                 s.lastTurn = turn;
+                s.lastMates = mates;
                 s.lastTick = now;
                 s.lastTarget = target;
                 s.lastPins = pinCount;
@@ -299,8 +301,45 @@ public final class MinimapService implements Listener {
         });
     }
 
+    /**
+     * The party's other members the map shows (docs/WORLD_MAP.md): online, alive, in the same world, not standing in
+     * for themselves in the training yard. Only the player's own party ever shows.
+     */
+    static List<Player> mates(SuldServices services, Player p) {
+        var party = services.parties().partyOf(p.getUniqueId()).orElse(null);
+        if (party == null) return List.of();
+        List<Player> out = new ArrayList<>();
+        for (UUID id : party.members()) {
+            if (id.equals(p.getUniqueId())) continue;
+            Player m = Bukkit.getPlayer(id);
+            if (m == null || m.isDead() || m.getWorld() != p.getWorld() || m.getGameMode() == GameMode.SPECTATOR) continue;
+            if (services.training != null && services.training.training(id)) continue;
+            out.add(m);
+        }
+        return out;
+    }
+
+    private int matesKey(Player p) {
+        return matesKey(services, p);
+    }
+
+    /** Where the mates stand and look, as one number: it changes when one moves a block or turns. */
+    static int matesKey(SuldServices services, Player p) {
+        int h = 1;
+        for (Player m : mates(services, p)) {
+            Location l = m.getLocation();
+            h = 31 * (31 * (31 * h + l.getBlockX()) + l.getBlockZ()) + Math.floorMod(Math.round(l.getYaw() / 22.5f), 16);
+        }
+        return h;
+    }
+
     private List<Minimap.Marker> markers(Player p, int x, int z) {
         List<Minimap.Marker> out = new ArrayList<>();
+        // the party first, wherever they are: the ones out of view get an arrow on the rim
+        for (Player m : mates(services, p)) {
+            Location l = m.getLocation();
+            out.add(new Minimap.Marker(l.getBlockX(), l.getBlockZ(), Minimap.Kind.PARTY, l.getYaw()));
+        }
         for (MapPois.Poi poi : map.pois.get()) {
             if (Math.abs(poi.x() - x) > NEAR || Math.abs(poi.z() - z) > NEAR) continue;
             Minimap.Kind k = switch (poi.kind()) {

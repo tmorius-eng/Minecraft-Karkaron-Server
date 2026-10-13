@@ -29,6 +29,8 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # the map's marker row, the frames follow a teleport and a turn (above the line of fire), an arrow through one flies on,
 # /map minimap, hidden in the atlas, the waypoint bar and label, /map stop, a pin stored, back after a relog (database),
 # removed; 13 checks.
+# partymapbot.js: a party on the map — two bots in one party: B as a light blue arrow on A's minimap (on the rim when far),
+# B's name on A's atlas that moves with B, nothing of B once B leaves the party; 7 checks.
 # skyclickbot.js: a click in a sky window is the window's own — as Мэргэн, a right click on the ground shoots, in the atlas
 # and in /menu it shoots nothing and an R-L-R casts nothing, back on the ground it shoots again; 4 checks.
 # questregionbot.js: each Act II kill chapter's quest bar names the region it is played in (staff /suld quest); 7 checks.
