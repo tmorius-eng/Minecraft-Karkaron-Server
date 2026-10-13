@@ -12,7 +12,9 @@ on the training Wardens in Хархорум, and sees what every hit, spell and 
 * **Place:** the middle of the walled field in Хархорум, on the spot the owner stood on 2026-10-13 (the big Warden at
   `world -29.5 69 -78.5`: config `training.*` = `-30 69 -79`, the Warden's block). Config v9 moves a yard still on the
   first default (`-63 72 -92`, beside the shrine) there; a centre staff set is kept. Staff move it with
-  `/dasgal yard set` (the centre where they stand).
+  `/dasgal yard set` (the centre where they stand). The centre is a block of the world, not a place in the city's
+  plan: on a new world (another seed, so the city stands elsewhere) staff stand where the yard belongs and run
+  `/dasgal yard set` once.
 * **The training Warden** («Дасгалын Warden ∞») in the middle, facing the south gate:
   * no AI: it never moves, digs, roars, attacks or gives Darkness;
   * ×1.6 (`Attribute.SCALE`), knockback-proof, silent (a grunt for the trainee on a big hit);

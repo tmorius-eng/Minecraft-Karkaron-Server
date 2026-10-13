@@ -5,18 +5,15 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `2de740e` · **Schema:** V26 · **Bot sweep:**
-`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` (37 runs) — 2026-10-13 on the world-map C build: **35/37**; the two red
-runs were a real yard bug and a stale test, both fixed and rerun green on the final build (not a second full sweep):
-`trainingbot.js` 26/26 (a wool awning over the Баатар station had floated its weapon 6 blocks up — the yard now
-stands on its median floor), `dungeon-clear.js` 5/5 (the console `/chronicle` lists the latest 60 entries and repeated
-sweeps' campaign results had pushed the first clear out; the bot reads `/chronicle dungeon`, which the console now
-honours); on the final build also `mapcbot.js` 13/13, `atlasbot.js` 10/10, `healthbot.js` 3/3. Before: 34/34, 315
-checks, on the heroic-dungeons build (with `heroicbot.js` 19/19). On the death-reform build before it: 31/33; hubbot (one chat line of unknown
-source in the `/profile` window, 2 standalone reruns 31/31; the bot now prints the line it saw) and campaign-effects
-(1 of 3 wolves killed: the kill was counted, the bot sat in a pit under the others; it now brings a wolf beyond melee
-reach to itself). A sweep with a missing log directory had printed «ALL GREEN» without running a bot: `regress.sh`
-now fails that. Unit api 537 + plugin 170 + sim 13 (the map-inspection fixes build); PostgreSQL 16 ITs 40/40 (19 files), and in CI on every push ·
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `c2d6741` · **Schema:** V26 · **Bot sweep:**
+`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` — 2026-10-13 on the map-inspection fixes build (`63acf28`): **40/40 runs,
+356 checks, all green** (the runs added that day: `skyclickbot.js`, `questregionbot.js`, `sitesbot.js`); on the next
+build (the party and the region names on the map) `partymapbot.js` 7/7 (now the 41st run), `atlasbot.js` 12/12,
+`mapcbot.js` 13/13 were run alone, not a second full sweep. `firstbootbot.js` (a throwaway fresh world, not in the
+runner: it deletes the world) 6/6. Earlier sweeps: 35/37 on the world-map C build (a yard bug and a stale test,
+both fixed), 34/34 with 315 checks on the heroic-dungeons build. A sweep with a missing log directory had once
+printed «ALL GREEN» without running a bot: `regress.sh` now fails that. Unit api 538 + plugin 170 + sim 13; PostgreSQL 16
+ITs 40/40 (19 files), and in CI on every push ·
 **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
