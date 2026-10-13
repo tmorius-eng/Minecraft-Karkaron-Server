@@ -144,13 +144,53 @@ final class TrainingYard {
         return e == null ? null : roles.get(e.getUniqueId());
     }
 
+    /** The yard's own floor height: the median of the ground at the centre, the five stations and the group (start). */
+    private int level;
+
     /** The highest block that stands at x/z, plus one (the pedestal if staff built one, else the grass). */
+    private int top(double x, double z) {
+        return centre.getWorld().getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z), HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1;
+    }
+
+    /**
+     * Where a thing of the yard stands at x/z: on the highest block there, unless that is more than {@value #STEP}
+     * blocks off the yard's level — a canopy, a lamp or a roof over the spot (on the dev server a wool awning 5 blocks
+     * over the Баатар station floated its weapon and its click box 6 blocks up, trainingbot 2026-10-13), or a hole —
+     * then on the floor nearest the yard's level.
+     */
     private Location ground(double x, double z) {
         World w = centre.getWorld();
-        int y = w.getHighestBlockYAt((int) Math.floor(x), (int) Math.floor(z), HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1;
-        if (Math.abs(y - centre.getY()) > 12) y = centre.getBlockY(); // a roof or a hole: the configured height
+        int bx = (int) Math.floor(x), bz = (int) Math.floor(z), y = top(x, z);
+        if (Math.abs(y - level) > STEP) {
+            y = level;
+            for (int fy = level + STEP; fy >= level - STEP; fy--) {
+                if (w.getBlockAt(bx, fy - 1, bz).getType().isSolid() && !w.getBlockAt(bx, fy, bz).getType().isSolid()) {
+                    y = fy;
+                    break;
+                }
+            }
+        }
         return new Location(w, x, y, z);
     }
+
+    /** The median ground of the yard's spots; the configured height when that is far off (a roof over all of it). */
+    private int level() {
+        double cx = centre.getX() + 0.5, cz = centre.getZ() + 0.5;
+        PlayerClass[] classes = PlayerClass.values();
+        int[] h = new int[classes.length + 2];
+        h[0] = top(cx, cz);
+        for (int i = 0; i < classes.length; i++) {
+            double a = Math.toRadians(-90 + 180.0 * i / (classes.length - 1));
+            h[i + 1] = top(cx + Math.sin(a) * STATION_RADIUS, cz - Math.cos(a) * STATION_RADIUS);
+        }
+        h[h.length - 1] = top(cx + GROUP_DX, cz + GROUP_DZ);
+        java.util.Arrays.sort(h);
+        int median = h[h.length / 2];
+        return Math.abs(median - centre.getY()) > 12 ? centre.getBlockY() : median;
+    }
+
+    /** How far a station may stand above or below the yard's level and still follow the ground. */
+    static final int STEP = 3;
 
     // ------------------------------------------------------------------------------------------------ lifecycle
 
@@ -167,6 +207,7 @@ final class TrainingYard {
         }
         // anything a crash left behind (the entities are not saved, but a chunk saved mid-tick may carry one)
         for (Entity e : w.getNearbyEntities(centre, RADIUS + 8, 24, RADIUS + 8)) if (e.getScoreboardTags().contains(TAG)) e.remove();
+        level = level();
         spawnAll();
         watchdog = Bukkit.getScheduler().runTaskTimer(plugin, this::respawnMissing, 100L, 100L);
         mover = Bukkit.getScheduler().runTaskTimer(plugin, this::move, 1L, 1L);
