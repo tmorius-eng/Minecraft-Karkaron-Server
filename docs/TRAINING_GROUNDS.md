@@ -9,8 +9,10 @@ on the training Wardens in Хархорум, and sees what every hit, spell and 
 
 ## Where and what
 
-* **Place:** plot A, the open 40×40 ground west of the spawn (centre `world -63 72 -92`, config `training.*`). Staff
-  move it with `/dasgal yard set` (the centre where they stand).
+* **Place:** the middle of the walled field in Хархорум, on the spot the owner stood on 2026-10-13 (the big Warden at
+  `world -29.5 69 -78.5`: config `training.*` = `-30 69 -79`, the Warden's block). Config v9 moves a yard still on the
+  first default (`-63 72 -92`, beside the shrine) there; a centre staff set is kept. Staff move it with
+  `/dasgal yard set` (the centre where they stand).
 * **The training Warden** («Дасгалын Warden ∞») in the middle, facing the south gate:
   * no AI: it never moves, digs, roars, attacks or gives Darkness;
   * ×1.6 (`Attribute.SCALE`), knockback-proof, silent (a grunt for the trainee on a big hit);
@@ -21,16 +23,21 @@ on the training Wardens in Хархорум, and sees what every hit, spell and 
     after every hit; the target bar shows ∞;
   * never despawns: not saved with the world (so no copy can pile up), held by a plugin chunk ticket on the yard's chunks,
     and a watchdog (every 5 s) puts back any entity of the yard that went missing.
-* **Group:** five small Wardens (×0.6) close together west of the centre (area spells). **Walking:** one Warden (×0.85)
-  walking a 3.5-block circle east of the centre at ~2.2 blocks/s (aim and spells on the move).
-* **Stations:** five class stations on the north side (name in the class colour, role, the class's T6 weapon turning).
-  Clicking one opens the class page: role, resource, spells with their keys, build A and B (keystone, ultimate,
-  passives), and «⚔ Build A / B-ээр турших».
-* **Labels:** the gate board, «Бүлэг бай», «Хөдөлгөөнт бай», the 10 m and 15 m marks for Мэргэн.
+* **One centre, three rings** (owner, 2026-10-13):
+  * **the class weapons:** the five classes' T6 weapons float round the big Warden's shoulders (radius 2.4, 3.3 above
+    its ground), each spinning, the ring turning once in 36 s, each with its name in the class colour and its role. A
+    click on a weapon (its box, 1.0 × 1.3, moves with it) opens the class page: role, resource, spells with their keys,
+    build A and B (keystone, ultimate, passives), and «⚔ Build A / B-ээр турших»;
+  * **the group:** five small Wardens (×0.6) round its feet (radius 3.4, facing out): any area spell of 3.5 blocks or
+    more cast on the big one reaches all six. The ring is open to the south, where the way in and Мэргэн's line are;
+  * **the walking one:** a Warden (×0.85, «Хөдөлгөөнт бай ∞») walking a 7-block circle round all of it at ~2.2 blocks/s
+    (aim and spells on the move).
+* **Labels:** the gate board at the south (what each ring is for), the 10 m and 15 m marks for Мэргэн.
 * **HD Warden:** the pack's Warden textures are the vanilla sheets at 4× with a voxel bevel (`tools/pack/hd_warden.py`);
   every Warden on the server looks this way.
 * **Blocks:** the city is built by hand, so the plugin places none on its own. `/dasgal yard build` lays the pedestal
-  (octagon, four lights), the five station pads in the class colours and the range marks, **on open ground only**
+  (an octagon of radius 5 under the big Warden and the group, four lights under the weapons' ring), the walking
+  Warden's track (a ring of polished andesite) and the range marks, **on open ground only**
   (air, grass, flowers, dirt; a built block is kept and reported), after writing every changed block to
   `plugins/SULD/training-yard-undo.txt`; `/dasgal yard undo` puts each one back. Without the blocks the yard works on the
   grass.

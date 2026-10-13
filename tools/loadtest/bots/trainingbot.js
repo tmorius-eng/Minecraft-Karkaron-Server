@@ -14,13 +14,17 @@ const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' 
 const name = 'D' + Math.floor(Math.random() * 90000 + 10000);
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
 const psql = (q) => execFileSync('runuser', ['-u', 'postgres', '--', 'psql', '-d', process.env.SULD_DB || 'suldit', '-At', '-c', q], { cwd: '/tmp' }).toString().trim();
-const CENTRE = { x: -62.5, z: -91.5 };
+// the big Warden (config training.x/z + 0.5; the shipped centre is the owner's spot of 2026-10-13)
+const CENTRE = { x: Number(process.env.TRAIN_X || -29.5), z: Number(process.env.TRAIN_Z || -78.5) };
+const dist = (e) => Math.hypot(e.position.x - CENTRE.x, e.position.z - CENTRE.z);
 
 const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
 const chat = [];
 b.on('messagestr', m => chat.push(m));
 b.on('error', () => {});
 b.on('resourcePack', () => { try { b.acceptResourcePack(); } catch (e) {} });
+let dialog = null;
+b._client.on('show_dialog', (pk) => { dialog = pk; });
 const said = (k, s) => chat.slice(k).some(l => l.includes(s));
 const lastWith = (k, s) => chat.slice(k).filter(l => l.includes(s)).pop() || '';
 const items = () => b.inventory.slots.map((s, i) => s ? i + ':' + s.name : null).filter(Boolean);
@@ -28,8 +32,8 @@ const bag = () => b.inventory.items().map(i => i.name).sort().join(',');
 const flatSlotsInv = () => b.inventory.slots.filter(Boolean).map(s => s.name).sort().join(',');
 const wardens = () => Object.values(b.entities).filter(e => e.name === 'warden');
 const centreWarden = () => wardens().sort((a, c) => Math.hypot(a.position.x - CENTRE.x, a.position.z - CENTRE.z) - Math.hypot(c.position.x - CENTRE.x, c.position.z - CENTRE.z))[0];
-// a damage number: a text display the server shows this player only, spawned right at the centre Warden (the yard's own
-// labels stand far from it); its text ends in the number
+// a damage number: a text display the server shows this player only, spawned right at the centre Warden; its text ends
+// in the number (the yard's own labels near it, the five class names, end in a letter)
 // a component's plain text: its own text first, then its children (NBT keeps the keys in any order)
 const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') return c; if (Array.isArray(c)) return c.map(flat).join('');
   if (typeof c !== 'object') return '';
@@ -84,6 +88,29 @@ b.once('spawn', async () => {
     await sleep(2500);
     const tab = b.players[name] && b.players[name].displayName ? JSON.stringify(b.players[name].displayName) : '';
     check(tab.includes('дасгал'), 'TAB marks the trainee «⚔ дасгал» (no mastery mark)', tab.slice(0, 160));
+    // the yard's shape (owner, 2026-10-13): the big Warden on the spot, the five class weapons floating round its
+    // shoulders and turning, five small Wardens round its feet, one walking a wide circle round all of it
+    const big = centreWarden();
+    const ring = wardens().filter(e => Math.abs(dist(e) - 3.4) < 0.35);
+    const walker = wardens().find(e => Math.abs(dist(e) - 7.0) < 0.5);
+    const weapons = Object.values(b.entities).filter(e => e.name === 'item_display' && Math.abs(dist(e) - 2.4) < 0.3);
+    const lift = big ? weapons.map(e => +(e.position.y - big.position.y).toFixed(2)) : [];
+    const was = weapons.map(e => e.position.clone()), walkerWas = walker ? walker.position.clone() : null;
+    await sleep(2000);
+    const turned = weapons.filter((e, i) => e.position.distanceTo(was[i]) > 0.3).length;
+    check(!!big && dist(big) < 0.3 && ring.length === 5 && weapons.length === 5 && lift.every(h => Math.abs(h - 3.3) < 0.3) && turned === 5
+      && !!walker && walker.position.distanceTo(walkerWas) > 1.5,
+      'the yard: the big Warden on its spot, five weapons floating round it and turning, five Wardens round its feet, one walking round',
+      `big ${big ? dist(big).toFixed(2) : '-'} · ring ${ring.length} · weapons ${weapons.length} at +${lift.join('/')} turned ${turned} · walker ${walker ? dist(walker).toFixed(1) + ' moved ' + walker.position.distanceTo(walkerWas).toFixed(1) : '-'}`);
+    // a floating weapon is its class's station: a click opens the class page
+    cmd(`tp ${name} ${CENTRE.x} ${big ? Math.round(big.position.y) : 70} ${CENTRE.z + 3.6} 180 0`); await sleep(1200);
+    dialog = null;
+    const boxes = Object.values(b.entities).filter(e => e.name === 'interaction' && Math.abs(dist(e) - 2.4) < 0.3);
+    const box = boxes.sort((a, c) => a.position.distanceTo(b.entity.position) - c.position.distanceTo(b.entity.position))[0];
+    if (box) { await b.lookAt(box.position.offset(0, 0.65, 0), true); b.activateEntity(box); }
+    await sleep(1500);
+    const page = JSON.stringify((dialog && dialog.dialog) || '');
+    check(boxes.length === 5 && !!dialog && page.includes('Build A'), 'a click on a floating weapon opens its class page', `boxes ${boxes.length}, dialog ${dialog ? page.length + ' chars' : 'none'}`);
     // the Warden: hits show numbers, it never dies, it never moves
     const w0 = centreWarden();
     const at0 = w0 ? w0.position.clone() : null;
@@ -121,7 +148,7 @@ b.once('spawn', async () => {
     numbers.length = 0;
     const bow = b.inventory.items().find(i => i.name === 'bow');
     if (bow) { await b.equip(bow, 'hand').catch(() => {}); await sleep(500); }
-    cmd(`tp ${name} ${CENTRE.x} 73 ${CENTRE.z + 9} 180 0`); await sleep(1500);
+    { const cw = centreWarden(); cmd(`tp ${name} ${CENTRE.x} ${cw ? Math.round(cw.position.y) : 70} ${CENTRE.z + 9} 180 0`); } await sleep(1500);
     for (let i = 0; i < 4; i++) { const tw = centreWarden(); if (tw) await b.lookAt(tw.position.offset(0, 2.5, 0), true); R(); await sleep(1200); }
     await sleep(1000);
     check(numbers.length > 0, 'Мэргэн arrows hit the Warden with numbers', numbers.slice(0, 3).join(' | '));

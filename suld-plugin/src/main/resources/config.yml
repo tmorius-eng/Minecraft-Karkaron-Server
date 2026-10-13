@@ -7,7 +7,7 @@
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
 # Schema version of this file (SULD migrates older files on start; do not edit).
-config-version: 8
+config-version: 9
 locale: mn
 
 # ---------------------------------------------------------------------------
@@ -86,15 +86,16 @@ death:
 # «Дайчдын Дасгалын Талбай» (docs/TRAINING_GROUNDS.md): any player — even before choosing a class — tries any class at
 # level 60 with its top gear on the training Wardens (∞ health, never move, never despawn) and sees every hit, spell
 # and passive explained. The character is a stand-in that is never saved; leaving gives everything back.
-#   world/x/y/z: the yard's centre (plot A, west of the spawn); staff move it with /dasgal yard set
+#   world/x/y/z: the yard's centre, the big Warden's block (the owner's spot of 2026-10-13, the middle of the walled
+#   field); staff move it with /dasgal yard set (the centre where they stand)
 #   blocks: only placed by staff, /dasgal yard build (undo: /dasgal yard undo) — the city is built by hand
 # ---------------------------------------------------------------------------
 training:
   enabled: true
   world: ""                     # empty = the main world
-  x: -63
-  y: 72
-  z: -92
+  x: -30
+  y: 69
+  z: -79
 
 # ---------------------------------------------------------------------------
 # Analytics. sink: log | database  (database requires a configured DB above)

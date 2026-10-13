@@ -88,6 +88,9 @@ import java.util.UUID;
  */
 public final class TrainingService implements Listener, TabExecutor {
 
+    /** The yard's centre as shipped (the big Warden's block): where the owner stood on 2026-10-13, the middle of the walled field. */
+    public static final int DEFAULT_X = -30, DEFAULT_Y = 69, DEFAULT_Z = -79;
+
     /** The commands a trainee may use. */
     private static final Set<String> ALLOWED = Set.of("dasgal", "дасгал", "training", "mori", "horse", "mount");
 
@@ -153,7 +156,7 @@ public final class TrainingService implements Listener, TabExecutor {
 
     // ------------------------------------------------------------------------------------------------ lifecycle
 
-    /** Puts the yard up where the config says (plot A by default), once the worlds are loaded. */
+    /** Puts the yard up where the config says (the owner's spot by default), once the worlds are loaded. */
     public void start() {
         if (!plugin.getConfig().getBoolean("training.enabled", true)) return;
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -175,7 +178,7 @@ public final class TrainingService implements Listener, TabExecutor {
         String wn = cfg.getString("training.world", "");
         World w = wn == null || wn.isBlank() ? Bukkit.getWorlds().get(0) : Bukkit.getWorld(wn);
         if (w == null) return null;
-        return new Location(w, cfg.getInt("training.x", -63), cfg.getInt("training.y", 72), cfg.getInt("training.z", -92));
+        return new Location(w, cfg.getInt("training.x", DEFAULT_X), cfg.getInt("training.y", DEFAULT_Y), cfg.getInt("training.z", DEFAULT_Z));
     }
 
     /** Plugin disable: every trainee back to their own character, the yard taken down. */
@@ -627,7 +630,7 @@ public final class TrainingService implements Listener, TabExecutor {
             case "respawn" -> {
                 Location c = yard.centreOrNull() == null ? configured() : yard.centre();
                 yard.start(c);
-                sender.sendMessage(Messages.success("Талбайн Warden, тавцангууд дахин байрлалаа."));
+                sender.sendMessage(Messages.success("Талбайн Warden, ангийн зэвсгүүд дахин байрлалаа."));
             }
             case "build", "undo" -> sender.sendMessage(Messages.info(YardBlocks.run(plugin, services, yard, sender, sub)));
             default -> {

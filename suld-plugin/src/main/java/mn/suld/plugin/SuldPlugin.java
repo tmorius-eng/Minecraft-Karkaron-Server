@@ -576,6 +576,25 @@ public final class SuldPlugin extends JavaPlugin {
         if (getConfig().getInt("config-version", 1) < 6) migrateActTwoCurve();
         if (getConfig().getInt("config-version", 1) < 7) migrateDeathCap();
         if (getConfig().getInt("config-version", 1) < 8) migrateDeathReform();
+        if (getConfig().getInt("config-version", 1) < 9) migrateTrainingYard();
+    }
+
+    /**
+     * v9: the training yard's centre moves from its first spot (plot A, -63 72 -92) to the one the owner chose on
+     * 2026-10-13, the middle of the walled field (-30 69 -79). A file without the keys already reads the new default;
+     * a centre staff set themselves ({@code /dasgal yard set}) is kept.
+     */
+    private void migrateTrainingYard() {
+        var c = getConfig();
+        if (c.isSet("training.x") && c.getInt("training.x") == -63 && c.getInt("training.y") == 72 && c.getInt("training.z") == -92) {
+            c.set("training.x", mn.suld.plugin.training.TrainingService.DEFAULT_X);
+            c.set("training.y", mn.suld.plugin.training.TrainingService.DEFAULT_Y);
+            c.set("training.z", mn.suld.plugin.training.TrainingService.DEFAULT_Z);
+            getLogger().warning("config.yml migrated to v9: the training yard's centre -63 72 -92 -> "
+                    + c.getInt("training.x") + " " + c.getInt("training.y") + " " + c.getInt("training.z") + " (the owner's spot)");
+        }
+        c.set("config-version", 9);
+        saveConfig();
     }
 
     /**
