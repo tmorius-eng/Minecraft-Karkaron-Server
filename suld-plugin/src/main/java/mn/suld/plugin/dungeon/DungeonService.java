@@ -160,6 +160,10 @@ public final class DungeonService {
             if (p == null || profile == null) {
                 return Messages.error("Багийн гишүүн онлайн биш байна.");
             }
+            // a member in the training yard reads as level 60 with top gear there: never a pass through the gates below
+            if (services.training != null && services.training.training(id)) {
+                return Messages.error(p.getName() + " дасгалын талбайд байна — гарсны дараа агуйд орно.");
+            }
             if (profile.progression().level() < def.minLevel()) {
                 return Messages.error(p.getName() + " түвшин " + def.minLevel() + "-д хүрээгүй байна.");
             }

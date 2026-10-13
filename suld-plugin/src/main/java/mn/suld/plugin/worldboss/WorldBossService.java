@@ -449,11 +449,20 @@ public final class WorldBossService implements Listener {
 
     // ------------------------------------------------------------------ helpers
 
-    /** Can fight for a reward: online, alive, not a soul, with a class (souls and the classless are never paid). */
+    /**
+     * Can fight for a reward: online, alive, not a soul, with a class (souls and the classless are never paid), and not
+     * in the training yard (its level-60 stand-in neither sizes the boss nor is paid; nobody trains while in this fight).
+     */
     private boolean fighter(Player p) {
         if (p.isDead() || services.isSoul.test(p.getUniqueId())) return false;
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-        return pr != null && pr.hasSelectedClass() && p.getGameMode() != org.bukkit.GameMode.SPECTATOR;
+        return pr != null && !pr.ephemeral() && pr.hasSelectedClass() && p.getGameMode() != org.bukkit.GameMode.SPECTATOR;
+    }
+
+    /** True while {@code id} is in the standing boss's fight (dealt damage or stood at it): training waits for its end. */
+    public boolean fighting(UUID id) {
+        Active a = active;
+        return a != null && a.fight.involved(id);
     }
 
     private int level(Player p) {

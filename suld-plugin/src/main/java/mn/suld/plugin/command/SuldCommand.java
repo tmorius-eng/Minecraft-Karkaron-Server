@@ -178,6 +178,7 @@ public final class SuldCommand implements CommandExecutor {
         } catch (NumberFormatException e) {
             amount = -1;
         }
+        if (training(sender, target)) return;
         PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
         if (profile == null || amount <= 0 || amount > 100_000_000) {
             sender.sendMessage(Messages.error("Онлайн тоглогч ба 1..100000000 EXP."));
@@ -198,6 +199,7 @@ public final class SuldCommand implements CommandExecutor {
             return;
         }
         Player target = args.length < 2 ? null : Bukkit.getPlayerExact(args[1]);
+        if (training(sender, target)) return;
         PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
         if (profile == null) {
             sender.sendMessage(Messages.info("/suld classreset <онлайн тоглогч>"));
@@ -255,6 +257,7 @@ public final class SuldCommand implements CommandExecutor {
             return;
         }
         Player target = args.length < 3 ? null : Bukkit.getPlayerExact(args[1]);
+        if (training(sender, target)) return;
         PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
         long amount;
         try {
@@ -328,6 +331,7 @@ public final class SuldCommand implements CommandExecutor {
         }
         var chain = services.quests().chain();
         Player target = args.length < 3 ? null : Bukkit.getPlayerExact(args[1]);
+        if (training(sender, target)) return;
         PlayerProfile profile = target == null ? null : services.profiles().cached(target.getUniqueId()).orElse(null);
         if (profile == null) {
             sender.sendMessage(Messages.info("/suld quest <онлайн тоглогч> <1.." + chain.size() + " | reset>"));
@@ -427,6 +431,16 @@ public final class SuldCommand implements CommandExecutor {
         }
     }
 
+    /**
+     * True (and the sender told why) when {@code target} trains: an admin change would land on the training stand-in,
+     * which is never written and is dropped when they leave (docs/TRAINING_GROUNDS.md).
+     */
+    private boolean training(CommandSender sender, Player target) {
+        if (target == null || services.training == null || !services.training.training(target.getUniqueId())) return false;
+        sender.sendMessage(Messages.error(target.getName() + " дасгалын талбайд байна (/dasgal) — гарсны дараа өөрчилнө үү."));
+        return true;
+    }
+
     /** Staff/QA: set a player's Тэнгэрийн Зэрэг rank, Тэнгэрийн оноо or Тэнгэрийн Ордон clears. Audited. */
     private void endgame(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
@@ -434,6 +448,7 @@ public final class SuldCommand implements CommandExecutor {
             return;
         }
         org.bukkit.entity.Player t = args.length > 1 ? org.bukkit.Bukkit.getPlayerExact(args[1]) : null;
+        if (training(sender, t)) return;
         mn.suld.api.profile.PlayerProfile pr = t == null ? null : services.profiles().cached(t.getUniqueId()).orElse(null);
         long n;
         try {

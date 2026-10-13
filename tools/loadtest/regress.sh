@@ -2,7 +2,7 @@
 # The whole bot regression in one command, on a local dev Paper (offline mode):
 #   tools/loadtest/regress.sh <srvctl.sh> <server latest.log> [port]
 # Runs every pass/fail bot in a fixed order and prints one table (bot · result · seconds); exit 1 on any failure.
-# DEV_CAMPAIGNS=1 also runs campaign-effects.js, dungeon-clear.js and campaign-deliver.js: dev/make_dev_campaigns.py
+# DEV_CAMPAIGNS=1 also runs campaign-effects.js, dungeon-clear.js, campaign-deliver.js and trainingpay.js: dev/make_dev_campaigns.py
 # writes the dev campaigns into the server's plugins/SULD/content/campaigns.json (server dir = two levels over the log),
 # the server restarts (<srvctl> stop|start), and the file is removed and the server restarted after. DEV_CRASH=1 also
 # runs trainingcrash.js last: it kills the server with SIGKILL during training and starts it again (dev server only).
@@ -43,7 +43,7 @@ RUNS=(
   "permbot|$CTL $LOG $PORT"
 )
 DEV_RUNS=("campaign-effects|$CTL $LOG $PORT" "dungeon-clear|$CTL $LOG $PORT"
-  "campaign-deliver|$CTL $LOG test_deliver item.chonon_arisan 60 $PORT")
+  "campaign-deliver|$CTL $LOG test_deliver item.chonon_arisan 60 $PORT" "trainingpay|$CTL $LOG $PORT")
 SRV=$(cd "$(dirname "$LOG")/.." && pwd)
 GEN="$(cd "$(dirname "$0")" && pwd)/dev/make_dev_campaigns.py"
 bad=0

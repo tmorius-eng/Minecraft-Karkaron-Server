@@ -386,6 +386,10 @@ public final class WorldEventService {
             if (services.dungeons().isInAnyRun(p.getUniqueId())) {
                 continue;
             }
+            // the training yard is not the steppe: no wolves drawn to it, and its stand-in neither counts nor is paid
+            if (services.training != null && services.training.training(p.getUniqueId())) {
+                continue;
+            }
             boolean hasClass = services.profiles().cached(p.getUniqueId())
                     .map(pr -> pr.playerClass().isPresent()).orElse(false);
             if (hasClass) {

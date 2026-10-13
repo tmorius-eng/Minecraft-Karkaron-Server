@@ -326,6 +326,11 @@ public final class SkillCommands {
                     s.sendMessage(Messages.error("«" + a[1] + "» онлайн биш (профайл зөвхөн онлайн тоглогчид засагдана)."));
                     return;
                 }
+                // in the training yard the tree is the stand-in's ready build, dropped on leaving: look, but change nothing
+                if (!a[0].equalsIgnoreCase("inspect") && services.training != null && services.training.training(t.getUniqueId())) {
+                    s.sendMessage(Messages.error(t.getName() + " дасгалын талбайд байна (/dasgal) — гарсны дараа."));
+                    return;
+                }
                 switch (a[0].toLowerCase(Locale.ROOT)) {
                     case "inspect" -> inspect(s, t);
                     case "grantpoints" -> {

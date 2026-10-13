@@ -71,6 +71,11 @@ public final class WorldBossFight {
         fighters.put(player, new Fighter(player, name, f == null ? 0 : f.damage(), (f == null ? 0 : f.presentSeconds()) + seconds));
     }
 
+    /** True once {@code player} dealt damage to it or stood at it. */
+    public boolean involved(UUID player) {
+        return player != null && fighters.containsKey(player);
+    }
+
     public double totalDamage() {
         double t = 0;
         for (Fighter f : fighters.values()) t += f.damage();

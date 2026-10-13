@@ -200,7 +200,8 @@ public final class ClassArmor implements Listener {
     /** Add armour XP (already the source's amount); levels regenerate the set and are announced. */
     public void addXp(Player p, double xp) {
         PlayerProfile pr = profile(p).orElse(null);
-        if (pr == null || !supports(pr.playerClass().orElse(null)) || services.isSoul.test(p.getUniqueId())) return;
+        // a training stand-in earns nothing (docs/TRAINING_GROUNDS.md): no XP into its record, none into the session totals
+        if (pr == null || pr.ephemeral() || !supports(pr.playerClass().orElse(null)) || services.isSoul.test(p.getUniqueId())) return;
         ArmorRules.Gain gain = ArmorRules.gain(pr.classGear(), xp, pr.progression().level());
         if (gain.added() <= 0) return;
         pr.classGear(gain.after());
@@ -266,7 +267,7 @@ public final class ClassArmor implements Listener {
     /** Add armour mastery XP; new ranks refresh the stat pipeline (perks, +0.25 % power per rank). */
     public void addMastery(Player p, double xp) {
         PlayerProfile pr = profile(p).orElse(null);
-        if (pr == null || !(xp > 0) || !supports(pr.playerClass().orElse(null)) || services.isSoul.test(p.getUniqueId())) return;
+        if (pr == null || pr.ephemeral() || !(xp > 0) || !supports(pr.playerClass().orElse(null)) || services.isSoul.test(p.getUniqueId())) return;
         MasteryRules.Gain gain = MasteryRules.gain(pr.classGear(), xp, pr.progression().level());
         pr.classGear(gain.after());
         services.session(p.getUniqueId()).masteryXp += xp;

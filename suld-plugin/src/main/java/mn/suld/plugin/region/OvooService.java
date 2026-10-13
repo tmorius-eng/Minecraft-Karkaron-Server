@@ -197,6 +197,7 @@ public final class OvooService implements Listener {
             for (Player p : w.getPlayers()) {
                 double dx = p.getLocation().getX() - (b[0] + 0.5), dz = p.getLocation().getZ() - (b[2] + 0.5);
                 if (dx * dx + dz * dz > 14 * 14 || Math.abs(p.getLocation().getY() - b[1]) > 6) continue;
+                if (services.training != null && services.training.training(p.getUniqueId())) continue; // the day's mark would stay, its EXP not
                 OvooCircle c = walking.computeIfAbsent(p.getUniqueId(), k -> new HashMap<>()).computeIfAbsent(o.id(), k -> new OvooCircle());
                 if (c.step(dx, dz)) {
                     bless(p, o, b);

@@ -154,6 +154,7 @@ public final class ClassGearCommand implements TabExecutor {
                 sender.sendMessage(Messages.error("Тоглогч онлайн биш: " + args[1]));
                 return;
             }
+            if (training(sender, target)) return;
         } else if (sender instanceof Player p) {
             target = p;
             Long t = last.get(p.getUniqueId());
@@ -193,6 +194,13 @@ public final class ClassGearCommand implements TabExecutor {
         if (w == ClassWeapons.Recovery.NO_ROOM || a.noRoom()) sender.sendMessage(Messages.error("Цүнхэнд зай гаргаад дахин оролдоно уу."));
     }
 
+    /** A target in the training yard wears the kit and plays a stand-in that is dropped: no gear change reaches it. */
+    private boolean training(CommandSender sender, Player target) {
+        if (target == null || services.training == null || !services.training.training(target.getUniqueId())) return false;
+        sender.sendMessage(Messages.error(target.getName() + " дасгалын талбайд байна (/dasgal) — гарсны дараа."));
+        return true;
+    }
+
     private void set(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin.classgear")) {
             sender.sendMessage(Messages.error("Танд энэ үйлдэл хийх эрх алга."));
@@ -203,6 +211,7 @@ public final class ClassGearCommand implements TabExecutor {
             return;
         }
         Player target = Bukkit.getPlayerExact(args[1]);
+        if (training(sender, target)) return;
         String what = args[2].toLowerCase(Locale.ROOT);
         if (what.equals("cleared") && target != null) {
             armor().markCleared(target, args[3]);

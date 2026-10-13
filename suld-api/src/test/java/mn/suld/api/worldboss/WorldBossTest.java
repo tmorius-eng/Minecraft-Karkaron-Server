@@ -62,6 +62,19 @@ class WorldBossTest {
     }
 
     @Test
+    void involvedOnceTheyHitOrStoodThere() {
+        WorldBossFight f = new WorldBossFight(def(), "r1", Instant.parse("2026-10-14T13:00:00Z"));
+        UUID hitter = UUID.randomUUID(), stander = UUID.randomUUID(), stranger = UUID.randomUUID();
+        f.damage(hitter, "a", 50);
+        f.present(stander, "b", 5);
+        f.damage(stranger, "c", 0); // nothing landed: not in the fight
+        assertTrue(f.involved(hitter));
+        assertTrue(f.involved(stander));
+        assertFalse(f.involved(stranger));
+        assertFalse(f.involved(null));
+    }
+
+    @Test
     void noPodiumWithoutDamage() {
         Instant t0 = Instant.parse("2026-10-14T13:00:00Z");
         WorldBossFight f = new WorldBossFight(def(), "r1", t0);

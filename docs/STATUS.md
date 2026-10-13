@@ -5,10 +5,13 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-13 · **Commit base:** `main` after `8f2de03` · **Schema:** V22 · **Bot sweep:**
-`DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` (30 runs) — 2026-10-13 on `8f2de03`: 29/30 green; the red one, trialclassbot
-(Мэргэн), was the bot's level: the dev lock (64 s at L12) ended mid-fight, which now stops the trial — at L37 all 5 classes
-4/4. On `b066572` 27/28 (duel-defeat bot bug, fixed). Unit api 453 + plugin 145, 33 PostgreSQL IT/guard tests green · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
+**Last updated:** 2026-10-13 · **Commit base:** `main` after `be358e7` · **Schema:** V22 · **Bot sweep:**
+`DEV_CAMPAIGNS=1 DEV_CRASH=1 tools/loadtest/regress.sh` (33 runs) — 2026-10-13 on the training-payouts build: 29/33; the
+4 red were two trial class bots (in both failing runs the spirit wolves stood on tree crowns at the forest test spot,
+y 87–89 over the ground at 84; the game now spawns them on the ground), world-boss (the bot's resistance came 4 s after the spread and the boss killed it: bot fixed)
+and trainingpay (an admin give is a 64-stack, the week resolved early: bot fixed); those 9 runs again on the final jar
+9/9. A sweep with a missing log directory had printed «ALL GREEN» without running a bot: `regress.sh` now fails that
+(regress1–6 had real logs). Unit api 464 + plugin 149; PostgreSQL ITs run in CI on every push · **Owner's one-sitting client test:** `docs/qa/LAPTOP_TEST_2026-10.md`
 
 ## Legend
 
@@ -67,7 +70,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | Hardcore death, lock, wound | ✅ | ✅ | ⏳ | |
 | Relics (2), seize rule | ✅ | ✅ | ⏳ | seize moves to consented fights only (PvP policy, this slice) |
 | Clans, parties, chat channels | ✅ | ✅ | ⏳ | party finder: this slice |
-| World events | ✅ (1 event; no raid while a world boss stands) | ✅ | ⏳ | «Чонын Их Аян» success: guards warn 2 min before a raid |
+| World events | ✅ (1 event; no raid while a world boss stands) | ✅ | ⏳ | «Чонын Их Аян» success: guards warn 2 min before a raid; raid wolves spawn on the ground, not on leaves (2026-10-13; probe: 4 raid wolves at the forest spot, 0 on leaves) |
 | Daily reward / tasks, leaderboards, trade, horses, smith | ✅ | 🤖 | ⏳ | B.8 ✅ a missed day costs one streak step, never a reset; 43 recipes + order board (`docs/CRAFTING.md`) |
 | HUD, menus (HD painted) | ✅ | — | 👤 G7 | `docs/HUD_MANUAL_QA.md` rows not recorded |
 | «Командын Өргөө» HD window system (`/menu` hub, profile, rankup, shop ×2, travel, settings, help pages; `suld:hd` font; default tooltip frame; themed buttons; slot glow) | ✅ | ✅ `hubbot.js` 30/30 | ⏳ owner: GUI scale 2/3/4 | `docs/UI_HUB.md`; the picture's 8 commands all work; `/travel` trips only from a relay (GAME-001) |
@@ -115,11 +118,12 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | «Тэнгэрийн сорил» (`/trial`), lock cap 30 min (config v7) | ✅ | ✅ `trialbot.js` 6/6 | ⏳ | `docs/DEATH_AND_RECOVERY.md`; time to 60 now ~146 h simulated (was ~200), accepted by the owner 2026-10-12 |
 | /menu sky window (`MenuSky`, every hub page; chest window only in combat/runs/mid-air) | ✅ | ✅ `skymenubot.js` 8/8 | ⏳ | `docs/UI_HUB.md` §0; owner to check look and text size on the real client |
 | Class change + «Ангийн Академи» (V22 class_mastery: each class keeps its tree and gear) | ✅ | ✅ `classchangebot.js` 10/10, `classreconnectbot.js` 6/6 | ⏳ | `docs/CLASS_CHANGE.md` |
-| Class trial «Турших» (5 min arena, dummies, nothing kept) + SÜLD bows with Infinity | ✅ | ✅ `classtrialbot.js` 7/7 | ⏳ | `docs/CLASS_CHANGE.md` §Сорилт, §Нум |
+| Class trial «Турших» (5 min arena, dummies, nothing kept) + SÜLD bows with Infinity | ✅ | ✅ `classtrialbot.js` 7/7 | ⏳ | `docs/CLASS_CHANGE.md` §Сорилт, §Нум; since 2026-10-13 the dummies are SÜLD targets: spells, crits, passives and named numbers reach them (they used to be skipped, and a big hit was zeroed) |
+| «Дайчдын Дасгалын Талбай» (`/dasgal`, class window «⚔ Туршиж үзэх»): any class at level 60, Зэрэг III, build A/B, T6 kit on the training Wardens (∞, no AI, ×1.6, never despawn), named numbers, spell/passive explanations, 10 s DPS sidebar; a stand-in profile nothing writes | ✅ | ✅ `trainingbot.js` 24/24, `trainingcrash.js` 6/6 (SIGKILL during training: bag, spot, real profile back), `trainingpay.js` 8/8 (a campaign resolved during training waits, then pays the real character on leaving: database coins 20 → 358 = +338 paid, tier claimed; a trainee's swings hurt no mob) | ⏳ | `docs/TRAINING_GROUNDS.md` (§What comes due while training: campaign tier, order refund and item, mailbox, world boss/event, party, `/pay`, staff commands, discoveries); HD Warden texture; staff `/dasgal yard build` (open ground only, undo log) |
 | «Ангийн Мастер» (class armour level = per-class mastery 1–60, milestones 20/40/60, «Таван Ангийн Эзэн») | ✅ | ✅ `masterybot.js` 3/3 | ⏳ | `docs/CLASS_CHANGE.md` §Ангийн Мастер |
 | External audit 2026-10-13 (`docs/audits/2026-10-13-external/RESPONSE.md`): class window refuses drags; death EXP saved with the lock; dungeon clears/sites restored from the DB into a file that lost them; boss HP by the party that entered (≤ recommended) | ✅ | ✅ dbfix check (EXP in SQL 4 s after death; DB clear restored), featbot 16/16 (dungeon clear) | ⏳ | `ClassMenuDragTest`, `PlayerMarksMergeTest`, `BalanceRulesTest` |
 | Self-audit 2026-10-13 fixes: a lock that ends mid-trial stops the trial (BUG-DEATH-01); the class confirm page no longer calls the pick permanent (BUG-ONB-01); tutorial mask before its reward; one writer per state file; no idle quiver saves; ITs refuse a non-test DB | ✅ | ✅ `trial-lockend.js` 5/5, `permbot.js` 20/20 (staff commands refuse a player) | ⏳ | unit: `DeathTrialTest`, `ClassConfirmNoteTest`, `AtomicYamlOrderTest`, `TestDbGuardTest` |
-| «Тэнгэрийн сорил» fought with the class (soul hits/shoots/casts at its wolves, wolf HP = 5 × attack) | ✅ | ✅ `trialclassbot.js` 4/4 × 5 classes | ⏳ | `docs/DEATH_AND_RECOVERY.md` |
+| «Тэнгэрийн сорил» fought with the class (soul hits/shoots/casts at its wolves, wolf HP = 5 × attack) | ✅ | ✅ `trialclassbot.js` 4/4 × 5 classes | ⏳ | `docs/DEATH_AND_RECOVERY.md`; since 2026-10-13 the wolves spawn on the ground, never on a tree's crown (a forest's leaves had put them out of reach of the soul and its arrows); the trial bots count only spirit wolves (a natural pack lives at the test spot) |
 
 ## Not built (and said so)
 

@@ -359,6 +359,10 @@ public final class CityCommands implements Listener {
                 s.sendMessage(Messages.error("Онлайн өөр тоглогч сонгоно уу."));
                 return true;
             }
+            if (services.training != null && services.training.training(to.getUniqueId())) { // its stand-in is never written
+                s.sendMessage(Messages.error(to.getName() + " дасгалын талбайд байна — гарсны дараа илгээнэ үү."));
+                return true;
+            }
             if (amount <= 0 || amount > 1_000_000) {
                 s.sendMessage(Messages.error("Тоо 1–1000000 байна."));
                 return true;

@@ -229,6 +229,8 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
     /** Title when a player crosses into another wild region: name, description and level band. */
     private void announceRegion(Player p) {
         if (!p.getWorld().equals(Bukkit.getWorlds().get(0))) return; // regions exist in the overworld only
+        // a trainee discovers nothing (the yard can be set up anywhere): the mark would stay and its EXP go to the stand-in
+        if (services.training != null && services.training.training(p.getUniqueId())) return;
         // the whole built city is Kharkhorum: its streets reach far past the safe square, and no wild area's name or
         // discovery belongs inside its walls
         if (services.city().near(p.getWorld().getName(), p.getLocation().getBlockX(), p.getLocation().getBlockZ(), 8)) {

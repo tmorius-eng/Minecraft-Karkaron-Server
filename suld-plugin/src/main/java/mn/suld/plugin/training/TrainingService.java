@@ -118,6 +118,8 @@ public final class TrainingService implements Listener, TabExecutor {
         final mn.suld.api.training.TrainingStats stats = new mn.suld.api.training.TrainingStats();
         final BossBar bar = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.RED, BossBar.Overlay.PROGRESS);
         final long since = System.currentTimeMillis();
+        /** What came due meanwhile (a week's tier reward, a refund, kept things): paid once the real character is back. */
+        final List<java.util.function.Consumer<Player>> owed = new ArrayList<>();
 
         Session(PlayerProfile real, Location back, double share, int food, SkillService.Held held, SkillTreeService.Timers timers,
                 List<PotionEffect> effects) {
@@ -191,6 +193,23 @@ public final class TrainingService implements Listener, TabExecutor {
         return sessions.containsKey(id);
     }
 
+    /**
+     * Something that came due for {@code id} while they train ({@code what}: «Аяны шагнал», a refund, kept things) and
+     * would otherwise land on the stand-in, which is dropped at the end: it waits and is paid to their own character the
+     * moment training ends (leaving, quitting, the server stopping). False when they are not training: pay it now.
+     * {@code what} null: no line now (a delivery that may be empty tells its own result).
+     * In memory only, so a payout with a durable record of its own (a campaign tier, a refund, the mailbox) keeps that
+     * record until it is paid: a crash in the yard then pays it on the next join, as for any offline player.
+     */
+    public boolean defer(UUID id, String what, java.util.function.Consumer<Player> pay) {
+        Session s = sessions.get(id);
+        if (s == null) return false;
+        s.owed.add(pay);
+        Player p = Bukkit.getPlayer(id);
+        if (p != null && what != null) p.sendMessage(Messages.info("⏳ " + what + ": дасгалаас гарахад олгоно."));
+        return true;
+    }
+
     Session session(UUID id) {
         return sessions.get(id);
     }
@@ -217,6 +236,7 @@ public final class TrainingService implements Listener, TabExecutor {
         if (services.worldEvents() != null && services.worldEvents().active().map(r -> r.contributions().containsKey(id)).orElse(false)) {
             return "Ертөнцийн үйл явдлын үеэр боломжгүй.";
         }
+        if (services.worldBosses != null && services.worldBosses.fighting(id)) return "Дэлхийн боссын тулаан дуустал боломжгүй.";
         long since = services.classChange == null ? Long.MAX_VALUE : System.currentTimeMillis() - services.classChange.lastCombat(id);
         if (since < ClassChangeRules.COMBAT_MS) return "Тулаанаас гараад " + ClassChangeRules.format(ClassChangeRules.COMBAT_MS - since) + "-ын дараа.";
         return null;
@@ -405,8 +425,17 @@ public final class TrainingService implements Listener, TabExecutor {
             services.hud().teamChanged(p);
             services.hud().update(p, s.real);
         }
+        // what came due meanwhile, now to the real character (a payout that asks again finds no session: it pays)
+        for (java.util.function.Consumer<Player> pay : s.owed) {
+            try {
+                pay.accept(p);
+            } catch (RuntimeException ex) {
+                plugin.getLogger().log(java.util.logging.Level.WARNING, "[training] " + p.getName() + ": a payout kept for after training failed", ex);
+            }
+        }
         PlayerDataSaves.now(p);
         if (teleport) {
+            if (p.isInsideVehicle()) p.leaveVehicle(); // off the horse first (the horse service sends it away)
             p.teleport(s.back);
             p.setFallDistance(0);
         }
@@ -642,6 +671,18 @@ public final class TrainingService implements Listener, TabExecutor {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onTraineeHurt(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player p && sessions.containsKey(p.getUniqueId())) e.setCancelled(true);
+    }
+
+    /**
+     * A trainee's blows (a swing, an arrow, a spell, a passive) reach the training Wardens only: the borrowed level-60
+     * power never touches a mob, an event wolf or a boss outside, so it never earns a kill, a share or a ranking.
+     */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onTraineeStrikes(EntityDamageByEntityEvent e) {
+        if (TrainingYard.dummy(e.getEntity())) return;
+        Entity d = e.getDamager();
+        if (d instanceof Projectile pr && pr.getShooter() instanceof Entity shooter) d = shooter;
+        if (d instanceof Player p && sessions.containsKey(p.getUniqueId())) e.setCancelled(true);
     }
 
     /** Only trainees hit the Wardens (the numbers are theirs); everyone else is told how to start. */

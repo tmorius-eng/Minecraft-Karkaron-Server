@@ -520,7 +520,11 @@ public final class CampaignService {
         return new CampaignOutcome(run.cycleId(), run.definition(), success, total, run.definition().goal().target(), totals, tag, participants);
     }
 
-    /** Tier rewards: online players now; offline ones owed in the database and paid on their next login. */
+    /**
+     * Tier rewards: online players now; offline ones owed in the database and paid on their next login. A player in the
+     * training yard is owed too (the row is written first, so a crash there pays it on the next join) and is paid the
+     * moment training ends ({@link #pay}).
+     */
     private void payRewards(CampaignRun run, List<Contribution> totals, CampaignOutcome outcome) {
         CampaignDefinition def = run.definition();
         Set<UUID> clansPaid = new HashSet<>();
@@ -533,7 +537,9 @@ public final class CampaignService {
                 services.clans().contribute(c.player(), def.clanSuccessBonus());
             }
             Player p = Bukkit.getPlayer(c.player());
-            if (p != null && services.profiles().cached(c.player()).isPresent()) {
+            PlayerProfile held = services.profiles().cached(c.player()).orElse(null);
+            if (p != null && held != null) {
+                if (held.ephemeral()) repository.markReward(run.cycleId(), c.player(), tier, null); // owed until training ends
                 pay(p, run.cycleId(), def, tier, rank, outcome.success());
             } else {
                 repository.markReward(run.cycleId(), c.player(), tier, settings.rewardClaimDays() > 0 ? null : 0L);
@@ -544,6 +550,11 @@ public final class CampaignService {
     private void pay(Player p, String cycleId, CampaignDefinition def, int tier, int rank, boolean success) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
+        if (pr.ephemeral()) { // the training stand-in would take it and drop it: it waits for the real character (the row stays owed)
+            if (services.training != null) services.training.defer(p.getUniqueId(), "Аяны шагнал «" + def.name() + "»",
+                    q -> pay(q, cycleId, def, tier, rank, success));
+            return;
+        }
         CampaignDefinition.TierReward r = def.reward(tier);
         double mult = def.podiumMultiplier(rank) * (success ? 1.0 : 0.5); // a failed week still pays half for the effort
         long exp = services.boosts().apply(p.getUniqueId(), Math.round(r.exp() * mult));

@@ -578,10 +578,15 @@ public final class TradeService implements Listener, TabExecutor {
     public void onJoinMailbox(org.bukkit.event.player.PlayerJoinEvent e) {
         Player p = e.getPlayer();
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!p.isOnline()) return;
-            int n = mailbox.deliver(p);
-            if (n > 0) p.sendMessage(Messages.success("Таны нэр дээр хадгалагдсан " + n + " эд зүйлийг өглөө (арилжаа, Дарханы захиалга)."));
+            if (p.isOnline()) deliverMail(p);
         }, 40L);
+    }
+
+    private void deliverMail(Player p) {
+        // already in the training yard (a quick /dasgal after joining): the bag there is the kit; the kept things wait
+        if (services.training != null && services.training.defer(p.getUniqueId(), null, this::deliverMail)) return;
+        int n = mailbox.deliver(p);
+        if (n > 0) p.sendMessage(Messages.success("Таны нэр дээр хадгалагдсан " + n + " эд зүйлийг өглөө (арилжаа, Дарханы захиалга)."));
     }
 
     @EventHandler

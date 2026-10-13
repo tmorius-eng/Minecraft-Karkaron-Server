@@ -263,9 +263,9 @@ public final class HistoricSiteService {
                         .definition(prof.questState().questId()).map(mn.suld.api.quest.QuestDefinition::targetId).orElse(null))) {
                     services.quests().onRegion(pl, prof, p.site().id());
                 }
-                // a soul or a player without a class earns nothing here yet: the first visit waits until they can
-                // (EXP, chronicle, campaign credit), instead of being spent on a walk-through
-                if (prof == null || !prof.hasSelectedClass() || services.isSoul.test(pl.getUniqueId())) continue;
+                // a soul, a player without a class or one in the training yard (its stand-in is dropped) earns nothing
+                // here yet: the first visit waits until they can (EXP, chronicle, campaign credit), instead of being spent
+                if (prof == null || !prof.hasSelectedClass() || prof.ephemeral() || services.isSoul.test(pl.getUniqueId())) continue;
                 Set<String> seen = seen(pl);
                 if (seen.contains(p.site().id())) continue;
                 seen.add(p.site().id());

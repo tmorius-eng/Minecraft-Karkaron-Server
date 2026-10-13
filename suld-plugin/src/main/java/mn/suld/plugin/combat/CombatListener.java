@@ -449,6 +449,7 @@ public final class CombatListener implements Listener {
             Player m = Bukkit.getPlayer(id);
             if (m == null || m.isDead() || !m.getWorld().equals(at.getWorld()) || m.getLocation().distanceSquared(at) > r2) continue;
             if (services.isSoul.test(id)) continue;
+            if (services.training != null && services.training.training(id)) continue; // a stand-in in the yard takes no share
             out.add(m);
         }
         return out;

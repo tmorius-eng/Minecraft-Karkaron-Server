@@ -178,6 +178,10 @@ public final class CraftOrderService implements Listener {
         Long owed = refunds.get(p.getUniqueId());
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (owed == null || owed <= 0 || pr == null) return;
+        if (pr.ephemeral()) { // in the training yard: the refund stays owed on the board and is paid when they leave
+            if (services.training != null) services.training.defer(p.getUniqueId(), "Дарханы захиалгын буцаалт", this::settleRefund);
+            return;
+        }
         refunds.remove(p.getUniqueId());
         if (!save()) {
             refunds.put(p.getUniqueId(), owed);
@@ -234,6 +238,10 @@ public final class CraftOrderService implements Listener {
                 services.profiles().save(cp);
                 PlayerDataSaves.now(crafter); // the spent materials reach the player file at once
                 Player poster = Bukkit.getPlayer(o.poster());
+                // a poster in the training yard reads as level 60 there: the level they posted at stands for the real one,
+                // and the item waits in the mailbox (their bag there is the kit) until training ends
+                boolean training = poster != null && services.training != null && services.training.training(o.poster());
+                if (training) poster = null;
                 int level = poster != null ? services.profiles().cached(o.poster()).map(x -> x.progression().level()).orElse(o.posterLevel()) : o.posterLevel();
                 var catalog = services.itemService().catalog();
                 ItemDefinition def = catalog.require(r.resultId());
@@ -246,6 +254,10 @@ public final class CraftOrderService implements Listener {
                     poster.sendMessage(Messages.success("Таны захиалга биеллээ: " + crafter.getName() + " " + itemName + " урлав."));
                 } else {
                     mailbox.keep(o.poster(), List.of(services.itemService().stack(made, null, 1)), "craft order " + o.id());
+                    if (training) services.training.defer(o.poster(), "Дарханы захиалга биеллээ: " + crafter.getName() + " " + itemName + " урлав", q -> {
+                        int n = mailbox.deliver(q);
+                        if (n > 0) q.sendMessage(Messages.success("Таны захиалгын эд зүйл ирлээ: " + itemName + "."));
+                    });
                 }
                 services.audit().record(AuditEvent.of(crafter.getUniqueId().toString(), "craft.order_fill", o.id(),
                         r.id() + " for " + o.posterName() + " fee " + o.fee() + " item " + made.uuid()));
