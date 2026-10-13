@@ -19,7 +19,6 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Item;
@@ -64,6 +63,9 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
     static final long DURATION_MS = 5 * 60_000, COOLDOWN_MS = 2 * 60_000;
     public static final String TAG = "suld_class_trial";
     static final int ARENA_R = 9, BASE_X = -4096, SPACING = 96, Y = 100;
+    /** The practice dummies' SÜLD mob id (not content: no loot, EXP or credit) and design health. */
+    static final String DUMMY_MOB = "mob.sorilyn_dures";
+    static final double DUMMY_HEALTH = 10_000_000;
 
     private final Plugin plugin;
     private final SuldServices services;
@@ -168,13 +170,16 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
                 h.setImmovable(true);
                 h.setSilent(true);
                 h.addScoreboardTag(TAG);
+                // a SÜLD mob to the combat code (audit 2026-10-13): the SÜLD hit formula, spells, crits and passives reach it
+                // and its numbers show; an id outside the content gives no loot, EXP or credit
+                services.mobs().tagAs(h, DUMMY_MOB);
                 h.customName(Component.text("Сургуулилтын дүрс", NamedTextColor.GOLD, TextDecoration.BOLD));
                 h.setCustomNameVisible(true);
                 h.setDescription(Component.text("Цохиж туршаарай", NamedTextColor.WHITE));
-                var hp = h.getAttribute(Attribute.MAX_HEALTH);
-                if (hp != null) hp.setBaseValue(1000);
-                h.setHealth(1000);
             });
+            // design health far above any hit (MobService divides every hit by the rest): it never dies, every number is true
+            services.mobs().resize(d, DUMMY_HEALTH);
+            d.setHealth(mn.suld.plugin.mob.MobService.maxHealth(d));
             run.dummies.add(d.getUniqueId());
         }
         run.ticker = Bukkit.getScheduler().runTaskTimer(plugin, () -> tick(p.getUniqueId()), 20L, 20L);
@@ -231,7 +236,7 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
             return;
         }
         // keep the dummies whole and the player on the platform
-        for (UUID d : r.dummies) if (Bukkit.getEntity(d) instanceof LivingEntity le) le.setHealth(1000);
+        for (UUID d : r.dummies) if (Bukkit.getEntity(d) instanceof LivingEntity le) le.setHealth(mn.suld.plugin.mob.MobService.maxHealth(le));
         if (!p.getWorld().equals(r.center.getWorld()) || p.getLocation().distanceSquared(r.center) > (ARENA_R + 3) * (ARENA_R + 3)) p.teleport(r.center);
         HudService.notice(p, Component.text("Сорилт · " + ClassChangeRules.format(left) + " · хохирол " + Math.round(r.damage)
                 + " · DPS " + Math.round(r.damage / Math.max(1, (DURATION_MS - left) / 1000.0)), NamedTextColor.GOLD));
@@ -325,14 +330,20 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
         Player p = e.getDamager() instanceof Player pl ? pl
                 : e.getDamager() instanceof org.bukkit.entity.Projectile pj && pj.getShooter() instanceof Player pl2 ? pl2 : null;
         Run r = p == null ? null : runs.get(p.getUniqueId());
-        if (r != null && r.dummies.contains(e.getEntity().getUniqueId())) r.damage += e.getFinalDamage();
+        if (r != null && r.dummies.contains(e.getEntity().getUniqueId())) r.damage += mn.suld.plugin.mob.MobService.trueDamage(e);
     }
 
-    /** A dummy never dies (no drop, no EXP), and never takes a hit from anyone but its own player. */
-    @EventHandler(priority = EventPriority.HIGHEST)
+    /**
+     * A dummy never dies (no drop, no EXP): its design health is far above any hit (a hit is divided by the rest of it,
+     * MobService), and it is whole again a tick later. It used to zero any hit bigger than what was left: a strong spell
+     * then showed nothing.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDummyDamage(EntityDamageEvent e) {
         if (!e.getEntity().getScoreboardTags().contains(TAG) || !(e.getEntity() instanceof LivingEntity le)) return;
-        if (e.getFinalDamage() >= le.getHealth() - 1) e.setDamage(0);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (le.isValid()) le.setHealth(mn.suld.plugin.mob.MobService.maxHealth(le));
+        });
     }
 
     @EventHandler

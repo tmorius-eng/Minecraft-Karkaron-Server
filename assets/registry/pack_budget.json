@@ -29,7 +29,8 @@
     "resourcepack/assets/suld/textures/gui/sprites/tooltip/": "the suld:mongol tooltip nine-slice from the owner's painting, 4x HD",
     "resourcepack/assets/suld/textures/entity/skytree/": "the full-screen skill tree backdrop (display entity), one 512x288 panel",
     "resourcepack/assets/minecraft/textures/gui/container/": "the survival inventory (E) from the owner's mock-up: the vanilla 256 px sheet at 4x (1024 px), sharp at GUI scale 4",
-    "resourcepack/assets/minecraft/textures/gui/sprites/": "blank sprites hiding vanilla HUD/boss bars (gen_hud.blank_sprites), the inventory's slot placeholders and recipe button at 4x (gen_ui.gui_inventory), the default tooltip frame, widget buttons and slot highlight at 4x (gen_ui.tooltip_style, hub_kit)"
+    "resourcepack/assets/minecraft/textures/gui/sprites/": "blank sprites hiding vanilla HUD/boss bars (gen_hud.blank_sprites), the inventory's slot placeholders and recipe button at 4x (gen_ui.gui_inventory), the default tooltip frame, widget buttons and slot highlight at 4x (gen_ui.tooltip_style, hub_kit)",
+    "resourcepack/assets/minecraft/textures/entity/warden/": "the training grounds' HD Warden (tools/pack/hd_warden.py): the vanilla 128 px Warden sheets at 4x (512 px) with a voxel bevel, as the owner's HD reference"
   },
   "duplicates_allowed_under": [
     "resourcepack/assets/minecraft/textures/gui/sprites/",

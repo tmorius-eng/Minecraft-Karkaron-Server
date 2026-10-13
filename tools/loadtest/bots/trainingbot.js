@@ -30,8 +30,14 @@ const wardens = () => Object.values(b.entities).filter(e => e.name === 'warden')
 const centreWarden = () => wardens().sort((a, c) => Math.hypot(a.position.x - CENTRE.x, a.position.z - CENTRE.z) - Math.hypot(c.position.x - CENTRE.x, c.position.z - CENTRE.z))[0];
 // a damage number: a text display the server shows this player only, spawned right at the centre Warden (the yard's own
 // labels stand far from it); its text ends in the number
+// a component's plain text: its own text first, then its children (NBT keeps the keys in any order)
 const flat = (c) => { if (c == null) return ''; if (typeof c === 'string') return c; if (Array.isArray(c)) return c.map(flat).join('');
-  if (typeof c === 'object') { let s = ''; for (const [k, v] of Object.entries(c)) { if (k === 'text' || k === '') s += (typeof v === 'string' ? v : flat(v)); else if (k === 'extra' || k === 'value') s += flat(v); } return s; } return ''; };
+  if (typeof c !== 'object') return '';
+  if (c.type && 'value' in c && !('text' in c)) return flat(c.value);
+  let s = '';
+  for (const k of ['text', '']) if (k in c) s += typeof c[k] === 'string' ? c[k] : flat(c[k]);
+  if ('extra' in c) s += flat(c.extra);
+  return s; };
 const numbers = [];
 b.on('entitySpawn', (e) => {
   if (e.name !== 'text_display' || Math.hypot(e.position.x - CENTRE.x, e.position.z - CENTRE.z) > 3) return;
@@ -91,11 +97,12 @@ b.once('spawn', async () => {
     check(!!w1 && w1.id === (w0 && w0.id) && at0 && w1.position.distanceTo(at0) < 0.1, 'the Warden takes every hit and stays where it is (∞, no AI)',
       w1 ? w1.position.toString() : 'gone');
     // a spell: R-L-R Тэнгэрийн Цавчилт, explained after it lands
-    k = chat.length;
+    k = chat.length; numbers.length = 0;
     const t = centreWarden(); if (t) await b.lookAt(t.position.offset(0, 2.2, 0), true);
     await combo('RLR'); await sleep(3500);
     check(said(k, 'Тэнгэрийн Цавчилт III (R-L-R): Урд талын бүх дайснаа цавчина.') && said(k, 'хохирол'), 'a spell is explained in chat after it lands',
       lastWith(k, 'Тэнгэрийн Цавчилт').slice(0, 220));
+    check(numbers.some(n => /^Тэнгэрийн Цавчилт [\d ]+$/.test(n)), "the spell's number over the Warden carries its name", numbers.filter(n => /[А-я]/.test(n)).slice(0, 2).join(' | '));
     // passives: explained in chat the first time each fires (it may have been during the hits above)
     for (let i = 0; i < 4 && !said(entered, '⚡'); i++) await hitCentre(8, 600);
     check(said(entered, '⚡') && said(entered, 'Энд '), 'a passive is explained the first time it fires, with how often it fired here',

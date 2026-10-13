@@ -449,9 +449,12 @@ final class HudPanel implements Listener {
 
     private HudComposer.Target describe(LivingEntity le, double hp, double max, double chip) {
         // a training Warden (docs/TRAINING_GROUNDS.md): a level-60 target whose health never ends
-        if (le.getScoreboardTags().contains("suld_training_dummy")) {
-            String name = le.customName() == null ? "Дасгалын Warden" : PlainTextComponentSerializer.plainText().serialize(le.customName()).replace(" ∞", "");
-            return new HudComposer.Target(name, 60, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, HudComposer.Tier.ELITE, true);
+        if (le.getScoreboardTags().contains("suld_training_dummy") || le.getScoreboardTags().contains(mn.suld.plugin.clazz.ClassTrialService.TAG)) {
+            boolean warden = le.getScoreboardTags().contains("suld_training_dummy");
+            String name = le.customName() == null ? (warden ? "Дасгалын Warden" : "Сургуулилтын дүрс")
+                    : PlainTextComponentSerializer.plainText().serialize(le.customName()).replace(" ∞", "");
+            int lvl = warden ? 60 : 0; // the Academy's dummy has no level: the trial is about the class, not a fight
+            return new HudComposer.Target(name, lvl, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, HudComposer.Tier.ELITE, true);
         }
         String id = services.mobs() == null ? null : services.mobs().mobId(le).orElse(null);
         MobDefinition def = id == null ? null : SuldContent.mobFor(id);

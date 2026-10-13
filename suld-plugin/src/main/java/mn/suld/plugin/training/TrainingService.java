@@ -164,7 +164,8 @@ public final class TrainingService implements Listener, TabExecutor {
             coach.start();
             plugin.getLogger().info("[training] Дайчдын Дасгалын Талбай at " + c.getWorld().getName() + " " + c.getBlockX() + " " + c.getBlockY() + " " + c.getBlockZ());
         }, 40L);
-        mn.suld.plugin.combat.CombatFeedback.labelled = TrainingYard::dummy;
+        // the numbers over the training Wardens and the Academy's practice dummies name their source
+        mn.suld.plugin.combat.CombatFeedback.labelled = e -> TrainingYard.dummy(e) || e.getScoreboardTags().contains(mn.suld.plugin.clazz.ClassTrialService.TAG);
     }
 
     private Location configured() {
