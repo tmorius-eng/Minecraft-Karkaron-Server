@@ -16,6 +16,11 @@ class DeathTrialTest {
         assertEquals(DeathTrial.Outcome.TIMED_OUT, t.outcome(2, 180, false, false));
         assertEquals(DeathTrial.Outcome.FALLEN, t.outcome(3, 10, true, false), "falling beats the last kill");
         assertEquals(DeathTrial.Outcome.LEFT, t.outcome(0, 1, false, true));
+        // the lock ended mid-fight: stop at once, even on the tick the last wolf fell (the player is already alive)
+        assertEquals(DeathTrial.Outcome.LOCK_ENDED, t.outcome(1, 30, false, false, false));
+        assertEquals(DeathTrial.Outcome.LOCK_ENDED, t.outcome(3, 30, true, false, false));
+        assertEquals(DeathTrial.Outcome.LEFT, t.outcome(0, 1, false, true, false), "a quit is still a quit");
+        assertEquals(DeathTrial.Outcome.RUNNING, t.outcome(2, 100, false, false, true));
     }
 
     @Test

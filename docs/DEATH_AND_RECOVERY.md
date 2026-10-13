@@ -63,6 +63,10 @@ time to level 60 fell from ~200 to ~146 active hours (`SimulationTest`); the own
   still applies.
 * Time out, a bite that would take the soul to 0 HP, or logging out → the wolves vanish, the soul keeps its timer and
   may try again after **5 minutes**.
+* **The lock ends during the fight** (its timer runs out, or staff `/deathrevive`) → the trial stops at once
+  (`DeathTrial.Outcome.LOCK_ENDED`): the wolves vanish, no cooldown, «Сүнсний хугацаа дуусч та амилсан тул сорил
+  зогслоо.» Before this (audit 2026-10-13 BUG-DEATH-01) the wolves kept biting the now-living player, who could die
+  for real. `trial-lockend.js` 5/5.
 * The wolves are plain vanilla wolves tagged `suld_trial`: no drops, no EXP, no quest/task/campaign credit; they are
   not persistent and are removed on quit and on shutdown.
 

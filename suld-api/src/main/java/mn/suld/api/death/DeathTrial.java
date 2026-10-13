@@ -12,7 +12,8 @@ public record DeathTrial(int wolves, int seconds, int cooldownSeconds) {
 
     public static final DeathTrial DEFAULT = new DeathTrial(3, 180, 300);
 
-    public enum Outcome { RUNNING, WON, TIMED_OUT, FALLEN, LEFT }
+    /** {@code LOCK_ENDED}: the lock ran out (or staff revived) while the trial ran; the player is alive and the trial stops. */
+    public enum Outcome { RUNNING, WON, TIMED_OUT, FALLEN, LEFT, LOCK_ENDED }
 
     public DeathTrial {
         if (wolves < 1 || seconds < 10 || cooldownSeconds < 0) throw new IllegalArgumentException("bad trial");
@@ -20,7 +21,16 @@ public record DeathTrial(int wolves, int seconds, int cooldownSeconds) {
 
     /** The trial's state after {@code killed} wolves, {@code elapsedSeconds}, and whether the soul fell or left. */
     public Outcome outcome(int killed, double elapsedSeconds, boolean fallen, boolean left) {
+        return outcome(killed, elapsedSeconds, fallen, left, true);
+    }
+
+    /**
+     * As above, for a player who may no longer be a soul: once the lock is over (its timer, or staff) the trial
+     * ends at once, whatever the wolves did — a living player must never be bitten on by its spirit wolves.
+     */
+    public Outcome outcome(int killed, double elapsedSeconds, boolean fallen, boolean left, boolean stillSoul) {
         if (left) return Outcome.LEFT;
+        if (!stillSoul) return Outcome.LOCK_ENDED;
         if (fallen) return Outcome.FALLEN;
         if (killed >= wolves) return Outcome.WON;
         return elapsedSeconds >= seconds ? Outcome.TIMED_OUT : Outcome.RUNNING;

@@ -145,7 +145,7 @@ public final class DeathTrialService implements Listener, TabExecutor {
         if (r == null) return;
         Player p = Bukkit.getPlayer(id);
         double elapsed = (System.currentTimeMillis() - r.startedAt) / 1000.0;
-        DeathTrial.Outcome o = rules.outcome(r.killed, elapsed, r.fallen, p == null || !p.isOnline());
+        DeathTrial.Outcome o = rules.outcome(r.killed, elapsed, r.fallen, p == null || !p.isOnline(), deaths.isSoul(id));
         if (o == DeathTrial.Outcome.RUNNING) {
             if (p != null) mn.suld.plugin.hud.HudService.notice(p, Component.text("Сорил: " + r.killed + "/" + rules.wolves() + " · "
                     + Math.max(0, (int) (rules.seconds() - elapsed)) + " с", NamedTextColor.AQUA));
@@ -172,6 +172,11 @@ public final class DeathTrialService implements Listener, TabExecutor {
                 pl.getWorld().spawnParticle(Particle.END_ROD, pl.getLocation().add(0, 1, 0), 60, 0.5, 1, 0.5, 0.02);
                 pl.playSound(pl.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.2f);
             }));
+            return;
+        }
+        if (o == DeathTrial.Outcome.LOCK_ENDED) {
+            // the lock ran out during the fight: the wolves go, no cooldown, nothing lost
+            if (p != null) p.sendMessage(Messages.info("Сүнсний хугацаа дуусч та амилсан тул сорил зогслоо."));
             return;
         }
         lastFail.put(id, System.currentTimeMillis());
