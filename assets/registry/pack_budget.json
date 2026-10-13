@@ -30,7 +30,8 @@
     "resourcepack/assets/suld/textures/entity/skytree/": "the full-screen skill tree backdrop (display entity), one 512x288 panel",
     "resourcepack/assets/minecraft/textures/gui/container/": "the survival inventory (E) from the owner's mock-up: the vanilla 256 px sheet at 4x (1024 px), sharp at GUI scale 4",
     "resourcepack/assets/minecraft/textures/gui/sprites/": "blank sprites hiding vanilla HUD/boss bars (gen_hud.blank_sprites), the inventory's slot placeholders and recipe button at 4x (gen_ui.gui_inventory), the default tooltip frame, widget buttons and slot highlight at 4x (gen_ui.tooltip_style, hub_kit)",
-    "resourcepack/assets/minecraft/textures/entity/warden/": "the training grounds' HD Warden (tools/pack/hd_warden.py): the vanilla 128 px Warden sheets at 4x (512 px) with a voxel bevel, as the owner's HD reference"
+    "resourcepack/assets/minecraft/textures/entity/warden/": "the training grounds' HD Warden (tools/pack/hd_warden.py): the vanilla 128 px Warden sheets at 4x (512 px) with a voxel bevel, as the owner's HD reference",
+    "resourcepack/assets/suld/textures/entity/atlas/": "«Сүлдийн Атлас» (tools/map/atlas_art.py pack): the frame in front of the map wall and the parchment behind it, drawn at 128 px a block like the maps themselves (sizes multiples of 16 for the block atlas's mipmaps)"
   },
   "duplicates_allowed_under": [
     "resourcepack/assets/minecraft/textures/gui/sprites/",

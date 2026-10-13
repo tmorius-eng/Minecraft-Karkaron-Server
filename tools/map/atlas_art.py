@@ -13,6 +13,7 @@ Usage::
     python3 -I tools/map/atlas_art.py local <map.png> <pois.json> <out.png> --origin X0 Z0 --scale S [--player X Z YAW]
         [--pin NAME X Z] [--death X Z]
     python3 -I tools/map/atlas_art.py minimap <map.png> <out.png> --origin X0 Z0 --scale S --player X Z YAW [--info L1 L2]
+    python3 -I tools/map/atlas_art.py pack <repo root>      # the resource pack's atlas textures, models, item definitions
 
 ``world``: the whole world (an export at zoom 4); ``local``: a part of it (``--origin`` is the export's north-west block,
 ``--scale`` blocks per pixel). ``--pin`` / ``--death`` add an example player pin / latest-death marker (marked as
@@ -397,7 +398,8 @@ def plaque(text: str, w: int, h: int) -> Image.Image:
     dr.rounded_rectangle([3, 3, w - 4, h - 4], radius=8, fill=C["gold_dk"])
     dr.rounded_rectangle([6, 6, w - 7, h - 7], radius=6, fill=C["blue"])
     dr.rounded_rectangle([9, 9, w - 10, h - 10], radius=4, outline=C["gold"], width=2)
-    outlined(dr, (w // 2, h // 2 + 1), text, font(h // 2 - 2), C["gold_lt"], width=3)
+    if text:
+        outlined(dr, (w // 2, h // 2 + 1), text, font(h // 2 - 2), C["gold_lt"], width=3)
     k = ulzii(1)
     im.alpha_composite(k, (14, (h - k.height) // 2))
     im.alpha_composite(k, (w - 14 - k.width, (h - k.height) // 2))
@@ -436,7 +438,7 @@ class Atlas:
         im.alpha_composite(paper((self.frame - 2 * o, self.frame - 2 * o)), (x0, y0))
         return im
 
-    def frame_over(self, im: Image.Image, active_left: int = 0, title: str = "СҮЛДИЙН АТЛАС"):
+    def frame_over(self, im: Image.Image, active_left: int = 0, title: str = "СҮЛДИЙН АТЛАС", tabs: bool = True):
         dr = ImageDraw.Draw(im)
         fx, fy, F = self.fx, self.fy, self.frame
         # torn paper over the map's edge
@@ -475,7 +477,14 @@ class Atlas:
         for cx, cy in ((fx + b0 + self.BAND // 2, fy + b0 + self.BAND // 2), (fx + F - b0 - self.BAND // 2, fy + b0 + self.BAND // 2),
                        (fx + b0 + self.BAND // 2, fy + F - b0 - self.BAND // 2), (fx + F - b0 - self.BAND // 2, fy + F - b0 - self.BAND // 2)):
             im.alpha_composite(k, (cx - k.width // 2, cy - k.height // 2))
-        # tabs
+        if tabs:
+            self._tabs(im, active_left)
+        # title plaque
+        pl = plaque(title, 360, 54)
+        im.alpha_composite(pl, ((self.width - pl.width) // 2, fy - self.TOP + 2))
+
+    def _tabs(self, im: Image.Image, active_left: int):
+        fy, F, fx = self.fy, self.frame, self.fx
         n = len(LEFT_TABS)
         span = n * self.TAB_H + (n - 1) * self.TAB_GAP
         y = fy + (F - span) // 2
@@ -496,9 +505,6 @@ class Atlas:
             g = icon(ic)
             im.alpha_composite(g, (x + 6 + (self.TAB_W - 24 - g.width) // 2, y + (self.TAB_H - g.height) // 2))
             y += self.TAB_H + self.TAB_GAP
-        # title plaque
-        pl = plaque(title, 360, 54)
-        im.alpha_composite(pl, ((self.width - pl.width) // 2, fy - self.TOP + 2))
 
     def cartouche(self, im: Image.Image, text: str, scale_text: str = "", scale_px: int = 0):
         dr = ImageDraw.Draw(im)
@@ -581,17 +587,24 @@ def compose(atlas: Atlas, map_png: str, origin, scale: float, pois, *, player=No
         for p in pois:
             if p["kind"] == "ovoo" and p.get("region"):
                 byreg.setdefault(p["region"], []).append((p["x"], p["z"]))
-        rf = font(17)
-        for name, pts in byreg.items():
+        rf = font(15)
+        taken = []
+        # the biggest regions first: they have the most room
+        for name, pts in sorted(byreg.items(), key=lambda kv: -len(kv[1])):
             if name == "Хархорум":
                 continue
             cx = sum(x for x, _ in pts) / len(pts)
             cz = sum(z for _, z in pts) / len(pts)
             px, py = to_px(cx, cz)
-            if not inside(px, py, 40):
+            spaced = "\u2009".join(name.upper())
+            tw = dr.textlength(spaced, font=rf)
+            r = (px - tw / 2, py - 10, px + tw / 2, py + 10)
+            if r[0] < mx0 + 8 or r[2] > mx1 - 8 or r[1] < my0 + 8 or r[3] > my1 - 8:
                 continue
-            spaced = " ".join(name.upper())
-            dr.text((px, py), spaced, font=rf, fill=C["ink"] + (210,), anchor="mm", stroke_width=3, stroke_fill=C["parch"] + (170,))
+            if any(r[0] < b[2] and b[0] < r[2] and r[1] < b[3] and b[1] < r[3] for b in taken):
+                continue
+            taken.append(r)
+            dr.text((px, py), spaced, font=rf, fill=C["ink"] + (200,), anchor="mm", stroke_width=3, stroke_fill=C["parch"] + (160,))
     order = {"ovoo": 0, "site": 1, "relay": 2, "training": 3, "boss": 4, "dungeon": 5, "city": 6}
     boxes = []  # icons and labels already on the page: a label never covers one
     wanted = []
@@ -684,9 +697,126 @@ def minimap(map_png: str, origin, scale: float, player, info, out: str):
     im.save(out)
 
 
+# --------------------------------------------------------------------------------------------- pack assets
+
+#: Pixels per block of every atlas texture: a map frame is 128 map pixels a block, so the art is drawn at the same
+#: density and the frame, the tabs and the maps meet pixel for pixel.
+PX_PER_BLOCK = 128
+FRONT_W, FRONT_H = 784, 864           # multiples of 16, so the block atlas keeps its mipmap levels
+FRAME_X, FRAME_Y = 2, 30               # the frame square inside front.png (the title plaque above, the cartouche below)
+TAB_NAMES = [n for n, _ in LEFT_TABS] + [n for n, _ in RIGHT_TABS]
+
+
+def front_texture() -> Image.Image:
+    """The frame in front of the maps: wood, the «алхан хээ» band, the parchment margin, the torn edge over the maps'
+    rim, the corner knots, the title plaque and the cartouche; transparent where the maps show."""
+    a = Atlas(640)
+    im = Image.new("RGBA", (FRONT_W, FRONT_H), (0, 0, 0, 0))
+    # the frame is drawn at (fx, fy); move it to FRAME_X/Y on this texture
+    a.fx, a.fy = FRAME_X, FRAME_Y
+    inset = a.WOOD + a.BAND + a.MARGIN
+    a.map_box = (a.fx + inset, a.fy + inset, a.fx + inset + 640, a.fy + inset + 640)
+    o = a.WOOD + a.BAND
+    margin = paper((a.frame - 2 * o, a.frame - 2 * o), 4)
+    hole = Image.new("L", margin.size, 255)
+    ImageDraw.Draw(hole).rectangle([a.MARGIN, a.MARGIN, a.MARGIN + 639, a.MARGIN + 639], fill=0)
+    margin.putalpha(hole)
+    im.alpha_composite(margin, (a.fx + o, a.fy + o))
+    a.width = FRONT_W
+    a.frame_over(im, -1, "", tabs=False)  # the plaque's text is a text display, so it can change
+    ct = plaque_blank(400, 40)
+    im.alpha_composite(ct, ((FRONT_W - ct.width) // 2, a.fy + a.frame - 22))
+    return im
+
+
+def plaque_blank(w: int, h: int) -> Image.Image:
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(im)
+    dr.rounded_rectangle([0, 0, w - 1, h - 1], radius=10, fill=C["outline"])
+    dr.rounded_rectangle([3, 3, w - 4, h - 4], radius=8, fill=C["gold_dk"])
+    dr.rounded_rectangle([6, 6, w - 7, h - 7], radius=6, fill=C["blue"])
+    dr.rounded_rectangle([9, 9, w - 10, h - 10], radius=4, outline=C["gold"], width=2)
+    k = ulzii(1)
+    im.alpha_composite(k, (14, (h - k.height) // 2))
+    im.alpha_composite(k, (w - 14 - k.width, (h - k.height) // 2))
+    return im
+
+
+def tab_texture(name: str, state: str, left_side: bool) -> Image.Image:
+    """A 64 x 48 tab: blue (normal), lighter (hover) or red (on), with its icon."""
+    p = pennant(Atlas.TAB_W, Atlas.TAB_H, state == "on", left_side)
+    if state == "hover":
+        px = p.load()
+        for y in range(p.height):
+            for x in range(p.width):
+                r, g, b, al = px[x, y]
+                if al and (r, g, b) == C["blue"]:
+                    px[x, y] = C["blue_lt"] + (al,)
+    g = icon(name)
+    ox = 18 if left_side else 6
+    p.alpha_composite(g, (ox + (Atlas.TAB_W - 24 - g.width) // 2, (Atlas.TAB_H - g.height) // 2))
+    return p
+
+
+MARKERS = ["city", "relay", "dungeon", "ovoo", "site", "boss", "training", "pin", "death", "player"]
+
+
+def marker_texture(name: str) -> Image.Image:
+    """A marker icon on a 32 x 32 canvas (16 art px at 2x), centred, so every marker quad centres the same way."""
+    im = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    if name == "player":
+        player_arrow(ImageDraw.Draw(im), 16, 16, 180, 13)  # pointing up (north); the display turns it
+        return im
+    g = icon(name, 2)
+    if g.width > 32 or g.height > 32:
+        g = icon(name, 1).resize((g.width // 2 * 2 // 2, g.height // 2), Image.NEAREST)
+    im.alpha_composite(g, ((32 - g.width) // 2, (32 - g.height) // 2))
+    return im
+
+
+def pack(root: str) -> list[str]:
+    """Writes the atlas's textures, models and item definitions into the resource pack at ``root``."""
+    import os
+    rp = os.path.join(root, "resourcepack", "assets")
+    tex = os.path.join(rp, "suld", "textures", "entity", "atlas")
+    mod = os.path.join(rp, "suld", "models", "entity", "atlas")
+    itm = os.path.join(rp, "suld", "items", "entity", "atlas")
+    for d in (tex, mod, itm):
+        os.makedirs(d, exist_ok=True)
+    quads = {"back": paper((640, 640), 3), "front": front_texture()}
+    for name in MARKERS:
+        quads["marker_" + name] = marker_texture(name)
+    for name in TAB_NAMES:
+        left = name in [n for n, _ in LEFT_TABS]
+        for state in ("", "_hover", "_on"):
+            quads[f"tab_{name}{state}"] = tab_texture(name, state.strip("_") or "normal", left)
+    written = []
+    for name, img in quads.items():
+        img.save(os.path.join(tex, name + ".png"), optimize=True)
+        model = {"textures": {"t": "suld:entity/atlas/" + name, "particle": "suld:entity/atlas/" + name},
+                 "elements": [{"from": [0, 0, 8], "to": [16, 16, 8], "shade": False,
+                               "faces": {"north": {"uv": [0, 0, 16, 16], "texture": "#t"},
+                                         "south": {"uv": [0, 0, 16, 16], "texture": "#t"}}}]}
+        with open(os.path.join(mod, name + ".json"), "w") as fh:
+            json.dump(model, fh, separators=(",", ":"))
+        with open(os.path.join(itm, name + ".json"), "w") as fh:
+            json.dump({"model": {"type": "minecraft:model", "model": "suld:entity/atlas/" + name}}, fh, separators=(",", ":"))
+        written.append(name)
+    for a in ("blocks", "items"):
+        path = os.path.join(rp, "minecraft", "atlases", a + ".json")
+        data = json.load(open(path)) if os.path.exists(path) else {"sources": []}
+        src = {"type": "directory", "source": "entity/atlas", "prefix": "entity/atlas/"}
+        if src not in data["sources"]:
+            data["sources"].append(src)
+            with open(path, "w") as fh:
+                json.dump(data, fh, indent=1)
+                fh.write("\n")
+    return written
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=("world", "local", "minimap"))
+    ap.add_argument("mode", choices=("world", "local", "minimap", "pack"))
     ap.add_argument("map")
     ap.add_argument("rest", nargs="*")
     ap.add_argument("--origin", nargs=2, type=float)
@@ -698,6 +828,10 @@ def main():
     ap.add_argument("--info", nargs="*", default=[])
     ap.add_argument("--title", default="СҮЛДИЙН АТЛАС")
     a = ap.parse_args()
+    if a.mode == "pack":
+        names = pack(a.map)
+        print(f"atlas pack assets: {len(names)} quads ({len(MARKERS)} markers, {len(TAB_NAMES)} tabs x 3)")
+        return
     if a.mode == "minimap":
         minimap(a.map, a.origin, a.scale, a.player, a.info, a.rest[0])
         return

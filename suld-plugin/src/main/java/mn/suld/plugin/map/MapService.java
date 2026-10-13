@@ -81,7 +81,9 @@ import java.util.regex.Pattern;
  *   <li>the chunks around every player once a minute (changes no event reports, e.g. a city build);</li>
  *   <li>the scan of the world already on disk: the region files' chunk tables name every chunk that exists; each one
  *       not on the map is loaded without generating anything, read and let go, throttled by the tick time like the
- *       pre-generator. It starts by itself a minute after start (and finishes at once when there is nothing new).</li>
+ *       pre-generator. It starts by itself a minute after start (and finishes at once when there is nothing new). A
+ *       chunk that never finished generating is remembered and not asked again (it is read when it finishes, as it
+ *       loads); {@code scan full} asks again for everything.</li>
  * </ul>
  */
 public final class MapService implements Listener {
@@ -107,6 +109,11 @@ public final class MapService implements Listener {
     private final ArrayDeque<Long> queue = new ArrayDeque<>();
     /** Loaded chunks whose surface changed since they were last read. */
     private final Set<Long> dirty = new HashSet<>();
+    /** Queued chunks the map holds loaded with a plugin ticket until it has read them (a pre-generator lets go at once). */
+    private final Set<Long> held = new HashSet<>();
+    /** Main-thread time spent on snapshots in tick {@link #budgetTick}. */
+    private long budgetUsed;
+    private int budgetTick = -1;
     /** Snapshots handed to the workers and not yet stored (any thread). */
     private final AtomicInteger backlog = new AtomicInteger();
     private BukkitTask ticker;
@@ -263,6 +270,8 @@ public final class MapService implements Listener {
         ticker = null;
         scan = null;
         HandlerList.unregisterAll(this);
+        for (long k : held) world.removePluginChunkTicket(cx(k), cz(k), plugin);
+        held.clear();
         workers.shutdown();
         try {
             if (!workers.awaitTermination(5, TimeUnit.SECONDS)) log.warning("[map] column work still running at shutdown");
@@ -281,16 +290,29 @@ public final class MapService implements Listener {
 
     // ------------------------------------------------------------------ the tick
 
+    /** True while this tick's snapshot budget is not spent. */
+    private boolean budgetLeft() {
+        int now = Bukkit.getCurrentTick();
+        if (now != budgetTick) {
+            budgetTick = now;
+            budgetUsed = 0;
+        }
+        return budgetUsed < budgetNanos && backlog.get() < maxBacklog;
+    }
+
     private void tick() {
         ticks++;
-        long t0 = System.nanoTime();
-        while (!queue.isEmpty() && backlog.get() < maxBacklog && System.nanoTime() - t0 < budgetNanos) {
+        while (!queue.isEmpty() && budgetLeft()) {
             long k = queue.poll();
             Boolean force = queued.remove(k);
             int cx = cx(k), cz = cz(k);
-            if (!world.isChunkLoaded(cx, cz)) continue; // read on its next load if it is still not on the map
-            if (!Boolean.TRUE.equals(force) && !dirty.contains(k) && store.present(cx, cz)) continue; // the scan was faster
-            snapshot(world.getChunkAt(cx, cz));
+            try {
+                if (!world.isChunkLoaded(cx, cz)) continue; // read on its next load if it is still not on the map
+                if (!Boolean.TRUE.equals(force) && !dirty.contains(k) && store.present(cx, cz)) continue; // the scan was faster
+                snapshot(world.getChunkAt(cx, cz));
+            } finally {
+                if (held.remove(k)) world.removePluginChunkTicket(cx, cz, plugin);
+            }
         }
         if (scan != null) scanTick();
         if (ticks % 100 == 0) requeueDirty();
@@ -311,11 +333,14 @@ public final class MapService implements Listener {
         }
     }
 
-    /** Takes the chunk's snapshot (main thread) and works its columns out on a worker. */
+    /** Takes the chunk's snapshot (main thread, counted against the tick's budget) and works its columns out on a worker. */
     private void snapshot(Chunk c) {
         int cx = c.getX(), cz = c.getZ();
         dirty.remove(key(cx, cz));
+        budgetLeft(); // starts this tick's count
+        long t0 = System.nanoTime();
         ChunkSnapshot s = c.getChunkSnapshot(true, natural != null, false, false);
+        budgetUsed += System.nanoTime() - t0;
         snapshots++;
         backlog.incrementAndGet();
         try {
@@ -379,7 +404,17 @@ public final class MapService implements Listener {
         if (!inside(cx, cz)) return;
         long k = key(cx, cz);
         if (scan != null && scan.requested.contains(k)) return; // the scan reads it when its load completes
-        if (e.isNewChunk() || !store.present(cx, cz)) enqueue(k, e.isNewChunk());
+        if (!e.isNewChunk() && store.present(cx, cz)) return;
+        if (budgetLeft()) {
+            snapshot(c); // now, while it is surely loaded
+            return;
+        }
+        // later: hold it loaded until then (a pre-generator or a teleport lets hundreds go within the tick)
+        if (!held.contains(k) && queued.get(k) == null) {
+            c.addPluginChunkTicket(plugin);
+            held.add(k);
+        }
+        enqueue(k, e.isNewChunk());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -574,7 +609,7 @@ public final class MapService implements Listener {
                 if ((header[o] | header[o + 1] | header[o + 2] | header[o + 3]) == 0) continue; // no such chunk
                 int cx = r.rx() * 32 + (i & 31), cz = r.rz() * 32 + (i >> 5);
                 if (cx < b[0] || cx > b[2] || cz < b[1] || cz > b[3]) continue;
-                if (!full && store.present(cx, cz)) continue;
+                if (!full && (store.present(cx, cz) || store.unfinished(cx, cz))) continue;
                 out.add(key(cx, cz));
             }
         }
@@ -609,7 +644,7 @@ public final class MapService implements Listener {
         for (int sent = 0; sent < perTick && s.inFlight < s.allowance && s.next < s.chunks.length; ) {
             long k = s.chunks[s.next++];
             int cx = cx(k), cz = cz(k);
-            if (!s.full && store.present(cx, cz)) {
+            if (!s.full && (store.present(cx, cz) || store.unfinished(cx, cz))) {
                 s.skipped++;
                 continue;
             }
@@ -647,8 +682,9 @@ public final class MapService implements Listener {
             if (s.failed <= 5) log.warning("[map] chunk " + cx(k) + "," + cz(k) + " not loaded: " + err.getMessage());
             return;
         }
-        if (chunk == null) { // on disk but never finished generating: nothing to draw
+        if (chunk == null) { // on disk but never finished generating: nothing to draw, and not asked again by later scans
             s.empty++;
+            store.markUnfinished(cx(k), cz(k));
             return;
         }
         if (ready) snapshot(chunk);
@@ -751,7 +787,7 @@ public final class MapService implements Listener {
                 + (ready ? "" : " · бэлтгэж байна"));
         out.add(String.format(Locale.ROOT, "Зурагт буй chunk: %d / %d (%.1f%%) · region файл %d, санах ойд %d", present, total,
                 100.0 * present / Math.max(1, total), store.regionsOnDisk().size(), store.regionsInMemory()));
-        out.add("Дараалал " + queue.size() + " · өөрчлөгдсөн " + dirty.size() + " · тооцоолж буй " + backlog.get()
+        out.add("Дараалал " + queue.size() + " (барьсан " + held.size() + ") · өөрчлөгдсөн " + dirty.size() + " · тооцоолж буй " + backlog.get()
                 + " · tile " + tiles.cachedCount() + " · нийт snapshot " + snapshots);
         Scan s = scan;
         if (s == null) {

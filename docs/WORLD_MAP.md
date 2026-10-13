@@ -1,7 +1,7 @@
 # «Сүлдийн Атлас» — the world map
 
-**Status (2026-10-13):** the terrain pipeline (part A) is built and running on the dev server; the atlas screen (B),
-pins, waypoints and the corner minimap (C) are next. Owner's rules for this feature: **real data only** — the map
+**Status (2026-10-13):** the terrain pipeline (part A) and the atlas screen `/map` (part B) are built and running on
+the dev server; pins, waypoints and the corner minimap (C) are next. Owner's rules for this feature: **real data only** — the map
 draws the blocks the server has really generated, never a guess from the world generator; Mongolian look; the whole
 world visible with `/map`; pins and waypoints; a minimap at the top left when `/map` is closed.
 
@@ -102,14 +102,37 @@ red-and-gold «өлзий» knots in the corners, pennant tabs, the title plaque
 over a real export and the real places: `world` (the whole world at zoom 4), `local` (a part), `minimap` (the corner
 map at its real size). The same pieces become the pack's atlas textures in part B.
 
-## Part B — the atlas screen (next)
+## Part B — the atlas screen `/map` (built)
 
-`/map` opens the atlas in the sky-window engine the menu and the skill tree use (`MenuSky`): the player is seated on
-a private stage; the map is a wall of invisible fixed item frames holding filled maps (one pooled `MapView` per
-frame, a per-player renderer paints the tile), the frame art is a display model behind it, markers and labels are
-text displays in front. The crosshair is the cursor (the coordinates under it in the cartouche, a tooltip on a
-marker), the wheel zooms (whole world … 1 block per pixel), W/A/S/D pan, left tabs filter the kinds of places, right
-tabs: whole world, centre on me, zoom, place a pin. Shift closes.
+`/map` (aliases `/atlas`, `/gazar`, `/газар`; again `/map` or Shift closes) opens the atlas in the sky-window engine
+of the menu and the skill tree (`AtlasSky`): the player is seated on a private stage 144 blocks over the world's top
+and looks at a wall of **5 × 5 maps** — invisible, fixed glow item frames holding filled maps. The frame art is
+drawn around them by display quads from the pack, places and labels stand in front of them; everything on the stage
+is visible to its owner only and is never saved. A crash while the atlas is open puts the player back where they
+stood on the next login.
+
+* **Maps.** 25 map views are created once and kept for good (`plugins/SULD/map/views.yml`; marked by a centre no
+  real map has, so a stale id is never mistaken for a player's map). Each view's renderer is per player, so every
+  open atlas shows its own place in the same 25 ids. A frame is cut from up to four world tiles (`AtlasView.copy`)
+  and sent at once (`Player#sendMap`); a tile that changes while the atlas is open (a chunk read) redraws it within
+  a second.
+* **View.** Opens centred on the player at zoom 2 (4 blocks a pixel, 2 560 blocks across); the wheel zooms toward the
+  cursor from 1 block a pixel to the whole world (16 blocks a pixel: the 10 001-block square fits the wall), W/A/S/D
+  pan a quarter of the wall (again every 6 ticks while held). The view never leaves the world square.
+* **Cursor.** The crosshair: the cartouche reads the block under it — `x · z`, the area and its level band
+  (`Хархорум` in the city) — and a place under it shows a tooltip (kind, area, distance, coordinates). A left click on
+  a place points the compass at it.
+* **Places.** The real places of part A as marker quads (ger, cave, cairn, stele, horned skull, banner, crossed
+  swords) with labels where they fit (city, dungeons and bosses always; sites up to zoom 2; ovoos, relays and the
+  training yard up to zoom 1); the player's own arrow points the way they faced.
+* **Tabs.** Left: Бүгд, Хот+өртөө, Агуй, Овоо, Түүхэн газар, Аварга дайсан, Миний тэмдэг (which places show). Right:
+  Бүх ертөнц, Миний байр, Ойртуулах, Холдуулах, Тэмдэг тавих (part C).
+* **Where it does not open:** outside the overworld, in a dungeon run, within 8 s of a fight, falling or riding.
+* **Art:** `tools/map/atlas_art.py pack` writes the textures at 128 px a block like the maps (sizes multiples of 16),
+  the models and the item definitions (`suld:entity/atlas/*`).
+* **Bot:** `tools/loadtest/bots/atlasbot.js` (in `regress.sh`): the stage, the 25 frames and their map packets with
+  real pixels, pan, zoom, the «Агуй» filter, Shift; 10 checks pass on the dev server (2026-10-13). The look on a real
+  client (frame alignment, text size at each GUI scale) is still the owner's check.
 
 ## Part C — pins, waypoints, minimap (next)
 

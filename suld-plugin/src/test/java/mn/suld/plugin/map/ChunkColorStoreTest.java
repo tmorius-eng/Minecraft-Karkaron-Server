@@ -81,6 +81,24 @@ class ChunkColorStoreTest {
     }
 
     @Test
+    void unfinishedChunksAreRememberedUntilTheyAreStored() throws Exception {
+        ChunkColorStore s = new ChunkColorStore(dir, log, io, 4);
+        io.submit(() -> s.presenceSquare(-64, -64, 128)).get();
+        s.markUnfinished(5, 5);
+        assertTrue(s.unfinished(5, 5));
+        s.flush().get(10, TimeUnit.SECONDS);
+        ChunkColorStore again = new ChunkColorStore(dir, log, io, 4);
+        io.submit(() -> again.presenceSquare(-64, -64, 128)).get();
+        assertTrue(again.unfinished(5, 5), "kept across a restart");
+        again.put(5, 5, chunk(MapColors.GRASS, 70));
+        again.flush().get(10, TimeUnit.SECONDS);
+        assertFalse(again.unfinished(5, 5), "a stored chunk is finished");
+        assertTrue(again.present(5, 5));
+        again.markUnfinished(5, 5);
+        assertFalse(again.unfinished(5, 5), "a chunk on the map is never marked unfinished");
+    }
+
+    @Test
     void aStoreOfAnotherFormatStartsOver() throws Exception {
         ChunkColorStore s = new ChunkColorStore(dir, log, io, 4);
         assertFalse(io.submit(() -> s.format("columns-2 natural-1")).get(), "an empty folder has nothing to delete");

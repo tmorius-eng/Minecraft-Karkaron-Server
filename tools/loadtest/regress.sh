@@ -15,6 +15,7 @@ mkdir -p "$OUT" || { echo "cannot create $OUT" >&2; exit 2; }
 RUNS=(
   "hubbot|$CTL $LOG $PORT"
   "skymenubot|$CTL $PORT"
+  "atlasbot|$CTL $PORT"
   "dodgehudbot|$CTL $PORT"
   "packmodesbot:nil|$CTL nil $PORT"
   "packmodesbot:foreign|$CTL foreign $PORT"

@@ -164,6 +164,11 @@
    "type": "directory",
    "source": "prop",
    "prefix": "prop/"
+  },
+  {
+   "type": "directory",
+   "source": "entity/atlas",
+   "prefix": "entity/atlas/"
   }
  ]
 }

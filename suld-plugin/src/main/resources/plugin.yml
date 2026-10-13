@@ -186,6 +186,10 @@ commands:
     description: The travel page (relays, historic sites, the nearest ovoo); trips start at a relay post.
     usage: /travel
     aliases: [ayalal, аялал]
+  map:
+    description: «Сүлдийн Атлас», the world map of the land as it really is (the wheel zooms, W A S D pan, Shift closes).
+    usage: /map
+    aliases: [atlas, gazar, газар]
   settings:
     description: Your settings page (tracker, sidebar, tips, HUD notices, menu sounds, chat heads, invites).
     usage: /settings

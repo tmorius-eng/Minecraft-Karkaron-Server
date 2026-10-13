@@ -37,6 +37,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.death.SoulBeaconService soulBeacons;
     private mn.suld.plugin.gui.SkillSky skillSky;
     private mn.suld.plugin.gui.MenuSky menuSky;
+    private mn.suld.plugin.map.AtlasSky atlas;
     private mn.suld.plugin.training.TrainingService training;
     private mn.suld.plugin.quest.QuestTracker tracker;
     private mn.suld.plugin.dungeon.DungeonGuide dungeonGuide;
@@ -331,6 +332,7 @@ public final class SuldPlugin extends JavaPlugin {
         training.closeWindows = pl -> {
             if (trainingMenuSky.isOpen(pl)) trainingMenuSky.close(pl);
             if (trainingSkillSky.isOpen(pl)) trainingSkillSky.close(pl);
+            if (atlas != null && atlas.isOpen(pl)) atlas.close(pl);
         };
         services.training = training;
         getServer().getPluginManager().registerEvents(training, this);
@@ -452,6 +454,17 @@ public final class SuldPlugin extends JavaPlugin {
             mn.suld.plugin.dungeon.DungeonHalls mapHalls = halls;
             services.map.pois = () -> mn.suld.plugin.map.MapPois.collect(services, worldBuild, mapHalls, getConfig());
             services.map.start();
+            // /map: the atlas screen in the sky window engine (docs/WORLD_MAP.md)
+            atlas = new mn.suld.plugin.map.AtlasSky(this, services, services.map);
+            mn.suld.plugin.gui.MenuSky atlasMenuSky = menuSky;
+            mn.suld.plugin.gui.SkillSky atlasSkillSky = skillSky;
+            atlas.closeOthers = pl -> {
+                if (atlasMenuSky.isOpen(pl)) atlasMenuSky.close(pl);
+                if (atlasSkillSky.isOpen(pl)) atlasSkillSky.close(pl);
+            };
+            getServer().getPluginManager().registerEvents(atlas, this);
+            atlas.start();
+            registerTab("map", atlas);
         }
         mn.suld.plugin.worldbuild.SuldWorldCommand worldCommand = new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls);
         registerTab("suldworld", worldCommand);
@@ -550,6 +563,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (pregen != null) {
             pregen.stop();
         }
+        if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
         if (services != null && services.map != null) services.map.shutdown(); // the map's regions to disk
         if (worldBuild != null) {
             worldBuild.stop();

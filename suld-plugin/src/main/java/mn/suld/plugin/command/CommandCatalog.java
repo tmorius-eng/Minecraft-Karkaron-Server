@@ -67,6 +67,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/shop", "Хангамж, олз зарах", null),
             e(Group.GAME, "/rankup", "Цол ахиулах", null),
             e(Group.GAME, "/travel", "Аялал: өртөө (өртөөнөөс л явна), түүхэн газрууд, овоо", null),
+            e(Group.GAME, "/map", "Сүлдийн Атлас: бодит ертөнцийн газрын зураг (дугуй: томруулах, W A S D, Shift: хаах)", null),
             e(Group.GAME, "/dasgal [анги] [a|b]", "Дайчдын Дасгалын Талбай: дурын ангийг 60-р түвшин, дээд хуяг, зэвсэгтэй Warden дээр турших (юу ч үлдэхгүй)", null),
             e(Group.GAME, "/classtrial <анги>|leave", "Ангийн Сорилт: өөр ангийг 5 минут дамми дээр турших (юу ч үлдэхгүй)", null),
             e(Group.GAME, "/trial", "Тэнгэрийн сорил: сүнс 3 сүнсний чоныг 3 минутад дийлбэл амилна (эсвэл овооны цацал)", null),

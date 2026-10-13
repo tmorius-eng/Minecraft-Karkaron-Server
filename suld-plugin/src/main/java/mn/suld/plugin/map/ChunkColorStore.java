@@ -53,6 +53,8 @@ final class ChunkColorStore {
     private final Map<Long, List<Pending>> pending = new HashMap<>();
     /** Which chunks of the presence square are stored (chunk index in the square). Guarded by {@code this}. */
     private BitSet present = new BitSet();
+    /** Chunks on disk that never finished generating (nothing to draw): the scan does not ask again. Guarded by {@code this}. */
+    private BitSet unfinished = new BitSet();
     private int squareMinCx, squareMinCz, squareSide;
 
     private record Pending(int cx, int cz, int[] cols) {
@@ -106,7 +108,7 @@ final class ChunkColorStore {
                 try (var list = Files.list(dir)) {
                     for (Path p : (Iterable<Path>) list::iterator) {
                         String n = p.getFileName().toString();
-                        if ((n.startsWith("r.") && (n.endsWith(".bin") || n.endsWith(".tmp"))) || n.startsWith("present.bin")) {
+                        if ((n.startsWith("r.") && (n.endsWith(".bin") || n.endsWith(".tmp"))) || n.startsWith("present.bin") || n.startsWith("unfinished.bin")) {
                             Files.deleteIfExists(p);
                             had = true;
                         }
@@ -130,18 +132,35 @@ final class ChunkColorStore {
         squareMinCx = minCx;
         squareMinCz = minCz;
         squareSide = side;
-        present = new BitSet(side * side);
-        Path f = dir.resolve("present.bin");
-        if (!Files.exists(f)) return;
+        present = readBits("present.bin", minCx, minCz, side);
+        unfinished = readBits("unfinished.bin", minCx, minCz, side);
+    }
+
+    /** A bit file of this square; empty when missing, unreadable or of another square (the region files stay valid). */
+    private BitSet readBits(String name, int minCx, int minCz, int side) {
+        Path f = dir.resolve(name);
+        if (!Files.exists(f)) return new BitSet(side * side);
         try (DataInputStream in = new DataInputStream(new BufferedInputStream(Files.newInputStream(f)))) {
             int mx = in.readInt(), mz = in.readInt(), s = in.readInt(), n = in.readInt();
-            if (mx != minCx || mz != minCz || s != side) return; // another square: start over (the region files stay valid)
+            if (mx != minCx || mz != minCz || s != side) return new BitSet(side * side);
             byte[] b = new byte[n];
             in.readFully(b);
-            present = BitSet.valueOf(b);
+            return BitSet.valueOf(b);
         } catch (IOException e) {
-            log.log(Level.WARNING, "[map] present.bin not read, starting over", e);
+            log.log(Level.WARNING, "[map] " + name + " not read, starting over", e);
+            return new BitSet(side * side);
         }
+    }
+
+    /** Chunk (cx, cz) is on disk but never finished generating. */
+    synchronized void markUnfinished(int cx, int cz) {
+        int i = squareIndex(cx, cz);
+        if (i >= 0 && !present.get(i)) unfinished.set(i);
+    }
+
+    synchronized boolean unfinished(int cx, int cz) {
+        int i = squareIndex(cx, cz);
+        return i >= 0 && unfinished.get(i);
     }
 
     private int squareIndex(int cx, int cz) {
@@ -253,7 +272,10 @@ final class ChunkColorStore {
     private void apply(Region r, int cx, int cz, int[] cols) {
         System.arraycopy(cols, 0, r.cols, index(cx, cz, 0, 0), CHUNK_COLS);
         int i = squareIndex(cx, cz);
-        if (i >= 0) present.set(i);
+        if (i >= 0) {
+            present.set(i);
+            unfinished.clear(i);
+        }
     }
 
     /** Caller holds the lock. Writes evicted dirty regions on the io thread (before any later read of them). */
@@ -276,7 +298,7 @@ final class ChunkColorStore {
     CompletableFuture<Void> flush() {
         return CompletableFuture.runAsync(() -> {
             List<Map.Entry<Long, int[]>> dirty = new ArrayList<>();
-            byte[] bits;
+            byte[] bits, open;
             int mx, mz, side;
             synchronized (this) {
                 for (Map.Entry<Long, Region> e : regions.entrySet()) {
@@ -285,13 +307,17 @@ final class ChunkColorStore {
                     dirty.add(Map.entry(e.getKey(), e.getValue().cols));
                 }
                 bits = present.toByteArray();
+                open = unfinished.toByteArray();
                 mx = squareMinCx;
                 mz = squareMinCz;
                 side = squareSide;
             }
             // a column written while its region is copied out is either old or new, both real; the region is dirty again
             for (Map.Entry<Long, int[]> e : dirty) write(e.getKey(), e.getValue());
-            if (side > 0) writePresence(mx, mz, side, bits);
+            if (side > 0) {
+                writeBits("present.bin", mx, mz, side, bits);
+                writeBits("unfinished.bin", mx, mz, side, open);
+            }
         }, io);
     }
 
@@ -310,8 +336,8 @@ final class ChunkColorStore {
         }
     }
 
-    private void writePresence(int mx, int mz, int side, byte[] bits) {
-        Path f = dir.resolve("present.bin"), tmp = dir.resolve("present.bin.tmp");
+    private void writeBits(String name, int mx, int mz, int side, byte[] bits) {
+        Path f = dir.resolve(name), tmp = dir.resolve(name + ".tmp");
         try {
             Files.createDirectories(dir);
             ByteBuffer b = ByteBuffer.allocate(16 + bits.length);
@@ -319,7 +345,7 @@ final class ChunkColorStore {
             Files.write(tmp, b.array());
             Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {
-            log.log(Level.WARNING, "[map] present.bin not written", e);
+            log.log(Level.WARNING, "[map] " + name + " not written", e);
         }
     }
 
