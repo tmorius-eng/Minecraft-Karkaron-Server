@@ -48,6 +48,8 @@ public final class PlayerProfile {
     private Endgame endgame;
     private mn.suld.api.clazz.ClassMasteries classMasteries = mn.suld.api.clazz.ClassMasteries.NONE;
     private long lastClassChange;
+    /** A stand-in nothing ever writes (the training grounds' max character, docs/TRAINING_GROUNDS.md). */
+    private boolean ephemeral;
 
     private PlayerProfile(UUID playerId, String name, PlayerClass playerClass,
                           Progression progression, Instant createdAt, Instant lastSeenAt,
@@ -297,6 +299,28 @@ public final class PlayerProfile {
     public synchronized Snapshot snapshot() {
         return new Snapshot(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState, skillState, equipment, classGear, activeMinutes, endgame,
                 classMasteries, lastClassChange);
+    }
+
+    /**
+     * True for a stand-in from {@link #ephemeralCopy()}: the profile service and every repository refuse to write it, so
+     * whatever happens to it (level 60, max gear, coins) never reaches storage.
+     */
+    public synchronized boolean ephemeral() {
+        return ephemeral;
+    }
+
+    /**
+     * A stand-in for the training grounds (docs/TRAINING_GROUNDS.md): the same player, story and settings, which the
+     * caller then raises to the max character. It shares no mutable state with this profile (every part is an immutable
+     * value), it is {@link #ephemeral()}, and this profile is left exactly as it was.
+     */
+    public synchronized PlayerProfile ephemeralCopy() {
+        PlayerProfile c = new PlayerProfile(playerId, name, playerClass, progression, createdAt, lastSeenAt, version, currency, questState,
+                skillState, equipment, classGear, activeMinutes, endgame);
+        c.classMasteries = classMasteries;
+        c.lastClassChange = lastClassChange;
+        c.ephemeral = true;
+        return c;
     }
 
     /** The other classes' saved progress (the class being played keeps its own in {@link #skillState()} / {@link #classGear()}). */

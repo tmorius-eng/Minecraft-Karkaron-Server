@@ -89,7 +89,22 @@ public final class DefaultProfileService implements ProfileService {
 
     @Override
     public CompletableFuture<PlayerProfile> save(PlayerProfile profile) {
+        if (profile.ephemeral()) return CompletableFuture.completedFuture(profile); // a training stand-in is never written
         return sequencer.submit(profile.playerId(), () -> repository.save(profile));
+    }
+
+    @Override
+    public boolean standIn(PlayerProfile real, PlayerProfile standIn) {
+        if (!standIn.ephemeral() || real.ephemeral() || !real.playerId().equals(standIn.playerId())) {
+            throw new IllegalArgumentException("a stand-in is an ephemeral copy of the same player");
+        }
+        return cache.replace(real.playerId(), real, standIn);
+    }
+
+    @Override
+    public boolean putBack(PlayerProfile standIn, PlayerProfile real) {
+        if (real.ephemeral()) throw new IllegalArgumentException("the real profile cannot be ephemeral");
+        return cache.replace(real.playerId(), standIn, real);
     }
 
     /**
@@ -98,6 +113,10 @@ public final class DefaultProfileService implements ProfileService {
      */
     @Override
     public CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second) {
+        // a transfer with a training stand-in would move coins that are never written on one side: refused (and undone)
+        if (first.ephemeral() || second.ephemeral()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("a training stand-in takes part in no transfer"));
+        }
         if (first.playerId().equals(second.playerId())) return save(first).thenApply(x -> null);
         PlayerProfile lo = first.playerId().compareTo(second.playerId()) < 0 ? first : second;
         PlayerProfile hi = lo == first ? second : first;
@@ -109,6 +128,12 @@ public final class DefaultProfileService implements ProfileService {
         return sequencer.submit(playerId, () -> {
             PlayerProfile profile = cache.get(playerId);
             if (profile == null) {
+                return CompletableFuture.completedFuture(null);
+            }
+            if (profile.ephemeral()) {
+                // a stand-in still cached at the end (the training service puts the real one back first): the stored row is
+                // the real profile as it was when training began; the stand-in is dropped, never written
+                cache.remove(playerId, profile);
                 return CompletableFuture.completedFuture(null);
             }
             // last seen = when they left (the relic's offline expiry counts from here, not from the login)

@@ -46,6 +46,7 @@ public final class InMemoryProfileRepository implements ProfileRepository {
 
     @Override
     public CompletableFuture<PlayerProfile> save(PlayerProfile profile) {
+        if (profile.ephemeral()) return CompletableFuture.completedFuture(profile); // a training stand-in is never written
         store.put(profile.playerId(), snapshot(profile));
         profile.markPersisted(profile.version());
         return CompletableFuture.completedFuture(profile);
@@ -53,6 +54,9 @@ public final class InMemoryProfileRepository implements ProfileRepository {
 
     @Override
     public CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second) {
+        if (first.ephemeral() || second.ephemeral()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("a training stand-in is never written"));
+        }
         PlayerProfile a = snapshot(first), b = snapshot(second);
         store.put(a.playerId(), a);
         store.put(b.playerId(), b);

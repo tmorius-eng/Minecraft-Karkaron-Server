@@ -59,4 +59,20 @@ public interface ProfileService {
      * session for the UUID has ended (see {@code SessionRegistry}).
      */
     CompletableFuture<Void> saveAndUnload(UUID playerId);
+
+    /**
+     * Training grounds (docs/TRAINING_GROUNDS.md): serve {@code standIn} (an {@link PlayerProfile#ephemeral()} copy) to
+     * every {@link #cached} reader in place of {@code real}, the instance cached now, until {@link #putBack}. The stand-in
+     * is never written; {@code real} keeps its stored row as it was.
+     *
+     * @return false when {@code real} is not the cached instance (nothing changed)
+     */
+    default boolean standIn(PlayerProfile real, PlayerProfile standIn) {
+        return false;
+    }
+
+    /** Ends {@link #standIn}: {@code real} is cached again. False when {@code standIn} was not the cached instance. */
+    default boolean putBack(PlayerProfile standIn, PlayerProfile real) {
+        return false;
+    }
 }

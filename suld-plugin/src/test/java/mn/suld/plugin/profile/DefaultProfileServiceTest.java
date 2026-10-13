@@ -277,4 +277,65 @@ class DefaultProfileServiceTest {
         assertEquals(900, a.currency());
         assertEquals(0, svc.inFlight());
     }
+    /**
+     * Training grounds (docs/TRAINING_GROUNDS.md): while a stand-in is cached, every save, autosave, transfer and the
+     * quit save leave the stored row exactly as it was before training; putting the real profile back serves it again.
+     */
+    @Test
+    void aTrainingStandInIsNeverWritten() throws Exception {
+        SlowRepo repo = new SlowRepo();
+        repo.saveDelayMs = 0;
+        DefaultProfileService svc = new DefaultProfileService(repo);
+        UUID id = UUID.randomUUID();
+        PlayerProfile real = acquire(svc, id, "Trainee").profile();
+        real.addCurrency(40);
+        svc.save(real).get(5, TimeUnit.SECONDS);
+        PlayerProfile other = acquire(svc, UUID.randomUUID(), "Other").profile();
+        other.addCurrency(500);
+        svc.save(other).get(5, TimeUnit.SECONDS);
+
+        PlayerProfile stand = real.ephemeralCopy();
+        assertTrue(stand.ephemeral());
+        assertFalse(real.ephemeral());
+        assertTrue(svc.standIn(real, stand));
+        assertSame(stand, svc.cached(id).orElseThrow(), "every reader sees the stand-in");
+        stand.progression(new mn.suld.api.progression.Progression(60, 0));
+        stand.addCurrency(1_000_000);
+        svc.save(stand).get(5, TimeUnit.SECONDS);
+        for (PlayerProfile p : svc.cachedProfiles()) svc.save(p).get(5, TimeUnit.SECONDS); // the autosave loop
+        assertEquals(40L, repo.storedCurrency.get(id), "the stand-in never reached storage");
+
+        // a transfer with a stand-in fails and is undone on both sides: no coin is made on the payee's real row
+        assertThrows(java.util.concurrent.ExecutionException.class, () -> svc.transfer(stand, other, 1000).get(5, TimeUnit.SECONDS));
+        assertEquals(500, other.currency());
+        assertEquals(500L, repo.storedCurrency.get(other.playerId()));
+        assertThrows(java.util.concurrent.ExecutionException.class, () -> svc.transfer(other, stand, 100).get(5, TimeUnit.SECONDS));
+        assertEquals(500, other.currency(), "the payer has its coins back");
+
+        assertFalse(svc.putBack(real, real), "only the cached stand-in can be replaced");
+        assertTrue(svc.putBack(stand, real));
+        assertSame(real, svc.cached(id).orElseThrow());
+        assertEquals(1, real.progression().level(), "the real profile never changed");
+        assertEquals(40, real.currency());
+        assertThrows(IllegalArgumentException.class, () -> svc.standIn(real, real), "a stand-in must be ephemeral");
+    }
+
+    /** A stand-in still cached when the player leaves is dropped, never written; the stored row stays the real one. */
+    @Test
+    void aStandInLeftAtQuitIsDropped() throws Exception {
+        SlowRepo repo = new SlowRepo();
+        repo.saveDelayMs = 0;
+        DefaultProfileService svc = new DefaultProfileService(repo);
+        UUID id = UUID.randomUUID();
+        PlayerProfile real = acquire(svc, id, "Crash").profile();
+        real.addCurrency(7);
+        svc.save(real).get(5, TimeUnit.SECONDS);
+        PlayerProfile stand = real.ephemeralCopy();
+        assertTrue(svc.standIn(real, stand));
+        stand.addCurrency(99_999);
+        svc.saveAndUnload(id).get(5, TimeUnit.SECONDS);
+        assertTrue(svc.cached(id).isEmpty());
+        assertEquals(7L, repo.storedCurrency.get(id));
+        assertEquals(7, acquire(svc, id, "Crash").profile().currency(), "the next join loads the real character");
+    }
 }

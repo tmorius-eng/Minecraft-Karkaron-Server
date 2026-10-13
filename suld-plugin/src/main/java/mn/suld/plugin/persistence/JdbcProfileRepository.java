@@ -184,6 +184,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
 
     @Override
     public CompletableFuture<PlayerProfile> save(PlayerProfile profile) {
+        if (profile.ephemeral()) return CompletableFuture.completedFuture(profile); // a training stand-in is never written
         return CompletableFuture.supplyAsync(mn.suld.plugin.perf.PerfProbe.timed("db.profile.save", () -> {
             // One consistent snapshot (all fields and the version under the profile's lock): the row and the
             // in-memory "persisted" marker agree, and a change made meanwhile stays dirty for the next save.
@@ -205,6 +206,9 @@ public final class JdbcProfileRepository implements ProfileRepository {
      */
     @Override
     public CompletableFuture<Void> saveTogether(PlayerProfile first, PlayerProfile second) {
+        if (first.ephemeral() || second.ephemeral()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("a training stand-in is never written"));
+        }
         return CompletableFuture.supplyAsync(mn.suld.plugin.perf.PerfProbe.timed("db.profile.saveTogether", () -> {
             PlayerProfile lo = first.playerId().compareTo(second.playerId()) <= 0 ? first : second;
             PlayerProfile hi = lo == first ? second : first;
