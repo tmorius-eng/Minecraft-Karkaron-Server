@@ -181,6 +181,9 @@ public final class TutorialService implements Listener, TabExecutor {
 
     private void complete(Player p, TutorialProgress t, Step s) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        TutorialProgress next = t.advance();
+        // the paid mask is on disk before the reward is queued for SQL (the side a crash could pay twice goes first)
+        save(p, next);
         if (pr != null && t.unpaid(t.step()) && (s.exp() > 0 || s.coins() > 0)) {
             services.progression().grantExp(pr, s.exp(), ExpSource.QUEST);
             pr.addCurrency(s.coins());
@@ -190,7 +193,6 @@ public final class TutorialService implements Listener, TabExecutor {
             p.sendMessage(Messages.success("Заавар: «" + s.title() + "» ✔"));
         }
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.3f);
-        TutorialProgress next = t.advance();
         services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of(mn.suld.api.analytics.AnalyticsEventType.TUTORIAL_STEP, p.getUniqueId(),
                 java.util.Map.of("step", t.step() + 1, "of", TutorialProgress.STEPS.size(), "name", s.name(),
                         "completed", next.state() == TutorialProgress.State.COMPLETED)));
@@ -201,7 +203,6 @@ public final class TutorialService implements Listener, TabExecutor {
                 services.profiles().save(pr);
                 p.sendMessage(Messages.success("Заавар дууслаа! +" + TutorialProgress.FINISH_EXP + " EXP, +" + TutorialProgress.FINISH_COINS + " зоос"));
             }
-            save(p, next);
             // only send them to the first dungeon when its gates are open (audit 2026-10-11 ONB-005: the gate usually
             // needs chapter 4, so "enter now" ended the tutorial on a refusal)
             mn.suld.api.dungeon.DungeonDefinition den = SuldContent.KHASAR_DEN;
@@ -213,7 +214,6 @@ public final class TutorialService implements Listener, TabExecutor {
             end(p);
             return;
         }
-        save(p, next);
         if (next.current() == Step.FIRST_KILL) killBaseline.put(p.getUniqueId(), services.session(p.getUniqueId()).mobsDefeated);
         show(p, next);
     }

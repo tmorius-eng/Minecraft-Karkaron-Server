@@ -133,9 +133,16 @@ public final class BowQuiver implements Listener {
         } else if (!stash.isEmpty()) {
             java.util.List<ItemStack> left = new java.util.ArrayList<>();
             for (ItemStack s : stash) left.addAll(p.getInventory().addItem(s).values());
+            if (count(left) == count(stash)) return; // a full bag: nothing moved, nothing to write
             store(p, left);
             PlayerDataSaves.now(p);
         }
+    }
+
+    private static int count(java.util.List<ItemStack> stacks) {
+        int n = 0;
+        for (ItemStack s : stacks) n += s.getAmount();
+        return n;
     }
 
     private static java.util.List<ItemStack> stash(Player p) {

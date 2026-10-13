@@ -19,20 +19,42 @@ public final class AtomicYaml {
     private AtomicYaml() {
     }
 
+    /** The newest snapshot number taken per file (audit 2026-10-13: a party clear queued N writers for one file). */
+    private static final java.util.concurrent.ConcurrentHashMap<Path, java.util.concurrent.atomic.AtomicLong> SEQ =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     public static void write(Plugin plugin, Path file, YamlConfiguration yaml) {
         String text = yaml.saveToString(); // serialised on the caller's thread: the state is consistent at this moment
+        long seq = next(file);
         Runnable write = () -> {
             try {
-                Files.createDirectories(file.getParent());
-                Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
-                Files.writeString(tmp, text);
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                writeIfNewest(file, text, seq);
             } catch (IOException e) {
                 plugin.getLogger().warning(file.getFileName() + ": " + e.getMessage());
             }
         };
         if (plugin.isEnabled()) Bukkit.getScheduler().runTaskAsynchronously(plugin, write);
         else write.run();
+    }
+
+    static long next(Path file) {
+        return SEQ.computeIfAbsent(file.toAbsolutePath().normalize(), k -> new java.util.concurrent.atomic.AtomicLong()).incrementAndGet();
+    }
+
+    /**
+     * Writes {@code text} unless a newer snapshot of the same file was taken meanwhile (that one carries this state
+     * too). One writer per file at a time, so two async writes never share the {@code .tmp} or land out of order.
+     */
+    static boolean writeIfNewest(Path file, String text, long seq) throws IOException {
+        java.util.concurrent.atomic.AtomicLong newest = SEQ.get(file.toAbsolutePath().normalize());
+        synchronized (newest) {
+            if (newest.get() != seq) return false;
+            Files.createDirectories(file.getParent());
+            Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
+            Files.writeString(tmp, text);
+            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            return true;
+        }
     }
 
     /** Like {@link #write} but on the caller's thread, reporting failure: for small files whose order matters. */
