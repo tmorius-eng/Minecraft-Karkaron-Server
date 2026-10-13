@@ -29,6 +29,7 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # the map's marker row, the frames follow a teleport and a turn, /map minimap, hidden in the atlas, the waypoint bar and
 # label, /map stop, a pin stored, back after a relog (database), removed; 12 checks.
 # healthbot.js: the health survives a relog and a server restart (it restarts the dev server once); 3 checks.
+# sitesbot.js: a historic site (Аураг) is built once and remembered across a restart (it restarts the dev server once); 2 checks.
 node bots/featbot.js ./srv2ctl.sh server.log     # the functional sweep (tutorial, chat, lock-on, dungeon hall, ...)
 node bots/khuraldai-smoke.js ./srv2ctl.sh server.log 25572   # Их Хуралдай: ballot, vote, close, force, finder, resolve, chronicle, PvP policy
 node bots/campaign-deliver.js ./srv2ctl.sh server.log test_deliver item.chonon_arisan 60 25572   # a DELIVER_ITEMS campaign to success

@@ -86,10 +86,9 @@ public final class HistoricSiteService {
             int[] o = s.offset();
             sites.add(new Placed(s, sp.getBlockX() + o[0], sp.getBlockZ() + o[1]));
         }
-        YamlConfiguration st = YamlConfiguration.loadConfiguration(stateFile);
-        for (String k : st.getKeys(false)) {
-            built.put(k, new int[]{st.getInt(k + ".x"), st.getInt(k + ".y"), st.getInt(k + ".z"), st.getInt(k + ".v")});
-        }
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        for (Placed p : sites) ids.add(p.site().id());
+        built.putAll(readBuilt(YamlConfiguration.loadConfiguration(stateFile), ids));
         for (Placed p : sites) {
             int[] b = built.get(p.site().id());
             if (b != null) guard(p.site(), b);
@@ -302,6 +301,22 @@ public final class HistoricSiteService {
         services.progression().grantExp(pr, exp, ExpSource.DISCOVERY);
         services.profiles().save(pr);
         p.sendMessage(Messages.success("Түүхэн газрыг анх үзлээ: +" + exp + " EXP"));
+    }
+
+    /**
+     * The built sites in sites.yml. The ids are dotted («site.aurag»), so the file nests them under «site»; reading only
+     * the top keys found nothing but «site», and after every restart each site lost its guard and its height and was
+     * built again as its chunk loaded (map inspection 2026-10-13). Every section that holds an x is read, for the ids
+     * the content knows (a stray «site» entry the old reader wrote is dropped at the next save).
+     */
+    static java.util.Map<String, int[]> readBuilt(org.bukkit.configuration.ConfigurationSection st, java.util.Set<String> ids) {
+        java.util.Map<String, int[]> out = new java.util.HashMap<>();
+        for (String k : st.getKeys(true)) {
+            if (!k.endsWith(".x")) continue;
+            String id = k.substring(0, k.length() - 2);
+            if (ids.contains(id)) out.put(id, new int[]{st.getInt(id + ".x"), st.getInt(id + ".y"), st.getInt(id + ".z"), st.getInt(id + ".v")});
+        }
+        return out;
     }
 
     private void save() {
