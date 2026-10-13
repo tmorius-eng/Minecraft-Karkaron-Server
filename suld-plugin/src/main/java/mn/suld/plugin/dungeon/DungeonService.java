@@ -299,8 +299,9 @@ public final class DungeonService {
     private void spawnBoss(ActiveRun ar) {
         ar.run.enterBoss();
         MobDefinition bossMob = ar.def.bossDefinition().mob();
-        // boss health is tuned for the dungeon's recommended party (×0.44 solo dungeon … ×1.0 for four)
-        double bossHp = bossMob.scaledHealth() * mn.suld.api.balance.MobScaling.bossPartyScale(ar.def.recommendedParty());
+        // boss health is tuned for the party that entered, never above the dungeon's recommended one (×0.44 solo …
+        // ×1.0 for four): a solo player in a four-player dungeon no longer faces a four-player boss (audit 2026-10-13)
+        double bossHp = bossMob.scaledHealth() * mn.suld.api.balance.MobScaling.bossPartyScale(ar.def.recommendedParty(), ar.participants.size());
         LivingEntity boss = mobs.spawn(bossMob, ar.hall == null ? ar.origin.clone() : ar.hall.at(mn.suld.api.dungeon.hall.HallBlueprint.BOSS_SPAWN), bossHp);
         boss.setRemoveWhenFarAway(false);
         boss.addScoreboardTag(DUNGEON_TAG);

@@ -86,6 +86,12 @@ class BalanceRulesTest {
         assertEquals(MobScaling.baseDamage(20) * 1.3, MobScaling.damage(20, MobTier.ELITE), 1e-9);
         assertEquals(0.4375, MobScaling.bossPartyScale(1), 1e-9);
         assertEquals(1.0, MobScaling.bossPartyScale(4), 1e-9);
+        // the party that entered, capped at the recommended one (audit 2026-10-13): solo in a 4-player dungeon, a full
+        // party in a solo dungeon, and a bigger-than-recommended party
+        assertEquals(0.4375, MobScaling.bossPartyScale(4, 1), 1e-9);
+        assertEquals(0.4375, MobScaling.bossPartyScale(1, 4), 1e-9);
+        assertEquals(MobScaling.bossPartyScale(3), MobScaling.bossPartyScale(3, 4), 1e-9);
+        assertEquals(MobScaling.bossPartyScale(2), MobScaling.bossPartyScale(4, 2), 1e-9);
         assertEquals(5, MobScaling.coins(10, MobTier.NORMAL));
         assertEquals(9, MobScaling.coins(10, MobTier.ELITE));
     }

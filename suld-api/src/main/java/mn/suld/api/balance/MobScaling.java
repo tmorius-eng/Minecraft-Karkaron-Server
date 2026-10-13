@@ -97,4 +97,12 @@ public final class MobScaling {
     public static double bossPartyScale(int recommendedParty) {
         return 0.25 + 0.75 * Math.max(1, Math.min(4, recommendedParty)) / 4.0;
     }
+
+    /**
+     * Boss health for the {@code entered} party of a dungeon recommended for {@code recommendedParty}: the smaller of
+     * the two decides, so a short party meets a smaller boss and a bigger party never a bigger one than designed.
+     */
+    public static double bossPartyScale(int recommendedParty, int entered) {
+        return bossPartyScale(Math.min(Math.max(1, recommendedParty), Math.max(1, entered)));
+    }
 }
