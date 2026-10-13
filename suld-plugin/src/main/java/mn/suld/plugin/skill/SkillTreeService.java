@@ -237,8 +237,33 @@ public final class SkillTreeService implements Listener {
     }
 
     public void stop() {
-        for (Player p : Bukkit.getOnlinePlayers()) clearAttributes(p);
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            rememberHealth(p); // the server saves players after the plugins stop: keep the real health first
+            clearAttributes(p);
+        }
         runtime.clear();
+    }
+
+    /** The health a player had when they left or the server stopped (their player file, read back at the next join). */
+    private static final NamespacedKey HEALTH = new NamespacedKey("suld", "health");
+
+    /**
+     * Writes the player's real health into their file. The maximum above the class base is made of transient
+     * modifiers (gear, the tree) that the game does not save, so loading the file clamps the health to the bare base;
+     * and {@link #stop()} lowers the maximum to 20 before the server saves the players (both seen on a 1.21.11 client:
+     * 55/55 came back as 46/55, then 20/55).
+     */
+    private void rememberHealth(Player p) {
+        if (p.isDead()) return;
+        p.getPersistentDataContainer().set(HEALTH, org.bukkit.persistence.PersistentDataType.DOUBLE, p.getHealth());
+    }
+
+    /** Gives back what loading the file took away (and nothing more): later damage still counts. */
+    private void restoreHealth(Player p, double lost) {
+        if (lost <= 0 || !p.isOnline() || p.isDead()) return;
+        AttributeInstance max = p.getAttribute(Attribute.MAX_HEALTH);
+        if (max == null) return;
+        p.setHealth(Math.min(max.getValue(), p.getHealth() + lost));
     }
 
     public Path dataDir() {
@@ -471,7 +496,12 @@ public final class SkillTreeService implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
+        Double saved = p.getPersistentDataContainer().get(HEALTH, org.bukkit.persistence.PersistentDataType.DOUBLE);
+        p.getPersistentDataContainer().remove(HEALTH);
+        double lost = saved == null ? 0 : saved - p.getHealth();
         attach(p);
+        // the gear's health lands a tick after the tree's (EquipmentService): give the health back after both
+        if (lost > 0) Bukkit.getScheduler().runTaskLater(plugin, () -> restoreHealth(p, lost), 10L);
         // the intro runs a little later so it is not buried by the join messages
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!p.isOnline()) return;
@@ -484,6 +514,12 @@ public final class SkillTreeService implements Listener {
                 p.sendMessage(Messages.info("◆ " + avail + " зарцуулаагүй чадварын оноо — /skills"));
             }
         }, 80L);
+    }
+
+    /** Last of the quit handlers (a trainee or a trial player is back in their own character by then). */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuitHealth(PlayerQuitEvent e) {
+        rememberHealth(e.getPlayer());
     }
 
     @EventHandler
