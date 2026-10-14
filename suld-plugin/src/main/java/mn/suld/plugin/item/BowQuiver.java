@@ -6,7 +6,9 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemFlag;
@@ -131,17 +133,30 @@ public final class BowQuiver implements Listener {
             p.sendMessage(net.kyori.adventure.text.Component.text("ᠰ Саадаг: " + n + " сум хадгалагдлаа — ангийн нум сумгүй харвана; өөр юм барихад буцна.",
                     net.kyori.adventure.text.format.NamedTextColor.GRAY));
         } else if (!stash.isEmpty()) {
-            java.util.List<ItemStack> left = new java.util.ArrayList<>();
-            for (ItemStack s : stash) left.addAll(p.getInventory().addItem(s).values());
-            if (count(left) == count(stash)) return; // a full bag: nothing moved, nothing to write
+            java.util.List<ItemStack> left = restore(stash, s -> p.getInventory().addItem(s).values(), ItemStack::getAmount);
+            if (left == null) return; // a full bag: nothing moved, nothing to write (SULD-F01: no save per scroll/tick)
             store(p, left);
             PlayerDataSaves.now(p);
         }
     }
 
-    private static int count(java.util.List<ItemStack> stacks) {
+    /**
+     * The stash back into the bag: what is left, or {@code null} when not one arrow fitted. The count is taken
+     * <em>before</em> {@code add}: Bukkit's {@code addItem} shrinks a partly placed stack in place, so counting the stash
+     * afterwards reads the leftover twice and a partial fit was taken for "nothing moved" (arrows in the bag and still
+     * in the quiver).
+     */
+    static <S> java.util.List<S> restore(java.util.List<S> stash, java.util.function.Function<S, java.util.Collection<S>> add,
+                                         java.util.function.ToIntFunction<S> amount) {
+        int before = count(stash, amount);
+        java.util.List<S> left = new java.util.ArrayList<>();
+        for (S s : stash) left.addAll(add.apply(s));
+        return count(left, amount) >= before ? null : left;
+    }
+
+    private static <S> int count(java.util.List<S> stacks, java.util.function.ToIntFunction<S> amount) {
         int n = 0;
-        for (ItemStack s : stacks) n += s.getAmount();
+        for (S s : stacks) n += amount.applyAsInt(s);
         return n;
     }
 
@@ -175,6 +190,15 @@ public final class BowQuiver implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onHeld(PlayerItemHeldEvent e) {
         Player p = e.getPlayer();
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (p.isOnline()) quiver(p);
+        });
+    }
+
+    /** SULD-F08: an arrow picked up with the class bow in the hand goes to the quiver at once, not after up to 2 s of draws. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPickup(EntityPickupItemEvent e) {
+        if (!(e.getEntity() instanceof Player p) || !arrow(e.getItem().getItemStack()) || !holdsClassBow(p)) return;
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (p.isOnline()) quiver(p);
         });

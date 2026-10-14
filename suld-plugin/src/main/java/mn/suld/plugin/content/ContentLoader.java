@@ -380,6 +380,12 @@ public final class ContentLoader {
                         : regions.stream().anyMatch(x -> x.id().equals(target)) ? null : "no region " + target + " in world.json";
                 case COLLECT_ITEM -> itemExists == null || itemExists.test(target) ? null : "no item " + target + " in the item catalog";
                 case REACH_LEVEL -> count <= 100 ? null : "level " + count + " is above 100";
+                // the objective vocabulary of audit 2026-10-14 (no chapter uses it yet; quests.json stays as it was)
+                case INSPECT_CLUE -> target.matches("[a-z][a-z0-9_]{1,40}") ? null : "prop id " + target + " (props.json ids look like deer_stone)";
+                case CRAFT_ITEM -> itemExists == null || itemExists.test(target) ? null : "no item " + target + " in the item catalog";
+                // an ovoo stands in an area (OvooService passes the area id); a region id is taken too
+                case OVOO_RITUAL -> regions.stream().anyMatch(x -> x.id().equals(target)) || areas.stream().anyMatch(a -> a.id().equals(target))
+                        ? null : "no area or region " + target + " in world.json";
             };
             if (missing != null) issues.add(new Issue(f, at + ".target", missing));
             // the rules set the EXP: 35 % of a level at the chapter's level (progression v2), unless the file gives it
@@ -392,7 +398,9 @@ public final class ContentLoader {
                                 .map(a -> (a.minLevel() + a.maxLevel()) / 2).orElse(1)
                         : regions.stream().filter(x -> x.id().equals(target)).findFirst().map(RegionDefinition::minLevel).orElse(1);
                 case KILL_MOB -> mobs.containsKey(target) ? mobs.get(target).level() : 1;
-                case COLLECT_ITEM -> 2;
+                case COLLECT_ITEM, CRAFT_ITEM -> 2;
+                case OVOO_RITUAL -> regions.stream().filter(x -> x.id().equals(target)).findFirst().map(RegionDefinition::minLevel).orElse(1);
+                case INSPECT_CLUE -> 1; // priced at the chain's level (below)
             };
             // Act II sends the player back to early areas: the area's own band would pay ~1 % of the neighbours
             lv = Math.max(lv, chainLevel);

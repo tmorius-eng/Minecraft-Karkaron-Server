@@ -634,7 +634,7 @@ public final class DungeonService {
             for (mn.suld.api.loot.LootDrop drop : rewards) {
                 ItemInstance inst = drop.item();
                 ItemDefinition idef = items.catalog().require(inst.definitionId());
-                ItemStack stack = items.stack(inst, p, drop.amount());
+                ItemStack stack = items.stackFor(inst, p, drop.amount()); // IT-03: an ON_PICKUP reward binds as it arrives
                 p.getInventory().addItem(stack).values()
                         .forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
                 p.sendMessage(Messages.info("Шагнал: " + mn.suld.api.item.ItemTooltip.name(items.catalog(), idef, inst)

@@ -17,14 +17,27 @@ public final class ItemEconomy {
         return mn.suld.api.balance.Economy.sellPrice(def, i);
     }
 
+    /** Item level from which a legendary-or-better piece breaks into its own band's (end-game) material. */
+    public static final int END_GAME_SALVAGE_LEVEL = 30;
+
+    /**
+     * The rarity a piece salvages as: its own, except a legendary-or-better piece below
+     * {@link #END_GAME_SALVAGE_LEVEL}, which salvages as an epic one (IT-17: «Саарлын Зүрх», a level-5 legendary from
+     * the first dungeon, broke into five «Тэнгэрийн Чулуу», the T6 armour's material).
+     */
+    public static ItemRarity salvageRarity(ItemInstance i) {
+        return i.rarity().atLeast(ItemRarity.LEGENDARY) && i.itemLevel() < END_GAME_SALVAGE_LEVEL ? ItemRarity.EPIC : i.rarity();
+    }
+
     /** Salvage materials: the rarity's yield plus one per 10 item levels, of the rarity band's material. */
     public static Map<String, Integer> salvage(ItemCatalog catalog, ItemDefinition def, ItemInstance i) {
         Map<String, Integer> out = new LinkedHashMap<>();
         // class gear never; other soulbound items (a boss trophy) can be broken down, or they would fill the bag forever
         if (!def.equippable() || i.rarity() == ItemRarity.UNIQUE || classGear(def.id())) return out;
-        String mat = catalog.salvageMaterial(i.rarity());
+        ItemRarity r = salvageRarity(i);
+        String mat = catalog.salvageMaterial(r);
         if (mat == null) return out;
-        out.put(mat, i.rarity().salvageYield() + i.itemLevel() / 10);
+        out.put(mat, r.salvageYield() + i.itemLevel() / 10);
         return out;
     }
 

@@ -374,6 +374,12 @@ public final class OvooService implements Listener {
         services.boosts().bless(p.getUniqueId(), until, BLESS_EXP);
         p.getPersistentDataContainer().set(blessKey, PersistentDataType.LONG, until);
         p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 60, 0, true, true));
+        // an OVOO_RITUAL chapter on this ovoo's land is done by the blessing (audit 2026-10-14)
+        services.profiles().cached(p.getUniqueId()).ifPresent(qp -> {
+            if (!services.quests().onOvooRitual(p, qp, o.area().id()) && o.area().regionId() != null) {
+                services.quests().onOvooRitual(p, qp, o.area().regionId()); // a chapter may name the region instead
+            }
+        });
         long first = 0;
         if (last == null) {
             var pr = services.profiles().cached(p.getUniqueId()).orElse(null);

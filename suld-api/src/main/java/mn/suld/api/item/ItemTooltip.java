@@ -106,6 +106,10 @@ public final class ItemTooltip {
                     + (durability <= 0 ? " — эвдэрсэн" : "")));
         }
         if (!def.lore().isEmpty()) out.add(new Line(Style.FLAVOR, def.lore()));
+        if (def.type() == ItemType.CONSUMABLE) { // IT-12: what a right click does, and how often
+            Consumables.of(def.id()).ifPresent(c -> out.add(new Line(Style.INFO, "Баруун товч: " + c.description()
+                    + " · " + c.cooldownSeconds() + " сек завсарлага")));
+        }
         if (i.rarity().isServerUnique()) out.add(new Line(Style.UNIQUE, "✦ ДЭЛХИЙД ГАНЦ · 1 / 1"));
         long price = ItemEconomy.sellPrice(def, i);
         if (price > 0) out.add(new Line(Style.INFO, "Үнэ: " + price + " зоос"));

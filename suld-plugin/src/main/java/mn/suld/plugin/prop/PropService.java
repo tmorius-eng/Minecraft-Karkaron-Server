@@ -119,6 +119,7 @@ public final class PropService implements Listener {
             if (height <= 0 || height > 32 || units <= 0 || units > 48) throw new IllegalArgumentException(id + ": height/units");
             props.put(id, new Prop(id, (String) m.get("name"), String.valueOf(m.getOrDefault("history", "INSPIRED")), height, units,
                     String.valueOf(m.getOrDefault("about", ""))));
+            if (m.get("name") instanceof String name) NAMES.put(id, name);
         }
         try (InputStream in = plugin.getResource("content/prop_shapes.json")) {
             if (in != null) {
@@ -295,6 +296,17 @@ public final class PropService implements Listener {
         e.getPlayer().sendMessage(Component.text("✦ " + p.name(), GOLD, TextDecoration.BOLD)
                 .append(Component.text("  " + HistoricSiteService.label(p.history()), NamedTextColor.GRAY)));
         if (!p.about().isEmpty()) e.getPlayer().sendMessage(Component.text(p.about(), STORY));
+        // an INSPECT_CLUE chapter on this prop is done by looking at it (audit 2026-10-14)
+        org.bukkit.entity.Player pl = e.getPlayer();
+        services.profiles().cached(pl.getUniqueId()).ifPresent(pr -> services.quests().onInspect(pl, pr, id));
+    }
+
+    /** Prop id -> display name, for the quest book (filled when props.json is read). */
+    private static final Map<String, String> NAMES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The display name of a prop, or its id when props.json has no such prop. */
+    public static String nameOf(String id) {
+        return id == null ? "" : NAMES.getOrDefault(id, id);
     }
 
     /**

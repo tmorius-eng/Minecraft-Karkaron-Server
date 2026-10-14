@@ -823,7 +823,7 @@ public final class Engine {
         World.Chapter c = currentChapter();
         switch (c.type()) {
             case REACH_LEVEL -> complete(c);
-            case DISCOVER_LOCATION -> {
+            case DISCOVER_LOCATION, INSPECT_CLUE, OVOO_RITUAL, CRAFT_ITEM -> { // a walk to the place and a few minutes there
                 World.Zone z = w.zones().get(Math.max(0, c.zone()));
                 travel(z);
                 spend(Math.max(c.minutes(), 3), "story");

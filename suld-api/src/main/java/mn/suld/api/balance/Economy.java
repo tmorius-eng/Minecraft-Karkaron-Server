@@ -11,12 +11,13 @@ public final class Economy {
     }
 
     /**
-     * Merchant price: legendary and above cannot be sold (salvage only); the rarity multiplier is capped at ×5 and the
-     * level factor is 1 + L/30.
+     * Merchant price: legendary and above gear cannot be sold (salvage only); the rarity multiplier is capped at ×5 and
+     * the level factor is 1 + L/30. A stackable material with a price in the data sells at it whatever its rarity
+     * (IT-19: «Тэнгэрийн Чулуу» declares sell 4 but the legendary rule made it unsellable everywhere).
      */
     public static long sellPrice(ItemDefinition def, ItemInstance i) {
         if (def.sellValue() <= 0 || i.soulbound() || i.rarity() == ItemRarity.UNIQUE
-                || i.rarity().ordinal() >= ItemRarity.LEGENDARY.ordinal()) return 0;
+                || i.rarity().ordinal() >= ItemRarity.LEGENDARY.ordinal() && !def.stackable()) return 0;
         return Math.round(def.sellValue() * Math.min(5, i.rarity().sellMultiplier()) * (1 + i.itemLevel() / 30.0));
     }
 

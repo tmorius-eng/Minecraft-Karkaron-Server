@@ -24,6 +24,8 @@ public final class QuestEngine {
      *   <li>{@code REACH_LEVEL}: target ignored, value = the player's level ({@code requiredCount} is the level).</li>
      *   <li>{@code COLLECT_ITEM}: target = item definition id, value = how many the player holds now.</li>
      *   <li>{@code DISCOVER_LOCATION} / {@code COMPLETE_DUNGEON}: target = region / dungeon id; a match completes.</li>
+     *   <li>{@code INSPECT_CLUE} / {@code OVOO_RITUAL}: target = prop id / region id; a match completes.</li>
+     *   <li>{@code CRAFT_ITEM}: target = item definition id, value = items made now (added up).</li>
      * </ul>
      *
      * @return the updated state, or the same state if the event does not apply
@@ -37,9 +39,9 @@ public final class QuestEngine {
         }
         int need = def.requiredCount();
         int progress = switch (type) {
-            case KILL_MOB -> (int) Math.min(need, state.progress() + Math.max(0, value));
+            case KILL_MOB, CRAFT_ITEM -> (int) Math.min(need, state.progress() + Math.max(0, value));
             case REACH_LEVEL, COLLECT_ITEM -> (int) Math.max(0, Math.min(need, value));
-            case DISCOVER_LOCATION, COMPLETE_DUNGEON -> need;
+            case DISCOVER_LOCATION, COMPLETE_DUNGEON, INSPECT_CLUE, OVOO_RITUAL -> need;
         };
         if (type == QuestType.REACH_LEVEL) progress = Math.max(progress, state.progress());
         return new QuestState(state.questId(), progress, progress >= need);

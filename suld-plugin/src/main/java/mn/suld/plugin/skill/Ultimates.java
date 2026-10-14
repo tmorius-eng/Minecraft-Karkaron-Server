@@ -75,6 +75,11 @@ final class Ultimates {
         p.addPotionEffect(new PotionEffect(type, seconds * 20, amplifier, false, false, true));
     }
 
+    /** False for an ultimate that only strikes chosen enemies when none is in its reach (the caller refuses it unpaid). */
+    boolean hasTarget(Player p, Ultimate u) {
+        return u != Ultimate.TENGERIIN_SHIITGEL || !skills.enemiesAround(p, p.getLocation(), 20).isEmpty();
+    }
+
     void cast(Player p, Ultimate u) {
         switch (u) {
             case CHINGISIIN_UUR -> {

@@ -213,9 +213,12 @@ public final class EquipmentService implements Listener {
             ItemInstance i = e.getValue();
             if (i.bound() || bonus.inactive().containsKey(e.getKey())) continue;
             ItemDefinition def = SuldContent.items().item(i.definitionId()).orElse(null);
-            if (def == null || def.bindingAt(i.rarity()) != Binding.ON_EQUIP) continue;
+            Binding b = def == null ? Binding.NONE : def.bindingAt(i.rarity());
+            // IT-03 defence in depth: an ON_PICKUP piece that reached the bag unbound (an old item, a path that skipped
+            // ItemService.stackFor) binds when worn, at the latest
+            if (b != Binding.ON_EQUIP && b != Binding.ON_PICKUP) continue;
             bind(p, e.getKey(), i.boundTo(p.getUniqueId()));
-            p.sendMessage(Messages.info(def.displayName() + " танд холбогдлоо (Өмсөхөд холбогдоно)."));
+            p.sendMessage(Messages.info(def.displayName() + " танд холбогдлоо (" + b.label() + ")."));
         }
     }
 
@@ -270,6 +273,9 @@ public final class EquipmentService implements Listener {
         }
         p.getInventory().setItem(invSlot, old == null ? null : services.itemService().stack(old, p, 1));
         pr.equipment(pr.equipment().with(target, c.item()));
+        // IT-09: the bag leaves the player file before the slot reaches SQL (PlayerDataSaves: the side a crash could
+        // duplicate first) — the slot alone used to be saved, so a crash left the jewel worn and still in the bag
+        PlayerDataSaves.now(p);
         services.profiles().save(pr);
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.equip", c.item().definitionId() + "-" + c.item().uuid(), target.name()));
         dirty(p);
@@ -356,10 +362,24 @@ public final class EquipmentService implements Listener {
         if (i == null) return "Энэ нүд хоосон.";
         if (p.getInventory().firstEmpty() < 0) return "Цүнх дүүрэн байна.";
         pr.equipment(pr.equipment().with(slot, null));
-        services.profiles().save(pr);
-        p.getInventory().addItem(services.itemService().stack(i, p, 1));
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.unequip", i.definitionId() + "-" + i.uuid(), slot.name()));
         dirty(p);
+        // IT-09: the empty slot is committed to SQL first; only then does the jewel enter the bag and the player file
+        // (PlayerDataSaves.coinsForItem's order). It used to go to the bag unsaved: a crash lost it from both.
+        services.profiles().save(pr).whenComplete((saved, err) -> PlayerDataSaves.onMain(plugin, () -> {
+            if (err != null) { // not saved: it is still worn in SQL, so it stays worn here too
+                if (pr.equipment().get(slot).isEmpty()) pr.equipment(pr.equipment().with(slot, i));
+                plugin.getLogger().severe("[items] unequip " + i.definitionId() + "-" + i.uuid() + " for " + p.getName() + " not saved, kept worn: " + err);
+                if (p.isOnline()) p.sendMessage(Messages.error("Хадгалалт амжилтгүй — зүүлт хэвээр үлдлээ."));
+                return;
+            }
+            ItemStack it = services.itemService().stack(i, p.isOnline() ? p : null, 1);
+            java.util.List<ItemStack> rest = new java.util.ArrayList<>();
+            if (p.isOnline()) rest.addAll(p.getInventory().addItem(it).values());
+            else rest.add(it);
+            if (!rest.isEmpty()) services.mailbox(plugin).keep(p.getUniqueId(), rest, "unequip " + slot.name()); // never on the ground
+            PlayerDataSaves.now(p);
+        }));
         return null;
     }
 

@@ -80,17 +80,35 @@ class LootEngineTest {
     void tierBandsDecideRarityWithinTheItemsRange() {
         LootTable t = table(0, List.of(new LootTable.Entry(null, new LootTable.Pool(Set.of(ItemType.Category.ARMOR)), 1, 1, 1, null, null, 0, null)), List.of(), List.of());
         Map<ItemRarity, Integer> normal = new EnumMap<>(ItemRarity.class), elite = new EnumMap<>(ItemRarity.class), boss = new EnumMap<>(ItemRarity.class);
+        Map<ItemRarity, Integer> normalCommonCapable = new EnumMap<>(ItemRarity.class);
         Rng rng = Rng.seeded(5);
         for (int i = 0; i < 3000; i++) {
-            ENGINE.roll(t, LootContext.of(40, LootTier.NORMAL), rng).forEach(d -> normal.merge(d.item().rarity(), 1, Integer::sum));
+            ENGINE.roll(t, LootContext.of(40, LootTier.NORMAL), rng).forEach(d -> {
+                normal.merge(d.item().rarity(), 1, Integer::sum);
+                if (CAT.require(d.item().definitionId()).rarity() == ItemRarity.COMMON) normalCommonCapable.merge(d.item().rarity(), 1, Integer::sum);
+            });
             ENGINE.roll(t, LootContext.of(40, LootTier.ELITE), rng).forEach(d -> elite.merge(d.item().rarity(), 1, Integer::sum));
             ENGINE.roll(t, LootContext.of(40, LootTier.BOSS), rng).forEach(d -> boss.merge(d.item().rarity(), 1, Integer::sum));
         }
-        // the band can be lifted by an item's own minimum rarity (Тэнгэрийн armour starts at rare), never lowered below it
-        assertFalse(elite.containsKey(ItemRarity.COMMON));
-        assertFalse(elite.containsKey(ItemRarity.EPIC), "elite band is uncommon..rare; " + elite);
-        assertTrue(boss.keySet().stream().allMatch(r -> r.atLeast(ItemRarity.LEGENDARY)), "a boss drops gear that can be legendary, at legendary or above: " + boss);
-        assertTrue(normal.getOrDefault(ItemRarity.COMMON, 0) > normal.getOrDefault(ItemRarity.UNCOMMON, 0), "normal " + normal);
+        // the v2 bands (IT-02, tiers.json = ProposedRules = GEAR_PROGRESSION_SPEC): ELITE uncommon 55 / rare 35 / epic 10,
+        // BOSS rare 50 / epic 38 / legendary 10 / ancient 2. An item's own range (Тэнгэрийн armour starts at rare)
+        // narrows the band, never takes a drop outside it.
+        int eliteAll = elite.values().stream().mapToInt(Integer::intValue).sum();
+        assertTrue(elite.keySet().stream().allMatch(r -> r.atLeast(ItemRarity.UNCOMMON) && ItemRarity.EPIC.atLeast(r)), "elite band is uncommon..epic; " + elite);
+        assertTrue(elite.containsKey(ItemRarity.UNCOMMON) && elite.containsKey(ItemRarity.RARE), "elite " + elite);
+        double eliteEpic = elite.getOrDefault(ItemRarity.EPIC, 0) / (double) eliteAll;
+        assertTrue(eliteEpic > 0.05 && eliteEpic < 0.20, "epic is the elite's 10% step, not its norm: " + elite);
+        int bossAll = boss.values().stream().mapToInt(Integer::intValue).sum();
+        assertTrue(boss.keySet().stream().allMatch(r -> r.atLeast(ItemRarity.RARE) && ItemRarity.ANCIENT.atLeast(r)), "boss band is rare..ancient, never mythic: " + boss);
+        int bossLegendaryPlus = boss.getOrDefault(ItemRarity.LEGENDARY, 0) + boss.getOrDefault(ItemRarity.ANCIENT, 0);
+        assertTrue(bossLegendaryPlus > 0, "a boss can still drop legendary gear: " + boss);
+        assertTrue(bossLegendaryPlus / (double) bossAll < 0.20, "legendary+ is ~12% of boss gear, not 100% (the pre-v2 band): " + boss);
+        // NORMAL common 75 / uncommon 25, measured on the pieces that can be common: at level 40 the pool also holds the
+        // uncommon-minimum Ган armour, which makes all-drops common vs uncommon an exact 50/50 tie (seed luck)
+        assertTrue(normal.keySet().stream().allMatch(r -> ItemRarity.UNCOMMON.atLeast(r)), "normal band is common..uncommon: " + normal);
+        int cc = normalCommonCapable.getOrDefault(ItemRarity.COMMON, 0), cu = normalCommonCapable.getOrDefault(ItemRarity.UNCOMMON, 0);
+        double commonShare = cc / (double) (cc + cu);
+        assertTrue(commonShare > 0.65 && commonShare < 0.85, "normal band ~75% common where common is possible: " + normalCommonCapable);
         for (Map<ItemRarity, Integer> m : List.of(normal, elite, boss)) assertFalse(m.containsKey(ItemRarity.UNIQUE));
     }
 
@@ -150,19 +168,66 @@ class LootEngineTest {
         assertEquals(0.1, mergen / (double) n, 0.02, "a sword is a quarter as likely for an archer");
     }
 
+    /**
+     * The only weapons loot may drop (IT-01 / IT-15, audit 2026-10-14): the four regional weapons, each named as a
+     * {@code rare} drop of its own region's mob or dungeon. Everything else stays the owner's rule.
+     */
+    static final Map<String, Set<String>> APPROVED_WEAPON_DROPS = Map.of(
+            "loot.goviin_chono", Set.of("weapon.talyn_ild"),
+            "loot.deeremchin", Set.of("weapon.talyn_ild"),
+            "loot.khasar", Set.of("weapon.khasar_soyo"),
+            "loot.dungeon.khasar_den", Set.of("weapon.khasar_soyo"),
+            "loot.khangai_baavgai", Set.of("weapon.anchin_num"),
+            "loot.altai_avarga", Set.of("weapon.altai_jad"));
+
     @Test
     void noBundledTableDropsAWeapon() {
-        // one weapon per player: the class weapon, which evolves in place; loot never adds another (owner's rule)
+        // one weapon per player: the class weapon, which evolves in place; loot never adds another (owner's rule),
+        // except the approved regional weapons from their own tables
         Rng rng = Rng.seeded(31);
+        Set<String> seen = new java.util.HashSet<>();
         for (LootTable t : CAT.lootTables()) {
+            Set<String> approved = APPROVED_WEAPON_DROPS.getOrDefault(t.id(), Set.of());
             for (int i = 0; i < 500; i++) {
                 for (PlayerClass c : PlayerClass.values()) {
                     for (LootDrop d : ENGINE.roll(t, new LootContext(40, LootTier.NORMAL, c, 100, null, "t"), rng)) {
-                        assertNotEquals(ItemType.Category.WEAPON, CAT.require(d.item().definitionId()).type().category(), t.id() + " dropped " + d.item().definitionId());
+                        ItemDefinition def = CAT.require(d.item().definitionId());
+                        if (def.type().category() != ItemType.Category.WEAPON) continue;
+                        assertTrue(approved.contains(def.id()), t.id() + " dropped " + def.id());
+                        assertTrue(def.classes().isEmpty() && !def.id().startsWith("weapon.class."), "never a class weapon: " + def.id());
+                        seen.add(t.id() + " " + def.id());
                     }
                 }
             }
         }
+        // the approved drops are real (no stale entry) and nothing else in the data names a weapon
+        for (Map.Entry<String, Set<String>> e : APPROVED_WEAPON_DROPS.entrySet()) {
+            for (String w : e.getValue()) assertTrue(seen.contains(e.getKey() + " " + w), e.getKey() + " never dropped " + w);
+        }
+    }
+
+    @Test
+    void weaponsReachLootOnlyAsNamedRareDrops() {
+        for (LootTable t : CAT.lootTables()) {
+            Set<String> approved = APPROVED_WEAPON_DROPS.getOrDefault(t.id(), Set.of());
+            for (LootTable.Entry e : concat(t.guaranteed(), t.entries())) {
+                assertFalse(e.pool() != null && e.pool().categories().contains(ItemType.Category.WEAPON), t.id() + " has a weapon pool");
+                assertFalse(e.itemId() != null && CAT.require(e.itemId()).type().category() == ItemType.Category.WEAPON,
+                        t.id() + " names " + e.itemId() + " as a regular or guaranteed entry");
+            }
+            for (LootTable.Rare r : t.rare()) {
+                String id = r.entry().itemId();
+                if (id == null || CAT.require(id).type().category() != ItemType.Category.WEAPON) continue;
+                assertTrue(approved.contains(id), t.id() + " names unapproved weapon " + id);
+                assertTrue(r.chance() > 0 && r.chance() <= 0.10, t.id() + " " + id + " is a rare drop, chance " + r.chance());
+            }
+        }
+    }
+
+    private static List<LootTable.Entry> concat(List<LootTable.Entry> a, List<LootTable.Entry> b) {
+        List<LootTable.Entry> out = new java.util.ArrayList<>(a);
+        out.addAll(b);
+        return out;
     }
 
     @Test

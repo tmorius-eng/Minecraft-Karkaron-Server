@@ -93,7 +93,13 @@ public final class QuestService {
     public void ensure(Player player, PlayerProfile profile) {
         if (profile.playerClass().isEmpty()) return;
         QuestState before = profile.questState();
-        QuestState now = chain.normalise(before);
+        // QS-03: an id quests.json no longer has is placed by the player's level — chapters paid at a level below theirs
+        // (ContentLoader prices each chapter at its running level, so the EXP grows along the chain) are behind them
+        long behind = mn.suld.api.balance.Rewards.chapterExp(mn.suld.api.balance.Balance.curve(), profile.progression().level());
+        QuestState now = chain.normalise(before, d -> d.expReward() < behind);
+        if (chain.indexOf(before.questId()) < 0 && !before.questId().isEmpty() && !now.equals(before)) {
+            org.bukkit.Bukkit.getLogger().warning("[quests] " + player.getName() + ": unknown chapter " + before.questId() + " -> " + now.questId());
+        }
         if (!now.equals(before)) {
             profile.questState(now);
             definition(now.questId()).ifPresent(d -> announceStart(player, d));
@@ -138,6 +144,21 @@ public final class QuestService {
 
     public boolean onDungeonCleared(Player player, PlayerProfile profile, String dungeonId) {
         return apply(player, profile, QuestType.COMPLETE_DUNGEON, dungeonId, 1);
+    }
+
+    /** A named prop (stele, shrine, clue) looked at: an INSPECT_CLUE chapter on it advances (audit 2026-10-14). */
+    public boolean onInspect(Player player, PlayerProfile profile, String propId) {
+        return apply(player, profile, QuestType.INSPECT_CLUE, propId, 1);
+    }
+
+    /** An item made at the Дархан's table: a CRAFT_ITEM chapter on its definition advances by {@code amount}. */
+    public boolean onCrafted(Player player, PlayerProfile profile, String itemId, int amount) {
+        return apply(player, profile, QuestType.CRAFT_ITEM, itemId, amount);
+    }
+
+    /** An Ovoo blessing received in a region: an OVOO_RITUAL chapter on that region advances. */
+    public boolean onOvooRitual(Player player, PlayerProfile profile, String regionId) {
+        return apply(player, profile, QuestType.OVOO_RITUAL, regionId, 1);
     }
 
     /** Re-count a collect objective (after a pickup or inventory change). */

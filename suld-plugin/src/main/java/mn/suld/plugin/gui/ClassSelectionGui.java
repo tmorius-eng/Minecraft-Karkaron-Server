@@ -168,6 +168,8 @@ public final class ClassSelectionGui implements Listener {
     /**
      * Nothing can be dragged into the class window (external audit 2026-10-13 F02): it is not a {@code Menu}, so
      * MenuListener's drag guard missed it, and the window is cleared on a pick or «Буцах», which deleted the stack.
+     * SULD-F07 (merged here): any drag that touches a class-window slot is cancelled, so an item can never be placed
+     * there and wiped by {@code inv.clear()}; a drag only inside the player's own bag is left alone.
      */
     @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST)
     public void onDrag(org.bukkit.event.inventory.InventoryDragEvent event) {
@@ -216,14 +218,6 @@ public final class ClassSelectionGui implements Listener {
                 showConfirm(holder, classes[i]);
                 return;
             }
-        }
-    }
-
-    /** SULD-F07: cancel item drags into the class selection GUI so items can never be placed and wiped by inv.clear(). */
-    @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST)
-    public void onDrag(org.bukkit.event.inventory.InventoryDragEvent event) {
-        if (event.getInventory().getHolder() instanceof ClassSelectionHolder) {
-            event.setCancelled(true);
         }
     }
 

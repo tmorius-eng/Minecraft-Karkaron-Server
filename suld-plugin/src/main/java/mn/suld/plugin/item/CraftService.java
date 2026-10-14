@@ -115,6 +115,7 @@ public final class CraftService {
         PlayerDataSaves.now(p); // SULD-F05: persist spent materials and crafted item alongside SQL profile
         services.profiles().save(pr);
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.craft", def.id() + "-" + made.uuid(), r.id()));
+        services.quests().onCrafted(p, pr, def.id(), 1); // a CRAFT_ITEM chapter on this item (audit 2026-10-14)
         p.sendMessage(Messages.success("Урлалаа: " + ItemTooltip.name(catalog(), def, made) + " (" + rarity.displayName() + ", Зэрэг " + made.itemLevel() + ")"));
         services.profiles().cached(p.getUniqueId()).ifPresent(x -> services.hud().update(p, x));
         return made;

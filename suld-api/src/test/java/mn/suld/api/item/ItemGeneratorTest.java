@@ -86,9 +86,19 @@ class ItemGeneratorTest {
 
     @Test
     void fixedRarityItemsKeepTheirExactNumbers() {
-        ItemInstance i = GEN.generate(CAT.require("weapon.class.baatar.4"), ItemRarity.LEGENDARY, 45, Rng.seeded(1), "t", null);
-        assertEquals(21.0, i.stat(ItemStat.DAMAGE), 1e-9, "class weapons keep the damage they had before the item engine");
-        assertEquals(11.0, i.stat(ItemStat.CRIT_CHANCE), 1e-9);
+        // the base numbers are the ones class weapons had before the item engine (no roll, no rarity factor); since
+        // IT-04 the damage also grows by the definition's perLevel, from level 1 like every other item
+        ItemDefinition d = CAT.require("weapon.class.baatar.4");
+        assertTrue(d.fixedRarity());
+        assertEquals(1.0, d.statPerLevel().get(ItemStat.DAMAGE), 1e-9);
+        assertFalse(d.statPerLevel().containsKey(ItemStat.CRIT_CHANCE));
+        for (long seed = 0; seed < 20; seed++) {
+            ItemInstance i = GEN.generate(d, ItemRarity.LEGENDARY, 45, Rng.seeded(seed), "t", null);
+            assertEquals(21.0 + 1.0 * (45 - 1), i.stat(ItemStat.DAMAGE), 1e-9, "base 21 plus the per-level growth, seed " + seed);
+            assertEquals(11.0, i.stat(ItemStat.CRIT_CHANCE), 1e-9, "a stat without growth keeps its exact number");
+        }
+        // at the tier's own level the weapon has its base plus exactly that level's growth, nothing rolled
+        assertEquals(21.0 + 1.0 * (36 - 1), GEN.generate(d, ItemRarity.LEGENDARY, 36, Rng.seeded(1), "t", null).stat(ItemStat.DAMAGE), 1e-9);
     }
 
     @Test

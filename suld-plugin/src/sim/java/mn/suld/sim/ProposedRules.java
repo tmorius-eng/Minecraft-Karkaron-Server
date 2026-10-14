@@ -335,6 +335,8 @@ public class ProposedRules extends Rules {
             case DISCOVER_LOCATION -> w.zone(c.target()) == null ? 1 : w.zone(c.target()).min();
             case KILL_MOB -> w.mob(c.target()) == null ? 1 : w.mob(c.target()).level();
             case COLLECT_ITEM -> c.zone() < 0 ? 2 : w.zones().get(c.zone()).min() + 1;
+            case OVOO_RITUAL -> w.zone(c.target()) == null ? 1 : w.zone(c.target()).min();
+            case INSPECT_CLUE, CRAFT_ITEM -> c.zone() < 0 ? 1 : w.zones().get(c.zone()).min();
         };
     }
 

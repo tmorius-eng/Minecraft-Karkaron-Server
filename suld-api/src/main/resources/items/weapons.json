@@ -469,7 +469,9 @@
     "damage": 5,
     "crit_chance": 5
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871001,
@@ -492,7 +494,9 @@
     "damage": 9,
     "crit_chance": 7
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871002,
@@ -515,7 +519,9 @@
     "damage": 14,
     "crit_chance": 9
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871003,
@@ -538,7 +544,9 @@
     "damage": 21,
     "crit_chance": 11
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871004,
@@ -561,7 +569,9 @@
     "damage": 28,
     "crit_chance": 13
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871005,
@@ -584,7 +594,9 @@
     "damage": 36,
     "crit_chance": 15
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871006,
@@ -607,7 +619,9 @@
     "damage": 5,
     "crit_chance": 10
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871011,
@@ -630,7 +644,9 @@
     "damage": 9,
     "crit_chance": 12
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871012,
@@ -653,7 +669,9 @@
     "damage": 14,
     "crit_chance": 14
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871013,
@@ -676,7 +694,9 @@
     "damage": 21,
     "crit_chance": 16
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871014,
@@ -699,7 +719,9 @@
     "damage": 28,
     "crit_chance": 18
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871015,
@@ -722,7 +744,9 @@
     "damage": 36,
     "crit_chance": 20
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871016,
@@ -745,7 +769,9 @@
     "damage": 6,
     "crit_chance": 4
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.2
+   },
    "durability": 0,
    "sell": 0,
    "model": 871021,
@@ -768,7 +794,9 @@
     "damage": 11,
     "crit_chance": 6
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.2
+   },
    "durability": 0,
    "sell": 0,
    "model": 871022,
@@ -791,7 +819,9 @@
     "damage": 17,
     "crit_chance": 8
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.2
+   },
    "durability": 0,
    "sell": 0,
    "model": 871023,
@@ -814,7 +844,9 @@
     "damage": 25,
     "crit_chance": 10
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.2
+   },
    "durability": 0,
    "sell": 0,
    "model": 871024,
@@ -837,7 +869,9 @@
     "damage": 34,
     "crit_chance": 12
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.2
+   },
    "durability": 0,
    "sell": 0,
    "model": 871025,
@@ -860,7 +894,9 @@
     "damage": 43,
     "crit_chance": 14
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.2
+   },
    "durability": 0,
    "sell": 0,
    "model": 871026,
@@ -883,7 +919,9 @@
     "damage": 5,
     "crit_chance": 4
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871031,
@@ -906,7 +944,9 @@
     "damage": 9,
     "crit_chance": 6
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871032,
@@ -929,7 +969,9 @@
     "damage": 14,
     "crit_chance": 8
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871033,
@@ -952,7 +994,9 @@
     "damage": 21,
     "crit_chance": 10
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871034,
@@ -975,7 +1019,9 @@
     "damage": 28,
     "crit_chance": 12
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871035,
@@ -998,7 +1044,9 @@
     "damage": 36,
     "crit_chance": 14
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 1.0
+   },
    "durability": 0,
    "sell": 0,
    "model": 871036,
@@ -1021,7 +1069,9 @@
     "damage": 4,
     "crit_chance": 7
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 0.8
+   },
    "durability": 0,
    "sell": 0,
    "model": 871041,
@@ -1044,7 +1094,9 @@
     "damage": 7,
     "crit_chance": 9
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 0.8
+   },
    "durability": 0,
    "sell": 0,
    "model": 871042,
@@ -1067,7 +1119,9 @@
     "damage": 11,
     "crit_chance": 11
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 0.8
+   },
    "durability": 0,
    "sell": 0,
    "model": 871043,
@@ -1090,7 +1144,9 @@
     "damage": 17,
     "crit_chance": 13
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 0.8
+   },
    "durability": 0,
    "sell": 0,
    "model": 871044,
@@ -1113,7 +1169,9 @@
     "damage": 22,
     "crit_chance": 15
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 0.8
+   },
    "durability": 0,
    "sell": 0,
    "model": 871045,
@@ -1136,7 +1194,9 @@
     "damage": 29,
     "crit_chance": 17
    },
-   "perLevel": {},
+   "perLevel": {
+    "damage": 0.8
+   },
    "durability": 0,
    "sell": 0,
    "model": 871046,

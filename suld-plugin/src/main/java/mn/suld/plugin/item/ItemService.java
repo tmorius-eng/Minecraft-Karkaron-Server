@@ -144,6 +144,28 @@ public final class ItemService {
         return s;
     }
 
+    /**
+     * IT-03: an «Авахад холбогдоно» (ON_PICKUP) item handed to {@code owner} — a reward, a craft, a mailbox delivery —
+     * binds to them as it arrives. Only a pickup from the ground used to bind it (EquipmentService.onPickup), so every
+     * item that reached the bag another way stayed tradable.
+     */
+    public ItemInstance bindForReceiver(ItemInstance i, UUID owner) {
+        ItemDefinition def = catalog.item(i.definitionId()).orElse(null);
+        return pickupBound(i, def == null ? mn.suld.api.item.Binding.NONE : def.bindingAt(i.rarity()), owner);
+    }
+
+    static ItemInstance pickupBound(ItemInstance i, mn.suld.api.item.Binding binding, UUID owner) {
+        return owner != null && !i.bound() && binding == mn.suld.api.item.Binding.ON_PICKUP ? i.boundTo(owner) : i;
+    }
+
+    /**
+     * The stack of an item going into {@code owner}'s hands (bound first, see {@link #bindForReceiver}). Displays and
+     * drops on the ground keep {@link #stack}: a ground drop binds to whoever picks it up.
+     */
+    public ItemStack stackFor(ItemInstance i, Player owner, int amount) {
+        return stack(bindForReceiver(i, owner.getUniqueId()), owner, amount);
+    }
+
     /** A new item of a definition; rarity null = its lowest. */
     public ItemInstance generate(ItemDefinition def, ItemRarity rarity, int level, UUID owner, String source) {
         return generator().generate(def, rarity == null ? def.rarity() : rarity, level, rng, source, owner);
@@ -223,7 +245,7 @@ public final class ItemService {
         for (LootDrop d : drops) {
             // amounts above one stack (bulk salvage) are split; stack() alone would clamp and lose the rest
             for (int left = Math.max(1, d.amount()); left > 0; ) {
-                ItemStack s = stack(d.item(), p, left);
+                ItemStack s = stackFor(d.item(), p, left);
                 left -= s.getAmount();
                 p.getInventory().addItem(s).values().forEach(rest -> p.getWorld().dropItemNaturally(p.getLocation(), rest));
             }

@@ -303,9 +303,29 @@ public final class CombatFeel implements Listener {
     public void onShoot(org.bukkit.event.entity.EntityShootBowEvent e) {
         if (!(e.getEntity() instanceof Player p) || e.getForce() < 0.9f || !classWeapon(e.getBow())) return;
         Location eye = p.getEyeLocation();
-        Location at = eye.clone().add(eye.getDirection().multiply(1.2));
-        at.setPitch(0);
-        sweep(at, "ring", 0xF2D27A, 0.4f, 1.4f, 0, 0);
+        Location at = eye.clone().add(eye.getDirection().multiply(1.2)).add(0, RING_DROP, 0);
+        ring(at, 0xF2D27A, 0.4f, 1.4f);
+    }
+
+    /** The release ring sits this far below the eye line, so the bow's own sprite never hides it. */
+    static final double RING_DROP = -0.18;
+
+    /**
+     * WP-04: the release ring faces along the shot. The model is a flat plane lying on the ground (XZ); turned 90° about
+     * X it stands across the display's forward axis, and the display takes the shooter's yaw and pitch, so the shooter
+     * looks straight through it instead of along its edge (it used to be laid flat at eye height, a thin line).
+     */
+    private void ring(Location at, int rgb, float s0, float s1) {
+        ItemDisplay d = decal(at, "ring", rgb, s0);
+        Quaternionf upright = new Quaternionf().rotateX((float) Math.toRadians(90));
+        d.setTransformation(new Transformation(new Vector3f(), upright, new Vector3f(s0, s0, s0), new Quaternionf()));
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!d.isValid()) return;
+            d.setInterpolationDelay(0);
+            d.setInterpolationDuration(4);
+            d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(upright), new Vector3f(s1, s1, s1), new Quaternionf()));
+        }, 1L);
+        Bukkit.getScheduler().runTaskLater(plugin, d::remove, 6L);
     }
 
     @EventHandler

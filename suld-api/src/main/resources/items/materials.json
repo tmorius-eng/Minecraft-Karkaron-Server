@@ -190,6 +190,50 @@
    "stack": 64,
    "sell": 8,
    "lore": "Ноосыг дэвтээж, нухаж хийсэн эсгий. Эсгий хуягийн нэг жорд Чонын Арьсны оронд орно."
+  },
+  {
+   "id": "item.airag_flask",
+   "name": "Айраг",
+   "material": "minecraft:potion",
+   "type": "CONSUMABLE",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 16,
+   "sell": 6,
+   "lore": "Гүүний сүүгээр исгэсэн айраг — хүчийг сэргээнэ."
+  },
+  {
+   "id": "item.steppe_salve",
+   "name": "Талын Эмийн Ургамал",
+   "material": "minecraft:green_dye",
+   "type": "CONSUMABLE",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 16,
+   "sell": 6,
+   "lore": "Талын ургамлаар хийсэн шавар жин — шархыг аажмаар эдгээнэ."
+  },
+  {
+   "id": "item.ovoo_incense",
+   "name": "Арц Хүж",
+   "material": "minecraft:sugar_cane",
+   "type": "CONSUMABLE",
+   "rarity": "rare",
+   "level": 1,
+   "stack": 16,
+   "sell": 10,
+   "lore": "Овоонд өргөдөг арцны утлага — сүнснүүдээс хамгаална."
+  },
+  {
+   "id": "item.darkhan_whetstone",
+   "name": "Дарханы Билүү",
+   "material": "minecraft:flint",
+   "type": "CONSUMABLE",
+   "rarity": "uncommon",
+   "level": 1,
+   "stack": 16,
+   "sell": 8,
+   "lore": "Замд явахдаа зэвсэг, хуягаа засах дарханы чулуу."
   }
  ]
 }

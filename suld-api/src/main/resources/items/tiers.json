@@ -4,8 +4,9 @@
   "uncommon": 25
  },
  "ELITE": {
-  "uncommon": 65,
-  "rare": 35
+  "uncommon": 55,
+  "rare": 35,
+  "epic": 10
  },
  "CHAMPION": {
   "rare": 70,
@@ -16,17 +17,18 @@
   "legendary": 25
  },
  "BOSS": {
-  "legendary": 70,
-  "ancient": 25,
-  "mythic": 5
+  "rare": 50,
+  "epic": 38,
+  "legendary": 10,
+  "ancient": 2
  },
  "WORLD_EVENT": {
   "ancient": 75,
   "mythic": 25
  },
  "DUNGEON": {
-  "uncommon": 40,
-  "rare": 40,
+  "uncommon": 35,
+  "rare": 45,
   "epic": 17,
   "legendary": 3
  },

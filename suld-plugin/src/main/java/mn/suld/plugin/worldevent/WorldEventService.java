@@ -283,7 +283,7 @@ public final class WorldEventService {
         List<mn.suld.api.loot.LootDrop> drops = items.filtered(p, items.roll(table, ctx)); // empty if the event has no table
         for (mn.suld.api.loot.LootDrop d : drops) {
             mn.suld.api.item.ItemInstance inst = d.item();
-            p.getInventory().addItem(items.stack(inst, p, d.amount())).values()
+            p.getInventory().addItem(items.stackFor(inst, p, d.amount())).values()
                     .forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
             p.sendMessage(Messages.info("Шагнал: " + mn.suld.api.item.ItemTooltip.name(items.catalog(),
                     items.catalog().require(inst.definitionId()), inst) + " [" + inst.rarity().displayName() + ", Зэрэг " + inst.itemLevel() + "]"));

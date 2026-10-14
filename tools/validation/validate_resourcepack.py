@@ -62,6 +62,62 @@ def walk_item_models(node, out: list, thresholds: list):
             walk_item_models(v, out, thresholds)
 
 
+def model_problems(ref: str, seen: set | None = None) -> list[str]:
+    """Why a suld: model referenced by an item definition would not render: the model file, each of its suld:
+    textures, and its suld: parent chain (followed through), all on disk. Vanilla refs are the client's own."""
+    seen = set() if seen is None else seen
+    if not ref.startswith("suld:") or ref in seen:
+        return []
+    seen.add(ref)
+    fp = resolve(ref, "model")
+    if not os.path.exists(fp):
+        return [f"model '{ref}' missing"]
+    try:
+        model = json.load(open(fp, encoding="utf-8"))
+    except Exception as ex:  # noqa: BLE001
+        return [f"model '{ref}' is not valid JSON: {ex}"]
+    out = []
+    for tex in (model.get("textures") or {}).values():
+        if isinstance(tex, str) and tex.startswith("suld:") and not os.path.exists(resolve(tex, "texture")):
+            out.append(f"model '{ref}' texture '{tex}' missing")
+    parent = model.get("parent")
+    if isinstance(parent, str):
+        out.extend(model_problems(parent, seen))
+    return out
+
+
+# Item definitions whose using_item branches are draw animations (pulling_0/1/2).
+DRAW_ITEMS = ("bow",)
+
+
+def draw_stage_problems(definition: dict) -> list[str]:
+    """A bow/crossbow-style definition: every minecraft:using_item condition must have an idle model on on_false and
+    three distinct draw stages on on_true (a use_duration range_dispatch: fallback pulling_0 + two entries)."""
+    out: list[str] = []
+
+    def visit(node, where: str):
+        if isinstance(node, dict):
+            if node.get("type") in ("minecraft:condition", "condition") \
+                    and node.get("property") in ("minecraft:using_item", "using_item"):
+                idle: list = []
+                walk_item_models(node.get("on_false"), idle, [])
+                if not idle:
+                    out.append(f"{where}: using_item condition has no idle (on_false) model")
+                stages: list = []
+                walk_item_models(node.get("on_true"), stages, [])
+                if len(set(stages)) < 3:
+                    out.append(f"{where}: using_item on_true has {len(set(stages))} draw stage(s), expected 3 "
+                               f"(pulling_0/1/2): {stages}")
+            for k, v in node.items():
+                visit(v, f"{where}.{k}")
+        elif isinstance(node, list):
+            for i, v in enumerate(node):
+                visit(v, f"{where}[{i}]")
+
+    visit(definition, "model")
+    return out
+
+
 def cmd_map(definition: dict) -> dict:
     """threshold -> model for a top-level custom_model_data range_dispatch definition."""
     m = definition.get("model", {})
@@ -136,10 +192,14 @@ def main() -> int:
             rel = os.path.relpath(fp, RP).replace(os.sep, "/")
             if "/items/" in "/" + rel:
                 refs, thresholds = [], []
+                # every branch: range_dispatch entries/fallback and condition on_true/on_false (bow draw stages)
                 walk_item_models(model, refs, thresholds)
-                for ref in refs:
-                    if ref.startswith("suld:") and not os.path.exists(resolve(ref, "model")):
-                        errors.append(f"{os.path.relpath(fp, ROOT)}: item model '{ref}' missing")
+                for ref in dict.fromkeys(refs):
+                    for problem in model_problems(ref):
+                        errors.append(f"{os.path.relpath(fp, ROOT)}: item {problem}")
+                if os.path.splitext(fn)[0] in DRAW_ITEMS:  # a shield's using_item has one (blocking) model, on purpose
+                    for problem in draw_stage_problems(model):
+                        errors.append(f"{os.path.relpath(fp, ROOT)}: {problem}")
                 for ts in thresholds:
                     if len(ts) != len(set(ts)):
                         errors.append(f"{os.path.relpath(fp, ROOT)}: duplicate range_dispatch thresholds {ts}")

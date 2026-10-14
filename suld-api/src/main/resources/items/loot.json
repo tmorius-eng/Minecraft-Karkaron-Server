@@ -23,6 +23,14 @@
     {
      "item": "item.chonon_arisan",
      "chance": 0.85
+    },
+    {
+     "item": "weapon.talyn_ild",
+     "chance": 0.02
+    },
+    {
+     "item": "item.airag_flask",
+     "chance": 0.04
     }
    ],
    "guaranteed": []
@@ -74,7 +82,12 @@
      ]
     }
    ],
-   "rare": []
+   "rare": [
+    {
+     "item": "weapon.khasar_soyo",
+     "chance": 0.05
+    }
+   ]
   },
   {
    "id": "loot.dungeon.khasar_den",
@@ -112,6 +125,10 @@
     {
      "item": "item.khasar_zurkh",
      "chance": 0.06
+    },
+    {
+     "item": "weapon.khasar_soyo",
+     "chance": 0.08
     }
    ]
   },
@@ -138,6 +155,18 @@
     {
      "item": "item.chonon_arisan",
      "chance": 0.5
+    },
+    {
+     "item": "weapon.talyn_ild",
+     "chance": 0.03
+    },
+    {
+     "item": "item.darkhan_whetstone",
+     "chance": 0.05
+    },
+    {
+     "item": "item.steppe_salve",
+     "chance": 0.05
     }
    ],
    "guaranteed": []
@@ -192,6 +221,10 @@
     {
      "item": "item.khilentsiin_khor",
      "chance": 0.4
+    },
+    {
+     "item": "item.ovoo_incense",
+     "chance": 0.05
     }
    ],
    "guaranteed": []
@@ -246,6 +279,18 @@
     {
      "item": "item.baavgain_arisan",
      "chance": 0.9
+    },
+    {
+     "item": "weapon.anchin_num",
+     "chance": 0.04
+    },
+    {
+     "item": "item.steppe_salve",
+     "chance": 0.1
+    },
+    {
+     "item": "item.airag_flask",
+     "chance": 0.1
     }
    ],
    "guaranteed": []
@@ -301,7 +346,12 @@
      "item": "item.mosun_chuluu"
     }
    ],
-   "rare": []
+   "rare": [
+    {
+     "item": "weapon.altai_jad",
+     "chance": 0.05
+    }
+   ]
   },
   {
    "id": "loot.dungeon.govi_bulsh",

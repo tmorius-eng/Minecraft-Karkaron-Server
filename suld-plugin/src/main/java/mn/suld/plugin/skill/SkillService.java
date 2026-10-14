@@ -211,6 +211,11 @@ public final class SkillService implements Listener {
         }
         castAttack.remove(id);
         lastClickByType.keySet().removeIf(k -> k.startsWith(id.toString()));
+        drawStart.remove(id);
+        drawRepeat.remove(id);
+        dryAt.remove(id);
+        rightGap.remove(id);
+        regenBoosts.remove(id);
         CombatListener.EMPOWERED_ARROWS.remove(id);
         CombatListener.EMPOWERED_UNTIL.remove(id);
         // the resource pool is kept: logging out and in again must not refill Хил / Сүнс mid-fight
@@ -252,14 +257,44 @@ public final class SkillService implements Listener {
         return true;
     }
 
-    /** Мэргэн: one shot per second (a full draw's pace, so the class balance stays as simulated). */
+    /** Мэргэн: one draw per second (a full draw's pace, so the class balance stays as simulated). */
     static final long SHOT_MS = 1_000;
     private final Map<UUID, Long> lastShot = new ConcurrentHashMap<>();
+    /** Released within this many ticks: a quick tap, shot at {@link #TAP_FORCE}. */
+    static final int QUICK_TAP_TICKS = 4;
+    /**
+     * Held this many ticks: a full draw. The pack's bow models (assets/minecraft/items/bow.json) show pulling_1 from
+     * use_duration 0.65 s and pulling_2 from 0.9 s = 18 ticks: full force arrives with the fully drawn model, and a
+     * full draw still fits the one-second shot pace.
+     */
+    static final int FULL_DRAW_TICKS = 18;
+    /** A draw nobody lets go of looses by itself after 5 s (a client that never sends the release cannot hang it). */
+    static final int MAX_DRAW_TICKS = 100;
+    static final float TAP_FORCE = 0.6f;
+    /** The client re-sends a held right click every 4 ticks when it is not drawing: two missed repeats = let go. */
+    static final int REPEAT_GAP_TICKS = 6;
+    /** Мэргэн: server tick a class-bow draw started, while it is drawn (WP-01). */
+    private final Map<UUID, Integer> drawStart = new ConcurrentHashMap<>();
+    /** Server tick of the last held-right-click repeat seen during a draw (only a client that is not drawing sends them). */
+    private final Map<UUID, Integer> drawRepeat = new ConcurrentHashMap<>();
+    /** Last dry-string cue (WP-03), so a held click on cooldown does not click every 200 ms. */
+    private final Map<UUID, Long> dryAt = new ConcurrentHashMap<>();
+    /** True while {@link #shoot} announces its own arrow (any other shot of the class bow is a stray vanilla one). */
+    private boolean firing;
 
     /**
-     * The class bow is never drawn (as in Wynncraft): while the client draws a bow it drops every left click, which
-     * broke the archer's L-R-L combos. The vanilla draw is refused and a right click shoots at once instead — unless
-     * a combo is under way, then the click is only the combo's R.
+     * The draw's force from how long it was held: a quick tap shoots at {@link #TAP_FORCE}, a longer hold grows to a
+     * full 1.0 at {@link #FULL_DRAW_TICKS} (never below the tap, so holding is never worse than tapping).
+     */
+    static float drawForce(int ticksHeld) {
+        if (ticksHeld < QUICK_TAP_TICKS) return TAP_FORCE;
+        return Math.min(1.0f, Math.max(TAP_FORCE, ticksHeld / (float) FULL_DRAW_TICKS));
+    }
+
+    /**
+     * Hold to draw, let go to shoot (WP-01/WP-02). The vanilla use is still refused (the arrows are in the quiver, and a
+     * vanilla draw would shoot a real arrow): the server starts the use itself, the client mirrors it and the bow model
+     * walks pulling_0 → pulling_2. While a combo is under way the click is only the combo's R, never a draw.
      */
     @EventHandler(priority = EventPriority.LOW)
     public void onBowUse(PlayerInteractEvent e) {
@@ -270,14 +305,99 @@ public final class SkillService implements Listener {
         if (clazzOf(p) != PlayerClass.MERGEN || !holdsClassWeapon(p, PlayerClass.MERGEN)) return;
         e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
         if (p.isSneaking() || paused.test(p)) return; // Shift + right click opens the skill map; a sky window's click is its own
-        ComboTracker t = combos.get(p.getUniqueId());
+        UUID id = p.getUniqueId();
+        if (drawStart.containsKey(id)) { // WP-06: a held click's repeat — one draw at a time
+            drawRepeat.put(id, Bukkit.getCurrentTick());
+            return;
+        }
+        ComboTracker t = combos.get(id);
         long now = System.currentTimeMillis();
         if (t != null && !t.current(now).isEmpty()) return;
-        Long last = lastShot.get(p.getUniqueId());
-        if (last != null && now - last < SHOT_MS) return;
-        if (soulBlocked(p.getUniqueId())) return;
-        lastShot.put(p.getUniqueId(), now);
-        shoot(p);
+        if (soulBlocked(id)) return;
+        Long last = lastShot.get(id);
+        if (last != null && now - last < SHOT_MS) {
+            dryString(p, SHOT_MS - (now - last));
+            return;
+        }
+        lastShot.put(id, now);
+        startDraw(p);
+    }
+
+    /** WP-03: the bow is not ready — a dry string click and the wait, at most every 0.4 s. */
+    private void dryString(Player p, long leftMs) {
+        long now = System.currentTimeMillis();
+        Long last = dryAt.put(p.getUniqueId(), now);
+        if (last != null && now - last < 400) return;
+        p.playSound(p.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.35f, 1.6f);
+        say(p, "§7Нум — " + String.format(java.util.Locale.ROOT, "%.1f", leftMs / 1000.0) + " сек");
+    }
+
+    private void startDraw(Player p) {
+        UUID id = p.getUniqueId();
+        int start = Bukkit.getCurrentTick();
+        drawStart.put(id, start);
+        drawRepeat.remove(id);
+        p.startUsingItem(EquipmentSlot.HAND);
+        // the fallback: a release the server never hears about (a switched item, a client that did not mirror the draw)
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Integer now = drawStart.get(id);
+                if (now == null || now != start) { // already released (PlayerStopUsingItemEvent) or a newer draw
+                    cancel();
+                    return;
+                }
+                if (!p.isOnline() || p.isDead() || !holdsClassWeapon(p, PlayerClass.MERGEN)) {
+                    cancelDraw(p);
+                    cancel();
+                    return;
+                }
+                int tick = Bukkit.getCurrentTick();
+                int held = tick - start;
+                Integer repeat = drawRepeat.get(id);
+                if (held >= MAX_DRAW_TICKS || held >= 2 && !p.isHandRaised()) {
+                    release(p, held);
+                    cancel();
+                } else if (repeat != null && tick - repeat > REPEAT_GAP_TICKS) {
+                    release(p, repeat - start); // the repeats stopped: the button came up at the last one
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 1L, 1L);
+    }
+
+    /** The draw ends without a shot (the bow was put away, a left click began a combo). */
+    private void cancelDraw(Player p) {
+        if (drawStart.remove(p.getUniqueId()) == null) return;
+        drawRepeat.remove(p.getUniqueId());
+        if (p.isOnline() && p.isHandRaised()) p.clearActiveItem();
+    }
+
+    /** The draw is let go after {@code held} ticks: the arrow flies at the draw's force. */
+    private void release(Player p, int held) {
+        UUID id = p.getUniqueId();
+        if (drawStart.remove(id) == null) return;
+        drawRepeat.remove(id);
+        if (p.isHandRaised()) p.clearActiveItem();
+        if (soulBlocked(id)) return;
+        shoot(p, drawForce(held));
+    }
+
+    /** The client let go of the right button: the draw's own release (Paper fires this from the vanilla release). */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onBowRelease(io.papermc.paper.event.player.PlayerStopUsingItemEvent e) {
+        Player p = e.getPlayer();
+        Integer start = drawStart.get(p.getUniqueId());
+        if (start == null) return;
+        release(p, Math.max(e.getTicksHeldFor(),Bukkit.getCurrentTick() - start));
+    }
+
+    /** A real arrow left in the bag (a full quiver overflow) must not fly from the class bow besides SÜLD's own. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onStrayClassBowShot(org.bukkit.event.entity.EntityShootBowEvent e) {
+        if (firing || !(e.getEntity() instanceof Player p) || clazzOf(p) != PlayerClass.MERGEN || !holdsClassWeapon(p, PlayerClass.MERGEN)) return;
+        e.setConsumeItem(false);
+        e.setCancelled(true);
     }
 
     /**
@@ -288,22 +408,52 @@ public final class SkillService implements Listener {
         return services.isSoul.test(id) && !services.inDeathTrial.test(id);
     }
 
-    /** A fully drawn arrow (speed 3, the vanilla full-draw damage 6 that CombatListener scales from). */
-    private void shoot(Player p) {
-        Arrow a = p.launchProjectile(Arrow.class, p.getEyeLocation().getDirection().multiply(3.0));
+    /**
+     * An arrow drawn with {@code force} (0..1: speed 3·force, the vanilla full-draw damage 6 that CombatListener scales
+     * from). The force is written on the arrow at launch (WP-08): a long shot slowed by the air keeps its damage.
+     */
+    private void shoot(Player p, float force) {
+        Arrow a = p.launchProjectile(Arrow.class, p.getEyeLocation().getDirection().multiply(3.0 * force));
         a.setPickupStatus(org.bukkit.entity.AbstractArrow.PickupStatus.DISALLOWED);
         a.setDamage(2.0);
         a.setCritical(false);
-        // a full-draw shot as far as every listener knows (CombatFeel's release ring, logging plugins)
+        CombatListener.markDraw(a, force);
+        // the shot as every listener knows it (CombatFeel's release ring on a full draw, logging plugins)
         var shot = new org.bukkit.event.entity.EntityShootBowEvent(p, p.getInventory().getItemInMainHand(), new org.bukkit.inventory.ItemStack(org.bukkit.Material.ARROW), a,
-                EquipmentSlot.HAND, 1.0f, false);
-        Bukkit.getPluginManager().callEvent(shot);
+                EquipmentSlot.HAND, force, false);
+        firing = true;
+        try {
+            Bukkit.getPluginManager().callEvent(shot);
+        } finally {
+            firing = false;
+        }
         if (shot.isCancelled()) {
             a.remove();
             return;
         }
-        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.9f, 1.15f);
+        // no arm swing on release: a server swing of the main hand comes back from the client as a left click (a phantom 'L')
+        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.9f, 0.95f + 0.2f * force);
         p.getWorld().spawnParticle(org.bukkit.Particle.CRIT, p.getEyeLocation().add(p.getEyeLocation().getDirection().multiply(1.2)), 6, 0.1, 0.1, 0.1, 0.05);
+        if (CombatListener.empowered(p.getUniqueId())) empoweredTrail(a);
+    }
+
+    /** WP-07: an arrow Чонын Нүд (or Чонын Сүнс) empowers trails soul fire until it lands (at most 3 s). */
+    private void empoweredTrail(Arrow a) {
+        a.addScoreboardTag("suld_empowered");
+        new BukkitRunnable() {
+            int ticks;
+
+            @Override
+            public void run() {
+                if (!a.isValid() || a.isInBlock() || a.isOnGround() || ++ticks > 60) {
+                    cancel();
+                    return;
+                }
+                Location at = a.getLocation();
+                at.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, at, 2, 0.03, 0.03, 0.03, 0.005);
+                at.getWorld().spawnParticle(Particle.CRIT, at, 1, 0.02, 0.02, 0.02, 0.0);
+            }
+        }.runTaskTimer(plugin, 1L, 1L);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -358,6 +508,12 @@ public final class SkillService implements Listener {
         if (c == 'L') {
             Long lastR = lastClickByType.get(p.getUniqueId() + ":R");
             if (lastR != null && now - lastR < 30) return;
+            cancelDraw(p); // a left click while the bow is drawn lets the draw go and starts the archer's combo
+        } else {
+            if (drawStart.containsKey(p.getUniqueId())) return; // WP-06: the held right button of a draw is not a combo R
+            long gap = last == null ? Long.MAX_VALUE : now - last;
+            Long before = rightGap.put(p.getUniqueId(), gap);
+            if (heldRepeat(before, gap)) return; // WP-06: a held button repeating every 4 ticks never types R-R-R
         }
         ComboTracker t = combos.computeIfAbsent(p.getUniqueId(), k -> new ComboTracker(clazz));
         if (t.clazz() != clazz) {
@@ -365,6 +521,7 @@ public final class SkillService implements Listener {
             combos.put(p.getUniqueId(), t);
         }
         ComboTracker.Result r = t.click(c, now);
+        if (r.kind() != ComboTracker.Kind.IGNORED && c == 'R') rightClickCue(p, clazz);
         if (r.kind() == ComboTracker.Kind.PROGRESS) {
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.35f, r.combo().length() == 1 ? 1.4f : 1.7f);
             services.hud().refresh(p);
@@ -373,9 +530,37 @@ public final class SkillService implements Listener {
         }
     }
 
+    /** The gap before each player's last right click, to tell a held button from clicks. */
+    private final Map<UUID, Long> rightGap = new ConcurrentHashMap<>();
+    /** A held right button repeats every 4 ticks (200 ms); the server sees the gaps on tick boundaries. */
+    static final long HOLD_MIN_MS = 170, HOLD_MAX_MS = 230;
+
+    /**
+     * True for a right click that is a held button's repeat: it and the click before it both came one 4-tick repeat
+     * after the previous one. The first two clicks of a hold still count (a held R starts R-R), the third never does,
+     * so holding the button cannot cast R-R-R. A player clicking R-R-R on their own almost never hits the exact
+     * 4-tick rhythm twice in a row.
+     */
+    static boolean heldRepeat(Long gapBefore, long gap) {
+        return gapBefore != null && gapBefore >= HOLD_MIN_MS && gapBefore <= HOLD_MAX_MS && gap >= HOLD_MIN_MS && gap <= HOLD_MAX_MS;
+    }
+
+    /**
+     * WP-05: a combo's right click shows on screen. The off hand swings (first and third person); a main-hand swing
+     * would come back from the client as a left click and type a phantom 'L'. Бөө's staff chimes, the blades whisper.
+     */
+    private void rightClickCue(Player p, PlayerClass clazz) {
+        p.swingOffHand();
+        switch (clazz) {
+            case BOO -> p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.5f, 1.5f);
+            case MERGEN -> p.playSound(p.getLocation(), Sound.ITEM_CROSSBOW_LOADING_START, 0.3f, 1.6f);
+            default -> p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.25f, 1.7f);
+        }
+    }
+
     // ------------------------------------------------------------------ casting
 
-    public enum CastResult { CAST, NO_PROFILE, SOUL, LOCKED, GAP, COOLDOWN, NO_RESOURCE }
+    public enum CastResult { CAST, NO_PROFILE, SOUL, LOCKED, GAP, COOLDOWN, NO_RESOURCE, NO_TARGET }
 
     private void cast(Player p, Spell s) {
         castDirect(p, s, false);
@@ -428,6 +613,7 @@ public final class SkillService implements Listener {
         if (pr == null) return CastResult.NO_PROFILE;
         if (soulBlocked(p.getUniqueId())) { // a soul cannot cast (but fights its own trial wolves with everything)
             say(p, "§bСүнс — ид шид хэрэглэх боломжгүй");
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f); // every refused cast sounds the same (Phase 5)
             return CastResult.SOUL;
         }
         if (pr.progression().level() < s.unlockLevel()) {
@@ -446,6 +632,13 @@ public final class SkillService implements Listener {
                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
                 return CastResult.COOLDOWN;
             }
+        }
+        // a single-target spell with nothing to aim at is refused before it costs anything or starts its cooldown
+        // (audit 2026-10-14: Онгоны Дуудлага used to charge, start the cooldown and hand back only the base cost)
+        if (s == Spell.ONGONY_DUUDLAGA && ongonTarget(p) == null) {
+            say(p, "§c" + s.displayName() + " — зорилго алга (20 м дотор, урагшаа)");
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
+            return CastResult.NO_TARGET;
         }
         int cost = costOf(build, s);
         if (!pool(p).spend(cost)) {
@@ -921,7 +1114,8 @@ public final class SkillService implements Listener {
         p.getWorld().playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.4f);
     }
 
-    private void ongon(Player p, Spell s) {
+    /** Онгоны Дуудлага's target: the nearest enemy within 20 blocks in front of the caster (cone of ~72°), or null. */
+    private LivingEntity ongonTarget(Player p) {
         LivingEntity target = null;
         double best = 20 * 20;
         Vector dir = p.getEyeLocation().getDirection();
@@ -933,9 +1127,15 @@ public final class SkillService implements Listener {
                 target = e;
             }
         }
+        return target;
+    }
+
+    private void ongon(Player p, Spell s) {
+        LivingEntity target = ongonTarget(p);
         if (target == null) {
+            // only an echo (12 ticks after the cast) or a target that died this tick gets here: the cast was checked to
+            // have one before it was paid (castDirect0). No refund: an echo is free, and refunding it gave resource for nothing
             say(p, "§7Онгон зорилгогүй...");
-            pool(p).gain(s.cost());
             return;
         }
         LivingEntity t = target;
@@ -1167,6 +1367,24 @@ public final class SkillService implements Listener {
         for (Player p : Bukkit.getOnlinePlayers()) regenOne(p);
     }
 
+    /** Player id -> {extra regeneration share, until ms}: Айраг's +10 % (IT-12), refreshed by the next flask. */
+    private final Map<UUID, double[]> regenBoosts = new ConcurrentHashMap<>();
+
+    /** Faster resource regeneration for {@code seconds}: a new boost replaces the old one (never stacks). */
+    public void boostRegen(Player p, double share, int seconds) {
+        regenBoosts.put(p.getUniqueId(), new double[] {share, System.currentTimeMillis() + seconds * 1000L});
+    }
+
+    private double regenBoost(Player p) {
+        double[] b = regenBoosts.get(p.getUniqueId());
+        if (b == null) return 0;
+        if (b[1] < System.currentTimeMillis()) {
+            regenBoosts.remove(p.getUniqueId(), b);
+            return 0;
+        }
+        return b[0];
+    }
+
     /** One second of resource regeneration for a player (also what the QA suite measures). */
     /** The player's armour mastery rank (perks of docs/ARMOR_PROGRESSION.md). */
     private int masteryRank(Player p) {
@@ -1191,7 +1409,7 @@ public final class SkillService implements Listener {
         // «Галт Ган» in a heroic run halves it (docs/HEROIC_DUNGEONS.md)
         double drought = services.heroic == null ? 1.0 : services.heroic.regenFactor(p);
         pool(p).gain((rate + b.stat(StatKey.RESOURCE_REGEN) + (b.has(KeystoneKind.TENGERTEI_KHOLBOGDOKH) ? 3 : 0))
-                * mn.suld.api.classgear.MasteryPerks.resourceRegen(c, masteryRank(p)) * drought);
+                * mn.suld.api.classgear.MasteryPerks.resourceRegen(c, masteryRank(p)) * drought * (1 + regenBoost(p)));
         double hp = b.stat(StatKey.HEALTH_REGEN);
         if (hp > 0 && services.skillTree() != null) services.skillTree().regenerate(p, hp);
     }

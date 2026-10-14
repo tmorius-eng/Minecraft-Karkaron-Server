@@ -111,6 +111,37 @@ public final class CombatListener implements Listener {
     /** When the empowered arrows run out even if unused. */
     public static final java.util.Map<java.util.UUID, Long> EMPOWERED_UNTIL = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** The draw force (0..1) an arrow left the bow with, written at launch. */
+    public static final org.bukkit.NamespacedKey DRAW_FORCE = new org.bukkit.NamespacedKey("suld", "draw_force");
+
+    /** Writes the draw force on an arrow at launch (WP-08). */
+    public static void markDraw(org.bukkit.entity.AbstractArrow arrow, float force) {
+        arrow.getPersistentDataContainer().set(DRAW_FORCE, org.bukkit.persistence.PersistentDataType.FLOAT, force);
+    }
+
+    /**
+     * An arrow's share of the SÜLD attack: its launch force when it carries one (the damage no longer falls with the
+     * distance flown), else the vanilla damage over a full draw's 6; between 0.25 and 1.4 either way.
+     */
+    static double arrowScale(Float force, double vanillaDamage) {
+        double s = force != null ? force : vanillaDamage / 6.0;
+        return Math.max(0.25, Math.min(1.4, s));
+    }
+
+    /** True while the player's next arrows are empowered (Чонын Нүд, Чонын Сүнс) and the window has not run out. */
+    public static boolean empowered(java.util.UUID id) {
+        Integer left = EMPOWERED_ARROWS.get(id);
+        Long until = EMPOWERED_UNTIL.get(id);
+        return left != null && left > 0 && (until == null || until >= System.currentTimeMillis());
+    }
+
+    /** Every player's bow shot carries its draw force, a vanilla bow's as much as the class bow's. */
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBowShot(org.bukkit.event.entity.EntityShootBowEvent e) {
+        if (!(e.getEntity() instanceof Player) || !(e.getProjectile() instanceof org.bukkit.entity.AbstractArrow a)) return;
+        if (!a.getPersistentDataContainer().has(DRAW_FORCE, org.bukkit.persistence.PersistentDataType.FLOAT)) markDraw(a, e.getForce());
+    }
+
     /** Player id -> {attack charge 0..1, server tick} of the melee swing in progress (vanilla resets it before the hit). */
     private record Charge(float value, int tick) {
     }
@@ -196,6 +227,11 @@ public final class CombatListener implements Listener {
         org.bukkit.entity.Entity src = event.getDamager();
         if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof Player) return;
         if (src instanceof Player) return;
+        // Арц Хүж (IT-12): a spirit's hit on a warded player is reduced before the armour
+        org.bukkit.entity.Entity attacker = src instanceof org.bukkit.entity.Projectile shot && shot.getShooter() instanceof org.bukkit.entity.Entity from ? from : src;
+        if (mn.suld.plugin.item.ConsumableService.wardedAgainst(victim.getUniqueId(), mobs.mobId(attacker).orElse(null))) {
+            event.setDamage(mn.suld.api.item.Consumables.warded(mn.suld.api.item.Consumables.INCENSE, event.getDamage()));
+        }
         mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
         double armor = tree == null ? 0 : tree.build(victim).stat(mn.suld.api.skill.tree.StatKey.ARMOR);
         if (armor <= 0) return;
@@ -227,9 +263,10 @@ public final class CombatListener implements Listener {
             player = p;
             scale = meleeScale(p, event);
         } else if (event.getDamager() instanceof org.bukkit.entity.AbstractArrow arrow && arrow.getShooter() instanceof Player p) {
-            // a fully drawn arrow does ~6 vanilla damage: scale the SÜLD attack by how hard it was drawn
+            // scale the SÜLD attack by how hard it was drawn: the force written at launch (WP-08), else the vanilla
+            // damage (a fully drawn arrow does ~6), which the air's drag lowers on a long shot
             player = p;
-            scale = Math.max(0.25, Math.min(1.4, event.getDamage() / 6.0));
+            scale = arrowScale(arrow.getPersistentDataContainer().get(DRAW_FORCE, org.bukkit.persistence.PersistentDataType.FLOAT), event.getDamage());
             mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
             mn.suld.api.skill.tree.SkillBuild skill = tree == null ? mn.suld.api.skill.tree.SkillBuild.EMPTY : tree.build(p);
             boolean single = skill.has(mn.suld.api.skill.tree.KeystoneKind.NEG_SUMNII_KHUVI);
@@ -378,6 +415,8 @@ public final class CombatListener implements Listener {
         }
 
         quests.onMobKilled(killer, profile, mobId);
+        // QS-01: the party's members near the kill advance their own hunt objective too (they used to get only EXP)
+        for (Player m : sharers) services.profiles().cached(m.getUniqueId()).ifPresent(mp -> quests.onMobKilled(m, mp, mobId));
 
         mn.suld.plugin.item.ItemService itemService = services.itemService();
         if (itemService != null) {
@@ -455,6 +494,15 @@ public final class CombatListener implements Listener {
 
     /** Party members (not the killer) alive within 48 blocks of the kill in the same world. */
     private java.util.List<Player> sharers(Player killer, org.bukkit.Location at) {
+        return partyNearby(services, killer, at);
+    }
+
+    /**
+     * The killer's party members who share a kill at {@code at}: online, alive, in the same world within
+     * {@link mn.suld.api.balance.ExpRules#PARTY_RANGE} blocks, not a soul, not in the training yard. EXP, the story
+     * quest and the daily hunting tasks all use this one list (QS-01).
+     */
+    public static java.util.List<Player> partyNearby(SuldServices services, Player killer, org.bukkit.Location at) {
         java.util.List<Player> out = new java.util.ArrayList<>();
         var party = services.parties().partyOf(killer.getUniqueId()).orElse(null);
         if (party == null) return out;

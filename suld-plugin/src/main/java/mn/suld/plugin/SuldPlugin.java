@@ -358,6 +358,8 @@ public final class SuldPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(craftOrders, this);
             craftOrders.start();
             services.craftOrders = craftOrders;
+            // the steppe consumables: Айраг, Талын Эмийн Ургамал, Арц Хүж, Дарханы Билүү (audit 2026-10-14 IT-12/IT-20)
+            getServer().getPluginManager().registerEvents(new mn.suld.plugin.item.ConsumableService(this, services, skills, deaths), this);
         }
         registerTab("order", new mn.suld.plugin.command.OrderCommand(this, services));
         registerTab("item", itemCommands.item());

@@ -690,6 +690,10 @@ public final class DeathService implements Listener {
     /** …and nothing can hurt a soul. */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onSoulDamaged(EntityDamageEvent e) {
+        if (shieldsTrialWolf(DeathTrialService.ownerOf(e.getEntity()) != null, e instanceof EntityDamageByEntityEvent, e.getCause())) {
+            e.setCancelled(true); // SULD-F09: a trial wolf falls to its soul only, never to lava, fire, cactus, water or a drop
+            return;
+        }
         if (!(e.getEntity() instanceof Player p) || !isSoul(p.getUniqueId())
                 || e.getCause() == EntityDamageEvent.DamageCause.VOID || e.getCause() == EntityDamageEvent.DamageCause.KILL) {
             return;
@@ -705,6 +709,11 @@ public final class DeathService implements Listener {
             return;
         }
         e.setCancelled(true);
+    }
+
+    /** True when the world, not an entity, hurts a trial wolf (VOID and KILL still clear a stuck one). */
+    static boolean shieldsTrialWolf(boolean trialWolf, boolean byEntity, EntityDamageEvent.DamageCause cause) {
+        return trialWolf && !byEntity && cause != EntityDamageEvent.DamageCause.VOID && cause != EntityDamageEvent.DamageCause.KILL;
     }
 
     @EventHandler(ignoreCancelled = true)

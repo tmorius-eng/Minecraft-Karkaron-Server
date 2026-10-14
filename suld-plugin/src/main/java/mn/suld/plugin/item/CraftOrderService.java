@@ -60,7 +60,7 @@ public final class CraftOrderService implements Listener {
     public CraftOrderService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
         this.services = services;
-        this.mailbox = new Mailbox(plugin);
+        this.mailbox = services.mailbox(plugin); // SULD-F12: the one mailbox TradeService also writes (one lock, one file)
         this.file = plugin.getDataFolder().toPath().resolve("craft_orders.yml");
         load();
     }
@@ -209,6 +209,11 @@ public final class CraftOrderService implements Listener {
 
     // ------------------------------------------------------------------ fill
 
+    /** SULD-F05: a filled order goes into the poster's hands only when it cannot fall on the ground (alive, a free slot). */
+    static boolean toHand(boolean online, boolean dead, int firstEmpty) {
+        return online && !dead && firstEmpty >= 0;
+    }
+
     /** {@code crafter} fills order {@code id}: their materials and the recipe's coins, the item to the poster, the fee to them. */
     public void fill(Player crafter, String id) {
         CraftOrder o = orders.get(id);
@@ -246,12 +251,20 @@ public final class CraftOrderService implements Listener {
                 var catalog = services.itemService().catalog();
                 ItemDefinition def = catalog.require(r.resultId());
                 ItemRarity rarity = catalog.band(LootTier.CRAFT).pick(mn.suld.api.loot.Rng.threadLocal(), r.minRarity(), r.maxRarity());
-                ItemInstance made = services.itemService().generate(def, rarity, r.itemLevel(level), o.poster(), "craft:" + r.id() + ":order:" + o.id());
+                // IT-03: made for the poster — an ON_PICKUP piece binds to them whether it reaches their hands or the mailbox
+                ItemInstance made = services.itemService().bindForReceiver(
+                        services.itemService().generate(def, rarity, r.itemLevel(level), o.poster(), "craft:" + r.id() + ":order:" + o.id()), o.poster());
                 String itemName = ItemTooltip.name(catalog, def, made);
-                if (poster != null) {
+                if (poster != null && toHand(poster.isOnline(), poster.isDead(), poster.getInventory().firstEmpty())) {
                     services.itemService().give(poster, List.of(new LootDrop(made, 1)), "craft order");
                     PlayerDataSaves.now(poster);
                     poster.sendMessage(Messages.success("Таны захиалга биеллээ: " + crafter.getName() + " " + itemName + " урлав."));
+                } else if (poster != null) {
+                    // SULD-F05: a dead poster or a full bag would drop a bound item on the ground: the mailbox keeps it
+                    mailbox.keep(o.poster(), List.of(services.itemService().stack(made, poster, 1)), "craft order " + o.id());
+                    poster.sendMessage(Messages.success("Таны захиалга биеллээ: " + crafter.getName() + " " + itemName
+                            + " урлав. " + (poster.isDead() ? "Та нас барсан байсан" : "Цүнх дүүрэн байсан")
+                            + " тул шуудангийн хайрцагт аюулгүй хадгалагдлаа — дахин нэвтрэхэд ирнэ."));
                 } else {
                     mailbox.keep(o.poster(), List.of(services.itemService().stack(made, null, 1)), "craft order " + o.id());
                     if (training) services.training.defer(o.poster(), "Дарханы захиалга биеллээ: " + crafter.getName() + " " + itemName + " урлав", q -> {

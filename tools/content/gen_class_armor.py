@@ -84,15 +84,27 @@ def mean(d, al, want):
             for k, (mn, mx) in d["stats"].items()}
 
 
+def fitted(piece, t):
+    """(mean at the tier's entry, linear slope to the next tier's entry) per stat, for a tier below the top."""
+    a0, a1, rar = TIER_AL[t], TIER_AL[t + 1], TIER_RARITY[t]
+    m0 = mean(proxy(piece, a0, rar), a0, rar)
+    m1 = mean(proxy(piece, a1, rar), a1, rar)
+    return m0, {k: max(0.0, (m1.get(k, v) - v) / (a1 - a0)) for k, v in m0.items()}
+
+
 def budget(piece, t):
     """(base at AL 1, per level) per stat for tier index t."""
     a0, rar = TIER_AL[t], TIER_RARITY[t]
-    m0 = mean(proxy(piece, a0, rar), a0, rar)
     if t + 1 < len(TIER_AL):
-        a1 = TIER_AL[t + 1]
-        m1 = mean(proxy(piece, a1, rar), a1, rar)
-        slope = {k: max(0.0, (m1.get(k, v) - v) / (a1 - a0)) for k, v in m0.items()}
+        m0, slope = fitted(piece, t)
+        if 0 < t and t + 2 < len(TIER_AL) and slope.get("armor", 1.0) <= 0.0005:
+            # IT-16 (audit 2026-10-14): the legendary proxy has less armour at 48 than at 36, so the T4 fit was flat:
+            # T4 armour stood still for twelve levels while T3 grew and overtook it. A flat armour fit takes the
+            # slope of the tier above (T5): T4 then stays over T3 up to 60 and under T5 from T5's entry, where the
+            # slope of the tier below (T3, steeper than T5) would carry T4 past T5.
+            slope["armor"] = fitted(piece, t + 1)[1].get("armor", 0.0)
     else:
+        m0 = mean(proxy(piece, a0, rar), a0, rar)
         slope = budget(piece, t - 1)[1]
         slope = {k: slope.get(k, 0.0) for k in m0}
     base = {k: max(0.1, v - slope[k] * (a0 - 1)) for k, v in m0.items()}

@@ -420,7 +420,7 @@ public final class WorldBossService implements Listener {
                 "worldboss:" + a.def.id() + ":" + a.fight.runId());
         for (mn.suld.api.loot.LootDrop d : items.filtered(p, items.roll(a.def.lootTable(), ctx))) {
             mn.suld.api.item.ItemInstance inst = d.item();
-            p.getInventory().addItem(items.stack(inst, p, d.amount())).values().forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
+            p.getInventory().addItem(items.stackFor(inst, p, d.amount())).values().forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
             p.sendMessage(Messages.info("Олз: " + mn.suld.api.item.ItemTooltip.name(items.catalog(), items.catalog().require(inst.definitionId()), inst)
                     + " [" + inst.rarity().displayName() + ", Зэрэг " + inst.itemLevel() + "]"));
             items.announce(p, inst);

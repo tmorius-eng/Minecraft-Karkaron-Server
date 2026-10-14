@@ -99,18 +99,23 @@ class SimulationTest {
     }
 
     @Test
-    void liveBossBandIsLegendaryOrBetter() {
+    void liveBossBandIsTheV2Band() {
+        // IT-02 (audit 2026-10-14): live items/tiers.json BOSS is the v2 band (rare 50 / epic 38 / legendary 10 /
+        // ancient 2), no longer legendary 70 / ancient 25 / mythic 5 — this golden pinned the old band (DG-3) at > 90 %
         SplittableRandom rng = new SplittableRandom(2);
-        int gear = 0, legendaryPlus = 0;
+        int gear = 0, legendaryPlus = 0, mythic = 0;
         for (int i = 0; i < 5_000; i++) {
             for (Loot.Drop d : LIVE.loot().roll("loot.mosun_khaan", 26, LootTier.BOSS, PlayerClass.BAATAR, rng)) {
                 if (!d.gear()) continue;
                 gear++;
                 if (d.item().rarity().atLeast(ItemRarity.LEGENDARY)) legendaryPlus++;
+                if (d.item().rarity() == ItemRarity.MYTHIC) mythic++;
             }
         }
         assertTrue(gear > 1_000);
-        assertTrue(legendaryPlus > 0.9 * gear, "DG-3: live dungeon bosses roll the BOSS band (legendary 70 / ancient 25 / mythic 5)");
+        assertTrue(legendaryPlus < 0.2 * gear, "live boss band legendary+ ~12 %: " + legendaryPlus + " / " + gear);
+        assertTrue(legendaryPlus > 0, "legendary and ancient still drop from bosses");
+        assertEquals(0, mythic, "no mythic from a dungeon boss");
     }
 
     @Test

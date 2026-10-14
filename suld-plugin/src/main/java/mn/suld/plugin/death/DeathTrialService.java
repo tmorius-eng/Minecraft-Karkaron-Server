@@ -95,6 +95,22 @@ public final class DeathTrialService implements Listener, TabExecutor {
         return null;
     }
 
+    /** How far up and down from the soul's height a wolf's floor is looked for. */
+    static final int FLOOR_SEARCH = 6;
+
+    /**
+     * The feet height of a wolf's spot near {@code soulY}: the nearest y within {@link #FLOOR_SEARCH} with a solid block
+     * under it and two passable ones at and above it (nearest first, down before up), else {@code soulY}.
+     */
+    static int floorY(int soulY, java.util.function.IntPredicate solid, java.util.function.IntPredicate passable) {
+        for (int d = 0; d <= FLOOR_SEARCH; d++) {
+            for (int y : d == 0 ? new int[] {soulY} : new int[] {soulY - d, soulY + d}) {
+                if (solid.test(y - 1) && passable.test(y) && passable.test(y + 1)) return y;
+            }
+        }
+        return soulY;
+    }
+
     /** A trial bite that would take the soul to 0: the trial is lost instead (called by DeathService). */
     void fell(Player p) {
         Run r = runs.get(p.getUniqueId());
@@ -131,7 +147,10 @@ public final class DeathTrialService implements Listener, TabExecutor {
             Location l = at.clone().add(Math.cos(a) * 6, 0, Math.sin(a) * 6);
             // on the ground, never on a tree's crown (a forest's leaves are the highest block): a wolf up there cannot
             // reach the soul, and an arrow does not reach it through the leaves (2026-10-13, trial bots at 900 900)
-            l.setY(l.getWorld().getHighestBlockYAt(l.getBlockX(), l.getBlockZ(), org.bukkit.HeightMap.MOTION_BLOCKING_NO_LEAVES) + 1);
+            // SULD-F11: and never on a cave's roof — a floor within 6 blocks of the soul's own height, else the soul's height
+            org.bukkit.World world = l.getWorld();
+            int bx = l.getBlockX(), bz = l.getBlockZ();
+            l.setY(floorY(at.getBlockY(), y -> world.getBlockAt(bx, y, bz).getType().isSolid(), y -> world.getBlockAt(bx, y, bz).isPassable()));
             Wolf w = l.getWorld().spawn(l, Wolf.class, wolf -> {
                 wolf.setPersistent(false);
                 wolf.setRemoveWhenFarAway(false);

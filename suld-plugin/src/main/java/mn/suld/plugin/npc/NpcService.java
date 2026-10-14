@@ -577,6 +577,9 @@ public final class NpcService implements Listener {
             pl.sendMessage(Messages.success(def.displayName() + ": шинжүүд шинэчлэгдлээ (-" + jade + " хас чулуу, -" + coins + " зоос)."));
             services.audit().record(mn.suld.api.audit.AuditEvent.of(pl.getUniqueId().toString(), "item.affix_reroll",
                     now.definitionId() + "-" + now.uuid(), now.rarity().name() + " L" + now.itemLevel()));
+            // IT-08: the jade spent and the new affixes reach the player file before the coins reach SQL (PlayerDataSaves:
+            // the item side first); the coins alone used to be saved, so a crash gave the jade back for coins already gone
+            mn.suld.plugin.item.PlayerDataSaves.now(pl);
             services.profiles().save(pr);
             pl.closeInventory();
         });

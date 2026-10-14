@@ -91,10 +91,18 @@ public final class TaskService implements Listener, TabExecutor {
         Player killer = mob.getKiller();
         if (killer == null || !services.mobs().isSuldMob(mob)) return;
         String mobId = services.mobs().mobId(mob).orElse(null);
+        if (mobId != null) services.achievements.record(killer, mn.suld.api.achievement.Deed.MOB_KILL, mobId, 1);
+        if (mobId == null) return;
+        credit(killer, mobId);
+        // QS-01: a party's hunt is everyone's — members within 48 blocks (alive, not a soul) count the kill too
+        for (Player m : mn.suld.plugin.combat.CombatListener.partyNearby(services, killer, mob.getLocation())) credit(m, mobId);
+    }
+
+    /** One kill of {@code mobId} on {@code killer}'s daily hunting tasks. */
+    private void credit(Player killer, String mobId) {
         PlayerProfile pr = services.profiles().cached(killer.getUniqueId()).orElse(null);
         PlayerStyle st = services.styles().cached(killer.getUniqueId()).orElse(null);
-        if (mobId != null) services.achievements.record(killer, mn.suld.api.achievement.Deed.MOB_KILL, mobId, 1);
-        if (mobId == null || pr == null || st == null || !pr.hasSelectedClass()) return;
+        if (pr == null || st == null || !pr.hasSelectedClass()) return;
         long day = today();
         String stored = st.taskProgress(day);
         int pin = DailyTasks.pinnedLevel(stored, pr.progression().level());

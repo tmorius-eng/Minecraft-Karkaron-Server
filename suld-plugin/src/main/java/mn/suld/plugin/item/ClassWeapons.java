@@ -204,7 +204,8 @@ public final class ClassWeapons implements Listener {
         java.util.UUID id = remembered(p);
         ItemInstance i = id == null
                 ? services.itemService().generate(d, d.rarity(), level, p.getUniqueId(), "recover")
-                : services.itemService().generator().generate(d, d.rarity(), level, mn.suld.api.loot.Rng.threadLocal(), "recover", p.getUniqueId(), id);
+                : services.itemService().generator().generate(d, d.rarity(), level,
+                        mn.suld.api.loot.Rng.seeded(rollSeed(p.getUniqueId(), id, tierFor(level))), "recover", p.getUniqueId(), id); // IT-05
         remember(p, i.uuid());
         p.getInventory().addItem(services.itemService().stack(i, p, 1));
         return Recovery.RESTORED;
@@ -222,6 +223,27 @@ public final class ClassWeapons implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         services.profiles().cached(p.getUniqueId()).ifPresent(pr -> upgrade(p, pr.progression().level(), false));
+    }
+
+    /**
+     * IT-04: a class weapon is rebuilt when the player's level moves it to a new tier, and also within its tier when
+     * the level outgrew the item's level: the definitions grow per level (items/weapons.json perLevel), so the lore's
+     * "grows with its bearer" is true between the tier levels too (a level-20 crafted sword used to deal ~3× a tier-2
+     * class weapon, which stood still from level 12 to 23).
+     */
+    static boolean needsRefresh(int tier, int wantTier, int itemLevel, int level) {
+        return tier < wantTier || tier == wantTier && itemLevel < level;
+    }
+
+    /**
+     * IT-05: the seed of a class weapon's rolls, fixed per owner, item and tier: the same weapon at the same tier always
+     * rolls the same, so neither levelling up nor /classgear recover is a free affix re-roll.
+     */
+    static long rollSeed(java.util.UUID owner, java.util.UUID item, int tier) {
+        long h = owner.getMostSignificantBits() * 31 + owner.getLeastSignificantBits();
+        h = h * 31 + item.getMostSignificantBits();
+        h = h * 31 + item.getLeastSignificantBits();
+        return h * 31 + tier;
     }
 
     /** Bring every class weapon in the inventory up to the tier of {@code level}. */
@@ -251,20 +273,24 @@ public final class ClassWeapons implements Listener {
                 PlayerClass c = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
                 if (c != null) h = new Held(c, 0);
             }
-            if (h == null || h.tier() >= want) continue;
+            if (h == null || !needsRefresh(h.tier(), want, ii.itemLevel(), level)) continue;
             // only this player's own class weapon: never one bound to someone else (it used to be re-bound here)
             if (ii.boundTo() != null && !ii.boundTo().equals(p.getUniqueId())) continue;
             PlayerClass mine = services.profiles().cached(p.getUniqueId()).flatMap(PlayerProfile::playerClass).orElse(null);
             if (mine != null && h.clazz() != mine) continue;
+            boolean newTier = h.tier() < want;
             ItemDefinition next = definition(h.clazz(), want);
-            // the same item (identity, binding) in its next form: new name, model, stats and affixes
-            ItemInstance rolled = services.itemService().generator().generate(next, next.rarity(), level, mn.suld.api.loot.Rng.threadLocal(),
-                    "upgrade", p.getUniqueId(), ii.uuid());
+            // the same item (identity, binding) in its next form or at its new level: the rolls come from a seed of
+            // owner + item + tier (IT-05), so levelling up only adds the per-level growth and never re-rolls affixes
+            ItemInstance rolled = services.itemService().generator().generate(next, next.rarity(), level,
+                    mn.suld.api.loot.Rng.seeded(rollSeed(p.getUniqueId(), ii.uuid(), want)), "upgrade", p.getUniqueId(), ii.uuid());
+            // within its tier the smith's +N stays (a new tier is a new form and starts from +0, as it always has)
+            if (!newTier && ii.upgradeLevel() > 0) rolled = rolled.reforged(rolled.itemLevel(), rolled.stats(), ii.upgradeLevel());
             ItemStack up = services.itemService().stack(rolled, p, 1);
             p.getInventory().setItem(i, up);
             remember(p, rolled.uuid());
             changed = true;
-            if (announce) {
+            if (announce && newTier) {
                 Line l = LINES.get(h.clazz());
                 TextColor tc = TextColor.color(l.color().asRGB());
                 p.showTitle(Title.title(Component.text("ЗЭВСЭГ ХҮЧИРХЭГЖЛЭЭ", tc, TextDecoration.BOLD),

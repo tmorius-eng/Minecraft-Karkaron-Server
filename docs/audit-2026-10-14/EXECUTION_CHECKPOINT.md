@@ -1,0 +1,123 @@
+# Execution checkpoint — audit-2026-10-14 (local CLI session)
+
+Base: `main` @ `411842d` (= `origin/main`, verified at session start). One agent, no subagents.
+**State at the end of the session: Phases 1–6 written; Phase 7 BLOCKED. Nothing is committed or pushed.**
+
+## Blocker (Phase 7)
+
+- In this non-interactive session every invocation of `./gradlew`, `.\gradlew.bat`, `java` and `python`/`py` asked for
+  an interactive approval that could not be given (tried at the start and again before Phase 7). The Gradle cache was
+  also outside the readable directories, so the Paper API jar could not be inspected.
+- Consequently **no code was compiled and no test, simTest or validator was run.** Every "DONE" below means written and
+  reviewed by reading, not verified by a build. Per the execution rules, nothing was committed or pushed.
+- The earlier web-session sub-audits (`items.md`, `quests.md`, `weapons.md`) and the prompt's "Part 12 / 20 Final
+  Questions" are **not in the repository**; findings follow the IDs and file/line references in
+  `CLAUDE_MASTER_EXECUTION_PROMPT.md`, each re-verified against source before it was fixed.
+
+## Phase status
+
+| Phase | Status | Notes |
+|---|---|---|
+| 1 — SULD-F01/F05/F08/F09/F11/F12 | DONE (found in working tree, uncompiled) | BowQuiver restore guard + pickup hook; DeathService trial-wolf shield (EXP save already at `DeathService.java:249-254`); DeathTrialService floor search; CraftOrderService shared mailbox + mailbox fallback. Tests: `BowQuiverTest`, `CraftOrderServiceTest`, `death/DeathTrialServiceTest`. |
+| 2 — WP-01..WP-10 | DONE (uncompiled) | SkillService hold-to-draw (`startUsingItem` + `PlayerStopUsingItemEvent` + tick watchdog + repeat-gap fallback + 5 s cap), stray vanilla shot cancel, dry-string cue, L cancels a draw, held-R filter, off-hand R cue; CombatListener draw-force PDC + `empowered()`; soul-fire trail; CombatFeel upright ring −0.18 Y; validator model/texture/parent + 3-stage check. Tests: `skill/BowDrawTest`, `combat/ArrowScaleTest`. |
+| 3 — IT-01..IT-20 | DONE for every IT item the prompt specifies (uncompiled) | IT-03 binding on delivery + equip fallback (`PickupBindingTest`); IT-02 tiers.json = sim v2 bands (simTest golden → `liveBossBandIsTheV2Band`); IT-01/15 named drops (`ItemObtainabilityTest`); IT-04/05 class weapon perLevel, in-tier refresh, seeded rolls (`ClassWeaponScalingTest`, `ClassWeaponRefreshTest`); IT-16 generator + T4 data (`ClassArmorScalingTest`); IT-17 salvage, IT-19 sale (`SalvageAndSaleAuditTest`); IT-08 reroll save order; IT-09 accessory save order; IT-12/20 consumables (`ConsumablesTest`). IT-07: no reforge/repair action exists. IT-06/10/11/13/14/18: unspecified — not invented. |
+| 4 — QS-01..QS-08 | DONE for every QS item the prompt specifies (uncompiled) | QS-01 party quest + daily credit; QS-02 gate refusal (tracker + book); QS-03 aliases + level placement (`QuestChainOrphanTest`); QS-04/05 giver; QS-07 verified already correct; new QuestType INSPECT_CLUE / CRAFT_ITEM / OVOO_RITUAL wired end to end (`QuestObjectiveVocabularyTest`). QS-06/08: unspecified. |
+| 5 — HUD / spell feedback | DONE (uncompiled) | HUD requirements verified present; Онгоны Дуудлага `NO_TARGET` before cost (echo refund removed); Тэнгэрийн Шийтгэл refused unpaid without enemies; soul refusal sounds. |
+| 6 — 8 reports | DONE | `GAME_LOGIC_STATUS.md`, `QUEST_AND_TASK_AUDIT.md`, `CLASS_ABILITY_AUDIT.md`, `ITEM_AND_RARITY_AUDIT.md`, `WEAPON_ANIMATION_AUDIT.md`, `COMBAT_AND_FEEDBACK_AUDIT.md` (Part 12 absent — stated, 20 scope questions answered instead), `LAPTOP_PLAYTEST_PLAN.md`, `GAMEPLAY_IMPROVEMENT_ROADMAP.md`. |
+| 7 — validate, commit, push | **BLOCKED** | see Blocker. Not committed, not pushed. |
+
+## To finish Phase 7 (in an interactive shell)
+
+```powershell
+.\gradlew.bat test simTest --no-daemon          # fix compile errors first if any (see "API assumptions")
+py tools\validation\run_all.py
+py -I tools\plugins\test_fetch_plugins.py
+py tools\content\gen_class_armor.py; git diff --stat suld-api/src/main/resources/items/class_armor.json   # rounding only
+git status; git diff --stat                      # review; CLAUDE_MASTER_EXECUTION_PROMPT.md is a scratch file — do not commit it
+git fetch origin; git rev-parse origin/main      # must still be 411842d4b7a9092021ef6e770d6f8e74abaa75b9
+git add <the files listed below>; git commit; git push origin main
+```
+
+Watch in particular: `SimulationTest.liveAndProposedReachSixtyAtTheSamePace` (130–170 h) after the tiers / loot /
+class-gear data changes. If it moves out of the band, tune the data with the owner — do not widen the test.
+
+## API assumptions to confirm at compile time (Paper 1.21.11)
+
+`LivingEntity#startUsingItem(EquipmentSlot)`, `LivingEntity#clearActiveItem()`, `HumanEntity#isHandRaised()`,
+`io.papermc.paper.event.player.PlayerStopUsingItemEvent#getTicksHeldFor()` (was `getTicksHeld()` — a compile error,
+see the follow-up below), `LivingEntity#swingOffHand()`,
+`EntityShootBowEvent#setConsumeItem`, `PersistentDataType.FLOAT`, `Attribute.MAX_HEALTH` (already used in the repo),
+`Particle.CAMPFIRE_COSY_SMOKE`, `Sound.ITEM_CROSSBOW_LOADING_START`, `Sound.BLOCK_GRINDSTONE_USE`.
+
+## Files changed (for the commit)
+
+Modified (main): suld-api `balance/Economy`, `item/ItemEconomy`, `item/ItemTooltip`, `quest/QuestChain`,
+`quest/QuestEngine`, `quest/QuestType`; resources `items/{class_armor,loot,materials,tiers,weapons}.json`;
+suld-plugin `SuldPlugin`, `combat/{CombatFeel,CombatListener}`, `content/ContentLoader`,
+`death/{DeathService,DeathTrialService}`, `dungeon/DungeonService`, `gui/{Menus,QuestMenu}`,
+`item/{BowQuiver,ClassWeapons,CraftOrderService,CraftService,EquipmentService,ItemService}`, `npc/NpcService`,
+`prop/PropService`, `quest/{QuestService,QuestTracker}`, `region/OvooService`, `reward/TaskService`,
+`skill/{SkillService,SkillTreeService,Ultimates}`, `worldboss/WorldBossService`, `worldevent/WorldEventService`;
+resources `content/quests.json`; sim `Engine`, `ProposedRules`; simTest `SimulationTest`; tools
+`content/gen_class_armor.py`, `validation/validate_resourcepack.py`.
+New (main): `suld-api/.../item/Consumables.java`, `suld-plugin/.../item/ConsumableService.java`.
+New (tests): suld-api `classgear/{ClassArmorScalingTest,ClassWeaponScalingTest}`,
+`item/{ConsumablesTest,ItemObtainabilityTest,SalvageAndSaleAuditTest}`,
+`quest/{QuestChainOrphanTest,QuestObjectiveVocabularyTest}`; suld-plugin `combat/ArrowScaleTest`,
+`death/DeathTrialServiceTest`, `item/{BowQuiverTest,ClassWeaponRefreshTest,CraftOrderServiceTest,PickupBindingTest}`,
+`skill/BowDrawTest`.
+New (docs): `docs/audit-2026-10-14/*` (this file + 8 reports).
+
+## Follow-up 2026-10-14 — four failing suld-api tests (test-only fixes)
+
+A local run (`suld-api/build/test-results`, 04:55) failed four tests. Each was traced to an intentional Phase 3 data
+change that the test still pinned at its pre-audit value; **no production code or item data was changed**.
+
+| Test | Failing assertion | Root cause | Fix |
+|---|---|---|---|
+| `ItemGeneratorTest.fixedRarityItemsKeepTheirExactNumbers` | `expected 21.0 but was 65.0` (baatar.4, legendary, lvl 45) | IT-04 gave class weapons `perLevel.damage` 1.0; growth is `perLevel × (level − 1)` (`ItemGenerator.generate`, `ItemDefinition.min/maxStat`, record javadoc "added per item level above 1"), so 21 + 44 = 65 | Asserts base + growth exactly (21 + 1.0 × 44) across 20 seeds and at the tier level 36, crit stays exactly 11, the data's perLevel is checked |
+| `RarityTooltipEconomyTest.tooltipShowsEverythingTheItemIs` | line 78 `+14 Хохирол` (tooltip shows `+38`) | same: baatar.3 at lvl 25 = 14 + 24 | Damage computed from the definition (= 38); now also asserts `+9% Чухал цохилтын магадлал` and the class-weapon lore; every other line unchanged |
+| `LootEngineTest.noBundledTableDropsAWeapon` | `loot.goviin_chono dropped weapon.talyn_ild` | IT-01/IT-15 named regional weapons as rare drops | `APPROVED_WEAPON_DROPS` allowlist (6 table → weapon pairs); any other weapon fails, a class weapon fails, and every approved pair must actually drop (no stale entry). New `weaponsReachLootOnlyAsNamedRareDrops`: no WEAPON pool, no weapon in entries/guaranteed, weapons only as approved `rare` entries with chance ≤ 10 % |
+| `LootEngineTest.tierBandsDecideRarityWithinTheItemsRange` | `elite band is uncommon..rare; {UNCOMMON=1114, RARE=1542, EPIC=344}` | IT-02 v2 bands (ELITE U55/R35/E10, BOSS R50/E38/L10/A2 — same as `ProposedRules.catalog` and `docs/GEAR_PROGRESSION_SPEC.md`) | Elite ⊆ uncommon..epic, epic share 5–20 %; boss ⊆ rare..ancient (never mythic), some legendary+, legendary+ < 20 % (est. ~6 %). The `normal` check (never reached in the failing run) compared all common vs uncommon drops, an exact 50/50 tie at level 40 (4 uncommon-minimum Ган pieces vs 8 common-capable): it now measures the 75/25 band on common-capable pieces (65–85 %) and that normal stays ≤ uncommon |
+
+Files changed: `suld-api/src/test/java/mn/suld/api/item/ItemGeneratorTest.java`,
+`suld-api/src/test/java/mn/suld/api/item/RarityTooltipEconomyTest.java`,
+`suld-api/src/test/java/mn/suld/api/loot/LootEngineTest.java`, this file.
+
+**Not run:** `gradlew.bat` was again refused (approval) in this session, so the edits are unverified. Run first:
+
+```powershell
+.\gradlew.bat :suld-api:test --tests mn.suld.api.item.ItemGeneratorTest --tests mn.suld.api.item.RarityTooltipEconomyTest --tests mn.suld.api.loot.LootEngineTest --tests mn.suld.api.classgear.ClassWeaponScalingTest --tests mn.suld.api.item.ItemObtainabilityTest --no-daemon
+```
+
+Note: the "Live band" column of `docs/GEAR_PROGRESSION_SPEC.md` (generated by `sim/SpecTables`) still shows the
+pre-v2 bands; regenerate it with the sim when Phase 7 runs.
+
+## Follow-up 2026-10-14 — two suld-plugin compilation errors (UNVERIFIED)
+
+The latest Gradle test report showed two Java compile errors in suld-plugin. Only these two were fixed. **Both fixes are
+UNVERIFIED until a local compile succeeds.** No build or test was run in this session.
+
+| File | Error | Fix |
+|---|---|---|
+| `suld-plugin/.../skill/SkillService.java` (`onBowRelease`) | `PlayerStopUsingItemEvent.getTicksHeld()` does not exist | Now calls the Paper 1.21.11 method `getTicksHeldFor()`. The draw duration is still `Math.max(ticksHeld, currentTick − drawStart)`, so the tick-watchdog fallback works the same way |
+| `suld-plugin/.../gui/ClassSelectionGui.java` | `onDrag(InventoryDragEvent)` declared twice (F02 handler + SULD-F07 handler, both in HEAD `411842d`) | Merged into one `@EventHandler(priority = HIGHEST)` handler that uses `cancelsDrag(...)`. That covers SULD-F07's goal: a drag touching any class-window slot is cancelled, so nothing can be placed there and wiped by `inv.clear()`. The SULD-F07 version cancelled every drag while the window was open. That stricter rule was not kept, because `ClassMenuDragTest` requires a drag only inside the player's own bag to pass. The javadoc now cites both F02 and SULD-F07 |
+
+Not touched: tests, loot balance, item data, deprecation warnings, all other uncommitted work. Run first:
+
+```powershell
+.\gradlew.bat :suld-plugin:compileJava :suld-plugin:test --tests mn.suld.plugin.gui.ClassMenuDragTest --tests mn.suld.plugin.skill.BowDrawTest --no-daemon
+```
+
+## Log
+
+- Start: git status/diff inspected; Phase 1 found complete in the working tree; checkpoint created.
+- Phases 2–5 implemented with tests; each phase recorded here as it finished.
+- Self-review pass over the Java changes (API usages cross-checked against existing calls in the repo;
+  `hasActiveItem()` → `isHandRaised()`; pattern-variable names de-duplicated in `CombatListener.onMitigate`).
+- Phase 6 reports written; counts re-checked against the data (42 chapters: 15 K / 1 C / 5 L / 9 D / 12 X; 234 items).
+- Phase 7: second attempt to run Gradle refused (approval) → stopped before commit/push.
+- Follow-up: four failing suld-api tests root-caused and fixed test-side (see section above); Gradle refused again,
+  so they are unverified. Nothing committed or pushed.
+- Follow-up: two suld-plugin compile errors fixed (`getTicksHeldFor()`, one merged `onDrag`). Not compiled, so
+  UNVERIFIED. Nothing committed or pushed.

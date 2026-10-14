@@ -464,6 +464,9 @@ public final class Menus {
             case COLLECT_ITEM -> Material.LEATHER;
             case DISCOVER_LOCATION -> Material.FILLED_MAP;
             case COMPLETE_DUNGEON -> Material.MOSSY_COBBLESTONE;
+            case INSPECT_CLUE -> Material.SPYGLASS;
+            case CRAFT_ITEM -> Material.SMITHING_TABLE;
+            case OVOO_RITUAL -> Material.COBBLESTONE_WALL;
         };
     }
 

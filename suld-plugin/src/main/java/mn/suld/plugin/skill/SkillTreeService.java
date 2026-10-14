@@ -1278,10 +1278,18 @@ public final class SkillTreeService implements Listener {
         long now = System.currentTimeMillis();
         if (services.isSoul.test(p.getUniqueId())) {
             skills.say(p, "§bСүнс — дуулал хэрэглэх боломжгүй");
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
             return;
         }
         if (now < r.ultReady) {
             skills.say(p, "§c" + r.build.ultimate().displayName() + " — " + ultimateCooldownSeconds(p) + " сек");
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
+            return;
+        }
+        // an ultimate that strikes chosen enemies, with none in reach, is refused before it costs or starts its wait
+        // (audit 2026-10-14: Тэнгэрийн Шийтгэл spent 60 and the cooldown on nothing, without a sound or a spark)
+        if (!ultimates.hasTarget(p, r.build.ultimate())) {
+            skills.say(p, "§c" + r.build.ultimate().displayName() + " — ойролцоо дайсан алга");
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.6f);
             return;
         }

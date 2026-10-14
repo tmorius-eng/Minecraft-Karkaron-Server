@@ -75,10 +75,16 @@ class RarityTooltipEconomyTest {
         assertTrue(t.contains("Домогт · Илд · Зэрэг 25"), t);
         assertTrue(lines.stream().anyMatch(l -> l.style() == ItemTooltip.Style.FAIL && l.text().equals("Шаардлагатай түвшин: 25")), "level too low is red");
         assertTrue(lines.stream().anyMatch(l -> l.style() == ItemTooltip.Style.FAIL && l.text().startsWith("Анги: Баатар")), "other class is red");
-        assertTrue(t.contains("+14 Хохирол"), t);
+        // base 14 at level 1 plus the class weapon's growth (IT-04: perLevel damage 1.0) to item level 25
+        ItemDefinition def = CAT.require("weapon.class.baatar.3");
+        long damage = Math.round(14 + def.statPerLevel().get(ItemStat.DAMAGE) * (25 - 1));
+        assertEquals(38, damage);
+        assertTrue(t.contains("+" + damage + " Хохирол"), t);
+        assertTrue(t.contains("+9% Чухал цохилтын магадлал"), "crit has no growth and keeps its number: " + t);
         assertEquals(3, lines.stream().filter(l -> l.style() == ItemTooltip.Style.AFFIX).count(), "epic = 3 affixes");
         assertTrue(t.contains("✦ Сүнсэнд холбоотой"), t);
         assertTrue(t.contains("Арилжаалах боломжгүй"), t);
+        assertTrue(t.contains("Ангийн зэвсэг — түвшин ахих тусам хамт ахина."), "the lore says it grows: " + t);
     }
 
     @Test

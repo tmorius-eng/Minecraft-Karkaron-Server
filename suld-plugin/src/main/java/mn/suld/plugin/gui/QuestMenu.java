@@ -71,6 +71,9 @@ public final class QuestMenu {
             case COLLECT_ITEM -> Material.LEATHER;
             case DISCOVER_LOCATION -> Material.FILLED_MAP;
             case COMPLETE_DUNGEON -> Material.MOSSY_COBBLESTONE;
+            case INSPECT_CLUE -> Material.SPYGLASS;
+            case CRAFT_ITEM -> Material.SMITHING_TABLE;
+            case OVOO_RITUAL -> Material.COBBLESTONE_WALL;
         };
     }
 
@@ -199,6 +202,8 @@ public final class QuestMenu {
             body.add(info("Юу хийх:", objective(def), NamedTextColor.WHITE));
             String where = where(p, def);
             if (where != null) body.add(info("Хаана:", where, SKY));
+            String gate = active ? mn.suld.plugin.quest.QuestTracker.gateRefusal(services, p, def) : null; // QS-02
+            if (gate != null) body.add(info("Хаалга:", "⛔ " + gate, NamedTextColor.RED));
             if (active) body.add(info("Явц:", bar(state.progress(), def.requiredCount()) + " " + state.progress() + "/" + def.requiredCount(), GOLD));
             body.add(info("Өгсөн:", lore.giver(), SKY));
             body.add(info("Нутаг:", land(index), SKY));
@@ -290,6 +295,9 @@ public final class QuestMenu {
             case COLLECT_ITEM -> "Цуглуулга";
             case DISCOVER_LOCATION -> "Аялал";
             case COMPLETE_DUNGEON -> "Агуй";
+            case INSPECT_CLUE -> "Мөрдлөг";
+            case CRAFT_ITEM -> "Дарханы ажил";
+            case OVOO_RITUAL -> "Овооны зан үйл";
         };
     }
 
@@ -374,6 +382,8 @@ public final class QuestMenu {
             body.add(Menu.kv("Юу хийх:", objective(def), NamedTextColor.WHITE));
             String where = where(p, def);
             if (where != null) body.add(Menu.kv("Хаана:", where, SKY));
+            String gate = active ? mn.suld.plugin.quest.QuestTracker.gateRefusal(services, p, def) : null; // QS-02
+            if (gate != null) body.add(Menu.kv("Хаалга:", "⛔ " + gate, NamedTextColor.RED));
             if (active) body.add(Menu.kv("Явц:", bar(state.progress(), def.requiredCount()) + " " + state.progress() + "/" + def.requiredCount(), GOLD));
             body.add(Menu.kv("Өгсөн:", lore.giver(), SKY));
             body.add(Menu.kv("Шагнал:", def.expReward() + " EXP · " + def.currencyReward() + " зоос", GREEN));
@@ -412,6 +422,13 @@ public final class QuestMenu {
             case COMPLETE_DUNGEON -> {
                 var dg = SuldContent.dungeonFor(d.targetId());
                 yield (dg == null ? "Агуй" : dg.displayName()) + "-г дав";
+            }
+            case INSPECT_CLUE -> "Мөрийг шинжлэх: " + mn.suld.plugin.prop.PropService.nameOf(d.targetId());
+            case CRAFT_ITEM -> SuldContent.items().item(d.targetId()).map(x -> x.displayName()).orElse(d.targetId())
+                    + " урла" + (d.requiredCount() > 1 ? " ×" + d.requiredCount() : "");
+            case OVOO_RITUAL -> {
+                RegionDefinition r = QuestTracker.targetRegion(d).orElse(null);
+                yield (r == null ? "Овоо" : r.displayName() + "-ийн овоо") + "-нд мөргө";
             }
         };
     }

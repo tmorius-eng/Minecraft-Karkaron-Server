@@ -75,7 +75,8 @@ public final class QuestTracker implements Listener {
             case COMPLETE_DUNGEON -> DungeonContent.regionOf(d.targetId());
             case KILL_MOB -> regionWithMob(d.targetId());
             case COLLECT_ITEM -> regionDropping(d.targetId());
-            case REACH_LEVEL -> null;
+            case OVOO_RITUAL -> d.targetId();
+            case REACH_LEVEL, INSPECT_CLUE, CRAFT_ITEM -> null; // a prop or the smith: the chapter's own "region" names it
         };
         if (id == null) return Optional.empty();
         for (RegionDefinition r : WorldContent.REGIONS) if (r.id().equals(id)) return Optional.of(r);
@@ -124,6 +125,28 @@ public final class QuestTracker implements Listener {
         }
     }
 
+    /** Player id -> {checked at ms, refusal text or null}: the gate check reads gear power, so it is redone every 2 s. */
+    private static final java.util.Map<java.util.UUID, Object[]> GATE_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * QS-02: why the gate of a dungeon chapter would refuse {@code p} right now (level, the previous rung, the story or
+     * gear-power gate — DungeonService.soloEntryRefusal), as plain text; null when it would open or the chapter is not
+     * a dungeon's.
+     */
+    public static String gateRefusal(SuldServices services, Player p, QuestDefinition d) {
+        if (d == null || d.type() != mn.suld.api.quest.QuestType.COMPLETE_DUNGEON || services.dungeons() == null) return null;
+        var def = SuldContent.dungeonFor(d.targetId());
+        if (def == null) return null;
+        long now = System.currentTimeMillis();
+        Object[] hit = GATE_CACHE.get(p.getUniqueId());
+        if (hit != null && now - (long) hit[0] < 2_000 && d.targetId().equals(hit[2])) return (String) hit[1];
+        Component why = services.dungeons().soloEntryRefusal(p, def);
+        String text = why == null ? null : net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(why)
+                .replaceFirst("^[✖✗⚠!\\s]+", "");
+        GATE_CACHE.put(p.getUniqueId(), new Object[] {now, text, d.targetId()});
+        return text;
+    }
+
     private Component line(Player p) {
         if (services.dungeons().isInAnyRun(p.getUniqueId()) || p.getWorld().getEnvironment() != World.Environment.NORMAL) return null;
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
@@ -135,6 +158,9 @@ public final class QuestTracker implements Listener {
                 .append(Component.text(s.progress() + "/" + d.requiredCount(), NamedTextColor.WHITE, TextDecoration.BOLD));
         Location l = p.getLocation();
         if (d.type() == mn.suld.api.quest.QuestType.COMPLETE_DUNGEON) {
+            // QS-02: a gate that would refuse the player says what it wants, not "here! press the gate"
+            String refusal = gateRefusal(services, p, d);
+            if (refusal != null) return head.append(Component.text("  ⛔ " + refusal, NamedTextColor.RED, TextDecoration.BOLD));
             // a dungeon chapter points at the dungeon's gate itself (docs/world/DUNGEON_HALLS.md)
             Location gate = services.dungeons().halls().flatMap(h -> h.gate(d.targetId())).orElse(null);
             if (gate != null && gate.getWorld().equals(l.getWorld())) {
