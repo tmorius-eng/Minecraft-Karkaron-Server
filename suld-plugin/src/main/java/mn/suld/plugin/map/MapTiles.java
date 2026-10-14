@@ -86,18 +86,26 @@ final class MapTiles {
             CompletableFuture<byte[]> f = inflight.get(k);
             if (f != null) return f;
             MapGeometry g = geometry;
-            CompletableFuture<byte[]> nf = CompletableFuture.supplyAsync(() -> TileComposer.compose(g, store::columnBlocking, zoom, tx, tz), workers);
-            inflight.put(k, nf);
-            nf.whenComplete((bytes, ex) -> {
-                synchronized (this) {
-                    inflight.remove(k);
-                    boolean stale = staleInflight.remove(k);
-                    if (bytes != null && !stale) {
-                        cache.put(k, bytes);
-                        while (cache.size() > maxTiles) cache.remove(cache.keySet().iterator().next());
+            // the tile is cached before its future completes, so whoever waited on it finds it cached (CI #79 caught a
+            // callback that cached it after the waiting thread had already woken); the lock held here keeps the worker's
+            // bookkeeping after the inflight entry below
+            CompletableFuture<byte[]> nf = CompletableFuture.supplyAsync(() -> {
+                byte[] bytes = null;
+                try {
+                    bytes = TileComposer.compose(g, store::columnBlocking, zoom, tx, tz);
+                    return bytes;
+                } finally {
+                    synchronized (MapTiles.this) {
+                        inflight.remove(k);
+                        boolean stale = staleInflight.remove(k);
+                        if (bytes != null && !stale) {
+                            cache.put(k, bytes);
+                            while (cache.size() > maxTiles) cache.remove(cache.keySet().iterator().next());
+                        }
                     }
                 }
-            });
+            }, workers);
+            if (!nf.isDone()) inflight.put(k, nf); // done already only if the executor ran it here: nothing in flight
             return nf;
         }
     }
