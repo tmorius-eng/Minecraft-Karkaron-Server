@@ -224,8 +224,13 @@ public final class SkillService implements Listener {
     // ------------------------------------------------------------------ clicks
 
     private boolean holdsClassWeapon(Player p, PlayerClass c) {
-        return services.items().read(p.getInventory().getItemInMainHand())
-                .map(i -> i.definitionId().startsWith("weapon.class." + c.id() + ".")).orElse(false);
+        return services.items().read(p.getInventory().getItemInMainHand()).map(i -> {
+            if (i.definitionId().startsWith("weapon.class." + c.id() + ".")) return true;
+            mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(i.definitionId());
+            if (def == null || def.type().category() != mn.suld.api.item.ItemType.Category.WEAPON) return false;
+            if (!mn.suld.api.loot.LootEngine.affinity(c).contains(def.type()) || !def.allows(c)) return false;
+            return services.equipment() == null || !services.equipment().bonus(p).inactive().containsKey(mn.suld.api.item.EquipSlot.MAIN_HAND);
+        }).orElse(false);
     }
 
     public boolean holdsClassWeapon(Player p) {
@@ -313,6 +318,7 @@ public final class SkillService implements Listener {
         ComboTracker t = combos.get(id);
         long now = System.currentTimeMillis();
         if (t != null && !t.current(now).isEmpty()) return;
+<<<<<<< ours
         if (soulBlocked(id)) return;
         Long last = lastShot.get(id);
         if (last != null && now - last < SHOT_MS) {
@@ -398,6 +404,16 @@ public final class SkillService implements Listener {
         if (firing || !(e.getEntity() instanceof Player p) || clazzOf(p) != PlayerClass.MERGEN || !holdsClassWeapon(p, PlayerClass.MERGEN)) return;
         e.setConsumeItem(false);
         e.setCancelled(true);
+=======
+        Long last = lastShot.get(p.getUniqueId());
+        if (last != null && now - last < SHOT_MS) {
+            p.playSound(p.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.3f, 1.6f);
+            return;
+        }
+        if (soulBlocked(p.getUniqueId())) return;
+        lastShot.put(p.getUniqueId(), now);
+        shoot(p);
+>>>>>>> theirs
     }
 
     /**
@@ -431,8 +447,14 @@ public final class SkillService implements Listener {
             a.remove();
             return;
         }
+<<<<<<< ours
         // no arm swing on release: a server swing of the main hand comes back from the client as a left click (a phantom 'L')
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.9f, 0.95f + 0.2f * force);
+=======
+        p.swingMainHand();
+        p.setCooldown(org.bukkit.Material.BOW, 6);
+        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 0.9f, 1.15f);
+>>>>>>> theirs
         p.getWorld().spawnParticle(org.bukkit.Particle.CRIT, p.getEyeLocation().add(p.getEyeLocation().getDirection().multiply(1.2)), 6, 0.1, 0.1, 0.1, 0.05);
         if (CombatListener.empowered(p.getUniqueId())) empoweredTrail(a);
     }
@@ -466,9 +488,19 @@ public final class SkillService implements Listener {
     }
 
     /** A left click always swings the arm (air, block or entity); the debounce merges it with the other events. */
+    private final Map<UUID, Integer> lastDropTick = new ConcurrentHashMap<>();
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDropTrack(org.bukkit.event.player.PlayerDropItemEvent e) {
+        lastDropTick.put(e.getPlayer().getUniqueId(), Bukkit.getCurrentTick());
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSwing(org.bukkit.event.player.PlayerAnimationEvent e) {
-        if (e.getAnimationType() == org.bukkit.event.player.PlayerAnimationType.ARM_SWING) click(e.getPlayer(), 'L');
+        if (e.getAnimationType() != org.bukkit.event.player.PlayerAnimationType.ARM_SWING) return;
+        Integer dt = lastDropTick.get(e.getPlayer().getUniqueId());
+        if (dt != null && dt == Bukkit.getCurrentTick()) return;
+        click(e.getPlayer(), 'L');
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -508,13 +540,21 @@ public final class SkillService implements Listener {
         if (c == 'L') {
             Long lastR = lastClickByType.get(p.getUniqueId() + ":R");
             if (lastR != null && now - lastR < 30) return;
+<<<<<<< ours
             cancelDraw(p); // a left click while the bow is drawn lets the draw go and starts the archer's combo
         } else {
             if (drawStart.containsKey(p.getUniqueId())) return; // WP-06: the held right button of a draw is not a combo R
             long gap = last == null ? Long.MAX_VALUE : now - last;
             Long before = rightGap.put(p.getUniqueId(), gap);
             if (heldRepeat(before, gap)) return; // WP-06: a held button repeating every 4 ticks never types R-R-R
+=======
+            if (clazz == PlayerClass.MERGEN) {
+                if (p.hasCooldown(org.bukkit.Material.BOW)) p.setCooldown(org.bukkit.Material.BOW, 0);
+                if (p.isHandRaised()) p.clearActiveItem();
+            }
+>>>>>>> theirs
         }
+        if (c == 'R' && p.isHandRaised()) return; // WP-06: ignore 4-tick hold-right-click auto-repeat packets while using an item
         ComboTracker t = combos.computeIfAbsent(p.getUniqueId(), k -> new ComboTracker(clazz));
         if (t.clazz() != clazz) {
             t = new ComboTracker(clazz);
@@ -523,6 +563,7 @@ public final class SkillService implements Listener {
         ComboTracker.Result r = t.click(c, now);
         if (r.kind() != ComboTracker.Kind.IGNORED && c == 'R') rightClickCue(p, clazz);
         if (r.kind() == ComboTracker.Kind.PROGRESS) {
+            if (c == 'R' && clazz != PlayerClass.MERGEN) p.swingOffHand(); // WP-05: visual hand motion on melee/staff R combo step
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.35f, r.combo().length() == 1 ? 1.4f : 1.7f);
             services.hud().refresh(p);
         } else if (r.kind() == ComboTracker.Kind.COMPLETE) {

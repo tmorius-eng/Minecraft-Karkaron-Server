@@ -96,6 +96,7 @@ def budget(piece, t):
     """(base at AL 1, per level) per stat for tier index t."""
     a0, rar = TIER_AL[t], TIER_RARITY[t]
     if t + 1 < len(TIER_AL):
+<<<<<<< ours
         m0, slope = fitted(piece, t)
         if 0 < t and t + 2 < len(TIER_AL) and slope.get("armor", 1.0) <= 0.0005:
             # IT-16 (audit 2026-10-14): the legendary proxy has less armour at 48 than at 36, so the T4 fit was flat:
@@ -103,6 +104,12 @@ def budget(piece, t):
             # slope of the tier above (T5): T4 then stays over T3 up to 60 and under T5 from T5's entry, where the
             # slope of the tier below (T3, steeper than T5) would carry T4 past T5.
             slope["armor"] = fitted(piece, t + 1)[1].get("armor", 0.0)
+=======
+        a1 = TIER_AL[t + 1]
+        m1 = mean(proxy(piece, a1, rar), a1, rar)
+        prev_slope = budget(piece, t - 1)[1] if t > 0 else {}
+        slope = {k: max(0.0, (m1.get(k, v) - v) / (a1 - a0)) or (prev_slope.get(k, 0.0) * 0.5 if k == "armor" else 0.0) for k, v in m0.items()}
+>>>>>>> theirs
     else:
         m0 = mean(proxy(piece, a0, rar), a0, rar)
         slope = budget(piece, t - 1)[1]

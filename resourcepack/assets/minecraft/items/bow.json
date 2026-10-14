@@ -10,8 +10,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "suld:item/surgamj_num"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/surgamj_num"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/surgamj_num_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/surgamj_num_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/surgamj_num_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -46,8 +73,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "minecraft:item/bow"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "minecraft:item/bow"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/bow_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/bow_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/bow_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -82,8 +136,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "suld:item/weapon/mergen_1"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_1"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_1_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_1_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_1_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -118,8 +199,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "suld:item/weapon/mergen_2"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_2"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_2_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_2_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_2_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -154,8 +262,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "suld:item/weapon/mergen_3"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_3"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_3_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_3_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_3_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -190,8 +325,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "suld:item/weapon/mergen_4"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_4"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_4_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_4_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_4_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -226,8 +388,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "suld:item/weapon/mergen_5"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_5"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_5_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_5_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_5_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -262,8 +451,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "suld:item/weapon/mergen_6"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "suld:item/weapon/mergen_6"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_6_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_6_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "suld:item/weapon/mergen_6_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -298,8 +514,35 @@
           "type": "minecraft:condition",
           "property": "minecraft:using_item",
           "on_false": {
-            "type": "minecraft:model",
-            "model": "minecraft:item/bow"
+            "type": "minecraft:range_dispatch",
+            "property": "minecraft:cooldown",
+            "fallback": {
+              "type": "minecraft:model",
+              "model": "minecraft:item/bow"
+            },
+            "entries": [
+              {
+                "threshold": 0.05,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/bow_pulling_0"
+                }
+              },
+              {
+                "threshold": 0.35,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/bow_pulling_1"
+                }
+              },
+              {
+                "threshold": 0.7,
+                "model": {
+                  "type": "minecraft:model",
+                  "model": "minecraft:item/bow_pulling_2"
+                }
+              }
+            ]
           },
           "on_true": {
             "type": "minecraft:range_dispatch",
@@ -333,8 +576,35 @@
       "type": "minecraft:condition",
       "property": "minecraft:using_item",
       "on_false": {
-        "type": "minecraft:model",
-        "model": "minecraft:item/bow"
+        "type": "minecraft:range_dispatch",
+        "property": "minecraft:cooldown",
+        "fallback": {
+          "type": "minecraft:model",
+          "model": "minecraft:item/bow"
+        },
+        "entries": [
+          {
+            "threshold": 0.05,
+            "model": {
+              "type": "minecraft:model",
+              "model": "minecraft:item/bow_pulling_0"
+            }
+          },
+          {
+            "threshold": 0.35,
+            "model": {
+              "type": "minecraft:model",
+              "model": "minecraft:item/bow_pulling_1"
+            }
+          },
+          {
+            "threshold": 0.7,
+            "model": {
+              "type": "minecraft:model",
+              "model": "minecraft:item/bow_pulling_2"
+            }
+          }
+        ]
       },
       "on_true": {
         "type": "minecraft:range_dispatch",

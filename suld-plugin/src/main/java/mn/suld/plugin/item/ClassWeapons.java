@@ -200,14 +200,22 @@ public final class ClassWeapons implements Listener {
         }
         if (p.getInventory().firstEmpty() < 0) return Recovery.NO_ROOM;
         int level = services.profiles().cached(p.getUniqueId()).map(pr -> pr.progression().level()).orElse(1);
-        ItemDefinition d = definition(c, tierFor(level));
+        int tier = tierFor(level);
+        ItemDefinition d = definition(c, tier);
         java.util.UUID id = remembered(p);
+        mn.suld.api.loot.Rng seeded = mn.suld.api.loot.Rng.seeded(seed(p.getUniqueId(), c, tier));
         ItemInstance i = id == null
+<<<<<<< ours
                 ? services.itemService().generate(d, d.rarity(), level, p.getUniqueId(), "recover")
                 : services.itemService().generator().generate(d, d.rarity(), level,
                         mn.suld.api.loot.Rng.seeded(rollSeed(p.getUniqueId(), id, tierFor(level))), "recover", p.getUniqueId(), id); // IT-05
+=======
+                ? services.itemService().generator().generate(d, d.rarity(), level, seeded, "recover", p.getUniqueId())
+                : services.itemService().generator().generate(d, d.rarity(), level, seeded, "recover", p.getUniqueId(), id);
+>>>>>>> theirs
         remember(p, i.uuid());
         p.getInventory().addItem(services.itemService().stack(i, p, 1));
+        PlayerDataSaves.now(p);
         return Recovery.RESTORED;
     }
 
@@ -280,12 +288,18 @@ public final class ClassWeapons implements Listener {
             if (mine != null && h.clazz() != mine) continue;
             boolean newTier = h.tier() < want;
             ItemDefinition next = definition(h.clazz(), want);
+<<<<<<< ours
             // the same item (identity, binding) in its next form or at its new level: the rolls come from a seed of
             // owner + item + tier (IT-05), so levelling up only adds the per-level growth and never re-rolls affixes
             ItemInstance rolled = services.itemService().generator().generate(next, next.rarity(), level,
                     mn.suld.api.loot.Rng.seeded(rollSeed(p.getUniqueId(), ii.uuid(), want)), "upgrade", p.getUniqueId(), ii.uuid());
             // within its tier the smith's +N stays (a new tier is a new form and starts from +0, as it always has)
             if (!newTier && ii.upgradeLevel() > 0) rolled = rolled.reforged(rolled.itemLevel(), rolled.stats(), ii.upgradeLevel());
+=======
+            // the same item (identity, binding) in its next form: new name, model, stats and affixes
+            ItemInstance rolled = services.itemService().generator().generate(next, next.rarity(), level,
+                    mn.suld.api.loot.Rng.seeded(seed(p.getUniqueId(), h.clazz(), want)), "upgrade", p.getUniqueId(), ii.uuid());
+>>>>>>> theirs
             ItemStack up = services.itemService().stack(rolled, p, 1);
             p.getInventory().setItem(i, up);
             remember(p, rolled.uuid());
@@ -302,7 +316,17 @@ public final class ClassWeapons implements Listener {
                 burst(p.getLocation().add(0, 1, 0), l.color(), want, 40);
             }
         }
-        if (changed) p.updateInventory();
+        if (changed) {
+            p.updateInventory();
+            PlayerDataSaves.now(p);
+        }
+    }
+
+    public static long seed(java.util.UUID player, PlayerClass clazz, int tier) {
+        long h = player.getMostSignificantBits() ^ Long.rotateLeft(player.getLeastSignificantBits(), 17);
+        h ^= (clazz.ordinal() + 1L) * 0x9E3779B97F4A7C15L;
+        h ^= (long) tier * 0xBF58476D1CE4E5B9L;
+        return h == 0 ? 1L : h;
     }
 
     // ------------------------------------------------------------------ effects

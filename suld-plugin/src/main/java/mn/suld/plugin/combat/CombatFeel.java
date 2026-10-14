@@ -112,7 +112,11 @@ public final class CombatFeel implements Listener {
     private boolean classWeapon(ItemStack it) {
         if (it == null || it.getType() == Material.AIR) return false;
         Optional<ItemInstance> i = services.items().read(it);
-        return i.isPresent() && i.get().definitionId().startsWith("weapon.class.");
+        if (i.isEmpty()) return false;
+        String id = i.get().definitionId();
+        if (id.startsWith("weapon.class.")) return true;
+        mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(id);
+        return def != null && def.type().category() == mn.suld.api.item.ItemType.Category.WEAPON;
     }
 
     // ------------------------------------------------------------------ lock-on
@@ -303,6 +307,7 @@ public final class CombatFeel implements Listener {
     public void onShoot(org.bukkit.event.entity.EntityShootBowEvent e) {
         if (!(e.getEntity() instanceof Player p) || e.getForce() < 0.9f || !classWeapon(e.getBow())) return;
         Location eye = p.getEyeLocation();
+<<<<<<< ours
         Location at = eye.clone().add(eye.getDirection().multiply(1.2)).add(0, RING_DROP, 0);
         ring(at, 0xF2D27A, 0.4f, 1.4f);
     }
@@ -326,6 +331,11 @@ public final class CombatFeel implements Listener {
             d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(upright), new Vector3f(s1, s1, s1), new Quaternionf()));
         }, 1L);
         Bukkit.getScheduler().runTaskLater(plugin, d::remove, 6L);
+=======
+        Location at = eye.clone().add(eye.getDirection().multiply(1.2)).subtract(0, 0.16, 0);
+        at.setPitch(25f);
+        sweep(at, "ring", 0xF2D27A, 0.4f, 1.4f, 0, 0);
+>>>>>>> theirs
     }
 
     @EventHandler

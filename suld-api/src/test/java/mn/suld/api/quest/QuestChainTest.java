@@ -22,6 +22,7 @@ class QuestChainTest {
     @Test
     void normaliseStartsAndCatchesUp() {
         assertEquals(HUNT.initialState(), chain.normalise(QuestState.NONE));
+        assertEquals(HUNT.initialState(), chain.normalise(new QuestState("q.removed_legacy", 2, false)));
         assertEquals(LEVEL.initialState(), chain.normalise(new QuestState("q.hunt", 3, true)));
         QuestState active = new QuestState("q.level", 2, false);
         assertEquals(active, chain.normalise(active));

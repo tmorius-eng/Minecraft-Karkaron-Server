@@ -403,7 +403,7 @@ public final class NpcService implements Listener {
             menus.tutorial(p);
         } else if (id.equals("quest.first_hunt")) {
             if (!pr.hasSelectedClass()) {
-                p.sendMessage(Messages.info("Анчин: «Эхлээд ангиа сонго — Бөө чамайг хүлээж байна.»"));
+                p.sendMessage(Messages.info("Анчдын Ахлагч: «Эхлээд ангиа сонго — Бөө чамайг хүлээж байна.»"));
                 return;
             }
             services.quests().ensure(p, pr);
@@ -453,7 +453,7 @@ public final class NpcService implements Listener {
         m.set(11, it.clone(), null);
         if (damaged) {
             int damage = ((Damageable) it.getItemMeta()).getDamage();
-            long cost = 5 + (long) Math.ceil(damage / 8.0);
+            long cost = inst != null ? mn.suld.api.item.ItemEconomy.repairCost(inst, damage) : 5 + (long) Math.ceil(damage / 8.0);
             m.set(upgradable ? 14 : 15, Menu.item(Material.ANVIL, Menu.title("Засах · " + cost + " зоос", NamedTextColor.GREEN),
                     List.of(Menu.kv("Гэмтэл:", String.valueOf(damage), NamedTextColor.RED), Menu.line("Бүрэн шинэ болгоно."))), (pl, c) -> {
                 PlayerProfile pr = services.profiles().cached(pl.getUniqueId()).orElse(null);
@@ -470,6 +470,8 @@ public final class NpcService implements Listener {
                     pr.addCurrency(-cost);
                     hd.setDamage(0);
                     hand.setItemMeta(hd);
+                    services.profiles().save(pr);
+                    mn.suld.plugin.item.PlayerDataSaves.now(pl);
                     pl.playSound(pl.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
                     pl.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " зоос)."));
                     if (services.classArmor != null) services.classArmor.smithWork(pl);
@@ -516,6 +518,7 @@ public final class NpcService implements Listener {
                 pl.getWorld().spawnParticle(org.bukkit.Particle.ENCHANT, pl.getLocation().add(0, 1.2, 0), 40, 0.4, 0.6, 0.4, 0.4);
                 pl.sendMessage(Messages.success(def.displayName() + " → Зэрэг " + up.itemLevel() + " (+" + up.upgradeLevel() + ")"));
                 services.profiles().save(pr);
+                mn.suld.plugin.item.PlayerDataSaves.now(pl);
                 if (services.classArmor != null) services.classArmor.smithWork(pl);
                 pl.closeInventory();
             });
