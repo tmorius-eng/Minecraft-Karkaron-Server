@@ -62,6 +62,17 @@ target frame draws its own bar; no other system uses white bars), and the genera
 advances (computed like the client: trimmed width × scale, rounded, + 1). `tools/pack/hud_render.py` renders a
 composed line offline with the pack's own font for review.
 
+**Glyph size limit (2026-10-14).** The client refuses a bitmap glyph whose cell is over **256 texels** on either axis:
+it draws its missing-glyph box (a few px wide) instead, but the server still advanced the pen by the art's width, so
+the line came out ~180 px shorter than the server's canvas. The client centres the shortened line, so everything
+before the bad glyph (the name) moved right, the box sat near the screen centre, and the bar and numbers after it moved
+left. The target frame (182 px at 2× = 364 texels) hit this for every target: mobs, elites, bosses, players, NPCs and
+training dummies alike. Each tier's frame is now two 91 px halves (`TGT_FRAME*_L` / `_R`, the same pixels) that
+`HudComposer.targetFrame` places at absolute positions. Guards: `gen_hud.py` refuses an oversized cell,
+`validate_resourcepack.py` fails on one in `suld:hud` (and warns for other fonts), `HudFontContractTest` checks every
+`suld:hud` cell and every advance in `HudGlyphs` against the real pack, and `hud_render.py` draws an oversized glyph as
+the client does.
+
 ## Limits (server-side HUD)
 
 * The hotbar cannot move (Ares' left/vertical hotbar needs a client mod); the panel sits above it.

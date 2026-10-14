@@ -283,12 +283,7 @@ public final class HudComposer {
                 : t.hostile() ? TextColor.color(0xFFB0A0) : WHITE;
         String lv = t.level() > 0 ? "LV " + t.level() + "  " : "";
         line(c, List.of(new HudState.Run(lv, GOLD), new HudState.Run(t.name(), nameColor)));
-        HudGlyphs.G frame = switch (t.tier()) {
-            case BOSS -> HudGlyphs.TGT_FRAME_BOSS;
-            case ELITE -> HudGlyphs.TGT_FRAME_ELITE;
-            case NORMAL -> HudGlyphs.TGT_FRAME;
-        };
-        c.glyphAt(x0, frame);
+        targetFrame(c, x0, t.tier());
         boolean endless = Double.isInfinite(t.maxHp()); // a training Warden: always full, «∞»
         int hpW = endless ? TARGET_INNER : px(t.hp(), t.maxHp(), TARGET_INNER);
         int chipW = endless ? hpW : px(Math.max(t.recentHp(), t.hp()), t.maxHp(), TARGET_INNER);
@@ -296,5 +291,24 @@ public final class HudComposer {
         if (chipW > hpW) c.at(x0 + 1 + hpW).fill(HudGlyphs.FILL_TGT_CHIP, chipW - hpW);
         c.centred(HudGlyphs.TARGET, 0, endless ? "∞" : n(t.hp()) + "/" + n(t.maxHp()), WHITE);
         return c.build();
+    }
+
+    /** The left and right halves of a tier's target frame (one 182 px frame is past the client's 256-texel glyph limit). */
+    static HudGlyphs.G[] frameHalves(Tier tier) {
+        return switch (tier) {
+            case BOSS -> new HudGlyphs.G[]{HudGlyphs.TGT_FRAME_BOSS_L, HudGlyphs.TGT_FRAME_BOSS_R};
+            case ELITE -> new HudGlyphs.G[]{HudGlyphs.TGT_FRAME_ELITE_L, HudGlyphs.TGT_FRAME_ELITE_R};
+            case NORMAL -> new HudGlyphs.G[]{HudGlyphs.TGT_FRAME_L, HudGlyphs.TGT_FRAME_R};
+        };
+    }
+
+    /**
+     * The whole frame from x0 to x0 + {@link HudGlyphs#TARGET_W}: the halves are placed at absolute positions (not by
+     * advance), so they butt together exactly whatever the advance padding, and the frame stays centred on x = 0.
+     */
+    static void targetFrame(HudCanvas c, int x0, Tier tier) {
+        HudGlyphs.G[] halves = frameHalves(tier);
+        c.glyphAt(x0, halves[0]);
+        c.glyphAt(x0 + HudGlyphs.TARGET_W / 2, halves[1]);
     }
 }

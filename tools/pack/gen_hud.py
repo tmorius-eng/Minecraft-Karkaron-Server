@@ -143,8 +143,20 @@ def advance_of(trim: int, scale: float) -> int:
     return int(0.5 + trim * scale) + 1
 
 
+# The client refuses a bitmap glyph whose cell is wider or taller than this (texture pixels): it draws the missing-glyph
+# box with that box's own small advance instead, so every glyph after it on the line lands in the wrong place and the
+# client's centring of the shortened line drags the rest the other way. Wider art is split into several glyphs.
+MAX_GLYPH_PX = 256
+
+
+def check_cell(name: str, w: int, h: int) -> None:
+    if w > MAX_GLYPH_PX or h > MAX_GLYPH_PX:
+        raise SystemExit(f"{name}: glyph cell {w}x{h} exceeds the client's {MAX_GLYPH_PX} px limit; split it")
+
+
 def single(name: str, img: Image.Image, height: int, ascent: int) -> None:
     """One glyph from one image; ``height`` is the displayed height (the texture may be 2x)."""
+    check_cell(name, img.width, img.height)
     file = save(img, name.lower())
     ch = cp()
     providers.append({"type": "bitmap", "file": file, "height": height, "ascent": ascent, "chars": [ch]})
@@ -154,6 +166,7 @@ def single(name: str, img: Image.Image, height: int, ascent: int) -> None:
 def strip(name: str, cells: list[Image.Image], cell_w: int, height: int, ascent: int) -> list[tuple[str, int]]:
     """Several glyphs side by side in one texture (one provider row); returns [(char, advance)]."""
     h = cells[0].height
+    check_cell(name, cell_w, h)
     sheet = Image.new("RGBA", (cell_w * len(cells), h), (0, 0, 0, 0))
     for i, c in enumerate(cells):
         sheet.paste(c, (i * cell_w, 0))  # no mask: cells never overlap, and the space's alpha-1 width pixel must survive
@@ -568,11 +581,18 @@ def build() -> None:
                                             cap=side), BAR_H, asc(ROW_A_Y))
     single("DIAMOND", diamond(), DIAMOND_W, asc(DIAMOND_Y))
     single("PLAQUE", plaque(), 7, asc(PLAQUE_Y))
-    single("TGT_FRAME", frame(TARGET_W, 7, chamfer_left=True, chamfer_right=True), 7, TGT_FRAME_ASC)
-    single("TGT_FRAME_ELITE", frame(TARGET_W, 7, metal=(SILVER_D, (150, 158, 170), SILVER, (110, 118, 130)), chamfer_left=True,
-                                    chamfer_right=True), 7, TGT_FRAME_ASC)
-    single("TGT_FRAME_BOSS", frame(TARGET_W, 7, metal=(GOLD_D, (226, 170, 60), GOLD, (150, 100, 20)), chamfer_left=True,
-                                   chamfer_right=True), 7, TGT_FRAME_ASC)
+    # the target frame is 182 px (364 texels at 2x), past the glyph limit: each tier is two glyphs of 91 px drawn side
+    # by side (the left halves keep the old code points; the right halves are appended at the end of the font)
+    target_frames = {
+        "TGT_FRAME": frame(TARGET_W, 7, chamfer_left=True, chamfer_right=True),
+        "TGT_FRAME_ELITE": frame(TARGET_W, 7, metal=(SILVER_D, (150, 158, 170), SILVER, (110, 118, 130)), chamfer_left=True,
+                                 chamfer_right=True),
+        "TGT_FRAME_BOSS": frame(TARGET_W, 7, metal=(GOLD_D, (226, 170, 60), GOLD, (150, 100, 20)), chamfer_left=True,
+                                chamfer_right=True),
+    }
+    split = TARGET_W  # texels: the left half is TARGET_W / 2 GUI px at 2x
+    for name, img in target_frames.items():
+        single(name + "_L", img.crop((0, 0, split, img.height)), 7, TGT_FRAME_ASC)
     # bar fills: power-of-two pieces per kind (columns identical, so pieces butt together seamlessly)
     row_a = {"hp", "hp_chip", "absorb"}
     for kind in FILLS:
@@ -603,6 +623,8 @@ def build() -> None:
     text_set("LINE", 7, text_symbols)
     del pf._G[" "]
     text_set("LEVEL", asc(43), "0123456789")     # 7 px digits centred on the diamond (Y 43..36)
+    for name, img in target_frames.items():
+        single(name + "_R", img.crop((split, 0, img.width, img.height)), 7, TGT_FRAME_ASC)
 
 
 def write_font() -> None:

@@ -16,6 +16,10 @@ from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ASSETS = os.path.join(ROOT, "resourcepack", "assets")
+# The client refuses a bitmap glyph cell over this many texels on either axis and draws its missing-glyph box (with
+# that box's own advance) instead; render it the same way so an oversized glyph shows here as it does in game.
+MAX_GLYPH_PX = 256
+MISSING_ADVANCE = 6
 
 
 def load_font(name: str = "suld:hud") -> dict:
@@ -31,6 +35,12 @@ def load_font(name: str = "suld:hud") -> dict:
             img = Image.open(os.path.join(ASSETS, fns, "textures", fpath)).convert("RGBA")
             rows = p["chars"]
             cw, chh = img.width // len(rows[0]), img.height // len(rows)
+            if cw > MAX_GLYPH_PX or chh > MAX_GLYPH_PX:
+                print(f"warning: {p['file']} glyph cell {cw}x{chh} > {MAX_GLYPH_PX}: drawn as the missing glyph", flush=True)
+                for row in rows:
+                    for ch in row:
+                        table[ch] = ("missing", MISSING_ADVANCE)
+                continue
             scale = p["height"] / chh
             for r, row in enumerate(rows):
                 for i, ch in enumerate(row):
@@ -71,6 +81,14 @@ def draw_line(screen: Image.Image, font: dict, runs: list[dict], centre_x: float
                 w, h = round(img.width * scale * S), round(img.height * scale * S)
                 img = img.resize((max(1, w), max(1, h)), Image.NEAREST)
                 screen.alpha_composite(img, (round(x * S), round((text_top + 7 - ascent) * S)))
+            elif g[0] == "missing":  # the client's hollow box, 5 x 8 px from the text top
+                box = Image.new("RGBA", (5 * S, 8 * S), (0, 0, 0, 0))
+                bp = box.load()
+                for yy in range(8 * S):
+                    for xx in range(5 * S):
+                        if xx < S or yy < S or xx >= 4 * S or yy >= 7 * S:
+                            bp[xx, yy] = (255, 255, 255, 255)
+                screen.alpha_composite(box, (round(x * S), round(text_top * S)))
             x += g[1]
 
 

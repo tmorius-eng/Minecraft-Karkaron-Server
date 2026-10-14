@@ -57,9 +57,9 @@ public final class HudGlyphs {
     public static final G FRAME_A_R_LOW = new G("\uE015", 87);
     public static final G DIAMOND = new G("\uE016", 31);
     public static final G PLAQUE = new G("\uE017", 15);
-    public static final G TGT_FRAME = new G("\uE018", 183);
-    public static final G TGT_FRAME_ELITE = new G("\uE019", 183);
-    public static final G TGT_FRAME_BOSS = new G("\uE01A", 183);
+    public static final G TGT_FRAME_L = new G("\uE018", 92);
+    public static final G TGT_FRAME_ELITE_L = new G("\uE019", 92);
+    public static final G TGT_FRAME_BOSS_L = new G("\uE01A", 92);
     public static final G BI_A_HEART = new G("\uE07F", 7);
     public static final G BI_B_HEART = new G("\uE080", 7);
     public static final G BI_A_RES = new G("\uE081", 7);
@@ -105,6 +105,9 @@ public final class HudGlyphs {
     public static final G ICON_JUMP = new G("\uE0A9", 10);
     public static final G ICON_NIGHT = new G("\uE0AA", 10);
     public static final G ICON_HASTE = new G("\uE0AB", 10);
+    public static final G TGT_FRAME_R = new G("\uE188", 92);
+    public static final G TGT_FRAME_ELITE_R = new G("\uE189", 92);
+    public static final G TGT_FRAME_BOSS_R = new G("\uE18A", 92);
 
     /** fill pieces of widths [1, 2, 4, 8, 16, 32, 64] */
     public static final G[] FILL_HP = {new G("\uE01B", 2), new G("\uE01C", 3), new G("\uE01D", 5), new G("\uE01E", 9), new G("\uE01F", 17), new G("\uE020", 33), new G("\uE021", 65)};

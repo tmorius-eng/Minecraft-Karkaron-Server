@@ -13,12 +13,16 @@
   texture to textures/entity/equipment/<layer type>/<path>.png;
 * every registry asset with custom_model_data + base_item is actually mapped to its
   minecraft_model by the base item's definition.
+* no bitmap glyph of the pixel-laid-out HUD font (suld:hud) is over 256 texels on either axis: the client refuses such a
+  glyph, draws the missing-glyph box with a different advance, and everything after it on the line shifts (the target
+  frame's name/bar/numbers misalignment). Oversized glyphs in other fonts are reported as warnings.
 Exit non-zero on failure.
 """
 from __future__ import annotations
 
 import json
 import os
+import struct
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,6 +30,50 @@ RP = os.path.join(ROOT, "resourcepack")
 REGISTRY = os.path.join(ROOT, "assets", "registry", "assets.json")
 # Resource pack format of Minecraft 1.21.11 (vanilla version.json: pack_version.resource_major).
 TARGET_PACK_FORMAT = 75
+# The client's maximum bitmap glyph cell (texture pixels, either axis).
+MAX_GLYPH_PX = 256
+# Fonts whose glyphs the server positions to the pixel: an oversized glyph there is a layout bug, not a cosmetic one.
+STRICT_FONTS = ("suld/font/hud.json",)
+
+
+def png_size(path: str) -> tuple[int, int]:
+    with open(path, "rb") as fh:
+        head = fh.read(24)
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("not a PNG")
+    return struct.unpack(">II", head[16:24])
+
+
+def font_glyph_problems() -> tuple[list[str], list[str]]:
+    """(errors, warnings): bitmap glyph cells larger than the client accepts."""
+    errors, warnings = [], []
+    assets = os.path.join(RP, "assets")
+    for ns in sorted(os.listdir(assets)):
+        font_dir = os.path.join(assets, ns, "font")
+        if not os.path.isdir(font_dir):
+            continue
+        for fn in sorted(os.listdir(font_dir)):
+            if not fn.endswith(".json"):
+                continue
+            rel = f"{ns}/font/{fn}"
+            spec = json.load(open(os.path.join(font_dir, fn), encoding="utf-8"))
+            for p in spec.get("providers", []):
+                if p.get("type") != "bitmap":
+                    continue
+                fns, _, fpath = p["file"].partition(":")
+                tex = os.path.join(assets, fns, "textures", fpath)
+                rows = p.get("chars") or [""]
+                try:
+                    w, h = png_size(tex)
+                except (OSError, ValueError) as ex:
+                    errors.append(f"{rel}: {p['file']}: {ex}")
+                    continue
+                cw, ch = w // max(1, len(rows[0])), h // max(1, len(rows))
+                if cw > MAX_GLYPH_PX or ch > MAX_GLYPH_PX:
+                    msg = (f"{rel}: {p['file']} glyph cell {cw}x{ch} > {MAX_GLYPH_PX} px: the client draws the "
+                           f"missing-glyph box instead (U+{ord(rows[0][0]):04X})")
+                    (errors if rel in STRICT_FONTS else warnings).append(msg)
+    return errors, warnings
 
 
 def _major(v):
@@ -260,9 +308,17 @@ def main() -> int:
         for e in errors:
             print("  -", e)
         return 1
+    font_errors, font_warnings = font_glyph_problems()
+    for w in font_warnings:
+        print("  warning:", w)
+    if font_errors:
+        print("RESOURCE PACK VALIDATION FAILED:")
+        for e in font_errors:
+            print("  -", e)
+        return 1
     print(f"resource pack OK: format covers {TARGET_PACK_FORMAT}, {model_count} model(s), "
           f"{len(item_defs)} item definition(s), {equipment_count} equipment asset(s), {tex_refs} texture ref(s), "
-          f"{mapped} registry model mapping(s)")
+          f"{mapped} registry model mapping(s), HUD font glyphs within {MAX_GLYPH_PX} px")
     return 0
 
 

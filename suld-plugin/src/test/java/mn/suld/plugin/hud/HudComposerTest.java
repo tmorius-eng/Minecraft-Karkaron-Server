@@ -261,13 +261,130 @@ class HudComposerTest {
         HudComposer.Target t = new HudComposer.Target("Хасар — Агуйн Эзэн", 5, 1500, 3000, 2100, HudComposer.Tier.BOSS, true);
         Decoded d = decode(HudComposer.target(t), HudComposer.TARGET_HALF);
         assertEquals(2 * HudComposer.TARGET_HALF, d.total());
-        assertEquals(1, d.named("TGT_FRAME_BOSS").size());
-        assertEquals(-HudGlyphs.TARGET_W / 2, d.named("TGT_FRAME_BOSS").get(0).x(), "frame centred under the title");
+        assertEquals(1, d.named("TGT_FRAME_BOSS_L").size());
+        assertEquals(1, d.named("TGT_FRAME_BOSS_R").size());
+        assertEquals(-HudGlyphs.TARGET_W / 2, d.named("TGT_FRAME_BOSS_L").get(0).x(), "frame centred under the title");
         assertEquals(Math.round(0.5 * (HudGlyphs.TARGET_W - 2)), d.fillWidth("TGT"));
         assertEquals("1500/3000", d.text("TARGET"));
         assertEquals("LV 5  ХАСАР — АГУЙН ЭЗЭН", d.text("LINE"));
-        assertEquals(1, decode(HudComposer.target(new HudComposer.Target("Чоно", 2, 10, 10, 10, HudComposer.Tier.NORMAL, true)),
-                HudComposer.TARGET_HALF).named("TGT_FRAME").stream().filter(g -> g.name().equals("TGT_FRAME")).count());
+        Decoded wolf = decode(HudComposer.target(new HudComposer.Target("Чоно", 2, 10, 10, 10, HudComposer.Tier.NORMAL, true)),
+                HudComposer.TARGET_HALF);
+        assertEquals(1, wolf.named("TGT_FRAME_L").size());
+        assertEquals(1, wolf.named("TGT_FRAME_R").size());
+        assertEquals(0, wolf.named("TGT_FRAME_BOSS").size() + wolf.named("TGT_FRAME_ELITE").size());
+    }
+
+    // ------------------------------------------------------------------ target-frame alignment (every entity kind)
+
+    /** Every kind of target the frame serves: mobs of each tier, bosses, NPC-like neutrals, players, training dummies. */
+    static List<HudComposer.Target> alignmentCases() {
+        List<HudComposer.Target> out = new ArrayList<>();
+        String[] names = {"Чоно", "АНГИЙН БӨӨ", "Хангайн Саарал Чоно", "Хасар — Агуйн Эзэн",
+                "Их Хааны Тэнгэрийн Хамгаалагч Луу Буюу Маш Урт Нэртэй Аймшигт Дайсан"};
+        double[][] hps = {{20, 20}, {100, 100}, {7, 20}, {0, 20}, {1500, 3000}, {12345, 99999}, {250_000, 250_000},
+                {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY}};
+        for (HudComposer.Tier tier : HudComposer.Tier.values())
+            for (String n : names)
+                for (double[] hp : hps)
+                    for (int lv : new int[]{0, 7, 60})
+                        out.add(new HudComposer.Target(n, lv, hp[0], hp[1], hp[0], tier, tier != HudComposer.Tier.NORMAL || lv > 0));
+        return out;
+    }
+
+    private static int left(List<Drawn> run) {
+        return run.get(0).x();
+    }
+
+    /** Last inked column (a glyph's advance is its ink width + 1). */
+    private static int right(List<Drawn> run) {
+        Drawn last = run.get(run.size() - 1);
+        return last.x() + last.advance() - 1;
+    }
+
+    @Test
+    void targetFrameIsOneContiguousBarCentredOnTheScreenForEveryTier() {
+        for (HudComposer.Tier tier : HudComposer.Tier.values()) {
+            HudGlyphs.G[] h = HudComposer.frameHalves(tier);
+            assertEquals(h[0].advance(), h[1].advance(), tier + ": halves are mirror images, the same width");
+            assertEquals(HudGlyphs.TARGET_W / 2 + 1, h[0].advance(), tier + ": each half is half the frame (+1 advance pad)");
+            Decoded d = decode(HudComposer.target(new HudComposer.Target("АНГИЙН БӨӨ", 0, 20, 20, 20, tier, false)),
+                    HudComposer.TARGET_HALF);
+            String prefix = switch (tier) {
+                case BOSS -> "TGT_FRAME_BOSS_";
+                case ELITE -> "TGT_FRAME_ELITE_";
+                case NORMAL -> "TGT_FRAME_";
+            };
+            Drawn l = d.glyphs().stream().filter(g -> g.name().equals(prefix + "L")).findFirst().orElseThrow();
+            Drawn r = d.glyphs().stream().filter(g -> g.name().equals(prefix + "R")).findFirst().orElseThrow();
+            int frameLeft = l.x(), frameRight = r.x() + r.advance() - 1;
+            assertEquals(l.x() + l.advance() - 1, r.x(), tier + ": right half starts where the left half's ink ends (no gap, no overlap)");
+            assertEquals(-HudGlyphs.TARGET_W / 2, frameLeft, tier.name());
+            assertEquals(HudGlyphs.TARGET_W / 2, frameRight, tier + ": frame spans exactly TARGET_W");
+            assertEquals(0, frameLeft + frameRight, tier + ": frame symmetric about the screen centre");
+        }
+    }
+
+    @Test
+    void nameFrameFillAndNumbersShareOneCentreForEveryTargetKind() {
+        int inner = HudGlyphs.TARGET_W - 2;
+        for (HudComposer.Target t : alignmentCases()) {
+            String why = t.tier() + " '" + t.name() + "' lv " + t.level() + " " + t.hp() + "/" + t.maxHp();
+            Decoded d = decode(HudComposer.target(t), HudComposer.TARGET_HALF);
+            assertEquals(2 * HudComposer.TARGET_HALF, d.total(), why + ": the title is always the full canvas, so x=0 is the screen centre");
+            assertTrue(d.glyphs().stream().noneMatch(g -> g.name().startsWith("NEG_") || g.name().startsWith("POS_")));
+
+            // the name line: centred on x=0 (integer centring keeps it within 1 px), never past the canvas
+            List<Drawn> name = d.named("LINE:");
+            assertFalse(name.isEmpty(), why);
+            assertTrue(Math.abs(left(name) + right(name)) <= 2, why + ": name centred, ink " + left(name) + ".." + right(name));
+            // a very long name may overhang the 182 px frame (the line is cut at the panel's width, as before); it stays
+            // centred because the title's total advance is still 2 * TARGET_HALF (checked above)
+            assertTrue(right(name) - left(name) + 1 <= 2 * HudComposer.HALF - 4, why + ": name cut to the line limit");
+
+            // the frame: both halves, spanning [-TARGET_W/2, +TARGET_W/2]
+            List<Drawn> frame = d.glyphs().stream().filter(g -> g.name().startsWith("TGT_FRAME")).toList();
+            assertEquals(2, frame.size(), why);
+            assertEquals(-HudGlyphs.TARGET_W / 2, left(frame), why);
+            assertEquals(HudGlyphs.TARGET_W / 2, right(frame), why);
+
+            // the fill starts inside the frame's left edge and never runs past its inner right edge
+            List<Drawn> fill = d.glyphs().stream().filter(g -> g.name().startsWith("FILL_TGT")).toList();
+            int filled = d.fillWidth("TGT") + d.fillWidth("TGT_CHIP");
+            assertTrue(filled <= inner, why + ": fill " + filled + " fits the frame");
+            if (!fill.isEmpty()) {
+                assertEquals(-HudGlyphs.TARGET_W / 2 + 1, left(fill), why + ": fill grows from the frame's inner left edge");
+                assertTrue(right(fill) <= HudGlyphs.TARGET_W / 2 - 1, why + ": fill ends inside the frame");
+            }
+            boolean endless = Double.isInfinite(t.maxHp());
+            assertEquals(endless ? inner : HudComposer.px(t.hp(), t.maxHp(), inner), d.fillWidth("TGT"), why);
+
+            // the numbers: centred over the frame (= over x=0), within it
+            List<Drawn> num = d.named("TARGET:");
+            if (endless) {
+                assertTrue(num.isEmpty(), why + ": '∞' is not in the digit set");
+                continue;
+            }
+            assertFalse(num.isEmpty(), why);
+            assertTrue(Math.abs(left(num) + right(num)) <= 2, why + ": numbers centred on the bar, ink " + left(num) + ".." + right(num));
+            assertTrue(left(num) > -HudGlyphs.TARGET_W / 2 && right(num) < HudGlyphs.TARGET_W / 2, why + ": numbers inside the bar");
+            assertEquals(HudComposer.n(t.hp()) + "/" + HudComposer.n(t.maxHp()), d.text("TARGET"), why);
+        }
+    }
+
+    @Test
+    void theScreenshotCase_ShamanAt20of20_isCentred() {
+        // the report: «АНГИЙН БӨӨ» name drifted right, the red bar left, «20/20» off the bar
+        Decoded d = decode(HudComposer.target(new HudComposer.Target("Ангийн Бөө", 0, 20, 20, 20, HudComposer.Tier.NORMAL, false)),
+                HudComposer.TARGET_HALF);
+        List<Drawn> name = d.named("LINE:"), num = d.named("TARGET:");
+        List<Drawn> frame = d.glyphs().stream().filter(g -> g.name().startsWith("TGT_FRAME")).toList();
+        int frameMid2 = left(frame) + right(frame), nameMid2 = left(name) + right(name), numMid2 = left(num) + right(num);
+        assertEquals("АНГИЙН БӨӨ", d.text("LINE"));
+        assertEquals("20/20", d.text("TARGET"));
+        assertEquals(0, frameMid2);
+        assertTrue(Math.abs(nameMid2 - frameMid2) <= 2, "name over the bar: " + nameMid2 + " vs " + frameMid2);
+        assertTrue(Math.abs(numMid2 - frameMid2) <= 2, "20/20 over the bar: " + numMid2 + " vs " + frameMid2);
+        assertEquals(HudGlyphs.TARGET_W - 2, d.fillWidth("TGT"), "full health: full bar");
     }
 
     @Test
@@ -285,6 +402,8 @@ class HudComposerTest {
                 List.of(new HudState.Buff("EMPOWER", "x3"), new HudState.Buff("SPEED", "8"), new HudState.Buff("DANGER", "")),
                 List.of(new HudState.Run("Мэргэн", TextColor.color(0x7CE07C)), new HudState.Run("  ·  ₮ 12,340  ·  ◆ 3  ·  ⚔ 57", W))), false));
         samples.put("target_boss", HudComposer.target(new HudComposer.Target("Хасар — Агуйн Эзэн", 5, 1500, 3000, 2100, HudComposer.Tier.BOSS, true)));
+        samples.put("target_shaman", HudComposer.target(new HudComposer.Target("Ангийн Бөө", 0, 20, 20, 20, HudComposer.Tier.NORMAL, false)));
+        samples.put("target_elite", HudComposer.target(new HudComposer.Target("Хангайн Саарал Чоно", 12, 140, 180, 160, HudComposer.Tier.ELITE, true)));
         for (Map.Entry<String, Component> e : samples.entrySet()) {
             StringBuilder sb = new StringBuilder("[");
             List<String[]> runs = new ArrayList<>();

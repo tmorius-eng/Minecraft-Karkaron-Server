@@ -95,7 +95,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/tgt_frame.png",
+   "file": "suld:font/hud/tgt_frame_l.png",
    "height": 7,
    "ascent": -1,
    "chars": [
@@ -104,7 +104,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/tgt_frame_elite.png",
+   "file": "suld:font/hud/tgt_frame_elite_l.png",
    "height": 7,
    "ascent": -1,
    "chars": [
@@ -113,7 +113,7 @@
   },
   {
    "type": "bitmap",
-   "file": "suld:font/hud/tgt_frame_boss.png",
+   "file": "suld:font/hud/tgt_frame_boss_l.png",
    "height": 7,
    "ascent": -1,
    "chars": [
@@ -712,6 +712,33 @@
    "ascent": -22,
    "chars": [
     "\ue17e\ue17f\ue180\ue181\ue182\ue183\ue184\ue185\ue186\ue187"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/hud/tgt_frame_r.png",
+   "height": 7,
+   "ascent": -1,
+   "chars": [
+    "\ue188"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/hud/tgt_frame_elite_r.png",
+   "height": 7,
+   "ascent": -1,
+   "chars": [
+    "\ue189"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/hud/tgt_frame_boss_r.png",
+   "height": 7,
+   "ascent": -1,
+   "chars": [
+    "\ue18a"
    ]
   }
  ]
