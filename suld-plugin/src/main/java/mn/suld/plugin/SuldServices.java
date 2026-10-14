@@ -283,6 +283,12 @@ public final class SuldServices {
             this.achievements = new mn.suld.plugin.achievement.AchievementService(plugin, this, dataSource == null
                     ? new mn.suld.api.persistence.InMemoryAchievementRepository()
                     : new mn.suld.plugin.persistence.JdbcAchievementRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
+            // the Bonum credit store (V29, docs/PAYMENT_ARCHITECTURE.md): an intent moves only by compare-and-set and a grant
+            // is keyed by the intent, so the shared pool is fine; off unless payment.bonum.enabled and its secrets are set
+            this.payments = new mn.suld.plugin.payment.PaymentService(plugin, this, dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryPaymentRepository()
+                    : new mn.suld.plugin.persistence.JdbcPaymentRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor),
+                    ioExecutor);
             this.mapPins = dataSource == null
                     ? new mn.suld.api.persistence.InMemoryMapPinRepository()
                     : new mn.suld.plugin.persistence.JdbcMapPinRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor);
@@ -307,6 +313,8 @@ public final class SuldServices {
     public final mn.suld.plugin.mastery.ProfessionService professions;
     /** Achievements and the season's pass «Хуралдайн Зам» (docs/ACHIEVEMENTS_AND_PASS.md). */
     public final mn.suld.plugin.achievement.AchievementService achievements;
+    /** The credit store paid through Bonum (docs/PAYMENT_ARCHITECTURE.md); off by default. */
+    public final mn.suld.plugin.payment.PaymentService payments;
     private final mn.suld.api.campaign.WeeklyCycle weeklyCycle;
     private final mn.suld.plugin.chronicle.ChronicleService chronicleService;
     private final mn.suld.plugin.campaign.KhuraldaiService khuraldaiService;

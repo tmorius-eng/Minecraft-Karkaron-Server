@@ -28,4 +28,10 @@ public final class AuditActions {
     public static final String CHRONICLE_ADMIN_HIDE = "chronicle.admin.hide";
     /** A player's {@code /report}: target = world and block position, detail = the text. */
     public static final String PLAYER_REPORT = "player.report";
+    /** A purchase asked for (target = player, detail = intent, product, amount). */
+    public static final String PAYMENT_INTENT = "payment.intent";
+    /** A provider's signed event paid an intent and its credits were granted (actor = the provider). */
+    public static final String PAYMENT_CONFIRMED = "payment.confirmed";
+    /** A signed event paid another amount or currency than its intent's: nothing granted, staff alerted. */
+    public static final String PAYMENT_MISMATCH = "payment.mismatch";
 }

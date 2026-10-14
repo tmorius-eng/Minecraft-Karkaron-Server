@@ -253,6 +253,13 @@ lives only on the server's own disk.
   `sudo -u suld ssh-keygen -t ed25519 -f /opt/suld/.ssh/id_ed25519 -N ''`.
   Add the `.pub` key to GitHub → Settings → Deploy keys, then set
   `REPO_URL=git@github.com:tmorius-eng/Minecraft-Karkaron-Server.git`.
+- **Payments (Bonum):** off until a merchant account exists (`docs/PAYMENT_ARCHITECTURE.md`). The terminal id, app
+  secret and checksum key go only into `/etc/suld/suld.env` (`BONUM_*`; `load_env` exports them to the server, never
+  through argv) and are never logged. Turn it on with `payment.bonum.enabled: true` in `config.yml`. The webhook listens
+  on `127.0.0.1:8085` only: put a TLS reverse proxy in front for `callback-url` (e.g. nginx `location
+  /api/bonum/callback { proxy_pass http://127.0.0.1:8085; }` on `pay.suld.mn`), keep 8085 closed in ufw, and set
+  `allowed-ips` to Bonum's sender addresses if Bonum publishes them. Check every field against the Bonum sandbox
+  before the first real payment (§Before production in that doc).
 - **`online-mode=true` is mandatory.** Identity is the Minecraft/Microsoft-authenticated UUID, and there is no /login
   (see [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)). `deploy.sh` refuses `ONLINE_MODE=false` and forces
   `auth.allow-insecure-offline-dev-mode: false`. `health-check.sh` fails on either. In offline mode SÜLD refuses all logins.

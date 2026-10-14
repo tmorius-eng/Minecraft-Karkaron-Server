@@ -577,6 +577,8 @@ public final class SuldPlugin extends JavaPlugin {
         // the read-only armory API for the web (docs/ARMORY_API.md): off unless web.armory.enabled
         armory = new mn.suld.plugin.web.ArmoryServer(this, services);
         armory.start();
+        // the Bonum credit store (docs/PAYMENT_ARCHITECTURE.md): off unless payment.bonum.enabled and its secrets are set
+        services.payments.start();
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
         java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));
@@ -640,6 +642,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (minimap != null) minimap.shutdown(); // the minimaps' frames go
         if (waypoints != null) waypoints.shutdown(); // the waypoint bars and labels go
         if (armory != null) armory.stop();
+        if (services != null && services.payments != null) services.payments.stop(); // the webhook closes, QR maps go blank
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
         if (services != null && services.map != null) services.map.shutdown(); // the map's regions to disk
         if (worldBuild != null) {

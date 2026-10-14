@@ -47,6 +47,13 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # clear and thirteen clears (with the title), each tier announced, a region found in the wild, the daily cap, tier 5's free
 # reward claimed once, the heroic track opened by staff and its two rewards, both windows, all of it after a relog; 13
 # checks (deeds are recorded with the staff /suld achievement, the game's own path; it resets the player at the end).
+# paybot.js <srvctl.sh> [port] [stubPort] (NOT in regress.sh: it needs the server set up for it): the Bonum credit store
+# against tools/payments/bonum_stub.py (a local stand-in, never Bonum) — the server started with payment.bonum enabled,
+# base-url http://127.0.0.1:<stubPort> and the stub's three dev BONUM_* variables; QR_PY names a python with OpenCV
+# (tools/payments/qr_decode.py reads the map's pixels). /buy → the QR map in hand (it decodes to the stub's code), an
+# unsigned, a tampered and a wrong-amount webhook grant nothing, the signed one grants once with the line, three replays
+# change nothing, the map cannot be dropped and is taken once paid, 2 open intents at most, the staff line, a relog;
+# 16 checks (docs/PAYMENT_ARCHITECTURE.md §Testing).
 # firstbootbot.js <srvctl.sh> <server dir>: a fresh world's first boot (NOT in regress.sh: it DELETES the world of <server dir>
 # and refuses unless the directory holds a FIRSTBOOT_SCRATCH file — a throwaway copy with the default config, never a real
 # world): every dungeon gate built once and only after Kharkhorum sets the spawn, the sites and ovoos move with it, a restart

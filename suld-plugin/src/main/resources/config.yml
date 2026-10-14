@@ -456,3 +456,32 @@ pass:
   epoch: "2026-10-05"
   season-weeks: 8
   heroic-credits: 0
+
+# The Bonum credit store (docs/PAYMENT_ARCHITECTURE.md, directive Phase 7). OFF until the merchant account exists; with
+# it off, /buy shows the packages and the store link as before. The merchant's secrets are NEVER written here: they are
+# read from the environment variables named below (deploy/suld.env, BONUM_*) and never logged. Every Bonum path and
+# field follows the open-source SDK and is to be confirmed against the merchant's sandbox before production.
+#   base-url              https only (plain http is allowed to this machine, for the local test stub)
+#   callback-url          what Bonum calls; the host's TLS proxy forwards it to webhook.bind:port + path
+#   invoice-expiry-minutes how long an intent and its QR stay open (2-60)
+#   open-intents-per-player purchases a player may have open at once
+#   webhook.signature-header the header carrying hex(HMAC-SHA256(raw body, checksum key))
+#   webhook.allowed-ips   the addresses Bonum calls from, if published ([] = any: the signature still decides)
+payment:
+  bonum:
+    enabled: false
+    base-url: "https://testapi.bonum.mn"
+    terminal-id-env: BONUM_TERMINAL_ID
+    app-secret-env: BONUM_APP_SECRET
+    checksum-key-env: BONUM_CHECKSUM_KEY
+    callback-url: "https://pay.suld.mn/api/bonum/callback"
+    language: mn
+    invoice-expiry-minutes: 15
+    open-intents-per-player: 2
+    webhook:
+      bind: 127.0.0.1
+      port: 8085
+      path: /api/bonum/callback
+      signature-header: x-checksum-v2
+      trusted-proxies: ["127.0.0.1"]
+      allowed-ips: []

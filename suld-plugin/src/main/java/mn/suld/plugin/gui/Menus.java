@@ -1165,6 +1165,17 @@ public final class Menus {
         String url = plugin.getConfig().getString("branding.store-url", "");
         int slot = 10;
         int i = 0;
+        mn.suld.plugin.payment.PaymentService pay = services.payments;
+        if (pay != null && pay.enabled()) {
+            // the Bonum gateway is on: a click asks Bonum for a QR invoice (docs/PAYMENT_ARCHITECTURE.md)
+            for (mn.suld.api.payment.StorePackage pkg : pay.packages()) {
+                if (slot > 16) break;
+                m.set(slot++, Menu.item(icons[Math.min(i++, icons.length - 1)], Menu.title(pkg.credits() + " Сүлд Кредит", GOLD), Menu.lore(GOLD,
+                        List.of(b("Зөвхөн гоёлд зарцуулагдана.")), List.of(Menu.kv("Үнэ:", pkg.price(), GREEN)), "Дарж QR авах (Bonum)")),
+                        (pl, c) -> pay.buy(pl, pkg));
+            }
+            packs = List.of();
+        }
         for (Map<?, ?> pack : packs) {
             if (slot > 16) break;
             String credits = String.valueOf(pack.get("credits"));

@@ -50,6 +50,7 @@ public final class SuldCommand implements CommandExecutor {
             case "mastery" -> mastery(sender, args);
             case "profession" -> profession(sender, args);
             case "achievement" -> achievement(sender, args);
+            case "payment" -> payment(sender, args);
             case "gather" -> gather(sender, args);
             case "heroic" -> heroic(sender, args);
             case "badge" -> badge(sender, args);
@@ -526,6 +527,48 @@ public final class SuldCommand implements CommandExecutor {
      * {@code … deed <DEED> <subject|-> <amount>} (recorded as the game would), {@code … points <n>}, {@code … heroic},
      * {@code … reset}. Audited (admin.achievement).
      */
+    /**
+     * {@code /suld payment <player>|reconcile} (docs/PAYMENT_ARCHITECTURE.md §Staff): whether the gateway is on, a player's
+     * last intents, or a reconcile now. Nothing here can mark a purchase paid: only the provider's signed event does.
+     */
+    private void payment(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        var pay = services.payments;
+        if (args.length < 2) {
+            sender.sendMessage(Messages.error("/suld payment <тоглогч|uuid> | reconcile"));
+            return;
+        }
+        String actor = sender instanceof Player p ? p.getUniqueId().toString() : "console";
+        java.util.function.Consumer<String> out = line -> {
+            sender.sendMessage(Messages.info(line));
+            if (!(sender instanceof Player)) return; // the console already printed it
+            Bukkit.getLogger().info("[SULD] " + line);
+        };
+        if (args[1].equalsIgnoreCase("reconcile")) {
+            services.audit().record(mn.suld.api.audit.AuditEvent.of(actor, "admin.payment", "reconcile", "reconcile"));
+            pay.reconcileNow(out);
+            return;
+        }
+        java.util.UUID id;
+        String name = args[1];
+        Player online = Bukkit.getPlayerExact(name);
+        if (online != null) {
+            id = online.getUniqueId();
+        } else {
+            try {
+                id = java.util.UUID.fromString(name);
+            } catch (IllegalArgumentException e) {
+                sender.sendMessage(Messages.error("Онлайн тоглогч эсвэл UUID: " + name));
+                return;
+            }
+        }
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(actor, "admin.payment", id.toString(), "view"));
+        pay.describe(id, name, out);
+    }
+
     private void achievement(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
             sender.sendMessage(Messages.error("Эрх алга."));

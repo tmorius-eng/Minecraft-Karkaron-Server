@@ -509,6 +509,23 @@ public final class StyleService implements Listener {
         }));
     }
 
+    /**
+     * Credits bought through the payment gateway (docs/PAYMENT_ARCHITECTURE.md): granted under {@code txid}
+     * ({@code suld_credit_grants}), so a purchase pays once however often it is tried. Completes, off the main thread,
+     * with whether this call granted them; the online player's balance and the listeners follow on the main thread.
+     */
+    public java.util.concurrent.CompletableFuture<Boolean> grantPurchase(UUID id, long amount, String txid, String actor) {
+        return repository.grantCredits(id, amount, txid, actor).thenApply(g -> {
+            if (plugin.isEnabled()) Bukkit.getScheduler().runTask(plugin, () -> {
+                PlayerStyle s = cache.get(id);
+                if (s != null) s.creditsCache(g.balance());
+                Player p = Bukkit.getPlayer(id);
+                if (p != null && g.applied()) changeListeners.forEach(l -> l.accept(p));
+            });
+            return g.applied();
+        });
+    }
+
     public void giveCredits(UUID id, long amount, Consumer<String> feedback) {
         repository.addCredits(id, amount).whenComplete((balance, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (err != null) {
