@@ -94,7 +94,7 @@ public final class QuestChain {
             QuestDefinition last = chapters.get(chapters.size() - 1);
             return new QuestState(last.id(), last.requiredCount(), true); // past every chapter: the story is done
         }
-        if (!s.completed()) return s;
+        if (indexOf(s.questId()) < 0) return first().initialState(); if (!s.completed()) return s;
         return next(s.questId()).map(QuestDefinition::initialState).orElse(s);
     }
 
