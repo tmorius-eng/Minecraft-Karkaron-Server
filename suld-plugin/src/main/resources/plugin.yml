@@ -270,6 +270,14 @@ commands:
     description: Зэвсгийн ур чадвар - the five weapon tracks, levels 1-50, the bonus and the titles.
     usage: /mastery
     aliases: [urchadvar, zevseg]
+  achievements:
+    description: Амжилт - the deeds the server honours, by page; titles as rewards.
+    usage: /achievements [story|battle|heroic|lands|crafts|honour|social]
+    aliases: [amjilt, deeds]
+  pass:
+    description: Хуралдайн Зам - the season's pass, its tiers and cosmetic rewards.
+    usage: /pass [claim]
+    aliases: [zam, battlepass]
   mergejil:
     description: Мэргэжил - the four crafts, their levels, the nearest veins, herbs and pens, and refining.
     usage: /mergejil [near | refine <id> [all]]

@@ -1,0 +1,577 @@
+{
+ "format": 1,
+ "about": "Achievements (docs/ACHIEVEMENTS_AND_PASS.md). Earned once, never bought, never power. A VERIFIED or LEGEND name names its source.",
+ "achievements": [
+  {
+   "id": "ach.story.first_hunt",
+   "category": "STORY",
+   "name": "Анхны ан",
+   "description": "Эхний бүлэг «Анхны Ан»-г дуусгах.",
+   "criterion": {
+    "deed": "CHAPTER",
+    "measure": "DISTINCT",
+    "target": 1,
+    "subjects": [
+     "quest.first_hunt"
+    ]
+   },
+   "points": 100,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.story.borte_chino",
+   "category": "STORY",
+   "name": "Бөртэ Чино, Гуа Маралын үр сад",
+   "description": "Нэгдүгээр үйлийн сүүлчийн бүлэг «Алтайн Аварга»-г дуусгах. Нэр нь «Монголын нууц товчоо»-ны эхний үгнээс: дээд тэнгэрээс заяат төрсөн Бөртэ Чино, гэргий Гуа Маралын хамт.",
+   "criterion": {
+    "deed": "CHAPTER",
+    "measure": "DISTINCT",
+    "target": 1,
+    "subjects": [
+     "quest.altai_giant"
+    ]
+   },
+   "points": 500,
+   "basis": "LEGEND",
+   "reward": "tag.ach_taliin_ur",
+   "source": "Монголын нууц товчоо, §1"
+  },
+  {
+   "id": "ach.story.oaths",
+   "category": "STORY",
+   "name": "Тангаргийн эзэн",
+   "description": "Таван тангаргийн бүлгийг бүгдийг дуусгах (5, 12, 33, 42, 60).",
+   "criterion": {
+    "deed": "CHAPTER",
+    "measure": "DISTINCT",
+    "target": 5,
+    "subjects": [
+     "quest.oath_5",
+     "quest.oath_12",
+     "quest.oath_33",
+     "quest.oath_42",
+     "quest.oath_60"
+    ]
+   },
+   "points": 300,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.story.khukh_suld",
+   "category": "STORY",
+   "name": "Хөх Сүлдний дуудлага",
+   "description": "Сүүлчийн бүлэг «Хөх Сүлдний Дуудлага»-г дуусгах.",
+   "criterion": {
+    "deed": "CHAPTER",
+    "measure": "DISTINCT",
+    "target": 1,
+    "subjects": [
+     "quest.oath_60"
+    ]
+   },
+   "points": 1000,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_khukh_suld"
+  },
+  {
+   "id": "ach.battle.first_clear",
+   "category": "BATTLE",
+   "name": "Агуйн анхны ялалт",
+   "description": "Аль нэг агуйг давж гарах.",
+   "criterion": {
+    "deed": "DUNGEON_CLEAR",
+    "measure": "TOTAL",
+    "target": 1
+   },
+   "points": 150,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.battle.thirteen_kurens",
+   "category": "BATTLE",
+   "name": "Арван гурван хүрээний тулаан",
+   "description": "Агуйг нийт 13 удаа давах. Нэр нь Тэмүжин арван гурван хүрээгээрээ Жамухатай байлдсан Далан Балжудын тулаанаас.",
+   "criterion": {
+    "deed": "DUNGEON_CLEAR",
+    "measure": "TOTAL",
+    "target": 13
+   },
+   "points": 400,
+   "basis": "VERIFIED",
+   "reward": "tag.ach_khureenii_tsereg",
+   "source": "Рашид ад-Дин, «Судрын чуулган» (арван гурван хүрээ); Монголын нууц товчоо, §129 (Далан Балжудын тулаан)"
+  },
+  {
+   "id": "ach.battle.ten_dungeons",
+   "category": "BATTLE",
+   "name": "Арван агуйн баатар",
+   "description": "Арван агуйг бүгдийг нэг нэгээр нь давах.",
+   "criterion": {
+    "deed": "DUNGEON_CLEAR",
+    "measure": "DISTINCT",
+    "target": 10,
+    "subjects": [
+     "dungeon.khasar_den",
+     "dungeon.govi_bulsh",
+     "dungeon.baavgain_uur",
+     "dungeon.mosun_orgil",
+     "dungeon.dalain_gun",
+     "dungeon.khar_khot",
+     "dungeon.ulaan_khad",
+     "dungeon.burkhan_agui",
+     "dungeon.tengeriin_shat",
+     "dungeon.tengeriin_ordon"
+    ]
+   },
+   "points": 800,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_arvan_agui"
+  },
+  {
+   "id": "ach.battle.palace",
+   "category": "BATTLE",
+   "name": "Тэнгэрийн Ордны үүд",
+   "description": "«Тэнгэрийн Ордон»-г давах.",
+   "criterion": {
+    "deed": "DUNGEON_CLEAR",
+    "measure": "DISTINCT",
+    "target": 1,
+    "subjects": [
+     "dungeon.tengeriin_ordon"
+    ]
+   },
+   "points": 600,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.battle.wolf_hunter",
+   "category": "BATTLE",
+   "name": "Чонын анчин",
+   "description": "Талын чоно 100-г дарах (бүх төрлийн чоно тоологдоно).",
+   "criterion": {
+    "deed": "MOB_KILL",
+    "measure": "TOTAL",
+    "target": 100,
+    "subjects": [
+     "mob.goviin_chono",
+     "mob.orkhon_chono",
+     "mob.saaral_chono",
+     "mob.altai_tsasan_chono",
+     "mob.dalain_chono",
+     "mob.dainy_chono",
+     "mob.tengeriin_chono"
+    ]
+   },
+   "points": 200,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.battle.great_bear",
+   "category": "BATTLE",
+   "name": "Их Баавгайг дарагч",
+   "description": "«Хөвсгөлийн Их Баавгай»-г дарахад оролцох.",
+   "criterion": {
+    "deed": "WORLD_BOSS",
+    "measure": "DISTINCT",
+    "target": 1,
+    "subjects": [
+     "worldboss.ikh_baavgai"
+    ]
+   },
+   "points": 400,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.battle.both_giants",
+   "category": "BATTLE",
+   "name": "Хоёр аваргын ялагч",
+   "description": "Ертөнцийн хоёр аваргыг хоёуланг нь дарахад оролцох.",
+   "criterion": {
+    "deed": "WORLD_BOSS",
+    "measure": "DISTINCT",
+    "target": 2,
+    "subjects": [
+     "worldboss.ikh_baavgai",
+     "worldboss.ikh_avarga"
+    ]
+   },
+   "points": 600,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_khoyor_avarga"
+  },
+  {
+   "id": "ach.battle.duelist",
+   "category": "BATTLE",
+   "name": "Сорилын ялагч",
+   "description": "Зөвшөөрөлт тулаанд 10 удаа ялах.",
+   "criterion": {
+    "deed": "DUEL_WIN",
+    "measure": "TOTAL",
+    "target": 10
+   },
+   "points": 200,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.heroic.key_five",
+   "category": "HEROIC",
+   "name": "Гэсгээлт +5",
+   "description": "Баатарлаг агуйг +5 түлхүүрээр хугацаанд нь давах.",
+   "criterion": {
+    "deed": "HEROIC_TIMED",
+    "measure": "BEST",
+    "target": 5
+   },
+   "points": 300,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.heroic.key_ten",
+   "category": "HEROIC",
+   "name": "Гэсгээлт +10",
+   "description": "Баатарлаг агуйг +10 түлхүүрээр хугацаанд нь давах.",
+   "criterion": {
+    "deed": "HEROIC_TIMED",
+    "measure": "BEST",
+    "target": 10
+   },
+   "points": 600,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_gesgeelt_arav"
+  },
+  {
+   "id": "ach.heroic.key_twenty",
+   "category": "HEROIC",
+   "name": "Гэсгээлт +20",
+   "description": "Баатарлаг агуйг +20 түлхүүрээр хугацаанд нь давах.",
+   "criterion": {
+    "deed": "HEROIC_TIMED",
+    "measure": "BEST",
+    "target": 20
+   },
+   "points": 1200,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_gesgeelt_khori"
+  },
+  {
+   "id": "ach.lands.first_site",
+   "category": "LANDS",
+   "name": "Эртний дурсгал",
+   "description": "Түүхэн нэг дурсгалт газрыг олох.",
+   "criterion": {
+    "deed": "SITE",
+    "measure": "DISTINCT",
+    "target": 1
+   },
+   "points": 100,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.lands.all_sites",
+   "category": "LANDS",
+   "name": "Нутгийн мэдэгч",
+   "description": "Арван зургаан дурсгалт газрыг бүгдийг олох.",
+   "criterion": {
+    "deed": "SITE",
+    "measure": "DISTINCT",
+    "target": 16,
+    "subjects": [
+     "site.aurag",
+     "site.khodoo_aral",
+     "site.burkhan_ovoo",
+     "site.deluun_boldog",
+     "site.khar_balgas",
+     "site.khoshoo_tsaidam",
+     "site.uushig",
+     "site.dariganga",
+     "site.chingis_wall",
+     "site.altai_petroglyphs",
+     "site.tangut_tower",
+     "site.ogloogchiin_kherem",
+     "site.urtuu_east",
+     "site.urtuu_south",
+     "site.urtuu_west",
+     "site.urtuu_north"
+    ]
+   },
+   "points": 800,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_nutgiin_medegch"
+  },
+  {
+   "id": "ach.lands.ovoo_ten",
+   "category": "LANDS",
+   "name": "Овоо тахигч",
+   "description": "Арван овоонд очих.",
+   "criterion": {
+    "deed": "OVOO",
+    "measure": "DISTINCT",
+    "target": 10
+   },
+   "points": 300,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_ovoo"
+  },
+  {
+   "id": "ach.lands.ovoo_all",
+   "category": "LANDS",
+   "name": "Дөчин овооны мөргөл",
+   "description": "Дөчин овоо бүгдэд нь очих.",
+   "criterion": {
+    "deed": "OVOO",
+    "measure": "DISTINCT",
+    "target": 40
+   },
+   "points": 800,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.lands.regions",
+   "category": "LANDS",
+   "name": "Есөн нутгийн аянчин",
+   "description": "Есөн нутаг бүгдийг нээх.",
+   "criterion": {
+    "deed": "REGION",
+    "measure": "DISTINCT",
+    "target": 9
+   },
+   "points": 500,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.crafts.first_gather",
+   "category": "CRAFTS",
+   "name": "Анхны түүвэр",
+   "description": "Анх удаа юм цуглуулах: судал, өвс, хялгас эсвэл ноос.",
+   "criterion": {
+    "deed": "GATHER",
+    "measure": "TOTAL",
+    "target": 1
+   },
+   "points": 50,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.crafts.gatherer",
+   "category": "CRAFTS",
+   "name": "Түүвэрчин",
+   "description": "500 удаа цуглуулах.",
+   "criterion": {
+    "deed": "GATHER",
+    "measure": "TOTAL",
+    "target": 500
+   },
+   "points": 300,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.crafts.journeyman",
+   "category": "CRAFTS",
+   "name": "Мэргэжилтэн",
+   "description": "Аль нэг мэргэжлээ 25-р түвшинд хүргэх.",
+   "criterion": {
+    "deed": "CRAFT_LEVEL",
+    "measure": "BEST",
+    "target": 25
+   },
+   "points": 300,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.crafts.silver_tree",
+   "category": "CRAFTS",
+   "name": "Мөнгөн модны нууц",
+   "description": "Төмрийн Дархан 50-р түвшинд хүрэх. Хархорумын ордны өмнө Парисын дархан Гийом Бушегийн урласан мөнгөн мод байсныг Рубрук 1254 онд тэмдэглэжээ.",
+   "criterion": {
+    "deed": "CRAFT_LEVEL",
+    "measure": "BEST",
+    "target": 50,
+    "subjects": [
+     "TOMRIIN_DARKHAN"
+    ]
+   },
+   "points": 800,
+   "basis": "VERIFIED",
+   "reward": "tag.ach_mungun_mod",
+   "source": "Гильом де Рубрук, аяллын тэмдэглэл, 1254 (Хархорумын мөнгөн мод)"
+  },
+  {
+   "id": "ach.crafts.four_masters",
+   "category": "CRAFTS",
+   "name": "Дөрвөн мэргэжлийн эзэн",
+   "description": "Дөрвөн мэргэжил бүгдийг 50-р түвшинд хүргэх.",
+   "criterion": {
+    "deed": "CRAFT_LEVEL",
+    "measure": "EACH",
+    "target": 50,
+    "subjects": [
+     "TOMRIIN_DARKHAN",
+     "EMIIN_BARIACH",
+     "ADUUCHIN",
+     "ESGIICH"
+    ]
+   },
+   "points": 1500,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_durvun_mergejil"
+  },
+  {
+   "id": "ach.honour.level_thirty",
+   "category": "HONOUR",
+   "name": "Түмэнтийн тангараг",
+   "description": "30-р түвшинд хүрэх.",
+   "criterion": {
+    "deed": "LEVEL",
+    "measure": "BEST",
+    "target": 30
+   },
+   "points": 300,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.honour.level_sixty",
+   "category": "HONOUR",
+   "name": "Тэнгэрийн хаалга",
+   "description": "60-р түвшинд хүрэх.",
+   "criterion": {
+    "deed": "LEVEL",
+    "measure": "BEST",
+    "target": 60
+   },
+   "points": 800,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.honour.ascension_three",
+   "category": "HONOUR",
+   "name": "Тэнгэрийн Зэрэг III",
+   "description": "Тэнгэрийн Зэрэг III-д хүрэх.",
+   "criterion": {
+    "deed": "ASCENSION",
+    "measure": "BEST",
+    "target": 3
+   },
+   "points": 800,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.honour.envoy",
+   "category": "HONOUR",
+   "name": "Мөнх Тэнгэрийн Элч",
+   "description": "Тэнгэрийн Зэрэг X-д хүрэх.",
+   "criterion": {
+    "deed": "ASCENSION",
+    "measure": "BEST",
+    "target": 10
+   },
+   "points": 3000,
+   "basis": "INSPIRED",
+   "hidden": true
+  },
+  {
+   "id": "ach.honour.weapon_master",
+   "category": "HONOUR",
+   "name": "Зэвсгийн эзэн",
+   "description": "Аль нэг зэвсгийн ур чадвараа 50-р түвшинд хүргэх.",
+   "criterion": {
+    "deed": "WEAPON_MASTERY",
+    "measure": "BEST",
+    "target": 50
+   },
+   "points": 1000,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.honour.class_master",
+   "category": "HONOUR",
+   "name": "Ангийн мастер",
+   "description": "Нэг ангийн мастер болох (60).",
+   "criterion": {
+    "deed": "CLASS_MASTERS",
+    "measure": "BEST",
+    "target": 1
+   },
+   "points": 500,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.honour.five_classes",
+   "category": "HONOUR",
+   "name": "Таван ангийн эзэн",
+   "description": "Таван ангийн мастер бүгд болох.",
+   "criterion": {
+    "deed": "CLASS_MASTERS",
+    "measure": "BEST",
+    "target": 5
+   },
+   "points": 2000,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.social.clan",
+   "category": "SOCIAL",
+   "name": "Овгийн гишүүн",
+   "description": "Овогт элсэх эсвэл овог байгуулах.",
+   "criterion": {
+    "deed": "CLAN_JOIN",
+    "measure": "DISTINCT",
+    "target": 1
+   },
+   "points": 100,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.social.voter",
+   "category": "SOCIAL",
+   "name": "Хуралдайн төлөөлөгч",
+   "description": "Их Хуралдайд дөрвөн удаа санал өгөх.",
+   "criterion": {
+    "deed": "VOTE",
+    "measure": "TOTAL",
+    "target": 4
+   },
+   "points": 400,
+   "basis": "INSPIRED",
+   "reward": "tag.ach_khuraldai"
+  },
+  {
+   "id": "ach.social.campaign_gold",
+   "category": "SOCIAL",
+   "name": "Алтан шагнал",
+   "description": "Аяны алтан шатанд (III) хүрэх.",
+   "criterion": {
+    "deed": "CAMPAIGN_TIER",
+    "measure": "BEST",
+    "target": 3
+   },
+   "points": 400,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.social.trial",
+   "category": "SOCIAL",
+   "name": "Тэнгэрийн сорилыг давагч",
+   "description": "«Тэнгэрийн сорил»-д ялах.",
+   "criterion": {
+    "deed": "TRIAL_WIN",
+    "measure": "TOTAL",
+    "target": 1
+   },
+   "points": 200,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.social.daily",
+   "category": "SOCIAL",
+   "name": "Өдөр бүрийн ажил",
+   "description": "Өдрийн даалгавар 30-г биелүүлэх.",
+   "criterion": {
+    "deed": "DAILY_TASK",
+    "measure": "TOTAL",
+    "target": 30
+   },
+   "points": 300,
+   "basis": "INSPIRED"
+  }
+ ]
+}

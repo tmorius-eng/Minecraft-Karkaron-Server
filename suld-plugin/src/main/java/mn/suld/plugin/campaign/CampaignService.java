@@ -573,6 +573,7 @@ public final class CampaignService {
                 + " → +" + exp + " EXP, +" + coins + " зоос"));
         if (gain.leveledUp()) Presentation.levelUp(p, from, gain.after().level());
         repository.markReward(cycleId, p.getUniqueId(), tier, System.currentTimeMillis());
+        services.achievements.record(p, mn.suld.api.achievement.Deed.CAMPAIGN_TIER, def.id(), tier);
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CAMPAIGN_REWARD_CLAIM, p.getUniqueId(),
                 Map.of("cycle", cycleId, "campaign", def.id(), "tier", tier, "rank", rank, "exp", exp, "coins", coins)));
     }

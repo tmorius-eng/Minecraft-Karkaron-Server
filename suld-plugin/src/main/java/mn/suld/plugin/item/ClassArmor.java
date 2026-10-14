@@ -230,6 +230,7 @@ public final class ClassArmor implements Listener {
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "class.master", p.getUniqueId().toString(), clazz));
         if (services.hud() != null) services.hud().teamChanged(p); // the ✦ next to the name
         int masters = mn.suld.api.clazz.ClassMastery.masters(pr);
+        services.achievements.record(p, mn.suld.api.achievement.Deed.CLASS_MASTERS, "", masters);
         String title = mn.suld.api.clazz.ClassMastery.title(masters);
         if (title != null) {
             Bukkit.broadcast(net.kyori.adventure.text.Component.text("✦✦ " + p.getName() + " — " + title + ": таван ангийг бүгдийг мастерлав!", Messages.BRAND, net.kyori.adventure.text.format.TextDecoration.BOLD));

@@ -428,6 +428,8 @@ public final class HeroicDungeonService implements Listener {
                     NamedTextColor.GOLD, TextDecoration.BOLD).append(Component.text(names.toString().replace(",", ", "), NamedTextColor.WHITE)));
         }
         for (UUID id : members) {
+            Player member = o == HeroicLadder.Outcome.TIMED ? Bukkit.getPlayer(id) : null;
+            if (member != null) services.achievements.record(member, mn.suld.api.achievement.Deed.HEROIC_TIMED, def.id(), hr.key);
             services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of("heroic_run", id, Map.<String, Object>of(
                     "dungeon", def.id(), "key", hr.key, "outcome", o.name(), "clock", clock, "deaths", hr.deaths, "affixes", hr.affixIds())));
         }

@@ -190,6 +190,7 @@ public final class DeathTrialService implements Listener, TabExecutor {
                 Player pl = Bukkit.getPlayer(id);
                 if (pl == null) return;
                 pl.sendMessage(Messages.success("Тэнгэр ивээлээ: сорилыг давж, сүнс бие махбодтоо буцлаа (шарх үлдэнэ)."));
+                services.achievements.record(pl, mn.suld.api.achievement.Deed.TRIAL_WIN, "", 1);
                 pl.getWorld().spawnParticle(Particle.END_ROD, pl.getLocation().add(0, 1, 0), 60, 0.5, 1, 0.5, 0.02);
                 pl.playSound(pl.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.2f);
                 SoulShardService sh = shards;

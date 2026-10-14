@@ -52,6 +52,8 @@ public final class QuestService {
 
     /** Called when a chapter completes (coins and EXP granted, collected items taken): persist both stores now. */
     private BiConsumer<Player, PlayerProfile> onComplete = (p, pr) -> { };
+    /** Told the id of every chapter a player completes (the achievements; SuldPlugin sets it). */
+    public volatile BiConsumer<Player, String> onChapter = (p, id) -> { };
 
     public void onComplete(BiConsumer<Player, PlayerProfile> listener) {
         this.onComplete = listener;
@@ -188,6 +190,7 @@ public final class QuestService {
         if (gained.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(player, from, gained.after().level());
         analytics.accept(mn.suld.api.analytics.AnalyticsEvent.of(mn.suld.api.analytics.AnalyticsEventType.QUEST_COMPLETE, player.getUniqueId(),
                 java.util.Map.of("quest", def.id(), "chapter", chapter, "of", chain.size(), "level", from)));
+        onChapter.accept(player, def.id());
         onComplete.accept(player, profile);
         if (next.isPresent()) {
             announceStart(player, next.get());

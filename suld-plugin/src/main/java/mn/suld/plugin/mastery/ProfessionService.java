@@ -296,6 +296,7 @@ public final class ProfessionService implements Listener {
         }
         services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of("profession_level", id,
                 Map.<String, Object>of("craft", c.name(), "level", after)));
+        services.achievements.record(p, mn.suld.api.achievement.Deed.CRAFT_LEVEL, c.name(), after);
     }
 
     // ================================================================== the plan
@@ -1076,6 +1077,7 @@ public final class ProfessionService implements Listener {
         }
         int pts = Profession.points(lvl, g.tier());
         earn(p, g.craft(), pts);
+        services.achievements.record(p, mn.suld.api.achievement.Deed.GATHER, g.craft().name(), 1);
         HudService.notice(p, Component.text("+" + amount + " " + (def == null ? mat : def.displayName()), GOLD)
                 .append(Component.text(" · " + g.craft().displayName() + " +" + pts, CREAM)));
         p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.7f, 1.1f);

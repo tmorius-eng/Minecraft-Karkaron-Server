@@ -58,7 +58,8 @@ public final class SchemaMigrator {
             new Migration(24, "heroic_keys", "V24__heroic_keys.sql"),
             new Migration(25, "weapon_mastery", "V25__weapon_mastery.sql"),
             new Migration(26, "map_pins", "V26__map_pins.sql"),
-            new Migration(27, "professions", "V27__professions.sql")
+            new Migration(27, "professions", "V27__professions.sql"),
+            new Migration(28, "achievements", "V28__achievements.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */

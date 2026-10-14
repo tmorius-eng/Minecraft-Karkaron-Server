@@ -241,6 +241,7 @@ public final class DuelService implements Listener {
     private void defeat(Player loser, Player winner) {
         lastHit.remove(loser.getUniqueId());
         lastHit.remove(winner.getUniqueId());
+        services.achievements.record(winner, mn.suld.api.achievement.Deed.DUEL_WIN, "", 1);
         // a quarter of their health: SÜLD health runs to ~80, and 4 points would hand the loser to the first mob nearby
         loser.setHealth(Math.max(1.0, maxHealth(loser) * DEFEAT_HEALTH));
         loser.setNoDamageTicks(60);

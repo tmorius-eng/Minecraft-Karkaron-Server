@@ -598,6 +598,7 @@ public final class DungeonService {
                 continue;
             }
             rewarded.add(p);
+            services.achievements.record(p, mn.suld.api.achievement.Deed.DUNGEON_CLEAR, ar.def.id(), 1);
             int from = profile.progression().level();
             services.session(id).dungeonClears++;
             services.session(id).bossesDefeated++;

@@ -263,6 +263,7 @@ public final class KhuraldaiService {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1.4f);
                     services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.VOTE_CAST, player.getUniqueId(),
                             Map.of("cycle", c.cycleId(), "option", chosen, "level", pr.progression().level())));
+                    services.achievements.record(player, mn.suld.api.achievement.Deed.VOTE, "", 1);
                     refreshTally();
                 }
                 case ALREADY_VOTED -> player.sendMessage(Messages.info("Та энэ долоо хоногт аль хэдийн санал өгсөн."));

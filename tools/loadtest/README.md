@@ -43,6 +43,10 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # tier II asks for level 13, a herb patch, a herder's pen (a horse's hair, a sheep's wool, the sheep shorn), refining
 # once and all, a SÜLD wool block never placed, the crafts after a relog and the pen after a restart (it restarts the
 # dev server once); 16 checks.
+# achievebot.js: achievements and the pass «Хуралдайн Зам» (docs/ACHIEVEMENTS_AND_PASS.md) — a fresh player has none, a first
+# clear and thirteen clears (with the title), each tier announced, a region found in the wild, the daily cap, tier 5's free
+# reward claimed once, the heroic track opened by staff and its two rewards, both windows, all of it after a relog; 13
+# checks (deeds are recorded with the staff /suld achievement, the game's own path; it resets the player at the end).
 # firstbootbot.js <srvctl.sh> <server dir>: a fresh world's first boot (NOT in regress.sh: it DELETES the world of <server dir>
 # and refuses unless the directory holds a FIRSTBOOT_SCRATCH file — a throwaway copy with the default config, never a real
 # world): every dungeon gate built once and only after Kharkhorum sets the spawn, the sites and ovoos move with it, a restart

@@ -343,6 +343,7 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
         p.playSound(p.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
         if (exp.leveledUp()) mn.suld.plugin.ui.Presentation.levelUp(p, from, exp.after().level());
         services.hud().update(p, pr);
+        services.achievements.record(p, mn.suld.api.achievement.Deed.REGION, r.id(), 1);
         return true;
     }
 

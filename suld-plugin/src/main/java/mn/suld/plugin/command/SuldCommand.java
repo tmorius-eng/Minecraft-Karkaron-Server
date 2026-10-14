@@ -49,6 +49,7 @@ public final class SuldCommand implements CommandExecutor {
             case "endgame" -> endgame(sender, args);
             case "mastery" -> mastery(sender, args);
             case "profession" -> profession(sender, args);
+            case "achievement" -> achievement(sender, args);
             case "gather" -> gather(sender, args);
             case "heroic" -> heroic(sender, args);
             case "badge" -> badge(sender, args);
@@ -520,6 +521,67 @@ public final class SuldCommand implements CommandExecutor {
     }
 
     /** Staff/QA: {@code /suld profession <player> <craft> <1-50>} sets a craft's level. Audited. */
+    /**
+     * Staff/QA: {@code /suld achievement <player>} (the line the bots read: unlocked, season, points, tier, heroic),
+     * {@code … deed <DEED> <subject|-> <amount>} (recorded as the game would), {@code … points <n>}, {@code … heroic},
+     * {@code … reset}. Audited (admin.achievement).
+     */
+    private void achievement(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        var ach = services.achievements;
+        Player t = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : null;
+        if (t == null || ach == null) {
+            sender.sendMessage(Messages.error("/suld achievement <онлайн тоглогч> [deed <DEED> <subject|-> <тоо> | points <тоо> | heroic | reset]"));
+            return;
+        }
+        java.util.UUID id = t.getUniqueId();
+        String sub = args.length > 2 ? args[2].toLowerCase(java.util.Locale.ROOT) : "";
+        switch (sub) {
+            case "" -> {
+                long points = ach.points(id);
+                sender.sendMessage(Messages.info("deeds " + t.getName() + (ach.loaded(id) ? "" : " (loading)") + ": unlocked=" + ach.unlocked(id).size()
+                        + " [" + String.join(",", new java.util.TreeSet<>(ach.unlocked(id))) + "] season=" + ach.season().id() + " points=" + points
+                        + " tier=" + mn.suld.api.battlepass.CampaignPass.tier(points) + " heroic=" + ach.heroic(id)
+                        + " claimable=" + ach.claimable(t).size()));
+                return;
+            }
+            case "deed" -> {
+                try {
+                    var deed = mn.suld.api.achievement.Deed.valueOf(args[3].toUpperCase(java.util.Locale.ROOT));
+                    String subject = args[4].equals("-") ? "" : args[4];
+                    long amount = Long.parseLong(args[5]);
+                    ach.staffRecord(t, deed, subject, amount);
+                    sender.sendMessage(Messages.success("deed " + deed + " " + subject + " " + amount + " → " + t.getName()));
+                } catch (RuntimeException e) {
+                    sender.sendMessage(Messages.error("/suld achievement <тоглогч> deed <DEED> <subject|-> <тоо>"));
+                    return;
+                }
+            }
+            case "points" -> {
+                try {
+                    ach.staffPoints(t, Long.parseLong(args[3]));
+                    sender.sendMessage(Messages.success("points +" + args[3] + " → " + t.getName()));
+                } catch (RuntimeException e) {
+                    sender.sendMessage(Messages.error("/suld achievement <тоглогч> points <тоо>"));
+                    return;
+                }
+            }
+            case "heroic" -> ach.openHeroic(id, "staff", line -> sender.sendMessage(Messages.info("heroic " + t.getName() + ": " + line)));
+            case "reset" -> {
+                ach.reset(t);
+                sender.sendMessage(Messages.success("deeds of " + t.getName() + " reset"));
+            }
+            default -> {
+                sender.sendMessage(Messages.error("/suld achievement <тоглогч> [deed … | points … | heroic | reset]"));
+                return;
+            }
+        }
+        services.audit().record(mn.suld.api.audit.AuditEvent.of(sender.getName(), "admin.achievement", id.toString(), String.join(" ", args)));
+    }
+
     private void profession(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
             sender.sendMessage(Messages.error("Эрх алга."));

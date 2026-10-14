@@ -1,0 +1,29 @@
+{
+ "format": 1,
+ "about": "«Хуралдайн Зам», the season pass (docs/ACHIEVEMENTS_AND_PASS.md): the cosmetic at each tier of the two tracks. Every reward is a cosmetic; never an item, a level or power.",
+ "free": {
+  "5": "tag.pass_ayanchin",
+  "10": "name.pass_tal",
+  "15": "join.pass_mendchilgee",
+  "20": "tag.pass_morin_elch",
+  "25": "chat.pass_tenger",
+  "30": "tag.pass_urtuuchin",
+  "35": "name.pass_ulaan_nar",
+  "40": "join.pass_ayan",
+  "45": "tag.pass_myangat",
+  "50": "tag.pass_khuraldai_baatar"
+ },
+ "heroic": {
+  "1": "tag.pass_h_ayanchin",
+  "5": "chat.pass_h_altan",
+  "10": "name.pass_h_khukh",
+  "15": "join.pass_h_buree",
+  "20": "tag.pass_h_tumen",
+  "25": "name.pass_h_galt",
+  "30": "chat.pass_h_mungun",
+  "35": "join.pass_h_khurdan",
+  "40": "tag.pass_h_ikh_sayd",
+  "45": "name.pass_h_monkh",
+  "50": "tag.pass_h_noyon"
+ }
+}

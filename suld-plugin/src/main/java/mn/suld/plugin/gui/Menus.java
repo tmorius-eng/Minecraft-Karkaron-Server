@@ -740,6 +740,21 @@ public final class Menus {
     }
 
     /** A sample of what the cosmetic looks like, sent to the viewer's chat (effects play around them instead). */
+    /** Which achievement or tier of the pass gives an earned cosmetic (null for the others). */
+    private String earnedBy(Cosmetic c) {
+        var ach = services.achievements;
+        if (ach == null) return null;
+        if ("achievement".equals(c.source())) {
+            for (mn.suld.api.achievement.Achievement a : ach.catalog().all()) if (c.id().equals(a.reward())) return "Амжилт «" + a.name() + "»";
+        }
+        if ("pass".equals(c.source())) {
+            for (mn.suld.api.battlepass.CampaignPass.Reward r : ach.layout().rewards()) {
+                if (c.id().equals(r.cosmetic())) return "Хуралдайн Зам · " + r.track().displayName() + " · " + r.tier() + "-р шат";
+            }
+        }
+        return null;
+    }
+
     private void previewCosmetic(Player p, Cosmetic c) {
         PlayerStyle s = styles().of(p.getUniqueId());
         Component hello = Component.text("Сайн байна уу!", NamedTextColor.WHITE, TextDecoration.BOLD);
@@ -797,8 +812,11 @@ public final class Menus {
                 if (c.creditPrice() > 0) info.add(Menu.kv("Кредит:", fmt(c.creditPrice()) + " ✦", s.credits() >= c.creditPrice() ? GREEN : RED));
                 if (c.creditPrice() > 0 && !forCoins) info.add(Menu.kv("Авах:", "Зөвхөн кредитээр · /buy", SKY));
                 if (c.source().startsWith("level:")) info.add(Menu.kv("Авах:", "Түвшин " + c.source().substring(6) + " · /lvlup", PURPLE));
+                String earnedBy = earnedBy(c);
+                if (earnedBy != null) info.add(Menu.kv("Авах:", earnedBy, PURPLE));
                 hint = forCoins ? "Зүүн: " + fmt(c.price()) + " зоос зоосоор · Баруун: " + fmt(c.creditPrice()) + " ✦ кредитээр"
-                        : c.creditPrice() > 0 ? "Дарж " + fmt(c.creditPrice()) + " ✦ кредитээр авах" : "Түвшний шагнал";
+                        : c.creditPrice() > 0 ? "Дарж " + fmt(c.creditPrice()) + " ✦ кредитээр авах"
+                        : "achievement".equals(c.source()) ? "Амжилтын шагнал · /achievements" : "pass".equals(c.source()) ? "Хуралдайн Замын шагнал · /pass" : "Түвшний шагнал";
             }
             body.add(Component.text("Shift + зүүн дарж урьдчилан харна", NamedTextColor.GRAY, TextDecoration.BOLD));
             Material icon = owned ? CAT_ICON.get(cat) : Material.GRAY_DYE;

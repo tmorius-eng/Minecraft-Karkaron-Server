@@ -15,7 +15,11 @@ public final class Presentation {
     private Presentation() {
     }
 
+    /** Told of every level-up shown (the achievements record the level; SuldPlugin sets it). */
+    public static volatile java.util.function.BiConsumer<Player, Integer> onLevel = (p, level) -> { };
+
     public static void levelUp(Player player, int from, int to) {
+        onLevel.accept(player, to);
         player.showTitle(Title.title(
                 Component.text("ТҮВШИН ДЭЭШЛЭВ", Messages.BRAND, TextDecoration.BOLD),
                 Component.text("Түвшин " + from + " → " + to, NamedTextColor.WHITE, TextDecoration.BOLD),

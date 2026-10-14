@@ -202,6 +202,7 @@ public final class WeaponMasteryService implements Listener {
         }
         services.analytics().record(mn.suld.api.analytics.AnalyticsEvent.of("weapon_mastery_level", p.getUniqueId(),
                 Map.<String, Object>of("track", t.name(), "level", after)));
+        services.achievements.record(p, mn.suld.api.achievement.Deed.WEAPON_MASTERY, t.name(), after);
     }
 
     /** Staff/QA: a track set to the start of {@code level}. */

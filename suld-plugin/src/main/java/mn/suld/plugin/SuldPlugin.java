@@ -566,6 +566,14 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new mn.suld.plugin.item.MaterialGuard(services), this);
         services.professions.start();
         registerTab("mergejil", new mn.suld.plugin.command.ProfessionCommand(services));
+        // achievements and the season's pass «Хуралдайн Зам» (docs/ACHIEVEMENTS_AND_PASS.md)
+        getServer().getPluginManager().registerEvents(services.achievements, this);
+        services.achievements.start();
+        mn.suld.plugin.ui.Presentation.onLevel = (pl, level) -> services.achievements.record(pl, mn.suld.api.achievement.Deed.LEVEL, "", level);
+        services.quests().onChapter = (pl, chapter) -> services.achievements.record(pl, mn.suld.api.achievement.Deed.CHAPTER, chapter, 1);
+        mn.suld.plugin.gui.AchievementMenu achievementMenu = new mn.suld.plugin.gui.AchievementMenu(services, menus);
+        registerTab("achievements", new mn.suld.plugin.command.AchievementCommand(services, achievementMenu, false));
+        registerTab("pass", new mn.suld.plugin.command.AchievementCommand(services, achievementMenu, true));
         // the read-only armory API for the web (docs/ARMORY_API.md): off unless web.armory.enabled
         armory = new mn.suld.plugin.web.ArmoryServer(this, services);
         armory.start();

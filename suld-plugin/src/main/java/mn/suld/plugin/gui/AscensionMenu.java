@@ -221,6 +221,7 @@ public final class AscensionMenu {
         services.profiles().save(pr);
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "ascension.rite", p.getUniqueId().toString(),
                 "rank " + rank + " -> " + r.rank()));
+        services.achievements.record(p, mn.suld.api.achievement.Deed.ASCENSION, "", r.rank());
         Presentation.banner(p, "ТЭНГЭРИЙН ЗЭРЭГ " + Ascension.roman(r.rank()), "Мөнх Тэнгэр таныг өргөмжиллөө", NamedTextColor.AQUA);
         p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation().add(0, 1, 0), 120, 0.6, 1.6, 0.6, 0.05);
         p.getWorld().playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 0.8f);
@@ -286,6 +287,7 @@ public final class AscensionMenu {
         services.profiles().save(pr);
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "ascension.honour_rite", p.getUniqueId().toString(),
                 "rank " + rank + " -> " + r.rank()));
+        services.achievements.record(p, mn.suld.api.achievement.Deed.ASCENSION, "", r.rank());
         String title = AscensionHonor.title(r.rank());
         Presentation.banner(p, "ТЭНГЭРИЙН ЗЭРЭГ " + Ascension.roman(r.rank()), title, NamedTextColor.AQUA);
         p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation().add(0, 1, 0), 160, 0.6, 1.8, 0.6, 0.06);

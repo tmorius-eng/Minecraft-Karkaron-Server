@@ -150,6 +150,7 @@ public final class ClanService {
         saveNow(a.clan());
         Bukkit.broadcast(Messages.accent(player.getName() + " шинэ овог байгууллаа: [" + a.clan().tag() + "] "
                 + a.clan().name()));
+        services.achievements.record(player, mn.suld.api.achievement.Deed.CLAN_JOIN, a.clan().id().toString(), 1);
         refreshHud(player);
     }
 
@@ -175,6 +176,7 @@ public final class ClanService {
         saveNow(a.clan());
         broadcast(a.clan(), Messages.success(player.getName() + " овогт нэгдлээ (" + a.clan().size() + "/"
                 + a.clan().capacity() + ")."));
+        services.achievements.record(player, mn.suld.api.achievement.Deed.CLAN_JOIN, a.clan().id().toString(), 1);
         refreshHud(player);
     }
 

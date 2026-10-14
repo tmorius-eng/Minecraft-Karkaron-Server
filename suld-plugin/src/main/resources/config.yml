@@ -447,3 +447,12 @@ web:
     allow-origin: "*"
     # a reverse proxy on this host (e.g. "127.0.0.1"): its X-Forwarded-For names the client the rate limit counts
     trusted-proxies: []
+
+# The season's pass «Хуралдайн Зам» (docs/ACHIEVEMENTS_AND_PASS.md): 50 tiers of 1 000 points, earned by playing.
+# Every reward on both tracks is a cosmetic. A season is season-weeks Хуралдай weeks (Monday to Sunday, daily.timezone)
+# from the Monday of epoch's week. The heroic track is opened per season by staff (/suld achievement <p> heroic);
+# heroic-credits is the price /pass shows for it (0: «not sold yet»). Buying it comes with the store (Bonum).
+pass:
+  epoch: "2026-10-05"
+  season-weeks: 8
+  heroic-credits: 0

@@ -49,6 +49,16 @@ public final class CosmeticCatalog {
         return new Cosmetic(id, cat, name, price, key, r, "shop");
     }
 
+    /** Earned by an achievement (docs/ACHIEVEMENTS_AND_PASS.md): never sold, for coins or credits. */
+    private static Cosmetic earned(Cosmetic c) {
+        return new Cosmetic(c.id(), c.category(), c.name(), 0, c.style(), c.rarity(), "achievement");
+    }
+
+    /** A reward of the season's pass, «Хуралдайн Зам» (docs/ACHIEVEMENTS_AND_PASS.md): never sold. */
+    private static Cosmetic pass(Cosmetic c) {
+        return new Cosmetic(c.id(), c.category(), c.name(), 0, c.style(), c.rarity(), "pass");
+    }
+
     private static Cosmetic levelTag(String id, String name, String mm, int level, Rarity r) {
         return new Cosmetic("tag." + id, Category.TAG, name, 0, mm, r, "level:" + level);
     }
@@ -135,7 +145,43 @@ public final class CosmeticCatalog {
             fx(Category.KILL_EFFECT, "kill.tsas", "Цасан Дэлбэрэлт", "tsas", 700, Rarity.EPIC),
             fx(Category.KILL_EFFECT, "kill.altan", "Алтан Бороо", "altan", 1_200, Rarity.EPIC),
             fx(Category.KILL_EFFECT, "kill.tenger", "Тэнгэрийн Тэнхээ", "tenger", 2_500, Rarity.LEGENDARY),
-            store("kill.tsakhilgaan", Category.KILL_EFFECT, "Цахилгаан", "tsakhilgaan", 350, Rarity.LEGENDARY));
+            store("kill.tsakhilgaan", Category.KILL_EFFECT, "Цахилгаан", "tsakhilgaan", 350, Rarity.LEGENDARY),
+            // --- earned by achievements (titles) ---
+            earned(tag("ach_taliin_ur", "Талын Үр", "<gradient:#C8A06B:#EAD9B8>Талын Үр</gradient>", 0, Rarity.RARE)),
+            earned(tag("ach_khukh_suld", "Хөх Сүлдний Баатар", "<gradient:#2A6BFF:#9FF3FF:#FFD24A>Хөх Сүлдний Баатар</gradient>", 0, Rarity.LEGENDARY)),
+            earned(tag("ach_khureenii_tsereg", "Хүрээний Цэрэг", "<gradient:#A0642A:#FF9A3C>Хүрээний Цэрэг</gradient>", 0, Rarity.RARE)),
+            earned(tag("ach_arvan_agui", "Арван Агуйн Баатар", "<gradient:#8C96A8:#FFD24A>Арван Агуйн Баатар</gradient>", 0, Rarity.EPIC)),
+            earned(tag("ach_khoyor_avarga", "Хоёр Аваргын Ялагч", "<gradient:#FF5A3C:#FFD24A>Хоёр Аваргын Ялагч</gradient>", 0, Rarity.EPIC)),
+            earned(tag("ach_gesgeelt_arav", "Гэсгээлтийн Баатар", "<gradient:#9FF3FF:#4F8BFF>Гэсгээлтийн Баатар</gradient>", 0, Rarity.EPIC)),
+            earned(tag("ach_gesgeelt_khori", "Тэнгэрийн Гэсгээлт", "<gradient:#FFFFFF:#9FF3FF:#B06BFF>Тэнгэрийн Гэсгээлт</gradient>", 0, Rarity.LEGENDARY)),
+            earned(tag("ach_nutgiin_medegch", "Нутгийн Мэдэгч", "<gradient:#6BD06B:#FFE08A>Нутгийн Мэдэгч</gradient>", 0, Rarity.EPIC)),
+            earned(tag("ach_ovoo", "Овооны Тахигч", "<gradient:#EAD9B8:#9FD8FF>Овооны Тахигч</gradient>", 0, Rarity.RARE)),
+            earned(tag("ach_mungun_mod", "Мөнгөн Модны Дархан", "<gradient:#FFFFFF:#8C96A8:#FFFFFF>Мөнгөн Модны Дархан</gradient>", 0, Rarity.EPIC)),
+            earned(tag("ach_durvun_mergejil", "Дөрвөн Мэргэжлийн Эзэн", "<gradient:#FFD24A:#6BD06B:#C8A06B>Дөрвөн Мэргэжлийн Эзэн</gradient>", 0, Rarity.LEGENDARY)),
+            earned(tag("ach_khuraldai", "Хуралдайн Төлөөлөгч", "<gradient:#4F8BFF:#EAD9B8>Хуралдайн Төлөөлөгч</gradient>", 0, Rarity.RARE)),
+            // --- the season's pass «Хуралдайн Зам»: the free track ---
+            pass(tag("pass_ayanchin", "Аянчин", "<#D9B86A>Аянчин", 0, Rarity.COMMON)),
+            pass(name("pass_tal", "Талын Шар", "<#E6C77A>", "", 0, Rarity.COMMON)),
+            pass(join("pass_mendchilgee", "Хуралдайн Мэндчилгээ", "<#E6C77A>✦ <white>{name}</white> <#B8C0CC>Хуралдайн замд мордлоо.", 0, Rarity.COMMON)),
+            pass(tag("pass_morin_elch", "Морин Элч", "<gradient:#C8A06B:#FFE08A>Морин Элч</gradient>", 0, Rarity.RARE)),
+            pass(chat("pass_tenger", "Тэнгэрийн Цэнхэр", "<#9FC7FF>", "", 0, Rarity.RARE)),
+            pass(tag("pass_urtuuchin", "Өртөөчин", "<gradient:#A0642A:#EAD9B8>Өртөөчин</gradient>", 0, Rarity.RARE)),
+            pass(name("pass_ulaan_nar", "Улаан Нар", "<gradient:#E85A4F:#F2A65A>", "</gradient>", 0, Rarity.RARE)),
+            pass(join("pass_ayan", "Аяны Дуудлага", "<#F2A65A>♞ <white>{name}</white> <#B8C0CC>аянаас буцаж ирлээ.", 0, Rarity.RARE)),
+            pass(tag("pass_myangat", "Мянгатын Ноён", "<gradient:#FFD24A:#A0642A>Мянгатын Ноён</gradient>", 0, Rarity.EPIC)),
+            pass(tag("pass_khuraldai_baatar", "Хуралдайн Баатар", "<gradient:#4F8BFF:#FFD24A>Хуралдайн Баатар</gradient>", 0, Rarity.EPIC)),
+            // --- the pass's heroic track ---
+            pass(tag("pass_h_ayanchin", "Баатарлаг Аянчин", "<gradient:#FFD24A:#FFF0A0>Баатарлаг Аянчин</gradient>", 0, Rarity.RARE)),
+            pass(chat("pass_h_altan", "Алтан Үг", "<gradient:#FFD36B:#F2A541>", "</gradient>", 0, Rarity.RARE)),
+            pass(name("pass_h_khukh", "Хөх Тэнгэрийн", "<gradient:#4F8BFF:#9BD1FF>", "</gradient>", 0, Rarity.EPIC)),
+            pass(join("pass_h_buree", "Бүрээний Дуу", "<gradient:#FFD24A:#FF9A3C>♪ Бүрээ дуугарч</gradient> <white>{name}</white> <#FFE08A>хүрэлцэн ирлээ!", 0, Rarity.EPIC)),
+            pass(tag("pass_h_tumen", "Түмэний Ноён", "<gradient:#FF9A3C:#FFD24A:#FF9A3C>Түмэний Ноён</gradient>", 0, Rarity.EPIC)),
+            pass(name("pass_h_galt", "Галт Шувуу", "<gradient:#FF6A3D:#FFC15E>", "</gradient>", 0, Rarity.EPIC)),
+            pass(chat("pass_h_mungun", "Мөнгөн Үг", "<gradient:#D7DEE8:#9FB3C8>", "</gradient>", 0, Rarity.EPIC)),
+            pass(join("pass_h_khurdan", "Хурдан Морины Туурай", "<#9FF3FF>♞ <#B8C0CC>Хурдан морины туурай дуулдаж — <white>{name}</white> <#9FF3FF>ирлээ!", 0, Rarity.EPIC)),
+            pass(tag("pass_h_ikh_sayd", "Их Сайд", "<gradient:#B06BFF:#FFD24A>Их Сайд</gradient>", 0, Rarity.EPIC)),
+            pass(name("pass_h_monkh", "Мөнх Тэнгэрийн", "<gradient:#7A5CFF:#4FD2D2>", "</gradient>", 0, Rarity.LEGENDARY)),
+            pass(tag("pass_h_noyon", "Хуралдайн Ноён", "<gradient:#FFD24A:#FF4A4A:#B06BFF>✦ Хуралдайн Ноён ✦</gradient>", 0, Rarity.LEGENDARY)));
 
     private static final Map<String, Cosmetic> BY_ID = new LinkedHashMap<>();
 

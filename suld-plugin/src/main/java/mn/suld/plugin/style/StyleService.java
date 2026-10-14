@@ -428,6 +428,19 @@ public final class StyleService implements Listener {
         saveProfile(p);
     }
 
+    /**
+     * A cosmetic earned by play (an achievement, a tier of the season's pass, docs/ACHIEVEMENTS_AND_PASS.md): granted
+     * and saved, never bought. False when the player owned it already or their style is not loaded.
+     */
+    public boolean grantEarned(Player p, String cosmeticId, String why) {
+        Cosmetic c = CosmeticCatalog.byId(cosmeticId).orElse(null);
+        PlayerStyle s = cache.get(p.getUniqueId());
+        if (c == null || s == null || !s.grant(c.id())) return false;
+        p.sendMessage(Messages.success("✦ " + why + ": " + c.name() + " (" + c.category().displayName() + ") — /cosmetics-оос зүү."));
+        changed(p);
+        return true;
+    }
+
     /** Admin: the badge refresh after {@code /suld badge} (name tags, TAB, chat). */
     public void badgeChanged(Player p) {
         changeListeners.forEach(l -> l.accept(p));

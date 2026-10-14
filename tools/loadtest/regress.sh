@@ -51,6 +51,7 @@ RUNS=(
   "questregionbot|$CTL $PORT"
   "honorbot|$CTL $PORT"
   "professionbot|$CTL $PORT"
+  "achievebot|$CTL $PORT"
   "healthbot|$CTL $PORT"
   "sitesbot|$CTL $LOG $PORT"
 )

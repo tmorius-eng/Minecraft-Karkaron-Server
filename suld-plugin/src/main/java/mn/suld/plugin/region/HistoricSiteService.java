@@ -324,6 +324,7 @@ public final class HistoricSiteService {
         p.sendMessage(Component.text("Шошго: " + label(s.history()), NamedTextColor.GRAY)); // no raw English label (LANG-009)
         services.chronicle().siteDiscovered(s, p); // the first of anyone to stand here goes into the book
         services.campaigns().onSiteDiscovered(p, s.id());
+        services.achievements.record(p, mn.suld.api.achievement.Deed.SITE, s.id(), 1);
         var pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null || services.isSoul.test(p.getUniqueId())) return;
         Area area = WorldContent.AREAS.stream().filter(a -> a.id().equals(s.areaId())).findFirst().orElse(null);

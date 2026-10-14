@@ -93,6 +93,7 @@ public final class TaskService implements Listener, TabExecutor {
         String mobId = services.mobs().mobId(mob).orElse(null);
         PlayerProfile pr = services.profiles().cached(killer.getUniqueId()).orElse(null);
         PlayerStyle st = services.styles().cached(killer.getUniqueId()).orElse(null);
+        if (mobId != null) services.achievements.record(killer, mn.suld.api.achievement.Deed.MOB_KILL, mobId, 1);
         if (mobId == null || pr == null || st == null || !pr.hasSelectedClass()) return;
         long day = today();
         String stored = st.taskProgress(day);
@@ -116,6 +117,7 @@ public final class TaskService implements Listener, TabExecutor {
                 var gained = services.progression().grantExp(pr, t.exp(), ExpSource.OTHER);
                 services.profiles().save(pr);
                 if (!killer.isOnline()) return;
+                services.achievements.record(killer, mn.suld.api.achievement.Deed.DAILY_TASK, "", 1);
                 killer.sendMessage(Messages.success("Өдрийн даалгавар биелэв: " + t.prey().mobName() + " ×" + t.count()
                         + "  (+" + t.coins() + " зоос, +" + t.exp() + " EXP)"));
                 killer.playSound(killer.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.3f);

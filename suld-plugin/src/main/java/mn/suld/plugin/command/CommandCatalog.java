@@ -55,6 +55,8 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/ascend", "Тэнгэрийн Зэрэг (60-р түвшний дараа): оноо, нөхцөл, ёслол", null),
             e(Group.GAME, "/mastery", "Зэвсгийн ур чадвар: таван төрлийн зэвсэг, 1–50, цол", null),
             e(Group.GAME, "/mergejil", "Мэргэжил: дархан, бариач, адуучин, эсгийч; ойрын газар, боловсруулах", null),
+            e(Group.GAME, "/achievements", "Амжилт: түүх, тулаан, нутаг, мэргэжил, алдар; цол шагнал", null),
+            e(Group.GAME, "/pass", "Хуралдайн Зам: улирлын 50 шат, гоёл шагнал", null),
             e(Group.GAME, "/dungeon heroic [агуй] [түлхүүр]", "Баатарлаг агуй (60): түлхүүр, долоо хоногийн нөхцөл, хас чулуу", null),
             e(Group.GAME, "/profile", "Дүрийн мэдээлэл", null),
             e(Group.GAME, "/exp", "Түвшин, EXP", null),

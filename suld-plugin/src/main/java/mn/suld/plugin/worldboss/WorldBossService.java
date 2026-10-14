@@ -395,6 +395,7 @@ public final class WorldBossService implements Listener {
                     + (r.multiplier() > 1 ? " (×" + r.multiplier() + ")" : "")));
             if (gain.leveledUp()) Presentation.levelUp(p, from, gain.after().level());
             loot(p, profile, a, now);
+            services.achievements.record(p, mn.suld.api.achievement.Deed.WORLD_BOSS, a.def.id(), 1);
             services.profiles().save(profile);
             services.profiles().cached(p.getUniqueId()).ifPresent(pr -> services.hud().update(p, pr));
             services.clans().clanOf(r.player()).map(c -> c.id()).ifPresent(cid -> {

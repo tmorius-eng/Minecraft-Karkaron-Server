@@ -279,6 +279,10 @@ public final class SuldServices {
             this.professions = new mn.suld.plugin.mastery.ProfessionService(plugin, this, dataSource == null
                     ? new mn.suld.api.persistence.InMemoryProfessionRepository()
                     : new mn.suld.plugin.persistence.JdbcProfessionRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
+            // achievements and the season's pass (V28, docs/ACHIEVEMENTS_AND_PASS.md): every write commutes, the pool is fine
+            this.achievements = new mn.suld.plugin.achievement.AchievementService(plugin, this, dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryAchievementRepository()
+                    : new mn.suld.plugin.persistence.JdbcAchievementRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor));
             this.mapPins = dataSource == null
                     ? new mn.suld.api.persistence.InMemoryMapPinRepository()
                     : new mn.suld.plugin.persistence.JdbcMapPinRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor);
@@ -301,6 +305,8 @@ public final class SuldServices {
     public final mn.suld.plugin.mastery.WeaponMasteryService weaponMastery;
     /** Мэргэжил: the four crafts, their nodes and pens in the wild (docs/MASTERY_AND_PROFESSIONS.md). */
     public final mn.suld.plugin.mastery.ProfessionService professions;
+    /** Achievements and the season's pass «Хуралдайн Зам» (docs/ACHIEVEMENTS_AND_PASS.md). */
+    public final mn.suld.plugin.achievement.AchievementService achievements;
     private final mn.suld.api.campaign.WeeklyCycle weeklyCycle;
     private final mn.suld.plugin.chronicle.ChronicleService chronicleService;
     private final mn.suld.plugin.campaign.KhuraldaiService khuraldaiService;
@@ -586,8 +592,9 @@ public final class SuldServices {
         java.util.concurrent.CompletableFuture<Void> campaigns = campaignService.shutdown();
         java.util.concurrent.CompletableFuture<Void> mastery = weaponMastery.shutdown();
         java.util.concurrent.CompletableFuture<Void> crafts = professions.shutdown();
+        java.util.concurrent.CompletableFuture<Void> deeds = achievements.shutdown();
         try {
-            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats, campaigns, mastery, crafts)
+            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats, campaigns, mastery, crafts, deeds)
                     .get(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
         } catch (Exception ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
