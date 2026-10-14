@@ -629,7 +629,6 @@
    "maxLevel": 60
   },
   {
-<<<<<<< ours
    "id": "recipe.esgii_boots_alt",
    "result": "armor.esgii.boots",
    "materials": {
@@ -755,54 +754,6 @@
     "rare",
     "epic"
    ]
-=======
-   "id": "recipe.talyn_ild",
-   "result": "weapon.talyn_ild",
-   "level": 2,
-   "coins": 45,
-   "minRarity": "rare",
-   "maxRarity": "epic",
-   "materials": {
-    "item.chonon_arisan": 4,
-    "item.tumriin_kheltarkhii": 3
-   }
-  },
-  {
-   "id": "recipe.khasar_soyo",
-   "result": "weapon.khasar_soyo",
-   "level": 5,
-   "coins": 90,
-   "minRarity": "epic",
-   "maxRarity": "legendary",
-   "materials": {
-    "item.chonon_arisan": 6,
-    "item.khasar_zurkh": 1
-   }
-  },
-  {
-   "id": "recipe.anchin_num",
-   "result": "weapon.anchin_num",
-   "level": 15,
-   "coins": 180,
-   "minRarity": "rare",
-   "maxRarity": "epic",
-   "materials": {
-    "item.chonon_arisan": 6,
-    "item.baavgain_arisan": 4
-   }
-  },
-  {
-   "id": "recipe.altai_jad",
-   "result": "weapon.altai_jad",
-   "level": 18,
-   "coins": 240,
-   "minRarity": "epic",
-   "maxRarity": "legendary",
-   "materials": {
-    "item.baavgain_arisan": 5,
-    "item.mosun_chuluu": 4
-   }
->>>>>>> theirs
   }
  ]
 }

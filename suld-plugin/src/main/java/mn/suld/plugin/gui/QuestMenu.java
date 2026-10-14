@@ -202,21 +202,8 @@ public final class QuestMenu {
             body.add(info("Юу хийх:", objective(def), NamedTextColor.WHITE));
             String where = where(p, def);
             if (where != null) body.add(info("Хаана:", where, SKY));
-<<<<<<< ours
             String gate = active ? mn.suld.plugin.quest.QuestTracker.gateRefusal(services, p, def) : null; // QS-02
             if (gate != null) body.add(info("Хаалга:", "⛔ " + gate, NamedTextColor.RED));
-=======
-            if (def.type() == mn.suld.api.quest.QuestType.COMPLETE_DUNGEON) {
-                var ddef = SuldContent.dungeonFor(def.targetId());
-                if (ddef != null) {
-                    body.add(info("Доод түвшин:", ddef.minLevel() + "-р түвшин", GOLD));
-                    if (active) {
-                        Component ref = services.dungeons().soloEntryRefusal(p, ddef);
-                        if (ref != null) body.add(Component.text("┃ ", GOLD_D).append(ref));
-                    }
-                }
-            }
->>>>>>> theirs
             if (active) body.add(info("Явц:", bar(state.progress(), def.requiredCount()) + " " + state.progress() + "/" + def.requiredCount(), GOLD));
             body.add(info("Өгсөн:", lore.giver(), SKY));
             body.add(info("Нутаг:", land(index), SKY));

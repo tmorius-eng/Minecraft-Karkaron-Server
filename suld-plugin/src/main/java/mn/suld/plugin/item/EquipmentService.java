@@ -213,14 +213,10 @@ public final class EquipmentService implements Listener {
             ItemInstance i = e.getValue();
             if (i.bound() || bonus.inactive().containsKey(e.getKey())) continue;
             ItemDefinition def = SuldContent.items().item(i.definitionId()).orElse(null);
-<<<<<<< ours
             Binding b = def == null ? Binding.NONE : def.bindingAt(i.rarity());
             // IT-03 defence in depth: an ON_PICKUP piece that reached the bag unbound (an old item, a path that skipped
             // ItemService.stackFor) binds when worn, at the latest
             if (b != Binding.ON_EQUIP && b != Binding.ON_PICKUP) continue;
-=======
-            if (def == null || (def.bindingAt(i.rarity()) != Binding.ON_EQUIP && def.bindingAt(i.rarity()) != Binding.ON_PICKUP)) continue;
->>>>>>> theirs
             bind(p, e.getKey(), i.boundTo(p.getUniqueId()));
             p.sendMessage(Messages.info(def.displayName() + " танд холбогдлоо (" + b.label() + ")."));
         }
@@ -367,12 +363,6 @@ public final class EquipmentService implements Listener {
         if (i == null) return "Энэ нүд хоосон.";
         if (p.getInventory().firstEmpty() < 0) return "Цүнх дүүрэн байна.";
         pr.equipment(pr.equipment().with(slot, null));
-<<<<<<< ours
-=======
-        services.profiles().save(pr);
-        p.getInventory().addItem(services.itemService().stack(i, p, 1));
-        PlayerDataSaves.now(p);
->>>>>>> theirs
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.unequip", i.definitionId() + "-" + i.uuid(), slot.name()));
         dirty(p);
         // IT-09: the empty slot is committed to SQL first; only then does the jewel enter the bag and the player file

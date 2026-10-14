@@ -250,11 +250,7 @@ public final class ItemService {
             }
             // amounts above one stack (bulk salvage) are split; stack() alone would clamp and lose the rest
             for (int left = Math.max(1, d.amount()); left > 0; ) {
-<<<<<<< ours
                 ItemStack s = stackFor(d.item(), p, left);
-=======
-                ItemStack s = stack(inst, p, left);
->>>>>>> theirs
                 left -= s.getAmount();
                 p.getInventory().addItem(s).values().forEach(rest -> p.getWorld().dropItemNaturally(p.getLocation(), rest));
             }

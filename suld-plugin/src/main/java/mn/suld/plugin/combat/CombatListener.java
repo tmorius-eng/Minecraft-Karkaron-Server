@@ -416,15 +416,8 @@ public final class CombatListener implements Listener {
         }
 
         quests.onMobKilled(killer, profile, mobId);
-<<<<<<< ours
         // QS-01: the party's members near the kill advance their own hunt objective too (they used to get only EXP)
         for (Player m : sharers) services.profiles().cached(m.getUniqueId()).ifPresent(mp -> quests.onMobKilled(m, mp, mobId));
-=======
-        for (Player m : sharers) {
-            PlayerProfile mp = services.profiles().cached(m.getUniqueId()).orElse(null);
-            if (mp != null) quests.onMobKilled(m, mp, mobId);
-        }
->>>>>>> theirs
 
         mn.suld.plugin.item.ItemService itemService = services.itemService();
         if (itemService != null) {

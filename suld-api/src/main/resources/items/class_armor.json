@@ -406,13 +406,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -420,11 +415,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -447,13 +438,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      8.66,
      11.02
-=======
-     9.44,
-     12.02
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -461,11 +447,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.111,
-=======
-    "armor": 0.085,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -488,13 +470,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      6.3,
      8.02
-=======
-     6.91,
-     8.79
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -502,11 +479,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.082,
-=======
-    "armor": 0.061,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -529,13 +502,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -547,11 +515,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -1234,13 +1198,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -1248,11 +1207,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -1275,13 +1230,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      8.66,
      11.02
-=======
-     9.44,
-     12.02
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -1289,11 +1239,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.111,
-=======
-    "armor": 0.085,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -1316,13 +1262,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      6.3,
      8.02
-=======
-     6.91,
-     8.79
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -1330,11 +1271,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.082,
-=======
-    "armor": 0.061,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -1357,13 +1294,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -1375,11 +1307,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -2062,13 +1990,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -2076,11 +1999,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -2103,13 +2022,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      8.66,
      11.02
-=======
-     9.44,
-     12.02
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -2117,11 +2031,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.111,
-=======
-    "armor": 0.085,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -2144,13 +2054,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      6.3,
      8.02
-=======
-     6.91,
-     8.79
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -2158,11 +2063,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.082,
-=======
-    "armor": 0.061,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -2185,13 +2086,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -2203,11 +2099,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -2890,13 +2782,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -2904,11 +2791,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -2931,13 +2814,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      8.66,
      11.02
-=======
-     9.44,
-     12.02
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -2945,11 +2823,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.111,
-=======
-    "armor": 0.085,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -2972,13 +2846,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      6.3,
      8.02
-=======
-     6.91,
-     8.79
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -2986,11 +2855,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.082,
-=======
-    "armor": 0.061,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -3013,13 +2878,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -3031,11 +2891,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -3718,13 +3574,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -3732,11 +3583,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -3759,13 +3606,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      8.66,
      11.02
-=======
-     9.44,
-     12.02
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -3773,11 +3615,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.111,
-=======
-    "armor": 0.085,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -3800,13 +3638,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      6.3,
      8.02
-=======
-     6.91,
-     8.79
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -3814,11 +3647,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.082,
-=======
-    "armor": 0.061,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
@@ -3841,13 +3670,8 @@
    "level": 1,
    "stats": {
     "armor": [
-<<<<<<< ours
      3.94,
      5.02
-=======
-     4.37,
-     5.56
->>>>>>> theirs
     ],
     "max_health": [
      0.25,
@@ -3859,11 +3683,7 @@
     ]
    },
    "perLevel": {
-<<<<<<< ours
     "armor": 0.052,
-=======
-    "armor": 0.038,
->>>>>>> theirs
     "max_health": 0.994
    },
    "durability": 0,
