@@ -43,6 +43,7 @@ public final class JdbcDeathRepository implements DeathRepository {
     public CompletableFuture<DeathRecord> insert(DeathRecord d) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     int seq;
@@ -66,6 +67,8 @@ public final class JdbcDeathRepository implements DeathRepository {
                 } catch (SQLException e) {
                     conn.rollback();
                     throw e;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException e) {
                 throw new RepositoryException("insert death " + d.player(), e);

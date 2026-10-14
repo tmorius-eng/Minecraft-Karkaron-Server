@@ -502,6 +502,14 @@ public final class SuldServices {
     /** The Дархан's order board (docs/CRAFTING.md); set once the item system is up. */
     public volatile mn.suld.plugin.item.CraftOrderService craftOrders;
 
+    private volatile mn.suld.plugin.trade.Mailbox mailbox;
+
+    /** SULD-F12: shared offline item mailbox so TradeService and CraftOrderService synchronize on one lock and stuck set. */
+    public synchronized mn.suld.plugin.trade.Mailbox mailbox(Plugin plugin) {
+        if (mailbox == null) mailbox = new mn.suld.plugin.trade.Mailbox(plugin);
+        return mailbox;
+    }
+
     private volatile mn.suld.plugin.item.CraftService crafting;
 
     /** The Дархан's recipes, shared by /item craft and the smith's window (docs/CRAFTING.md). */

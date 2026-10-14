@@ -112,6 +112,7 @@ public final class CraftService {
         ItemRarity rarity = catalog().band(LootTier.CRAFT).pick(mn.suld.api.loot.Rng.threadLocal(), r.minRarity(), r.maxRarity());
         ItemInstance made = items().generate(def, rarity, r.itemLevel(pr.progression().level()), p.getUniqueId(), "craft:" + r.id());
         items().give(p, List.of(new LootDrop(made, 1)), "craft");
+        PlayerDataSaves.now(p); // SULD-F05: persist spent materials and crafted item alongside SQL profile
         services.profiles().save(pr);
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.craft", def.id() + "-" + made.uuid(), r.id()));
         p.sendMessage(Messages.success("Урлалаа: " + ItemTooltip.name(catalog(), def, made) + " (" + rarity.displayName() + ", Зэрэг " + made.itemLevel() + ")"));

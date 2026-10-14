@@ -69,6 +69,7 @@ public final class JdbcStyleRepository implements StyleRepository {
         return CompletableFuture.runAsync(() -> {
             long now = System.currentTimeMillis();
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     try (PreparedStatement ps = conn.prepareStatement(upsert())) {
@@ -104,6 +105,8 @@ public final class JdbcStyleRepository implements StyleRepository {
                 } catch (SQLException e) {
                     conn.rollback();
                     throw e;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException e) {
                 throw new RepositoryException("save style " + s.player(), e);
@@ -115,6 +118,7 @@ public final class JdbcStyleRepository implements StyleRepository {
     public CompletableFuture<Long> addCredits(UUID player, long delta) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     // make sure the row exists (credits 0), then one conditional UPDATE does the arithmetic
@@ -148,6 +152,8 @@ public final class JdbcStyleRepository implements StyleRepository {
                 } catch (SQLException e) {
                     conn.rollback();
                     throw e;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException e) {
                 throw new RepositoryException("credits " + player, e);
@@ -160,6 +166,7 @@ public final class JdbcStyleRepository implements StyleRepository {
         if (amount <= 0) throw new IllegalArgumentException("amount must be > 0: " + amount);
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     // the ledger row first: a txid already present inserts nothing, and then nothing else changes
@@ -202,6 +209,8 @@ public final class JdbcStyleRepository implements StyleRepository {
                 } catch (SQLException e) {
                     conn.rollback();
                     throw e;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException e) {
                 throw new RepositoryException("credit grant " + txid + " for " + player, e);

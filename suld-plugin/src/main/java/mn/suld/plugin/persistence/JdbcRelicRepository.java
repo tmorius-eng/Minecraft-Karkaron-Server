@@ -58,6 +58,7 @@ public final class JdbcRelicRepository implements RelicRepository {
                         + "VALUES (?, ?, 'UNCLAIMED', 0) ON DUPLICATE KEY UPDATE item_key = item_key";
             };
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     int inserted;
@@ -75,6 +76,8 @@ public final class JdbcRelicRepository implements RelicRepository {
                 } catch (SQLException ex) {
                     conn.rollback();
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to ensure relic " + key, ex);
@@ -103,6 +106,7 @@ public final class JdbcRelicRepository implements RelicRepository {
     public CompletableFuture<CasResult> apply(RelicTransition t) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     RelicRecord cur = select(conn, t.key()).orElseThrow(() -> new SQLException("unknown relic " + t.key()));
@@ -138,6 +142,8 @@ public final class JdbcRelicRepository implements RelicRepository {
                 } catch (SQLException ex) {
                     conn.rollback(); // e.g. UNIQUE(owner_uuid): that player already bears a relic
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Relic transition rejected for " + t.key() + " (" + ex.getSQLState() + ")", ex);
@@ -149,6 +155,7 @@ public final class JdbcRelicRepository implements RelicRepository {
     public CompletableFuture<RelicRecord> setShrine(String key, ShrineLocation s, String actor) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     try (PreparedStatement ps = conn.prepareStatement("UPDATE suld_world_unique_items SET shrine_world = ?, "
@@ -167,6 +174,8 @@ public final class JdbcRelicRepository implements RelicRepository {
                 } catch (SQLException ex) {
                     conn.rollback();
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to set shrine for " + key, ex);

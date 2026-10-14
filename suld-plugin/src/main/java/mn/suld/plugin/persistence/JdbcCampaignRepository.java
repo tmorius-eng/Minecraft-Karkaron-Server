@@ -111,6 +111,7 @@ public final class JdbcCampaignRepository implements CampaignRepository {
     public CompletableFuture<Boolean> reopenVote(String cycleId, List<String> options, long opensAt, long closesAt, long expectedVersion) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     int changed;
@@ -136,6 +137,8 @@ public final class JdbcCampaignRepository implements CampaignRepository {
                 } catch (SQLException ex) {
                     conn.rollback();
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to reopen vote " + cycleId, ex);
@@ -318,6 +321,7 @@ public final class JdbcCampaignRepository implements CampaignRepository {
     public CompletableFuture<Boolean> replaceCampaign(CampaignSnapshot s, long expectedVersion) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     int changed;
@@ -348,6 +352,8 @@ public final class JdbcCampaignRepository implements CampaignRepository {
                 } catch (SQLException ex) {
                     conn.rollback();
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to replace campaign " + s.cycleId(), ex);
@@ -367,6 +373,7 @@ public final class JdbcCampaignRepository implements CampaignRepository {
                         + "ON DUPLICATE KEY UPDATE units = units + VALUES(units), player_name = VALUES(player_name), clan_uuid = VALUES(clan_uuid)";
             };
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     long sum = 0, now = System.currentTimeMillis();
@@ -399,6 +406,8 @@ public final class JdbcCampaignRepository implements CampaignRepository {
                 } catch (SQLException ex) {
                     conn.rollback();
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to add " + deltas.size() + " contributions to " + cycleId, ex);

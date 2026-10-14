@@ -652,6 +652,7 @@ public final class DungeonService {
             if (firstClear) services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_BOSS, id, Map.of("dungeon", ar.def.id())));
             services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.BOSS_PARTICIPATION, id,
                     Map.of("boss", ar.def.bossDefinition().id(), "dungeon", ar.def.id(), "seconds", seconds, "first", firstClear)));
+            mn.suld.plugin.item.PlayerDataSaves.now(p); // SULD-F10: persist dungeon loot and PDC clearsKey alongside SQL profile
             services.profiles().save(profile);
         }
         if (!rewarded.isEmpty() && ar.heroic == null) {

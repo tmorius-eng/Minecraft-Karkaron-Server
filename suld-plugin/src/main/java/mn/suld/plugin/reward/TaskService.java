@@ -141,6 +141,10 @@ public final class TaskService implements Listener, TabExecutor {
             s.sendMessage(Messages.error("Зөвхөн тоглогч ашиглана."));
             return true;
         }
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа анчны даалгавар ашиглах боломжгүй."));
+            return true;
+        }
         open(p);
         return true;
     }

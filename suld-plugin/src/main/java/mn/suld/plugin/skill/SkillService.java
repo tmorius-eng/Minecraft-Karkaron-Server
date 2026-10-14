@@ -354,6 +354,11 @@ public final class SkillService implements Listener {
         String key = p.getUniqueId() + ":" + c;
         Long last = lastClickByType.put(key, now);
         if (last != null && now - last < CLICK_DEBOUNCE_MS) return;
+        // SULD-F08: a right-click block/entity interact also fires ARM_SWING ('L') in the same tick; ignore 'L' within 30 ms of 'R'
+        if (c == 'L') {
+            Long lastR = lastClickByType.get(p.getUniqueId() + ":R");
+            if (lastR != null && now - lastR < 30) return;
+        }
         ComboTracker t = combos.computeIfAbsent(p.getUniqueId(), k -> new ComboTracker(clazz));
         if (t.clazz() != clazz) {
             t = new ComboTracker(clazz);

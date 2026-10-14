@@ -108,6 +108,10 @@ public final class NpcService implements Listener {
 
     /** A paid trip to the relay {@code key}: the coins go first and come back when the teleport fails. */
     public void travelTo(Player pl, String key) {
+        if (services.isSoul.test(pl.getUniqueId())) {
+            pl.sendMessage(Messages.error("Сүнс байхдаа өртөөгөөр аялах боломжгүй."));
+            return;
+        }
         Location to = city.pointLocation(key);
         String name = RELAY_NAMES.get(key);
         if (to == null || name == null) return;

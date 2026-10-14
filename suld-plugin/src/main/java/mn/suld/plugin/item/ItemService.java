@@ -313,8 +313,7 @@ public final class ItemService {
             if (services.relics() != null && services.relics().items().isRelic(s)) continue; // the relic system validates its own copies
             Checked c = check(s);
             switch (c.verdict()) {
-                case NOT_SULD -> {
-                }
+                case NOT_SULD -> taken += sweepContainerMeta(owner, s, where + "#" + slot, seen);
                 case FORGED -> {
                     quarantine(owner, s, where + "#" + slot, String.join("; ", c.problems()));
                     inv.setItem(slot, null);
@@ -344,6 +343,50 @@ public final class ItemService {
             b.setDamage(Math.min(a.getDamage(), b.hasMaxDamage() ? b.getMaxDamage() - 1 : a.getDamage()));
             to.setItemMeta(b);
         }
+    }
+
+    /** SULD-F04: inspect Shulker Boxes and Bundles so forged or duplicated SÜLD items cannot hide inside containers. */
+    private int sweepContainerMeta(Player owner, ItemStack container, String where, Set<UUID> seen) {
+        if (container == null || !container.hasItemMeta()) return 0;
+        var meta = container.getItemMeta();
+        if (meta instanceof org.bukkit.inventory.meta.BlockStateMeta bsm && bsm.getBlockState() instanceof org.bukkit.block.ShulkerBox box) {
+            int taken = sweep(owner, box.getInventory(), where + "/shulker", seen);
+            if (taken > 0) {
+                bsm.setBlockState(box);
+                container.setItemMeta(bsm);
+            }
+            return taken;
+        }
+        if (meta instanceof org.bukkit.inventory.meta.BundleMeta bundle) {
+            List<ItemStack> kept = new ArrayList<>();
+            int taken = 0;
+            int idx = 0;
+            for (ItemStack in : bundle.getItems()) {
+                idx++;
+                if (in == null || in.isEmpty()) continue;
+                Checked c = check(in);
+                if (c.verdict() == Verdict.FORGED) {
+                    quarantine(owner, in, where + "/bundle#" + idx, String.join("; ", c.problems()));
+                    taken++;
+                } else if (c.verdict() == Verdict.GENUINE || c.verdict() == Verdict.MIGRATED) {
+                    ItemDefinition def = catalog.require(c.item().definitionId());
+                    if (!def.stackable() && !seen.add(c.item().uuid())) {
+                        quarantine(owner, in, where + "/bundle#" + idx, "second copy of item " + c.item().uuid());
+                        taken++;
+                    } else {
+                        kept.add(in);
+                    }
+                } else {
+                    kept.add(in);
+                }
+            }
+            if (taken > 0) {
+                bundle.setItems(kept);
+                container.setItemMeta(bundle);
+            }
+            return taken;
+        }
+        return 0;
     }
 
     /** Join: the player's inventory, armour, off hand and ender chest, plus the stored accessories. */
@@ -378,6 +421,9 @@ public final class ItemService {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!mn.suld.plugin.perf.Stagger.due(p.getUniqueId(), tick, 600)) continue;
             Set<UUID> mine = new HashSet<>();
+            PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+            if (pr != null) for (ItemInstance a : pr.equipment().slots().values()) mine.add(a.uuid());
+            sweep(p, p.getEnderChest(), "enderchest", new HashSet<>(mine));
             Inventory inv = p.getInventory();
             for (int slot = 0; slot < inv.getSize(); slot++) {
                 ItemStack st = inv.getItem(slot);

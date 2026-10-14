@@ -262,6 +262,10 @@ public final class CityCommands implements Listener {
             }
             Location target = city.pointLocation("spawn");
             if (target == null) target = p.getWorld().getSpawnLocation();
+            if (!p.hasPermission("suld.admin") && services.isSoul.test(p.getUniqueId())) {
+                p.sendMessage(Messages.error("Сүнс байхдаа хот руу телепорт хийх боломжгүй."));
+                return true;
+            }
             if (services.dungeons().isInAnyRun(p.getUniqueId())) {
                 p.sendMessage(Messages.error("Агуйн аяны үеэр хот руу буцахгүй. /dungeon leave"));
                 return true;
@@ -375,6 +379,10 @@ public final class CityCommands implements Listener {
             }
             if (!a1.hasSelectedClass() || !b1.hasSelectedClass()) {
                 s.sendMessage(Messages.error("Хоёулаа анги сонгосон байх ёстой."));
+                return true;
+            }
+            if (services.isSoul.test(from.getUniqueId()) || services.isSoul.test(to.getUniqueId())) {
+                s.sendMessage(Messages.error("Сүнс байхдаа зоос шилжүүлэх боломжгүй."));
                 return true;
             }
             // the check and the in-memory move happen on the main thread (no double spend); both rows are then

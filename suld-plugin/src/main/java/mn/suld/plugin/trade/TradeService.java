@@ -78,7 +78,7 @@ public final class TradeService implements Listener, TabExecutor {
     private final Map<UUID, List<ItemStack>> dyingOffer = new HashMap<>();
 
     public TradeService(Plugin plugin, SuldServices services) {
-        this.mailbox = new Mailbox(plugin);
+        this.mailbox = services.mailbox(plugin);
         this.plugin = plugin;
         this.services = services;
         this.menuKey = new NamespacedKey(plugin, "menu_item");
@@ -413,7 +413,8 @@ public final class TradeService implements Listener, TabExecutor {
             return;
         }
         PlayerProfile payer = net > 0 ? rb : ra, payee = net > 0 ? ra : rb;
-        Settlement st = new Settlement(pa, pb, fromA, fromB, services.profiles().transfer(payer, payee, Math.abs(net)));
+        long absNet = Math.abs(net);
+        Settlement st = new Settlement(pa, pb, fromA, fromB, payer, payee, absNet, services.profiles().transfer(payer, payee, absNet));
         inFlight.add(st);
         st.coins.whenComplete((v, err) -> {
             if (!plugin.isEnabled()) return; // shutdown() settles what is still in flight
@@ -433,6 +434,7 @@ public final class TradeService implements Listener, TabExecutor {
      * someone (shutdown() settles them), never let them vanish with the scheduler.
      */
     private record Settlement(Player pa, Player pb, List<ItemStack> fromA, List<ItemStack> fromB,
+                              PlayerProfile payer, PlayerProfile payee, long amount,
                               java.util.concurrent.CompletableFuture<?> coins) {
     }
 
@@ -603,10 +605,16 @@ public final class TradeService implements Listener, TabExecutor {
                 st.coins().get(3, java.util.concurrent.TimeUnit.SECONDS); // the profile pool is still open here
                 ok = true;
             } catch (Exception ex) {
-                // failed, or not stored in time: each side keeps its own goods (never both the goods and the coins)
+                // SULD-F03: if timed out (not already reverted by transfer's error handler), revert in-memory coins before onDisable saves profiles
+                if (!st.coins().isCompletedExceptionally()) {
+                    st.coins().cancel(false);
+                    long back = Math.min(st.amount(), Math.max(0, st.payee().currency()));
+                    st.payee().addCurrency(-back);
+                    st.payer().addCurrency(back);
+                }
                 ok = false;
                 plugin.getLogger().severe("[audit] trade " + st.pa().getName() + " <-> " + st.pb().getName()
-                        + " unsettled at shutdown (" + ex + "); items returned to their owners, check the coin balances");
+                        + " unsettled at shutdown (" + ex + "); balances reverted and items returned to their owners");
             }
             settle(st.pa(), st.pb(), st.fromA(), st.fromB(), ok);
         }

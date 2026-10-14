@@ -47,6 +47,7 @@ public final class JdbcChronicleRepository implements ChronicleRepository {
                 case MYSQL -> "INSERT IGNORE INTO suld_chronicle_records (kind, subject_key, entry_id, entry_value, version) VALUES (?, ?, ?, ?, 0)";
             };
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     // a cheap pre-check keeps the log clean of rolled-back ids; the INSERT is still the real guard
@@ -72,6 +73,8 @@ public final class JdbcChronicleRepository implements ChronicleRepository {
                 } catch (SQLException ex) {
                     conn.rollback();
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to claim first " + entry.kind() + " " + entry.subjectKey(), ex);
@@ -83,7 +86,9 @@ public final class JdbcChronicleRepository implements ChronicleRepository {
     public CompletableFuture<Optional<ChronicleEntry>> recordIfBetter(ChronicleEntry entry) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
+                try {
                 // a lost compare-and-set means another record landed meanwhile: re-read and compare again, so the best
                 // of several concurrent attempts always ends up holding the record
                 for (int attempt = 0; attempt < 8; attempt++) {
@@ -131,6 +136,9 @@ public final class JdbcChronicleRepository implements ChronicleRepository {
                     }
                 }
                 return Optional.empty();
+                } finally {
+                    conn.setAutoCommit(auto);
+                }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to record " + entry.kind() + " " + entry.subjectKey(), ex);
             }
@@ -141,6 +149,7 @@ public final class JdbcChronicleRepository implements ChronicleRepository {
     public CompletableFuture<ChronicleEntry> append(ChronicleEntry entry) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection()) {
+                boolean auto = conn.getAutoCommit();
                 conn.setAutoCommit(false);
                 try {
                     ChronicleEntry written = insertLog(conn, entry);
@@ -149,6 +158,8 @@ public final class JdbcChronicleRepository implements ChronicleRepository {
                 } catch (SQLException ex) {
                     conn.rollback();
                     throw ex;
+                } finally {
+                    conn.setAutoCommit(auto);
                 }
             } catch (SQLException ex) {
                 throw new RepositoryException("Failed to append chronicle " + entry.kind(), ex);

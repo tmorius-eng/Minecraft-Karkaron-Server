@@ -542,6 +542,10 @@ public final class Menus {
 
     /** The Rankup page of the hub: the eight ranks as cards (owned ones glow), the next one climbs on a click. */
     public void rankup(Player p) {
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа цол ахиулах боломжгүй."));
+            return;
+        }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         PlayerStyle s = styles().of(p.getUniqueId());
@@ -660,6 +664,10 @@ public final class Menus {
     // ================================================================== level rewards
 
     public void lvlup(Player p) {
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа шагнал авах боломжгүй."));
+            return;
+        }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         PlayerStyle s = styles().of(p.getUniqueId());
@@ -998,6 +1006,10 @@ public final class Menus {
     }
 
     private void buySupply(Player p, Supply sup) {
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа худалдан авалт хийх боломжгүй."));
+            return;
+        }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         if (pr.currency() < sup.price()) {
@@ -1092,6 +1104,10 @@ public final class Menus {
     }
 
     private void sellSlot(Player p, int bag, ItemStack seen) {
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа эд зүйл зарах боломжгүй."));
+            return;
+        }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         ItemStack now = p.getInventory().getItem(bag);
         // the bag changed since the window was drawn (moved, split, swapped): redraw, never sell something else
@@ -1125,6 +1141,10 @@ public final class Menus {
     }
 
     private void sellAll(Player p) {
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа эд зүйл зарах боломжгүй."));
+            return;
+        }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
         long total = 0;

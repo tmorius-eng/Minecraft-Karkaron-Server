@@ -111,6 +111,11 @@ public final class DailyService implements Listener, TabExecutor {
     }
 
     private void claim(Player p) {
+        if (services.isSoul.test(p.getUniqueId())) {
+            p.sendMessage(Messages.error("Сүнс байхдаа өдрийн шагнал авах боломжгүй."));
+            p.closeInventory();
+            return;
+        }
         PlayerStyle style = services.styles().cached(p.getUniqueId()).orElse(null);
         PlayerProfile profile = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (style == null || profile == null || !profile.hasSelectedClass()) return;

@@ -374,17 +374,20 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onQuit(PlayerQuitEvent e) {
-        if (runs.containsKey(e.getPlayer().getUniqueId())) end(e.getPlayer(), "Сорилт тасарлаа.");
+        PlayerProfile pr = services.profiles().cached(e.getPlayer().getUniqueId()).orElse(null);
+        if (runs.containsKey(e.getPlayer().getUniqueId()) || (pr != null && pr.classTrial() != null)) {
+            end(e.getPlayer(), "Сорилт тасарлаа.");
+        }
     }
 
-    /** A crash or restart during a trial: the next join ends it (the profile still records it). */
+    /** SULD-F06: end a post-crash trial on the very next tick after join (no 40-tick unprotected window). */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        Bukkit.getScheduler().runTask(plugin, () -> {
             if (!p.isOnline() || runs.containsKey(p.getUniqueId())) return;
             PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
             if (pr != null && pr.classTrial() != null) end(p, "Өмнөх сорилт дууслаа.");
-        }, 40L);
+        });
     }
 }

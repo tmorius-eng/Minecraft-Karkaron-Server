@@ -219,6 +219,14 @@ public final class ClassSelectionGui implements Listener {
         }
     }
 
+    /** SULD-F07: cancel item drags into the class selection GUI so items can never be placed and wiped by inv.clear(). */
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST)
+    public void onDrag(org.bukkit.event.inventory.InventoryDragEvent event) {
+        if (event.getInventory().getHolder() instanceof ClassSelectionHolder) {
+            event.setCancelled(true);
+        }
+    }
+
     /** GAME-003: a player who leaves without choosing is asked again on the next join, not kept here forever. */
     @EventHandler
     public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
