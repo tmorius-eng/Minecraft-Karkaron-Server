@@ -67,21 +67,21 @@ public final class QuestChain {
     }
 
     /**
-     * Where a player stands, normalised: no quest yet → the first chapter; a completed chapter that has a successor →
-     * the successor (catch-up for players who finished a chapter before it got one); a former id → its current one;
-     * any other unknown id → unchanged (see {@link #normalise(QuestState, Predicate)} to place it).
+     * Where a player stands, normalised: no quest yet or an unknown non-alias id → the first chapter; a completed
+     * chapter that has a successor → the successor (catch-up for players who finished a chapter before it got one);
+     * a former id → its current one.
      */
     public QuestState normalise(QuestState s) {
         return normalise(s, null);
     }
 
     /**
-     * QS-03 (audit 2026-10-14): as {@link #normalise(QuestState)}, and an id that is neither a chapter nor a former one
-     * (a chapter removed from quests.json) no longer soft-locks the story: the player goes to the first chapter they
-     * have not {@code reached} (by their progress, e.g. a chapter gated below their level), started fresh. The chapters
-     * before it count as done — their skill points are kept — and none of their rewards is paid again.
+     * QS-03 (audit 2026-10-14): normalises a removed/unknown chapter id without replaying chapter rewards. With a
+     * {@code reached} predicate, resumes at the first chapter not yet reached; if all chapters are reached, returns
+     * the final chapter as completed. With no predicate, falls back to the first chapter. Former ids are still migrated
+     * through the alias map before this recovery logic runs.
      *
-     * @param reached whether a chapter is behind the player; null keeps an unknown id unchanged
+     * @param reached predicate identifying chapters already behind the player; null uses the first chapter as fallback
      */
     public QuestState normalise(QuestState s, Predicate<QuestDefinition> reached) {
         Objects.requireNonNull(s, "state");
