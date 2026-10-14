@@ -111,7 +111,12 @@ public final class PaymentService {
         if (c == null || !c.getBoolean("enabled", false)) {
             why = why == null ? "payment.bonum.enabled is false" : why;
         } else if (why == null) {
-            URI base = URI.create(c.getString("base-url", mn.suld.api.payment.bonum.BonumApi.SANDBOX).trim());
+            URI base = null;
+            try {
+                base = URI.create(c.getString("base-url", mn.suld.api.payment.bonum.BonumApi.SANDBOX).trim());
+            } catch (IllegalArgumentException badUrl) {
+                // a typo in the URL turns the store off; it never stops the plugin from enabling
+            }
             String terminal = env(c.getString("terminal-id-env", "BONUM_TERMINAL_ID"));
             String secret = env(c.getString("app-secret-env", "BONUM_APP_SECRET"));
             String checksum = env(c.getString("checksum-key-env", "BONUM_CHECKSUM_KEY"));
@@ -121,8 +126,8 @@ public final class PaymentService {
             if (checksum == null) missing.add(c.getString("checksum-key-env", "BONUM_CHECKSUM_KEY"));
             if (!missing.isEmpty()) {
                 why = "missing environment variables " + String.join(", ", missing);
-            } else if (!BonumClient.safeBase(base)) {
-                why = "base-url must be https (plain http only to this machine)";
+            } else if (base == null || !BonumClient.safeBase(base)) {
+                why = "base-url must be an https URL (plain http only to this machine)";
             } else if (packages.isEmpty()) {
                 why = "no store.packages";
             } else {

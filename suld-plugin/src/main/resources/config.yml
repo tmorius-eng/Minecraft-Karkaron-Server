@@ -451,7 +451,8 @@ web:
 # The season's pass «Хуралдайн Зам» (docs/ACHIEVEMENTS_AND_PASS.md): 50 tiers of 1 000 points, earned by playing.
 # Every reward on both tracks is a cosmetic. A season is season-weeks Хуралдай weeks (Monday to Sunday, daily.timezone)
 # from the Monday of epoch's week. The heroic track is opened per season by staff (/suld achievement <p> heroic);
-# heroic-credits is the price /pass shows for it (0: «not sold yet»). Buying it comes with the store (Bonum).
+# heroic-credits is the price /pass shows for it (0: «not sold yet»). The store (payment.bonum) sells credits only;
+# selling the heroic track is the owner's decision and is not built.
 pass:
   epoch: "2026-10-05"
   season-weeks: 8

@@ -84,9 +84,9 @@ on the list for the native review (they are earned, never sold).
 ### The heroic track
 
 It is opened per season by staff (`/suld achievement <player> heroic`, audited). `pass.heroic-credits` is the price
-`/pass` shows (0 shows «not sold yet»). Selling it for Сүлд Кредит comes with the store (directive Phase 7, Bonum);
-until then no money path exists for it. Its rewards are cosmetics like the free track's: the heroic track never gives
-power.
+`/pass` shows (0 shows «not sold yet»). The store (directive Phase 7, Bonum, `docs/PAYMENT_ARCHITECTURE.md`) sells
+credits only: whether and how the heroic track is sold (for credits, or never: earned by play) is the owner's decision,
+and no money path to it is built. Its rewards are cosmetics like the free track's: the heroic track never gives power.
 
 ## Storage (V28)
 
