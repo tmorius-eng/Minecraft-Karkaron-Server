@@ -68,20 +68,21 @@ public final class QuestChain {
 
     /**
      * Where a player stands, normalised: no quest yet → the first chapter; a completed chapter that has a successor →
-     * the successor (catch-up for players who finished a chapter before it got one); a former id → its current one;
-     * any other unknown id → unchanged (see {@link #normalise(QuestState, Predicate)} to place it).
+     * the successor (catch-up for players who finished a chapter before it got one); a former id → its current one.
+     * An unknown non-alias id is preserved when no progression hint is available; use
+     * {@link #normalise(QuestState, Predicate)} to recover it safely.
      */
     public QuestState normalise(QuestState s) {
         return normalise(s, null);
     }
 
     /**
-     * QS-03 (audit 2026-10-14): as {@link #normalise(QuestState)}, and an id that is neither a chapter nor a former one
-     * (a chapter removed from quests.json) no longer soft-locks the story: the player goes to the first chapter they
-     * have not {@code reached} (by their progress, e.g. a chapter gated below their level), started fresh. The chapters
-     * before it count as done — their skill points are kept — and none of their rewards is paid again.
+     * QS-03 (audit 2026-10-14): normalises a removed/unknown chapter id without replaying chapter rewards. With a
+     * {@code reached} predicate, resumes at the first chapter not yet reached; if all chapters are reached, returns
+     * the final chapter as completed. Without that predicate, the unknown state is preserved because this method does
+     * not have enough progression context to safely choose a replacement. Former ids are migrated before recovery.
      *
-     * @param reached whether a chapter is behind the player; null keeps an unknown id unchanged
+     * @param reached predicate identifying chapters already behind the player; null preserves an unknown state
      */
     public QuestState normalise(QuestState s, Predicate<QuestDefinition> reached) {
         Objects.requireNonNull(s, "state");
@@ -89,7 +90,7 @@ public final class QuestChain {
         String alias = aliases.get(s.questId());
         if (alias != null) return normalise(new QuestState(alias, s.progress(), s.completed()), reached);
         if (indexOf(s.questId()) < 0) {
-            if (reached == null) return first().initialState();
+            if (reached == null) return s;
             for (QuestDefinition d : chapters) if (!reached.test(d)) return d.initialState();
             QuestDefinition last = chapters.get(chapters.size() - 1);
             return new QuestState(last.id(), last.requiredCount(), true); // past every chapter: the story is done
