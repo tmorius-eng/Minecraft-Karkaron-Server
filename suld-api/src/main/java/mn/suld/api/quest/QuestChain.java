@@ -89,12 +89,12 @@ public final class QuestChain {
         String alias = aliases.get(s.questId());
         if (alias != null) return normalise(new QuestState(alias, s.progress(), s.completed()), reached);
         if (indexOf(s.questId()) < 0) {
-            if (reached == null) return s;
+            if (reached == null) return first().initialState();
             for (QuestDefinition d : chapters) if (!reached.test(d)) return d.initialState();
             QuestDefinition last = chapters.get(chapters.size() - 1);
             return new QuestState(last.id(), last.requiredCount(), true); // past every chapter: the story is done
         }
-        if (indexOf(s.questId()) < 0) return first().initialState(); if (!s.completed()) return s;
+        if (!s.completed()) return s;
         return next(s.questId()).map(QuestDefinition::initialState).orElse(s);
     }
 
