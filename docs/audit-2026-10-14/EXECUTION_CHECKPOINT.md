@@ -2,6 +2,7 @@
 
 Base: `main` @ `411842d` (= `origin/main`, verified at session start). One agent, no subagents.
 **State at the end of the session: Phases 1–6 written; Phase 7 BLOCKED. Nothing is committed or pushed.**
+**Superseded:** see "Phase 7 run 2026-10-14 (validation passed; remote-base gate failed)" at the end of this file.
 
 ## Blocker (Phase 7)
 
@@ -121,3 +122,32 @@ Not touched: tests, loot balance, item data, deprecation warnings, all other unc
   so they are unverified. Nothing committed or pushed.
 - Follow-up: two suld-plugin compile errors fixed (`getTicksHeldFor()`, one merged `onDrag`). Not compiled, so
   UNVERIFIED. Nothing committed or pushed.
+
+## Phase 7 run 2026-10-14 (validation passed; remote-base gate failed)
+
+Local Windows CLI session, one agent. Environment fixes, for this session only: `py` is not on PATH, so the launcher
+`%LOCALAPPDATA%\Programs\Python\Launcher\py.exe` (Python 3.13.15) was used. `JAVA_HOME` is set machine-wide but was
+missing from the session, so it was set to `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot` per command.
+
+| Step | Command | Result |
+|---|---|---|
+| 1 | `$env:PYTHONUTF8='1'; py tools\content\gen_class_armor.py` | exit 0, "120 class armour definitions, 30 sets"; byte-identical to HEAD (no diff) |
+| 2 | `.\gradlew.bat :suld-plugin:specTables --no-daemon -q` | exit 0, "spec tables written". Only content change: `docs/GEAR_PROGRESSION_SPEC.md` "Live band" for ELITE/BOSS/DUNGEON now equals the v2 `tiers.json` (3 lines). The other 7 spec docs differ only by mixed CRLF/LF that SpecTables writes; `git diff --ignore-cr-at-eol` is empty for them |
+| 3 | `.\gradlew.bat test simTest --no-daemon` | exit 0, BUILD SUCCESSFUL. `suld-api:test` and `simTest` were UP-TO-DATE, so they were forced: `.\gradlew.bat :suld-plugin:simTest --rerun` and `.\gradlew.bat :suld-api:test --rerun`, both BUILD SUCCESSFUL. JUnit XML: suld-api 630 tests / 0 failures / 0 errors; suld-plugin test 210 / 0 / 0; simTest 13 / 0 / 0 |
+| 4 | `$env:PYTHONUTF8='1'; py tools\validation\run_all.py` | exit 0, "ALL VALIDATIONS PASSED" |
+| 4 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | exit 0, "Ran 6 tests … OK" (one ResourceWarning, unclosed file at line 132) |
+| 5 | `git diff --check`; `git status`; `git diff --cached` | clean; nothing staged; changes are the 8 spec docs above + untracked `CLAUDE_MASTER_EXECUTION_PROMPT.md`. All 8 audit reports + this file are already tracked |
+| 6 | `git branch --show-current`; `git fetch origin`; `git rev-parse origin/main` | branch `main`; **origin/main = HEAD = `d04967a`**, not the expected `411842d4b7a9…`. `411842d..origin/main` = one commit: `d04967a tmorius-eng 2026-10-14 13:26 +0800 fix(gameplay): complete SULD audit and regression fixes` (72 files, already contains the audit work and the 8 reports) |
+| 7–9 | stage / commit / push | **Not done** — gate in step 6 failed |
+
+**Blocker:** the remote moved off the expected base. The Phase 7 commit appears to have been made and pushed already
+as `d04967a` (by the owner, outside this session). This session did not stage, commit or push anything.
+
+**Remaining work (owner decision):**
+- Confirm `d04967a` is the intended Phase 7 commit. If so, Phase 7 is done; the validation above ran against that tree
+  plus the regenerated docs.
+- Optionally commit the one real regeneration, `docs/GEAR_PROGRESSION_SPEC.md` (stale "Live band" column), on top of
+  `d04967a`. `git add` normalises the line endings of the other 7 docs, so they would drop out. Never commit
+  `CLAUDE_MASTER_EXECUTION_PROMPT.md`.
+- This checkpoint file is modified by this update (uncommitted).
+- Phase 7 run: steps 1–5 passed (see section above); step 6 found origin/main = `d04967a` ≠ `411842d` → stopped. Nothing staged, committed or pushed.
