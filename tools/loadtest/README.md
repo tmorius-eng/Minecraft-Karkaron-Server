@@ -24,7 +24,8 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # trainingcrash.js (DEV_CRASH=1): SIGKILL during training, restart, the bag and spot come back — KILLS THE DEV SERVER.
 # Trial bots count only spirit wolves (named «Сүнсний чоно», glowing): a natural wolf pack can live at the test spot.
 # atlasbot.js: /map (docs/WORLD_MAP.md) — the stage, the 25 map frames and their pixels (map packets), D pans, the wheel zooms,
-# no region named close up and all eight at the whole world, the «Агуй» tab filters, Shift closes; 12 checks.
+# no region named close up, all eight at the whole world (wholly on the wall, none over another), the «Агуй» tab filters,
+# Shift closes; 13 checks.
 # mapcbot.js: the corner minimap, pins and the waypoint (docs/WORLD_MAP.md part C) — the three owner-only frames facing up,
 # the map's marker row, the frames follow a teleport and a turn (above the line of fire), an arrow through one flies on,
 # /map minimap, hidden in the atlas, the waypoint bar and label, /map stop, a pin stored, back after a relog (database),

@@ -25,6 +25,7 @@ import argparse
 import json
 import math
 import random
+from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -39,6 +40,101 @@ C = {
     "parch": (234, 218, 180), "parch_dk": (210, 188, 142), "parch_edge": (176, 148, 100),
     "ink": (60, 40, 24), "white": (252, 248, 238), "outline": (24, 16, 10),
 }
+
+REGION_INK = (0xE8, 0xC6, 0x6A)  # AtlasSky.REGION_INK
+CREAM = (0xF4, 0xE8, 0xC8)  # AtlasSky.CREAM, the places' labels
+
+
+# api RegionLabels, the same rule in panel units (one map frame, 128 px, is one unit)
+REGION_ONE_LINE = 12
+REGION_MARGIN = 0.04
+REGION_STEPS = (0.5, 0.38, 0.62, 0.26, 0.74, 0.16, 0.84)
+REGION_CHAR = 7 * 0.025 * 0.62   # AtlasSky.REGION_METRICS
+REGION_LINE = 10 * 0.025 * 0.62
+
+
+def region_lines(name: str):
+    n = name.strip()
+    if len(n) <= REGION_ONE_LINE or " " not in n:
+        return [n]
+    spaces = [i for i, c in enumerate(n) if c == " "]
+    best = min(spaces, key=lambda i: abs(i - len(n) / 2))
+    return [n[:best].strip(), n[best + 1:].strip()]
+
+
+def region_labels(sectors, to_px, spawn, edge, wall, taken):
+    """api RegionLabels.place, in pixels: [(lines, x, y)] for the sectors (name, min r, max r, from°, to°)."""
+    mx0, my0, mx1, my1 = wall
+    unit = 128.0
+    halfw, halfh = (mx1 - mx0) / unit / 2 - REGION_MARGIN, (my1 - my0) / unit / 2 - REGION_MARGIN
+    cx0, cy0 = (mx0 + mx1) / 2, (my0 + my1) / 2
+
+    def uv(x, z):
+        px, py = to_px(x, z)
+        return (px - cx0) / unit, -(py - cy0) / unit
+
+    tk = [((b[0] - cx0) / unit, -(b[3] - cy0) / unit, (b[2] - cx0) / unit, -(b[1] - cy0) / unit) for b in taken]
+
+    def hits(a, b):
+        return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+    def overlap(a, b):
+        w, h = min(a[2], b[2]) - max(a[0], b[0]), min(a[3], b[3]) - max(a[1], b[1])
+        return w * h if w > 0 and h > 0 else 0
+
+    out = []
+    for name, r0, r1, a0, a1 in sectors:
+        lines = region_lines(name.upper())
+        hw, hh = max(len(t) for t in lines) * REGION_CHAR / 2, len(lines) * REGION_LINE / 2
+        a0, a1 = a0 % 360, a1 % 360
+        span = (a1 - a0) if a0 <= a1 else (a1 + 360 - a0)
+        span = span or 360
+        outer = min(r1, edge)
+        if outer <= r0:
+            continue
+        spots = []
+        for i, t in enumerate(REGION_STEPS):
+            for j, f in enumerate(REGION_STEPS):
+                rr = r0 + t * (outer - r0)
+                a = math.radians(a0 + f * span)
+                u, v = uv(spawn[0] + math.sin(a) * rr, spawn[1] - math.cos(a) * rr)
+                if abs(u) > halfw + REGION_MARGIN or abs(v) > halfh + REGION_MARGIN:
+                    continue
+                u = max(-halfw + hw, min(halfw - hw, u))
+                v = max(-halfh + hh, min(halfh - hh, v))
+                spots.append((math.hypot(t - 0.5, f - 0.5) + 1e-3 * (i + j), u, v))
+        if not spots:
+            continue
+        spots.sort(key=lambda q: q[0])
+        best = None
+        for _, u, v in spots:
+            b = (u - hw, v - hh, u + hw, v + hh)
+            clear = not any(hits((o[0] - REGION_MARGIN, o[1] - REGION_MARGIN, o[2] + REGION_MARGIN, o[3] + REGION_MARGIN), b) for o in out_boxes(out))
+            cover = sum(overlap(t, b) for t in tk)
+            if clear and cover == 0:
+                best = (u, v, clear, cover)
+                break
+            if best is None or (clear and not best[2]) or (clear == best[2] and cover < best[3]):
+                best = (u, v, clear, cover)
+        u, v = best[0], best[1]
+        out.append((lines, u, v, (u - hw, v - hh, u + hw, v + hh)))
+    return [(lines, cx0 + u * unit, cy0 - v * unit) for lines, u, v, _ in out]
+
+
+def out_boxes(out):
+    return [o[3] for o in out]
+
+
+def world_sectors():
+    """The wild regions' rings from the game's content (name, min radius, max radius, from°, to°)."""
+    path = Path(__file__).resolve().parents[2] / "suld-plugin/src/main/resources/content/world.json"
+    out = []
+    for r in json.loads(path.read_text(encoding="utf-8"))["regions"]:
+        sh = r["shape"]
+        if sh.get("type") == "sector":
+            out.append((r["name"], sh["minRadius"], sh["maxRadius"], sh["fromDeg"], sh["toDeg"]))
+    return out
+
 
 # --------------------------------------------------------------------------------------------- pixel icons (16 px)
 # '.' clear, 'd' outline; other letters index ICON_COLOURS.
@@ -582,34 +678,13 @@ def compose(atlas: Atlas, map_png: str, origin, scale: float, pois, *, player=No
             if my0 < py < my1:
                 dr.line([(mx0, py), (mx1, py)], fill=C["ink"] + (38,), width=1)
     im.alpha_composite(layer)
-    dr = ImageDraw.Draw(im)
-    if regions:
-        byreg = {}
-        for p in pois:
-            if p["kind"] == "ovoo" and p.get("region"):
-                byreg.setdefault(p["region"], []).append((p["x"], p["z"]))
-        rf = font(15)
-        taken = []
-        # the biggest regions first: they have the most room
-        for name, pts in sorted(byreg.items(), key=lambda kv: -len(kv[1])):
-            if name == "Хархорум":
-                continue
-            cx = sum(x for x, _ in pts) / len(pts)
-            cz = sum(z for _, z in pts) / len(pts)
-            px, py = to_px(cx, cz)
-            spaced = "\u2009".join(name.upper())
-            tw = dr.textlength(spaced, font=rf)
-            r = (px - tw / 2, py - 10, px + tw / 2, py + 10)
-            if r[0] < mx0 + 8 or r[2] > mx1 - 8 or r[1] < my0 + 8 or r[3] > my1 - 8:
-                continue
-            if any(r[0] < b[2] and b[0] < r[2] and r[1] < b[3] and b[1] < r[3] for b in taken):
-                continue
-            taken.append(r)
-            dr.text((px, py), spaced, font=rf, fill=C["ink"] + (200,), anchor="mm", stroke_width=3, stroke_fill=C["parch"] + (160,))
+    # the places go on a layer of their own over the regions' names (AtlasSky draws the names behind them)
+    places = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    dp = ImageDraw.Draw(places)
+    taken = []  # the places' markers and labels: the regions' names keep off them (api RegionLabels)
     order = {"ovoo": 0, "site": 1, "relay": 2, "training": 3, "boss": 4, "dungeon": 5, "city": 6}
-    boxes = []  # icons and labels already on the page: a label never covers one
     wanted = []
-    for p in sorted(pois, key=lambda q: order.get(q["kind"], 0)):
+    for p in sorted(pois, key=lambda q: -order.get(q["kind"], 0)):
         if p["kind"] not in show:
             continue
         px, py = to_px(p["x"], p["z"])
@@ -618,8 +693,8 @@ def compose(atlas: Atlas, map_png: str, origin, scale: float, pois, *, player=No
         sc = icon_scale if p["kind"] in ("city", "dungeon", "boss") else max(1, icon_scale - 1) if icon_scale > 1 else 1
         g = icon(p["kind"], sc)
         x0, y0 = int(px - g.width / 2), int(py - g.height / 2)
-        im.alpha_composite(g, (x0, y0))
-        boxes.append((x0, y0, x0 + g.width, y0 + g.height))
+        places.alpha_composite(g, (x0, y0))
+        taken.append((x0, y0, x0 + g.width, y0 + g.height))
         if p["kind"] in labels:
             wanted.append((-order.get(p["kind"], 0), p["name"], px, py, g.height, p["kind"]))
     for name, x, z in pins:
@@ -627,30 +702,52 @@ def compose(atlas: Atlas, map_png: str, origin, scale: float, pois, *, player=No
         if inside(px, py, 6):
             g = icon("pin", 2)
             x0, y0 = int(px - g.width / 2), int(py - g.height / 2)
-            im.alpha_composite(g, (x0, y0))
-            boxes.append((x0, y0, x0 + g.width, y0 + g.height))
+            places.alpha_composite(g, (x0, y0))
+            taken.append((x0, y0, x0 + g.width, y0 + g.height))
             wanted.append((-10, name, px, py, g.height, "pin"))
     if death:
         px, py = to_px(*death)
         if inside(px, py, 6):
             g = icon("death", 2)
             x0, y0 = int(px - g.width / 2), int(py - g.height / 2)
-            im.alpha_composite(g, (x0, y0))
-            boxes.append((x0, y0, x0 + g.width, y0 + g.height))
+            places.alpha_composite(g, (x0, y0))
+            taken.append((x0, y0, x0 + g.width, y0 + g.height))
             wanted.append((-9, "Сүүлд унасан газар", px, py, g.height, "death"))
+    labels_on = []  # as the game places them (AtlasSky.placeMarkers): under the marker, never over another label
     for _, name, px, py, ih, kind in sorted(wanted, key=lambda w: w[0]):
         f = font(13 if kind in ("city", "pin") else 12)
-        tw = dr.textlength(name, font=f) + 4
-        th = 15
-        for cx, cy in ((px, py + ih / 2 + 9), (px, py - ih / 2 - 9), (px + ih / 2 + 6 + tw / 2, py), (px - ih / 2 - 6 - tw / 2, py)):
-            r = (cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2)
-            if r[0] < mx0 + 2 or r[2] > mx1 - 2 or r[1] < my0 + 2 or r[3] > my1 - 2:
-                continue
-            if any(r[0] < b[2] and b[0] < r[2] and r[1] < b[3] and b[1] < r[3] for b in boxes):
-                continue
-            outlined(dr, (cx, cy), name, f, C["white"], width=2)
-            boxes.append(r)
-            break
+        tw = dp.textlength(name, font=f) + 8
+        th = 16
+        cx, cy = px, py + ih / 2 + 10
+        r = (cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2)
+        if r[0] < mx0 + 2 or r[2] > mx1 - 2 or r[3] > my1 - 2:
+            continue
+        if any(r[0] < b[2] and b[0] < r[2] and r[1] < b[3] and b[1] < r[3] for b in labels_on):
+            continue
+        labels_on.append(r)
+        taken.append(r)
+        plate = Image.new("RGBA", im.size, (0, 0, 0, 0))
+        ImageDraw.Draw(plate).rectangle(r, fill=(0, 0, 0, 0x99))
+        places.alpha_composite(plate)
+        dp = ImageDraw.Draw(places)
+        dp.text((cx + 1, cy + 1), name, font=f, fill=(61, 58, 50), anchor="mm")
+        dp.text((cx, cy), name, font=f, fill=CREAM, anchor="mm")
+    if regions:
+        # as the game names them (AtlasSky.regionNames, api RegionLabels): faint gold capitals, the middle of each wild
+        # region's ring and arc when free, else the nearest free spot of the region; never over another name or a
+        # place's marker or label, wholly on the wall; a long name of two words in two lines
+        spawn = next(((p["x"], p["z"]) for p in pois if p["kind"] == "city"), None)
+        if spawn:
+            under = Image.new("RGBA", im.size, (0, 0, 0, 0))
+            du = ImageDraw.Draw(under)
+            rf = font(16)
+            for lines, cx, cy in region_labels(world_sectors(), to_px, spawn, m.width * scale / 2 - 100, (mx0, my0, mx1, my1), taken):
+                text = "\n".join(lines)
+                du.multiline_text((cx + 2, cy + 2), text, font=rf, fill=tuple(c // 4 for c in REGION_INK) + (190,), anchor="mm", align="center", spacing=4)
+                du.multiline_text((cx, cy), text, font=rf, fill=REGION_INK + (190,), anchor="mm", align="center", spacing=4)
+            im.alpha_composite(under)
+    im.alpha_composite(places)
+    dr = ImageDraw.Draw(im)
     if player:
         px, py = to_px(player[0], player[1])
         if inside(px, py):

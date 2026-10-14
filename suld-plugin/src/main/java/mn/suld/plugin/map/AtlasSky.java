@@ -654,8 +654,8 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (s.hover != null && !s.tabs.contains(s.hover)) s.hover = null;
         AtlasView v = s.view;
         int zoom = v.zoom();
-        if (zoom >= REGION_NAMES_ZOOM) regionNames(s);
         List<double[]> boxes = new ArrayList<>(); // labels already placed (u0, v0, u1, v1)
+        List<mn.suld.api.map.RegionLabels.Box> taken = new ArrayList<>(); // markers and labels: the regions' names keep off them
         List<MapPois.Poi> pois = new ArrayList<>(map.pois.get());
         pois.sort((a, b) -> Integer.compare(rank(b.kind()), rank(a.kind())));
         for (MapPois.Poi poi : pois) {
@@ -665,6 +665,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             boolean big = poi.kind() == MapPois.Kind.CITY || poi.kind() == MapPois.Kind.DUNGEON || poi.kind() == MapPois.Kind.BOSS;
             double size = big ? MARKER_BIG : MARKER;
             picture(s, s.marks, "marker_" + poi.kind().name().toLowerCase(Locale.ROOT), u, vv, size, size, 0.03, 0f);
+            taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, size / 2, size / 2));
             Runnable click = () -> point(s, poi);
             s.places.add(new Hit(u, vv, size * 1.3, size * 1.3, click, Component.text(poi.name(), GOLD, TextDecoration.BOLD), describe(s, poi), null, null, null));
             if (labelled(poi.kind(), zoom)) {
@@ -674,6 +675,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 for (double[] b : boxes) if (box[0] < b[2] && b[0] < box[2] && box[1] < b[3] && b[1] < box[3]) free = false;
                 if (free) {
                     boxes.add(box);
+                    taken.add(new mn.suld.api.map.RegionLabels.Box(box[0], box[1], box[2], box[3]));
                     text(s, s.marks, u, lv, Component.text(poi.name(), CREAM), 0.42f, 300, 0x99000000);
                 }
             }
@@ -684,6 +686,8 @@ public final class AtlasSky implements Listener, TabExecutor {
                 double u = v.u(pin.x() + 0.5), vv = v.v(pin.z() + 0.5);
                 if (Math.abs(u) > COLS / 2.0 - 0.05 || Math.abs(vv) > ROWS / 2.0 - 0.05) continue;
                 picture(s, s.marks, "marker_pin", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
+                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, MARKER_BIG / 2, MARKER_BIG / 2));
+                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - 0.07, Math.max(0.3, pin.name().length() * 0.045) / 2, 0.06));
                 long d = Math.round(Math.hypot(pin.x() + 0.5 - s.origin.getX(), pin.z() + 0.5 - s.origin.getZ()));
                 s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> pinDialog(s, pin), Component.text("◆ " + pin.name(), GOLD, TextDecoration.BOLD),
                         List.of(Component.text("Миний тэмдэг · " + d + " м", GREY), Component.text("Дарж: чиглэх эсвэл устгах", CYAN)), null, null, null));
@@ -694,6 +698,8 @@ public final class AtlasSky implements Listener, TabExecutor {
             double u = v.u(s.death[0] + 0.5), vv = v.v(s.death[1] + 0.5);
             if (Math.abs(u) <= COLS / 2.0 - 0.05 && Math.abs(vv) <= ROWS / 2.0 - 0.05) {
                 picture(s, s.marks, "marker_death", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
+                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, MARKER_BIG / 2, MARKER_BIG / 2));
+                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - 0.07, 0.42, 0.06));
                 int[] at = s.death;
                 s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> guide.guide(s.p, new WaypointGuide.Target("Сүүлд унасан газар", "☠",
                         s.origin.getWorld().getName(), at[0] + 0.5, WaypointGuide.GROUND, at[1] + 0.5)), Component.text("☠ Сүүлд унасан газар", GOLD, TextDecoration.BOLD),
@@ -701,6 +707,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 text(s, s.marks, u, vv - MARKER_BIG / 2 - 0.07, Component.text("Сүүлд унасан газар", CREAM), 0.42f, 300, 0x99000000);
             }
         }
+        if (zoom >= REGION_NAMES_ZOOM) regionNames(s, taken);
         placeMates(s);
         // where the player stood, and which way they looked
         double pu = v.u(s.origin.getX()), pv = v.v(s.origin.getZ());
@@ -714,25 +721,35 @@ public final class AtlasSky implements Listener, TabExecutor {
     /** From this zoom (8 blocks a pixel) out the atlas writes the regions' names across their lands. */
     static final int REGION_NAMES_ZOOM = 3;
 
+    /** The regions' letters on the wall: a capital's mean width and a line's height at {@link #REGION_SCALE} (1/40 block a pixel). */
+    static final float REGION_SCALE = 0.62f;
+    static final mn.suld.api.map.RegionLabels.Metrics REGION_METRICS =
+            new mn.suld.api.map.RegionLabels.Metrics(7 * 0.025 * REGION_SCALE, 10 * 0.025 * REGION_SCALE);
+
     /**
      * The regions' names across their lands, as an atlas names its countries: at the two widest zooms, faint gold
-     * capitals at the middle of each wild region (half way out its ring, half way round its arc), behind the places and
-     * their labels. The city keeps its own label.
+     * capitals behind the places and their labels, where {@link mn.suld.api.map.RegionLabels} puts them: the middle of
+     * each wild region's ring and arc when free, else the nearest free spot of the region; never over another name, the
+     * places' markers or labels ({@code taken}), always wholly on the wall; a long name of two words in two lines. The
+     * city keeps its own label.
      */
-    private void regionNames(Session s) {
+    private void regionNames(Session s, List<mn.suld.api.map.RegionLabels.Box> taken) {
         World w = s.p.getWorld();
         Location sp = w.getSpawnLocation();
         double edge = w.getWorldBorder().getSize() / 2 - 100;
+        List<mn.suld.api.map.RegionLabels.Region> regions = new ArrayList<>();
         for (mn.suld.api.region.RegionDefinition r : WorldContent.REGIONS) {
             if (!(r.shape() instanceof mn.suld.api.region.RegionShape.Sector sec)) continue;
-            double from = (sec.fromDeg() % 360 + 360) % 360, to = (sec.toDeg() % 360 + 360) % 360;
-            double mid = Math.toRadians(from + (from <= to ? to - from : to + 360 - from) / 2);
-            double rr = (sec.minRadius() + Math.min(sec.maxRadius(), edge)) / 2;
-            double u = s.view.u(sp.getX() + Math.sin(mid) * rr), vv = s.view.v(sp.getZ() - Math.cos(mid) * rr);
-            if (!s.view.onWall(u, vv)) continue;
-            TextDisplay t = text(s, s.marks, u, vv, Component.text(r.displayName().toUpperCase(java.util.Locale.ROOT), REGION_INK,
-                    TextDecoration.BOLD), 0.62f, 400, 0, 0.02);
+            regions.add(new mn.suld.api.map.RegionLabels.Region(r.displayName(), sec.minRadius(), sec.maxRadius(), sec.fromDeg(), sec.toDeg()));
+        }
+        for (mn.suld.api.map.RegionLabels.Label l : mn.suld.api.map.RegionLabels.place(regions, s.view, sp.getX(), sp.getZ(), edge, REGION_METRICS, taken)) {
+            TextDisplay t = text(s, s.marks, l.u(), l.v(), Component.text(l.text().toUpperCase(java.util.Locale.ROOT), REGION_INK,
+                    TextDecoration.BOLD), REGION_SCALE, 400, 0, 0.02);
             t.setTextOpacity((byte) 190);
+            if (l.lines().size() > 1) { // the text grows up from its foot: its middle goes down a half line a line more
+                t.setTransformation(new Transformation(new Vector3f(0, (float) (-0.125 * REGION_SCALE * l.lines().size()), 0), new Quaternionf(),
+                        new Vector3f(REGION_SCALE), new Quaternionf()));
+            }
         }
     }
 

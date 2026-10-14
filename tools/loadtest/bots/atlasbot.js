@@ -30,6 +30,8 @@ const packetsNow = () => [...maps.values()].reduce((n, m) => n + m.packets, 0);
 const high = (e) => e.position.y > 400;
 const texts = () => Object.values(b.entities).filter(e => e.name === 'text_display' && high(e)).map(e => ({ e, t: JSON.stringify(e.metadata) }));
 const find = (s) => texts().find(x => x.t.includes(s));
+// a region's name may be written in two lines: its line break reads as a space here
+const flat = (t) => t.replace(/\\+n/g, ' ');
 const frames = () => Object.values(b.entities).filter(e => e.name === 'glow_item_frame' && high(e));
 
 function lookAt(eye, t) {
@@ -66,7 +68,7 @@ b.once('spawn', async () => {
   let p0 = packetsNow();
   b._client.write('player_input', { inputs: { right: true } }); await sleep(400); b._client.write('player_input', { inputs: {} }); await sleep(2500);
   check(packetsNow() > p0, 'D pans the map: new pixels arrive', (packetsNow() - p0) + ' map packets');
-  const closeUp = texts().filter(x => /"(ХЭРЛЭНГИЙН ТАЛ|ГОВЬ|ХАНГАЙ|АЛТАЙ)"/.test(x.t)).length;
+  const closeUp = texts().filter(x => /"(ХЭРЛЭНГИЙН ТАЛ|ГОВЬ|ХАНГАЙ|АЛТАЙ)"/.test(flat(x.t))).length;
   check(closeUp === 0, 'close up (4 blocks a pixel) no region is named', closeUp + ' region name(s)');
   // the wheel zooms: new pixels arrive
   p0 = packetsNow();
@@ -77,8 +79,27 @@ b.once('spawn', async () => {
   // (at 8 blocks a pixel the panned view leaves some of them off the wall, so the whole world is the check)
   b.setQuickBarSlot((b.quickBarSlot + 1) % 9); await sleep(2500);
   const all = ['ХЭРЛЭНГИЙН ТАЛ', 'ГОВЬ', 'ХАНГАЙ', 'АЛТАЙ', 'ХЭНТИЙН НУРУУ', 'ЗҮҮНГАРЫН ГОВЬ', 'ОТГОНТЭНГЭРИЙН ОРГИЛ', 'ХӨВСГӨЛИЙН ТАЙГА'];
-  const named = () => all.filter(n => texts().some(x => x.t.includes('"' + n + '"'))).length;
+  const named = () => all.filter(n => texts().some(x => flat(x.t).includes('"' + n + '"'))).length;
   check(named() === 8, 'at the whole world the eight regions are named', named() + ' of 8');
+  // and wholly on the wall, none over another (AtlasSky.REGION_METRICS: 7 and 10 font pixels at 0.62, 1/40 block a
+  // pixel; a name longer than 12 letters in two lines): boxes round each name's text display, in the wall's plane
+  const boxes = [];
+  for (const n of all) {
+    const x = texts().find(q => flat(q.t).includes('"' + n + '"'));
+    if (!x) continue;
+    const lines = n.length > 12 && n.includes(' ') ? n.split(' ') : [n];
+    const hw = Math.max(...lines.map(l => l.length)) * 7 * 0.025 * 0.62 / 2, hh = lines.length * 10 * 0.025 * 0.62 / 2;
+    const u = -(x.e.position.x - plane.x), v = x.e.position.y - plane.y;
+    boxes.push({ n, u0: u - hw, u1: u + hw, v0: v - hh, v1: v + hh });
+  }
+  const offWall = boxes.filter(q => q.u0 < -2.5 || q.u1 > 2.5 || q.v0 < -2.5 || q.v1 > 2.5).map(q => q.n);
+  const meet = [];
+  for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+    const a = boxes[i], c = boxes[j];
+    if (a.u0 < c.u1 && c.u0 < a.u1 && a.v0 < c.v1 && c.v0 < a.v1) meet.push(a.n + ' / ' + c.n);
+  }
+  check(boxes.length === 8 && offWall.length === 0 && meet.length === 0, 'at the whole world each name is wholly on the wall and none covers another',
+    'off the wall: ' + (offWall.join(', ') || 'none') + ' · meeting: ' + (meet.join(', ') || 'none'));
   // the «Агуй» tab (the third on the left) leaves only the dungeons
   const cityBefore = !!find('Хархорум');
   const v = (FILTERS - 1) * TAB_STEP / 2 - 2 * TAB_STEP;

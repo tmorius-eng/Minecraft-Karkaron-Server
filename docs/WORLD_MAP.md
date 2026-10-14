@@ -152,11 +152,19 @@ stood on the next login.
 * **Art:** `tools/map/atlas_art.py pack` writes the textures at 128 px a block like the maps (sizes multiples of 16),
   the models and the item definitions (`suld:entity/atlas/*`).
 * **Region names.** From 8 blocks a pixel out (the two widest views), the eight wild regions are named across
-  their lands, as an atlas names its countries: faint gold capitals («ГОВЬ», «ХӨВСГӨЛИЙН ТАЙГА»…) half way out the
-  region's ring and half way round its arc, behind the places and their labels. The city keeps its own label.
+  their lands, as an atlas names its countries: faint gold capitals («ГОВЬ», «ХӨВСГӨЛИЙН ТАЙГА»…) behind the places
+  and their labels. The city keeps its own label. Where a name stands is `api.map.RegionLabels`:
+  * the middle of its region: half way out the ring (as far as the world goes) and half way round its arc;
+  * a name of two words longer than 12 letters in two lines («ОТГОНТЭНГЭРИЙН / ОРГИЛ»);
+  * wholly on the wall (a name by the edge is moved in);
+  * never over another region's name or a place's marker or label: with its middle taken it tries other spots of
+    its region, nearest the middle first.
+  The rule came from the whole-world preview of the pre-generated dev world (2026-10-13). There the west's long name
+  ran off the wall, the east's two names met on one line, and the inner names lay under the city's dungeon labels.
+  `RegionLabelsTest` checks the eight names against the dev world's real places.
 * **Bot:** `tools/loadtest/bots/atlasbot.js` (in `regress.sh`): the stage, the 25 frames and their map packets with
-  real pixels, pan, zoom, no region named close up and all eight at the whole world, the «Агуй» filter, Shift.
-  12 checks pass on the dev server and on a second one (2026-10-13).
+  real pixels, pan, zoom, no region named close up, all eight at the whole world, wholly on the wall and none over
+  another, the «Агуй» filter, Shift. 13 checks.
 
 ## Part C — pins, waypoints, minimap (built)
 
