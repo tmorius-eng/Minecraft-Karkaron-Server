@@ -224,6 +224,8 @@ public final class AtlasSky implements Listener, TabExecutor {
     public volatile WaypointGuide guide;
     /** Set by SuldPlugin: turns the minimap setting (the /map minimap shortcut). */
     public volatile java.util.function.Consumer<Player> toggleMinimap = p -> { };
+    /** Set by SuldPlugin: turns the «Дэлгэцийн тэмдэг» setting (the /map markers shortcut). */
+    public volatile java.util.function.Consumer<Player> toggleScreenMarkers = p -> { };
     private static final net.kyori.adventure.text.event.ClickCallback.Options ONCE =
             net.kyori.adventure.text.event.ClickCallback.Options.builder().uses(1).lifetime(java.time.Duration.ofMinutes(5)).build();
 
@@ -271,7 +273,7 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        List<String> subs = List.of("pin", "pins", "unpin", "guide", "stop", "minimap");
+        List<String> subs = List.of("pin", "pins", "unpin", "guide", "stop", "minimap", "markers");
         if (args.length == 1) return subs.stream().filter(x -> x.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         if (args.length == 2 && (args[0].equalsIgnoreCase("unpin") || args[0].equalsIgnoreCase("guide")) && sender instanceof Player p && pins != null) {
             List<String> out = new ArrayList<>();
@@ -281,7 +283,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         return List.of();
     }
 
-    /** {@code /map pin [нэр] | pins | unpin <нэр|#> | guide <нэр|#|x z> | stop | minimap}. */
+    /** {@code /map pin [нэр] | pins | unpin <нэр|#> | guide <нэр|#|x z> | stop | minimap | markers}. */
     private void sub(Player p, String[] args) {
         String sub = args[0].toLowerCase(Locale.ROOT);
         String rest = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).strip();
@@ -323,7 +325,8 @@ public final class AtlasSky implements Listener, TabExecutor {
                 p.sendMessage(Messages.success("Чиглэл зогслоо."));
             }
             case "minimap" -> toggleMinimap.accept(p);
-            default -> p.sendMessage(Messages.info("/map — газрын зураг · /map pin [нэр] · /map pins · /map unpin <нэр> · /map guide <нэр|x z> · /map stop · /map minimap"));
+            case "markers" -> toggleScreenMarkers.accept(p);
+            default -> p.sendMessage(Messages.info("/map — газрын зураг · /map pin [нэр] · /map pins · /map unpin <нэр> · /map guide <нэр|x z> · /map stop · /map minimap · /map markers"));
         }
     }
 
@@ -358,7 +361,16 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (guide != null) guide.pinRemoved(p, pin.id());
     }
 
-    /** The player's atlas, if open, shows their pins again. */
+    /**
+     * The player's waypoint was set, stopped or reached (WaypointGuide's listener): an open atlas moves its «Чиглэл» flag
+     * on the next tick (not inside the click that set it).
+     */
+    public void waypointChanged(Player p) {
+        if (!sessions.containsKey(p.getUniqueId())) return;
+        Bukkit.getScheduler().runTask(plugin, () -> refreshFor(p));
+    }
+
+    /** The player's atlas, if open, shows their pins and their waypoint again. */
     private void refreshFor(Player p) {
         Session s = sessions.get(p.getUniqueId());
         if (s != null && s.ready) placeMarkers(s);
@@ -758,6 +770,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 text(s, s.marks, u, vv - MARKER_BIG / 2 - LABEL_GAP, Component.text("Сүүлд унасан газар", CREAM), LABEL_SCALE, 300, 0x99000000);
             }
         }
+        waypointFlag(s, taken);
         if (zoom >= REGION_NAMES_ZOOM) regionNames(s, taken);
         placeMates(s);
         // where the player stood, and which way they looked
@@ -767,6 +780,28 @@ public final class AtlasSky implements Listener, TabExecutor {
             float turn = (float) Math.toRadians(s.origin.getYaw() + 180);
             picture(s, s.marks, "marker_player", pu, pv, MARKER_BIG, MARKER_BIG, 0.035, turn);
         }
+    }
+
+    /**
+     * The waypoint on the wall: a gold «▼ Чиглэл · 412 м» over it, the same waypoint the screen cards, the minimap's gold
+     * diamond and the bar show. A waypoint to typed coordinates or a mate's spot, which has no marker of its own, also
+     * gets a pin marker.
+     */
+    private void waypointFlag(Session s, List<mn.suld.api.map.RegionLabels.Box> taken) {
+        WaypointGuide.Target t = guide == null ? null : guide.target(s.p.getUniqueId());
+        if (t == null || !t.world().equals(s.origin.getWorld().getName())) return;
+        AtlasView v = s.view;
+        double u = v.u(t.x()), vv = v.v(t.z());
+        if (Math.abs(u) > COLS / 2.0 - 0.05 || Math.abs(vv) > ROWS / 2.0 - 0.05) return;
+        boolean marked = t.pin() != null || s.death != null && Math.floor(t.x()) == s.death[0] && Math.floor(t.z()) == s.death[1];
+        for (MapPois.Poi poi : map.pois.get()) marked |= poi.x() + 0.5 == t.x() && poi.z() + 0.5 == t.z();
+        if (!marked) picture(s, s.marks, "marker_pin", u, vv, MARKER, MARKER, 0.031, 0f);
+        String meters = mn.suld.api.map.WaypointHud.meters(mn.suld.api.map.ScreenProjection.distance(s.origin.getX(), s.origin.getY(),
+                s.origin.getZ(), t.x(), t.y(), t.z()));
+        String line = "▼ Чиглэл · " + meters;
+        double lv = vv + MARKER_BIG / 2 + LABEL_GAP + LABEL_HALF;
+        taken.add(new mn.suld.api.map.RegionLabels.Box(u - line.length() * LABEL_CHAR / 2, lv - LABEL_HALF, u + line.length() * LABEL_CHAR / 2, lv + LABEL_HALF));
+        text(s, s.marks, u, lv, Component.text(line, GOLD, TextDecoration.BOLD), LABEL_SCALE, 300, 0xB0101A30, 0.07);
     }
 
     /** From this zoom (8 blocks a pixel) out the atlas writes the regions' names across their lands. */

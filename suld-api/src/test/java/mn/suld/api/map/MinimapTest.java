@@ -98,4 +98,39 @@ class MinimapTest {
         assertTrue(end > 2 + 5);
         assertTrue(count(img, 0, 0, 128, 12, (byte) 5) > 10);
     }
+
+    @Test
+    void pinsShowInTheirOwnColoursOnTheirBlock() {
+        int cx = Minimap.VIEW_X + Minimap.VIEW_W / 2, cy = Minimap.VIEW_Y + Minimap.VIEW_H / 2;
+        // every mark sits on the pixel of its block: the player's block is the middle pixel
+        List<Minimap.Marker> pins = List.of(Minimap.Marker.pin(-20, -10, "red"), Minimap.Marker.pin(20, 10, "blue"),
+                Minimap.Marker.pin(-20, 10, "white"), new Minimap.Marker(20, -10, Minimap.Kind.PIN));
+        byte[] img = Minimap.draw(WEST, 0, 0, 0, pins, null, "", "");
+        assertEquals(Minimap.PIN_COLOURS[1], img[(cy - 10) * 128 + cx - 20], "red pin");
+        assertEquals(Minimap.PIN_COLOURS[2], img[(cy + 10) * 128 + cx + 20], "blue pin");
+        assertEquals(Minimap.WHITE, img[(cy + 10) * 128 + cx - 20], "white pin");
+        assertEquals(Minimap.GREEN, img[(cy - 10) * 128 + cx + 20], "a pin with no colour stays green");
+        assertEquals(Minimap.OUTLINE, img[(cy - 10 - 2) * 128 + cx - 20], "outlined");
+        assertEquals(java.util.Set.of(), java.util.Set.copyOf(java.util.stream.IntStream.range(0, Minimap.PIN_COLOURS.length).boxed()
+                .filter(k -> Minimap.PIN_COLOURS[k] == Minimap.MOB || Minimap.PIN_COLOURS[k] == Minimap.MATE).toList()), "no pin reads as a mob or a mate");
+        assertEquals(MapPin.COLOURS.size(), Minimap.PIN_COLOURS.length);
+    }
+
+    @Test
+    void hostileMobsAreSmallRedDotsUnderThePlacesAndThePlayer() {
+        int cx = Minimap.VIEW_X + Minimap.VIEW_W / 2, cy = Minimap.VIEW_Y + Minimap.VIEW_H / 2;
+        List<Minimap.Marker> marks = List.of(new Minimap.Marker(-15, 7, Minimap.Kind.MOB), new Minimap.Marker(30, 30, Minimap.Kind.MOB),
+                new Minimap.Marker(-30, -30, Minimap.Kind.MOB), Minimap.Marker.pin(-30, -30, "gold"), new Minimap.Marker(0, 0, Minimap.Kind.MOB),
+                new Minimap.Marker(5000, 0, Minimap.Kind.MOB));
+        byte[] img = Minimap.draw(WEST, 0, 0, 0, marks, null, "", "");
+        assertEquals(Minimap.MOB, img[(cy + 7) * 128 + cx - 15]);
+        assertEquals(Minimap.OUTLINE, img[(cy + 7) * 128 + cx - 14], "a shadow beside it");
+        assertEquals(Minimap.MOB, img[(cy + 30) * 128 + cx + 30]);
+        assertEquals(Minimap.GOLD, img[(cy - 30) * 128 + cx - 30], "a pin over a mob on the same block");
+        assertEquals(Minimap.WHITE, img[(cy + 1) * 128 + cx], "the player's arrow over a mob at the feet");
+        // a mob out of the window is not drawn on the rim (only the party and the waypoint get rim arrows)
+        int reds = count(img, Minimap.VIEW_X, Minimap.VIEW_Y, Minimap.VIEW_X + Minimap.VIEW_W, Minimap.VIEW_Y + Minimap.VIEW_H, Minimap.MOB);
+        assertEquals(2, reds);
+        for (int x = Minimap.MARK.length; x < 128; x++) assertNotEquals(Minimap.MOB, img[x], "never in the shader's row");
+    }
 }

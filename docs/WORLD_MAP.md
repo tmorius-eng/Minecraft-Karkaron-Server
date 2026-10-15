@@ -190,11 +190,47 @@ clickable «[Чиглэх]» «[Устгах]»; a pin on the atlas opens «Чи
 
 * A **yellow boss bar** «◆ Нэр  ↗ зүүн хойд · 412 м» — the arrow relative to where the player faces, the compass point
   and the distance (`api.region.Navigation`, like the dungeon guide); the compass points there too.
-* A **label** «◆ Нэр / 412 м», seen through blocks and by its owner only: at the place itself within 24 blocks,
-  otherwise 24 blocks along the way at eye height; it grows with the distance (×0.125 a block, ×3 at 24) so it reads
-  the same on screen (≈ 20 px at 1080p).
-* Within 6 blocks «ирлээ!» and it ends; `/map stop` ends it; removing the pin it leads to ends it, and the compass goes back to the spawn when it ends; it never outlives the session (a crash leaves no label:
-  the tag is swept when entities load).
+* A **screen card** «◆ Нэр / 28.1 м» (see «Screen markers» below), at the place or at the screen's edge.
+* The distance is the straight line from the player's feet (across the ground for a place picked on the map, whose
+  height the map does not hold): to the tenth under 100 m («28.1 м»), whole metres under 10 km, then «12.4 км»
+  (`api.map.WaypointHud.meters`); the bar and the card show the same number, rewritten every 4 ticks.
+* Within 6 blocks across the ground «ирлээ!» and it ends; `/map stop` ends it; removing the pin it leads to ends it, and the compass goes back to the spawn when it ends; it never outlives the session (a crash leaves no card:
+  the tag `suld_waypoint` is swept when entities load).
+* Every set, stop or arrival is told to `WaypointGuide.onChange` listeners on the spot: an open atlas moves its gold
+  «▼ Чиглэл · 412 м» flag over the waypoint on the next tick (with a pin marker of its own for typed coordinates or a
+  mate's spot); the minimap redraws on its next tick (the guide's target is compared by identity); the screen cards
+  read the guide every tick.
+
+### Screen markers «Дэлгэцийн тэмдэг» (2026-10-15)
+
+Like a client minimap mod's in-world waypoints, with no client mod (`map/ScreenMarkers`, layout in the pure
+`api.map.WaypointHud` and `api.map.ScreenProjection`). The waypoint, the player's nearest pins (6, within 1 500
+blocks) and a standing soul beacon («Сүүлд унасан газар») each get a card: a letter in the pin's colour (the name's
+first letter, «◆» for a place, «☠» for the death), the name, and under it the distance. A waypoint that leads to a pin
+or to the death wears that mark's letter and colour and is not shown twice. Seen through blocks, by the player only.
+
+* **In view:** the card stands in the world on the line from the eye to a spot 2.2 blocks over the place: at the
+  place within 24 blocks, else 24 blocks out on that line, scaled ×0.125 a block of distance (×3 at 24, never under
+  ×1) so it reads the same on screen. The client's own camera then draws it on the right pixel every frame, at any
+  field of view, window size or GUI scale, and as the player turns there is no lag at all.
+* **Out of view** (behind, beside, above or below): an edge card «➡ A 28.1 м» (the waypoint's with its name) 10
+  blocks out, placed by `ScreenProjection` for the look the server knows: in front, where the line from the crosshair
+  to the place leaves the edge area; behind, on the left or right edge (the way to turn) at the place's height, with
+  an arrow (8 directions) pointing that way. The edge area is 15% in from the sides, under three boss bars at the top
+  (y ≤ 0.7) and over the hotbar, hearts and HUD panel at the bottom (y ≥ −0.6); the corner minimap's area
+  (x < −0.6, y > 0.36) is kept free. Cards on one edge keep 0.08 apart up and down (0.3 side to side on the top and
+  bottom), none comes nearer a corner than that, and a full top or bottom edge sends its last cards to the side edges;
+  the waypoint keeps its spot first. A card moves between in view and the edge with hysteresis (in at 12% inside the
+  screen, out at 3%), and starts afresh when it does rather than glide across the view.
+* **The camera model:** Minecraft's axes (yaw 0 = south, 90 = west; pitch 90 = straight down), a level camera, the
+  default 70° vertical field of view on a 16:9 window (the server knows neither; a wider view only pulls an edge card
+  in, the 15% inset covers a drawn bow's narrower one). `ScreenProjectionTest` checks project ∘ unproject on 500
+  random cameras.
+* **Cost:** the cards are re-laid every tick; a card is teleported only when its spot moved over 0.01 block (standing
+  still and not turning sends nothing), its text rewritten at most every 4 ticks (at once when its arrow changes).
+* **When:** the waypoint's card always (it replaced the old 24-block label); pins and the death with the
+  «Дэлгэцийн тэмдэг» setting (`PlayerSetting.SCREEN_MARKERS`, on by default, `/map markers`). Hidden in the sky
+  windows, while dead, as a spectator and in another world (pins live in the overworld).
 
 ### The latest death
 
@@ -206,7 +242,9 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
 * **Picture** (`suld-api` `Minimap`, pure): one 128 × 128 map image — a 120 × 98 window of the real land at one block
   a pixel (the zoom-0 tiles of part A, so it shows exactly what the atlas shows), north up; a black-gold-blue-gold
   frame with a gold north notch; places within 72 blocks (city, dungeons and bosses, ovoos, sites and relays, the
-  player's pins, the soul beacon); the party's other members as light blue arrows the way they look, or a light blue
+  player's pins in their own colours, the soul beacon); hostile mobs within 48 blocks as small red dots (the nearest
+  24, SÜLD's own and every vanilla enemy, looked up every 10 ticks, redrawing at most every 10 ticks while they move);
+  every mark on the pixel of its block, the player's block in the middle; the party's other members as light blue arrows the way they look, or a light blue
   arrow on the rim toward a mate out of view (a mate who moves or turns redraws it, at the same pace as the player's
   own moves); the waypoint as a gold diamond, or a gold arrow on the rim pointing to it; the
   player's white arrow in the middle, turned the way they look; under the map a navy panel with «X 326  Z 92» and the
@@ -237,7 +275,8 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
 * **When:** only with the SÜLD pack loaded (without the shader the map would hang in the air), the «Мини газрын
   зураг» setting on (`PlayerSetting.MINIMAP`, `/map minimap`), in the overworld, alive, and outside the sky windows
   (atlas, menu, skill tree). Redrawn on the map's workers after a move of 2 blocks or a turn (at most every 5 ticks;
-  a single step is caught up after a second, at least every 10 s) and at once when the waypoint or a pin changes;
+  a single step is caught up after a second, at least every 10 s) and at once when the waypoint or a pin changes
+  (`PinService.version` counts every read, add and remove: a pin removed and another added redraw too);
   a picture equal to the last one is not sent. The places it marks are collected at most every 5 s
   (`MapPois.cached`: they were read from the whole world on the main thread for every picture).
 * **Seen on the 1.21.11 client:** the corner map in the city, by night (no lightmap: it stays bright) and in the
@@ -250,7 +289,8 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
 
 `tools/loadtest/bots/mapcbot.js` (in `regress.sh`): the four frames facing up out of reach, the marker row, the frames
 follow a 30-block teleport and a turn and stay off the line of fire (three over the look, one 2+ blocks under it), an arrow shot through a frame flies on past it,
-`/map minimap` off and on, hidden in the atlas, the waypoint bar with the distance and the label 24 blocks out,
+`/map minimap` off and on, hidden in the atlas, the waypoint bar with the distance and the card 24 blocks out
+toward the place, then an edge card with an arrow once the bot turns away (2026-10-15, not yet run),
 `/map stop`, a pin stored, still there after a relog (PostgreSQL), removed — 13 checks pass on the dev server
 (2026-10-13). `JdbcMapPinRepositoryIT` (the limit under concurrency), api
 `MapPinTest`, `MinimapTest`.

@@ -33,6 +33,8 @@ public final class PinService implements Listener {
     private final MapPinRepository repo;
     private final Map<UUID, List<MapPin>> pins = new HashMap<>();
     private final Set<UUID> busy = new HashSet<>();
+    /** Counts each player's pin changes (read, added, removed), so the minimap redraws on any change, not just a new count. */
+    private final Map<UUID, Integer> versions = new HashMap<>();
 
     public PinService(Plugin plugin, MapPinRepository repo) {
         this.plugin = plugin;
@@ -48,13 +50,20 @@ public final class PinService implements Listener {
         return pins.getOrDefault(player, List.of());
     }
 
+    /** A number that changes whenever the player's pins change. */
+    public int version(UUID player) {
+        return versions.getOrDefault(player, 0);
+    }
+
     private void load(UUID id) {
         repo.list(id).whenComplete((list, err) -> main(() -> {
             if (err != null) {
                 plugin.getLogger().log(Level.WARNING, "[map] pins of " + id + " not read", err);
                 return;
             }
-            if (Bukkit.getPlayer(id) != null) pins.put(id, new ArrayList<>(list));
+            if (Bukkit.getPlayer(id) == null) return;
+            pins.put(id, new ArrayList<>(list));
+            versions.merge(id, 1, Integer::sum);
         }));
     }
 
@@ -88,6 +97,7 @@ public final class PinService implements Listener {
             }
             List<MapPin> list = pins.computeIfAbsent(id, k -> new ArrayList<>());
             list.add(pin);
+            versions.merge(id, 1, Integer::sum);
             if (p.isOnline()) p.sendMessage(Messages.success("◆ «" + pin.name() + "» тэмдэг тавигдлаа (x " + x + ", z " + z + ")."));
             if (done != null) done.accept(pin);
         }));
@@ -109,6 +119,7 @@ public final class PinService implements Listener {
             }
             List<MapPin> list = pins.get(id);
             if (list != null) list.removeIf(q -> q.id().equals(pin.id()));
+            versions.merge(id, 1, Integer::sum);
             if (p.isOnline()) p.sendMessage(Messages.success("«" + pin.name() + "» тэмдэг устлаа."));
             if (done != null) done.run();
         }));
@@ -129,5 +140,6 @@ public final class PinService implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         pins.remove(e.getPlayer().getUniqueId());
         busy.remove(e.getPlayer().getUniqueId());
+        versions.remove(e.getPlayer().getUniqueId());
     }
 }

@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -132,5 +133,23 @@ class MinimapStabilityTest {
         assertEquals(1, reads.get());
         clock.addAndGet(1);
         assertEquals(2, places.get(), "read again after " + MapPois.CACHE_MS + " ms");
+    }
+
+    @Test
+    void movingMobsRedrawTheMapButNotEveryTick() {
+        int m = MinimapService.MOB_REDRAW_TICKS;
+        assertFalse(MinimapService.redrawDue(0, false, false, true, m - 1), "a fight: not a map every few ticks");
+        assertTrue(MinimapService.redrawDue(0, false, false, true, m), "the dots follow the mobs");
+        assertFalse(MinimapService.redrawDue(0, false, false, false, m), "mobs standing still: nothing");
+        assertTrue(MinimapService.redrawDue(0, false, true, true, 0), "a new waypoint or pin still shows at once");
+        assertTrue(m >= MinimapService.REDRAW_TICKS, "mobs never redraw faster than the player's own moves");
+        // the mobs' key: the same mobs in another order read the same; one moving a block changes it
+        java.util.List<int[]> a = java.util.List.of(new int[]{10, 20}, new int[]{-5, 7}, new int[]{30, -2});
+        java.util.List<int[]> b = java.util.List.of(new int[]{30, -2}, new int[]{10, 20}, new int[]{-5, 7});
+        java.util.List<int[]> moved = java.util.List.of(new int[]{10, 21}, new int[]{-5, 7}, new int[]{30, -2});
+        assertEquals(MinimapService.mobsKey(a), MinimapService.mobsKey(b));
+        assertNotEquals(MinimapService.mobsKey(a), MinimapService.mobsKey(moved));
+        assertNotEquals(MinimapService.mobsKey(a), MinimapService.mobsKey(a.subList(0, 2)), "one gone");
+        assertNotEquals(MinimapService.mobsKey(java.util.List.of()), MinimapService.mobsKey(java.util.List.of(new int[]{0, 0})), "one come");
     }
 }

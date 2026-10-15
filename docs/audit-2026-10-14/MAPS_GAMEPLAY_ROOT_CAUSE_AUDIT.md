@@ -120,3 +120,45 @@ Still open from this round:
 * A modded client with occlusion entity culling (Sodium, Entity Culling) may still hide a frame that sits behind
   terrain; the extra frame makes that rarer but cannot rule it out.
 * Atlas pans still respawn every marker entity (`placeMarkers`); not changed.
+
+## 6. Follow-up 2026-10-15 (3): true screen waypoints, HUD projection, minimap marks
+
+Session: local CLI, one agent, no subagents, on `main` = `origin/main` `6f2162b`, working tree clean. The owner's
+request: every waypoint selected in the atlas shown on the live game screen like JourneyMap / Xaero's Minimap
+(«Awesome Waypoint · 28.1m»), with edge arrows when out of view; atlas, minimap and screen in sync; pins and nearby
+entities on the minimap. As before, SÜLD has no client mod: everything is done by the server with owner-only display
+entities, so "projection" means the server places each card where the client's own camera will draw it.
+
+| # | Sev | Gap found | Root cause | Fix | Status |
+|---|---|---|---|---|---|
+| W-1 | P1 | Only the one followed waypoint had anything on the game screen; pins and the latest death showed only on the atlas and the minimap | `WaypointGuide` drew a single label for its target; nothing else knew how to put a mark on the screen | `map/ScreenMarkers` (new): the waypoint, the 6 nearest pins within 1 500 blocks and a standing soul beacon each get a see-through, owner-only card «A · Агуй / 28.1 м»: the name's first letter in the pin's colour («◆» a place, «☠» the death). A waypoint to a pin or to the death wears its mark and is not shown twice. Pins and the death follow a new setting «Дэлгэцийн тэмдэг» (`PlayerSetting.SCREEN_MARKERS`, bit 9, on by default, `/map markers`, page 2 of «Тохиргоо») | **Fixed+tested** (`WaypointHudTest`, `ScreenMarkersTest`) |
+| W-2 | P1 | The label was not on the place on screen: it stood 24 blocks out *level* at eye height + 0.6, so a place up a hill or down a valley showed at the wrong height, and a waypoint behind the player showed nothing | The direction ignored height (`new Vector(dx, 0, dz)`), and nothing handled out-of-view targets | `api.map.ScreenProjection` (new, pure): Minecraft's camera (yaw 0 = south, pitch 90 = down, level), the default 70° vertical FOV on 16:9, `project` / `unproject` / `edge`. **In view** (hysteresis: in at 12% inside the screen, out at 3%), the card stands on the true 3D line from the eye to 2.2 blocks over the place: at the place within 24 blocks, else 24 out, scaled ×0.125 a block. The client's camera then puts it on the right pixel every frame at any FOV, window or GUI scale, with no turn lag. **Out of view**, an edge card «➡ A 28.1 м» 10 blocks out where the crosshair-to-place line leaves the edge area. Behind the player it goes on the side to turn to, with one of 8 arrows. The edge area is 15% in from the sides, under three boss bars, over the hotbar and HUD panel, and off the corner minimap. Cards are spread so none overlap, including at corners (a full top or bottom spills to the sides), and the waypoint keeps its place first | **Fixed+tested** (`ScreenProjectionTest` 9 tests incl. project ∘ unproject on 500 random cameras; `WaypointHudTest` layout: the in-view card projects onto the place's own pixel, the edge card projects onto its edge spot, 300 random layouts keep every card on screen, apart and off the minimap) |
+| W-3 | P2 | The distance read «412 м» everywhere: whole metres across the ground, the same at 28 m as at 28.9, and wrong for a pin far above or below | `Math.round(Math.hypot(dx, dz))` | `WaypointHud.meters` on the straight 3D line from the feet (across the ground only when the height is unknown): «28.1 м» to the tenth under 100 m (cut, never «100.0 м»), whole metres under 10 km, «12.4 км» beyond; the bar uses the same number. Arrival stays across the ground (a pin set from the atlas over an unloaded chunk stores a guessed y = 64) | **Fixed+tested** (`WaypointHudTest.distancesReadLikeTheReferenceCard`, `ScreenMarkersTest.theReferenceCardReads28Point1Metres`) |
+| W-4 | P2 | The atlas did not show which place is the current waypoint, and did not change when one was set from the atlas, by command or by arriving | `WaypointGuide` had no listeners; `AtlasSky.placeMarkers` never read the guide | `WaypointGuide.onChange`: set, stop and arrival notify listeners at once. `AtlasSky.waypointChanged` redraws an open atlas on the next tick (not inside the click), with a gold «▼ Чиглэл · 412 м» flag, plus a pin marker for typed coordinates or a mate's spot, which have none | **Fixed (compile-verified)**: needs a live atlas |
+| W-5 | P2 | The minimap could miss a pin change: it redrew on a new pin *count*, so removing one pin and adding another between two of its ticks (the dialog, `/map pin` right after `/map unpin`) left the old picture for up to 10 s | `MinimapService` compared `pins(id).size()` | `PinService.version(id)` counts every read, add and remove; the minimap compares that | **Fixed (compile-verified)** |
+| W-6 | P2 | Minimap pins were all green whatever their colour; no nearby entities were shown except party mates | `Minimap.Kind.PIN` had one colour; nothing collected mobs | `Minimap.Marker.colour` + `Marker.pin(x, z, colour)`: the five pin colours. `Kind.MOB`: hostile mobs within 48 blocks (SÜLD's own and every vanilla `Enemy`, the nearest 24) as a 1-pixel red dot with a shadow, under places, pins, mates, the waypoint and the player's arrow. Looked up every 10 ticks; their moving redraws at most every 10 ticks (`redrawDue` 5-argument form; `mobsKey` ignores order). Every mark sits on its block's pixel (unchanged, now tested) | **Fixed+tested** (`MinimapTest.pinsShowInTheirOwnColoursOnTheirBlock`, `hostileMobsAreSmallRedDots…`, `MinimapStabilityTest.movingMobsRedrawTheMapButNotEveryTick`) |
+
+Sync, as built (all one server, no extra packets beyond the entities'):
+
+| Event | Atlas | Minimap | Screen cards | Bar / compass |
+|---|---|---|---|---|
+| Waypoint set (atlas click, `/map guide`, pin dialog, mate click) | flag on the next tick (`onChange`) | next tick (target identity) | next tick | at once |
+| Waypoint stopped / reached / its pin removed | flag gone on the next tick | next tick | next tick | at once |
+| Pin added / removed | at once (existing `refreshFor`) | next tick (`PinService.version`) | next tick | — |
+| Death beacon opens / closes | on the next opening (unchanged) | next redraw | next tick | — |
+
+Not changed: the compass and arrival logic, the boss bar's place (it is gated by `ui/BossBars`), the 24-block / ×0.125
+sizing of the in-view card (kept from the label, seen on a client at 1080p in 2026-10-13), the latest death on the
+atlas (still `deathRepository().recent`; the screen card uses the soul beacon, which has a height and a world).
+
+Still open from this round:
+* **No client check.** The server cannot know the client's FOV or window. An edge card assumes 70° on 16:9 and sits
+  15% in from the sides, which covers a drawn bow's 15% zoom. A spyglass, or a FOV setting below about 55°, can push
+  an edge card off the screen until the player turns. Steps: `/map guide 200 0`, face east (the card at the place's
+  pixel, 24 blocks out), turn around (an edge card on the side to turn to, with an arrow), look straight up and down,
+  `/map pin a` at several places, walk away, `/map markers` off and on, open `/maps` (the gold flag), sprint with a
+  bow drawn.
+* Edge cards follow the look the server knows, one round trip late: in a fast turn an edge card swings across for a
+  moment before it settles. The in-view cards have no such lag. The minimap frames have the same limit.
+* `mapcbot.js` was updated for the new card (in view 24 blocks out toward the place; turned away, an edge card under
+  13 blocks with an arrow), but not run: it needs the dev server, and `node` is not installed here.

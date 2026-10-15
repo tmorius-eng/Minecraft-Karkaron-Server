@@ -6,7 +6,7 @@
 // the line of fire, an arrow shot through one flies on (the frame steps aside), the map's first row carries the
 // shader's marker colours, `/map minimap` hides and shows it, the atlas hides it while open. Pins: `/map pin` stores one in the database, it is there after a
 // relog, `/map unpin` removes it. The waypoint: `/map guide <x> <z>` shows a yellow bar with the distance and a
-// see-through label toward the place, `/map stop` ends both.
+// see-through card toward the place (an edge card with an arrow once turned away), `/map stop` ends both.
 const mineflayer = require('mineflayer');
 const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
@@ -108,16 +108,25 @@ async function pickClass(b) {
   b._client.write('player_input', { inputs: { shift: true } }); await sleep(800); b._client.write('player_input', { inputs: {} }); await sleep(3000);
   check(seated && inAtlas === 0 && miniFrames(b).length === FRAMES, 'the atlas hides the minimap while open', 'seated ' + seated + ', frames in the atlas '
     + inAtlas + ', after ' + miniFrames(b).length);
-  // 5. the waypoint: a bar with the distance and a label toward the place, /map stop ends both
+  // 5. the waypoint: a bar with the distance and a screen card (ScreenMarkers): in view it stands 24 blocks out on the
+  // line to the place, turned away it is an edge card 10 blocks out with an arrow; /map stop ends both
   const here = b.entity.position;
   const tx = Math.floor(here.x) + 200, tz = Math.floor(here.z);
   let bar = null;
   b.on('bossBarCreated', (x) => { bar = x; });
+  await b.lookAt(here.offset(200, b.entity.height, 0), true); await sleep(500);
   b.chat(`/map guide ${tx} ${tz}`); await sleep(2500);
   const barText = bar ? String(bar.title) : '';
-  const label = Object.values(b.entities).find(e => e.name === 'text_display' && e.position.distanceTo(b.entity.position) < 40 && JSON.stringify(e.metadata).includes('◆'));
+  const card = () => Object.values(b.entities).find(e => e.name === 'text_display' && e.position.distanceTo(b.entity.position) < 40 && JSON.stringify(e.metadata).includes('◆'));
+  const label = card();
   check(!!bar && /\d+ м/.test(barText), 'the waypoint bar names the distance', JSON.stringify(barText));
-  check(!!label && label.position.distanceTo(b.entity.position) > 15, 'a see-through label stands toward the place', label ? label.position.distanceTo(b.entity.position).toFixed(1) + ' blocks away' : 'none');
+  check(!!label && label.position.distanceTo(b.entity.position) > 15 && label.position.x > here.x + 15, 'the waypoint card stands toward the place',
+    label ? label.position.distanceTo(b.entity.position).toFixed(1) + ' blocks away' : 'none');
+  await b.lookAt(here.offset(-200, b.entity.height, 0), true); await sleep(1500); // the place now behind
+  const edge = card();
+  const edgeText = edge ? JSON.stringify(edge.metadata) : '';
+  check(!!edge && edge.position.distanceTo(b.entity.position) < 13 && /[⬅➡]/.test(edgeText), 'turned away, the card waits at the screen edge with an arrow',
+    edge ? edge.position.distanceTo(b.entity.position).toFixed(1) + ' blocks away, arrow ' + /[⬅➡]/.test(edgeText) : 'none');
   let gone = false;
   b.on('bossBarDeleted', () => { gone = true; });
   b.chat('/map stop'); await sleep(2000);

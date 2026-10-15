@@ -1,5 +1,7 @@
 package mn.suld.plugin.map;
 
+import mn.suld.api.map.ScreenProjection;
+import mn.suld.api.map.WaypointHud;
 import mn.suld.api.region.Navigation;
 import mn.suld.plugin.hud.HudService;
 import net.kyori.adventure.bossbar.BossBar;
@@ -8,39 +10,38 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.Transformation;
-import org.bukkit.util.Vector;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * The waypoint (docs/WORLD_MAP.md): one place a player is heading for — a pin, a place picked on the atlas, the latest
- * death. A bar names it with the arrow, the compass point and the distance (like the dungeon guide), and a label
- * «◆ Нэр · 412 м» floats toward it, seen through blocks and by its owner only: at the place itself within
- * {@value #NEAR} blocks, otherwise {@value #NEAR} blocks along the way, larger so it reads the same. Arriving within
- * {@value #ARRIVED} blocks ends it. Main thread.
+ * death. A bar names it with the arrow, the compass point and the distance (like the dungeon guide), the compass points
+ * at it, and {@link ScreenMarkers} puts its card on the game screen («◆ Нэр» over «28.1 м» at the place, or at the
+ * screen's edge with an arrow while it is out of view). Arriving within {@value #ARRIVED} blocks across the ground ends
+ * it (a pin set from the atlas over an unloaded chunk holds a guessed height). Every change is told to the
+ * {@link #onChange} listeners at once: the atlas marks the new waypoint; the minimap and the screen cards read it on
+ * their next tick. Main thread.
  */
 public final class WaypointGuide implements Listener {
 
+    /** The screen cards' tag ({@link ScreenMarkers}; the waypoint's own label had it before them). */
     static final String TAG = "suld_waypoint";
-    static final double NEAR = 24, ARRIVED = 6, LABEL_SCALE = 0.125;
+    static final double ARRIVED = 6;
+    /** The bar is rewritten this often (ticks), as often as the screen cards' distance. */
+    static final long BAR_TICKS = ScreenMarkers.TEXT_TICKS;
     private static final TextColor GOLD = TextColor.fromHexString("#ECBE4C");
 
     /** A {@link Target#y()} meaning "on the ground there" (a place picked on the map, whose height the map does not hold). */
@@ -66,7 +67,6 @@ public final class WaypointGuide implements Listener {
     private final class Guide {
         final Target target;
         final BossBar bar;
-        TextDisplay label;
         boolean shown;
         /** The compass target this waypoint set (handed back to the world spawn when it ends, if still ours). */
         Location compass;
@@ -79,7 +79,8 @@ public final class WaypointGuide implements Listener {
 
     private final Plugin plugin;
     private final Map<UUID, Guide> guides = new HashMap<>();
-    /** Set by SuldPlugin: true while the player is in a sky window (atlas, menu, skill tree), which the bar and the label would cover. */
+    private final List<Consumer<Player>> listeners = new ArrayList<>();
+    /** Set by SuldPlugin: true while the player is in a sky window (atlas, menu, skill tree), which the bar would cover. */
     public volatile java.util.function.Predicate<Player> busy = p -> false;
 
     public WaypointGuide(Plugin plugin) {
@@ -87,7 +88,16 @@ public final class WaypointGuide implements Listener {
     }
 
     public void start() {
-        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 5L, 5L);
+        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 5L, BAR_TICKS);
+    }
+
+    /** {@code l} hears of every waypoint set, stopped or reached, with the player whose it was. */
+    public void onChange(Consumer<Player> l) {
+        listeners.add(l);
+    }
+
+    private void changed(Player p) {
+        for (Consumer<Player> l : listeners) l.accept(p);
     }
 
     /** The player's waypoint, or null. */
@@ -97,7 +107,7 @@ public final class WaypointGuide implements Listener {
     }
 
     public void guide(Player p, Target t) {
-        stop(p);
+        end(p);
         Guide g = new Guide(t);
         guides.put(p.getUniqueId(), g);
         // the compass in the waypoint's own world (a waypoint set from another world points into the overworld)
@@ -106,18 +116,24 @@ public final class WaypointGuide implements Listener {
         p.setCompassTarget(g.compass);
         p.playSound(p.getLocation(), Sound.ITEM_LODESTONE_COMPASS_LOCK, 0.8f, 1.2f);
         update(p, g);
+        changed(p);
     }
 
     public void stop(Player p) {
-        Guide g = guides.remove(p.getUniqueId());
-        if (g == null) return;
-        mn.suld.plugin.ui.BossBars.hide(p, g.bar);
-        if (g.label != null && g.label.isValid()) g.label.remove();
-        // the compass stops pointing at a waypoint that is over, unless something else has pointed it since
-        if (g.compass != null && g.compass.equals(p.getCompassTarget())) p.setCompassTarget(p.getWorld().getSpawnLocation());
+        if (end(p)) changed(p);
     }
 
-    /** The player's pin {@code pinId} was removed: a waypoint leading to it ends (bar, label, compass, minimap mark). */
+    /** Ends the player's waypoint (bar, compass) without telling the listeners; true when there was one. */
+    private boolean end(Player p) {
+        Guide g = guides.remove(p.getUniqueId());
+        if (g == null) return false;
+        mn.suld.plugin.ui.BossBars.hide(p, g.bar);
+        // the compass stops pointing at a waypoint that is over, unless something else has pointed it since
+        if (g.compass != null && g.compass.equals(p.getCompassTarget())) p.setCompassTarget(p.getWorld().getSpawnLocation());
+        return true;
+    }
+
+    /** The player's pin {@code pinId} was removed: a waypoint leading to it ends (bar, screen card, compass, minimap mark). */
     public void pinRemoved(Player p, UUID pinId) {
         Guide g = guides.get(p.getUniqueId());
         if (g == null || !g.target.leadsTo(pinId)) return;
@@ -128,7 +144,7 @@ public final class WaypointGuide implements Listener {
     public void shutdown() {
         for (UUID id : new ArrayList<>(guides.keySet())) {
             Player p = Bukkit.getPlayer(id);
-            if (p != null) stop(p);
+            if (p != null) end(p);
         }
         guides.clear();
     }
@@ -148,7 +164,6 @@ public final class WaypointGuide implements Listener {
         Target t = g.target;
         if (busy.test(p) || p.isDead()) {
             mn.suld.plugin.ui.BossBars.hide(p, g.bar);
-            hideLabel(g);
             g.shown = false;
             return;
         }
@@ -159,79 +174,24 @@ public final class WaypointGuide implements Listener {
         Location l = p.getLocation();
         if (!l.getWorld().getName().equals(t.world())) {
             g.bar.name(Component.text(t.glyph() + " " + t.name() + " — энэ ертөнцөд алга", NamedTextColor.GRAY, TextDecoration.BOLD));
-            hideLabel(g);
             return;
         }
         double dx = t.x() - l.getX(), dz = t.z() - l.getZ();
-        double dist = Math.hypot(dx, dz);
-        if (dist <= ARRIVED) {
+        if (Math.hypot(dx, dz) <= ARRIVED) {
             HudService.notice(p, Component.text(t.glyph() + " " + t.name() + " — ирлээ!", NamedTextColor.GREEN, TextDecoration.BOLD));
             p.playSound(l, Sound.BLOCK_NOTE_BLOCK_CHIME, 0.8f, 1.4f);
             stop(p);
             return;
         }
         double b = Navigation.bearing(dx, dz);
-        String meters = Math.round(dist) + " м";
+        String meters = WaypointHud.meters(ScreenProjection.distance(l.getX(), l.getY(), l.getZ(), t.x(), t.y(), t.z()));
         g.bar.name(Component.text(t.glyph() + " " + t.name() + "  ", GOLD, TextDecoration.BOLD)
                 .append(Component.text(Navigation.arrow(b, Navigation.facing(l.getYaw())) + " ", NamedTextColor.AQUA, TextDecoration.BOLD))
                 .append(Component.text(Navigation.compass(b) + " · " + meters, NamedTextColor.WHITE, TextDecoration.BOLD)));
-        // the label: at the place when near, else NEAR blocks along the way at eye height; its size grows with the
-        // distance so it reads the same on screen (seen on a 1080p client: 3× at 24 blocks is a 20 px line)
-        Location eye = p.getEyeLocation();
-        Location at;
-        float scale;
-        if (dist <= NEAR) {
-            // a place from the map stands on the ground: its chunk is loaded this close
-            World w = eye.getWorld();
-            int bx = (int) Math.floor(t.x()), bz = (int) Math.floor(t.z());
-            double y = !Double.isNaN(t.y()) ? t.y() : w.isChunkLoaded(bx >> 4, bz >> 4) ? w.getHighestBlockYAt(bx, bz) + 1 : eye.getY() - 1.6;
-            at = new Location(w, t.x(), y + 2.2, t.z());
-            scale = (float) Math.max(1.0, dist * LABEL_SCALE);
-        } else {
-            Vector dir = new Vector(dx, 0, dz).normalize().multiply(NEAR);
-            at = eye.clone().add(dir).add(0, 0.6, 0);
-            scale = (float) (NEAR * LABEL_SCALE);
-        }
-        Component text = Component.text(t.glyph() + " " + t.name(), GOLD, TextDecoration.BOLD).append(Component.newline())
-                .append(Component.text(meters, NamedTextColor.WHITE));
-        if (g.label == null || !g.label.isValid() || g.label.getWorld() != eye.getWorld()) {
-            hideLabel(g);
-            World w = eye.getWorld();
-            g.label = w.spawn(at, TextDisplay.class, d -> {
-                d.setPersistent(false);
-                d.setVisibleByDefault(false);
-                d.addScoreboardTag(TAG);
-                d.setBillboard(Display.Billboard.CENTER);
-                d.setSeeThrough(true);
-                d.setShadowed(true);
-                d.setBrightness(new Display.Brightness(15, 15));
-                d.setBackgroundColor(Color.fromARGB(110, 10, 16, 32));
-                d.setAlignment(TextDisplay.TextAlignment.CENTER);
-                d.setTeleportDuration(5);
-                d.setViewRange(4f);
-                d.text(text);
-            });
-            p.showEntity(plugin, g.label);
-        } else {
-            g.label.teleport(at);
-            g.label.text(text);
-        }
-        g.label.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(scale), new Quaternionf()));
-    }
-
-    private static void hideLabel(Guide g) {
-        if (g.label != null && g.label.isValid()) g.label.remove();
-        g.label = null;
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        stop(e.getPlayer());
-    }
-
-    /** A label left behind by a crash: never kept. */
-    @EventHandler
-    public void onEntitiesLoad(EntitiesLoadEvent e) {
-        for (var en : e.getEntities()) if (en.getScoreboardTags().contains(TAG)) en.remove();
+        end(e.getPlayer());
     }
 }

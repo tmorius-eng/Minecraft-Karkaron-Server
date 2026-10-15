@@ -55,7 +55,9 @@ import java.util.function.Predicate;
  * targeted) and none is on the player's line of fire. Shown only to a player with the SÜLD pack loaded (without the
  * shader the map would hang in the world) and the «Мини газрын зураг» setting on, in the overworld, outside the sky
  * windows. Redrawn when the player has moved {@value #MOVE_BLOCKS} blocks or turned, at most {@value #REDRAW_TICKS}
- * ticks apart (a single step is caught up after {@value #SETTLE_TICKS} ticks), and only sent when the picture changed.
+ * ticks apart (a single step is caught up after {@value #SETTLE_TICKS} ticks), at once when the waypoint or a pin
+ * changes (the guide's target and {@link PinService#version}), when the hostile mobs close by have moved at most every
+ * {@value #MOB_REDRAW_TICKS} ticks, and only sent when the picture changed.
  */
 public final class MinimapService implements Listener {
 
@@ -81,6 +83,12 @@ public final class MinimapService implements Listener {
     static final int REDRAW_TICKS = 5, SETTLE_TICKS = 20, STALE_TICKS = 200, MOVE_BLOCKS = 2;
     /** A frame something flew into steps {@value #PARK_UP} blocks up (~15°: still in view) for this long, enough for the shot to pass. */
     static final int PARK_TICKS = 5, PARK_UP = 2;
+    /**
+     * Hostile mobs within {@value #MOB_RANGE} blocks (the window reaches 60 across and 49 up and down) show as red dots,
+     * the nearest {@value #MAX_MOBS}; they are looked up every {@value #MOB_SCAN_TICKS} ticks, and their moving redraws
+     * the picture at most every {@value #MOB_REDRAW_TICKS} ticks (a fight would otherwise send a map every 5 ticks).
+     */
+    static final int MOB_RANGE = 48, MAX_MOBS = 24, MOB_SCAN_TICKS = 10, MOB_REDRAW_TICKS = 10;
 
     private final class State {
         final List<GlowItemFrame> frames = new ArrayList<>();
@@ -88,7 +96,8 @@ public final class MinimapService implements Listener {
         final int[] parkedUntil = new int[SLOTS.length];
         byte[] image;
         int version, painted = -1;
-        int lastX = Integer.MIN_VALUE, lastZ, lastTurn = -1, lastTick, lastPins = -1, lastMates;
+        int lastX = Integer.MIN_VALUE, lastZ, lastTurn = -1, lastTick, lastPins = -1, lastMates, lastMobs, mobsKey, mobScan = Integer.MIN_VALUE / 2;
+        List<int[]> mobs = List.of();
         WaypointGuide.Target lastTarget;
         boolean drawing;
         /** The eye the frames were last placed for: standing still and not turning, nothing is computed or sent. */
@@ -194,18 +203,24 @@ public final class MinimapService implements Listener {
             int mates = matesKey(p); // a party mate who moves or turns redraws it too, at the same pace
             int moved = s.lastX == Integer.MIN_VALUE ? Integer.MAX_VALUE : Math.max(Math.abs(x - s.lastX), Math.abs(z - s.lastZ));
             boolean turned = turn != s.lastTurn || mates != s.lastMates;
-            // a new waypoint or pin shows at once
+            // a new, moved or ended waypoint or pin shows at once (a pin removed and another added count, not the total)
             WaypointGuide.Target target = guide.target(id);
-            int pinCount = pins.pins(id).size();
-            boolean marks = target != s.lastTarget || pinCount != s.lastPins;
-            if (redrawDue(moved, turned, marks, now - s.lastTick)) {
+            int pinVersion = pins.version(id);
+            boolean marks = target != s.lastTarget || pinVersion != s.lastPins;
+            if (now - s.mobScan >= MOB_SCAN_TICKS) {
+                s.mobScan = now;
+                s.mobs = hostiles(p);
+                s.mobsKey = mobsKey(s.mobs);
+            }
+            if (redrawDue(moved, turned, marks, s.mobsKey != s.lastMobs, now - s.lastTick)) {
                 s.lastX = x;
                 s.lastZ = z;
                 s.lastTurn = turn;
                 s.lastMates = mates;
+                s.lastMobs = s.mobsKey;
                 s.lastTick = now;
                 s.lastTarget = target;
-                s.lastPins = pinCount;
+                s.lastPins = pinVersion;
                 draw(p, s, x, z, l.getYaw());
             }
         }
@@ -219,9 +234,39 @@ public final class MinimapService implements Listener {
      * since the last picture (the larger of x and z).
      */
     static boolean redrawDue(int moved, boolean turned, boolean marks, int ticksSince) {
+        return redrawDue(moved, turned, marks, false, ticksSince);
+    }
+
+    /** {@link #redrawDue(int, boolean, boolean, int)}, and after {@value #MOB_REDRAW_TICKS} ticks when the mobs close by moved. */
+    static boolean redrawDue(int moved, boolean turned, boolean marks, boolean mobsMoved, int ticksSince) {
         if (marks || ticksSince >= STALE_TICKS) return true;
         if ((moved >= MOVE_BLOCKS || turned) && ticksSince >= REDRAW_TICKS) return true;
+        if (mobsMoved && ticksSince >= MOB_REDRAW_TICKS) return true;
         return moved > 0 && ticksSince >= SETTLE_TICKS;
+    }
+
+    /** The hostile mobs (SÜLD's own and every vanilla enemy) within {@value #MOB_RANGE} blocks, nearest first, as {x, z}. */
+    private List<int[]> hostiles(Player p) {
+        Location l = p.getLocation();
+        List<org.bukkit.entity.LivingEntity> found = new ArrayList<>();
+        for (Entity e : p.getNearbyEntities(MOB_RANGE, 24, MOB_RANGE)) {
+            if (!(e instanceof org.bukkit.entity.LivingEntity le) || le.isDead() || e instanceof Player) continue;
+            if (e instanceof org.bukkit.entity.Enemy || services.mobs().isSuldMob(e)) found.add(le);
+        }
+        found.sort(java.util.Comparator.comparingDouble(e -> e.getLocation().distanceSquared(l)));
+        List<int[]> out = new ArrayList<>();
+        for (int i = 0; i < Math.min(MAX_MOBS, found.size()); i++) {
+            Location m = found.get(i).getLocation();
+            out.add(new int[]{m.getBlockX(), m.getBlockZ()});
+        }
+        return out;
+    }
+
+    /** Where the mobs stand, as one number: it changes when one moves a block (order aside). */
+    static int mobsKey(List<int[]> mobs) {
+        int h = mobs.size();
+        for (int[] m : mobs) h += 31 * m[0] ^ m[1] * 0x9E3779B1; // a sum: the nearest-first order may swap without a move
+        return h;
     }
 
     /**
@@ -407,8 +452,10 @@ public final class MinimapService implements Listener {
             out.add(new Minimap.Marker(poi.x(), poi.z(), k));
         }
         for (MapPin pin : pins.pins(p.getUniqueId())) {
-            if (Math.abs(pin.x() - x) <= NEAR && Math.abs(pin.z() - z) <= NEAR) out.add(new Minimap.Marker(pin.x(), pin.z(), Minimap.Kind.PIN));
+            if (Math.abs(pin.x() - x) <= NEAR && Math.abs(pin.z() - z) <= NEAR) out.add(Minimap.Marker.pin(pin.x(), pin.z(), pin.colour()));
         }
+        State s = states.get(p.getUniqueId());
+        if (s != null) for (int[] m : s.mobs) out.add(new Minimap.Marker(m[0], m[1], Minimap.Kind.MOB));
         var beacons = services.soulBeacons;
         if (beacons != null) {
             var b = beacons.of(p.getUniqueId());

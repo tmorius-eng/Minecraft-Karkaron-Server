@@ -39,6 +39,7 @@ public final class SuldPlugin extends JavaPlugin {
     private mn.suld.plugin.gui.MenuSky menuSky;
     private mn.suld.plugin.map.AtlasSky atlas;
     private mn.suld.plugin.map.WaypointGuide waypoints;
+    private mn.suld.plugin.map.ScreenMarkers screenMarkers;
     private mn.suld.plugin.web.ArmoryServer armory;
     private mn.suld.plugin.map.MinimapService minimap;
     private mn.suld.plugin.training.TrainingService training;
@@ -494,11 +495,17 @@ public final class SuldPlugin extends JavaPlugin {
             waypoints.start();
             atlas.pins = mapPins;
             atlas.guide = waypoints;
+            waypoints.onChange(atlas::waypointChanged); // the atlas's «Чиглэл» flag follows the waypoint
             mn.suld.plugin.map.AtlasSky openAtlas = atlas;
             // the bar and the label stay off every sky window (the label, seen through blocks, would float over the menu
             // and the skill tree too), as the minimap does
             waypoints.busy = pl -> openAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
             services.hud().quiet(openAtlas::isOpen); // so do the HUD panel and the target frame
+            atlas.toggleScreenMarkers = pl -> {
+                boolean on = services.styles().toggleSetting(pl, mn.suld.api.style.PlayerSetting.SCREEN_MARKERS);
+                pl.sendMessage(on ? mn.suld.plugin.ui.Messages.success("Дэлгэцийн тэмдэг асаалттай: тэмдэг, сүүлд унасан газар дэлгэц дээр зайтай харагдана.")
+                        : mn.suld.plugin.ui.Messages.info("Дэлгэцийн тэмдэг унтраалттай: зөвхөн чиглэл харагдана (/map markers — асаах)."));
+            };
             atlas.toggleMinimap = pl -> {
                 boolean on = services.styles().toggleSetting(pl, mn.suld.api.style.PlayerSetting.MINIMAP);
                 pl.sendMessage(on ? mn.suld.plugin.ui.Messages.success("Мини газрын зураг асаалттай (зүүн дээд буланд, SÜLD дүрс багцтай үед).")
@@ -509,6 +516,11 @@ public final class SuldPlugin extends JavaPlugin {
             minimap.busy = pl -> minimapAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
             getServer().getPluginManager().registerEvents(minimap, this);
             minimap.start();
+            // the waypoint, the pins and the latest death on the game screen (docs/WORLD_MAP.md, «Дэлгэцийн тэмдэг»)
+            screenMarkers = new mn.suld.plugin.map.ScreenMarkers(this, services, mapPins, waypoints);
+            screenMarkers.busy = pl -> openAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
+            getServer().getPluginManager().registerEvents(screenMarkers, this);
+            screenMarkers.start();
         }
         // the boss bars step aside while a sky window is open: its title hangs where they do (the atlas's «СҮЛДИЙН АТЛАС»)
         mn.suld.plugin.ui.BossBars.start(this, pl -> atlas != null && atlas.isOpen(pl) || menuSky != null && menuSky.isOpen(pl)
@@ -648,7 +660,8 @@ public final class SuldPlugin extends JavaPlugin {
             pregen.stop();
         }
         if (minimap != null) minimap.shutdown(); // the minimaps' frames go
-        if (waypoints != null) waypoints.shutdown(); // the waypoint bars and labels go
+        if (screenMarkers != null) screenMarkers.shutdown(); // the screen cards go
+        if (waypoints != null) waypoints.shutdown(); // the waypoint bars go
         if (armory != null) armory.stop();
         if (services != null && services.payments != null) services.payments.stop(); // the webhook closes, QR maps go blank
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood

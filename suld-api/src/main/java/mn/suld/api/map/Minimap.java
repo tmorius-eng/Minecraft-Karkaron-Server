@@ -6,8 +6,9 @@ import java.util.List;
  * The corner minimap's picture (docs/WORLD_MAP.md): one 128 × 128 map image, north up, drawn the way the atlas draws
  * the world (real blocks only; land never generated is plain parchment), with a thin Mongolian frame, the player's
  * arrow in the middle, nearby places, the party's mates (light blue arrows the way they look, or on the rim toward a
- * mate out of view), the waypoint (or an arrow on the rim pointing to it) and two lines of text under the map: the
- * coordinates and the area's name.
+ * mate out of view), the player's pins in their own colours, hostile mobs close by (small red dots), the waypoint (or an
+ * arrow on the rim pointing to it) and two lines of text under the map: the coordinates and the area's name. One map
+ * pixel is one block, the player's block in the middle: every mark sits on the pixel of its block.
  * <p>
  * Row 0 starts with {@link #MARK}: the resource pack's text shader looks for these four colours to draw this map in
  * the screen's top-left corner instead of in the world (and hides row 0). Nothing else ever paints row 0.
@@ -32,6 +33,10 @@ public final class Minimap {
     static final byte GREEN = MapColors.pixel(33, MapColors.SHADE_NORMAL);         // emerald
     /** A party mate's arrow: light blue, apart from the gold waypoint and the white player. */
     static final byte MATE = MapColors.pixel(17, MapColors.SHADE_HIGH);
+    /** A hostile mob's dot: bright red, apart from the dungeons' darker red squares. */
+    static final byte MOB = MapColors.pixel(28, MapColors.SHADE_HIGH);
+    /** The pins' colours, in the order of {@link MapPin#COLOURS}: green, red, blue, gold, white. */
+    static final byte[] PIN_COLOURS = {GREEN, MapColors.pixel(28, MapColors.SHADE_NORMAL), MapColors.pixel(25, MapColors.SHADE_HIGH), GOLD, WHITE};
 
     /** The four colours that mark the minimap for the shader (magenta, dark diamond, dark gold, darkest red). */
     public static final byte[] MARK = {MapColors.pixel(16, MapColors.SHADE_HIGH), MapColors.pixel(31, MapColors.SHADE_LOWEST),
@@ -43,13 +48,25 @@ public final class Minimap {
         byte at(int x, int z);
     }
 
-    /** A place near the player, or a party mate ({@link #PARTY}). */
-    public enum Kind { CITY, DUNGEON, OVOO, SITE, BOSS, RELAY, PIN, DEATH, PARTY }
+    /** A place near the player, a party mate ({@link #PARTY}) or a hostile mob ({@link #MOB}). */
+    public enum Kind { CITY, DUNGEON, OVOO, SITE, BOSS, RELAY, PIN, DEATH, PARTY, MOB }
 
-    /** {@code yaw} is a party mate's look (Minecraft's); a place has none. */
-    public record Marker(int x, int z, Kind kind, float yaw) {
+    /**
+     * {@code yaw} is a party mate's look (Minecraft's); a place has none. {@code colour} is a pin's colour, its index in
+     * {@link MapPin#COLOURS} (−1: the default green).
+     */
+    public record Marker(int x, int z, Kind kind, float yaw, int colour) {
+        public Marker(int x, int z, Kind kind, float yaw) {
+            this(x, z, kind, yaw, -1);
+        }
+
         public Marker(int x, int z, Kind kind) {
-            this(x, z, kind, 0f);
+            this(x, z, kind, 0f, -1);
+        }
+
+        /** A pin in its colour ({@link MapPin#COLOURS}). */
+        public static Marker pin(int x, int z, String colour) {
+            return new Marker(x, z, Kind.PIN, 0f, MapPin.COLOURS.indexOf(colour));
         }
     }
 
@@ -79,12 +96,20 @@ public final class Minimap {
         // north: a gold notch on the top edge
         for (int i = -2; i <= 2; i++) img[2 * SIZE + VIEW_X + VIEW_W / 2 + i] = GOLD;
         img[1 * SIZE + VIEW_X + VIEW_W / 2] = GOLD;
-        // places, the party, then the waypoint, then the player on top
+        // mobs under everything, then places and pins, the party, then the waypoint, then the player on top
         for (Marker m : markers) {
-            if (m.kind() == Kind.PARTY) continue;
+            if (m.kind() != Kind.MOB) continue;
+            int px = VIEW_X + m.x() - x0, py = VIEW_Y + m.z() - z0;
+            if (px < VIEW_X + 1 || px >= VIEW_X + VIEW_W - 1 || py < VIEW_Y + 1 || py >= VIEW_Y + VIEW_H - 1) continue;
+            set(img, px, py, MOB);
+            set(img, px + 1, py, OUTLINE);
+            set(img, px, py + 1, OUTLINE);
+        }
+        for (Marker m : markers) {
+            if (m.kind() == Kind.PARTY || m.kind() == Kind.MOB) continue;
             int px = VIEW_X + m.x() - x0, py = VIEW_Y + m.z() - z0;
             if (px < VIEW_X + 2 || px >= VIEW_X + VIEW_W - 2 || py < VIEW_Y + 2 || py >= VIEW_Y + VIEW_H - 2) continue;
-            marker(img, px, py, m.kind());
+            marker(img, px, py, m);
         }
         for (Marker m : markers) {
             if (m.kind() != Kind.PARTY) continue;
@@ -150,8 +175,8 @@ public final class Minimap {
         for (int y = -r; y <= r; y++) for (int x = -r; x <= r; x++) if (Math.abs(x) + Math.abs(y) <= r) set(img, cx + x, cy + y, colour);
     }
 
-    private static void marker(byte[] img, int x, int y, Kind k) {
-        switch (k) {
+    private static void marker(byte[] img, int x, int y, Marker m) {
+        switch (m.kind()) {
             case CITY -> {
                 square(img, x, y, 2, OUTLINE);
                 square(img, x, y, 1, WHITE);
@@ -170,7 +195,7 @@ public final class Minimap {
             }
             case PIN -> {
                 diamond(img, x, y, 2, OUTLINE);
-                diamond(img, x, y, 1, GREEN);
+                diamond(img, x, y, 1, m.colour() >= 0 && m.colour() < PIN_COLOURS.length ? PIN_COLOURS[m.colour()] : GREEN);
             }
             case DEATH -> {
                 for (int i = -2; i <= 2; i++) {

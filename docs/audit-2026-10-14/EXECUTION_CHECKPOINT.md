@@ -259,3 +259,35 @@ reconcile in `QuestTracker.java`; its only change in this run is the boss-bar ga
 **Not verified:** a real 1.21.11 client (the closer atlas, boss bars leaving and coming back, the four-frame minimap in
 fights, Shift + right click doing nothing) and the loadtest bots `mapcbot.js` / `hudbot.js` (updated for the new
 behaviour; they need the dev server, and `node` is not installed here, so not even syntax-checked).
+
+## Follow-up 2026-10-15 (3) — true screen waypoints, HUD projection, minimap marks
+
+Local Windows CLI session, one agent, no subagents. Root causes and fixes: `MAPS_GAMEPLAY_ROOT_CAUSE_AUDIT.md` §6
+(W-1 … W-6).
+
+**State found:** `main` = `origin/main` = `6f2162b`, working tree clean. `CLAUDE_MASTER_EXECUTION_PROMPT.md`,
+`ArrowScaleTest.java` and the excluded `jcode-windows-x86_64.exe` were not touched.
+
+**Changed by this run:**
+* new: `suld-api` `map/ScreenProjection`, `map/WaypointHud`; `suld-plugin` `map/ScreenMarkers`;
+* changed: `api` `map/Minimap` (pin colours, `Kind.MOB`), `style/PlayerSetting` (`SCREEN_MARKERS`); `plugin`
+  `map/WaypointGuide` (the label moved to `ScreenMarkers`, `onChange`, 3D distance), `map/PinService` (`version`),
+  `map/MinimapService` (pin version, mobs), `map/AtlasSky` (the «Чиглэл» flag, `/map markers`), `SuldPlugin`
+  (wiring);
+* tests: new `ScreenProjectionTest` (9), `WaypointHudTest` (19), `ScreenMarkersTest` (8); +2 `MinimapTest`, +1
+  `MinimapStabilityTest`;
+* docs: `docs/WORLD_MAP.md` (screen markers, minimap marks, sync), `docs/UI_HUB.md`, `docs/STATUS.md`, this audit;
+  bot `tools/loadtest/bots/mapcbot.js` (the card in view and at the edge).
+
+| Step | Command (main working tree) | Result |
+|---|---|---|
+| 1 | `.\gradlew.bat :suld-api:test --tests "mn.suld.api.map.*" --tests "mn.suld.api.style.*" :suld-plugin:test --tests "mn.suld.plugin.map.*" --no-daemon` | first run: 2 failed. (a) The hysteresis test had the wrong sign: facing south, −x is on the right. (b) A real defect: `ScreenProjection.edge` scaled a card onto the top bound at 0.7000000001, just outside the edge area, so the next step skipped it. The result is now clamped onto the bound. Re-run: exit 0 |
+| 2 | `.\gradlew.bat test --rerun simTest --rerun --no-daemon` | **exit 0**, BUILD SUCCESSFUL. JUnit XML: suld-api 662 / 0 failures / 0 errors / 0 skipped (632 + 30); suld-plugin 250 / 0 / 0 / 0 (241 + 9); simTest 13 / 0 / 0 / 0. The flaky `JdbcMapPinRepositoryIT.theLimitHoldsWhenAddsRace` passed in this run |
+| 3 | `.\gradlew.bat test simTest --no-daemon` | exit 0, BUILD SUCCESSFUL (all up to date after step 2) |
+| 4 | `$env:PYTHONUTF8 = "1"; py tools\validation\run_all.py` | exit 0, "ALL VALIDATIONS PASSED" |
+| 5 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | exit 0, "Ran 6 tests … OK" |
+| 6 | `git diff --check` (new files included with `git add -N`) | exit 0, clean |
+
+**Not verified:** a real 1.21.11 client (the card on the place's pixel, edge cards and their arrows while turning,
+the atlas flag, red mob dots and coloured pins on the minimap, `/map markers`) and the bot `mapcbot.js` (needs the
+dev server; `node` is not installed here, so not even syntax-checked). Client steps: audit §6, "Still open".
