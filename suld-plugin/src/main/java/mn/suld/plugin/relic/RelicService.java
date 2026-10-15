@@ -178,6 +178,10 @@ public final class RelicService {
         for (String key : plan.issue()) {
             issueCopy(player, records.get(key));
         }
+        // a purged copy must not come back from an older player file after a crash (issueCopy saves on its own)
+        if (plan.issue().isEmpty() && (!plan.removals().isEmpty() || !plan.fixAmount().isEmpty())) {
+            mn.suld.plugin.item.PlayerDataSaves.now(player);
+        }
         boolean bears = borneBy(player.getUniqueId()).isPresent();
         if (player.isGlowing() != bears) {
             player.setGlowing(bears); // the bearer is visible to everyone: holding a relic means being hunted
@@ -238,14 +242,16 @@ public final class RelicService {
         ItemStack copy = items.create(def, record);
         PlayerInventory inv = player.getInventory();
         if (!inv.addItem(copy).isEmpty()) {
-            // Inventory full: the relic must still be carried. Displace an ordinary item to the ground.
+            // Inventory full: the relic must still be carried. An ordinary item makes room and goes to the mailbox
+            // (on the ground a passer-by could take it, or it despawns).
             int slot = 35;
             ItemStack displaced = inv.getItem(slot);
             if (displaced != null && !items.isRelic(displaced)) {
-                player.getWorld().dropItemNaturally(player.getLocation(), displaced);
+                services.mailbox(plugin).keepOverflow(player, List.of(displaced), "displaced by relic " + record.key());
             }
             inv.setItem(slot, copy);
         }
+        mn.suld.plugin.item.PlayerDataSaves.now(player);
     }
 
     private void removeAllCopies(Player player) {

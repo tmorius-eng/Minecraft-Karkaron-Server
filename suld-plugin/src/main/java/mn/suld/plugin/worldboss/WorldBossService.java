@@ -418,13 +418,18 @@ public final class WorldBossService implements Listener {
         mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(a.mob.level(), mn.suld.api.loot.LootTier.WORLD_EVENT,
                 profile.playerClass().get(), tree == null ? 0 : tree.lootPct(p), p.getUniqueId(),
                 "worldboss:" + a.def.id() + ":" + a.fight.runId());
+        List<org.bukkit.inventory.ItemStack> overflow = new ArrayList<>();
+        boolean given = false;
         for (mn.suld.api.loot.LootDrop d : items.filtered(p, items.roll(a.def.lootTable(), ctx))) {
             mn.suld.api.item.ItemInstance inst = d.item();
-            p.getInventory().addItem(items.stackFor(inst, p, d.amount())).values().forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
+            overflow.addAll(p.getInventory().addItem(items.stackFor(inst, p, d.amount())).values());
+            given = true;
             p.sendMessage(Messages.info("Олз: " + mn.suld.api.item.ItemTooltip.name(items.catalog(), items.catalog().require(inst.definitionId()), inst)
                     + " [" + inst.rarity().displayName() + ", Зэрэг " + inst.itemLevel() + "]"));
             items.announce(p, inst);
         }
+        services.mailbox(plugin).keepOverflow(p, overflow, "world boss " + a.def.id());
+        if (given) mn.suld.plugin.item.PlayerDataSaves.now(p);
     }
 
     /** Admin: end the standing boss without rewards. */

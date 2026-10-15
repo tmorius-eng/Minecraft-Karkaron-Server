@@ -281,14 +281,16 @@ public final class WorldEventService {
         mn.suld.api.loot.LootContext ctx = new mn.suld.api.loot.LootContext(level, mn.suld.api.loot.LootTier.WORLD_EVENT,
                 profile.playerClass().get(), 0, p.getUniqueId(), "event:" + def.id() + ":" + runId);
         List<mn.suld.api.loot.LootDrop> drops = items.filtered(p, items.roll(table, ctx)); // empty if the event has no table
+        List<org.bukkit.inventory.ItemStack> overflow = new java.util.ArrayList<>();
         for (mn.suld.api.loot.LootDrop d : drops) {
             mn.suld.api.item.ItemInstance inst = d.item();
-            p.getInventory().addItem(items.stackFor(inst, p, d.amount())).values()
-                    .forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
+            overflow.addAll(p.getInventory().addItem(items.stackFor(inst, p, d.amount())).values());
             p.sendMessage(Messages.info("Шагнал: " + mn.suld.api.item.ItemTooltip.name(items.catalog(),
                     items.catalog().require(inst.definitionId()), inst) + " [" + inst.rarity().displayName() + ", Зэрэг " + inst.itemLevel() + "]"));
             items.announce(p, inst);
         }
+        services.mailbox(plugin).keepOverflow(p, overflow, "world event " + def.id());
+        if (!drops.isEmpty()) mn.suld.plugin.item.PlayerDataSaves.now(p);
     }
 
     private void finish() {

@@ -641,12 +641,13 @@ public final class DungeonService {
                 p.sendMessage(Messages.info("Энэ агуйг саяхан олон удаа цэвэрлэсэн: хуяг зэвсгийн шагнал ×" + fatigue + " (2 цагийн дотор)."));
             }
             if (items != null) rewards = items.filtered(p, rewards);
+            // a full bag sends the rest to the mailbox: on the hall floor it would be cleared with the hall seconds later
+            List<ItemStack> overflow = new java.util.ArrayList<>();
             for (mn.suld.api.loot.LootDrop drop : rewards) {
                 ItemInstance inst = drop.item();
                 ItemDefinition idef = items.catalog().require(inst.definitionId());
                 ItemStack stack = items.stackFor(inst, p, drop.amount()); // IT-03: an ON_PICKUP reward binds as it arrives
-                p.getInventory().addItem(stack).values()
-                        .forEach(left -> p.getWorld().dropItemNaturally(p.getLocation(), left));
+                overflow.addAll(p.getInventory().addItem(stack).values());
                 p.sendMessage(Messages.info("Шагнал: " + mn.suld.api.item.ItemTooltip.name(items.catalog(), idef, inst)
                         + (drop.amount() > 1 ? " ×" + drop.amount() : "") + " [" + inst.rarity().displayName() + ", Зэрэг " + inst.itemLevel() + "]"));
                 items.announce(p, inst);
@@ -654,6 +655,7 @@ public final class DungeonService {
                     services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.FIRST_RARE_ITEM, id));
                 }
             }
+            services.mailbox(plugin).keepOverflow(p, overflow, "dungeon reward " + ar.def.id());
             services.quests().onDungeonCleared(p, profile, ar.def.id());
             boolean firstClear = !cleared(p, ar.def.id());
             markCleared(p, ar.def.id());

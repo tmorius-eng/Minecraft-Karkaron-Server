@@ -62,6 +62,15 @@ class JdbcMapPinRepositoryIT {
         long added = all.stream().map(CompletableFuture::join).filter(Boolean::booleanValue).count();
         int stored = repo.list(me).join().size();
         assertEquals(stored, added, "every true is a stored row");
-        assertTrue(stored >= 5 && stored <= 8, "the limit of 5 holds within the few adds that read the count together: " + stored);
+        assertEquals(5, stored, "the limit of 5 holds exactly when adds race");
+    }
+
+    @Test
+    void racingPlayersEachKeepTheirOwnLimit() {
+        List<UUID> players = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        List<CompletableFuture<Boolean>> all = new ArrayList<>();
+        for (int i = 0; i < 40; i++) all.add(repo.add(pin(players.get(i % players.size()), "p" + i, i), 3));
+        all.forEach(CompletableFuture::join);
+        for (UUID p : players) assertEquals(3, repo.list(p).join().size(), "each player at their own limit");
     }
 }

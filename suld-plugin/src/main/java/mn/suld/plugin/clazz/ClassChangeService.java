@@ -123,7 +123,7 @@ public final class ClassChangeService implements Listener {
             if (services.classArmor != null && services.classArmor.supports(to)) services.classArmor.recover(p);
             if (pr.classGear().weapon() == null) {
                 ItemStack w = services.classWeapons().starter(to, pr.progression().level(), p);
-                if (w != null) p.getInventory().addItem(w).values().forEach(x -> p.getWorld().dropItemNaturally(p.getLocation(), x));
+                if (w != null) services.mailbox(plugin).giveOrKeep(p, java.util.List.of(w), "class weapon " + to.id());
             } else {
                 services.classWeapons().recover(p);
             }
@@ -220,7 +220,7 @@ public final class ClassChangeService implements Listener {
             if (services.classArmor != null && services.classArmor.supports(to)) services.classArmor.recover(p);
             if (pr.classGear().weapon() == null) {
                 ItemStack w = services.classWeapons().starter(to, pr.progression().level(), p);
-                if (w != null) p.getInventory().addItem(w).values().forEach(x -> p.getWorld().dropItemNaturally(p.getLocation(), x));
+                if (w != null) services.mailbox(plugin).giveOrKeep(p, java.util.List.of(w), "class weapon " + to.id());
             } else {
                 services.classWeapons().recover(p);
             }

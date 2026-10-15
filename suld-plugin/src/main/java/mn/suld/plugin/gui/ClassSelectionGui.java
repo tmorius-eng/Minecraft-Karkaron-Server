@@ -267,14 +267,19 @@ public final class ClassSelectionGui implements Listener {
         ItemStack weapon = services.classWeapons().starter(clazz, profile.progression().level(), player);
         if (!player.getInventory().addItem(weapon).isEmpty()) {
             // full inventory: the class weapon never touches the ground (a hopper could take it) — it takes the first
-            // hotbar slot and whatever was there drops instead
+            // hotbar slot and whatever was there goes to the mailbox
             ItemStack displaced = player.getInventory().getItem(0);
             player.getInventory().setItem(0, weapon);
-            if (displaced != null && !displaced.getType().isAir()) player.getWorld().dropItemNaturally(player.getLocation(), displaced);
+            if (displaced != null && !displaced.getType().isAir()) {
+                services.mailbox(plugin).keepOverflow(player, java.util.List.of(displaced), "displaced by the class weapon");
+            }
         }
         // the class armour set (T1), bound and worn (docs/CLASS_ARMOR_SYSTEM.md "Lifecycle")
         if (services.classArmor != null) services.classArmor.ensure(player);
         mn.suld.plugin.item.BowQuiver.give(player); // Мэргэн: Infinity and the arrow at once
+        // the starter gear reaches the player file with the class: a crash before the autosave would keep the class
+        // in SQL and lose the gear
+        mn.suld.plugin.item.PlayerDataSaves.now(player);
 
         services.events().dispatch(new ClassSelectedEvent(player.getUniqueId(), clazz));
         services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.CLASS_SELECTED, player.getUniqueId(),

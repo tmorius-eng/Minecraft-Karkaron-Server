@@ -226,6 +226,7 @@ public final class SuldPlugin extends JavaPlugin {
                 pl.sendMessage(mn.suld.plugin.ui.Messages.info("Ангийн эд таны сүнстэй холбоотой — устгах боломжгүй, буцааж өглөө."));
             }
         }));
+        services.soulbound().overflow((pl, it) -> services.mailbox(this).keepOverflow(pl, java.util.List.of(it), "soulbound give-back"));
         mn.suld.plugin.activity.ActivePlaytimeService activity = new mn.suld.plugin.activity.ActivePlaytimeService(this, services);
         services.activity = activity;
         getServer().getPluginManager().registerEvents(activity, this);

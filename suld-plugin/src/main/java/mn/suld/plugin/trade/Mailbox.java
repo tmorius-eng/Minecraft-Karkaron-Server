@@ -42,6 +42,31 @@ public final class Mailbox {
         plugin.getLogger().info("[mailbox] " + items.size() + " stack(s) kept for " + player + " (" + why + ")");
     }
 
+    /**
+     * Into an online player's bag; what does not fit is kept here for the next join, never dropped on the ground (a
+     * dungeon hall is cleared seconds after the win, and a bound reward on the ground is lost). Returns the stacks kept.
+     */
+    public int giveOrKeep(Player p, List<ItemStack> items, String why) {
+        List<ItemStack> rest = new ArrayList<>();
+        for (ItemStack it : items) {
+            if (it == null || it.getType().isAir()) continue;
+            if (p.isOnline()) rest.addAll(p.getInventory().addItem(it).values());
+            else rest.add(it);
+        }
+        return keepOverflow(p, rest, why);
+    }
+
+    /** Stacks that did not fit an online player's bag: kept, and the player told where they went. Returns the count. */
+    public int keepOverflow(Player p, List<ItemStack> rest, String why) {
+        List<ItemStack> kept = new ArrayList<>();
+        for (ItemStack it : rest) if (it != null && !it.getType().isAir()) kept.add(it);
+        if (kept.isEmpty()) return 0;
+        keep(p.getUniqueId(), kept, why);
+        if (p.isOnline()) p.sendMessage(mn.suld.plugin.ui.Messages.info("Цүнх дүүрэн байсан тул " + kept.size()
+                + " эд зүйл шуудангийн хайрцагт аюулгүй хадгалагдлаа — дахин нэвтрэхэд ирнэ."));
+        return kept.size();
+    }
+
     /** Players whose delivered file could not be emptied: no second delivery from it in this run (FIND-08). */
     private final java.util.Set<UUID> stuck = java.util.concurrent.ConcurrentHashMap.newKeySet();
 

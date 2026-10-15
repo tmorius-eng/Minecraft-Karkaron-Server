@@ -47,6 +47,16 @@ public final class SoulboundGuard implements Listener {
         this.restorer = restorer;
     }
 
+    // unwired (tests): the old behaviour; a bound stack is never dropped, it would only come back through onItemSpawn
+    private java.util.function.BiConsumer<Player, ItemStack> overflow = (p, it) -> {
+        if (!bound(it)) p.getWorld().dropItemNaturally(p.getLocation(), it);
+    };
+
+    /** Where a stack goes that no longer fits the bag (the mailbox); wired by the plugin. */
+    public void overflow(java.util.function.BiConsumer<Player, ItemStack> overflow) {
+        this.overflow = overflow;
+    }
+
     /** True for a soulbound SÜLD item. */
     public boolean bound(ItemStack it) {
         if (it == null || it.getType().isAir()) return false;
@@ -176,19 +186,25 @@ public final class SoulboundGuard implements Listener {
         return false;
     }
 
-    /** Into the bag; if it is full, the bound item takes a hotbar/bag slot of an unbound item, which drops instead. */
+    /**
+     * Into the bag; if it is full, the bound item takes the slot of an unbound item, which goes to the overflow (the
+     * mailbox) instead. A bag of nothing but bound items sends the bound item itself there rather than losing it.
+     */
     private void giveBack(Player p, ItemStack it) {
         var left = p.getInventory().addItem(it);
         if (left.isEmpty()) return;
+        ItemStack back = left.values().iterator().next();
         ItemStack[] inv = p.getInventory().getStorageContents();
         for (int k = inv.length - 1; k >= 0; k--) {
             if (inv[k] != null && !bound(inv[k])) {
                 ItemStack out = inv[k];
-                p.getInventory().setItem(k, left.values().iterator().next());
-                p.getWorld().dropItemNaturally(p.getLocation(), out);
+                p.getInventory().setItem(k, back);
+                overflow.accept(p, out);
+                PlayerDataSaves.now(p);
                 return;
             }
         }
+        overflow.accept(p, back);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
