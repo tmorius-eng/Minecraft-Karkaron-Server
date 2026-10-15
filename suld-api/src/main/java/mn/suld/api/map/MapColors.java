@@ -16,7 +16,7 @@ public final class MapColors {
             TERRACOTTA_LIGHT_BLUE = 39, TERRACOTTA_YELLOW = 40, TERRACOTTA_LIGHT_GREEN = 41, TERRACOTTA_PINK = 42,
             TERRACOTTA_GRAY = 43, TERRACOTTA_LIGHT_GRAY = 44, TERRACOTTA_CYAN = 45, TERRACOTTA_PURPLE = 46,
             TERRACOTTA_BLUE = 47, TERRACOTTA_BROWN = 48, TERRACOTTA_GREEN = 49, TERRACOTTA_RED = 50, TERRACOTTA_BLACK = 51,
-            DEEPSLATE = 59;
+            DEEPSLATE = 59, RAW_IRON = 60, GLOW_LICHEN = 61;
 
     /** The four brightnesses, as the client numbers them. */
     public static final int SHADE_LOW = 0, SHADE_NORMAL = 1, SHADE_HIGH = 2, SHADE_LOWEST = 3;

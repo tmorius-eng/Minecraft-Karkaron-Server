@@ -122,6 +122,10 @@ public final class MapService implements Listener {
     private int minCx, minCz, maxCx, maxCz;
     private Scan scan;
     private String lastScan = "хийгээгүй";
+    /** The baked cartography's state for /suld map status. */
+    private volatile String cartography = "унтраалттай";
+    /** The spawn and the square the last bake was for (main thread). */
+    private double bakedSpawnX = Double.NaN, bakedSpawnZ = Double.NaN;
     /** The atlas's places (set by SuldPlugin once the city, gates, ovoos and sites are placed). */
     public volatile java.util.function.Supplier<List<MapPois.Poi>> pois = List::of;
 
@@ -258,6 +262,7 @@ public final class MapService implements Listener {
                 log.info("[map] " + g.width() + " x " + g.depth() + " blocks, " + store.presentCount() + " chunks on the map, "
                         + (natural == null ? "vanilla" : "natural") + " colours"
                         + (mismatch == 0 ? ", palette checked" : mismatch < 0 ? "" : ", " + mismatch + " palette colours differ from the server's"));
+                bake();
                 if (plugin.getConfig().getBoolean("map.scan.auto-start", true)) {
                     long delay = 20L * Math.max(5, plugin.getConfig().getInt("map.scan.auto-delay-seconds", 60));
                     Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -388,8 +393,39 @@ public final class MapService implements Listener {
         }
     }
 
+    /**
+     * Bakes the cartography (map.cartography, on by default) for the current spawn and square on a worker, then draws
+     * every tile over it. Main thread; the bake reads only the loaded content (no chunk, block or biome) and takes about
+     * a second off the main thread.
+     */
+    private void bake() {
+        if (!plugin.getConfig().getBoolean("map.cartography", true)) {
+            cartography = "унтраалттай (map.cartography: false)";
+            return;
+        }
+        org.bukkit.Location sp = world.getSpawnLocation();
+        bakedSpawnX = sp.getBlockX() + 0.5;
+        bakedSpawnZ = sp.getBlockZ() + 0.5;
+        MapGeometry g = tiles.geometry();
+        mn.suld.api.map.Cartography.Layout layout = CartoContent.layout(mn.suld.plugin.content.Content.pack(), bakedSpawnX, bakedSpawnZ);
+        cartography = "зурж байна…";
+        CompletableFuture.supplyAsync(() -> mn.suld.api.map.Cartography.bake(layout, g), workers).whenComplete((b, err) -> {
+            if (err != null) {
+                cartography = "алдаа: " + err;
+                log.log(Level.WARNING, "[map] the cartography was not baked; the map shows the real blocks only", err);
+                return;
+            }
+            if (!g.equals(tiles.geometry())) return; // the border moved meanwhile: its own bake follows
+            tiles.baked(b);
+            cartography = String.format(Locale.ROOT, "%d ms, %.1f MB", b.bakeMillis(), b.bytes() / 1048576.0);
+            log.info("[map] cartography baked in " + b.bakeMillis() + " ms (" + b.bytes() / 1024 + " KB)");
+        });
+    }
+
     /** A moved or resized border gives a new square (the stored columns stay; only the presence bits start over). */
     private void checkBorder() {
+        org.bukkit.Location sp = world.getSpawnLocation();
+        if (tiles.baked() != null && (sp.getBlockX() + 0.5 != bakedSpawnX || sp.getBlockZ() + 0.5 != bakedSpawnZ)) bake(); // the city moved the spawn
         MapGeometry g = borderGeometry();
         if (g.equals(tiles.geometry())) return;
         tiles.geometry(g);
@@ -397,6 +433,7 @@ public final class MapService implements Listener {
         int side = Math.max(maxCx - minCx, maxCz - minCz) + 1, mx = minCx, mz = minCz;
         io.execute(() -> store.presenceSquare(mx, mz, side));
         log.info("[map] the border changed: the map is now " + g.width() + " x " + g.depth() + " blocks");
+        bake();
     }
 
     // ------------------------------------------------------------------ live updates
@@ -794,6 +831,7 @@ public final class MapService implements Listener {
                 100.0 * present / Math.max(1, total), store.regionsOnDisk().size(), store.regionsInMemory()));
         out.add("Дараалал " + queue.size() + " (барьсан " + held.size() + ") · өөрчлөгдсөн " + dirty.size() + " · тооцоолж буй " + backlog.get()
                 + " · tile " + tiles.cachedCount() + " · нийт snapshot " + snapshots);
+        out.add("Суурь зураглал: " + cartography);
         Scan s = scan;
         if (s == null) {
             out.add("Скан: идэвхгүй (сүүлийнх: " + lastScan + ")");

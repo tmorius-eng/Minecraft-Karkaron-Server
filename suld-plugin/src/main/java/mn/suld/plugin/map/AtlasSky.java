@@ -124,10 +124,17 @@ public final class AtlasSky implements Listener, TabExecutor {
         return u / (DIST * Math.tan(Math.toRadians(FOV_DEG / 2)) * aspect);
     }
 
-    private static final TextColor GOLD = TextColor.fromHexString("#ECBE4C"), CREAM = TextColor.fromHexString("#F4E8C8"),
+    static final TextColor GOLD = TextColor.fromHexString("#ECBE4C"), CREAM = TextColor.fromHexString("#F4E8C8"),
             GREY = TextColor.fromHexString("#B9B3A4"), CYAN = TextColor.fromHexString("#56E2EC");
-    /** The regions' names on the widest views: an old gold that reads on snow, steppe and sea alike. */
-    private static final TextColor REGION_INK = TextColor.fromHexString("#E8C66A");
+    /** The regions' names on the widest views: an old gold, on a navy plate so it reads on snow, sand and taiga alike. */
+    static final TextColor REGION_INK = TextColor.fromHexString("#E8C66A");
+    /**
+     * The plate behind a region's name (ARGB): navy at 65%. Over the baked atlas's lightest colour (snow) the gold still
+     * stands 3:1 (CartographyContentTest); the old plateless, 75%-opaque ink vanished on the Gobi's sand and the snow.
+     */
+    static final int REGION_PLATE = 0xA6101A30;
+    /** The plate behind a place's label (ARGB). */
+    static final int LABEL_PLATE = 0x99000000;
     private static final NamespacedKey RETURN = new NamespacedKey("suld", "atlas_return");
     private static final byte[] BLANK = new byte[TileComposer.PIXELS];
 
@@ -239,6 +246,7 @@ public final class AtlasSky implements Listener, TabExecutor {
     public void start() {
         frames.start();
         map.tiles().listen((zoom, tx, tz) -> Bukkit.getScheduler().runTask(plugin, () -> tileChanged(zoom, tx, tz)));
+        map.tiles().onReset(() -> Bukkit.getScheduler().runTask(plugin, () -> sessions.values().forEach(s -> s.dirty = true)));
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
@@ -739,7 +747,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 if (free) {
                     boxes.add(box);
                     taken.add(new mn.suld.api.map.RegionLabels.Box(box[0], box[1], box[2], box[3]));
-                    text(s, s.marks, u, lv, Component.text(poi.name(), CREAM), LABEL_SCALE, 300, 0x99000000);
+                    text(s, s.marks, u, lv, Component.text(poi.name(), CREAM), LABEL_SCALE, 300, LABEL_PLATE);
                 }
             }
         }
@@ -830,8 +838,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         }
         for (mn.suld.api.map.RegionLabels.Label l : mn.suld.api.map.RegionLabels.place(regions, s.view, sp.getX(), sp.getZ(), edge, REGION_METRICS, taken)) {
             TextDisplay t = text(s, s.marks, l.u(), l.v(), Component.text(l.text().toUpperCase(java.util.Locale.ROOT), REGION_INK,
-                    TextDecoration.BOLD), REGION_SCALE, 400, 0, 0.02);
-            t.setTextOpacity((byte) 190);
+                    TextDecoration.BOLD), REGION_SCALE, 400, REGION_PLATE, 0.02);
             if (l.lines().size() > 1) { // the text grows up from its foot: its middle goes down a half line a line more
                 t.setTransformation(new Transformation(new Vector3f(0, (float) (-0.125 * REGION_SCALE * l.lines().size()), 0), new Quaternionf(),
                         new Vector3f(REGION_SCALE), new Quaternionf()));

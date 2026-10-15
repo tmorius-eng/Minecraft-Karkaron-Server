@@ -1,5 +1,7 @@
 package mn.suld.plugin.map;
 
+import mn.suld.api.map.AtlasLod;
+import mn.suld.api.map.BakedAtlas;
 import mn.suld.api.map.MapGeometry;
 import mn.suld.api.map.TileComposer;
 
@@ -22,8 +24,10 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * The world map's tiles (docs/WORLD_MAP.md): 128 × 128 map bytes per (zoom, tile), composed on the map's worker threads
- * from the {@link ChunkColorStore} (real blocks only) and kept in a bounded cache. A chunk that changes drops the tiles
- * over it at every zoom and tells the listeners (open atlases, minimaps), which ask again.
+ * from the {@link ChunkColorStore} (the real blocks) and the baked cartography ({@link BakedAtlas}, by {@link AtlasLod}'s
+ * rule: the real land where it is explored, the atlas elsewhere) and kept in a bounded cache. A chunk that changes drops
+ * the tiles over it at every zoom and tells the listeners (open atlases, minimaps), which ask again; a new bake drops
+ * every tile and tells the reset listeners.
  */
 final class MapTiles {
 
@@ -36,6 +40,9 @@ final class MapTiles {
     private final ExecutorService workers;
     private final int maxTiles;
     private volatile MapGeometry geometry;
+    /** The baked cartography, or null (map.cartography off, or not baked yet): the real blocks only. */
+    private volatile BakedAtlas baked;
+    private final List<Runnable> resets = new CopyOnWriteArrayList<>();
     /** Guarded by {@code this}. */
     private final LinkedHashMap<Long, byte[]> cache = new LinkedHashMap<>(256, 0.75f, true);
     /** Tiles being composed. Guarded by {@code this}. */
@@ -68,6 +75,25 @@ final class MapTiles {
         }
     }
 
+    /** The baked cartography the tiles are drawn over (null: none); every tile is dropped and the reset listeners told. */
+    void baked(BakedAtlas b) {
+        baked = b;
+        synchronized (this) {
+            cache.clear();
+            staleInflight.addAll(inflight.keySet());
+        }
+        for (Runnable r : resets) r.run();
+    }
+
+    BakedAtlas baked() {
+        return baked;
+    }
+
+    /** Told (on the thread that set it) when every tile changed: a new bake. */
+    void onReset(Runnable r) {
+        resets.add(r);
+    }
+
     void listen(Listener l) {
         listeners.add(l);
     }
@@ -86,13 +112,15 @@ final class MapTiles {
             CompletableFuture<byte[]> f = inflight.get(k);
             if (f != null) return f;
             MapGeometry g = geometry;
+            BakedAtlas b0 = baked;
+            BakedAtlas atlas = b0 != null && b0.geometry().equals(g) ? b0 : null; // a bake for an old border is not drawn
             // the tile is cached before its future completes, so whoever waited on it finds it cached (CI #79 caught a
             // callback that cached it after the waiting thread had already woken); the lock held here keeps the worker's
             // bookkeeping after the inflight entry below
             CompletableFuture<byte[]> nf = CompletableFuture.supplyAsync(() -> {
                 byte[] bytes = null;
                 try {
-                    bytes = TileComposer.compose(g, store::columnBlocking, zoom, tx, tz);
+                    bytes = AtlasLod.compose(g, store::columnBlocking, atlas, zoom, tx, tz);
                     return bytes;
                 } finally {
                     synchronized (MapTiles.this) {
@@ -172,7 +200,8 @@ final class MapTiles {
 
     /**
      * Writes the map of the square {@code [x0, x1) × [z0, z1)} (blocks) at {@code zoom} as a PNG, one image pixel per map
-     * pixel; parts never generated stay transparent. Runs on a worker thread.
+     * pixel: the real blocks only (staff's evidence of what the server has); parts never generated stay transparent.
+     * Runs on a worker thread.
      */
     CompletableFuture<Path> export(int zoom, int x0, int z0, int x1, int z1, Path file) {
         return CompletableFuture.supplyAsync(() -> {

@@ -6,7 +6,9 @@ the corner minimap (part C) are built and running on the dev server. Parts B and
 screenshots went to the owner) — that run found and fixed three things a bot cannot see (below). A human check on the
 owner's own PC is still owed. Owner's rules for this feature: **real data only** — the map draws the blocks the server
 has really generated, never a guess from the world generator; Mongolian look; the whole world visible with `/map`;
-pins and waypoints; a minimap at the top left when `/map` is closed.
+pins and waypoints; a minimap at the top left when `/map` is closed. **Revised 2026-10-15** (the owner's request): land
+nobody has explored is no longer blank; it shows the baked cartography (below), drawn hatched at the close zooms so it
+never passes for real land; `map.cartography: false` brings back the real-only map.
 
 The earlier proposals in `docs/world-map/` (tile glyphs, predicted biomes) are **superseded** by this document.
 
@@ -38,7 +40,8 @@ Each column of the world is stored as one `int` (`suld-api` `MapColumn`): the ma
 Minecraft's own map item draws it (`TileComposer`, `ColumnShading`): the top block's colour, one shade brighter when
 the column is higher than the one a pixel north of it and one darker when lower (with the vanilla checkerboard
 dither), water one shade brighter or darker by depth. A column the server has no data for, and anything outside the
-border, is byte 0 — transparent — so the atlas page (parchment) shows through: that is how unexplored land looks.
+border, is byte 0 — transparent. With the baked cartography on (the default) such a pixel is drawn from it
+(«Baked cartography» below); with it off the atlas page (parchment) shows through.
 
 ### Where the colours come from
 
@@ -109,6 +112,31 @@ red-and-gold «өлзий» knots in the corners, pennant tabs, the title plaque
 over a real export and the real places: `world` (the whole world at zoom 4), `local` (a part), `minimap` (the corner
 map at its real size). The same pieces become the pack's atlas textures in part B.
 
+## Baked cartography and the zoom levels (2026-10-15)
+
+The whole world drawn once as an atlas (`suld-api` `Cartography`), from world.json's layout only: the regions' and
+areas' ring sectors, the capital's square, and the dungeon gates and historic sites. No chunk, block or biome is read.
+A gazetteer gives each area its land (taiga and lakes in the north, forested highlands and river valleys, the eastern
+steppe, snow-capped ranges in the west, the golden Gobi, dunes and red badlands in the south). It also places 7
+lakes, 14 rivers and 11 ranges inside the areas' own sectors. The bake adds relief shading, contours, peak and tree
+marks, the caravan roads out of Хархорум to every gate and site, and dotted region borders.
+
+The bake is about 1 s on the map workers at start, run again when the border or spawn moves. It keeps an immutable
+`byte[]` per zoom 2/3/4 (`BakedAtlas`, 8.2 MB for the 10 001-block world), and a pixel is one array read.
+
+Which land a tile shows is `AtlasLod`:
+
+| Zoom | Shows |
+|---|---|
+| 0–1 | Real blocks wherever they exist. Elsewhere *survey ink*: a shade lighter, with a parchment diagonal hatch. |
+| 2 | Real where the land around is explored (a stray chunk is no speck), survey ink elsewhere. |
+| 3 | The atlas, with real land only where most of the 72 blocks around is explored (no square under a gate). |
+| 4 | The atlas alone. No column is read. |
+
+Хархорум's real blocks show at every zoom. The minimap reads the zoom-0 tiles, so it shows the same survey ink.
+`/suld map export` stays real-only. The design, measurements and tests are in
+`docs/audit-2026-10-14/MAPS_GAMEPLAY_ROOT_CAUSE_AUDIT.md` §8.
+
 ## Part B — the atlas screen `/map` (built)
 
 `/map` (aliases `/maps`, `/atlas`, `/gazar`, `/газар`; again `/map` under any of its names, or Shift, closes) opens the atlas in the sky-window engine
@@ -158,7 +186,7 @@ stood on the next login.
 * **Art:** `tools/map/atlas_art.py pack` writes the textures at 128 px a block like the maps (sizes multiples of 16),
   the models and the item definitions (`suld:entity/atlas/*`).
 * **Region names.** From 8 blocks a pixel out (the two widest views), the eight wild regions are named across
-  their lands, as an atlas names its countries: faint gold capitals («ГОВЬ», «ХӨВСГӨЛИЙН ТАЙГА»…) behind the places
+  their lands, as an atlas names its countries: gold capitals on a navy plate («ГОВЬ», «ХӨВСГӨЛИЙН ТАЙГА»…) behind the places
   and their labels. The city keeps its own label. Where a name stands is `api.map.RegionLabels`:
   * the middle of its region: half way out the ring (as far as the world goes) and half way round its arc;
   * a name of two words longer than 12 letters in two lines («ОТГОНТЭНГЭРИЙН / ОРГИЛ»);
@@ -239,7 +267,7 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
 
 ### The minimap (top left, while `/map` is closed)
 
-* **Picture** (`suld-api` `Minimap`, pure): one 128 × 128 map image — a 120 × 98 window of the real land at one block
+* **Picture** (`suld-api` `Minimap`, pure): one 128 × 128 map image — a 120 × 98 window of the land (real blocks; survey ink where unexplored) at one block
   a pixel (the zoom-0 tiles of part A, so it shows exactly what the atlas shows), north up; a black-gold-blue-gold
   frame with a gold north notch; places within 72 blocks (city, dungeons and bosses, ovoos, sites and relays, the
   player's pins in their own colours, the soul beacon); hostile mobs within 48 blocks as small red dots (the nearest

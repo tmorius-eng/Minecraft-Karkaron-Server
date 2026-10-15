@@ -372,6 +372,11 @@ map:
   # natural: grass, leaves and water take the colour of the biome they really stand in (as the game draws them);
   # vanilla: the colours of a vanilla map. Changing it makes the scan read the world again.
   colors: natural
+  # The baked cartography (docs/WORLD_MAP.md): the whole world drawn once at start as an atlas (taiga, steppe, ranges,
+  # Gobi, lakes, rivers, caravan roads) from world.json's layout, ~1 s on the map's workers and ~8 MB, no chunk read.
+  # The real blocks show over it where the land is explored; unexplored land is drawn hatched at the close zooms and the
+  # whole-world view is the atlas. false: the real blocks only, unexplored land blank parchment (the old map).
+  cartography: true
   snapshot-budget-ms: 2.0       # main-thread time per tick for chunk snapshots
   workers: 2                    # threads that work out the colours and draw tiles
   max-regions: 32               # 512 x 512-block regions kept in memory (1 MB each)

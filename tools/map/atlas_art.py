@@ -159,10 +159,10 @@ ICONS = {
         ".dWWWWWOOWWWWWd.",
         ".dddddddddddddd.",
     ],
-    "dungeon": [  # a cave mouth in rock
+    "dungeon": [  # a cave mouth in rock, its crest sunlit (so it reads on mid-tone land: CartographyContentTest)
         "................",
         ".....dddddd.....",
-        "...ddSSSSSSdd...",
+        "...ddHHHHHHdd...",
         "..dSSSsSSSsSSd..",
         ".dSsSdddddSSSSd.",
         ".dSSdKKKKKdSsSd.",
@@ -172,21 +172,21 @@ ICONS = {
         "dSSdKKKKKKKdSsSd",
         "dddddddddddddddd",
     ],
-    "ovoo": [  # a cairn with its pole and a blue khadag
+    "ovoo": [  # a cairn with its pole and a blue khadag, its top stones sunlit (so it reads on mid-tone land)
         "......d.........",
         ".....dPd........",
         ".....dPdBB......",
         ".....dPdBBB.....",
-        "....dSSSdBB.....",
+        "....dHHSdBB.....",
         "...dSsSSSd......",
         "..dSSSSsSSd.....",
         ".dSsSSSSSsSd....",
         "dSSSSsSSSSSSd...",
         "ddddddddddddd...",
     ],
-    "site": [  # a stele on a stone turtle
+    "site": [  # a stele on a stone turtle, its crown sunlit (so it reads on mid-tone land)
         ".....dddd.......",
-        "....dSSSSd......",
+        "....dHHHHd......",
         "....dSllSd......",
         "....dSSSSd......",
         "....dSllSd......",
@@ -857,7 +857,7 @@ def tab_texture(name: str, state: str, left_side: bool) -> Image.Image:
 
 
 MARKERS = ["city", "relay", "dungeon", "ovoo", "site", "boss", "training", "pin", "death", "player", "party"]
-PARTY_BLUE = (110, 182, 246)
+PARTY_BLUE = (132, 198, 250)  # light enough to read 3:1 with its outline on any land (CartographyContentTest)
 
 
 def marker_texture(name: str) -> Image.Image:

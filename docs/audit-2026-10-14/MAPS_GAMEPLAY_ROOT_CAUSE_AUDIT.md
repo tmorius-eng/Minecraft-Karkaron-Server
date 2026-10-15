@@ -251,3 +251,70 @@ Open (not fixed this round, documented for the next one):
 
 **Not verified:** a real client (the welcome painting and title, the hub pages, the E-inventory decor, the HUD hiding
 and returning around the welcome chest and death).
+
+
+## 8. Follow-up 2026-10-15 (5): the baked cartography and the zoom levels (LOD)
+
+**Reported.** Zoomed out, about 95% of `/maps` was flat parchment. Only the chunks around Хархорум and small squares
+under the dungeon icons had pixels. The squares looked like rendering glitches, and players could not see the world's
+lands.
+
+**Root cause.**
+- The atlas drew real scanned blocks only (the owner's rule of 2026-10-13). On a world that is mostly not generated,
+  that leaves a blank page.
+- Every dungeon gate generates and scans its own chunk (`DungeonHalls`: `getChunkAtAsync(…, true)` then the entrance
+  build). Each gate leaves a lone patch of 1–3 chunks. At 8 or 16 blocks a pixel that patch is a 2–6 px square in an
+  empty page.
+- There was no picture of the world that did not come from blocks.
+
+**Decision.** The owner asked for this on 2026-10-15, which revises the 2026-10-13 rule. The atlas now draws a baked
+cartography of the whole world. The real blocks show over it where the land is explored. Unexplored land is drawn
+hatched at close zoom, so it never passes for real land, and `map.cartography: false` restores the old real-only map.
+
+**Design** (`suld-api` `map/Cartography`, `BakedAtlas`, `AtlasLod`; plugin `CartoContent`, `MapTiles`, `MapService`):
+
+| Part | What it does |
+|---|---|
+| Source | world.json's region and area ring sectors, the capital's square, and the dungeon gates' and historic sites' offsets (`CartoContent`). The world generator, chunks, blocks and biomes are never read. |
+| Gazetteer | Each of the 40 areas has a land: steppe, meadow, dry steppe, forest, taiga, wetland, highland, Gobi, dunes or badlands. The gazetteer also places 7 lakes (Хөвсгөл, Хар Ус, Буйр, Цагаан, Ганга, two salt pans), 14 rivers (Сэлэнгэ, Орхон, Туул, Хэрлэн, Онон …) and 11 ranges (Отгонтэнгэр, Таван Богд, Хэнтий …). Every point is given inside an area's own sector, so features follow the layout. A feature that names a missing area is dropped. `CartographyContentTest` requires every area to exist in world.json. |
+| Fields | A 32-block coarse grid holds height (land base, blurred so areas ease into each other), crests, river valleys and border warp (±24°, ±520 blocks), so no border is a ruled line. Within 420 blocks the capital has its own meadow plain, so the regions do not meet at its walls in wedges. |
+| Painting | Relief is lit from the NW with a Bayer dither. Contours are drawn on the slopes. Snow above 1.02 (1.12 in arid ranges) and bare rock above 0.74 (0.62). North-facing slopes keep their forest (forest-steppe). Taiga has ponds, the Gobi has sand seas, the badlands are banded. Then rivers (with valleys), the caravan roads (a trunk out of each gate along each inner region's middle, a branch to every gate and site, round the lakes, in two-tone dashes that read on sand and in taiga) and the dotted region borders. Хархорум is drawn as walls, gates, roofs and cherry trees. Zooms 3 and 4 add peak and tree marks. |
+| Storage | One immutable `byte[]` of map bytes per zoom 2/3/4 (4/8/16 blocks a pixel), aligned to the world tiles. Zooms 0 and 1 read zoom 2, each block nudged up to 2 blocks by a fixed hash, so the 4-block cells dither. |
+| LOD (`AtlasLod`) | **z0–1:** the real blocks wherever they exist (crisp). Elsewhere, *survey ink*: one shade lighter (dark colours lifted to luminance ≥ 0.125) with a parchment diagonal line every 4 px (every 6 at z2). **z2:** real where ≥ 25–60% of the 3×3 around a pixel is explored (dithered), so a stray chunk is no speck. **z3:** the atlas, real only where 55–95% of the 9×9 (72 blocks) is explored, so a gate's lone square never shows. **z4:** the atlas alone. The capital's real blocks show at every zoom. Dithering is fixed to world pixels, so tiles meet without a seam. |
+| Threads | `MapService.start` bakes on the map workers. The bake runs again when the border moves or the city moves the spawn. Until it finishes, and with `map.cartography: false`, tiles are real-only. A finished bake drops every tile and redraws open atlases (`MapTiles.onReset`). `/suld map export` stays real-only. |
+
+**Legibility.**
+- Region names: the old plateless 75% gold measured under 3:1 on snow and on Gobi sand. Names now sit on a 65% navy
+  plate and stay at least 3:1 over every baked colour. Place labels on their 60% black plate stay at least 4.5:1.
+- Atlas markers: every marker must reach 3:1 with its outline or its fill on every baked colour.
+  - The dungeon, ovoo and site icons had no light pixel and failed on mid-tone land. They gained a sunlit crest
+    (cream `H`).
+  - The party arrow was raised from `(110,182,246)` to `(132,198,250)`.
+- Minimap marks reach 3:1 on every survey colour of the land. The badlands' red rock, which stays too dark even at
+  its lightest shade, steps toward parchment in survey ink.
+
+**Measured** on the dev PC (JUnit, JDK 21, parallel bands):
+
+| What | Result |
+|---|---|
+| Bake, 10 001-block world | 1.0–1.1 s |
+| Memory kept | 8 211 878 bytes (2 501² + 1 251² + 626²), plus a 450 KB polar table during the bake |
+| One pixel | about 10 ns (array read) |
+| Zoom-4 tile away from the capital | **0** column reads (the whole-world view previously loaded every region file) |
+| Main-thread cost | none: the bake and the tiles run on the map workers |
+
+**Tests.**
+
+| Test | Checks |
+|---|---|
+| `CartographyTest` (api, 8) | Same layout gives the same bytes; no hole; one read per lookup (and its cost); memory and time budget; taiga, Хангай, steppe, Orkhon, Gobi, Зүүнгар and badlands colours told apart; snow and rock on Отгонтэнгэр, Мөнххайрхан and Таван Богд; lakes, rivers, a road to every gate, the capital; survey ink lighter, hatched 1 in 4, atlas far out; gazetteer areas exist; a missing area drops only its features |
+| `AtlasLodTest` (api, 6) | No bake gives real only; close up, real where explored and survey ink in every hole; the gate's lone patch is gone at z3/z4 but a 1 200-block explored land stays at z3; the real share never rises as the view widens; the capital at every zoom; no seam at tile edges; z4 reads no column |
+| `CartoLegibilityTest` (api) | Minimap marks on every survey colour |
+| `CartographyContentTest` (plugin, 5) | Layout read from the bundled content; every gazetteer area and region exists, and every area has a land; the real world bakes within budget; region-name and label plates; every marker PNG on every baked colour |
+
+`CartographyPreviewTest` writes the PNG previews when `SULD_CARTO_PREVIEW` is set. They were looked at during tuning
+for the whole world, zoom 2 around the capital, zoom 3 in the north-west, and zoom-0 survey ink.
+
+**Not verified:** a real 1.21.11 client (the atlas at each zoom, the minimap's survey ink on screen, region plates)
+and the bots `atlasbot.js`/`mapcbot.js`. `atlasbot`'s check "frames with real pixels" now also passes on unexplored
+land, so its intent (real land shows) should be re-read when it is next run.

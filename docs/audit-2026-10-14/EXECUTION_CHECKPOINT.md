@@ -312,3 +312,38 @@ The details are in audit §7.
 | 5 | `git diff --check` | exit 0 |
 
 **Not verified:** a real client. Pillow 12.3.0 was installed for the user's Python to run the pack tools.
+
+
+## Follow-up 2026-10-15 (5) — baked cartography and zero-lag zoom levels (LOD)
+
+The details are in audit §8.
+- **Root cause:** a real-blocks-only atlas on a mostly ungenerated world. Each dungeon gate leaves a lone scanned
+  patch, which showed as a "glitch" square at zoom 3/4.
+- **Engine:** `api.map.Cartography` bakes the world once from world.json's layout. It does not read the world
+  generator, chunks, blocks or biomes. The gazetteer covers 40 areas, 7 lakes, 14 rivers, 11 ranges, the caravan roads
+  and the borders. The result goes into an immutable `BakedAtlas` (3 levels, 8.2 MB, a pixel is about 10 ns).
+- **Zoom rule:** `AtlasLod` picks the land per zoom.
+  - z0–1: real blocks crisp, hatched survey ink elsewhere.
+  - z2: real where explored.
+  - z3: the atlas plus densely explored land.
+  - z4: the atlas only, with 0 column reads.
+  - The capital's real blocks show at every zoom.
+- **Plugin:** `CartoContent` builds the layout, `MapService` bakes on the workers (rebaked when the border or spawn
+  moves; `map.cartography`, on by default), `MapTiles` composes through `AtlasLod`.
+- **Legibility:** region names now sit on a navy plate. The dungeon, ovoo and site icons got a sunlit crest, and the
+  party arrow is lighter.
+- **Revises** the owner's 2026-10-13 "real data only" rule, as asked on 2026-10-15. `map.cartography: false` restores
+  the old map.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `.\gradlew.bat test --rerun simTest --rerun --no-daemon` | **exit 0**, BUILD SUCCESSFUL. JUnit XML: suld-api 678 / 0 failures / 0 errors / 0 skipped; suld-plugin 265 / 0 / 0 / 0; simTest 13 / 0 / 0 / 0. Three earlier runs failed only the known flaky `JdbcMapPinRepositoryIT.theLimitHoldsWhenAddsRace` (9–10 rows against a limit of 5). It also failed 1 of 3 on a clean `HEAD` worktree. Interleaved runs then passed 3/3 on both trees, so it depends on load and is unrelated (pins are untouched) |
+| 2 | `$env:PYTHONUTF8 = "1"; py tools\validation\run_all.py` | exit 0, "ALL VALIDATIONS PASSED" |
+| 3 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | exit 0, "Ran 6 tests … OK" |
+| 4 | `git diff --check` (new files included with `git add -N`) | exit 0, clean |
+| 5 | Bake metrics (JUnit, dev PC) | 1.0–1.1 s, 8 211 878 bytes, lookup about 10 ns, z4 tile 0 column reads |
+| 6 | PNG previews (`SULD_CARTO_PREVIEW`) | whole world (z4), z2 around the capital, z3 north-west, z0 survey ink: reviewed and tuned |
+
+**Not verified:** a real 1.21.11 client (each zoom, region plates, the minimap's survey ink) and the bots.
+`atlasbot.js` checks "frames with real pixels", which now also passes on unexplored land; its intent should be
+re-read when it next runs.
