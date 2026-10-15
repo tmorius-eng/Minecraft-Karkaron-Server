@@ -515,6 +515,9 @@ public final class DungeonService {
             return;
         }
         if (ar.heroic != null && services.heroic != null) services.heroic.mobDied(ar.heroic, entity, onlineParticipants(ar));
+        // «Галт Ган» embers can kill the last player standing: the wipe fails the run inside mobDied, and complete()
+        // on a failed run threw (the boss dead, no reward, an exception in the listener)
+        if (!ar.run.isActive()) return;
         UUID id = entity.getUniqueId();
         if (id.equals(ar.bossId)) {
             bosses.unregister(id);

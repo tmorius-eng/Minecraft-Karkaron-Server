@@ -198,6 +198,8 @@ public final class SkillService implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
+        lastShot.remove(e.getPlayer().getUniqueId());      // per-player maps written on every draw/drop: no leak per session
+        lastDropTick.remove(e.getPlayer().getUniqueId());
         UUID id = e.getPlayer().getUniqueId();
         combos.remove(id);
         lastCast.remove(id);
@@ -892,9 +894,15 @@ public final class SkillService implements Listener {
 
     // ------------------------------------------------------------------ spell helpers
 
+    /** A trial wolf is only its own soul's foe (others cannot hurt it, so no refund, heal or proc off it). */
+    private boolean trialFoeOf(Entity e, Player caster) {
+        java.util.UUID owner = mn.suld.plugin.death.DeathTrialService.ownerOf(e);
+        return owner != null ? owner.equals(caster.getUniqueId()) : services.mobs().isSuldMob(e) || e instanceof Monster;
+    }
+
     private boolean hostile(Entity e, Player caster) {
         return e instanceof LivingEntity le && le.isValid() && !(e instanceof Player) && e != caster
-                && (services.mobs().isSuldMob(e) || e instanceof Monster || mn.suld.plugin.death.DeathTrialService.ownerOf(e) != null)
+                && trialFoeOf(e, caster)
                 && !e.getScoreboardTags().contains("city_npc");
     }
 

@@ -243,6 +243,7 @@ public final class ResourcePackService implements Listener {
         UUID id = event.getPlayer().getUniqueId();
         gate.forget(id);
         status.remove(id);
+        sentAt.remove(id);
     }
 
     /** When the pack was sent to each online player, for the time-to-load of the funnel event. */

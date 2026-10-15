@@ -260,5 +260,6 @@ public final class QuestTracker implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         hide(e.getPlayer());
+        GATE_CACHE.remove(e.getPlayer().getUniqueId());
     }
 }

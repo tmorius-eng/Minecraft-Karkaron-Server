@@ -27,6 +27,7 @@ import pixelfont as pf  # noqa: E402
 import hd_art  # noqa: E402
 import hub_kit  # noqa: E402
 import hd_font  # noqa: E402
+import glyph_tiles  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ART = os.path.join(ROOT, "assets", "art", "source")
@@ -1071,7 +1072,8 @@ def gui_inventory(preview: str | None) -> None:
     gui_inventory_keyed.png, tools/art/inventory_prompts.json). The window is textures/gui/container/inventory.png at
     4x, every slot frame on its vanilla slot. The spires, crest, banners and tassels around it cannot be in that
     texture (the client draws only its 176 x 166 window), so they are one glyph of minecraft:default drawn through
-    the screen's title: lang key container.crafting = colour reset + negative space + glyph. The crafting table uses
+    the screen's title: lang key container.crafting = colour reset + negative space + glyph (glyph_tiles.py then cuts
+    the glyph into tiles of at most 256 texels, the client's limit). The crafting table uses
     the same key, so SÜLD gives crafting tables a plain title (SuldPlugin, InventoryOpenEvent#titleOverride)."""
     art = os.path.join(ART, "gui_inventory_keyed.png")
     if not os.path.exists(art):
@@ -1227,6 +1229,8 @@ def main() -> None:
         json.dump({"providers": providers}, fh, ensure_ascii=False, indent=1)
         fh.write("\n")
     write_java()
+    # the 4x HD backgrounds are over the client's 256-texel glyph limit: cut them into tiles (Glyphs.java, lang)
+    glyph_tiles.main()
     print(f"ui: {len(java_consts)} glyphs, font suld:ui, Glyphs.java written")
 
 

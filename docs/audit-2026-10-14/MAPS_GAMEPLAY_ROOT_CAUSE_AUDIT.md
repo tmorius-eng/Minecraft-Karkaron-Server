@@ -162,3 +162,92 @@ Still open from this round:
   moment before it settles. The in-view cards have no such lag. The minimap frames have the same limit.
 * `mapcbot.js` was updated for the new card (in view 24 blocks out toward the place; turned away, an edge card under
   13 blocks with an arrow), but not run: it needs the dev server, and `node` is not installed here.
+
+## 7. Follow-up 2026-10-15 (4): the welcome screen regression, ▯ glyphs, one HUD policy, cross-system audit
+
+**Symptom (live test, 15:49, client 1.21.11 Fabric with no mods, GUI scale 3, en_us).** After «Дүрс багц амжилттай
+ачаалагдлаа.» the welcome chest opened empty, titled «Тавтай морил, dekushdee!▯» and shifted left. Three boss bars,
+the minimap, a waypoint card and the «✦ SÜLD ✦» sidebar all stayed on top of it.
+
+**History.** Nothing since `f4c071b` touched the welcome menu, `ui.json` or its art, and no branch or stash holds a
+welcome fix. The art itself was never drawn on 1.21.11. `f4c071b` added the 256-texel glyph check, but it made only
+`hud.json` strict. The validator printed 21 warnings for `ui.json` and `minecraft:default`, and the pack shipped anyway.
+
+**Root cause (W4-1), checked in the 1.21.11 client bytecode.**
+- The font atlas page is 256 × 256 (`class_380`: `new Node(0, 0, 256, 256)`).
+- A bitmap glyph that does not fit makes `method_2022` return null. The stitch callback (`class_377$2`) then
+  substitutes the whole missing glyph, advance included (`requireNonNullElse(..., missing)`).
+- So the 704 × 288 welcome art became one ▯ with a 6 px advance. The title, positioned after it by `shift(-159)`,
+  started 171 px left, and the ▯ appeared right after the «!».
+- The cards are invisible items over the painting, so the chest looked empty.
+- The same happened to the main menu, cosmetics, frame, the three quest-book tabs, all hub pages and their glow
+  frames, and the E-inventory decor (880 × 884, `container.crafting`).
+
+**Fix.**
+- **New `tools/pack/glyph_tiles.py`, run by `gen_ui.py`, idempotent.**
+  - It cuts every cell over 256 texels into tiles of at most 256. Each tile gets a code point: `suld:ui` from U+E400,
+    `minecraft:default` from U+F800, with ±2ⁿ spaces at U+F8E0.
+  - Each `Glyphs` constant and the `container.crafting` lang strings become tiles plus shifts. Each string ends at the
+    art's full width + 1, so `Menu`/`HubLayout` need no change.
+  - Transparent tiles are dropped and identical tiles are shared: 21 glyphs became 143 tiles.
+  - A script check confirmed that all 21 reassemble pixel-exact against `HEAD` (visible pixels, exact advance).
+- **`validate_resourcepack.py`:** every font is now strict.
+- **Latent defect found along the way:** the hub page art is transparent at its right edge, so the client's trimmed
+  advance (189) was 24 px short of the `W + 1` that `HubLayout` counts. The tiled strings end at `W + 1`.
+
+**One HUD policy (W4-2).** Before this, only the three sky windows hid anything, and the sidebar never stepped aside.
+- **New `ui/UiFocus`.** It counts as modal: dead, `/map`, `/menu` or `/skills` open, or a SÜLD chest open (`Menu` or
+  `ClassSelectionHolder`).
+  - It is polled each tick, so ESC, menu-to-menu clicks, death, respawn, teleport, world change and quit all resolve
+    without per-path restore code.
+  - It fires `onChange` the tick the state flips. The map of last states is pruned on quit.
+- **Wired into:**
+  - the `BossBars` gate;
+  - `MinimapService.busy` and `ScreenMarkers.busy`;
+  - `HudService.update`, which takes the sidebar out of the slot while a view is up and puts it back on the flip;
+  - the welcome trigger, which no longer opens over a sky window, the class choice or the death screen.
+- `WaypointGuide.busy` and the atlas-only `hud().quiet` are unchanged.
+- **The world behind the chest is unchanged.** The Envoy plaque «…Анхны баатрын нэр энд бичигдэнэ» (5 blocks
+  ahead of the spawn, billboard) and the GuideBoards are world text, not HUD. With the sidebar now hidden they no
+  longer collide with it.
+
+**Cross-system audit (W4-3), with read-only sub-audits.**
+
+Fixed:
+- **`DungeonService.onEntityDeath`:** «Галт Ган» embers could kill the last player. That failed the run, and then
+  `complete()` threw: the boss was dead and no reward was given. There is now a re-check after `mobDied`.
+- **`SkillService.hostile`:** another soul's trial wolves counted as foes, so a player got refunds, heals and procs off
+  hits that are always cancelled. A trial wolf is now only its own soul's foe.
+- **Quit leaks:** `SkillService.lastShot` and `lastDropTick`, `ResourcePackService.sentAt`, and
+  `QuestTracker.GATE_CACHE`.
+
+Checked and clean:
+- No listener is registered twice or left unregistered.
+- No per-player task leaks.
+- The PackGate covers decline, failure, timeout and quit, and runs each deferred action once.
+- Every sky window cleans up on quit.
+
+Open (not fixed this round, documented for the next one):
+- A dungeon reward that overflows a full inventory drops in the hall, and `DungeonHalls.release` deletes it 7 s
+  later. Fix: drop at `exitFor`.
+- A player downed in a dungeon stays "in a run" at the gate (no `/spawn`) until the run ends.
+- Heroic runs ended by shutdown are not logged, and forced affixes can leak when `begin()` fails late.
+- The sell confirmation (`Menus.sellArmed`) holds a bag slot index with no item identity or expiry.
+- Delayed spells keep running after a teleport or the training swap (no world/epoch check).
+- `GuideBoards.ensure` duplicates the last board when one is skipped (index shift).
+- Small cooldown maps with no quit prune (`CityProtectionListener`, `TrainingCoach`, `DeathService.wounds`).
+- The pin-limit race (`JdbcMapPinRepositoryIT`) remains flaky. It passed in this run.
+
+**Tests.**
+- `GlyphFontContractTest`, five checks:
+  - every bitmap cell of every font is ≤ 256;
+  - every `Glyphs` constant is drawn;
+  - tiled art keeps the 176 + 1 and `W + 1` advances;
+  - the welcome title lands at `TITLE_INDENT`;
+  - `container.crafting` is drawn in every language. A sixth check covers the code: every private-use code point in
+    `suld-plugin`/`suld-api` is mapped by a pack font.
+- `UiFocusTest`: the modal rule, the edge detector (rejoin starts fresh) and the wiring of every HUD element.
+- `HubLayoutTest` now walks whole glyph strings.
+
+**Not verified:** a real client (the welcome painting and title, the hub pages, the E-inventory decor, the HUD hiding
+and returning around the welcome chest and death).

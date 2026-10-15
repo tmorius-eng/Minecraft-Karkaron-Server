@@ -119,13 +119,13 @@ public final class Glyphs {
     /** badge «АЮУЛТАЙ» */
     public static final String BADGE_DANGER = "\uE035";
     /** chest background main 176x138 (HD, owner's painting) */
-    public static final String GUI_MAIN = "\uE036";
+    public static final String GUI_MAIN = "\uE400\uE000\uE401\uE000\uE402\uE00E\uE00A\uE008\uE000\uE403\uE000\uE404\uE000\uE405\uE00E\uE00A\uE008\uE000\uE406\uE000\uE407\uE000\uE408";
     /** chest background welcome 176x72 (HD) */
-    public static final String GUI_WELCOME = "\uE037";
+    public static final String GUI_WELCOME = "\uE409\uE000\uE40A\uE000\uE40B\uE00E\uE00A\uE008\uE000\uE40C\uE000\uE40D\uE000\uE40E";
     /** chest background cosmetics 176x126 (4x2 cards, HD) */
-    public static final String GUI_COSMETICS = "\uE038";
+    public static final String GUI_COSMETICS = "\uE40F\uE000\uE410\uE000\uE411\uE00E\uE00A\uE008\uE000\uE412\uE000\uE413\uE000\uE414";
     /** chest background frame 176x126 (framed slots, HD) */
-    public static final String GUI_FRAME = "\uE039";
+    public static final String GUI_FRAME = "\uE415\uE000\uE416\uE000\uE417\uE00E\uE00A\uE008\uE000\uE418\uE000\uE419\uE000\uE41A";
     /** chest background skillmap 176x126 (parchment map, toolbar row) */
     public static final String GUI_SKILLMAP = "\uE03A";
     /** chest background dungeons 176x126 (dungeon ladder) */
@@ -149,17 +149,17 @@ public final class Glyphs {
     /** mouse, left button (click hints) */
     public static final String MOUSE_LEFT = "\uE044";
     /** chest background quest book, tab 1 active 176x126 (HD x4) */
-    public static final String GUI_QUESTBOOK1 = "\uE045";
+    public static final String GUI_QUESTBOOK1 = "\uE41B\uE000\uE41C\uE000\uE41D\uE00E\uE00A\uE008\uE000\uE41E\uE000\uE41F\uE000\uE420";
     /** chest background quest book, tab 2 active 176x126 (HD x4) */
-    public static final String GUI_QUESTBOOK2 = "\uE046";
+    public static final String GUI_QUESTBOOK2 = "\uE421\uE000\uE422\uE000\uE41D\uE00E\uE00A\uE008\uE000\uE41E\uE000\uE41F\uE000\uE420";
     /** chest background quest book, tab 3 active 176x126 (HD x4) */
-    public static final String GUI_QUESTBOOK3 = "\uE047";
+    public static final String GUI_QUESTBOOK3 = "\uE423\uE000\uE424\uE000\uE425\uE00E\uE00A\uE008\uE000\uE41E\uE000\uE41F\uE000\uE420";
     /** Командын Өргөө frame 212x244 at x-18 (HD x4): banners, tabs, close */
-    public static final String HUB_FRAME = "\uE048";
+    public static final String HUB_FRAME = "\uE426\uE000\uE427\uE000\uE428\uE000\uE429\uE00E\uE00C\uE008\uE004\uE42A\uE000\uE42B\uE007\uE003\uE001\uE42C\uE000\uE42D\uE00E\uE00C\uE008\uE004\uE42E\uE000\uE42F\uE000\uE430\uE000\uE431\uE00E\uE00C\uE008\uE004\uE000\uE432\uE000\uE432\uE000\uE432\uE000\uE433";
     /** hub page hub 212x244 (HD x4) */
-    public static final String PAGE_HUB = "\uE049";
+    public static final String PAGE_HUB = "\uE434\uE000\uE435\uE000\uE436\uE00E\uE00A\uE008\uE006\uE004\uE000\uE437\uE000\uE438\uE000\uE439\uE00E\uE00A\uE008\uE006\uE004\uE000\uE43A\uE000\uE43B\uE000\uE43C\uE009\uE007";
     /** hub page profile 212x244 (HD x4) */
-    public static final String PAGE_PROFILE = "\uE04A";
+    public static final String PAGE_PROFILE = "\uE43D\uE000\uE43E\uE000\uE43F\uE00E\uE00A\uE008\uE006\uE004\uE000\uE440\uE000\uE441\uE000\uE442\uE00E\uE00A\uE008\uE006\uE004\uE000\uE443\uE000\uE444\uE000\uE445\uE009\uE007";
     /** active tab tile 19x18 at the tab's slot (HD x4) */
     public static final String HUB_TAB_ON = "\uE04B";
     /** footer «Буцах» button 38x14 at slot 0 (HD x4) */
@@ -169,25 +169,25 @@ public final class Glyphs {
     /** footer paging arrow » 16x14 at slot 8 (HD x4) */
     public static final String HUB_NEXT = "\uE04E";
     /** hub page help 212x244 (HD x4) */
-    public static final String PAGE_HELP = "\uE04F";
+    public static final String PAGE_HELP = "\uE446\uE000\uE447\uE000\uE448\uE00E\uE00A\uE008\uE006\uE004\uE000\uE449\uE000\uE44A\uE000\uE44B\uE00E\uE00A\uE008\uE006\uE004\uE000\uE44C\uE000\uE44D\uE000\uE44E\uE009\uE007";
     /** hub page rankup 212x244 (HD x4) */
-    public static final String PAGE_RANKUP = "\uE050";
+    public static final String PAGE_RANKUP = "\uE44F\uE000\uE450\uE000\uE451\uE00E\uE00A\uE008\uE006\uE004\uE000\uE452\uE000\uE453\uE000\uE454\uE00E\uE00A\uE008\uE006\uE004\uE000\uE455\uE000\uE456\uE000\uE457\uE009\uE007";
     /** hub page shop 212x244 (HD x4) */
-    public static final String PAGE_SHOP = "\uE051";
+    public static final String PAGE_SHOP = "\uE458\uE000\uE459\uE000\uE45A\uE00E\uE00A\uE008\uE006\uE004\uE000\uE45B\uE000\uE45C\uE009\uE007\uE005\uE001\uE45D\uE00E\uE00A\uE008\uE006\uE004\uE002\uE000\uE45E\uE000\uE45F\uE009\uE007\uE005\uE001\uE460\uE009\uE007";
     /** hub page shop2 212x244 (HD x4) */
-    public static final String PAGE_SHOP2 = "\uE052";
+    public static final String PAGE_SHOP2 = "\uE461\uE000\uE462\uE000\uE463\uE00E\uE00A\uE008\uE006\uE004\uE000\uE464\uE000\uE465\uE000\uE466\uE00E\uE00A\uE008\uE006\uE004\uE000\uE467\uE000\uE468\uE000\uE469\uE009\uE007";
     /** hub page travel 212x244 (HD x4) */
-    public static final String PAGE_TRAVEL = "\uE053";
+    public static final String PAGE_TRAVEL = "\uE46A\uE000\uE46B\uE000\uE46C\uE00E\uE00A\uE008\uE006\uE004\uE000\uE46D\uE000\uE46E\uE000\uE46F\uE00E\uE00A\uE008\uE006\uE004\uE000\uE470\uE000\uE456\uE000\uE471\uE009\uE007";
     /** glow frame over a card of row 1 (owned rank, chosen setting), 74x14 (HD x4) */
-    public static final String HUB_CARD_ON_R1 = "\uE054";
+    public static final String HUB_CARD_ON_R1 = "\uE472\uE000\uE473";
     /** glow frame over a card of row 2 (owned rank, chosen setting), 74x14 (HD x4) */
-    public static final String HUB_CARD_ON_R2 = "\uE055";
+    public static final String HUB_CARD_ON_R2 = "\uE474\uE000\uE475";
     /** glow frame over a card of row 3 (owned rank, chosen setting), 74x14 (HD x4) */
-    public static final String HUB_CARD_ON_R3 = "\uE056";
+    public static final String HUB_CARD_ON_R3 = "\uE476\uE000\uE477";
     /** glow frame over a card of row 4 (owned rank, chosen setting), 74x14 (HD x4) */
-    public static final String HUB_CARD_ON_R4 = "\uE057";
+    public static final String HUB_CARD_ON_R4 = "\uE478\uE000\uE479";
     /** hub page settings 212x244 (HD x4) */
-    public static final String PAGE_SETTINGS = "\uE058";
+    public static final String PAGE_SETTINGS = "\uE47A\uE000\uE47B\uE000\uE47C\uE00E\uE00A\uE008\uE006\uE004\uE000\uE47D\uE000\uE47E\uE000\uE47F\uE00E\uE00A\uE008\uE006\uE004\uE000\uE480\uE000\uE481\uE000\uE482\uE009\uE007";
 
     private Glyphs() {
     }

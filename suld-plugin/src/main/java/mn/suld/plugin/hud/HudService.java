@@ -197,11 +197,18 @@ public final class HudService {
             lastLines.remove(player.getUniqueId());
             return;
         }
+        Objective obj = board.getObjective("suld");
+        if (mn.suld.plugin.ui.UiFocus.isModal(player)) {
+            // a full-screen view is up (the welcome chest, a sky window, the death screen): the sidebar steps aside,
+            // it hung over their text; UiFocus.onChange calls this again the tick the view closes
+            if (obj != null && obj.getDisplaySlot() != null) obj.setDisplaySlot(null);
+            return;
+        }
         List<Component> special = sidebar.apply(player);
         List<Component> lines = special != null ? special : buildLines(player, profile);
+        if (obj != null && obj.getDisplaySlot() != DisplaySlot.SIDEBAR) obj.setDisplaySlot(DisplaySlot.SIDEBAR);
         if (lines.equals(lastLines.get(player.getUniqueId()))) return;
         lastLines.put(player.getUniqueId(), lines);
-        Objective obj = board.getObjective("suld");
         if (obj == null) {
             obj = board.registerNewObjective("suld", Criteria.DUMMY, title());
             obj.setDisplaySlot(DisplaySlot.SIDEBAR);

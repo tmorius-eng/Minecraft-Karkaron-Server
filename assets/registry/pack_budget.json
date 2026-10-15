@@ -6,10 +6,6 @@
     "suld:item/suld_ild_tenger"
   ],
   "justified_large": {
-    "resourcepack/assets/suld/textures/font/gui/main.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
-    "resourcepack/assets/suld/textures/font/gui/welcome.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
-    "resourcepack/assets/suld/textures/font/gui/cosmetics.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
-    "resourcepack/assets/suld/textures/font/gui/frame.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen",
     "resourcepack/assets/suld/textures/font/gui/skillmap.png": "GUI background drawn into the container title (font glyph): must be exactly 176 px wide, the width of a chest screen"
   },
   "max_file_kb": 512,
@@ -25,7 +21,7 @@
   "justified_prefixes": {
     "resourcepack/assets/suld/textures/font/hud/": "HUD glyphs (gen_hud.py): bar fills are 896/2048 px wide because one glyph is one bar length; frames and target plaques are drawn at 2x",
     "resourcepack/assets/suld/textures/font/badge/": "name-tag/TAB badges from the owner's HD sheet (hd_art.SCALE = 4x the 9 px glyph), so they stay sharp at GUI scale 4",
-    "resourcepack/assets/suld/textures/font/gui/": "chest-screen backgrounds drawn into the container title: exactly 176 GUI px wide (quest book: 4x HD from the owner's painting)",
+    "resourcepack/assets/suld/textures/font/gui/": "chest-screen backgrounds drawn into the container title: exactly 176 GUI px wide (4x HD art from the owner's painting in gui/tiles/: tools/pack/glyph_tiles.py cuts every glyph over the client's 256-texel limit into tiles)",
     "resourcepack/assets/suld/textures/gui/sprites/tooltip/": "the suld:mongol tooltip nine-slice from the owner's painting, 4x HD",
     "resourcepack/assets/suld/textures/entity/skytree/": "the full-screen skill tree backdrop (display entity), one 512x288 panel",
     "resourcepack/assets/minecraft/textures/gui/container/": "the survival inventory (E) from the owner's mock-up: the vanilla 256 px sheet at 4x (1024 px), sharp at GUI scale 4",
@@ -42,9 +38,6 @@
     "resourcepack/assets/suld/models/prop/deer_stone.json": "Meshy prop voxelised to a box model (tools/meshy); 48 KB zipped",
     "resourcepack/assets/suld/models/prop/silver_tree.json": "Meshy prop voxelised to a box model (tools/meshy); 43 KB zipped",
     "resourcepack/assets/suld/models/prop/stone_man.json": "Meshy prop voxelised to a box model (tools/meshy); 37 KB zipped",
-    "resourcepack/assets/minecraft/textures/gui/container/inventory.png": "the HD survival inventory (owner's mock-up, 4x); a painted texture, PNG cannot shrink it further without losing the art",
-    "resourcepack/assets/suld/textures/font/gui/inventory_decor.png": "the inventory's spires, crest, banners and tassels (owner's mock-up, 4x), one glyph drawn through the screen title",
-    "resourcepack/assets/suld/textures/font/gui/main.png": "the main menu's six HD cards in the owner's welcome-window style (4x, 176x126 GUI px)",
-    "resourcepack/assets/suld/textures/font/gui/hub_frame.png": "the «Командын Өргөө» window frame (owner's mock-up, 4x: 848x976 px), one glyph drawn through the chest title; banners, panel cloth, tabs and the close button are painted art"
+    "resourcepack/assets/minecraft/textures/gui/container/inventory.png": "the HD survival inventory (owner's mock-up, 4x); a painted texture, PNG cannot shrink it further without losing the art"
   }
 }

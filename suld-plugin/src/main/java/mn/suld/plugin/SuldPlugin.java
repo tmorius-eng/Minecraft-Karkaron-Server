@@ -512,19 +512,22 @@ public final class SuldPlugin extends JavaPlugin {
                         : mn.suld.plugin.ui.Messages.info("Мини газрын зураг унтраалттай (/map minimap — асаах)."));
             };
             minimap = new mn.suld.plugin.map.MinimapService(this, services, services.map, mapPins, waypoints);
-            mn.suld.plugin.map.AtlasSky minimapAtlas = atlas;
-            minimap.busy = pl -> minimapAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
+            minimap.busy = mn.suld.plugin.ui.UiFocus::isModal; // sky windows, SÜLD chests (welcome), the death screen
             getServer().getPluginManager().registerEvents(minimap, this);
             minimap.start();
             // the waypoint, the pins and the latest death on the game screen (docs/WORLD_MAP.md, «Дэлгэцийн тэмдэг»)
             screenMarkers = new mn.suld.plugin.map.ScreenMarkers(this, services, mapPins, waypoints);
-            screenMarkers.busy = pl -> openAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
+            screenMarkers.busy = mn.suld.plugin.ui.UiFocus::isModal; // no card floats over a menu or the welcome chest
             getServer().getPluginManager().registerEvents(screenMarkers, this);
             screenMarkers.start();
         }
-        // the boss bars step aside while a sky window is open: its title hangs where they do (the atlas's «СҮЛДИЙН АТЛАС»)
-        mn.suld.plugin.ui.BossBars.start(this, pl -> atlas != null && atlas.isOpen(pl) || menuSky != null && menuSky.isOpen(pl)
+        // one HUD policy (ui/UiFocus): while a sky window, a SÜLD chest (the welcome screen) or the death screen is up,
+        // the boss bars, the minimap, the screen markers and the sidebar step aside, and come back the tick it closes
+        mn.suld.plugin.ui.UiFocus.sky(pl -> atlas != null && atlas.isOpen(pl) || menuSky != null && menuSky.isOpen(pl)
                 || skillSky != null && skillSky.isOpen(pl));
+        mn.suld.plugin.ui.UiFocus.onChange(pl -> services.profiles().cached(pl.getUniqueId()).ifPresent(pr -> services.hud().update(pl, pr)));
+        mn.suld.plugin.ui.UiFocus.start(this);
+        mn.suld.plugin.ui.BossBars.start(this, mn.suld.plugin.ui.UiFocus::isModal);
         mn.suld.plugin.worldbuild.SuldWorldCommand worldCommand = new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls);
         registerTab("suldworld", worldCommand);
         // ovoo at the heart of every area (docs/world/OVOO.md): circle three times clockwise for Тэнгэрийн ивээл
@@ -666,6 +669,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (services != null && services.payments != null) services.payments.stop(); // the webhook closes, QR maps go blank
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
         mn.suld.plugin.ui.BossBars.stop(); // quiet players get their bars back before the services hide theirs
+        mn.suld.plugin.ui.UiFocus.stop();
         if (services != null && services.map != null) services.map.shutdown(); // the map's regions to disk
         if (worldBuild != null) {
             worldBuild.stop();

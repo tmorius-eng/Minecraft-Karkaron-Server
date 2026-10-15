@@ -32,8 +32,6 @@ REGISTRY = os.path.join(ROOT, "assets", "registry", "assets.json")
 TARGET_PACK_FORMAT = 75
 # The client's maximum bitmap glyph cell (texture pixels, either axis).
 MAX_GLYPH_PX = 256
-# Fonts whose glyphs the server positions to the pixel: an oversized glyph there is a layout bug, not a cosmetic one.
-STRICT_FONTS = ("suld/font/hud.json",)
 
 
 def png_size(path: str) -> tuple[int, int]:
@@ -45,7 +43,10 @@ def png_size(path: str) -> tuple[int, int]:
 
 
 def font_glyph_problems() -> tuple[list[str], list[str]]:
-    """(errors, warnings): bitmap glyph cells larger than the client accepts."""
+    """(errors, warnings): bitmap glyph cells larger than the client accepts. Every font is strict: the client draws
+    such a glyph as the missing-glyph box with the box's own advance, which also throws off everything after it on the
+    line (the welcome screen's «Тавтай морил, <name>!▯» over an empty chest, 2026-10-15). tools/pack/glyph_tiles.py
+    cuts big art into tiles that fit."""
     errors, warnings = [], []
     assets = os.path.join(RP, "assets")
     for ns in sorted(os.listdir(assets)):
@@ -70,9 +71,8 @@ def font_glyph_problems() -> tuple[list[str], list[str]]:
                     continue
                 cw, ch = w // max(1, len(rows[0])), h // max(1, len(rows))
                 if cw > MAX_GLYPH_PX or ch > MAX_GLYPH_PX:
-                    msg = (f"{rel}: {p['file']} glyph cell {cw}x{ch} > {MAX_GLYPH_PX} px: the client draws the "
-                           f"missing-glyph box instead (U+{ord(rows[0][0]):04X})")
-                    (errors if rel in STRICT_FONTS else warnings).append(msg)
+                    errors.append(f"{rel}: {p['file']} glyph cell {cw}x{ch} > {MAX_GLYPH_PX} px: the client draws "
+                                  f"the missing-glyph box instead (U+{ord(rows[0][0]):04X}); run tools/pack/glyph_tiles.py")
     return errors, warnings
 
 
@@ -318,7 +318,7 @@ def main() -> int:
         return 1
     print(f"resource pack OK: format covers {TARGET_PACK_FORMAT}, {model_count} model(s), "
           f"{len(item_defs)} item definition(s), {equipment_count} equipment asset(s), {tex_refs} texture ref(s), "
-          f"{mapped} registry model mapping(s), HUD font glyphs within {MAX_GLYPH_PX} px")
+          f"{mapped} registry model mapping(s), every font glyph within {MAX_GLYPH_PX} px")
     return 0
 
 

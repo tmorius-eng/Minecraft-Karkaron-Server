@@ -150,7 +150,8 @@ public final class MenuListener implements Listener {
         if (hasClass && plugin.getConfig().getBoolean("ui.welcome-screen", true)) {
             // after the pack prompt is answered: a screen opened over the prompt replaces it (ONB-001)
             services.resourcePacks().afterPack(p, () -> Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (p.isOnline() && !(p.getOpenInventory().getTopInventory().getHolder() instanceof Menu)) menus.welcome(p);
+                // never over another full-screen view: a menu, the class choice, a sky window, the death screen
+                if (p.isOnline() && !mn.suld.plugin.ui.UiFocus.isModal(p)) menus.welcome(p);
             }, 40L));
         }
     }

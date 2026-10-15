@@ -291,3 +291,24 @@ Local Windows CLI session, one agent, no subagents. Root causes and fixes: `MAPS
 **Not verified:** a real 1.21.11 client (the card on the place's pixel, edge cards and their arrows while turning,
 the atlas flag, red mob dots and coloured pins on the minimap, `/map markers`) and the bot `mapcbot.js` (needs the
 dev server; `node` is not installed here, so not even syntax-checked). Client steps: audit §6, "Still open".
+
+## Follow-up 2026-10-15 (4) — welcome HUD regression, ▯ glyphs, one HUD policy, cross-system audit
+
+The details are in audit §7.
+- **Root cause:** the 1.21.11 client draws any font glyph over 256 texels as ▯, using the ▯'s own advance. The
+  validator only warned on this outside `hud.json`.
+- **Glyph fix:** `tools/pack/glyph_tiles.py` tiled the 21 oversized glyphs into 143 tiles. All 21 were verified
+  pixel-exact against `HEAD`, and every font is now strict.
+- **HUD fix:** the new `ui/UiFocus` gives one policy for boss bars, minimap, screen markers and sidebar during sky
+  windows, SÜLD chests and death.
+- **Other fixes:** the dungeon `complete()` after a wipe, trial-wolf targeting, and four quit leaks.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `.\gradlew.bat test simTest --no-daemon` | BUILD SUCCESSFUL. The first run had 2 failures: my new advance assertion, which exposed the hub `W + 1` trim and is fixed, and the known flaky `theLimitHoldsWhenAddsRace`. The rerun had none. |
+| 2 | `py tools\validation\run_all.py` (PYTHONUTF8=1) | ALL VALIDATIONS PASSED, with every font strict. |
+| 3 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | 6 tests OK |
+| 4 | Tile reassembly script (21 composites against `HEAD` art) | 20 `suld:ui` + 1 decor, pixel-exact |
+| 5 | `git diff --check` | exit 0 |
+
+**Not verified:** a real client. Pillow 12.3.0 was installed for the user's Python to run the pack tools.

@@ -3,16 +3,131 @@
   {
    "type": "space",
    "advances": {
-    "": -119
+    "": -119,
+    "": -128,
+    "": 128,
+    "": -64,
+    "": 64,
+    "": -32,
+    "": 32,
+    "": -16,
+    "": 16,
+    "": -8,
+    "": 8,
+    "": -4,
+    "": 4,
+    "": -2,
+    "": 2,
+    "": -1,
+    "": 1
    }
   },
   {
    "type": "bitmap",
-   "file": "suld:font/gui/inventory_decor.png",
-   "height": 221,
+   "file": "suld:font/gui/tiles/inventory_decor_0_0.png",
+   "height": 64,
    "ascent": 48,
    "chars": [
-    ""
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_0_1.png",
+   "height": 64,
+   "ascent": 48,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_0_2.png",
+   "height": 64,
+   "ascent": 48,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_0_3.png",
+   "height": 64,
+   "ascent": 48,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_1_0.png",
+   "height": 64,
+   "ascent": -16,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_1_3.png",
+   "height": 64,
+   "ascent": -16,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_2_0.png",
+   "height": 64,
+   "ascent": -80,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_2_3.png",
+   "height": 64,
+   "ascent": -80,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_3_0.png",
+   "height": 29,
+   "ascent": -144,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_3_1.png",
+   "height": 29,
+   "ascent": -144,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_3_2.png",
+   "height": 29,
+   "ascent": -144,
+   "chars": [
+    ""
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "suld:font/gui/tiles/inventory_decor_3_3.png",
+   "height": 29,
+   "ascent": -144,
+   "chars": [
+    ""
    ]
   }
  ]

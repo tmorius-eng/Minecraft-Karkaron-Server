@@ -80,7 +80,13 @@ class HubLayoutTest {
 
     private static void walk(Component c, Map<String, Integer> advance, Map<String, String> names, List<String> drawn, int[] cursor) {
         if (c instanceof TextComponent t && !t.content().isEmpty()) {
-            if (Glyphs.FONT.equals(t.font())) {
+            if (Glyphs.FONT.equals(t.font()) && advance.containsKey(t.content()) && names.containsKey(t.content())
+                    && !names.get(t.content()).startsWith("NEG_") && !names.get(t.content()).startsWith("POS_")) {
+                // a whole glyph (big art is several tiles plus shifts, tools/pack/glyph_tiles.py; GlyphFontContractTest
+                // checks that the tiles add up to the art's advance)
+                drawn.add(names.get(t.content()) + "@" + cursor[0]);
+                cursor[0] += advance.get(t.content());
+            } else if (Glyphs.FONT.equals(t.font())) {
                 for (char ch : t.content().toCharArray()) {
                     String g = String.valueOf(ch);
                     Integer adv = advance.get(g);
