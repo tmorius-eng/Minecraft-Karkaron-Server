@@ -49,6 +49,46 @@ class AtlasFramingTest {
     }
 
     @Test
+    void theSizesStartAtTheDefaultAndOnlyGrow() {
+        assertEquals(1.0, AtlasSky.SIZES[0], "size 1 is the framing checked above");
+        for (int i = 1; i < AtlasSky.SIZES.length; i++) assertTrue(AtlasSky.SIZES[i] > AtlasSky.SIZES[i - 1]);
+        // the largest still keeps the camera in front of the wall with the room's back wall behind it
+        assertTrue(AtlasSky.DIST / AtlasSky.SIZES[AtlasSky.SIZES.length - 1] > 2.5);
+        assertEquals("1/5 (100%)", AtlasSky.sizeLabel(0));
+        assertEquals("5/5 (190%)", AtlasSky.sizeLabel(4));
+    }
+
+    @Test
+    void theGuideFitsOnTheMapAndIsMongolian() {
+        double[] box = AtlasSky.box(AtlasSky.helpLines(), AtlasSky.HELP_SCALE);
+        double w = box[0] + AtlasSky.HELP_BORDER, h = box[1] + AtlasSky.HELP_BORDER; // AtlasSky.showHelp's frame
+        assertTrue(w <= AtlasSky.COLS - 0.2, "the guide is " + w + " blocks wide on a " + AtlasSky.COLS + "-block map");
+        assertTrue(h <= AtlasSky.ROWS - 0.2, "the guide is " + h + " blocks high");
+        for (String[] l : AtlasSky.HELP) assertTrue(l[1].chars().anyMatch(c -> Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CYRILLIC), l[1]);
+        // its text reads at least as large as the places' labels
+        assertTrue(AtlasSky.HELP_SCALE > AtlasSky.LABEL_SCALE && AtlasSky.TIP_SCALE > AtlasSky.LABEL_SCALE);
+    }
+
+    @Test
+    void theSuldTooltipFramesNinePiecesAreInThePack() {
+        java.nio.file.Path root = java.nio.file.Files.exists(java.nio.file.Path.of("../resourcepack")) ? java.nio.file.Path.of("../resourcepack") : java.nio.file.Path.of("resourcepack");
+        for (String piece : new String[]{"tl", "t", "tr", "l", "m", "r", "bl", "b", "br"}) {
+            for (String f : new String[]{"textures/entity/atlas/tip_" + piece + ".png", "models/entity/atlas/tip_" + piece + ".json",
+                    "items/entity/atlas/tip_" + piece + ".json"}) {
+                assertTrue(java.nio.file.Files.exists(root.resolve("assets/suld/" + f)), f + " (python3 tools/map/atlas_art.py tooltip .)");
+            }
+        }
+    }
+
+    @Test
+    void aTooltipFrameIsWiderThanItsText() {
+        double[] box = AtlasSky.box(java.util.List.of("Бүх ертөнц", "Бүх нутгийг нэг дор"), AtlasSky.TIP_SCALE);
+        double text = mn.suld.plugin.gui.HubLayout.textWidth("Бүх нутгийг нэг дор") * AtlasSky.FONT_PX * AtlasSky.TIP_SCALE;
+        assertTrue(box[0] > text + 2 * AtlasSky.TIP_BORDER * 0.6, "room for the gold border on both sides");
+        assertTrue(box[1] > 2 * AtlasSky.LINE * AtlasSky.TIP_SCALE, "two lines and the border");
+    }
+
+    @Test
     void labelsAndMarkersReadLargerThanBefore() {
         assertTrue(AtlasSky.LABEL_SCALE > 0.42f && AtlasSky.CART_SCALE > 0.7f && AtlasSky.TIP_SCALE > 0.6f);
         assertTrue(AtlasSky.MARKER > 24 * AtlasSky.PX && AtlasSky.MARKER_BIG > 32 * AtlasSky.PX);

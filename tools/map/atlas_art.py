@@ -14,6 +14,7 @@ Usage::
         [--pin NAME X Z] [--death X Z]
     python3 -I tools/map/atlas_art.py minimap <map.png> <out.png> --origin X0 Z0 --scale S --player X Z YAW [--info L1 L2]
     python3 -I tools/map/atlas_art.py pack <repo root>      # the resource pack's atlas textures, models, item definitions
+    python3 -I tools/map/atlas_art.py tooltip <repo root>   # only the SÜLD tooltip frame's nine pieces
 
 ``world``: the whole world (an export at zoom 4); ``local``: a part of it (``--origin`` is the export's north-west block,
 ``--scale`` blocks per pixel). ``--pin`` / ``--death`` add an example player pin / latest-death marker (marked as
@@ -876,8 +877,33 @@ def marker_texture(name: str) -> Image.Image:
     return im
 
 
-def pack(root: str) -> list[str]:
-    """Writes the atlas's textures, models and item definitions into the resource pack at ``root``."""
+#: The nine pieces of the SÜLD tooltip frame, row by row (AtlasSky.panel draws them in this order).
+TIP_PIECES = ("tl", "t", "tr", "l", "m", "r", "bl", "b", "br")
+
+
+def tooltip_quads(root: str) -> dict:
+    """The SÜLD tooltip frame (``suld:mongol``, tools/pack/gen_ui.py: the same navy-and-gold frame every tooltip in the
+    game wears) cut into its nine-slice pieces, so the atlas's in-world tooltips and its guide wear it at any size.
+    The sprites are 4x a 40 x 37 nine-slice with a 12 px border: the corners stay 48 px square, the edges and the
+    middle are stretched by the display (they are plain lines and a flat navy), and are written 64 px long so every
+    texture side is a multiple of 16 (the block atlas keeps its mipmap levels)."""
+    import os
+    src = os.path.join(root, "resourcepack", "assets", "suld", "textures", "gui", "sprites", "tooltip")
+    im = Image.open(os.path.join(src, "mongol_background.png")).convert("RGBA")
+    im.alpha_composite(Image.open(os.path.join(src, "mongol_frame.png")).convert("RGBA"))
+    w, h, b = im.width, im.height, 48
+    xs, ys = (0, b, w - b, w), (0, b, h - b, h)
+    out = {}
+    for r in range(3):
+        for c in range(3):
+            piece = im.crop((xs[c], ys[r], xs[c + 1], ys[r + 1]))
+            size = (b if c != 1 else 64, b if r != 1 else 64)
+            out["tip_" + TIP_PIECES[r * 3 + c]] = piece.resize(size, Image.NEAREST) if piece.size != size else piece
+    return out
+
+
+def write_quads(root: str, quads: dict) -> list[str]:
+    """Each image as an atlas quad: its texture, a two-sided 16 x 16 model and an item definition."""
     import os
     rp = os.path.join(root, "resourcepack", "assets")
     tex = os.path.join(rp, "suld", "textures", "entity", "atlas")
@@ -885,13 +911,6 @@ def pack(root: str) -> list[str]:
     itm = os.path.join(rp, "suld", "items", "entity", "atlas")
     for d in (tex, mod, itm):
         os.makedirs(d, exist_ok=True)
-    quads = {"back": paper((640, 640), 3), "front": front_texture()}
-    for name in MARKERS:
-        quads["marker_" + name] = marker_texture(name)
-    for name in TAB_NAMES:
-        left = name in [n for n, _ in LEFT_TABS]
-        for state in ("", "_hover", "_on"):
-            quads[f"tab_{name}{state}"] = tab_texture(name, state.strip("_") or "normal", left)
     written = []
     for name, img in quads.items():
         img.save(os.path.join(tex, name + ".png"), optimize=True)
@@ -904,6 +923,22 @@ def pack(root: str) -> list[str]:
         with open(os.path.join(itm, name + ".json"), "w") as fh:
             json.dump({"model": {"type": "minecraft:model", "model": "suld:entity/atlas/" + name}}, fh, separators=(",", ":"))
         written.append(name)
+    return written
+
+
+def pack(root: str) -> list[str]:
+    """Writes the atlas's textures, models and item definitions into the resource pack at ``root``."""
+    import os
+    rp = os.path.join(root, "resourcepack", "assets")
+    quads = {"back": paper((640, 640), 3), "front": front_texture()}
+    for name in MARKERS:
+        quads["marker_" + name] = marker_texture(name)
+    for name in TAB_NAMES:
+        left = name in [n for n, _ in LEFT_TABS]
+        for state in ("", "_hover", "_on"):
+            quads[f"tab_{name}{state}"] = tab_texture(name, state.strip("_") or "normal", left)
+    quads.update(tooltip_quads(root))
+    written = write_quads(root, quads)
     for a in ("blocks", "items"):
         path = os.path.join(rp, "minecraft", "atlases", a + ".json")
         data = json.load(open(path)) if os.path.exists(path) else {"sources": []}
@@ -918,7 +953,7 @@ def pack(root: str) -> list[str]:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=("world", "local", "minimap", "pack"))
+    ap.add_argument("mode", choices=("world", "local", "minimap", "pack", "tooltip"))
     ap.add_argument("map")
     ap.add_argument("rest", nargs="*")
     ap.add_argument("--origin", nargs=2, type=float)
@@ -932,7 +967,11 @@ def main():
     a = ap.parse_args()
     if a.mode == "pack":
         names = pack(a.map)
-        print(f"atlas pack assets: {len(names)} quads ({len(MARKERS)} markers, {len(TAB_NAMES)} tabs x 3)")
+        print(f"atlas pack assets: {len(names)} quads ({len(MARKERS)} markers, {len(TAB_NAMES)} tabs x 3, {len(TIP_PIECES)} tooltip pieces)")
+        return
+    if a.mode == "tooltip":  # only the tooltip frame's pieces (no font needed): after a change to the suld:mongol sprites
+        names = write_quads(a.map, tooltip_quads(a.map))
+        print(f"atlas tooltip pieces: {len(names)}")
         return
     if a.mode == "minimap":
         minimap(a.map, a.origin, a.scale, a.player, a.info, a.rest[0])

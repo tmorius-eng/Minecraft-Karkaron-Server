@@ -20,6 +20,9 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Rotation;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -89,6 +92,21 @@ public final class AtlasSky implements Listener, TabExecutor {
      * is then a little over one screen pixel at 1080p.
      */
     static final double DIST = 5.25, EYE_UP = -0.29;
+    /**
+     * The player's atlas size ({@code /map size}): the camera comes in to DIST / SIZES[i]. The default fills a 70°
+     * screen; a wider field of view (the client's FOV slider) or weak eyes want it larger. Kept in the player's data.
+     */
+    static final double[] SIZES = {1.0, 1.2, 1.4, 1.65, 1.9};
+    private static final NamespacedKey SIZE_KEY = new NamespacedKey("suld", "atlas_size");
+    /** How many times the guide opened by itself; it does for a player's first {@link #HELP_AUTO} atlases. */
+    private static final NamespacedKey HELP_KEY = new NamespacedKey("suld", "atlas_help_seen");
+    static final int HELP_AUTO = 3;
+    /**
+     * While the atlas is open: no speed bonus or flying widens the client's field of view (the client scales its FOV
+     * with the movement speed: a skill-tree or potion bonus made the atlas look farther away), and nothing on the stage
+     * is within reach (a close camera would otherwise touch the frames). Transient modifiers: never saved.
+     */
+    private static final NamespacedKey CALM = new NamespacedKey("suld", "atlas_fov"), NO_REACH = new NamespacedKey("suld", "atlas_reach");
     /** The client's default vertical field of view, and the bottom of the screen the hotbar, XP bar and hearts take at GUI scale 3. */
     static final double FOV_DEG = 70, HUD_BOTTOM = 39.0 / 360;
     static final int RISE = 144;
@@ -105,8 +123,12 @@ public final class AtlasSky implements Listener, TabExecutor {
     static final double TITLE_V = 391 * PX, CART_V = -388 * PX;
     /** Places' markers; a little larger than the pack's 24/32 px art was first shown at, so they read from the seat. */
     static final double MARKER = 28 * PX, MARKER_BIG = 38 * PX;
-    /** The text: places' labels, the cartouche's line, the tooltip. A text display's line is 1/4 block at scale 1. */
-    static final float LABEL_SCALE = 0.5f, CART_SCALE = 0.8f, TIP_SCALE = 0.7f;
+    /** The text: places' labels, the cartouche's line, the tooltip, the guide. A text display's line is 1/4 block at scale 1. */
+    static final float LABEL_SCALE = 0.5f, CART_SCALE = 0.8f, TIP_SCALE = 0.85f, HELP_SCALE = 0.62f;
+    /** A text display's font pixel (1/40 block at scale 1); the SÜLD frame's corner and the room inside it, in blocks. */
+    static final double FONT_PX = 0.025, TIP_BORDER = 0.085, TIP_PAD = 0.07;
+    /** The guide's frame is a big board: its gold border and corner knots drawn larger, as on a tooltip seen up close. */
+    static final double HELP_BORDER = 0.16;
     static final double LINE = 0.25;
     /** A label's box: width a character, half its height, and its gap under the marker (scaled with the label). */
     static final double LABEL_CHAR = 0.045 * LABEL_SCALE / 0.42, LABEL_HALF = 0.06 * LABEL_SCALE / 0.42, LABEL_GAP = 0.07 * LABEL_SCALE / 0.42;
@@ -176,6 +198,20 @@ public final class AtlasSky implements Listener, TabExecutor {
             new Tool("me", "Миний байр", "Таны зогсож буй газар руу"), new Tool("plus", "Ойртуулах", "Дугуйгаар ч болно"),
             new Tool("minus", "Холдуулах", "Дугуйгаар ч болно"), new Tool("pin_add", "Тэмдэг тавих", "Дараа нь газрын зураг дээр дарж тэмдэг тавина"));
 
+    /** The guide: its title and its lines (key, what it does), shown on the SÜLD frame in the middle of the map. */
+    static final String HELP_TITLE = "СҮЛДИЙН АТЛАС — ЗААВАР";
+    static final List<String[]> HELP = List.of(
+            new String[]{"Хулгана", "заагч аваачвал тайлбар гарна"},
+            new String[]{"Зүүн товч", "туг дарах · тэмдэг тавих"},
+            new String[]{"Дугуй", "ойртуулах · холдуулах"},
+            new String[]{"W A S D", "газрын зураг гүйлгэх"},
+            new String[]{"Зүүн туг", "газрын төрлөөр шүүх"},
+            new String[]{"Баруун туг", "ертөнц · миний байр · ±"},
+            new String[]{"/map size", "атласыг томруулах"},
+            new String[]{"Space", "заавар нээх · хаах"},
+            new String[]{"Shift", "атлас хаах"});
+    static final String HELP_CLOSE = "Товших эсвэл Space — заавар хаах";
+
     /** A thing under the cursor: a tab or a place. */
     private record Hit(double u, double v, double w, double h, Runnable click, Component name, List<Component> lore, ItemDisplay bg, String model,
                        String hoverModel) {
@@ -210,6 +246,13 @@ public final class AtlasSky implements Listener, TabExecutor {
         int[] death;
         int heldTicks;
         long lastClick;
+        /** The tooltip's SÜLD frame (rebuilt for each thing hovered) and the guide (its frame and its text). */
+        final List<Entity> tipFrame = new ArrayList<>(), help = new ArrayList<>();
+        boolean jump;
+        /** The camera's distance from the wall (DIST shrunk by the player's /map size). */
+        double dist = DIST;
+        /** Flying when the atlas opened (given back on close). */
+        boolean wasFlying;
 
         Session(Player p) {
             this.p = p;
@@ -281,8 +324,13 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        List<String> subs = List.of("pin", "pins", "unpin", "guide", "stop", "minimap", "markers");
+        List<String> subs = List.of("pin", "pins", "unpin", "guide", "stop", "minimap", "markers", "size");
         if (args.length == 1) return subs.stream().filter(x -> x.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
+        if (args.length == 2 && args[0].equalsIgnoreCase("size")) {
+            List<String> out = new ArrayList<>();
+            for (int i = 1; i <= SIZES.length; i++) out.add(String.valueOf(i));
+            return out;
+        }
         if (args.length == 2 && (args[0].equalsIgnoreCase("unpin") || args[0].equalsIgnoreCase("guide")) && sender instanceof Player p && pins != null) {
             List<String> out = new ArrayList<>();
             for (mn.suld.api.map.MapPin pin : pins.pins(p.getUniqueId())) out.add(pin.name());
@@ -334,7 +382,40 @@ public final class AtlasSky implements Listener, TabExecutor {
             }
             case "minimap" -> toggleMinimap.accept(p);
             case "markers" -> toggleScreenMarkers.accept(p);
-            default -> p.sendMessage(Messages.info("/map — газрын зураг · /map pin [нэр] · /map pins · /map unpin <нэр> · /map guide <нэр|x z> · /map stop · /map minimap · /map markers"));
+            case "size", "хэмжээ" -> setSize(p, rest);
+            default -> p.sendMessage(Messages.info("/map — газрын зураг · /map pin [нэр] · /map pins · /map unpin <нэр> · /map guide <нэр|x z> · /map stop · /map minimap · /map markers · /map size [1-" + SIZES.length + "]"));
+        }
+    }
+
+    /** The player's size step, 0-based (0: the default). */
+    private static int sizeOf(Player p) {
+        Integer v = p.getPersistentDataContainer().get(SIZE_KEY, PersistentDataType.INTEGER);
+        return v == null ? 0 : Math.max(0, Math.min(SIZES.length - 1, v));
+    }
+
+    static String sizeLabel(int i) {
+        return (i + 1) + "/" + SIZES.length + " (" + Math.round(SIZES[i] * 100) + "%)";
+    }
+
+    /** {@code /map size}: the next size (after the largest, the default again); {@code /map size 3}: that one. An open atlas is rebuilt at once. */
+    private void setSize(Player p, String arg) {
+        int next;
+        if (arg.isEmpty()) {
+            next = (sizeOf(p) + 1) % SIZES.length;
+        } else if (arg.matches("\\d+") && Integer.parseInt(arg) >= 1 && Integer.parseInt(arg) <= SIZES.length) {
+            next = Integer.parseInt(arg) - 1;
+        } else {
+            p.sendMessage(Messages.error("/map size 1–" + SIZES.length + " (1 — анхны хэмжээ, " + SIZES.length + " — хамгийн том)"));
+            return;
+        }
+        if (next == 0) p.getPersistentDataContainer().remove(SIZE_KEY);
+        else p.getPersistentDataContainer().set(SIZE_KEY, PersistentDataType.INTEGER, next);
+        p.sendMessage(Messages.success("Атласын хэмжээ: " + sizeLabel(next) + ". Дахин томруулах: /map size"));
+        if (isOpen(p)) {
+            close(p);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (p.isOnline() && !isOpen(p) && blocked(p) == null) open(p);
+            });
         }
     }
 
@@ -401,6 +482,7 @@ public final class AtlasSky implements Listener, TabExecutor {
     private void open(Player p) {
         closeOthers.accept(p);
         Session s = new Session(p);
+        s.dist = DIST / SIZES[sizeOf(p)];
         sessions.put(p.getUniqueId(), s);
         p.closeInventory();
         Location o = s.origin;
@@ -437,11 +519,60 @@ public final class AtlasSky implements Listener, TabExecutor {
         });
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (sessions.get(p.getUniqueId()) != s || !p.isOnline()) return;
+            calm(s);
             build(s);
             s.ready = true;
             redraw(s);
             p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.9f, 1.0f);
+            // the guide opens by itself for a player's first atlases; Space brings it back any time
+            int seen = p.getPersistentDataContainer().getOrDefault(HELP_KEY, PersistentDataType.INTEGER, 0);
+            if (seen < HELP_AUTO) {
+                p.getPersistentDataContainer().set(HELP_KEY, PersistentDataType.INTEGER, seen + 1);
+                showHelp(s);
+            }
         }, 2L);
+    }
+
+    /**
+     * The client widens its field of view with the player's movement speed (and while flying): a skill-tree or potion
+     * speed bonus made the atlas look farther away. While it is open the speed is exactly the walking speed (one
+     * MULTIPLY_TOTAL modifier on top of every other), flying is off, and nothing on the stage is within reach.
+     */
+    private void calm(Session s) {
+        Player p = s.p;
+        calmSpeed(p);
+        for (Attribute a : new Attribute[]{Attribute.ENTITY_INTERACTION_RANGE, Attribute.BLOCK_INTERACTION_RANGE}) {
+            AttributeInstance r = p.getAttribute(a);
+            if (r == null) continue;
+            r.removeModifier(NO_REACH);
+            r.addTransientModifier(new AttributeModifier(NO_REACH, -1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+        }
+        s.wasFlying = p.isFlying();
+        if (s.wasFlying) p.setFlying(false);
+    }
+
+    /** The movement speed back to the plain walking speed (again after a skill or potion changed it while open). */
+    private static void calmSpeed(Player p) {
+        AttributeInstance speed = p.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed == null) return;
+        double walk = p.getWalkSpeed() / 2.0; // Bukkit's walk speed is twice the client's
+        if (Math.abs(speed.getValue() - walk) < 1e-6) return;
+        speed.removeModifier(CALM);
+        double now = speed.getValue();
+        if (now > 0 && walk > 0 && Math.abs(walk / now - 1) > 1e-4) {
+            speed.addTransientModifier(new AttributeModifier(CALM, walk / now - 1, AttributeModifier.Operation.MULTIPLY_SCALAR_1));
+        }
+    }
+
+    private void uncalm(Session s) {
+        Player p = s.p;
+        AttributeInstance speed = p.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed != null) speed.removeModifier(CALM);
+        for (Attribute a : new Attribute[]{Attribute.ENTITY_INTERACTION_RANGE, Attribute.BLOCK_INTERACTION_RANGE}) {
+            AttributeInstance r = p.getAttribute(a);
+            if (r != null) r.removeModifier(NO_REACH);
+        }
+        if (s.wasFlying && p.getAllowFlight()) p.setFlying(true);
     }
 
     public void close(Player p) {
@@ -455,6 +586,9 @@ public final class AtlasSky implements Listener, TabExecutor {
         for (Entity e : s.marks) if (e.isValid()) e.remove();
         for (Entity e : s.mateMarks) if (e.isValid()) e.remove();
         for (Entity e : s.stage) if (e.isValid()) e.remove();
+        for (Entity e : s.tipFrame) if (e.isValid()) e.remove();
+        for (Entity e : s.help) if (e.isValid()) e.remove();
+        uncalm(s);
         frames.close(p.getUniqueId());
         if (p.isInsideVehicle()) p.leaveVehicle();
         if (goBack) p.teleport(s.origin);
@@ -537,13 +671,13 @@ public final class AtlasSky implements Listener, TabExecutor {
         // the frames hang on block faces: the wall's middle is a block centre, the camera sits level with it
         int bx = (int) Math.floor(st.getX());
         int by = (int) Math.floor(st.getY() + s.eyeOff);
-        int bz = (int) Math.floor(st.getZ() + DIST);
+        int bz = (int) Math.floor(st.getZ() + s.dist);
         // an invisible frame draws its map flush with the block behind it (the client's item frame renderer: 0.5
         // from the block centre instead of a visible frame's 0.4375), one map pixel's depth (1/128) in front of it;
         // the parchment, the frame art and the labels are placed against that plane (seen on a 1.21.11 client)
         double faceZ = bz + 1 - 1.0 / 128;
         s.plane = new Location(w, bx + 0.5, by + 0.5, faceZ - 0.004);
-        Location cam = new Location(w, bx + 0.5, by + 0.5 + EYE_UP - s.eyeOff, faceZ - DIST, p.getLocation().getYaw(), p.getLocation().getPitch());
+        Location cam = new Location(w, bx + 0.5, by + 0.5 + EYE_UP * s.dist / DIST - s.eyeOff, faceZ - s.dist, p.getLocation().getYaw(), p.getLocation().getPitch());
         s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
         // the map wall: column 0 is on the viewer's left (world +x, the viewer faces +z)
         for (int row = 0; row < ROWS; row++) {
@@ -574,7 +708,8 @@ public final class AtlasSky implements Listener, TabExecutor {
         picture(s, s.stage, "front", 0, FRONT_V, FRONT_W, FRONT_H, 0.012, 0f);
         s.title = text(s, s.stage, 0, TITLE_V, Component.text("СҮЛДИЙН АТЛАС", GOLD, TextDecoration.BOLD), 1.2f, 300, 0);
         s.cartouche = text(s, s.stage, 0, CART_V, Component.empty(), CART_SCALE, 420, 0);
-        s.tooltip = text(s, s.stage, 0, 0, Component.empty(), TIP_SCALE, 240, 0);
+        s.tooltip = text(s, s.stage, 0, 0, Component.empty(), TIP_SCALE, 1000, 0, TIP_Z + 0.012);
+        s.tooltip.setAlignment(TextDisplay.TextAlignment.LEFT);
         // tabs
         Filter[] fs = Filter.values();
         double top = (fs.length - 1) * TAB_STEP / 2;
@@ -1018,7 +1153,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             int x = (int) Math.floor(s.view.worldX(a[0])), z = (int) Math.floor(s.view.worldZ(a[1]));
             line = place(x, z);
         } else {
-            line = "Zoom " + zoomLabel(s.view.zoom()) + " · Дугуй: томруулах · W A S D: гүйлгэх · Shift: хаах";
+            line = "Zoom " + zoomLabel(s.view.zoom()) + " · Space: заавар · Shift: хаах";
         }
         if (!line.equals(s.lastCursor) || force) {
             s.lastCursor = line;
@@ -1054,20 +1189,118 @@ public final class AtlasSky implements Listener, TabExecutor {
         return b.toString();
     }
 
+    /** How far in front of the wall the tooltip's frame and the guide's frame stand (the tooltip over the guide). */
+    static final double HELP_Z = 0.07, TIP_Z = 0.1;
+
+    /**
+     * The tooltip of the thing under the cursor, in the SÜLD tooltip frame (the same navy-and-gold frame every tooltip
+     * in the game wears) right beside it, toward the middle of the wall: its name in bold gold, its lines in bold cream.
+     */
     private void showTooltip(Session s, Hit h) {
+        for (Entity e : s.tipFrame) if (e.isValid()) e.remove();
+        s.tipFrame.clear();
         if (h == null) {
             s.tooltip.text(Component.empty());
-            s.tooltip.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
             return;
         }
-        Component tip = h.name();
-        for (Component l : h.lore()) tip = tip.append(Component.newline()).append(l);
+        List<String> lines = new ArrayList<>();
+        lines.add(plain(h.name()));
+        for (Component l : h.lore()) lines.add(plain(l));
+        Component tip = Component.text(lines.get(0), GOLD, TextDecoration.BOLD);
+        for (int i = 1; i < lines.size(); i++) tip = tip.append(Component.newline()).append(Component.text(lines.get(i), CREAM, TextDecoration.BOLD));
+        double[] box = box(lines, TIP_SCALE);
+        double w = box[0], ht = box[1];
+        // beside the thing, on the side toward the wall's middle, and wholly on the wall
+        double side = h.u() > 0 ? -1 : 1;
+        double cu = h.u() + side * (h.w() / 2 + 0.06 + w / 2);
+        double half = COLS / 2.0 + 0.4;
+        cu = Math.max(-half + w / 2, Math.min(half - w / 2, cu));
+        double cv = Math.max(-ROWS / 2.0 + ht / 2, Math.min(ROWS / 2.0 - ht / 2, h.v()));
+        panel(s, s.tipFrame, cu, cv, w, ht, TIP_Z);
         s.tooltip.text(tip.font(mn.suld.plugin.ui.StyleFormat.HD));
-        s.tooltip.setBackgroundColor(Color.fromARGB(230, 14, 22, 44));
-        int lines = 1 + h.lore().size();
-        double tu = Math.max(-2.2, Math.min(2.2, h.u() + (h.u() < 0 ? 0.9 : -0.9) * (Math.abs(h.u()) > 3 ? 1 : 0)));
-        double tv = h.v() > -1.0 ? h.v() - h.h() / 2 - 0.08 - LINE * TIP_SCALE * lines : h.v() + h.h() / 2 + 0.08;
-        s.tooltip.teleport(at(s, tu, tv, 0.08));
+        s.tooltip.teleport(at(s, cu, cv - (lines.size() - 1) * LINE * TIP_SCALE / 2, TIP_Z + 0.012));
+    }
+
+    private static String plain(Component c) {
+        return net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(c);
+    }
+
+    /**
+     * The SÜLD frame's size (w, h in blocks) around these lines of bold HD text at {@code scale}: the widest line
+     * (gui.HubLayout's widths of the HD font, one pixel more a letter for the bold) and a line's height each, with room.
+     */
+    static double[] box(List<String> lines, float scale) {
+        int px = 0;
+        for (String l : lines) px = Math.max(px, mn.suld.plugin.gui.HubLayout.textWidth(l) + l.length());
+        double w = px * FONT_PX * scale + 2 * (TIP_BORDER * 0.6 + TIP_PAD);
+        double h = lines.size() * LINE * scale + 2 * (TIP_BORDER * 0.5 + TIP_PAD);
+        return new double[]{w, h};
+    }
+
+    /**
+     * The SÜLD tooltip frame (tools/map/atlas_art.py: the pack's suld:mongol nine-slice, cut in nine) as a w × h box
+     * centred at (u, v): the corners keep their size, the edges and the middle stretch.
+     */
+    private void panel(Session s, List<Entity> into, double u, double v, double w, double h, double towardViewer) {
+        panel(s, into, u, v, w, h, towardViewer, TIP_BORDER);
+    }
+
+    private void panel(Session s, List<Entity> into, double u, double v, double w, double h, double towardViewer, double border) {
+        double b = Math.min(border, Math.min(w, h) / 2);
+        double[] us = {u - w / 2 + b / 2, u, u + w / 2 - b / 2}, vs = {v + h / 2 - b / 2, v, v - h / 2 + b / 2};
+        double[] ws = {b, w - 2 * b, b}, hs = {b, h - 2 * b, b};
+        String[] names = {"tl", "t", "tr", "l", "m", "r", "bl", "b", "br"};
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 3; c++) {
+                if (ws[c] <= 0 || hs[r] <= 0) continue;
+                // the middle a hair behind the edges and corners, so the gold line is never hidden under the navy
+                double z = towardViewer + (r == 1 && c == 1 ? 0 : 0.002);
+                picture(s, into, "tip_" + names[r * 3 + c], us[c], vs[r], ws[c] + (c == 1 ? 0.002 : 0), hs[r] + (r == 1 ? 0.002 : 0), z, 0f);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------ the guide
+
+    private void toggleHelp(Session s) {
+        if (s.help.isEmpty()) showHelp(s);
+        else hideHelp(s);
+    }
+
+    /** The guide: what every key and tab does, in bold Mongolian on the SÜLD frame in the middle of the map. */
+    private void showHelp(Session s) {
+        hideHelp(s);
+        List<String> plainLines = helpLines();
+        Component body = Component.text(HELP_TITLE, GOLD, TextDecoration.BOLD).append(Component.newline());
+        for (String[] l : HELP) {
+            body = body.append(Component.newline()).append(Component.text(l[0], CYAN, TextDecoration.BOLD))
+                    .append(Component.text(" — " + l[1], CREAM, TextDecoration.BOLD));
+        }
+        body = body.append(Component.newline()).append(Component.newline())
+                .append(Component.text(HELP_CLOSE, GREY, TextDecoration.BOLD));
+        double[] box = box(plainLines, HELP_SCALE);
+        double cv = 0.1;
+        panel(s, s.help, 0, cv, box[0] + HELP_BORDER, box[1] + HELP_BORDER, HELP_Z, HELP_BORDER);
+        TextDisplay t = text(s, s.help, 0, cv - (plainLines.size() - 1) * LINE * HELP_SCALE / 2, body.font(mn.suld.plugin.ui.StyleFormat.HD),
+                HELP_SCALE, 1000, 0, HELP_Z + 0.012);
+        t.setAlignment(TextDisplay.TextAlignment.LEFT);
+        s.p.playSound(s.p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.6f, 1.3f);
+    }
+
+    /** The guide's lines as plain text, as shown (title, a blank line, the keys, a blank line, how to close it). */
+    static List<String> helpLines() {
+        List<String> out = new ArrayList<>();
+        out.add(HELP_TITLE);
+        out.add("");
+        for (String[] l : HELP) out.add(l[0] + " — " + l[1]);
+        out.add("");
+        out.add(HELP_CLOSE);
+        return out;
+    }
+
+    private void hideHelp(Session s) {
+        for (Entity e : s.help) if (e.isValid()) e.remove();
+        s.help.clear();
     }
 
     // ------------------------------------------------------------------------------------------------ input
@@ -1097,6 +1330,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 placeMates(s); // a party mate moved: only their markers
             }
             if (Bukkit.getCurrentTick() % 2 == 0) cursor(s, false);
+            if (Bukkit.getCurrentTick() % 20 == 5) calmSpeed(s.p);
         }
     }
 
@@ -1104,6 +1338,10 @@ public final class AtlasSky implements Listener, TabExecutor {
         long now = System.currentTimeMillis();
         if (now - s.lastClick < 200) return;
         s.lastClick = now;
+        if (!s.help.isEmpty()) { // the first click puts the guide away
+            hideHelp(s);
+            return;
+        }
         cursor(s, false);
         Hit h = s.hover;
         if (s.pinMode && (h == null || !s.tabs.contains(h))) {
@@ -1161,6 +1399,10 @@ public final class AtlasSky implements Listener, TabExecutor {
         s.down = in.isBackward();
         s.left = in.isLeft();
         s.right = in.isRight();
+        // Space: the guide, open or away (on the press, not while held)
+        boolean jump = in.isJump();
+        if (jump && !s.jump && s.ready) toggleHelp(s);
+        s.jump = jump;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

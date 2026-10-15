@@ -155,6 +155,18 @@ stood on the next login.
   is open (`BossBars`: a service's bar is remembered and comes back on close; one its service hid meanwhile stays
   hidden). Tiles that load redraw the wall, but a frame whose picture did not change is not sent again
   (`AtlasFrames.unchanged`).
+* **Size and field of view** (2026-10-15). The client widens its field of view with the player's movement speed and
+  while flying, so a skill-tree or potion speed bonus (on top of a wide FOV slider) made the atlas a small picture far
+  away. While the atlas is open the movement speed is held at the plain walking speed (one transient MULTIPLY_TOTAL
+  modifier, checked again every second), flying is off, and the entity and block reach are zero; all of it comes
+  back on close and none of it is ever saved. `/map size [1-5]` (kept in the player's data) brings the camera in to
+  5.25 / 1.0, 1.2, 1.4, 1.65 or 1.9 blocks for a wide FOV or weak eyes; an open atlas is rebuilt at once.
+* **Tooltips and the guide.** The tooltip of a tab or a place stands right beside it, toward the middle of the wall,
+  on the SÜLD tooltip frame (the pack's `suld:mongol` nine-slice, cut into nine quads `entity/atlas/tip_*` by
+  `tools/map/atlas_art.py tooltip`): its name in bold gold, its lines in bold cream (0.85). The guide
+  («СҮЛДИЙН АТЛАС — ЗААВАР»: mouse, click, wheel, W A S D, the tabs, `/map size`, Space, Shift) opens by itself on a
+  player's first three atlases and with Space any time; a click or Space puts it away. The cartouche reads
+  `Zoom · Space: заавар · Shift: хаах`.
 * **While it is open** the player's weather is clear (no rain or snow across the map; their own weather comes back on
   close), the HUD panel and the target frame step aside (`HudService.quiet`) and so do the waypoint's bar and label. The waypoint's bar and label also step aside in the menu and the skill tree (2026-10-15: its see-through label floated over them).
 * **The map plane.** An invisible item frame draws its map flush with the block behind it — the client's item frame
