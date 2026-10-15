@@ -4,7 +4,8 @@
 #moj_import <minecraft:dynamictransforms.glsl>
 
 // Vanilla 1.21.11 rendertype_text, plus the SÜLD corner minimap (see rendertype_text.vsh): drawn with the map's own
-// colours (no light, no fog), its marker row hidden.
+// colours (no light, no fog), its marker row hidden. suldLocal is the place in the map (0..1), texCoord0 the place in
+// the texture, which is a map atlas's cell with ImmediatelyFast.
 
 uniform sampler2D Sampler0;
 
@@ -12,13 +13,14 @@ in float sphericalVertexDistance;
 in float cylindricalVertexDistance;
 in vec4 vertexColor;
 in vec2 texCoord0;
+in vec2 suldLocal;
 flat in int suldMinimap;
 
 out vec4 fragColor;
 
 void main() {
     if (suldMinimap == 1) {
-        if (texCoord0.y < 1.0 / 128.0) {
+        if (suldLocal.y < 1.0 / 128.0) {
             discard;
         }
         vec4 map = texture(Sampler0, texCoord0);

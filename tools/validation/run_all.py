@@ -8,7 +8,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CHECKS = ["validate_registry.py", "validate_resourcepack.py", "validate_pack_budget.py", "validate_world_plan.py"]
+CHECKS = ["validate_registry.py", "validate_resourcepack.py", "validate_pack_budget.py", "validate_world_plan.py",
+          "check_minimap_shader.py"]
 
 
 def main() -> int:

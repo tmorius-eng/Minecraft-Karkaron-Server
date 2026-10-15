@@ -54,7 +54,7 @@ import java.util.function.Predicate;
  * client skips entities out of view), none is within reach of a click (an entity farther than 5 blocks is never
  * targeted) and none is on the player's line of fire. Shown only to a player with the SÜLD pack loaded (without the
  * shader the map would hang in the world) and the «Мини газрын зураг» setting on, in the overworld, outside the sky
- * windows. Redrawn when the player has moved {@value #MOVE_BLOCKS} blocks or turned, at most {@value #REDRAW_TICKS}
+ * windows, never to a Bedrock player (Geyser answers the pack request but cannot run a Java core shader). Redrawn when the player has moved {@value #MOVE_BLOCKS} blocks or turned, at most {@value #REDRAW_TICKS}
  * ticks apart (a single step is caught up after {@value #SETTLE_TICKS} ticks), at once when the waypoint or a pin
  * changes (the guide's target and {@link PinService#version}), when the hostile mobs close by have moved at most every
  * {@value #MOB_REDRAW_TICKS} ticks, and only sent when the picture changed.
@@ -125,7 +125,40 @@ public final class MinimapService implements Listener {
 
     public void start() {
         view = minimapView();
+        sweep();
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 1L);
+    }
+
+    /** Frames no minimap owns (a reload, a crash in a chunk that stayed loaded): removed, never kept. */
+    private void sweep() {
+        int n = 0;
+        for (World w : Bukkit.getWorlds()) {
+            for (GlowItemFrame f : w.getEntitiesByClass(GlowItemFrame.class)) {
+                if (orphan(f.getScoreboardTags(), owned(f))) {
+                    f.remove();
+                    n++;
+                }
+            }
+        }
+        if (n > 0) plugin.getLogger().info("[map] removed " + n + " orphaned minimap frame(s)");
+    }
+
+    private boolean owned(Entity e) {
+        for (State s : states.values()) if (s.frames.contains(e)) return true;
+        return false;
+    }
+
+    /** A minimap frame (by its tag) that no player's minimap holds. */
+    static boolean orphan(java.util.Set<String> tags, boolean owned) {
+        return tags.contains(TAG) && !owned;
+    }
+
+    /**
+     * A Bedrock player through Geyser/Floodgate: Floodgate's UUIDs are {@code new UUID(0, xuid)}, every Java UUID
+     * (online v4, offline v3) has its version bits in the high half.
+     */
+    static boolean bedrock(UUID id) {
+        return id.getMostSignificantBits() == 0;
     }
 
     /** The one map view every minimap shows (per-player pictures), kept in map/views.yml like the atlas's. */
@@ -181,6 +214,7 @@ public final class MinimapService implements Listener {
 
     private boolean wanted(Player p) {
         if (!p.isOnline() || p.isDead() || p.getGameMode() == GameMode.SPECTATOR) return false;
+        if (bedrock(p.getUniqueId())) return false;
         if (p.getWorld() != Bukkit.getWorlds().get(0)) return false;
         if (busy.test(p)) return false;
         if (services.resourcePacks().statusOf(p.getUniqueId()) != org.bukkit.event.player.PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED) return false;
@@ -224,7 +258,8 @@ public final class MinimapService implements Listener {
                 draw(p, s, x, z, l.getYaw());
             }
         }
-        states.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
+        // a player gone without a quit event: the frames go with the state (they used to stay, unowned)
+        for (UUID id : new ArrayList<>(states.keySet())) if (Bukkit.getPlayer(id) == null) hide(id);
     }
 
     /**
@@ -344,20 +379,28 @@ public final class MinimapService implements Listener {
         mm.setMapView(view);
         item.setItemMeta(mm);
         // first above the player's head, out of every line of fire; place() puts it on its slot the same tick
-        GlowItemFrame f = at.getWorld().spawn(at.clone().add(0, 3, 0), GlowItemFrame.class, e -> {
-            e.setFacingDirection(BlockFace.UP, true);
-            e.setPersistent(false);
-            e.setVisibleByDefault(false);
-            e.addScoreboardTag(TAG);
-            e.setVisible(false);
-            e.setFixed(true);
-            e.setInvulnerable(true);
-            e.setSilent(true);
-            e.setItem(item, false);
-            e.setRotation(Rotation.NONE);
-        });
+        GlowItemFrame f = at.getWorld().spawn(at.clone().add(0, 3, 0), GlowItemFrame.class, e -> dress(e, item));
         p.showEntity(plugin, f);
         return f;
+    }
+
+    /**
+     * How a frame is made, before it is ever sent: hidden from everyone (only {@code showEntity} shows it to its owner),
+     * an invisible frame (only the map is drawn, and the shader moves that to the corner), never saved with the chunk,
+     * fixed (no drop, no break, no rotate), invulnerable and silent.
+     */
+    static void dress(GlowItemFrame e, ItemStack item) {
+        e.setFacingDirection(BlockFace.UP, true);
+        e.setPersistent(false);
+        e.setVisibleByDefault(false);
+        e.addScoreboardTag(TAG);
+        e.setVisible(false);
+        e.setFixed(true);
+        e.setInvulnerable(true);
+        e.setSilent(true);
+        e.setItemDropChance(0f);
+        e.setItem(item, false);
+        e.setRotation(Rotation.NONE);
     }
 
     private void hide(UUID id) {
@@ -490,6 +533,12 @@ public final class MinimapService implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
+        hide(e.getPlayer().getUniqueId());
+    }
+
+    /** The frames stay in the world the player left: removed at once (the next tick hangs new ones if the minimap is wanted there). */
+    @EventHandler
+    public void onWorldChange(org.bukkit.event.player.PlayerChangedWorldEvent e) {
         hide(e.getPlayer().getUniqueId());
     }
 

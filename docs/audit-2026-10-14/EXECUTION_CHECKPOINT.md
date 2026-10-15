@@ -347,3 +347,38 @@ The details are in audit §8.
 **Not verified:** a real 1.21.11 client (each zoom, region plates, the minimap's survey ink) and the bots.
 `atlasbot.js` checks "frames with real pixels", which now also passes on unexplored land; its intent should be
 re-read when it next runs.
+
+
+## Follow-up 2026-10-15 (6) — git sync, and the floating minimap map frames
+
+**Git.** The tree was on `fix/nameplate-healthbar-alignment` at `eabff41`, which equals `origin/main`. Local `main`
+was 7 commits behind (at `6232a4f`) and was fast-forwarded. No local work was at risk: the tree was clean apart from
+an untracked 129 MB `jcode-windows-x86_64.exe`. That file is not committed; it was added to `.git/info/exclude`
+(local only).
+
+**Bug.** In playtest screenshot `2026-10-15_18.53.49.png`, four maps float around the crosshair and no corner
+minimap shows. Details are in audit §9.
+- **Root cause:** the client profile (Fabulously Optimized) runs ImmediatelyFast with `map_atlas_generation`, which
+  puts every map into one 2048² atlas. The pack's `rendertype_text` shader only recognised a minimap in a 128² texture,
+  so it never moved the map to the corner. The server-side entity, metadata and visibility were correct.
+- **Shader fix:** the shader also finds the map in an atlas of 128-texel cells. A vertex's corner comes from
+  `gl_VertexID % 4`, and row 0 is hidden by the map's own coordinate.
+- **Server:**
+  - Bedrock players get no frames.
+  - Orphaned frames are swept at start.
+  - A state dropped without a quit event now removes its frames.
+  - A world change removes the frames at once.
+  - Drop chance is 0.
+  - The frame setup is the tested `dress()`.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `.\gradlew.bat test --rerun simTest --rerun --no-daemon` (JDK 21; JDK 25 in `JAVA_HOME` fails Gradle 8.14.3 at startup) | BUILD SUCCESSFUL. JUnit XML: suld-api 678 / 0 failures / 0 errors / 0 skipped; suld-plugin 269 / 0 / 0 / 0, including `MinimapFrameTest` 3 and `MinimapShaderTest` 3; simTest 13 / 0 / 0 / 0 |
+| 2 | `$env:PYTHONUTF8 = "1"; py tools\validation\run_all.py` | ALL VALIDATIONS PASSED (`check_minimap_shader.py` SKIP: no moderngl in the user's Python) |
+| 3 | `check_minimap_shader.py` in a moderngl venv (RTX 5060, GL 3.3) | 17/17 PASS. Against `eabff41`'s shaders, the 2 atlas checks FAIL, which reproduces the screenshot |
+| 4 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | Ran 6 tests, OK |
+| 5 | `git diff --check` | exit 0 |
+
+**Not verified:** a real client after the fix. The next playtest with the same profile should show the corner map.
+With an Iris shader pack on, the maps still hang in the world (Iris replaces core shaders); such players should use
+`/map minimap` to turn it off.

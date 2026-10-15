@@ -296,11 +296,17 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
   cancelled hit alone would hold a plain arrow on the frame's face — and a frame never shields its owner. The pack's
   own `rendertype_text`
   core shader (written fresh from vanilla 1.21.11's; NMinimap showed the technique, its GPL code is not used) checks
-  every 128 × 128 texture it draws for the four marker colours of row 0 (`Minimap.MARK`); that quad is moved into the
+  every 128 × 128 texture it draws for the four marker colours of row 0 (`Minimap.MARK`), and also every map in a map
+  atlas of 128-texel cells (ImmediatelyFast's `map_atlas_generation`, on by default in Fabulously Optimized: a
+  shader that looked at 128 × 128 textures only left the four frames hanging in front of the player as floating maps,
+  2026-10-15). In an atlas a vertex on a cell boundary takes its corner from the quad's vertex order
+  (`gl_VertexID % 4`: bottom-left, bottom-right, top-right, top-left, as vanilla and ImmediatelyFast draw a map), since a
+  boundary touches four maps. That quad is moved into the
   top-left corner in screen space at a whole number of screen pixels per map pixel (2 at 1080p, 3 at 1440p, 4 at
   2160p, 1 below 900 px high), drawn with the map's own colours (no light, no fog), and row 0 is hidden. Every other
   text, sign and map is drawn exactly as vanilla draws it.
-* **When:** only with the SÜLD pack loaded (without the shader the map would hang in the air), the «Мини газрын
+* **When:** only with the SÜLD pack loaded (without the shader the map would hang in the air), never for a Bedrock
+  player (Geyser answers the pack request but cannot run the shader; Floodgate UUIDs have a zero high half), the «Мини газрын
   зураг» setting on (`PlayerSetting.MINIMAP`, `/map minimap`), in the overworld, alive, and outside the sky windows
   (atlas, menu, skill tree). Redrawn on the map's workers after a move of 2 blocks or a turn (at most every 5 ticks;
   a single step is caught up after a second, at least every 10 s) and at once when the waypoint or a pin changes
@@ -311,7 +317,14 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
   steppe; hidden while dead and in the atlas, back after; with the three-frame layout drawn in all 72 screen grabs taken during
   fast turns (~33° and ~90° a step, looking up and down). A two-frame layout at ±28° blinked in the same test and the
   first layout had a frame on the line of fire, so neither was kept. The four-frame layout, the slack and the shorter step aside (2026-10-15) are checked by tests only, not yet on a client. A modded client that culls entities by occlusion (Sodium's entity culling) or replaces the core shaders
-  (an Iris shader pack) may hide it — vanilla and plain Fabric are fine.
+  (an Iris shader pack) may hide it — vanilla and plain Fabric are fine. With an Iris shader pack **on**, Iris replaces
+  every core shader and the four maps hang in the world: such players should turn `/map minimap` off.
+* **Lifecycle:** a frame is made hidden, invisible, fixed, drop chance 0, invulnerable, silent and not persistent
+  before its first packet (`MinimapService.dress`, `MinimapFrameTest`). It is removed when the minimap is not wanted
+  (setting off, death, spectator, sky window, pack not loaded), on quit, on a world change, when a player's state is
+  dropped, on a chunk load (a crash's leftovers) and at start (`suld_minimap` frames no minimap owns).
+* **Shader check on a GPU:** `tools/validation/check_minimap_shader.py` (moderngl; SKIP without it) renders the real
+  pack shaders: vanilla, a 2048 atlas with eight neighbouring maps, glyphs.
 
 ### Bots
 

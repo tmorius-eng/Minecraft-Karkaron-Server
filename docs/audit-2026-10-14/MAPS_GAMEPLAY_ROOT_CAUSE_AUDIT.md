@@ -318,3 +318,71 @@ for the whole world, zoom 2 around the capital, zoom 3 in the north-west, and zo
 **Not verified:** a real 1.21.11 client (the atlas at each zoom, the minimap's survey ink on screen, region plates)
 and the bots `atlasbot.js`/`mapcbot.js`. `atlasbot`'s check "frames with real pixels" now also passes on unexplored
 land, so its intent (real land shows) should be re-read when it is next run.
+
+## 9. Follow-up 2026-10-15 (6): four minimap maps floating in front of the player
+
+**Report.** Playtest screenshot `2026-10-15_18.53.49.png` (qeevr_, 18:50–19:03 on the dev server, plugin
+`eabff41`): four small maps hang in the world around the crosshair and nothing shows in the top-left corner.
+
+**What it is.** The four maps are the minimap's own glow item frames (`MinimapService.SLOTS`: 14° up, 50° left,
+50° right, 24° down). They sit exactly where the server puts them. The frame itself is invisible
+(`setVisible(false)`), only the owner is sent the entity (`setVisibleByDefault(false)` + `showEntity`), and the
+server side worked as designed. What failed is the pack's `rendertype_text` core shader: it did not recognise the map,
+so the client drew the map where its frame hangs.
+
+**Root cause.** The client was the Modrinth profile *Fabulously Optimized* (Fabric 1.21.11, Sodium, Iris, ImmediatelyFast
+1.14.1). ImmediatelyFast's `map_atlas_generation` is on by default (`map_atlas_size: 2048`). It copies every map into
+one 2048 × 2048 texture of 128-texel cells (`MapAtlasTexture`) and remaps the map quad's UVs to the cell. The shader
+had two hard assumptions, and an atlas breaks both:
+- `textureSize(Sampler0, 0) != ivec2(128, 128) → not the minimap`;
+- the marker row is read at texels (0..3, 0) of the texture, not of the map.
+
+Every client with that mod (most Fabric performance packs) saw the floating maps. Vanilla clients did not.
+
+**Fix (`rendertype_text.vsh/.fsh`).**
+- A 128 × 128 texture is still read as before.
+- A square texture of 128-texel cells (≥ 256) is read as a map atlas. A vertex whose UV lies exactly on a cell
+  boundary (glyph corners almost never do, so text costs one modulo) takes its corner from `gl_VertexID % 4`. Vanilla
+  and ImmediatelyFast both draw a map as bottom-left, bottom-right, top-right, top-left. From the corner the vertex
+  finds its map's top-left texel and tests the four marker colours there.
+- The corner comes from the vertex order, not the UV, because a cell boundary touches up to four maps. Taking it from
+  the UV would pull a corner of a neighbouring map (an atlas-sky tile, say) to the screen corner as a stretched
+  triangle.
+- The fragment shader hides row 0 by the map's own coordinate (`suldLocal`), since `texCoord0` is the place in the
+  whole atlas.
+
+**Verified on a GPU.** `tools/validation/check_minimap_shader.py` compiles the real pack shaders under moderngl
+(RTX 5060, GL 3.3 core) and renders:
+- a vanilla 128² minimap;
+- a 2048 atlas with the minimap in cell (3, 1), its eight neighbours drawn in the same batch;
+- glyph quads from a 256² font whose first texels carry the marker colours.
+
+All 17 checks pass. Against the shaders of `HEAD` (`eabff41`), "atlas: corner shows the map" and "atlas: nothing
+left in the world" **fail**, which reproduces the screenshot. Without moderngl or a GL context the check prints SKIP
+(CI has no GPU).
+
+**Server-side hardening (`MinimapService`).**
+- **Bedrock players:** never get frames. Geyser answers the Java pack request but cannot run a core shader.
+  Floodgate UUIDs are `new UUID(0, xuid)`.
+- **Orphaned frames:** `start()` removes any `suld_minimap` glow frame that no minimap owns (e.g. after a `/reload`,
+  or a crash in a chunk that stayed loaded). `EntitiesLoadEvent` already covered chunks loaded from disk.
+- **States dropped without a quit event:** the tick used to drop the state and keep the frames. It now removes the
+  frames with the state.
+- **World change:** `PlayerChangedWorldEvent` removes the frames at once instead of one tick later.
+- **Item drop chance:** a frame's drop chance is 0. With `setFixed(true)`, it never drops, breaks or turns.
+- **`dress()`:** the frame's settings are now one static method, tested, and applied in the spawn consumer before the
+  first packet.
+
+**Tests.**
+
+| Test | Checks |
+|---|---|
+| `MinimapShaderTest` (plugin, 3) | Marker colours in order; the 128² path is kept; no 128²-only gate; cells of 128; the corner comes from `gl_VertexID % 4`; row 0 hidden by `suldLocal`, not by `texCoord0` |
+| `MinimapFrameTest` (plugin, 3) | `dress`: hidden by default, invisible, not persistent, fixed, drop chance 0, invulnerable, silent, tagged, facing up, hidden before the map goes in; Bedrock UUIDs refused, Java v3/v4 accepted; only unowned `suld_minimap` frames are orphans (`suld_atlas` frames are not touched) |
+| `tools/validation/check_minimap_shader.py` | The GPU render described above (in `run_all.py`) |
+
+**Still open.**
+- With an **Iris shader pack on** (the same profile had Complementary Reimagined; it was turned off at 18:51), Iris
+  replaces every core shader. The minimap then hangs in the world whatever the pack does. The server cannot detect
+  this. Such players should turn the minimap off (`/map minimap`). WORLD_MAP.md says so.
+- Not yet seen on the real client after the fix: the next playtest with the same profile should show the corner map.
