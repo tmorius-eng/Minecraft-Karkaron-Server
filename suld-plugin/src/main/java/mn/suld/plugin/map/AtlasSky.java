@@ -72,8 +72,8 @@ import java.util.concurrent.CompletableFuture;
  * quads from the pack), places and labels in front of them. Everything on the stage is visible to its owner only.
  * <p>
  * The crosshair is the cursor: the block under it is read out in the cartouche, a place under it shows its tooltip, a
- * left click on a place points the compass at it, on a tab runs it. The wheel zooms toward the cursor (from 1 block a
- * pixel to the whole world), W/A/S/D pan by a quarter of the wall, Shift closes. Left tabs choose which places show,
+ * left click on a place points the compass at it, on a tab runs it. The wheel zooms toward the cursor (from 4 × 4 map
+ * pixels a block to the whole world), W/A/S/D pan by a quarter of the wall, Shift closes. Left tabs choose which places show,
  * right tabs: the whole world, back to me, zoom in, zoom out. The map never shows land the server has not generated.
  */
 public final class AtlasSky implements Listener, TabExecutor {
@@ -88,6 +88,11 @@ public final class AtlasSky implements Listener, TabExecutor {
     static final double DIST = 6.0, EYE_UP = 0.25;
     static final int RISE = 144;
     static final long COMBAT_MS = 8000;
+    /**
+     * The zoom the atlas opens at: one block a map pixel, 640 blocks across the wall around the player. (It opened at
+     * 4 blocks a pixel, where the city is a speck and most of the 2 560-block window is ungenerated parchment.)
+     */
+    static final int OPEN_ZOOM = 0;
     /** Panel layout (blocks, u right, v up, (0, 0) the middle of the wall), measured from the pack's textures (128 px a block). */
     static final double PX = 1.0 / 128;
     static final double FRONT_W = 784 * PX, FRONT_H = 864 * PX, FRONT_V = -12 * PX;
@@ -272,7 +277,8 @@ public final class AtlasSky implements Listener, TabExecutor {
                     p.sendMessage(Messages.error("Ийм тэмдэг алга: /map pins"));
                     return;
                 }
-                pins.remove(p, pin.get(), () -> refreshFor(p));
+                var gone = pin.get();
+                pins.remove(p, gone, () -> unpinned(p, gone));
             }
             case "guide" -> {
                 String[] xz = rest.split("\\s+");
@@ -318,8 +324,14 @@ public final class AtlasSky implements Listener, TabExecutor {
     }
 
     private void guidePin(Player p, mn.suld.api.map.MapPin pin) {
-        guide.guide(p, new WaypointGuide.Target(pin.name(), "◆", Bukkit.getWorlds().get(0).getName(), pin.x() + 0.5, pin.y(), pin.z() + 0.5));
+        guide.guide(p, new WaypointGuide.Target(pin.name(), "◆", Bukkit.getWorlds().get(0).getName(), pin.x() + 0.5, pin.y(), pin.z() + 0.5, pin.id()));
         p.sendMessage(Messages.success("◆ «" + pin.name() + "» руу чиглэлээ. Зогсоох: /map stop"));
+    }
+
+    /** A pin was removed: the atlas drops its marker and a waypoint leading to it ends (no stale bar, label or compass). */
+    private void unpinned(Player p, mn.suld.api.map.MapPin pin) {
+        refreshFor(p);
+        if (guide != null) guide.pinRemoved(p, pin.id());
     }
 
     /** The player's atlas, if open, shows their pins again. */
@@ -368,7 +380,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         s.seat.addPassenger(p);
         frames.open(p.getUniqueId());
         MapGeometry g = map.geometry();
-        s.view = new AtlasView(COLS, ROWS, o.getX(), o.getZ(), 2).clamp(g);
+        s.view = new AtlasView(COLS, ROWS, o.getX(), o.getZ(), OPEN_ZOOM).clamp(g);
         String home = w.getName();
         services.deathRepository().recent(p.getUniqueId(), 1).whenComplete((list, err) -> {
             if (err != null || list == null || list.isEmpty() || !plugin.isEnabled()) return;
@@ -539,8 +551,8 @@ public final class AtlasSky implements Listener, TabExecutor {
             Runnable click = switch (t.icon()) {
                 case "world" -> () -> setView(s, new AtlasView(COLS, ROWS, 0, 0, AtlasView.wholeWorldZoom(COLS, ROWS, map.geometry())).clamp(map.geometry()));
                 case "me" -> () -> setView(s, s.view.centreOn(s.origin.getX(), s.origin.getZ(), map.geometry()));
-                case "plus" -> () -> setView(s, s.view.zoomAt(s.view.zoom() - 1, 0, 0, map.geometry()));
-                case "minus" -> () -> setView(s, s.view.zoomAt(s.view.zoom() + 1, 0, 0, map.geometry()));
+                case "plus" -> () -> zoom(s, -1, 0, 0);
+                case "minus" -> () -> zoom(s, 1, 0, 0);
                 case "pin_add" -> () -> togglePinMode(s);
                 default -> null;
             };
@@ -586,6 +598,20 @@ public final class AtlasSky implements Listener, TabExecutor {
         redraw(s);
     }
 
+    /**
+     * One zoom step ({@code dz} −1 closer, +1 farther) toward panel point (u, v), shared by the wheel and the tabs. The
+     * new scale is read out on the action bar; at either end the step is refused out loud instead of doing nothing.
+     */
+    private void zoom(Session s, int dz, double u, double v) {
+        AtlasView next = s.view.zoomAt(s.view.zoom() + dz, u, v, map.geometry());
+        if (next.zoom() == s.view.zoom()) {
+            s.p.sendActionBar(Component.text(dz < 0 ? "Хамгийн ойр (" + zoomLabel(s.view.zoom()) + ")" : "Хамгийн хол (" + zoomLabel(s.view.zoom()) + ")", GREY));
+            return;
+        }
+        setView(s, next);
+        s.p.sendActionBar(Component.text("Zoom " + zoomLabel(next.zoom()), GOLD));
+    }
+
     private void setFilter(Session s, Filter f) {
         if (s.filter == f) return;
         s.filter = f;
@@ -610,7 +636,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 int[] t = v.tilesOf(col, row);
                 for (int tz = t[1]; tz <= t[3]; tz++) {
                     for (int tx = t[0]; tx <= t[2]; tx++) {
-                        wanted.add(tiles.tile(v.zoom(), tx, tz));
+                        wanted.add(tiles.tile(v.tileZoom(), tx, tz));
                         keys.add(new int[]{col, row, tx, tz});
                     }
                 }
@@ -625,6 +651,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                     int[] k = keys.get(i);
                     CompletableFuture<byte[]> f = wanted.get(i);
                     byte[] tile = f.isCompletedExceptionally() ? null : f.getNow(null);
+                    if (tile == null) s.dirty = true; // a region read timed out: asked again within a second, not left blank
                     int frame = k[1] * COLS + k[0];
                     if (out[frame] == null) out[frame] = new byte[TileComposer.PIXELS];
                     if (tile != null) v.copy(tile, k[2], k[3], k[0], k[1], out[frame]);
@@ -639,7 +666,7 @@ public final class AtlasSky implements Listener, TabExecutor {
     /** A tile changed (a chunk was read): redraw the atlases that show it. */
     private void tileChanged(int zoom, int tx, int tz) {
         for (Session s : sessions.values()) {
-            if (!s.ready || s.view.zoom() != zoom) continue;
+            if (!s.ready || s.view.tileZoom() != zoom) continue;
             int[] a = s.view.tilesOf(0, 0), b = s.view.tilesOf(COLS - 1, ROWS - 1);
             if (tx >= a[0] && tx <= b[2] && tz >= a[1] && tz <= b[3]) s.dirty = true;
         }
@@ -887,7 +914,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                                 }), ONCE)),
                         io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Устгах ✕", NamedTextColor.RED), null, 100,
                                 io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((view, who) -> Bukkit.getScheduler().runTask(plugin, () -> {
-                                    if (who instanceof Player pl && pl.isOnline()) pins.remove(pl, pin, () -> refreshFor(pl));
+                                    if (who instanceof Player pl && pl.isOnline()) pins.remove(pl, pin, () -> unpinned(pl, pin));
                                 }), ONCE))))
                         .columns(2)
                         .exitAction(io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Болих"), null, 100, null))
@@ -939,8 +966,10 @@ public final class AtlasSky implements Listener, TabExecutor {
         h.bg().setItemStack(quad(on ? h.model() + "_on" : h.model()));
     }
 
-    private static String zoomLabel(int zoom) {
+    static String zoomLabel(int zoom) {
         return switch (zoom) {
+            case -2 -> "4:1";
+            case -1 -> "2:1";
             case 0 -> "1:1";
             case 1 -> "1:2";
             case 2 -> "1:4";
@@ -1054,7 +1083,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         double[] a = aim(s);
         double u = a != null && s.view.onWall(a[0], a[1]) ? a[0] : 0, v = a != null && s.view.onWall(a[0], a[1]) ? a[1] : 0;
         // wheel down (next slot) = farther, like a web map
-        setView(s, s.view.zoomAt(s.view.zoom() + Integer.signum(d), u, v, map.geometry()));
+        zoom(s, Integer.signum(d), u, v);
     }
 
     @EventHandler
@@ -1081,9 +1110,20 @@ public final class AtlasSky implements Listener, TabExecutor {
     public void onCommand(PlayerCommandPreprocessEvent e) {
         Player p = e.getPlayer();
         if (!sessions.containsKey(p.getUniqueId())) return;
-        String cmd = e.getMessage().toLowerCase(Locale.ROOT);
-        if (cmd.equals("/map") || cmd.startsWith("/map ") || cmd.equals("/atlas")) return; // the command closes it itself
+        if (isAtlasCommand(e.getMessage())) return; // the command closes it itself
         close(p);
+    }
+
+    /** The /map command under any of its names (plugin.yml aliases, the suld: prefix), so it toggles instead of closing and reopening. */
+    static final java.util.Set<String> LABELS = java.util.Set.of("map", "maps", "atlas", "gazar", "газар");
+
+    static boolean isAtlasCommand(String message) {
+        String m = message.strip();
+        if (!m.startsWith("/")) return false;
+        int sp = m.indexOf(' ');
+        String label = (sp < 0 ? m.substring(1) : m.substring(1, sp)).toLowerCase(Locale.ROOT);
+        if (label.startsWith("suld:")) label = label.substring(5);
+        return LABELS.contains(label);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

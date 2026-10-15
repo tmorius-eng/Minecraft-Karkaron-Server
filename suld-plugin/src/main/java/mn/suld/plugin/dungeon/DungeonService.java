@@ -91,6 +91,12 @@ public final class DungeonService {
     private final SuldServices services;
     private final MobService mobs;
     private final PartyService parties;
+    /**
+     * Set by SuldPlugin: closes a member's sky window (atlas, menu, skill tree) before the run moves them. Seated on a
+     * window's stage, a member's teleport ends in the window's dismount guard, which sends them back where they opened
+     * it — the party went into the hall without them.
+     */
+    public volatile java.util.function.Consumer<Player> closeWindows = p -> { };
     private final BossService bosses;
 
     private final Map<UUID, ActiveRun> runsByParty = new HashMap<>();
@@ -255,6 +261,7 @@ public final class DungeonService {
         Location enter = hall == null ? null : hall.at(mn.suld.api.dungeon.hall.HallBlueprint.PLAYER_SPAWN);
         for (UUID id : members) {
             Player p = Bukkit.getPlayer(id);
+            closeWindows.accept(p); // off the window's stage first, or the move into the run is undone
             if (enter != null) {
                 p.teleportAsync(enter);
             } else if (!p.getUniqueId().equals(leader.getUniqueId())) {

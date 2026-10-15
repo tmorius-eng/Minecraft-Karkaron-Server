@@ -151,3 +151,87 @@ as `d04967a` (by the owner, outside this session). This session did not stage, c
   `CLAUDE_MASTER_EXECUTION_PROMPT.md`.
 - This checkpoint file is modified by this update (uncommitted).
 - Phase 7 run: steps 1–5 passed (see section above); step 6 found origin/main = `d04967a` ≠ `411842d` → stopped. Nothing staged, committed or pushed.
+
+## Run 2026-10-15 — atlas / waypoint / minimap root-cause audit (validation passed in a worktree; stopped at the gates; completed by the follow-up below)
+
+Local Windows CLI session, one agent, no subagents. Same environment fixes as above (py launcher, `JAVA_HOME`).
+Report: `MAPS_GAMEPLAY_ROOT_CAUSE_AUDIT.md`. The eight 2026-10-14 reports were reviewed and left unchanged.
+
+**Initial state (before this run):** branch `main` @ `c1fcc62`, nothing staged. Pre-existing user changes, left
+untouched: `suld-plugin/src/test/java/mn/suld/plugin/combat/ArrowScaleTest.java` is modified so its whole content is one
+line that looks like an OpenRouter API key; untracked `jcode-windows-x86_64.exe`. Note:
+`CLAUDE_MASTER_EXECUTION_PROMPT.md` is already **tracked** (committed in `7685130`, also on `origin/main`) despite the rule never to commit it; this run did not touch it. **The key should be treated as exposed and rotated.** `ArrowScaleTest.java` must not be committed as it is.
+
+**Changed by this run:** `AtlasView`, `AtlasViewTest`, `AtlasSky`, `WaypointGuide`, `ChunkColorStore`,
+`ChunkColorStoreTest`, new `map/AtlasInputTest`, `DungeonService`, `SuldPlugin`, `QuestTracker` (the one-identifier
+compile fix identical to origin's `2018b2a`), `plugin.yml` (alias `maps`), `docs/WORLD_MAP.md`, `atlasbot.js`,
+`partymapbot.js`, new `MAPS_GAMEPLAY_ROOT_CAUSE_AUDIT.md`, this file.
+
+| Step | Command | Result |
+|---|---|---|
+| 1 | `.\gradlew.bat :suld-api:test --rerun --tests "mn.suld.api.map.*"` (main tree) | exit 0; `AtlasViewTest` 6 / 0 / 0 |
+| 2 | `.\gradlew.bat test simTest --no-daemon` (**main tree**) | **exit 1**: `:suld-plugin:compileTestJava` fails at `ArrowScaleTest.java:1` ("class, interface, enum, or record expected"), the pre-existing user change above. Before that, local `HEAD` itself failed `:suld-plugin:compileJava` (`QuestTracker.java:171`, `refusal` already defined); fixed as G-1 |
+| 3 | `git worktree add --detach ../suld-validate HEAD`, this run's files copied in (`cmp`-checked), the committed `ArrowScaleTest.java` | temporary validation tree; removed after use |
+| 4 | `.\gradlew.bat test --rerun simTest --rerun --no-daemon` (worktree) | exit 0, BUILD SUCCESSFUL. JUnit XML: suld-api 632 / 0 failures / 0 errors; suld-plugin 215 / 0 / 0; simTest 13 / 0 / 0 |
+| 5 | `.\gradlew.bat :suld-plugin:specTables --no-daemon -q` (worktree) | exit 0, "spec tables written"; 8 spec docs differ only by line endings (`git diff --ignore-cr-at-eol` empty), so nothing was brought back |
+| 6 | `py tools\content\gen_class_armor.py` (worktree) | exit 0, "120 class armour definitions, 30 sets"; `class_armor.json` byte-identical |
+| 7 | `$env:PYTHONUTF8='1'; py tools\validation\run_all.py` (main tree) | exit 0, "ALL VALIDATIONS PASSED" |
+| 8 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | exit 0, "Ran 6 tests … OK" |
+| 9 | `git diff --check` | clean |
+| 10 | `git fetch origin`; `git rev-parse origin/main` | **`f4c071be387004f27f7e6974443e63c03b641aa8`** ≠ expected `411842d4b7a9092021ef6e770d6f8e74abaa75b9` (`411842d` is an ancestor). Local `main` diverged: 1 ahead (`c1fcc62`), 5 behind (`2018b2a`, `aee8470`, `86c2911`, merge `6232a4f`, `f4c071b`) |
+| 11 | stage / commit / push | **Not done.** Stop conditions: origin/main ≠ expected base; the required main-tree `gradlew test simTest` fails because of the pre-existing user change, which may not be altered; no real-client verification |
+
+**Not verified anywhere:** behaviour on a real 1.21.11 client (the new zooms, the action-bar read-out, the unpin
+ending the waypoint, the dungeon start closing sky windows, the minimap) and the loadtest bots (they need the dev server).
+
+**Remaining steps (owner):**
+1. Rotate the exposed key. Restore or rewrite `ArrowScaleTest.java` yourself (`git diff` shows the committed test).
+2. Integrate `origin/main` (`f4c071b`) into local `main`. Local `c1fcc62` touches `QuestChain` / `QuestChainTest`;
+   origin's `aee8470` / `86c2911` touch the same quest area, so review that merge by hand. The `QuestTracker` hunk here
+   equals origin's.
+3. Re-run `.\gradlew.bat test simTest --no-daemon`, the two Python validators, and `atlasbot.js` / `mapcbot.js` /
+   `partymapbot.js` on the dev server. Check the client steps in the report §4.
+4. Then stage only the files listed under "Changed by this run" (never `CLAUDE_MASTER_EXECUTION_PROMPT.md`,
+   `ArrowScaleTest.java` or `jcode-windows-x86_64.exe`) and commit as `fix(gameplay): complete SULD audit and regression fixes`.
+
+Steps 1, 2 and 4 and the automated part of step 3 were done in the follow-up below. The bots and the client steps are
+still open.
+
+## Follow-up 2026-10-15 — reconciliation with `origin/main`, main-tree validation, commit and push
+
+Local Windows CLI session, one agent, no subagents. The owner authorised restoring `ArrowScaleTest.java` (they had
+already revoked the key), integrating the current `origin/main` instead of the old `411842d` base, and pushing.
+
+**State found:** a `git pull --rebase origin main` stopped halfway (HEAD detached at `f4c071b`, local `main` at a merge
+commit `29c0baf`). That merge was never pushed, and it could not be used for two reasons. (1) It committed
+`QuestChainTest.java` with conflict markers still in it. (2) It added the untracked 130 MB `jcode-windows-x86_64.exe`,
+which is over GitHub's 100 MB limit. The rebase had staged the same conflict markers. `ArrowScaleTest.java` was already
+back to its committed content in the working tree.
+
+**Resolution:**
+1. `QuestChainTest.normaliseStartsAndCatchesUp`: kept both sides. Origin's assertion (an unknown id with no progression
+   hint is preserved) and local `c1fcc62`'s assertion (`q -> false` recovers to the first chapter) both hold under
+   origin's `QuestChain.normalise`. `git rebase --continue` then wrote `f56dea3`, which is `c1fcc62` replayed on
+   `f4c071b`. Its `QuestChain.java` hunk is already in origin, so the commit only adds one test line.
+2. This run's files were restored from `29c0baf` (`git checkout 29c0baf -- <paths>`), leaving out the `.exe` and
+   `QuestChainTest.java`. None of those paths changed between the merge base `c67836a` and `f4c071b`, so origin's
+   versions lose nothing. The `QuestTracker` hunk matched origin's `2018b2a`, so it no longer shows as a change.
+3. `jcode-windows-x86_64.exe` was written back to the working tree from `29c0baf` and listed in `.git/info/exclude`
+   (local only, not committed).
+4. `ArrowScaleTest.java` matches `HEAD`. `git grep` and a working-tree grep for the OpenRouter key prefix find nothing
+   apart from the excluded `.exe`.
+
+| Step | Command (main working tree) | Result |
+|---|---|---|
+| 1 | `.\gradlew.bat test --rerun simTest --rerun --no-daemon` | **exit 1**: `:suld-plugin:test` 221 run, 1 failed: `JdbcMapPinRepositoryIT.theLimitHoldsWhenAddsRace` ("the limit of 5 holds …: 9") |
+| 2 | `.\gradlew.bat :suld-plugin:test --rerun --tests 'mn.suld.plugin.persistence.JdbcMapPinRepositoryIT'` ×3 | exit 0, 0, 1 (the failed run stored 10). Flaky |
+| 3 | the same ×4 in a temporary `git worktree` at clean `origin/main` `f4c071b` | exit 0, 0, 1, 1: **the flake is already on `origin/main`**, not caused by this work; worktree removed |
+| 4 | `.\gradlew.bat test --rerun simTest --rerun --no-daemon` | **exit 0**, BUILD SUCCESSFUL. JUnit XML: suld-api 632 / 0 failures / 0 errors / 0 skipped; suld-plugin 221 / 0 / 0 / 0; simTest 13 / 0 / 0 / 0 |
+| 5 | `$env:PYTHONUTF8 = "1"; py tools\validation\run_all.py` | exit 0, "ALL VALIDATIONS PASSED" |
+| 6 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | exit 0, "Ran 6 tests … OK" |
+| 7 | `git diff --check`, `git diff --cached --check` | exit 0, clean |
+
+**Open:** `JdbcMapPinRepositoryIT.theLimitHoldsWhenAddsRace` fails about half the time, on `origin/main` too. 24 adds
+racing a limit of 5 can store 9 or 10 rows. So the `INSERT … SELECT … WHERE (SELECT COUNT(*) …) < ?` guard does not
+fully serialise concurrent adds, despite what the `JdbcMapPinRepository` Javadoc says. This affects the real pin
+limit, not just the test. Not changed here. The bots and the real-client checks in the report §4 also remain open.

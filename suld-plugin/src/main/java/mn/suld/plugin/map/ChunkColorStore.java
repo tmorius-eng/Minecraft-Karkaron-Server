@@ -180,7 +180,21 @@ final class ChunkColorStore {
 
     // ------------------------------------------------------------------------------------------------ reading
 
-    /** The column at block (x, z), reading its region from disk if needed. Map worker threads only. */
+    /** How long a worker waits for a region read before giving up on the column (tests shorten it). */
+    volatile long readTimeoutMs = 10_000;
+
+    /** A region could not be read in time: the column is unknown, which is not the same as "never generated". */
+    static final class RegionUnavailable extends RuntimeException {
+        RegionUnavailable(long key, Throwable cause) {
+            super("map region " + rx(key) + "," + rz(key) + " not read", cause);
+        }
+    }
+
+    /**
+     * The column at block (x, z), reading its region from disk if needed. Map worker threads only. Throws
+     * {@link RegionUnavailable} when the read does not finish in time: answering 0 there (as it did) drew real land as
+     * blank parchment, and the tile was cached with the hole until a chunk under it changed.
+     */
     int columnBlocking(int x, int z) {
         int cx = x >> 4, cz = z >> 4;
         long k = key(cx >> 5, cz >> 5);
@@ -192,9 +206,12 @@ final class ChunkColorStore {
         }
         if (r == null) {
             try {
-                r = f.get(10, TimeUnit.SECONDS);
+                r = f.get(readTimeoutMs, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RegionUnavailable(k, e);
             } catch (Exception e) {
-                return 0;
+                throw new RegionUnavailable(k, e);
             }
             if (r == null) return 0;
         }

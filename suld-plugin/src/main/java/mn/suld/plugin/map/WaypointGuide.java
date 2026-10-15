@@ -46,8 +46,21 @@ public final class WaypointGuide implements Listener {
     /** A {@link Target#y()} meaning "on the ground there" (a place picked on the map, whose height the map does not hold). */
     public static final double GROUND = Double.NaN;
 
-    /** A waypoint: where, what it is called, the glyph shown before the name; {@code y} may be {@link #GROUND}. */
-    public record Target(String name, String glyph, String world, double x, double y, double z) {
+    /**
+     * A waypoint: where, what it is called, the glyph shown before the name; {@code y} may be {@link #GROUND}. {@code pin}
+     * is the id of the player's pin it leads to (null for a place, a death or typed coordinates), so removing that pin
+     * ends the waypoint instead of leaving it pointing at a pin that no longer exists.
+     */
+    public record Target(String name, String glyph, String world, double x, double y, double z, UUID pin) {
+
+        public Target(String name, String glyph, String world, double x, double y, double z) {
+            this(name, glyph, world, x, y, z, null);
+        }
+
+        /** True when this waypoint leads to the pin {@code pinId}. */
+        public boolean leadsTo(UUID pinId) {
+            return pin != null && pin.equals(pinId);
+        }
     }
 
     private final class Guide {
@@ -55,6 +68,8 @@ public final class WaypointGuide implements Listener {
         final BossBar bar;
         TextDisplay label;
         boolean shown;
+        /** The compass target this waypoint set (handed back to the world spawn when it ends, if still ours). */
+        Location compass;
 
         Guide(Target target) {
             this.target = target;
@@ -64,7 +79,7 @@ public final class WaypointGuide implements Listener {
 
     private final Plugin plugin;
     private final Map<UUID, Guide> guides = new HashMap<>();
-    /** Set by SuldPlugin: true while the player is in the atlas, whose wall the bar and the label would cover. */
+    /** Set by SuldPlugin: true while the player is in a sky window (atlas, menu, skill tree), which the bar and the label would cover. */
     public volatile java.util.function.Predicate<Player> busy = p -> false;
 
     public WaypointGuide(Plugin plugin) {
@@ -85,7 +100,10 @@ public final class WaypointGuide implements Listener {
         stop(p);
         Guide g = new Guide(t);
         guides.put(p.getUniqueId(), g);
-        p.setCompassTarget(new Location(p.getWorld(), t.x(), Double.isNaN(t.y()) ? 64 : t.y(), t.z()));
+        // the compass in the waypoint's own world (a waypoint set from another world points into the overworld)
+        World tw = Bukkit.getWorld(t.world());
+        g.compass = new Location(tw != null ? tw : p.getWorld(), t.x(), Double.isNaN(t.y()) ? 64 : t.y(), t.z());
+        p.setCompassTarget(g.compass);
         p.playSound(p.getLocation(), Sound.ITEM_LODESTONE_COMPASS_LOCK, 0.8f, 1.2f);
         update(p, g);
     }
@@ -95,6 +113,16 @@ public final class WaypointGuide implements Listener {
         if (g == null) return;
         p.hideBossBar(g.bar);
         if (g.label != null && g.label.isValid()) g.label.remove();
+        // the compass stops pointing at a waypoint that is over, unless something else has pointed it since
+        if (g.compass != null && g.compass.equals(p.getCompassTarget())) p.setCompassTarget(p.getWorld().getSpawnLocation());
+    }
+
+    /** The player's pin {@code pinId} was removed: a waypoint leading to it ends (bar, label, compass, minimap mark). */
+    public void pinRemoved(Player p, UUID pinId) {
+        Guide g = guides.get(p.getUniqueId());
+        if (g == null || !g.target.leadsTo(pinId)) return;
+        stop(p);
+        p.sendMessage(mn.suld.plugin.ui.Messages.info("Тэмдэг устсан тул чиглэл зогслоо."));
     }
 
     public void shutdown() {
@@ -118,7 +146,7 @@ public final class WaypointGuide implements Listener {
 
     private void update(Player p, Guide g) {
         Target t = g.target;
-        if (busy.test(p)) {
+        if (busy.test(p) || p.isDead()) {
             p.hideBossBar(g.bar);
             hideLabel(g);
             g.shown = false;

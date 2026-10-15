@@ -4,7 +4,7 @@
 // the server sends every map's pixels at once, drawn from the real world (spawn is generated: most frames have land);
 // the title and the places' labels are text displays; D pans (new pixels arrive), the wheel zooms (new pixels), the
 // «Агуй» tab leaves only the dungeons' labels; Shift closes and puts the player back where they stood. The regions are
-// named only zoomed out: none at 4 blocks a pixel, all eight at the whole world.
+// named only zoomed out: none at 1 block a pixel (where it opens), all eight at the whole world.
 const mineflayer = require('mineflayer');
 const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
@@ -69,7 +69,7 @@ b.once('spawn', async () => {
   b._client.write('player_input', { inputs: { right: true } }); await sleep(400); b._client.write('player_input', { inputs: {} }); await sleep(2500);
   check(packetsNow() > p0, 'D pans the map: new pixels arrive', (packetsNow() - p0) + ' map packets');
   const closeUp = texts().filter(x => /"(ХЭРЛЭНГИЙН ТАЛ|ГОВЬ|ХАНГАЙ|АЛТАЙ)"/.test(flat(x.t))).length;
-  check(closeUp === 0, 'close up (4 blocks a pixel) no region is named', closeUp + ' region name(s)');
+  check(closeUp === 0, 'close up (the atlas opens at 1 block a pixel) no region is named', closeUp + ' region name(s)');
   // the wheel zooms: new pixels arrive
   p0 = packetsNow();
   lookAt(eye, plane); await sleep(300);
@@ -77,7 +77,8 @@ b.once('spawn', async () => {
   check(packetsNow() > p0, 'the wheel zooms: new pixels arrive', (packetsNow() - p0) + ' map packets');
   // the regions' names lie across their lands from 8 blocks a pixel out (none closer); at the whole world all eight
   // (at 8 blocks a pixel the panned view leaves some of them off the wall, so the whole world is the check)
-  b.setQuickBarSlot((b.quickBarSlot + 1) % 9); await sleep(2500);
+  // the atlas opens at zoom 0 and the first notch went to 1: three more reach the whole world (zoom 4)
+  for (let i = 0; i < 3; i++) { b.setQuickBarSlot((b.quickBarSlot + 1) % 9); await sleep(2500); }
   const all = ['ХЭРЛЭНГИЙН ТАЛ', 'ГОВЬ', 'ХАНГАЙ', 'АЛТАЙ', 'ХЭНТИЙН НУРУУ', 'ЗҮҮНГАРЫН ГОВЬ', 'ОТГОНТЭНГЭРИЙН ОРГИЛ', 'ХӨВСГӨЛИЙН ТАЙГА'];
   const named = () => all.filter(n => texts().some(x => flat(x.t).includes('"' + n + '"'))).length;
   check(named() === 8, 'at the whole world the eight regions are named', named() + ' of 8');

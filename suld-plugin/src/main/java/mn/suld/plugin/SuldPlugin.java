@@ -340,6 +340,7 @@ public final class SuldPlugin extends JavaPlugin {
             if (trainingSkillSky.isOpen(pl)) trainingSkillSky.close(pl);
             if (atlas != null && atlas.isOpen(pl)) atlas.close(pl);
         };
+        services.dungeons().closeWindows = training.closeWindows; // a run moves every member: off any sky window first
         services.training = training;
         getServer().getPluginManager().registerEvents(training, this);
         registerTab("dasgal", training);
@@ -494,7 +495,9 @@ public final class SuldPlugin extends JavaPlugin {
             atlas.pins = mapPins;
             atlas.guide = waypoints;
             mn.suld.plugin.map.AtlasSky openAtlas = atlas;
-            waypoints.busy = openAtlas::isOpen; // the bar and the label stay off the atlas
+            // the bar and the label stay off every sky window (the label, seen through blocks, would float over the menu
+            // and the skill tree too), as the minimap does
+            waypoints.busy = pl -> openAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
             services.hud().quiet(openAtlas::isOpen); // so do the HUD panel and the target frame
             atlas.toggleMinimap = pl -> {
                 boolean on = services.styles().toggleSetting(pl, mn.suld.api.style.PlayerSetting.MINIMAP);

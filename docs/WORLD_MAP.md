@@ -111,7 +111,7 @@ map at its real size). The same pieces become the pack's atlas textures in part 
 
 ## Part B — the atlas screen `/map` (built)
 
-`/map` (aliases `/atlas`, `/gazar`, `/газар`; again `/map` or Shift closes) opens the atlas in the sky-window engine
+`/map` (aliases `/maps`, `/atlas`, `/gazar`, `/газар`; again `/map` under any of its names, or Shift, closes) opens the atlas in the sky-window engine
 of the menu and the skill tree (`AtlasSky`): the player is seated on a private stage 144 blocks over the world's top
 and looks at a wall of **5 × 5 maps** — invisible, fixed glow item frames holding filled maps. The frame art is
 drawn around them by display quads from the pack, places and labels stand in front of them; everything on the stage
@@ -122,7 +122,7 @@ stood on the next login.
   map pixel is one screen pixel at 1080p (the sharpest a map can be drawn), and the whole frame — title plaque to
   cartouche — fits between two boss bars and the hotbar at GUI scale 3 and 4.
 * **While it is open** the player's weather is clear (no rain or snow across the map; their own weather comes back on
-  close), the HUD panel and the target frame step aside (`HudService.quiet`) and so do the waypoint's bar and label.
+  close), the HUD panel and the target frame step aside (`HudService.quiet`) and so do the waypoint's bar and label. The waypoint's bar and label also step aside in the menu and the skill tree (2026-10-15: its see-through label floated over them).
 * **The map plane.** An invisible item frame draws its map flush with the block behind it — the client's item frame
   renderer puts it 0.5 from the block centre, a visible frame's 0.4375 — one map pixel (1/128) in front of that face.
   The parchment, the frame art and the labels are placed against that plane. (Placed against a visible frame's plane,
@@ -133,8 +133,8 @@ stood on the next login.
   open atlas shows its own place in the same 25 ids. A frame is cut from up to four world tiles (`AtlasView.copy`)
   and sent at once (`Player#sendMap`); a tile that changes while the atlas is open (a chunk read) redraws it within
   a second.
-* **View.** Opens centred on the player at zoom 2 (4 blocks a pixel, 2 560 blocks across); the wheel zooms toward the
-  cursor from 1 block a pixel to the whole world (16 blocks a pixel: the 10 001-block square fits the wall), W/A/S/D
+* **View.** Opens centred on the player at zoom 0 (1 block a pixel, 640 blocks across; until 2026-10-15 it opened at 4 blocks a pixel, where the city was a speck); the wheel zooms toward the
+  cursor from 4 × 4 map pixels a block (zooms −1 and −2 magnify the 1-block tiles: 320 and 160 blocks across) to the whole world (16 blocks a pixel: the 10 001-block square fits the wall); each step and a refused step at either end is read out on the action bar. W/A/S/D
   pan a quarter of the wall (again every 6 ticks while held). The view never leaves the world square.
 * **Cursor.** The crosshair: the cartouche reads the block under it — `x · z`, the area and its level band
   (`Хархорум` in the city) — and a place under it shows a tooltip (kind, area, distance, coordinates). A left click on
@@ -187,7 +187,7 @@ clickable «[Чиглэх]» «[Устгах]»; a pin on the atlas opens «Чи
 * A **label** «◆ Нэр / 412 м», seen through blocks and by its owner only: at the place itself within 24 blocks,
   otherwise 24 blocks along the way at eye height; it grows with the distance (×0.125 a block, ×3 at 24) so it reads
   the same on screen (≈ 20 px at 1080p).
-* Within 6 blocks «ирлээ!» and it ends; `/map stop` ends it; it never outlives the session (a crash leaves no label:
+* Within 6 blocks «ирлээ!» and it ends; `/map stop` ends it; removing the pin it leads to ends it, and the compass goes back to the spawn when it ends; it never outlives the session (a crash leaves no label:
   the tag is swept when entities load).
 
 ### The latest death

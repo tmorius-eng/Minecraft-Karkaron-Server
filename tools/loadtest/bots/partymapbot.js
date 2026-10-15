@@ -70,14 +70,14 @@ const texts = (b) => Object.values(b.entities).filter(e => e.name === 'text_disp
   cmd(`tp ${nameB} ${x + 2000} 220 ${z} 0 0`); await sleep(2500);
   check(eastRim(a.minimap) >= 3 && near(a.minimap) <= before, 'B 2 000 blocks east: an arrow on the east rim', 'rim ' + eastRim(a.minimap) + ', near ' + near(a.minimap));
   // the atlas: B's name where B stands, and it moves with B
-  cmd(`tp ${nameB} ${x + 300} 220 ${z} 0 0`); await sleep(1500);
+  cmd(`tp ${nameB} ${x + 200} 220 ${z} 0 0`); await sleep(1500); // on the wall at the opening zoom (640 blocks across)
   a.chat('/map');
   // the first atlas after a start sets up its 25 map views: wait for the stage rather than a fixed time
   for (let i = 0; i < 24 && labels(a, nameB).length === 0; i++) await sleep(500);
   const l1 = labels(a, nameB);
   const p1 = l1.length ? l1[0].position.clone() : null;
   check(!!a.vehicle && l1.length === 1, 'the atlas shows B\'s name', 'seated ' + !!a.vehicle + ', labels ' + l1.length + (l1.length ? '' : ' of ' + JSON.stringify(texts(a)).slice(0, 300)));
-  cmd(`tp ${nameB} ${x + 300} 220 ${z - 160} 0 0`);
+  cmd(`tp ${nameB} ${x + 200} 220 ${z - 160} 0 0`);
   const movedBy = () => { const l = labels(a, nameB); return p1 && l.length === 1 ? l[0].position.distanceTo(p1) : 0; };
   for (let i = 0; i < 12 && movedBy() <= 0.02; i++) await sleep(500); // redrawn within a second of the move
   const l2 = labels(a, nameB);

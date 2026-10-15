@@ -114,6 +114,38 @@ class ChunkColorStoreTest {
     }
 
     @Test
+    void aRegionReadThatTimesOutIsNotCachedAsBlankLand() throws Exception {
+        ChunkColorStore s = new ChunkColorStore(dir, log, io, 8);
+        io.submit(() -> s.presenceSquare(-32, -32, 64)).get();
+        s.put(0, 0, chunk(MapColors.GRASS, 70));
+        s.flush().get(10, TimeUnit.SECONDS);
+        ChunkColorStore cold = new ChunkColorStore(dir, log, io, 8); // the region is on disk, not in memory
+        io.submit(() -> cold.presenceSquare(-32, -32, 64)).get();
+        cold.readTimeoutMs = 50;
+        java.util.concurrent.CountDownLatch busy = new java.util.concurrent.CountDownLatch(1);
+        io.submit(() -> {
+            busy.await(); // the io thread is stuck behind other work (a long flush, the scan)
+            return null;
+        });
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        try {
+            MapTiles tiles = new MapTiles(cold, new MapGeometry(-512, -512, 512, 512), workers, 64);
+            var late = tiles.tile(0, 0, 0);
+            java.util.concurrent.ExecutionException e = org.junit.jupiter.api.Assertions.assertThrows(
+                    java.util.concurrent.ExecutionException.class, () -> late.get(10, TimeUnit.SECONDS));
+            assertTrue(e.getCause() instanceof ChunkColorStore.RegionUnavailable, "unknown, not blank: " + e.getCause());
+            assertTrue(tiles.cached(0, 0, 0) == null, "a tile with an unread region is never cached");
+            busy.countDown();
+            cold.readTimeoutMs = 10_000;
+            byte[] t = tiles.tile(0, 0, 0).get(10, TimeUnit.SECONDS);
+            assertEquals(MapColors.GRASS, MapColors.id(t[3 * 128 + 3]), "asked again, the land is there");
+        } finally {
+            busy.countDown();
+            workers.shutdownNow();
+        }
+    }
+
+    @Test
     void tilesAreDrawnFromTheStoreAndRedrawnWhenAChunkChanges() throws Exception {
         ChunkColorStore s = new ChunkColorStore(dir, log, io, 8);
         io.submit(() -> s.presenceSquare(-32, -32, 64)).get();
