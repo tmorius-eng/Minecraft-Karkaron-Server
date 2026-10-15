@@ -235,3 +235,27 @@ back to its committed content in the working tree.
 racing a limit of 5 can store 9 or 10 rows. So the `INSERT … SELECT … WHERE (SELECT COUNT(*) …) < ?` guard does not
 fully serialise concurrent adds, despite what the `JdbcMapPinRepository` Javadoc says. This affects the real pin
 limit, not just the test. Not changed here. The bots and the real-client checks in the report §4 also remain open.
+
+## Follow-up 2026-10-15 (2) — atlas framing, boss bars, minimap stability and lag, accidental `/skills`
+
+Local Windows CLI session, one agent, no subagents. Root causes and fixes: `MAPS_GAMEPLAY_ROOT_CAUSE_AUDIT.md` §5
+(H-1 … H-5).
+
+**State found:** `main` = `origin/main` = `0825c8f` after `git fetch`, working tree clean. The preserved work (atlas
+zoom and opening scale, tile timeout and cache, waypoint cleanup, the `/maps` alias, the dungeon window close) was
+already in `0825c8f`. `ArrowScaleTest.java` equals `HEAD`, and `git grep` finds no `sk-or-v1` key. There was nothing to
+reconcile in `QuestTracker.java`; its only change in this run is the boss-bar gate call.
+`CLAUDE_MASTER_EXECUTION_PROMPT.md` and the excluded `jcode-windows-x86_64.exe` were not touched.
+
+| Step | Command (main working tree) | Result |
+|---|---|---|
+| 1 | `.\gradlew.bat :suld-plugin:test --tests …BossBarsTest --tests …AtlasFramingTest --tests …MinimapStabilityTest --tests …NoAccidentalWindowTest --tests …AtlasInputTest --no-daemon` | exit 0: 4 + 6 + 7 + 3 + 4 tests, 0 failures |
+| 2 | `.\gradlew.bat test simTest --no-daemon` | exit 0, BUILD SUCCESSFUL (Gradle took most test tasks as up to date from step 1, so step 3 forces a full run) |
+| 3 | `.\gradlew.bat test --rerun simTest --rerun --no-daemon` | **exit 0**, BUILD SUCCESSFUL. JUnit XML: suld-api 632 / 0 failures / 0 errors / 0 skipped; suld-plugin 241 / 0 / 0 / 0 (221 + 20 new); simTest 13 / 0 / 0 / 0. The flaky `JdbcMapPinRepositoryIT.theLimitHoldsWhenAddsRace` passed in this run |
+| 4 | `$env:PYTHONUTF8 = "1"; py tools\validation\run_all.py` | exit 0, "ALL VALIDATIONS PASSED" |
+| 5 | `py -X utf8 -I tools\plugins\test_fetch_plugins.py` | exit 0, "Ran 6 tests … OK" |
+| 6 | `git diff --check` (new files included with `git add -N`) | exit 0, clean |
+
+**Not verified:** a real 1.21.11 client (the closer atlas, boss bars leaving and coming back, the four-frame minimap in
+fights, Shift + right click doing nothing) and the loadtest bots `mapcbot.js` / `hudbot.js` (updated for the new
+behaviour; they need the dev server, and `node` is not installed here, so not even syntax-checked).

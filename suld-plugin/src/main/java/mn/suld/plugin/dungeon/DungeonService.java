@@ -267,7 +267,7 @@ public final class DungeonService {
             } else if (!p.getUniqueId().equals(leader.getUniqueId())) {
                 p.teleportAsync(ar.origin); // the leader's chunk is loaded, but a member far away must not block the tick
             }
-            p.showBossBar(ar.bar);
+            mn.suld.plugin.ui.BossBars.show(p, ar.bar);
             Presentation.banner(p, def.displayName().toUpperCase(java.util.Locale.ROOT),
                     ar.heroic == null ? "Бэлдэцгээ — эхний давалгаа ирж байна" : "Баатарлаг +" + ar.heroic.key + " — цаг явж эхэллээ",
                     NamedTextColor.GOLD);
@@ -546,7 +546,7 @@ public final class DungeonService {
         Player p = Bukkit.getPlayer(member);
         if (p != null && ar.hall != null && halls != null) halls.sendOut(p, ar.def.id()); // never left behind in a hall
         if (p != null) {
-            p.hideBossBar(ar.bar);
+            mn.suld.plugin.ui.BossBars.hide(p, ar.bar);
             services.profiles().cached(member).ifPresent(profile -> services.hud().update(p, profile));
         }
         if (ar.run.isActive() && ar.participants.isEmpty()) {
@@ -727,7 +727,7 @@ public final class DungeonService {
         for (UUID id : ar.participants) {
             Player p = Bukkit.getPlayer(id);
             if (p != null) {
-                p.hideBossBar(ar.bar);
+                mn.suld.plugin.ui.BossBars.hide(p, ar.bar);
             }
         }
         List<UUID> tracked = runsByEntity.entrySet().stream()

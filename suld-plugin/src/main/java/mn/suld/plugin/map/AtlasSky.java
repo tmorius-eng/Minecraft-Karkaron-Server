@@ -81,11 +81,16 @@ public final class AtlasSky implements Listener, TabExecutor {
     static final String TAG = "suld_atlas";
     static final int COLS = 5, ROWS = 5;
     /**
-     * The camera stands DIST blocks in front of the wall, EYE_UP above its middle; the stage stands RISE blocks over
-     * the world's top. At 6 blocks (70° field of view) one map pixel is one screen pixel at 1080p, the sharpest a map
-     * can be, and the whole frame fits between the boss bars and the hotbar (seen on a 1.21.11 client at GUI scale 3).
+     * The camera stands DIST blocks in front of the wall, EYE_UP above its middle (negative: below it); the stage stands
+     * RISE blocks over the world's top. At 6 blocks the frame was a small picture in a sea of navy, its title under three
+     * boss bars (seen on a 1.21.11 client); the boss bars now step aside while the atlas is open
+     * ({@link mn.suld.plugin.ui.BossBars}), so the camera comes in until the frame's top almost touches the top of the
+     * screen and the cartouche still clears the hotbar and the hearts ({@link #screenY}, AtlasFramingTest). A map pixel
+     * is then a little over one screen pixel at 1080p.
      */
-    static final double DIST = 6.0, EYE_UP = 0.25;
+    static final double DIST = 5.25, EYE_UP = -0.29;
+    /** The client's default vertical field of view, and the bottom of the screen the hotbar, XP bar and hearts take at GUI scale 3. */
+    static final double FOV_DEG = 70, HUD_BOTTOM = 39.0 / 360;
     static final int RISE = 144;
     static final long COMBAT_MS = 8000;
     /**
@@ -98,7 +103,26 @@ public final class AtlasSky implements Listener, TabExecutor {
     static final double FRONT_W = 784 * PX, FRONT_H = 864 * PX, FRONT_V = -12 * PX;
     static final double TAB_W = 64 * PX, TAB_H = 48 * PX, TAB_STEP = 58 * PX, TAB_U = 406 * PX;
     static final double TITLE_V = 391 * PX, CART_V = -388 * PX;
-    static final double MARKER = 24 * PX, MARKER_BIG = 32 * PX;
+    /** Places' markers; a little larger than the pack's 24/32 px art was first shown at, so they read from the seat. */
+    static final double MARKER = 28 * PX, MARKER_BIG = 38 * PX;
+    /** The text: places' labels, the cartouche's line, the tooltip. A text display's line is 1/4 block at scale 1. */
+    static final float LABEL_SCALE = 0.5f, CART_SCALE = 0.8f, TIP_SCALE = 0.7f;
+    static final double LINE = 0.25;
+    /** A label's box: width a character, half its height, and its gap under the marker (scaled with the label). */
+    static final double LABEL_CHAR = 0.045 * LABEL_SCALE / 0.42, LABEL_HALF = 0.06 * LABEL_SCALE / 0.42, LABEL_GAP = 0.07 * LABEL_SCALE / 0.42;
+
+    /**
+     * Where panel height {@code v} (blocks from the wall's middle, up) shows on the screen: −1 the bottom edge, +1 the
+     * top, at the default field of view.
+     */
+    static double screenY(double v) {
+        return (v - EYE_UP) / (DIST * Math.tan(Math.toRadians(FOV_DEG / 2)));
+    }
+
+    /** Where panel point {@code u} (blocks from the middle, right) shows across a screen of {@code aspect}: −1 left, +1 right. */
+    static double screenX(double u, double aspect) {
+        return u / (DIST * Math.tan(Math.toRadians(FOV_DEG / 2)) * aspect);
+    }
 
     private static final TextColor GOLD = TextColor.fromHexString("#ECBE4C"), CREAM = TextColor.fromHexString("#F4E8C8"),
             GREY = TextColor.fromHexString("#B9B3A4"), CYAN = TextColor.fromHexString("#56E2EC");
@@ -529,8 +553,8 @@ public final class AtlasSky implements Listener, TabExecutor {
         picture(s, s.stage, "back", 0, 0, COLS, ROWS, -0.03, 0f);
         picture(s, s.stage, "front", 0, FRONT_V, FRONT_W, FRONT_H, 0.012, 0f);
         s.title = text(s, s.stage, 0, TITLE_V, Component.text("СҮЛДИЙН АТЛАС", GOLD, TextDecoration.BOLD), 1.2f, 300, 0);
-        s.cartouche = text(s, s.stage, 0, CART_V, Component.empty(), 0.7f, 420, 0);
-        s.tooltip = text(s, s.stage, 0, 0, Component.empty(), 0.6f, 240, 0);
+        s.cartouche = text(s, s.stage, 0, CART_V, Component.empty(), CART_SCALE, 420, 0);
+        s.tooltip = text(s, s.stage, 0, 0, Component.empty(), TIP_SCALE, 240, 0);
         // tabs
         Filter[] fs = Filter.values();
         double top = (fs.length - 1) * TAB_STEP / 2;
@@ -696,14 +720,14 @@ public final class AtlasSky implements Listener, TabExecutor {
             Runnable click = () -> point(s, poi);
             s.places.add(new Hit(u, vv, size * 1.3, size * 1.3, click, Component.text(poi.name(), GOLD, TextDecoration.BOLD), describe(s, poi), null, null, null));
             if (labelled(poi.kind(), zoom)) {
-                double lw = Math.max(0.3, poi.name().length() * 0.045), lv = vv - size / 2 - 0.07;
-                double[] box = {u - lw / 2, lv - 0.06, u + lw / 2, lv + 0.06};
+                double lw = Math.max(0.3, poi.name().length() * LABEL_CHAR), lv = vv - size / 2 - LABEL_GAP;
+                double[] box = {u - lw / 2, lv - LABEL_HALF, u + lw / 2, lv + LABEL_HALF};
                 boolean free = Math.abs(box[0]) < COLS / 2.0 && Math.abs(box[2]) < COLS / 2.0 && box[1] > -ROWS / 2.0;
                 for (double[] b : boxes) if (box[0] < b[2] && b[0] < box[2] && box[1] < b[3] && b[1] < box[3]) free = false;
                 if (free) {
                     boxes.add(box);
                     taken.add(new mn.suld.api.map.RegionLabels.Box(box[0], box[1], box[2], box[3]));
-                    text(s, s.marks, u, lv, Component.text(poi.name(), CREAM), 0.42f, 300, 0x99000000);
+                    text(s, s.marks, u, lv, Component.text(poi.name(), CREAM), LABEL_SCALE, 300, 0x99000000);
                 }
             }
         }
@@ -714,11 +738,11 @@ public final class AtlasSky implements Listener, TabExecutor {
                 if (Math.abs(u) > COLS / 2.0 - 0.05 || Math.abs(vv) > ROWS / 2.0 - 0.05) continue;
                 picture(s, s.marks, "marker_pin", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
                 taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, MARKER_BIG / 2, MARKER_BIG / 2));
-                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - 0.07, Math.max(0.3, pin.name().length() * 0.045) / 2, 0.06));
+                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - LABEL_GAP, Math.max(0.3, pin.name().length() * LABEL_CHAR) / 2, LABEL_HALF));
                 long d = Math.round(Math.hypot(pin.x() + 0.5 - s.origin.getX(), pin.z() + 0.5 - s.origin.getZ()));
                 s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> pinDialog(s, pin), Component.text("◆ " + pin.name(), GOLD, TextDecoration.BOLD),
                         List.of(Component.text("Миний тэмдэг · " + d + " м", GREY), Component.text("Дарж: чиглэх эсвэл устгах", CYAN)), null, null, null));
-                text(s, s.marks, u, vv - MARKER_BIG / 2 - 0.07, Component.text(pin.name(), CREAM), 0.42f, 300, 0x99000000);
+                text(s, s.marks, u, vv - MARKER_BIG / 2 - LABEL_GAP, Component.text(pin.name(), CREAM), LABEL_SCALE, 300, 0x99000000);
             }
         }
         if (s.death != null && s.filter == Filter.ALL) {
@@ -726,12 +750,12 @@ public final class AtlasSky implements Listener, TabExecutor {
             if (Math.abs(u) <= COLS / 2.0 - 0.05 && Math.abs(vv) <= ROWS / 2.0 - 0.05) {
                 picture(s, s.marks, "marker_death", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
                 taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, MARKER_BIG / 2, MARKER_BIG / 2));
-                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - 0.07, 0.42, 0.06));
+                taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - LABEL_GAP, "Сүүлд унасан газар".length() * LABEL_CHAR / 2, LABEL_HALF));
                 int[] at = s.death;
                 s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> guide.guide(s.p, new WaypointGuide.Target("Сүүлд унасан газар", "☠",
                         s.origin.getWorld().getName(), at[0] + 0.5, WaypointGuide.GROUND, at[1] + 0.5)), Component.text("☠ Сүүлд унасан газар", GOLD, TextDecoration.BOLD),
                         List.of(Component.text("x " + at[0] + ", z " + at[1], GREY), Component.text("Дарж чиглэх", CYAN)), null, null, null));
-                text(s, s.marks, u, vv - MARKER_BIG / 2 - 0.07, Component.text("Сүүлд унасан газар", CREAM), 0.42f, 300, 0x99000000);
+                text(s, s.marks, u, vv - MARKER_BIG / 2 - LABEL_GAP, Component.text("Сүүлд унасан газар", CREAM), LABEL_SCALE, 300, 0x99000000);
             }
         }
         if (zoom >= REGION_NAMES_ZOOM) regionNames(s, taken);
@@ -808,7 +832,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                     List.of(Component.text("Багийн гишүүн · " + d + " м", GREY), Component.text("Дарж чиглэх (одоо байгаа газар нь)", CYAN)), null, null, null);
             s.mateHits.add(h);
             s.places.add(h);
-            text(s, s.mateMarks, u, vv - MARKER / 2 - 0.07, Component.text(name, CYAN), 0.42f, 300, 0x99000000);
+            text(s, s.mateMarks, u, vv - MARKER / 2 - LABEL_GAP, Component.text(name, CYAN), LABEL_SCALE, 300, 0x99000000);
         }
     }
 
@@ -1000,7 +1024,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         s.tooltip.setBackgroundColor(Color.fromARGB(230, 14, 22, 44));
         int lines = 1 + h.lore().size();
         double tu = Math.max(-2.2, Math.min(2.2, h.u() + (h.u() < 0 ? 0.9 : -0.9) * (Math.abs(h.u()) > 3 ? 1 : 0)));
-        double tv = h.v() > -1.0 ? h.v() - h.h() / 2 - 0.08 - 0.15 * lines : h.v() + h.h() / 2 + 0.08;
+        double tv = h.v() > -1.0 ? h.v() - h.h() / 2 - 0.08 - LINE * TIP_SCALE * lines : h.v() + h.h() / 2 + 0.08;
         s.tooltip.teleport(at(s, tu, tv, 0.08));
     }
 

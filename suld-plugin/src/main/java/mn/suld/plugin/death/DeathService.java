@@ -446,7 +446,7 @@ public final class DeathService implements Listener {
         applySoulEffects(p);
         BossBar bar = bars.computeIfAbsent(p.getUniqueId(),
                 id -> BossBar.bossBar(Component.empty(), 1f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_10));
-        p.showBossBar(bar);
+        mn.suld.plugin.ui.BossBars.show(p, bar);
         updateBar(p, bar, until);
         boolean forever = until - System.currentTimeMillis() > FOREVER / 2;
         String sub = until == DeathRecord.UNTIL_RECOVERY ? "/trial эсвэл овоонд цацал өргөж амил"
@@ -577,7 +577,7 @@ public final class DeathService implements Listener {
         flushWounds();
         for (Map.Entry<UUID, BossBar> en : bars.entrySet()) {
             Player p = Bukkit.getPlayer(en.getKey());
-            if (p != null) p.hideBossBar(en.getValue());
+            if (p != null) mn.suld.plugin.ui.BossBars.hide(p, en.getValue());
         }
         bars.clear();
     }
@@ -644,7 +644,7 @@ public final class DeathService implements Listener {
         if (!p.isOnline()) return;
         services.session(p.getUniqueId()).revives++;
         BossBar bar = bars.remove(p.getUniqueId());
-        if (bar != null) p.hideBossBar(bar);
+        if (bar != null) mn.suld.plugin.ui.BossBars.hide(p, bar);
         p.removePotionEffect(PotionEffectType.SLOWNESS);
         p.removePotionEffect(PotionEffectType.WEAKNESS);
         services.equipment().dirty(p);
@@ -825,7 +825,7 @@ public final class DeathService implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
         BossBar bar = bars.remove(id);
-        if (bar != null) e.getPlayer().hideBossBar(bar);
+        if (bar != null) mn.suld.plugin.ui.BossBars.hide(e.getPlayer(), bar);
         summaries.remove(id);
         fellAt.remove(id);
         if (dirtyWounds.remove(id)) repo.saveWound(id, wound(id));

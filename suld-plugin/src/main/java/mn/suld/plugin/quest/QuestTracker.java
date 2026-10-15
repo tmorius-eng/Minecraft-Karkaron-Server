@@ -115,7 +115,7 @@ public final class QuestTracker implements Listener {
             }
             BossBar bar = bars.computeIfAbsent(p.getUniqueId(), id -> {
                 BossBar b = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS);
-                p.showBossBar(b);
+                mn.suld.plugin.ui.BossBars.show(p, b);
                 return b;
             });
             bar.name(line);
@@ -254,7 +254,7 @@ public final class QuestTracker implements Listener {
 
     private void hide(Player p) {
         BossBar bar = bars.remove(p.getUniqueId());
-        if (bar != null) p.hideBossBar(bar);
+        if (bar != null) mn.suld.plugin.ui.BossBars.hide(p, bar);
     }
 
     @EventHandler

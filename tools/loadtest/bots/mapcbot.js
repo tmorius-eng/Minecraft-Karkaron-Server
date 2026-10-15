@@ -1,8 +1,8 @@
 // «Сүлдийн Атлас» part C (docs/WORLD_MAP.md): the corner minimap, pins and the waypoint, one offline bot:
 //   node mapcbot.js <srvctl.sh> [port]
-// With the pack loaded the server hangs the minimap's map in three owner-only glow item frames facing up, 7.5 blocks
-// out, above the look (14° up ahead, 50° to either side); the pack's text shader draws that map in the screen's corner. The bot checks
-// what the server can be held to: the frames follow the player when it is teleported and when it turns, neither is on
+// With the pack loaded the server hangs the minimap's map in four owner-only glow item frames facing up, 7.5 blocks
+// out around the look (14° up ahead, 50° to either side, 24° under it); the pack's text shader draws that map in the screen's corner. The bot checks
+// what the server can be held to: the frames follow the player when it is teleported and when it turns, none is on
 // the line of fire, an arrow shot through one flies on (the frame steps aside), the map's first row carries the
 // shader's marker colours, `/map minimap` hides and shows it, the atlas hides it while open. Pins: `/map pin` stores one in the database, it is there after a
 // relog, `/map unpin` removes it. The waypoint: `/map guide <x> <z>` shows a yellow bar with the distance and a
@@ -10,6 +10,8 @@
 const mineflayer = require('mineflayer');
 const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
+// MinimapService.SLOTS: three over the look, one under it
+const FRAMES = 4;
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
@@ -52,11 +54,11 @@ async function pickClass(b) {
   let b = join();
   await spawned(b);
   await pickClass(b);
-  // 1. the minimap appears: three frames facing up, out of reach, along the look; its map carries the marker row
+  // 1. the minimap appears: four frames facing up, out of reach, along the look; its map carries the marker row
   let fr = miniFrames(b);
   const eye = b.entity.position.offset(0, 1.62, 0);
   const dists = fr.map(f => f.position.distanceTo(eye));
-  check(fr.length === 3 && dists.every(d => d > 5.5 && d < 9.5), 'the minimap hangs in 3 owner-only frames facing up, out of reach',
+  check(fr.length === FRAMES && dists.every(d => d > 5.5 && d < 9.5), 'the minimap hangs in ' + FRAMES + ' owner-only frames facing up, out of reach',
     fr.length + ' frames at ' + dists.map(d => d.toFixed(1)).join(', ') + ' blocks');
   check(b.marked.length > 0, 'the minimap\'s picture starts with the shader\'s marker colours', 'marked map ids ' + JSON.stringify(b.marked));
   // 2. the frames follow a teleport (30 blocks east) and a turn (yaw + 180)
@@ -64,7 +66,7 @@ async function pickClass(b) {
   console_(`tp ${name} ${(p0.x + 30).toFixed(1)} ${(p0.y + 0.5).toFixed(1)} ${p0.z.toFixed(1)}`);
   await sleep(3000);
   fr = near(b, miniFrames(b), 10);
-  check(fr.length === 3 && b.entity.position.distanceTo(p0) > 25, 'the frames follow the player 30 blocks east',
+  check(fr.length === FRAMES && b.entity.position.distanceTo(p0) > 25, 'the frames follow the player 30 blocks east',
     'moved ' + b.entity.position.distanceTo(p0).toFixed(1) + ', frames within 10 blocks ' + fr.length + ' of ' + miniFrames(b).length);
   const ahead = (yawDeg) => {
     const yaw = yawDeg * Math.PI / 180; // mineflayer: yaw 0 looks north (-z), positive turns west
@@ -73,11 +75,13 @@ async function pickClass(b) {
   await b.look(b.entity.yaw + Math.PI, 0, true); await sleep(2500);
   const dir = ahead(b.entity.yaw * 180 / Math.PI);
   const e2 = b.entity.position.offset(0, 1.62, 0);
-  // the look is level after b.look(…, 0): every frame must stand above the eye — an arrow leaves 0.1 under it and
-  // only drops (a frame snaps to its block, so a side frame 1.3 up can sit as low as +0.33) — and one ahead in view
+  // the look is level after b.look(…, 0): three frames must stand above the eye — an arrow leaves 0.1 under it and
+  // only drops a few hundredths in 7.5 blocks (a frame snaps to its block, so a side frame 1.3 up can sit as low as +0.33);
+  // the fourth, 24° under the look for quick looks down, at least 2 blocks under it, far off any shot's path; one ahead
   const angles = miniFrames(b).map(f => { const dx = f.position.x - e2.x, dy = f.position.y - e2.y, dz = f.position.z - e2.z, l = Math.hypot(dx, dy, dz) || 1;
     return { a: Math.acos(Math.max(-1, Math.min(1, (dx * dir.x + dz * dir.z) / l))) * 180 / Math.PI, up: dy }; });
-  check(angles.length === 3 && angles.every(x => x.up > 0.25) && angles.some(x => x.a < 30), 'after a turn the frames follow, above the line of fire, one ahead',
+  check(angles.length === FRAMES && angles.filter(x => x.up > 0.25).length === FRAMES - 1 && angles.filter(x => x.up < -2).length === 1
+    && angles.some(x => x.a < 30), 'after a turn the frames follow, off the line of fire, one ahead',
     angles.map(x => x.a.toFixed(0) + '° ' + (x.up >= 0 ? '+' : '') + x.up.toFixed(1)).join(', '));
   // an arrow shot through a frame flies on (the frame steps aside instead of stopping it)
   const f0 = miniFrames(b)[0];
@@ -97,12 +101,12 @@ async function pickClass(b) {
   const off = miniFrames(b).length;
   b.chat('/map minimap'); await sleep(2500);
   const on = miniFrames(b).length;
-  check(off === 0 && on === 3 && said(b, 'унтраалттай', n) && said(b, 'асаалттай', n), '/map minimap turns it off and on', 'off ' + off + ' frames, on ' + on);
+  check(off === 0 && on === FRAMES && said(b, 'унтраалттай', n) && said(b, 'асаалттай', n), '/map minimap turns it off and on', 'off ' + off + ' frames, on ' + on);
   // 4. the atlas hides it while open
   b.chat('/map'); await sleep(4000);
   const inAtlas = miniFrames(b).length, seated = !!b.vehicle;
   b._client.write('player_input', { inputs: { shift: true } }); await sleep(800); b._client.write('player_input', { inputs: {} }); await sleep(3000);
-  check(seated && inAtlas === 0 && miniFrames(b).length === 3, 'the atlas hides the minimap while open', 'seated ' + seated + ', frames in the atlas '
+  check(seated && inAtlas === 0 && miniFrames(b).length === FRAMES, 'the atlas hides the minimap while open', 'seated ' + seated + ', frames in the atlas '
     + inAtlas + ', after ' + miniFrames(b).length);
   // 5. the waypoint: a bar with the distance and a label toward the place, /map stop ends both
   const here = b.entity.position;

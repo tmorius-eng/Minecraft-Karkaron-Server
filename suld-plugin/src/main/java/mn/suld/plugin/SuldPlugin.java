@@ -318,7 +318,6 @@ public final class SuldPlugin extends JavaPlugin {
         mn.suld.plugin.gui.SkillMapMenu skillMap = new mn.suld.plugin.gui.SkillMapMenu(this, services);
         skillMap.menus(menus);
         menus.skillMap(skillMap);
-        skills.skillMap(skillMap::open); // sneak + right click with the class weapon
         getServer().getPluginManager().registerEvents(skillMap, this);
         // the full-screen tree (docs/SKILL_SKY.md); the chest map stays the fallback
         mn.suld.plugin.death.DeathService deathsForSky = deaths;
@@ -472,7 +471,8 @@ public final class SuldPlugin extends JavaPlugin {
             // «Сүлдийн Атлас» (docs/WORLD_MAP.md): after the border, whose square the map covers
             services.map = new mn.suld.plugin.map.MapService(this);
             mn.suld.plugin.dungeon.DungeonHalls mapHalls = halls;
-            services.map.pois = () -> mn.suld.plugin.map.MapPois.collect(services, worldBuild, mapHalls, getConfig());
+            services.map.pois = mn.suld.plugin.map.MapPois.cached(() -> mn.suld.plugin.map.MapPois.collect(services, worldBuild, mapHalls, getConfig()),
+                    mn.suld.plugin.map.MapPois.CACHE_MS, System::currentTimeMillis);
             services.map.start();
             // /map: the atlas screen in the sky window engine (docs/WORLD_MAP.md)
             atlas = new mn.suld.plugin.map.AtlasSky(this, services, services.map);
@@ -510,6 +510,9 @@ public final class SuldPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(minimap, this);
             minimap.start();
         }
+        // the boss bars step aside while a sky window is open: its title hangs where they do (the atlas's «СҮЛДИЙН АТЛАС»)
+        mn.suld.plugin.ui.BossBars.start(this, pl -> atlas != null && atlas.isOpen(pl) || menuSky != null && menuSky.isOpen(pl)
+                || skillSky != null && skillSky.isOpen(pl));
         mn.suld.plugin.worldbuild.SuldWorldCommand worldCommand = new mn.suld.plugin.worldbuild.SuldWorldCommand(border, pregen, halls);
         registerTab("suldworld", worldCommand);
         // ovoo at the heart of every area (docs/world/OVOO.md): circle three times clockwise for Тэнгэрийн ивээл
@@ -649,6 +652,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (armory != null) armory.stop();
         if (services != null && services.payments != null) services.payments.stop(); // the webhook closes, QR maps go blank
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
+        mn.suld.plugin.ui.BossBars.stop(); // quiet players get their bars back before the services hide theirs
         if (services != null && services.map != null) services.map.shutdown(); // the map's regions to disk
         if (worldBuild != null) {
             worldBuild.stop();

@@ -286,7 +286,7 @@ public final class TrainingService implements Listener, TabExecutor {
         }
         if (!yard.inside(p.getLocation(), 0)) p.teleport(yard.entrance());
         p.setFallDistance(0);
-        p.showBossBar(s.bar);
+        mn.suld.plugin.ui.BossBars.show(p, s.bar);
         coach.begin(p, s);
         p.showTitle(Title.title(Component.text("Дайчдын Дасгалын Талбай", NamedTextColor.GOLD, TextDecoration.BOLD),
                 Component.text(c.displayName() + " · 60-р түвшин · Build " + (variant == 0 ? "A" : "B"), NamedTextColor.WHITE)));
@@ -397,7 +397,7 @@ public final class TrainingService implements Listener, TabExecutor {
             if (p.getPersistentDataContainer().has(stashKey, PersistentDataType.BYTE_ARRAY)) unstash(p, teleport);
             return;
         }
-        p.hideBossBar(s.bar);
+        mn.suld.plugin.ui.BossBars.hide(p, s.bar);
         coach.end(p);
         boolean back = services.profiles().putBack(s.stand, s.real);
         if (!back) plugin.getLogger().warning("[training] " + p.getName() + ": the stand-in was no longer cached (the real profile is the stored one)");

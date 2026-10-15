@@ -113,7 +113,7 @@ public final class TutorialService implements Listener, TabExecutor {
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
         BossBar b = bars.remove(id);
-        if (b != null) e.getPlayer().hideBossBar(b);
+        if (b != null) mn.suld.plugin.ui.BossBars.hide(e.getPlayer(), b);
         killBaseline.remove(id);
         openedSkills.remove(id);
         openedQuest.remove(id);
@@ -141,7 +141,7 @@ public final class TutorialService implements Listener, TabExecutor {
 
     private void end(Player p) {
         BossBar b = bars.remove(p.getUniqueId());
-        if (b != null) p.hideBossBar(b);
+        if (b != null) mn.suld.plugin.ui.BossBars.hide(p, b);
     }
 
     // ------------------------------------------------------------------ steps
@@ -226,7 +226,7 @@ public final class TutorialService implements Listener, TabExecutor {
         if (s == null) return;
         BossBar b = bars.computeIfAbsent(p.getUniqueId(), k -> {
             BossBar nb = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_10);
-            p.showBossBar(nb);
+            mn.suld.plugin.ui.BossBars.show(p, nb);
             return nb;
         });
         Component title = Component.text("Заавар " + (t.step() + 1) + "/" + TutorialProgress.STEPS.size() + " · ", NamedTextColor.GOLD)

@@ -203,7 +203,7 @@ final class HudPanel implements Listener {
         targets.remove(id);
         BossBar b = targetBars.remove(id);
         Player p = Bukkit.getPlayer(id);
-        if (b != null && p != null) p.hideBossBar(b);
+        if (b != null && p != null) mn.suld.plugin.ui.BossBars.hide(p, b);
     }
 
     private void flushDirty() {
@@ -436,7 +436,7 @@ final class HudPanel implements Listener {
         HudComposer.Target info = describe(le, hp, max, t.chip.update(hp, now));
         BossBar bar = targetBars.computeIfAbsent(p.getUniqueId(), k -> {
             BossBar b = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
-            p.showBossBar(b);
+            mn.suld.plugin.ui.BossBars.show(p, b);
             return b;
         });
         Component title = HudComposer.target(info);
@@ -447,7 +447,7 @@ final class HudPanel implements Listener {
 
     private void hideTarget(Player p) {
         BossBar b = targetBars.remove(p.getUniqueId());
-        if (b != null) p.hideBossBar(b);
+        if (b != null) mn.suld.plugin.ui.BossBars.hide(p, b);
     }
 
     static boolean targetable(Player viewer, Entity e) {

@@ -173,7 +173,7 @@ public final class CampaignService {
                 active = CampaignRun.restore(def, s, totals);
                 activeVersion = s.version();
                 startedCycle = id;
-                for (Player p : Bukkit.getOnlinePlayers()) p.showBossBar(bar);
+                for (Player p : Bukkit.getOnlinePlayers()) mn.suld.plugin.ui.BossBars.show(p, bar);
                 updateBar();
                 plugin.getLogger().info("[campaign] restored " + def.id() + " for " + id + ": " + active.total() + "/" + def.goal().target()
                         + " (" + totals.size() + " contributors)");
@@ -305,7 +305,7 @@ public final class CampaignService {
             tierToasted.clear();
             lastOutcome = null;
             for (Player p : Bukkit.getOnlinePlayers()) {
-                p.showBossBar(bar);
+                mn.suld.plugin.ui.BossBars.show(p, bar);
                 Presentation.banner(p, def.name().toUpperCase(java.util.Locale.ROOT), "Долоо хоногийн аян эхэллээ · /khuraldai", NamedTextColor.GOLD);
                 p.playSound(p.getLocation(), Sound.EVENT_RAID_HORN, 1f, 1f);
             }
@@ -504,7 +504,7 @@ public final class CampaignService {
     }
 
     private void finish(CampaignRun run) {
-        for (Player p : Bukkit.getOnlinePlayers()) p.hideBossBar(bar);
+        for (Player p : Bukkit.getOnlinePlayers()) mn.suld.plugin.ui.BossBars.hide(p, bar);
         if (active == run) active = null;
         resolving = false;
         buffer.clear();
@@ -580,7 +580,7 @@ public final class CampaignService {
 
     /** On login: a tier owed from a recent week (within reward-claim-days) is paid now. */
     public void onJoin(Player p) {
-        if (active != null) p.showBossBar(bar);
+        if (active != null) mn.suld.plugin.ui.BossBars.show(p, bar);
         if (settings.rewardClaimDays() <= 0) return;
         long since = System.currentTimeMillis() - settings.rewardClaimDays() * 86_400_000L;
         whenDone(repository.recentCampaigns(3), (rows, err) -> {
@@ -661,7 +661,7 @@ public final class CampaignService {
 
     /** Shutdown: the buffered contributions are written; the caller waits with the shutdown budget. */
     public CompletableFuture<Void> shutdown() {
-        for (Player p : Bukkit.getOnlinePlayers()) p.hideBossBar(bar);
+        for (Player p : Bukkit.getOnlinePlayers()) mn.suld.plugin.ui.BossBars.hide(p, bar);
         if (buffer.isEmpty() || active == null) return CompletableFuture.completedFuture(null);
         List<Contribution> deltas = new ArrayList<>(buffer.values());
         buffer.clear();

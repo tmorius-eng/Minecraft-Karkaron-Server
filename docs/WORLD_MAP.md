@@ -118,9 +118,15 @@ drawn around them by display quads from the pack, places and labels stand in fro
 is visible to its owner only and is never saved. A crash while the atlas is open puts the player back where they
 stood on the next login.
 
-* **The camera** sits 6 blocks in front of the wall and 0.25 above its middle: at the default 70° field of view one
-  map pixel is one screen pixel at 1080p (the sharpest a map can be drawn), and the whole frame — title plaque to
-  cartouche — fits between two boss bars and the hotbar at GUI scale 3 and 4.
+* **The camera** sits 5.25 blocks in front of the wall and 0.29 below its middle (2026-10-15; it sat 6 blocks out,
+  0.25 above, and the frame was a small picture in a sea of navy with its title under three boss bars): at the default
+  70° field of view the title plaque reaches 97% of the way to the top of the screen and the cartouche's line still
+  clears the hotbar, the XP bar and the hearts at GUI scale 3 (`AtlasSky.screenY`, `AtlasFramingTest`); the frame is
+  14% larger on the screen, a map pixel a little over one screen pixel at 1080p. Places' labels (0.5), the cartouche
+  (0.8), the tooltip (0.7) and the markers (28/38 px) were enlarged too. The boss bars step aside while any sky window
+  is open (`BossBars`: a service's bar is remembered and comes back on close; one its service hid meanwhile stays
+  hidden). Tiles that load redraw the wall, but a frame whose picture did not change is not sent again
+  (`AtlasFrames.unchanged`).
 * **While it is open** the player's weather is clear (no rain or snow across the map; their own weather comes back on
   close), the HUD panel and the target frame step aside (`HudService.quiet`) and so do the waypoint's bar and label. The waypoint's bar and label also step aside in the menu and the skill tree (2026-10-15: its see-through label floated over them).
 * **The map plane.** An invisible item frame draws its map flush with the block behind it — the client's item frame
@@ -206,15 +212,23 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
   player's white arrow in the middle, turned the way they look; under the map a navy panel with «X 326  Z 92» and the
   area's name in the pack's 5 × 7 pixel font (`PixelFont`, generated from `tools/pack/pixelfont.py` by
   `tools/map/gen_pixel_font.py`).
-* **On the screen:** the map hangs in three invisible glow item frames that only its owner sees, facing up, 7.5
-  blocks out, all above the look (`MinimapService.SLOTS`): one 14° up straight ahead, always in view (a 16:9 screen
-  sees ±51° across and ±35° up and down), and two 50° to the sides, which come into view while the player turns
-  faster than the server moves the frames. None is within reach of a click, and none is on the line of fire: an
-  arrow leaves 0.1 under the eye along the look and only drops (a frame snaps to its block, so a side frame stands
-  at least 0.33 over the eye). A frame is still a real entity on the server, and Paper lets a projectile hit what its
-  shooter can see (a mob sees everything): such a hit is cancelled and the frame steps 4 blocks up for a second, so
-  the projectile flies on — a cancelled hit alone would hold a plain arrow on the frame's face — and a frame never
-  shields its owner. The pack's own `rendertype_text`
+* **On the screen:** the map hangs in four invisible glow item frames that only its owner sees, facing up, 7.5
+  blocks out around the look (`MinimapService.SLOTS`): one 14° up straight ahead, always in view (a 16:9 screen
+  sees ±51° across and ±35° up and down), two 50° to the sides, which come into view while the player turns
+  faster than the server moves the frames, and one 24° under the look (2026-10-15), for a quick look down: the
+  server places the frames for the look it knows, a round trip behind the camera, and with all three old frames
+  10–14° up a look down of 21° within that lag took every one out of a view only 35° tall — the blink players saw
+  in fights (`MinimapStabilityTest` models turns of ±90° and looks of 45° down / 40° up, also with a drawn bow's
+  15% narrower view). None is within reach of a click, and none is on the line of fire: every frame is at least 10°
+  off the look; an arrow leaves 0.1 under the eye along the look and only drops (a frame snaps to its block, so a
+  side frame stands at least 0.33 over the eye; the low frame is 3 blocks under the look). A frame follows its spot
+  only once the spot is 0.3 past the edge of its block (`MOVE_SLACK`), so a look resting near an edge no longer
+  sends a teleport a tick, and a player who stands still and does not turn costs nothing. A frame is still a real
+  entity on the server, and Paper lets a projectile hit what its shooter can see (a mob sees everything): such a hit
+  is cancelled and the frame steps 2 blocks up for 5 ticks (it was 4 blocks for a second: out of view, so each
+  arrow or fireball that clipped the middle frame blinked the minimap for a second), so the projectile flies on — a
+  cancelled hit alone would hold a plain arrow on the frame's face — and a frame never shields its owner. The pack's
+  own `rendertype_text`
   core shader (written fresh from vanilla 1.21.11's; NMinimap showed the technique, its GPL code is not used) checks
   every 128 × 128 texture it draws for the four marker colours of row 0 (`Minimap.MARK`); that quad is moved into the
   top-left corner in screen space at a whole number of screen pixels per map pixel (2 at 1080p, 3 at 1440p, 4 at
@@ -222,19 +236,20 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
   text, sign and map is drawn exactly as vanilla draws it.
 * **When:** only with the SÜLD pack loaded (without the shader the map would hang in the air), the «Мини газрын
   зураг» setting on (`PlayerSetting.MINIMAP`, `/map minimap`), in the overworld, alive, and outside the sky windows
-  (atlas, menu, skill tree). Redrawn on the map's workers when the player moves to another block or turns (at most
-  every 4 ticks, at least every 10 s) and at once when the waypoint or a pin changes; the frames follow the player
-  (the server moves them when their block changes).
+  (atlas, menu, skill tree). Redrawn on the map's workers after a move of 2 blocks or a turn (at most every 5 ticks;
+  a single step is caught up after a second, at least every 10 s) and at once when the waypoint or a pin changes;
+  a picture equal to the last one is not sent. The places it marks are collected at most every 5 s
+  (`MapPois.cached`: they were read from the whole world on the main thread for every picture).
 * **Seen on the 1.21.11 client:** the corner map in the city, by night (no lightmap: it stays bright) and in the
-  steppe; hidden while dead and in the atlas, back after; with this layout drawn in all 72 screen grabs taken during
+  steppe; hidden while dead and in the atlas, back after; with the three-frame layout drawn in all 72 screen grabs taken during
   fast turns (~33° and ~90° a step, looking up and down). A two-frame layout at ±28° blinked in the same test and the
-  first layout had a frame on the line of fire, so neither was kept. A modded client that culls entities by occlusion (Sodium's entity culling) or replaces the core shaders
+  first layout had a frame on the line of fire, so neither was kept. The four-frame layout, the slack and the shorter step aside (2026-10-15) are checked by tests only, not yet on a client. A modded client that culls entities by occlusion (Sodium's entity culling) or replaces the core shaders
   (an Iris shader pack) may hide it — vanilla and plain Fabric are fine.
 
 ### Bots
 
-`tools/loadtest/bots/mapcbot.js` (in `regress.sh`): the three frames facing up out of reach, the marker row, the frames
-follow a 30-block teleport and a turn and stay above the line of fire, an arrow shot through a frame flies on past it,
+`tools/loadtest/bots/mapcbot.js` (in `regress.sh`): the four frames facing up out of reach, the marker row, the frames
+follow a 30-block teleport and a turn and stay off the line of fire (three over the look, one 2+ blocks under it), an arrow shot through a frame flies on past it,
 `/map minimap` off and on, hidden in the atlas, the waypoint bar with the distance and the label 24 blocks out,
 `/map stop`, a pin stored, still there after a relog (PostgreSQL), removed — 13 checks pass on the dev server
 (2026-10-13). `JdbcMapPinRepositoryIT` (the limit under concurrency), api

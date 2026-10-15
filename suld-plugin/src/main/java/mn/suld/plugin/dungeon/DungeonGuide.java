@@ -49,7 +49,7 @@ public final class DungeonGuide implements Listener {
         stop(p);
         BossBar bar = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.PURPLE, BossBar.Overlay.PROGRESS);
         targets.put(p.getUniqueId(), new Target(dungeonId, System.currentTimeMillis(), bar));
-        p.showBossBar(bar);
+        mn.suld.plugin.ui.BossBars.show(p, bar);
         update(p, targets.get(p.getUniqueId()));
     }
 
@@ -64,7 +64,7 @@ public final class DungeonGuide implements Listener {
 
     public void stop(Player p) {
         Target t = targets.remove(p.getUniqueId());
-        if (t != null) p.hideBossBar(t.bar());
+        if (t != null) mn.suld.plugin.ui.BossBars.hide(p, t.bar());
     }
 
     public void shutdown() {

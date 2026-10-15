@@ -118,13 +118,23 @@ final class AtlasFrames {
         pictures.remove(player);
     }
 
-    /** Shows {@code bytes} (128 × 128) in frame {@code frame} for {@code player} and sends it at once. */
+    /**
+     * Shows {@code bytes} (128 × 128) in frame {@code frame} for {@code player} and sends it at once; a frame already
+     * showing the same picture is not sent again (a tile that loads redraws the whole wall, and a pan keeps most frames
+     * of a zoomed-out view: each needless send is ~16 KB and a texture upload on the client).
+     */
     void show(Player player, int frame, byte[] bytes) {
         Pictures p = pictures.get(player.getUniqueId());
         if (p == null) return;
+        if (unchanged(p, frame, bytes)) return;
         p.data[frame] = bytes;
         p.version[frame]++;
         player.sendMap(views[frame]);
+    }
+
+    /** True when the frame already shows (painted and sent) exactly {@code bytes}. */
+    static boolean unchanged(Pictures p, int frame, byte[] bytes) {
+        return p.data[frame] != null && p.painted[frame] == p.version[frame] && java.util.Arrays.equals(p.data[frame], bytes);
     }
 
     private final class Painter extends MapRenderer {

@@ -29,8 +29,10 @@ resource pack); no client mod.
 | Target frame: name, level, tier frame (bronze / silver elite / gold boss), health, damage chip | crosshair entity (24 blocks, held 3 s) or the last thing you hit / that hit you (12 s); SÜLD mob definition (PDC `mob_id`) |
 | Quest progress | the existing quest compass bar (`QuestTracker`) and sidebar — reused, not duplicated |
 
-Shift + right click while holding the class weapon opens the skill-tree map (not a combo click, so it never
-interferes with spells).
+No key, click or gesture opens a window in a fight: the skill-tree map opens from `/skills` and the menu only. (Shift +
+right click with the class weapon used to open it, and players sneak through every fight — Shift + Space dodges,
+Shift + F casts, Shift + Q cycles the lock — so a combo's R or a bow draw while sneaking threw them onto the tree stage;
+removed 2026-10-15, `NoAccidentalWindowTest`. A click while sneaking is a plain click.)
 
 ## Architecture
 

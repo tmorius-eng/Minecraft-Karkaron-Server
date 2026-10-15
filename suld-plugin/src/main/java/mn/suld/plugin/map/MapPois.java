@@ -60,6 +60,33 @@ public final class MapPois {
     private MapPois() {
     }
 
+    /** How long a collected list of places is kept: they move only when the world is rebuilt or a site is placed. */
+    public static final long CACHE_MS = 5_000;
+
+    /**
+     * {@code collect} read at most once every {@code ttlMs} ({@code clock} in ms): the minimap asked for every place in
+     * the world (relays, dungeons, sites, every ovoo's nearest area) on the main thread up to five times a second per
+     * player, and the atlas on every pan.
+     */
+    public static <T> java.util.function.Supplier<T> cached(java.util.function.Supplier<T> collect, long ttlMs, java.util.function.LongSupplier clock) {
+        return new java.util.function.Supplier<>() {
+            private T value;
+            private long at;
+            private boolean read;
+
+            @Override
+            public synchronized T get() {
+                long now = clock.getAsLong();
+                if (!read || now - at >= ttlMs) {
+                    value = collect.get();
+                    at = now;
+                    read = true;
+                }
+                return value;
+            }
+        };
+    }
+
     /** Every place in the overworld, in a stable order (kind, then the content files' order). */
     public static List<Poi> collect(SuldServices services, WorldBuildService city, DungeonHalls halls, FileConfiguration cfg) {
         World w = Bukkit.getWorlds().get(0);

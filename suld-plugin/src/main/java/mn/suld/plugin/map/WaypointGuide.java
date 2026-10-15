@@ -111,7 +111,7 @@ public final class WaypointGuide implements Listener {
     public void stop(Player p) {
         Guide g = guides.remove(p.getUniqueId());
         if (g == null) return;
-        p.hideBossBar(g.bar);
+        mn.suld.plugin.ui.BossBars.hide(p, g.bar);
         if (g.label != null && g.label.isValid()) g.label.remove();
         // the compass stops pointing at a waypoint that is over, unless something else has pointed it since
         if (g.compass != null && g.compass.equals(p.getCompassTarget())) p.setCompassTarget(p.getWorld().getSpawnLocation());
@@ -147,13 +147,13 @@ public final class WaypointGuide implements Listener {
     private void update(Player p, Guide g) {
         Target t = g.target;
         if (busy.test(p) || p.isDead()) {
-            p.hideBossBar(g.bar);
+            mn.suld.plugin.ui.BossBars.hide(p, g.bar);
             hideLabel(g);
             g.shown = false;
             return;
         }
         if (!g.shown) {
-            p.showBossBar(g.bar);
+            mn.suld.plugin.ui.BossBars.show(p, g.bar);
             g.shown = true;
         }
         Location l = p.getLocation();

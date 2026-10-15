@@ -7,7 +7,7 @@ needs the owner's 1.21.11 client test (`docs/qa/CLIENT_QA_SKILL_SKY.md`).
 A Paper server cannot open a new screen on a vanilla client. Pufferfish's Skills, for example, is a client mod. So
 SÜLD builds the tree in the world, in front of a locked camera, out of display entities that only the owner sees:
 
-* `/skills` (or Shift + right-click with the class weapon) lifts the player to a private stage high above where they
+* `/skills` (or the menu's «Ур чадвар» card; no key or gesture opens it, so it never opens mid-fight) lifts the player to a private stage high above where they
   stand. They are seated on an invisible display, so the camera does not move.
 * A box of panels rides with the seat and fills the whole view:
   * the front panel is the night-sky backdrop (`assets/art/source/skilltree_bg.png`, one image from

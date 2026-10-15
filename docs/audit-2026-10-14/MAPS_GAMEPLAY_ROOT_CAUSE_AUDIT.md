@@ -24,7 +24,7 @@ pieces:
 | Terrain data | `MapService` (chunk snapshots) → `ChunkColorStore` (region files, `columnBlocking`) → `MapTiles` (tile cache) → `TileComposer` |
 | Rendering | `AtlasFrames`: 25 persistent `MapView`s with one per-player `MapRenderer` each, `Player#sendMap` |
 | Waypoint | `WaypointGuide`: a yellow boss bar (arrow relative to facing + compass word + metres), a see-through `TextDisplay` label (at the place within 24 blocks, otherwise 24 blocks along the way), and the compass |
-| Minimap | `MinimapService`: three owner-only glow item frames out along the look, carrying one map (`suld-api` `Minimap.draw`). The pack's `rendertype_text` core shader detects the marker row and moves the quad to the top-left corner of the screen |
+| Minimap | `MinimapService`: four owner-only glow item frames around the look (three until §5), carrying one map (`suld-api` `Minimap.draw`). The pack's `rendertype_text` core shader detects the marker row and moves the quad to the top-left corner of the screen |
 | Shared data | everything reads the same `MapTiles` (zoom 0 for the minimap), `MapPois`, `PinService`, `WaypointGuide.target`, `MinimapService.mates` |
 
 ## 1. Reported symptoms → root causes
@@ -93,3 +93,30 @@ Coordinates and world identity, checked and found consistent:
   the time on `origin/main` too. 24 adds racing a limit of 5 stored 9–10 rows, where the test allows 8. So
   `JdbcMapPinRepository.add`'s `INSERT … SELECT … WHERE (SELECT COUNT(*) …) < ?` does not serialise concurrent adds.
   Fixing it needs a per-player lock or a serialisable transaction.
+
+## 5. Follow-up 2026-10-15 (2): atlas framing, boss bars, minimap blinking and lag, accidental `/skills`
+
+Session: local CLI, one agent, no subagents, on `main` = `origin/main` `0825c8f` (nothing to reconcile: the earlier
+blockers, the ArrowScaleTest key and the QuestTracker merge, were already resolved and pushed in `0825c8f`/`f56dea3`).
+Live reports from the owner's client. None of the fixes below was seen on a real client yet (§4 still applies).
+
+| # | Sev | Symptom | Root cause | Fix | Status |
+|---|---|---|---|---|---|
+| H-1 | P1 | `/maps`: the atlas is small in a sea of navy; labels, pins, cartouche hard to read | The camera sat `DIST = 6.0` blocks out, `EYE_UP = +0.25`: at 70° FOV the 6.75-block frame filled ~80% of the screen height and ~41% of a 16:9 width, and the title plaque's top sat at y = 0.70, where the boss bars hang. The distance had been chosen so the frame fit *between* the boss bars and the hotbar | Boss bars step aside (H-2), so the camera moves in to `DIST = 5.25`, `EYE_UP = −0.29`: plaque top at y = 0.97, cartouche text at y = −0.77, above the hotbar + XP + hearts (39 GUI px at scale 3); the frame is 14% larger on screen. Labels 0.42 → 0.5, cartouche 0.7 → 0.8, tooltip 0.6 → 0.7, markers 24/32 → 28/38 px (label boxes scaled with them). `AtlasSky.screenY/screenX` model the framing | **Fixed+tested** (`AtlasFramingTest`) |
+| H-2 | P1 | Boss bars «Жингийн Зам», «Заавар 4/7», «Анхны Ан» cover «СҮЛДИЙН АТЛАС» | 11 services called `Player#showBossBar` directly; only the waypoint bar knew about sky windows | `ui/BossBars`: every show/hide goes through one gate. While the atlas, the menu or the skill tree is open the bars are hidden and later shows are only remembered; on close the bars still wanted come back, and a bar its service hid meanwhile (a quest handed in) stays hidden. A 1-tick task follows the windows; `stop()` on disable | **Fixed+tested** (`BossBarsTest`) |
+| H-3 | P1 | The corner minimap blinks off and on while moving, turning and fighting | (a) The client draws the map only while one of its frames is in view, and the server places the frames for the look it knows, a round trip behind the camera. All three frames were 10–14° *above* the look, so a look *down* of only ~21° within that lag (a mob at the feet) took every frame out of a view 35° tall. A drawn bow narrows the view by 15%, which makes it worse. (b) A projectile that clipped a frame parked it 4 blocks up (~42°, out of view) for 20 ticks: every skeleton arrow or fireball that touched the middle frame blinked the map for a second | (a) A fourth frame 24° *under* the look (`SLOTS`); all frames stay ≥ 10° off the look and > 5.5 blocks out. Modelled: turns of ±90°, looks of 45° down / 40° up (bow: 40°/30°) keep a frame in view; the old layout fails at 30° down. (b) The park is 2 blocks up (~15°, still in view) for 5 ticks | **Fixed+tested** (`MinimapStabilityTest`, model only); bot `mapcbot.js` updated to 4 frames |
+| H-4 | P2 | Minimap and atlas cause lag | (a) Frames teleported on *any* block change, so a look resting near a block edge hopped a frame between two blocks every tick, one packet each. (b) The minimap redrew and sent a full 128×128 map (~16 KB) on every block moved, at most every 4 ticks (~5/s sprinting). (c) `MapPois.collect` (relays, dungeons, sites, every ovoo's nearest area, bosses) ran on the main thread for every minimap picture and every atlas pan. (d) Each atlas redraw (also once a second while tiles load) re-sent all 25 frames even when only one tile changed. Tile reads were already cached and composed on the map workers; none blocks the main thread | (a) `frameMoves`: a frame follows only once its spot is 0.3 past its block's edge; standing still and not turning, `place` returns before any maths. (b) `redrawDue`: a move of 2 blocks or a turn redraws at most every 5 ticks, a single step after 20, marks at once, a refresh at 200; identical pictures are still not sent. (c) `MapPois.cached` keeps the list 5 s. (d) `AtlasFrames.unchanged`: a frame already showing the same bytes is not sent | **Fixed+tested** (`MinimapStabilityTest`, `AtlasFramingTest`); not measured on the dev server |
+| H-5 | P1 | `/skills` (the skill tree stage) pops open mid-fight while spamming W A S D, attacking, casting, Shift + Ctrl | `SkillService.mapShortcut`: **sneak + right click with the class weapon** opened the skill map, from `onInteract` (right click air/block) and `onInteractEntity` (right click on a mob). Players hold Shift through fights (Shift + Space dodge, Shift + F fifth spell, Shift + Q lock cycle; Ctrl + Shift is sprint + sneak), so any combo R, bow draw or right click on a mob while sneaking opened it. No other key, sneak, sprint, swap, drop or hotbar listener opens it (all `@EventHandler`s on input events were scanned) | The shortcut is removed: a click while sneaking is a plain combo click, and a Мэргэн can draw while sneaking. The tree opens from `/skills` and the menu's «Ур чадвар» card only; the join hint, `docs/HUD.md`, `HUD_MANUAL_QA.md` #14, `SKILL_SKY.md` and `hudbot.js` now say so | **Fixed+tested** (`NoAccidentalWindowTest`: no class that listens to keys, clicks or moves references a skill-tree opener; SkillService's click handlers do not branch on sneaking) |
+
+Tests added: `ui/BossBarsTest` (4), `map/AtlasFramingTest` (6), `map/MinimapStabilityTest` (7),
+`skill/NoAccidentalWindowTest` (3). Validation results: `EXECUTION_CHECKPOINT.md`, "Follow-up 2026-10-15 (2)".
+
+Still open from this round:
+* No client check: the atlas at 5.25 blocks (does the cartouche clear the hearts at the owner's GUI scale? at GUI
+  scale 4 on 1080p the HUD is 18% of the height and the cartouche line would sit behind the hearts; scale 3 and
+  lower are fine), the boss bars leaving and coming back, the four-frame minimap in fast fights, Shift + right click
+  doing nothing. Steps: open `/maps` with a quest, the tutorial and an event bar showing; close it with Shift; fight
+  skeletons while flicking the view down; sneak + right click with the class weapon.
+* A modded client with occlusion entity culling (Sodium, Entity Culling) may still hide a frame that sits behind
+  terrain; the extra frame makes that rarer but cannot rule it out.
+* Atlas pans still respawn every marker entity (`placeMarkers`); not changed.

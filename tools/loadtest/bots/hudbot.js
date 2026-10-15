@@ -81,15 +81,14 @@ bot.once('spawn', async () => {
   check('hud.cooldown_shown', cdSeen, 'after the combo: SLOT_CD ' + b.count('SLOT_CD') + ', countdown "' + b.text('SLOT') + '", resource "' + resBefore + '" -> "' + b.side('ROW_A', true) + '"');
   await sleep(4000); b = await fresh();
   check('hud.cooldown_cleared', b.count('SLOT_CD') === 0, 'after the cooldown: SLOT_CD ' + b.count('SLOT_CD'));
-  // sneak + right click with the class weapon opens the skill-tree map, and is not a combo click
+  // sneak + right click with the class weapon opens nothing (it opened the skill-tree map mid-fight until 2026-10-15)
   bot.setControlState('sneak', true); await sleep(400);
   bot.activateItem(); await sleep(80); bot.deactivateItem(); await sleep(1500);
   const win = bot.currentWindow; const wt = win ? JSON.stringify(win.title) : '';
-  b = await fresh();
-  check('hud.shift_right_click_opens_skill_map', !!win && win.slots.length >= 54 && b.text('LINE').indexOf(' - ') < 0,
-    'window ' + (win ? win.slots.length + ' slots, title ' + wt.slice(0, 80) : 'none') + ', combo line "' + b.text('LINE') + '"');
+  check('hud.shift_right_click_opens_nothing', !win && !bot.vehicle,
+    'window ' + (win ? win.slots.length + ' slots, title ' + wt.slice(0, 80) : 'none') + ', seated ' + !!bot.vehicle);
   if (win) bot.closeWindow(win);
-  bot.setControlState('sneak', false); await sleep(500);
+  bot.setControlState('sneak', false); await sleep(2500); // the click was a combo R: let it lapse
   // target: a named animal in front of the bot (look → frame), attack, then another target, then gone
   const p = bot.entity.position;
   cmd('minecraft:kill @e[tag=hudtest]'); await sleep(300);   // vanilla kill: plain "kill" is EssentialsX's player command

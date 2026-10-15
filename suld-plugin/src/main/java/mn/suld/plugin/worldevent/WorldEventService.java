@@ -138,7 +138,7 @@ public final class WorldEventService {
         lastSpawnMillis = 0;
         eventMobs.clear();
         for (Player p : Bukkit.getOnlinePlayers()) {
-            p.showBossBar(bar);
+            mn.suld.plugin.ui.BossBars.show(p, bar);
             Presentation.banner(p, def.displayName().toUpperCase(java.util.Locale.ROOT), def.description(),
                     NamedTextColor.DARK_PURPLE);
             p.playSound(p.getLocation(), Sound.EVENT_RAID_HORN, 1f, 0.9f);
@@ -161,7 +161,7 @@ public final class WorldEventService {
     /** Players joining mid-event see the bar. */
     public void onJoin(Player player) {
         if (active().isPresent()) {
-            player.showBossBar(bar);
+            mn.suld.plugin.ui.BossBars.show(player, bar);
         }
     }
 
@@ -332,7 +332,7 @@ public final class WorldEventService {
                 ? Messages.success(def.displayName() + " ялагдлаа! " + rewards.size() + " баатар шагнагдлаа.")
                 : Messages.error(def.displayName() + " — хугацаа дууслаа. Чоно ялав...");
         for (Player p : Bukkit.getOnlinePlayers()) {
-            p.hideBossBar(bar);
+            mn.suld.plugin.ui.BossBars.hide(p, bar);
             p.sendMessage(headline);
             if (success) {
                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
@@ -368,7 +368,7 @@ public final class WorldEventService {
                 }
             }
             eventMobs.clear();
-            Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(bar));
+            Bukkit.getOnlinePlayers().forEach(p -> mn.suld.plugin.ui.BossBars.hide(p, bar));
             active = null;
         }
     }

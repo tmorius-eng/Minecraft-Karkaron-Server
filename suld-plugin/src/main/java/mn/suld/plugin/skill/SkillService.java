@@ -200,7 +200,6 @@ public final class SkillService implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         UUID id = e.getPlayer().getUniqueId();
         combos.remove(id);
-        mapOpened.remove(id);
         lastCast.remove(id);
         // spell cooldowns survive a relog (like the pool): only the expired ones are dropped
         Map<Spell, Long> ready = spellReady.get(id);
@@ -242,25 +241,12 @@ public final class SkillService implements Listener {
      * A right click on a block is often "cancelled" by block protection (the city denies using most blocks): that says
      * nothing about casting, so cancelled interacts still count (the class weapon check decides).
      */
-    /** Opens the skill-tree map (set by the plugin once the map exists). */
-    private java.util.function.Consumer<Player> skillMap = p -> { };
-    private final Map<UUID, Long> mapOpened = new ConcurrentHashMap<>();
-
-    public void skillMap(java.util.function.Consumer<Player> open) {
-        this.skillMap = open;
-    }
-
-    /**
-     * Sneak + right click with the class weapon opens the skill-tree map. It is not a combo click (combos are plain
-     * clicks), so spells and the map never get in each other's way.
+    /*
+     * No input opens a window here. Sneak + right click with the class weapon used to open the skill-tree map, and
+     * players sneak all through a fight (Shift + Space dodges, Shift + F casts the fifth spell, Shift + Q cycles the
+     * lock): a combo's R, a bow draw or a right click on a mob while sneaking threw them onto the tree stage mid-fight.
+     * The tree opens from /skills and the menu only (NoAccidentalWindowTest); every click while sneaking is a click.
      */
-    private boolean mapShortcut(Player p) {
-        if (!p.isSneaking() || !holdsClassWeapon(p)) return false;
-        long now = System.currentTimeMillis();
-        Long last = mapOpened.put(p.getUniqueId(), now);
-        if (last == null || now - last > 600) Bukkit.getScheduler().runTask(plugin, () -> skillMap.accept(p));
-        return true;
-    }
 
     /** Мэргэн: one draw per second (a full draw's pace, so the class balance stays as simulated). */
     static final long SHOT_MS = 1_000;
@@ -309,7 +295,7 @@ public final class SkillService implements Listener {
         Player p = e.getPlayer();
         if (clazzOf(p) != PlayerClass.MERGEN || !holdsClassWeapon(p, PlayerClass.MERGEN)) return;
         e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
-        if (p.isSneaking() || paused.test(p)) return; // Shift + right click opens the skill map; a sky window's click is its own
+        if (paused.test(p)) return; // a sky window's click is its own
         UUID id = p.getUniqueId();
         if (drawStart.containsKey(id)) { // WP-06: a held click's repeat — one draw at a time
             drawRepeat.put(id, Bukkit.getCurrentTick());
@@ -465,7 +451,6 @@ public final class SkillService implements Listener {
     public void onInteract(PlayerInteractEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;
         Action a = e.getAction();
-        if ((a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) && mapShortcut(e.getPlayer())) return;
         if (a == Action.LEFT_CLICK_AIR || a == Action.LEFT_CLICK_BLOCK) click(e.getPlayer(), 'L');
         else if (a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) click(e.getPlayer(), 'R');
     }
@@ -488,7 +473,7 @@ public final class SkillService implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInteractEntity(PlayerInteractEntityEvent e) {
-        if (e.getHand() != EquipmentSlot.HAND || mapShortcut(e.getPlayer())) return;
+        if (e.getHand() != EquipmentSlot.HAND) return;
         click(e.getPlayer(), 'R');
     }
 

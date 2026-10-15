@@ -19,7 +19,7 @@ dev server, accept the resource pack, choose a class.
 | 11 | Status line | idle | class · ₮ coins · ◆ unspent points · ⚔ gear score |
 | 12 | Target frame | look at / hit a wolf, an elite, a boss, a player | frame at the top with name, level, health, bronze/silver/gold frame; switches with the target; disappears when it dies or 3 s after you look away (12 s after a hit) |
 | 13 | Other boss bars | start a dungeon, a world event, die (soul bar), follow a quest | their bars still show normally (only white bars are transparent) |
-| 14 | Shift + right click | hold the class weapon, sneak, right click | the skill-tree map opens; a normal right click still starts a combo |
+| 14 | Shift + right click | hold the class weapon, sneak, right click (also spam W A S D, Shift + Ctrl, attack, cast) | no window opens; the right click is a plain combo R (a Мэргэн bow draws); `/skills` and the menu still open the tree |
 | 15 | F1 / spectator | press F1; switch to spectator | HUD hidden with F1; no panel in spectator |
 | 16 | Without the pack | (admin) disable the pack or test a client that failed to load it | the plain text bar is shown instead, no boxes |
 

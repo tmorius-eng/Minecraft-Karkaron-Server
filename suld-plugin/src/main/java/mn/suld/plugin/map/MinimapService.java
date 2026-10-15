@@ -50,25 +50,37 @@ import java.util.function.Predicate;
  * map in invisible glow item frames that only its owner sees; the resource pack's text shader recognises it by the
  * colours in its first row and draws it in the corner instead of where the frames hang.
  * <p>
- * The three frames hang {@value #DIST} blocks out, a little above the look and to its sides ({@link #SLOTS}), so one of
- * them is always in view (the client skips entities out of view), none is within reach of a click (an entity farther
- * than 5 blocks is never targeted) and none is on the player's line of fire. Shown only to a player with the SÜLD pack loaded (without the
+ * The frames hang {@value #DIST} blocks out around the look ({@link #SLOTS}), so one of them is always in view (the
+ * client skips entities out of view), none is within reach of a click (an entity farther than 5 blocks is never
+ * targeted) and none is on the player's line of fire. Shown only to a player with the SÜLD pack loaded (without the
  * shader the map would hang in the world) and the «Мини газрын зураг» setting on, in the overworld, outside the sky
- * windows. Redrawn when the player moves to another block or turns, at most {@value #REDRAW_TICKS} ticks apart.
+ * windows. Redrawn when the player has moved {@value #MOVE_BLOCKS} blocks or turned, at most {@value #REDRAW_TICKS}
+ * ticks apart (a single step is caught up after {@value #SETTLE_TICKS} ticks), and only sent when the picture changed.
  */
 public final class MinimapService implements Listener {
 
     static final String TAG = "suld_minimap";
     static final double DIST = 7.5, NEAR = 72;
     /**
-     * Where the frames hang, as (yaw, pitch) turns from the look in degrees (negative pitch = up): all above the line of
-     * fire (an arrow leaves just under the eye along the look and only drops), one 14° up in the middle of the view
-     * (a 16:9 screen sees ±51° across, ±35° up and down) and two 50° to the sides, which come into view while the
-     * player turns faster than the server moves the frames (a two-frame layout at ±28° blinked in fast turns on the
-     * real client; the sides keep it drawn through turns of ~90° a tick).
+     * Where the frames hang, as (yaw, pitch) turns from the look in degrees (negative pitch = up): one 14° up in the
+     * middle of the view (a 16:9 screen sees ±51° across, ±35° up and down), two 50° to the sides and one 24° under
+     * the look, none on the line of fire (an arrow leaves just under the eye along the look and drops a few
+     * hundredths of a block in 7.5). The server moves the frames a round trip after the client turned: the sides keep
+     * the map drawn through fast turns (a two-frame layout at ±28° blinked on the real client) and the low frame
+     * through a quick look down, which took every frame of the old three-frame layout (all 10–14° up) out of a view
+     * only 35° tall, the blink players saw in fights: 21° of look-down within the lag was enough.
      */
-    static final double[][] SLOTS = {{0, -14}, {-50, -10}, {50, -10}};
-    static final int REDRAW_TICKS = 4, STALE_TICKS = 200, PARK_TICKS = 20;
+    static final double[][] SLOTS = {{0, -14}, {-50, -10}, {50, -10}, {0, 24}};
+    /**
+     * A frame follows the look only once its spot is this far past the edge of the block it hangs in (~2° at
+     * {@link #DIST}): hanging on the block grid, it hopped back and forth between two blocks on every small turn of a
+     * look resting near an edge, a teleport packet a frame a tick. Small enough that the middle frame stays well over
+     * the line of fire.
+     */
+    static final double MOVE_SLACK = 0.3;
+    static final int REDRAW_TICKS = 5, SETTLE_TICKS = 20, STALE_TICKS = 200, MOVE_BLOCKS = 2;
+    /** A frame something flew into steps {@value #PARK_UP} blocks up (~15°: still in view) for this long, enough for the shot to pass. */
+    static final int PARK_TICKS = 5, PARK_UP = 2;
 
     private final class State {
         final List<GlowItemFrame> frames = new ArrayList<>();
@@ -79,6 +91,9 @@ public final class MinimapService implements Listener {
         int lastX = Integer.MIN_VALUE, lastZ, lastTurn = -1, lastTick, lastPins = -1, lastMates;
         WaypointGuide.Target lastTarget;
         boolean drawing;
+        /** The eye the frames were last placed for: standing still and not turning, nothing is computed or sent. */
+        double eyeX = Double.NaN, eyeY, eyeZ;
+        float eyeYaw, eyePitch;
     }
 
     private final Plugin plugin;
@@ -173,15 +188,17 @@ public final class MinimapService implements Listener {
             }
             State s = states.computeIfAbsent(id, k -> new State());
             place(p, s);
+            if (s.drawing) continue;
             Location l = p.getLocation();
             int x = l.getBlockX(), z = l.getBlockZ(), turn = Math.floorMod(Math.round(l.getYaw() / 22.5f), 16);
             int mates = matesKey(p); // a party mate who moves or turns redraws it too, at the same pace
-            boolean moved = x != s.lastX || z != s.lastZ || turn != s.lastTurn || mates != s.lastMates;
+            int moved = s.lastX == Integer.MIN_VALUE ? Integer.MAX_VALUE : Math.max(Math.abs(x - s.lastX), Math.abs(z - s.lastZ));
+            boolean turned = turn != s.lastTurn || mates != s.lastMates;
             // a new waypoint or pin shows at once
             WaypointGuide.Target target = guide.target(id);
             int pinCount = pins.pins(id).size();
             boolean marks = target != s.lastTarget || pinCount != s.lastPins;
-            if (!s.drawing && (marks || moved && now - s.lastTick >= REDRAW_TICKS || now - s.lastTick >= STALE_TICKS)) {
+            if (redrawDue(moved, turned, marks, now - s.lastTick)) {
                 s.lastX = x;
                 s.lastZ = z;
                 s.lastTurn = turn;
@@ -195,16 +212,51 @@ public final class MinimapService implements Listener {
         states.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
     }
 
-    /** The frames out along the player's look, spawned when missing; moved only when their block changes. */
+    /**
+     * Whether the picture is drawn again now: at once for a new waypoint or pin; after {@value #REDRAW_TICKS} ticks for
+     * a move of {@value #MOVE_BLOCKS} blocks, a turn or a mate's move; after {@value #SETTLE_TICKS} for a single step
+     * (so the player ends up in the middle); after {@value #STALE_TICKS} anyway. {@code moved} is the move in blocks
+     * since the last picture (the larger of x and z).
+     */
+    static boolean redrawDue(int moved, boolean turned, boolean marks, int ticksSince) {
+        if (marks || ticksSince >= STALE_TICKS) return true;
+        if ((moved >= MOVE_BLOCKS || turned) && ticksSince >= REDRAW_TICKS) return true;
+        return moved > 0 && ticksSince >= SETTLE_TICKS;
+    }
+
+    /**
+     * Whether a frame hanging in block (bx, by, bz) goes to its spot {@code at}: only once the spot is more than
+     * {@link #MOVE_SLACK} outside that block on some axis.
+     */
+    static boolean frameMoves(int bx, int by, int bz, double atX, double atY, double atZ) {
+        return outside(bx, atX) || outside(by, atY) || outside(bz, atZ);
+    }
+
+    private static boolean outside(int block, double at) {
+        return at < block - MOVE_SLACK || at >= block + 1 + MOVE_SLACK;
+    }
+
+    /** The frames out along the player's look, spawned when missing; each moved only when its spot has left its block (see {@link #frameMoves}). */
     private void place(Player p, State s) {
         Location eye = p.getEyeLocation();
         World w = eye.getWorld();
         if (s.frames.stream().anyMatch(f -> !f.isValid() || f.getWorld() != w)) {
             for (Entity f : s.frames) if (f.isValid()) f.remove();
             s.frames.clear();
+            s.eyeX = Double.NaN;
         }
         while (s.frames.size() < SLOTS.length) s.frames.add(spawn(p, eye));
         int now = Bukkit.getCurrentTick();
+        boolean parked = false;
+        for (int until : s.parkedUntil) parked |= now <= until;
+        if (!parked && eye.getX() == s.eyeX && eye.getY() == s.eyeY && eye.getZ() == s.eyeZ && eye.getYaw() == s.eyeYaw && eye.getPitch() == s.eyePitch) {
+            return; // standing still, not turning: every frame is where it was put
+        }
+        s.eyeX = eye.getX();
+        s.eyeY = eye.getY();
+        s.eyeZ = eye.getZ();
+        s.eyeYaw = eye.getYaw();
+        s.eyePitch = eye.getPitch();
         for (int i = 0; i < SLOTS.length; i++) {
             if (now < s.parkedUntil[i]) continue;
             Location look = eye.clone();
@@ -213,15 +265,17 @@ public final class MinimapService implements Listener {
             Location at = eye.clone().add(look.getDirection().multiply(DIST));
             GlowItemFrame f = s.frames.get(i);
             Location cur = f.getLocation();
-            if (cur.getBlockX() != at.getBlockX() || cur.getBlockY() != at.getBlockY() || cur.getBlockZ() != at.getBlockZ()) f.teleport(at);
+            if (frameMoves(cur.getBlockX(), cur.getBlockY(), cur.getBlockZ(), at.getX(), at.getY(), at.getZ())) f.teleport(at);
         }
     }
 
     /**
      * A frame is a real entity on the server, so an arrow, a snowball or a mob's shot can fly into it (only its owner
      * sees it, but Paper lets a projectile hit what its shooter can see, and a mob sees everything). The hit is
-     * cancelled and the frame steps 4 blocks up for a second, so the projectile goes on as if nothing were there
-     * (a cancelled hit alone would stop a plain arrow on the frame's face) and a frame never shields its owner.
+     * cancelled and the frame steps {@value #PARK_UP} blocks up for {@value #PARK_TICKS} ticks, so the projectile goes on
+     * as if nothing were there (a cancelled hit alone would stop a plain arrow on the frame's face) and a frame never
+     * shields its owner. (It stepped 4 blocks up for a second: out of view, so every arrow or fireball that clipped the
+     * middle frame blinked the minimap for a second in fights.)
      */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onProjectileHit(org.bukkit.event.entity.ProjectileHitEvent e) {
@@ -233,7 +287,7 @@ public final class MinimapService implements Listener {
             int i = s.frames.indexOf(hit);
             if (i < 0) continue;
             s.parkedUntil[i] = now + PARK_TICKS;
-            hit.teleport(hit.getLocation().add(0, 4, 0));
+            hit.teleport(hit.getLocation().add(0, PARK_UP, 0));
             return;
         }
         hit.remove(); // a frame no minimap owns any more

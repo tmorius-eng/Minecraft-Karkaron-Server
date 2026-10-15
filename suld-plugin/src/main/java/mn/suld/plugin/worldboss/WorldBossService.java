@@ -298,13 +298,13 @@ public final class WorldBossService implements Listener {
         for (UUID id : new ArrayList<>(a.barShown)) {
             if (near.contains(id)) continue;
             Player p = Bukkit.getPlayer(id);
-            if (p != null) p.hideBossBar(bar);
+            if (p != null) mn.suld.plugin.ui.BossBars.hide(p, bar);
             a.barShown.remove(id);
         }
         for (UUID id : near) {
             if (a.barShown.add(id)) {
                 Player p = Bukkit.getPlayer(id);
-                if (p != null) p.showBossBar(bar);
+                if (p != null) mn.suld.plugin.ui.BossBars.show(p, bar);
             }
         }
     }
@@ -360,7 +360,7 @@ public final class WorldBossService implements Listener {
         services.bosses().unregister(a.boss.getUniqueId());
         for (UUID id : a.barShown) {
             Player p = Bukkit.getPlayer(id);
-            if (p != null) p.hideBossBar(bar);
+            if (p != null) mn.suld.plugin.ui.BossBars.hide(p, bar);
         }
         for (Entity e : a.boss.getWorld().getNearbyEntities(a.boss.getLocation(), 64, 32, 64, x -> x.getScoreboardTags().contains(TAG))) {
             if (!e.equals(a.boss) || !slain) e.remove();
@@ -442,7 +442,7 @@ public final class WorldBossService implements Listener {
         services.bosses().unregister(a.boss.getUniqueId());
         for (UUID id : a.barShown) {
             Player p = Bukkit.getPlayer(id);
-            if (p != null) p.hideBossBar(bar);
+            if (p != null) mn.suld.plugin.ui.BossBars.hide(p, bar);
         }
         for (Entity e : a.boss.getWorld().getNearbyEntities(a.boss.getLocation(), 64, 32, 64, x -> x.getScoreboardTags().contains(TAG))) e.remove();
         a.chunk.removePluginChunkTicket(plugin);

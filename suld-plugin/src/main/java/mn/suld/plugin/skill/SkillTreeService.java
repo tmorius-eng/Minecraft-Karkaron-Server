@@ -555,7 +555,7 @@ public final class SkillTreeService implements Listener {
                     // the class armour and weapon stats land a tick later (EquipmentService): fill again after them
                     Bukkit.getScheduler().runTaskLater(plugin, () -> fillHealth(p), 5L);
                     p.sendMessage(Messages.accent("◆ Чадварын мод нээгдлээ: түвшин ахих бүрт, түүхийн эрэл дуусгаж, шинэ газар нээхэд оноо ирнэ."));
-                    p.sendMessage(Messages.info("Оноогоо /skills (газрын зураг; эсвэл ангийн зэвсгээ барьж Shift + баруун товч) дээр зарцуулж, шид болон идэвхгүй чадвараа сонго. Улаан холбоос = зөвхөн нэгийг сонгоно."));
+                    p.sendMessage(Messages.info("Оноогоо /skills (эсвэл цэсний «Ур чадвар») дээр зарцуулж, шид болон идэвхгүй чадвараа сонго. Улаан холбоос = зөвхөн нэгийг сонгоно."));
                 });
             }
         } else if (e.payload() instanceof LevelUpEvent ev) {
