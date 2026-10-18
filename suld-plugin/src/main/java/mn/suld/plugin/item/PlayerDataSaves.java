@@ -115,9 +115,31 @@ public final class PlayerDataSaves {
         });
     }
 
-    /** On the main thread; inline when the plugin is disabling (the scheduler refuses new tasks then). */
+    /** Storage callbacks that finished while the plugin was disabling, for {@link #drainShutdown} on the main thread. */
+    private static final java.util.Queue<Runnable> AT_SHUTDOWN = new java.util.concurrent.ConcurrentLinkedQueue<>();
+
+    /**
+     * On the main thread. While the plugin is disabling the scheduler refuses new tasks: on the main thread the task runs
+     * inline, from a storage thread it waits for {@link #drainShutdown} (an inventory is never touched off the main thread).
+     */
     static void onMain(Plugin plugin, Runnable r) {
         if (plugin.isEnabled()) Bukkit.getScheduler().runTask(plugin, r);
-        else r.run();
+        else if (Bukkit.isPrimaryThread()) r.run();
+        else AT_SHUTDOWN.add(r);
+    }
+
+    /**
+     * onDisable, main thread: runs what storage callbacks left for the main thread while the plugin was stopping (a
+     * purchase whose coins were committed during the last saves still gives its item). Called after the profile flush
+     * and again after the pools close.
+     */
+    public static void drainShutdown(java.util.logging.Logger log) {
+        for (Runnable r; (r = AT_SHUTDOWN.poll()) != null; ) {
+            try {
+                r.run();
+            } catch (RuntimeException ex) {
+                log.severe("[coins] a callback left for shutdown failed: " + ex);
+            }
+        }
     }
 }

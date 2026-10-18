@@ -35,6 +35,16 @@ class ChatGuardTest {
     }
 
     @Test
+    void packGlyphsAndSpaceShiftsAreTakenOut() {
+        ChatGuard.Result r = guard.check(UUID.randomUUID(), "сайн\uE018 уу\uF8E5\uF8E0", 0);
+        assertTrue(r.allowed());
+        assertEquals("сайн уу", r.text());
+        assertEquals("a b", ChatGuard.withoutPrivateUse("a\uDB80\uDC00 b")); // U+F0000, the supplementary private-use plane
+        assertEquals("сайн уу", ChatGuard.withoutPrivateUse("сайн уу"));
+        assertEquals(ChatGuard.Verdict.GLYPHS_ONLY, guard.check(UUID.randomUUID(), "\uE048\uF8EF", 0).verdict());
+    }
+
+    @Test
     void shoutingIsLoweredNotBlocked() {
         ChatGuard.Result r = guard.check(UUID.randomUUID(), "ХҮМҮҮС ЭНД ИРЭЭРЭЙ", 0);
         assertTrue(r.allowed());

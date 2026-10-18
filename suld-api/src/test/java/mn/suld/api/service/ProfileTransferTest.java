@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** PERS-004: a coin transfer whose transaction fails never creates coins, even if the payee spent them meanwhile. */
@@ -55,5 +56,41 @@ class ProfileTransferTest {
         assertEquals(before, payer.currency() + payee.currency(), "the revert moves coins, it never creates them");
         assertEquals(0, payee.currency());
         assertEquals(650, payer.currency());
+    }
+
+    @Test
+    void aCancelledTransferIsUndoneOnceEvenIfStorageFailsLater() {
+        FailingStore store = new FailingStore();
+        PlayerProfile payer = profile(1000), payee = profile(50);
+        CompletableFuture<Void> f = store.transfer(payer, payee, 400);
+        assertTrue(f.cancel(false), "a caller that stops waiting (shutdown) cancels");
+        assertEquals(1000, payer.currency());
+        assertEquals(50, payee.currency());
+        store.pending.completeExceptionally(new RuntimeException("db down after the timeout"));
+        assertEquals(1000, payer.currency(), "the late failure does not pay the coins back a second time");
+        assertEquals(50, payee.currency());
+    }
+
+    @Test
+    void aCancelAfterTheFailureChangesNothing() {
+        FailingStore store = new FailingStore();
+        PlayerProfile payer = profile(1000), payee = profile(50);
+        CompletableFuture<Void> f = store.transfer(payer, payee, 400);
+        store.pending.completeExceptionally(new RuntimeException("db down"));
+        assertFalse(f.cancel(false));
+        assertEquals(1000, payer.currency());
+        assertEquals(50, payee.currency());
+    }
+
+    @Test
+    void aSavedTransferStays() {
+        FailingStore store = new FailingStore();
+        PlayerProfile payer = profile(1000), payee = profile(50);
+        CompletableFuture<Void> f = store.transfer(payer, payee, 400);
+        store.pending.complete(null);
+        assertTrue(f.isDone() && !f.isCompletedExceptionally());
+        assertFalse(f.cancel(false));
+        assertEquals(600, payer.currency());
+        assertEquals(450, payee.currency());
     }
 }

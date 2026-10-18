@@ -696,8 +696,10 @@ public final class SuldPlugin extends JavaPlugin {
             getLogger().severe("[shutdown] " + missing.size() + " profile save(s) not confirmed within 15 s (" + ex.getClass().getSimpleName()
                     + "): " + missing + " — these players' last changes may be missing; the database row is what it was before");
         }
+        mn.suld.plugin.item.PlayerDataSaves.drainShutdown(getLogger()); // purchases whose coins committed meanwhile get their items
         // after the profile flush: style/clan/analytics flushes and every pool, all against one deadline
         services.close(getConfig().getLong("shutdown.budget-seconds", 20));
+        mn.suld.plugin.item.PlayerDataSaves.drainShutdown(getLogger());
         getLogger().info("SULD disabled.");
     }
 

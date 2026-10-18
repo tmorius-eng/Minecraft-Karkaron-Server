@@ -95,8 +95,10 @@ public final class PinService implements Listener {
                 if (p.isOnline()) p.sendMessage(Messages.error("Тэмдэг хадгалагдсангүй."));
                 return;
             }
+            if (Bukkit.getPlayer(id) == null) return; // left meanwhile: the next join reads the stored pins
             List<MapPin> list = pins.computeIfAbsent(id, k -> new ArrayList<>());
-            list.add(pin);
+            // back already: that join's read may hold this pin
+            if (list.stream().noneMatch(q -> q.id().equals(pin.id()))) list.add(pin);
             versions.merge(id, 1, Integer::sum);
             if (p.isOnline()) p.sendMessage(Messages.success("◆ «" + pin.name() + "» тэмдэг тавигдлаа (x " + x + ", z " + z + ")."));
             if (done != null) done.accept(pin);
@@ -117,6 +119,7 @@ public final class PinService implements Listener {
                 if (p.isOnline()) p.sendMessage(Messages.error("Тэмдэг устсангүй."));
                 return;
             }
+            if (Bukkit.getPlayer(id) == null) return; // left meanwhile: nothing of theirs is kept
             List<MapPin> list = pins.get(id);
             if (list != null) list.removeIf(q -> q.id().equals(pin.id()));
             versions.merge(id, 1, Integer::sum);

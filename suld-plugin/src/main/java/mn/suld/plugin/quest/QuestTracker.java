@@ -168,11 +168,7 @@ public final class QuestTracker implements Listener {
                 long gd = Math.round(Math.hypot(gx, gz));
                 var def = SuldContent.dungeonFor(d.targetId());
                 String name = def == null ? "Агуйн хаалга" : def.displayName() + "-ийн хаалга";
-                Component gateRefusalComponent = def == null ? null : services.dungeons().soloEntryRefusal(p, def);
-                if (gd <= 16) {
-                    if (gateRefusalComponent != null) return head.append(Component.text("  ⚠ ", NamedTextColor.RED, TextDecoration.BOLD)).append(gateRefusalComponent);
-                    return head.append(Component.text("  ⚔ " + name + " — энд! Хаалгыг дар", NamedTextColor.GREEN, TextDecoration.BOLD));
-                }
+                if (gd <= 16) return head.append(Component.text("  ⚔ " + name + " — энд! Хаалгыг дар", NamedTextColor.GREEN, TextDecoration.BOLD));
                 double gb = Navigation.bearing(gx, gz);
                 return head.append(Component.text("  " + Navigation.arrow(gb, Navigation.facing(l.getYaw())) + " ", NamedTextColor.AQUA, TextDecoration.BOLD))
                         .append(Component.text("⚔ " + name + " · " + Navigation.compass(gb) + " · " + gd + "м", NamedTextColor.WHITE, TextDecoration.BOLD));

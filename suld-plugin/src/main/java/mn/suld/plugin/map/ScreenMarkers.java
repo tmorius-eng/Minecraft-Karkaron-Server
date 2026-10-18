@@ -109,7 +109,8 @@ public final class ScreenMarkers implements Listener {
             }
             update(p, now);
         }
-        cards.keySet().removeIf(id -> Bukkit.getPlayer(id) == null);
+        // a player gone without the quit event reaching here: their cards' entities go with the cards
+        for (UUID id : List.copyOf(cards.keySet())) if (Bukkit.getPlayer(id) == null) hideAll(id);
     }
 
     /** The marks the player may see in their world now, before {@link WaypointHud#choose}. */

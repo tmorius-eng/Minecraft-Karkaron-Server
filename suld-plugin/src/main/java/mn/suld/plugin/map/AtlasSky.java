@@ -39,6 +39,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerAnimationType;
@@ -48,6 +49,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -276,7 +278,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         Hit hover;
         String lastCursor = "";
         int gen;
-        boolean ready, closing, dirty, pinMode, up, down, left, right;
+        boolean ready, closing, dirty, pinMode, up, down, left, right, seatMoving;
         /** The latest death's {x, z} (read when the atlas opens), or null. */
         int[] death;
         int heldTicks;
@@ -400,7 +402,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             }
             case "guide" -> {
                 String[] xz = rest.split("\\s+");
-                if (xz.length == 2 && xz[0].matches("-?\\d+") && xz[1].matches("-?\\d+")) {
+                if (xz.length == 2 && xz[0].matches("-?\\d{1,8}") && xz[1].matches("-?\\d{1,8}")) { // an int, never an overflow
                     int x = Integer.parseInt(xz[0]), z = Integer.parseInt(xz[1]);
                     guide.guide(p, new WaypointGuide.Target("x " + x + ", z " + z, "◆", Bukkit.getWorlds().get(0).getName(), x + 0.5, WaypointGuide.GROUND, z + 0.5));
                     return;
@@ -1018,7 +1020,12 @@ public final class AtlasSky implements Listener, TabExecutor {
         Location cam = s.plane.clone().add(0, EYE_UP - s.eyeOff, 0.004 - s.dist);
         cam.setYaw(s.p.getLocation().getYaw());
         cam.setPitch(s.p.getLocation().getPitch());
-        s.seat.teleport(cam); // passengers always ride along (Paper 1.21.10+)
+        s.seatMoving = true; // the rider's teleport event this fires is the atlas's own (onTeleport)
+        try {
+            s.seat.teleport(cam); // passengers always ride along (Paper 1.21.10+)
+        } finally {
+            s.seatMoving = false;
+        }
     }
 
     /** A tooltip's lines under its name: what the thing is (cream) and, last, what a click does (cyan). */
@@ -1780,6 +1787,26 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (s == null || s.closing) return;
         e.setCancelled(true);
         Bukkit.getScheduler().runTask(plugin, () -> close(p));
+    }
+
+    /**
+     * Any other teleport (a staff /tp, a party summon, a dungeon start) wins over the atlas: it closes where it stands,
+     * without the walk back, before the dismount the teleport needs (which the atlas would otherwise cancel). The
+     * atlas's own teleports are the one onto the stage (no seat yet), the camera's seat carrying its rider (Paper
+     * teleports a passenger with its vehicle) and the walk back (the session is gone by then); a dismount's own move
+     * (Shift) is {@link #onDismount}'s, which walks the player back.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent e) {
+        Session s = sessions.get(e.getPlayer().getUniqueId());
+        if (s == null || s.closing || s.seat == null || s.seatMoving || e.getCause() == PlayerTeleportEvent.TeleportCause.DISMOUNT) return;
+        close(e.getPlayer(), false);
+    }
+
+    /** A death that gets past the atlas's damage guard (a plugin setting health to 0): the respawn takes the player away. */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDeath(PlayerDeathEvent e) {
+        if (sessions.containsKey(e.getPlayer().getUniqueId())) close(e.getPlayer(), false);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

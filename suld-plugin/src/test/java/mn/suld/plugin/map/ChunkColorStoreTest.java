@@ -129,7 +129,7 @@ class ChunkColorStoreTest {
         });
         ExecutorService workers = Executors.newFixedThreadPool(2);
         try {
-            MapTiles tiles = new MapTiles(cold, new MapGeometry(-512, -512, 512, 512), workers, 64);
+            MapTiles tiles = new MapTiles(cold, new MapGeometry(-512, -512, 512, 512), workers, 64, log);
             var late = tiles.tile(0, 0, 0);
             java.util.concurrent.ExecutionException e = org.junit.jupiter.api.Assertions.assertThrows(
                     java.util.concurrent.ExecutionException.class, () -> late.get(10, TimeUnit.SECONDS));
@@ -146,12 +146,43 @@ class ChunkColorStoreTest {
     }
 
     @Test
+    void aTileThatChangesWhileBeingDrawnIsDrawnAgainForTheNextRequest() throws Exception {
+        ChunkColorStore s = new ChunkColorStore(dir, log, io, 8);
+        io.submit(() -> s.presenceSquare(-32, -32, 64)).get();
+        s.put(0, 0, chunk(MapColors.GRASS, 70));
+        s.flush().get(10, TimeUnit.SECONDS);
+        ChunkColorStore cold = new ChunkColorStore(dir, log, io, 8); // the region is on disk: the first draw waits for it
+        io.submit(() -> cold.presenceSquare(-32, -32, 64)).get();
+        java.util.concurrent.CountDownLatch busy = new java.util.concurrent.CountDownLatch(1);
+        io.submit(() -> {
+            busy.await();
+            return null;
+        });
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        try {
+            MapTiles tiles = new MapTiles(cold, new MapGeometry(-512, -512, 512, 512), workers, 64, log);
+            var first = tiles.tile(0, 0, 0);
+            assertTrue(tiles.tile(0, 0, 0) == first, "while it is drawn, a second request shares the draw");
+            tiles.chunkChanged(0, 0);
+            var second = tiles.tile(0, 0, 0);
+            assertTrue(second != first, "after the change the next request draws it again, not the old picture");
+            busy.countDown();
+            first.get(10, TimeUnit.SECONDS);
+            byte[] fresh = second.get(10, TimeUnit.SECONDS);
+            assertTrue(tiles.cached(0, 0, 0) == fresh, "only the fresh draw is cached");
+        } finally {
+            busy.countDown();
+            workers.shutdownNow();
+        }
+    }
+
+    @Test
     void tilesAreDrawnFromTheStoreAndRedrawnWhenAChunkChanges() throws Exception {
         ChunkColorStore s = new ChunkColorStore(dir, log, io, 8);
         io.submit(() -> s.presenceSquare(-32, -32, 64)).get();
         ExecutorService workers = Executors.newFixedThreadPool(2);
         try {
-            MapTiles tiles = new MapTiles(s, new MapGeometry(-512, -512, 512, 512), workers, 64);
+            MapTiles tiles = new MapTiles(s, new MapGeometry(-512, -512, 512, 512), workers, 64, log);
             s.put(0, 0, chunk(MapColors.GRASS, 70));
             s.flush().get(10, TimeUnit.SECONDS);
             byte[] t = tiles.tile(0, 0, 0).get(10, TimeUnit.SECONDS);

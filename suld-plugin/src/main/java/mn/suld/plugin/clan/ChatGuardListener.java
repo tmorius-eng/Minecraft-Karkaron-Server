@@ -67,6 +67,10 @@ public final class ChatGuardListener implements Listener {
                 e.setCancelled(true);
                 p.sendMessage(Messages.error("Өөр серверийн хаяг, IP чатад хориотой."));
             }
+            case GLYPHS_ONLY -> {
+                e.setCancelled(true);
+                p.sendMessage(Messages.error("Эдгээр тусгай тэмдэгтийг чатад бичих боломжгүй."));
+            }
         }
     }
 

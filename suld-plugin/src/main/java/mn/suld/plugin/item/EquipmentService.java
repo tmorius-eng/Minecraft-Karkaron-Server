@@ -277,7 +277,6 @@ public final class EquipmentService implements Listener {
         // duplicate first) — the slot alone used to be saved, so a crash left the jewel worn and still in the bag
         PlayerDataSaves.now(p);
         services.profiles().save(pr);
-        PlayerDataSaves.now(p);
         services.audit().record(AuditEvent.of(p.getUniqueId().toString(), "item.equip", c.item().definitionId() + "-" + c.item().uuid(), target.name()));
         dirty(p);
         return null;

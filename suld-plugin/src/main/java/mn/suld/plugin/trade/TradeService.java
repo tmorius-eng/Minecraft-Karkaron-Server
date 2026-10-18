@@ -414,7 +414,7 @@ public final class TradeService implements Listener, TabExecutor {
         }
         PlayerProfile payer = net > 0 ? rb : ra, payee = net > 0 ? ra : rb;
         long absNet = Math.abs(net);
-        Settlement st = new Settlement(pa, pb, fromA, fromB, payer, payee, absNet, services.profiles().transfer(payer, payee, absNet));
+        Settlement st = new Settlement(pa, pb, fromA, fromB, services.profiles().transfer(payer, payee, absNet));
         inFlight.add(st);
         st.coins.whenComplete((v, err) -> {
             if (!plugin.isEnabled()) return; // shutdown() settles what is still in flight
@@ -434,7 +434,6 @@ public final class TradeService implements Listener, TabExecutor {
      * someone (shutdown() settles them), never let them vanish with the scheduler.
      */
     private record Settlement(Player pa, Player pb, List<ItemStack> fromA, List<ItemStack> fromB,
-                              PlayerProfile payer, PlayerProfile payee, long amount,
                               java.util.concurrent.CompletableFuture<?> coins) {
     }
 
@@ -605,13 +604,10 @@ public final class TradeService implements Listener, TabExecutor {
                 st.coins().get(3, java.util.concurrent.TimeUnit.SECONDS); // the profile pool is still open here
                 ok = true;
             } catch (Exception ex) {
-                // SULD-F03: if timed out (not already reverted by transfer's error handler), revert in-memory coins before onDisable saves profiles
-                if (!st.coins().isCompletedExceptionally()) {
-                    st.coins().cancel(false);
-                    long back = Math.min(st.amount(), Math.max(0, st.payee().currency()));
-                    st.payee().addCurrency(-back);
-                    st.payer().addCurrency(back);
-                }
+                // SULD-F03: a transfer still running after 3 s is cancelled, which undoes the coins in memory before
+                // onDisable saves the profiles; ProfileService.transfer undoes at most once, so a storage failure that
+                // arrives after the cancel (or came before it) never pays the coins back twice
+                st.coins().cancel(false);
                 ok = false;
                 plugin.getLogger().severe("[audit] trade " + st.pa().getName() + " <-> " + st.pb().getName()
                         + " unsettled at shutdown (" + ex + "); balances reverted and items returned to their owners");

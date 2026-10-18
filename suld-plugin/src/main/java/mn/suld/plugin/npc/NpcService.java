@@ -466,17 +466,22 @@ public final class NpcService implements Listener {
                     pl.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + cost + " зоос)."));
                     return;
                 }
-                if (hand.getItemMeta() instanceof Damageable hd) {
-                    pr.addCurrency(-cost);
-                    hd.setDamage(0);
-                    hand.setItemMeta(hd);
-                    services.profiles().save(pr);
-                    mn.suld.plugin.item.PlayerDataSaves.now(pl);
-                    pl.playSound(pl.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
-                    pl.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " зоос)."));
-                    if (services.classArmor != null) services.classArmor.smithWork(pl);
-                }
+                if (!(hand.getItemMeta() instanceof Damageable)) return;
                 pl.closeInventory();
+                // COINS -> ITEMS (PlayerDataSaves.coinsForItem): the charge is committed before the mended item is written
+                pr.addCurrency(-cost);
+                mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, pl, pr, cost, "smith repair", p2 -> {
+                    ItemStack now = p2.getInventory().getItemInMainHand();
+                    if (!now.isSimilar(it) || !(now.getItemMeta() instanceof Damageable nd)) {
+                        refund(p2, pr, cost);
+                        return;
+                    }
+                    nd.setDamage(0);
+                    now.setItemMeta(nd);
+                    p2.playSound(p2.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f);
+                    p2.sendMessage(Messages.success("Дархан засаж өглөө (-" + cost + " зоос)."));
+                    if (services.classArmor != null) services.classArmor.smithWork(p2);
+                });
             });
         }
         if (upgradable) {
@@ -508,19 +513,29 @@ public final class NpcService implements Listener {
                 }
                 mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(now.definitionId());
                 if (!upgradableDef(def) || hand.getAmount() != 1) return; // only single equippable gear, never materials
-                mn.suld.api.item.ItemInstance up = services.itemService().generator().upgrade(now, def);
-                takeItem(pl, cost.materialId(), cost.materialCount());
-                pr.addCurrency(-cost.coins());
-                ItemStack upgraded = hand.clone();
-                services.items().rewrite(upgraded, up, services.itemService().viewer(pl)); // keeps durability and identity
-                pl.getInventory().setItemInMainHand(upgraded);
-                pl.playSound(pl.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1f, 1f);
-                pl.getWorld().spawnParticle(org.bukkit.Particle.ENCHANT, pl.getLocation().add(0, 1.2, 0), 40, 0.4, 0.6, 0.4, 0.4);
-                pl.sendMessage(Messages.success(def.displayName() + " → Зэрэг " + up.itemLevel() + " (+" + up.upgradeLevel() + ")"));
-                services.profiles().save(pr);
-                mn.suld.plugin.item.PlayerDataSaves.now(pl);
-                if (services.classArmor != null) services.classArmor.smithWork(pl);
                 pl.closeInventory();
+                // COINS -> ITEMS (PlayerDataSaves.coinsForItem): the charge is committed before the materials are taken and
+                // the upgraded item is written, so a crash between them costs the coins, never gives a free upgrade
+                pr.addCurrency(-cost.coins());
+                mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, pl, pr, cost.coins(), "smith upgrade", p2 -> {
+                    ItemStack h2 = p2.getInventory().getItemInMainHand();
+                    mn.suld.api.item.ItemInstance n2 = services.items().read(h2).orElse(null);
+                    // the very item, still at the level the price was for, and the materials still in the bag
+                    if (n2 == null || !n2.uuid().equals(inst.uuid()) || n2.itemLevel() != inst.itemLevel() || h2.getAmount() != 1
+                            || countItem(p2, cost.materialId()) < cost.materialCount()) {
+                        refund(p2, pr, cost.coins());
+                        return;
+                    }
+                    mn.suld.api.item.ItemInstance up = services.itemService().generator().upgrade(n2, def);
+                    takeItem(p2, cost.materialId(), cost.materialCount());
+                    ItemStack upgraded = h2.clone();
+                    services.items().rewrite(upgraded, up, services.itemService().viewer(p2)); // keeps durability and identity
+                    p2.getInventory().setItemInMainHand(upgraded);
+                    p2.playSound(p2.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1f, 1f);
+                    p2.getWorld().spawnParticle(org.bukkit.Particle.ENCHANT, p2.getLocation().add(0, 1.2, 0), 40, 0.4, 0.6, 0.4, 0.4);
+                    p2.sendMessage(Messages.success(def.displayName() + " → Зэрэг " + up.itemLevel() + " (+" + up.upgradeLevel() + ")"));
+                    if (services.classArmor != null) services.classArmor.smithWork(p2);
+                });
             });
             reroll(m, p, inst);
         }
@@ -569,23 +584,37 @@ public final class NpcService implements Listener {
                 pl.sendMessage(Messages.error("Эртний Хас Чулуу ×" + jade + " хэрэгтэй: баатарлаг агуйг хугацаанд нь дав (/dungeon heroic)."));
                 return;
             }
-            mn.suld.api.item.ItemInstance rolled = services.itemService().rerollAffixes(now, def);
-            takeItem(pl, mn.suld.api.item.AffixReroll.JADE, jade);
-            pr.addCurrency(-coins);
-            ItemStack out = hand.clone();
-            services.items().rewrite(out, rolled, services.itemService().viewer(pl)); // keeps durability and identity
-            pl.getInventory().setItemInMainHand(out);
-            pl.playSound(pl.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_RESONATE, 1f, 1.2f);
-            pl.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, pl.getLocation().add(0, 1.2, 0), 24, 0.4, 0.5, 0.4, 0);
-            pl.sendMessage(Messages.success(def.displayName() + ": шинжүүд шинэчлэгдлээ (-" + jade + " хас чулуу, -" + coins + " зоос)."));
-            services.audit().record(mn.suld.api.audit.AuditEvent.of(pl.getUniqueId().toString(), "item.affix_reroll",
-                    now.definitionId() + "-" + now.uuid(), now.rarity().name() + " L" + now.itemLevel()));
-            // IT-08: the jade spent and the new affixes reach the player file before the coins reach SQL (PlayerDataSaves:
-            // the item side first); the coins alone used to be saved, so a crash gave the jade back for coins already gone
-            mn.suld.plugin.item.PlayerDataSaves.now(pl);
-            services.profiles().save(pr);
             pl.closeInventory();
+            // COINS -> ITEMS (PlayerDataSaves.coinsForItem): the coins are committed first, then the jade is taken and the
+            // new affixes written in one player-file save (IT-08: jade and affixes always reach disk together)
+            pr.addCurrency(-coins);
+            mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, pl, pr, coins, "affix reroll", p2 -> {
+                ItemStack h2 = p2.getInventory().getItemInMainHand();
+                mn.suld.api.item.ItemInstance n2 = services.items().read(h2).orElse(null);
+                if (n2 == null || !n2.uuid().equals(inst.uuid()) || !n2.affixes().equals(inst.affixes()) || h2.getAmount() != 1
+                        || mn.suld.api.item.AffixReroll.blocked(n2, def) != null || countItem(p2, mn.suld.api.item.AffixReroll.JADE) < jade) {
+                    refund(p2, pr, coins);
+                    return;
+                }
+                mn.suld.api.item.ItemInstance rolled = services.itemService().rerollAffixes(n2, def);
+                takeItem(p2, mn.suld.api.item.AffixReroll.JADE, jade);
+                ItemStack out = h2.clone();
+                services.items().rewrite(out, rolled, services.itemService().viewer(p2)); // keeps durability and identity
+                p2.getInventory().setItemInMainHand(out);
+                p2.playSound(p2.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_RESONATE, 1f, 1.2f);
+                p2.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, p2.getLocation().add(0, 1.2, 0), 24, 0.4, 0.5, 0.4, 0);
+                p2.sendMessage(Messages.success(def.displayName() + ": шинжүүд шинэчлэгдлээ (-" + jade + " хас чулуу, -" + coins + " зоос)."));
+                services.audit().record(mn.suld.api.audit.AuditEvent.of(p2.getUniqueId().toString(), "item.affix_reroll",
+                        n2.definitionId() + "-" + n2.uuid(), n2.rarity().name() + " L" + n2.itemLevel()));
+            });
         });
+    }
+
+    /** A smith job whose item changed while its charge was being saved: the coins go back (and are saved again). */
+    private void refund(Player p, PlayerProfile pr, long coins) {
+        pr.addCurrency(coins);
+        services.profiles().save(pr);
+        p.sendMessage(Messages.error("Эд зүйл өөрчлөгдсөн тул ажил цуцлагдлаа — зоос буцаалаа."));
     }
 
     /** Where the smith stands (the purchase confirmation checks the player is still there). */

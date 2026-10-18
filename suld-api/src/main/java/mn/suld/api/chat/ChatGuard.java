@@ -12,12 +12,13 @@ import java.util.regex.Pattern;
 
 /**
  * Chat protection for a public server: per-player rate limit, repeated-message block, server/IP advertising block
- * (allow-listed domains pass) and a caps filter that lowers SHOUTED messages instead of blocking them. Pure and
- * thread-safe (chat runs async).
+ * (allow-listed domains pass) and a caps filter that lowers SHOUTED messages instead of blocking them. Private-use
+ * characters (the resource pack's glyphs and space shifts) are taken out, so a player cannot draw HUD art or move text
+ * over other lines. Pure and thread-safe (chat runs async).
  */
 public final class ChatGuard {
 
-    public enum Verdict { ALLOW, TOO_FAST, REPEAT, ADVERT }
+    public enum Verdict { ALLOW, TOO_FAST, REPEAT, ADVERT, GLYPHS_ONLY }
 
     /** {@code text} is the message to send (possibly lowered) when allowed. */
     public record Result(Verdict verdict, String text) {
@@ -48,7 +49,8 @@ public final class ChatGuard {
     }
 
     public Result check(UUID player, String message, long now) {
-        String text = message.strip();
+        String text = withoutPrivateUse(message).strip();
+        if (text.isEmpty() && !message.isBlank()) return new Result(Verdict.GLYPHS_ONLY, text);
         State st = states.computeIfAbsent(player, k -> new State(new ArrayDeque<>(), "", 0));
         synchronized (st) {
             Deque<Long> times = st.times();
@@ -63,6 +65,22 @@ public final class ChatGuard {
             states.put(player, new State(times, norm, now));
         }
         return new Result(Verdict.ALLOW, shouting(text) ? text.toLowerCase(Locale.ROOT) : text);
+    }
+
+    /** {@code s} without private-use characters (U+E000–U+F8FF and the supplementary private-use planes). */
+    public static String withoutPrivateUse(String s) {
+        StringBuilder b = null;
+        for (int i = 0; i < s.length(); ) {
+            int cp = s.codePointAt(i);
+            int n = Character.charCount(cp);
+            if (Character.getType(cp) == Character.PRIVATE_USE) {
+                if (b == null) b = new StringBuilder(s.length()).append(s, 0, i);
+            } else if (b != null) {
+                b.appendCodePoint(cp);
+            }
+            i += n;
+        }
+        return b == null ? s : b.toString();
     }
 
     public void forget(UUID player) {

@@ -164,7 +164,7 @@ public final class MapService implements Listener {
         this.store = new ChunkColorStore(root.resolve("columns"), log, io, c.getInt("map.max-regions", 32));
         this.natural = "vanilla".equalsIgnoreCase(c.getString("map.colors", "natural")) ? null : loadPalette(plugin, log);
         MapGeometry g = borderGeometry();
-        this.tiles = new MapTiles(store, g, workers, c.getInt("map.max-tiles", 512));
+        this.tiles = new MapTiles(store, g, workers, c.getInt("map.max-tiles", 512), log);
         bounds(g);
     }
 
@@ -409,7 +409,18 @@ public final class MapService implements Listener {
         MapGeometry g = tiles.geometry();
         mn.suld.api.map.Cartography.Layout layout = CartoContent.layout(mn.suld.plugin.content.Content.pack(), bakedSpawnX, bakedSpawnZ);
         cartography = "зурж байна…";
-        CompletableFuture.supplyAsync(() -> mn.suld.api.map.Cartography.bake(layout, g), workers).whenComplete((b, err) -> {
+        // the bake's row bands run in parallel streams; in a task of this pool they stay in it (map.workers threads)
+        // instead of taking every core of the common pool for about a second
+        java.util.concurrent.ForkJoinPool bakePool = new java.util.concurrent.ForkJoinPool(Math.max(1, plugin.getConfig().getInt("map.workers", 2)),
+                pool -> {
+                    var t = java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                    t.setName("suld-map-bake-" + t.getPoolIndex());
+                    t.setDaemon(true);
+                    t.setPriority(Thread.NORM_PRIORITY - 1);
+                    return t;
+                }, null, false);
+        CompletableFuture.supplyAsync(() -> mn.suld.api.map.Cartography.bake(layout, g), bakePool).whenComplete((b, err) -> {
+            bakePool.shutdown();
             if (err != null) {
                 cartography = "алдаа: " + err;
                 log.log(Level.WARNING, "[map] the cartography was not baked; the map shows the real blocks only", err);

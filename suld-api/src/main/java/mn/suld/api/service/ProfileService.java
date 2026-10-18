@@ -39,19 +39,38 @@ public interface ProfileService {
      * Move {@code amount} coins from one player to another: the in-memory balances change at once (the caller has
      * checked {@code from} can pay, on the main thread), then both rows are written in one transaction. If storage
      * fails, the in-memory move is undone and the future fails, so neither side keeps coins the other lost.
+     * Cancelling the returned future (a caller that stops waiting, e.g. at shutdown) undoes the move too; the undo runs
+     * at most once, whichever comes first, so a late storage failure after a cancel never pays the coins back twice.
      */
     default CompletableFuture<Void> transfer(PlayerProfile from, PlayerProfile to, long amount) {
         if (amount <= 0) return CompletableFuture.completedFuture(null);
         from.addCurrency(-amount);
         to.addCurrency(amount);
-        return saveTogether(from, to).whenComplete((v, err) -> {
+        java.util.concurrent.atomic.AtomicBoolean undone = new java.util.concurrent.atomic.AtomicBoolean();
+        Runnable undo = () -> {
+            if (!undone.compareAndSet(false, true)) return;
+            // PERS-004: take back only what the payee still has (balances clamp at 0); never mint the difference
+            long back = Math.min(amount, Math.max(0, to.currency()));
+            to.addCurrency(-back);
+            from.addCurrency(back);
+        };
+        CompletableFuture<Void> result = new CompletableFuture<>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                boolean cancelled = super.cancel(mayInterruptIfRunning);
+                if (cancelled) undo.run();
+                return cancelled;
+            }
+        };
+        saveTogether(from, to).whenComplete((v, err) -> {
             if (err != null) {
-                // PERS-004: take back only what the payee still has (balances clamp at 0); never mint the difference
-                long back = Math.min(amount, Math.max(0, to.currency()));
-                to.addCurrency(-back);
-                from.addCurrency(back);
+                undo.run();
+                result.completeExceptionally(err);
+            } else {
+                result.complete(null);
             }
         });
+        return result;
     }
 
     /**

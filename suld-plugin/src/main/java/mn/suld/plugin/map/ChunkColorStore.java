@@ -225,20 +225,31 @@ final class ChunkColorStore {
         CompletableFuture<Region> nf = new CompletableFuture<>();
         loading.put(k, nf);
         io.execute(() -> {
-            int[] cols = read(k);
-            Region r = new Region(cols);
-            List<Pending> waiting;
-            synchronized (this) {
-                loading.remove(k);
-                waiting = pending.remove(k);
-                if (waiting != null) {
-                    for (Pending p : waiting) apply(r, p.cx(), p.cz(), p.cols());
-                    r.dirty = true;
+            try {
+                int[] cols = read(k);
+                Region r = new Region(cols);
+                List<Pending> waiting;
+                synchronized (this) {
+                    loading.remove(k);
+                    waiting = pending.remove(k);
+                    if (waiting != null) {
+                        for (Pending p : waiting) apply(r, p.cx(), p.cz(), p.cols());
+                        r.dirty = true;
+                    }
+                    regions.put(k, r);
+                    evictIfNeeded();
                 }
-                regions.put(k, r);
-                evictIfNeeded();
+                nf.complete(r);
+            } catch (RuntimeException | Error ex) {
+                // the read failed outright: the waiters fail now and the next request reads again, instead of every
+                // later one waiting out the timeout on a future that never completes (columns put meanwhile stay pending)
+                log.log(Level.SEVERE, "[map] region " + rx(k) + "," + rz(k) + " not read", ex);
+                synchronized (this) {
+                    loading.remove(k, nf);
+                }
+                nf.completeExceptionally(ex);
+                if (ex instanceof Error err) throw err;
             }
-            nf.complete(r);
         });
         return nf;
     }

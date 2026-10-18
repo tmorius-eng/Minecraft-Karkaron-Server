@@ -106,6 +106,11 @@ public final class ConsumableService implements Listener {
     public void onQuit(PlayerQuitEvent e) {
         lastHurt.remove(e.getPlayer().getUniqueId());
         WARD_UNTIL.remove(e.getPlayer().getUniqueId()); // the incense burns out with the session
+        // used cooldowns that have run out go; one still running stays, so leaving and coming back never resets it
+        String prefix = e.getPlayer().getUniqueId() + ":";
+        long now = System.currentTimeMillis();
+        lastUse.entrySet().removeIf(en -> en.getKey().startsWith(prefix)
+                && Consumables.of(en.getKey().substring(prefix.length())).map(c -> Consumables.cooldownLeftMs(c, en.getValue(), now) <= 0).orElse(true));
     }
 
     private void use(Player p, Consumable c) {
