@@ -1,6 +1,22 @@
 {
   "minecraft": "1.21.11",
   "plugins": {
+    "authme-paper": {
+      "source": "modrinth",
+      "version": "6.0.1",
+      "version_id": "fPuH4uYs",
+      "file": "AuthMe-6.0.1-Paper.jar",
+      "algo": "sha512",
+      "hash": "832eb1570f1887493dc09bd183360c6c890aafe24fbc635d36f7c3162c339f064e3a0e082519defe7e67569c1d78072f582cb49c14a24d125d4ece463b765271"
+    },
+    "authme-velocity": {
+      "source": "modrinth",
+      "version": "6.0.1",
+      "version_id": "6CyGMFMO",
+      "file": "AuthMe-6.0.1-Velocity.jar",
+      "algo": "sha512",
+      "hash": "4faad3ce130f74c796a5134cda02c7e1af47fa92925f639167d9836fe3155a8ec753df7231f3dc8a98dad8920a0682c45f012fb338d73781d213b73b7b439ed6"
+    },
     "axiom": {
       "source": "modrinth",
       "version": "6.0.1+1.21.11",

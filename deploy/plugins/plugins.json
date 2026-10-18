@@ -1,6 +1,6 @@
 {
   "minecraft": "1.21.11",
-  "note": "Trusted third-party server plugins around SÜLD. SÜLD owns gameplay (classes, EXP, skills, combat, items, quests, dungeons, relics, HUD, Kharkhorum, /help, /spawn); these provide generic server plumbing. Never add plugins that own RPG/UI layers (MythicMobs, MMOCore, MMOItems, mcMMO, Jobs, Citizens, ItemsAdder, Oraxen, DeluxeMenus, TAB, BetterHud). Profiles: core = always (test + production), hardening = production, optional = on request, dev = admin/build tools only. Exactly one of each conflicting pair is installed. spark is not listed: Paper 1.21.11 bundles it (/spark). Modrinth: listed releases only (allow_beta for projects that publish no releases, e.g. Geyser). Only builds whose main class targets Java 21 (class version <= 65) are installed. optional = skipped with a warning when no allowed source has a build (Bedrock support: Geyser, Floodgate); requires = installed only together with those plugins.",
+  "note": "Trusted third-party server plugins around SÜLD. SÜLD owns gameplay (classes, EXP, skills, combat, items, quests, dungeons, relics, HUD, Kharkhorum, /help, /spawn); these provide generic server plumbing. Never add plugins that own RPG/UI layers (MythicMobs, MMOCore, MMOItems, mcMMO, Jobs, Citizens, ItemsAdder, Oraxen, DeluxeMenus, TAB, BetterHud). Profiles: core = always (test + production), hardening = production, optional = on request, dev = admin/build tools only, auth = the hybrid login (AUTH_MODE=hybrid, docs/AUTHENTICATION.md). Exactly one of each conflicting pair is installed. spark is not listed: Paper 1.21.11 bundles it (/spark). Modrinth: listed releases only (allow_beta for projects that publish no releases, e.g. Geyser). Only builds whose main class targets Java 21 (class version <= 65) are installed. optional = skipped with a warning when no allowed source has a build (Bedrock support: Geyser, Floodgate); requires = installed only together with those plugins. target = which server a plugin is for: paper (default) or velocity (the proxy; --target velocity).",
   "plugins": [
     {
       "id": "luckperms",
@@ -184,6 +184,21 @@
       "profile": "dev",
       "modrinth": "axiom-paper-plugin",
       "why": "Axiom building tool server side (commercial licence for public servers)"
+    },
+    {
+      "id": "authme-paper",
+      "name": "AuthMe",
+      "profile": "auth",
+      "modrinth": "authmereloaded",
+      "why": "hybrid login on the backend: /register and /login for offline accounts, the login state SÜLD waits for (AuthMeBridge)"
+    },
+    {
+      "id": "authme-velocity",
+      "name": "AuthMe Velocity",
+      "profile": "auth",
+      "target": "velocity",
+      "modrinth": "authmereloaded",
+      "why": "hybrid login on the proxy: verifies premium accounts with Mojang and tells the backend (shared secret)"
     }
   ]
 }

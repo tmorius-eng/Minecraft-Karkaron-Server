@@ -5,7 +5,9 @@
 
 Rules under test: with a lock present, the locked build is installed even when upstream has a newer release; a lock
 entry whose hash upstream no longer serves fails instead of falling back; a plugin without a lock entry fails (an
-optional one is skipped with a warning); --update-lock refuses a build without a published hash and writes entries.
+optional one is skipped with a warning); --update-lock refuses a build without a published hash and writes entries;
+--target velocity installs only the proxy's plugins, from Velocity builds only, and a lock never puts a Paper jar on
+the proxy (or the reverse).
 """
 import io
 import json
@@ -25,16 +27,20 @@ SHA_OLD = "a" * 128
 SHA_NEW = "b" * 128
 
 
-def fake_jar(path, name="Demo"):
-    """A minimal plugin jar whose main class targets Java 21 (class version 65)."""
+def fake_jar(path, name="Demo", velocity=False):
+    """A minimal plugin jar whose main class targets Java 21 (class version 65): Paper's plugin.yml or Velocity's
+    velocity-plugin.json."""
     with zipfile.ZipFile(path, "w") as z:
-        z.writestr("plugin.yml", f"name: {name}\nmain: demo.Main\nversion: 1\n")
+        if velocity:
+            z.writestr("velocity-plugin.json", json.dumps({"id": name.lower(), "name": name, "main": "demo.Main"}))
+        else:
+            z.writestr("plugin.yml", f"name: {name}\nmain: demo.Main\nversion: 1\n")
         z.writestr("demo/Main.class", bytes([0xCA, 0xFE, 0xBA, 0xBE, 0, 0, 0, 65]) + b"\0" * 8)
 
 
-def version(vid, number, sha, filename, published):
+def version(vid, number, sha, filename, published, loaders=("paper",)):
     return {"id": vid, "version_number": number, "version_type": "release", "status": "listed", "date_published": published,
-            "game_versions": [MC], "loaders": ["paper"],
+            "game_versions": [MC], "loaders": list(loaders),
             "files": [{"url": f"https://cdn.example/{filename}", "filename": filename, "primary": True, "hashes": {"sha512": sha}}]}
 
 
@@ -44,6 +50,9 @@ class FakeNet:
     def __init__(self):
         self.old = version("OLDID", "1.0.0", SHA_OLD, "demo-1.0.0.jar", "2026-01-01T00:00:00Z")
         self.new = version("NEWID", "2.0.0", SHA_NEW, "demo-2.0.0.jar", "2026-09-01T00:00:00Z")
+        # one project, one jar per loader (like AuthMe): the newest build is the Paper one
+        self.proxy_paper = version("PXPAPER", "3.0.0", SHA_NEW, "proxy-3.0.0-Paper.jar", "2026-09-02T00:00:00Z")
+        self.proxy_velocity = version("PXVELO", "3.0.0", SHA_OLD, "proxy-3.0.0-Velocity.jar", "2026-09-01T00:00:00Z", ("velocity",))
         self.served_sha = {SHA_OLD: SHA_OLD, SHA_NEW: SHA_NEW}  # what the download really hashes to
         self.downloaded = []
 
@@ -54,18 +63,25 @@ class FakeNet:
             return self.old
         if url.endswith("/version/NEWID"):
             return self.new
+        if "/project/proxy/version" in url:
+            return [self.proxy_paper, self.proxy_velocity]
+        if url.endswith("/version/PXPAPER"):
+            return self.proxy_paper
+        if url.endswith("/version/PXVELO"):
+            return self.proxy_velocity
         raise AssertionError("unexpected URL " + url)
 
     def download(self, url, dest):
         self.downloaded.append(url)
         tmp = dest + ".part"
-        fake_jar(tmp)
+        velocity = "Velocity" in dest
+        fake_jar(tmp, name="Proxy Velocity" if velocity else "Demo", velocity=velocity)
         return tmp
 
     def file_hash(self, path, algo):
         # the jar content is synthetic; report the hash the test wants this download to have
         name = os.path.basename(path).replace(".part", "")
-        return self.served_sha.get(SHA_OLD if "1.0.0" in name else SHA_NEW, "0" * 128)
+        return self.served_sha.get(SHA_OLD if "1.0.0" in name or "Velocity" in name else SHA_NEW, "0" * 128)
 
 
 class LockTest(unittest.TestCase):
@@ -76,7 +92,10 @@ class LockTest(unittest.TestCase):
         self.lock = os.path.join(self.tmp, "plugins.lock.json")
         with open(self.manifest, "w", encoding="utf-8") as fh:
             json.dump({"minecraft": MC, "plugins": [{"id": "demo", "name": "Demo", "profile": "core", "modrinth": "demo"},
-                                                     {"id": "extra", "name": "Extra", "profile": "core", "modrinth": "extra", "optional": True}]}, fh)
+                                                     {"id": "extra", "name": "Extra", "profile": "core", "modrinth": "extra", "optional": True},
+                                                     {"id": "proxy-paper", "name": "Proxy", "profile": "auth", "modrinth": "proxy"},
+                                                     {"id": "proxy-velocity", "name": "Proxy Velocity", "profile": "auth", "target": "velocity",
+                                                      "modrinth": "proxy"}]}, fh)
         self.net = FakeNet()
 
     def tearDown(self):
@@ -146,12 +165,43 @@ class LockTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             fp.from_lock({"name": "X"}, {"source": "hangar", "file": "x.jar", "url": "https://h/x.jar", "algo": "sha256", "hash": ""}, MC)
 
+    def test_velocity_target_installs_only_the_proxys_plugins_from_velocity_builds(self):
+        code, out = self.run_main("--dest", self.dest, "--manifest", self.manifest, "--profiles", "auth", "--target", "velocity",
+                                  "--lock", self.lock, "--update-lock")
+        self.assertEqual(0, code, out)
+        self.assertIn("ok Proxy Velocity 3.0.0 [PXVELO] proxy-3.0.0-Velocity.jar", out)
+        self.assertNotIn("PXPAPER", out, "the newer Paper jar of the same project never goes on the proxy")
+        self.assertIn("plugins (velocity): 1 installed", out)
+        self.assertEqual(("Proxy Velocity", 65), fp.jar_info(os.path.join(self.dest, "proxy-3.0.0-Velocity.jar")))
+        lock = json.load(open(self.lock, encoding="utf-8"))
+        self.assertEqual(["proxy-velocity"], list(lock["plugins"]), "only the proxy's entry is written by a velocity run")
+        # the Paper run of the same profile takes the Paper build and leaves the proxy's entry alone
+        code, out = self.run_main("--dest", os.path.join(self.tmp, "paper"), "--manifest", self.manifest, "--profiles", "auth",
+                                  "--lock", self.lock, "--update-lock")
+        self.assertEqual(0, code, out)
+        self.assertIn("ok Proxy 3.0.0 [PXPAPER]", out)
+        self.assertNotIn("PXVELO", out)
+        self.assertEqual({"proxy-paper", "proxy-velocity"}, set(json.load(open(self.lock, encoding="utf-8"))["plugins"]))
+
+    def test_a_lock_never_puts_a_paper_jar_on_the_proxy(self):
+        with open(self.lock, "w", encoding="utf-8") as fh:
+            json.dump({"minecraft": MC, "plugins": {"proxy-velocity": {"source": "modrinth", "version": "3.0.0", "version_id": "PXPAPER",
+                                                                      "file": "proxy-3.0.0-Paper.jar", "algo": "sha512", "hash": SHA_NEW}}}, fh)
+        code, out = self.run_main("--dest", self.dest, "--manifest", self.manifest, "--profiles", "auth", "--target", "velocity", "--lock", self.lock)
+        self.assertEqual(1, code, out)
+        self.assertIn("is a paper build, not one for velocity", out)
+        self.assertEqual([], self.net.downloaded)
+
     def test_repository_lock_is_consistent_with_the_manifest(self):
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         manifest = json.load(open(os.path.join(root, "deploy", "plugins", "plugins.json"), encoding="utf-8"))
         lock = json.load(open(os.path.join(root, "deploy", "plugins", "plugins.lock.json"), encoding="utf-8"))
         self.assertEqual(manifest["minecraft"], lock["minecraft"])
         ids = {p["id"] for p in manifest["plugins"]}
+        for p in manifest["plugins"]:
+            self.assertIn(p.get("target", "paper"), fp.TARGET_LOADERS, p["id"])
+            if p.get("target", "paper") != "paper":
+                self.assertTrue(p.get("modrinth") and not p.get("geysermc") and not p.get("hangar"), f"{p['id']}: proxy plugins come from Modrinth")
         for pid, e in lock["plugins"].items():
             self.assertIn(pid, ids, f"lock entry {pid} is not in the manifest")
             self.assertIn(e["source"], ("modrinth", "geysermc", "hangar"))

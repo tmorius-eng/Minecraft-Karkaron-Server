@@ -65,7 +65,8 @@ upstream no longer serves, or a required plugin missing from the lock, fails the
 "latest". Upgrading is a reviewed commit:
 
 ```bash
-python3 tools/plugins/fetch_plugins.py --dest /tmp/plugins --profiles core,hardening --update-lock   # then optional, dev
+python3 tools/plugins/fetch_plugins.py --dest /tmp/plugins --profiles core,hardening --update-lock   # then optional, dev, auth
+python3 tools/plugins/fetch_plugins.py --dest /tmp/proxy --profiles auth --target velocity --update-lock  # the proxy's plugins
 python3 -I tools/plugins/test_fetch_plugins.py                                                       # lock rules + lock/manifest consistency
 git diff deploy/plugins/plugins.lock.json                                                            # review, test on the dev server, commit
 ```
@@ -76,6 +77,7 @@ git diff deploy/plugins/plugins.lock.json                                       
 | hardening (production) | GrimAC, Plan, LibertyBans, ViaVersion |
 | optional | BlueMap, InventoryRollbackPlus |
 | dev (build server) | FastAsyncWorldEdit, Axiom Paper Plugin |
+| auth (`AUTH_MODE=hybrid` only) | AuthMe (Paper backend) and AuthMe Velocity (`target: velocity`, the proxy; installed with `--target velocity` into the proxy's `plugins/`), both AuthMeReloaded 6.0.1 from Modrinth `authmereloaded`, one jar per loader. A lock entry for one target never installs on the other |
 
 SÜLD loads before EssentialsX (`loadbefore`), so SÜLD's own `/help`, `/rules`, `/spawn` and RPG commands win.
 Plugins that would own a SÜLD layer are never installed: MythicMobs, MMOCore, MMOItems, mcMMO, Jobs,

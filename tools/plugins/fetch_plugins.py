@@ -85,24 +85,35 @@ JAVA_CLASS_MAX = 65  # Paper 1.21.11 runs on Java 21
 
 
 def jar_info(path):
-    """(plugin name, class-file major version of the main class) of a plugin jar."""
+    """(plugin name, class-file major version of the main class) of a Paper/Bukkit or Velocity plugin jar."""
     import re
     import zipfile
     with zipfile.ZipFile(path) as z:
         names = z.namelist()
         yml = "plugin.yml" if "plugin.yml" in names else "paper-plugin.yml" if "paper-plugin.yml" in names else None
-        if not yml:
+        if yml:
+            text = z.read(yml).decode("utf-8", "replace")
+            name = re.search(r"(?m)^name:\s*[\"']?([^\"'\r\n]+)", text)
+            main = re.search(r"(?m)^main:\s*[\"']?([^\"'\r\n]+)", text)
+            name, main = (name.group(1).strip() if name else None), (main.group(1).strip() if main else None)
+        elif "velocity-plugin.json" in names:
+            try:
+                desc = json.loads(z.read("velocity-plugin.json").decode("utf-8", "replace"))
+            except ValueError:
+                return None, 0
+            if not isinstance(desc, dict):
+                return None, 0
+            name = desc.get("name") or desc.get("id")
+            name, main = (name if isinstance(name, str) else None), (desc["main"] if isinstance(desc.get("main"), str) else None)
+        else:
             return None, 0
-        text = z.read(yml).decode("utf-8", "replace")
-        name = re.search(r"(?m)^name:\s*[\"']?([^\"'\r\n]+)", text)
-        main = re.search(r"(?m)^main:\s*[\"']?([^\"'\r\n]+)", text)
         major = 0
         if main:
-            cls = main.group(1).strip().replace(".", "/") + ".class"
+            cls = main.replace(".", "/") + ".class"
             if cls in names:
                 head = z.read(cls)[:8]
                 major = head[6] * 256 + head[7]
-        return (name.group(1).strip() if name else None), major
+        return name, major
 
 
 def _version_ok(v):
@@ -140,10 +151,19 @@ def modrinth_releases(slug, mc, loaders, types=("release",)):
     return out
 
 
-def from_modrinth(slug, mc, allow_beta=False):
-    """Paper builds first; Bukkit/Spigot builds (they run on Paper) only when a plugin publishes no Paper build."""
+# the Modrinth loaders whose builds run on each target, in order of preference
+TARGET_LOADERS = {"paper": (["paper"], ["spigot", "bukkit"]), "velocity": (["velocity"],)}
+
+
+def from_modrinth(slug, mc, allow_beta=False, target="paper"):
+    """For Paper: Paper builds first; Bukkit/Spigot builds (they run on Paper) only when a plugin publishes no Paper
+    build. For Velocity: Velocity builds only (a project that ships one jar per loader, like AuthMe, lists each)."""
     types = ("release", "beta") if allow_beta else ("release",)
-    return modrinth_releases(slug, mc, ["paper"], types) or modrinth_releases(slug, mc, ["spigot", "bukkit"], types)
+    for loaders in TARGET_LOADERS[target]:
+        found = modrinth_releases(slug, mc, loaders, types)
+        if found:
+            return found
+    return []
 
 
 GEYSERMC = "https://download.geysermc.org/v2/projects"
@@ -164,8 +184,9 @@ def from_geysermc(project):
              "endpoint": f"{GEYSERMC}/{project}/versions/latest/builds/latest"}]
 
 
-def from_lock(p, entry, mc):
-    """The one candidate the lock pins for this plugin, or a RuntimeError when upstream no longer serves that exact file."""
+def from_lock(p, entry, mc, target="paper"):
+    """The one candidate the lock pins for this plugin, or a RuntimeError when upstream no longer serves that exact file
+    (or serves it for another loader: a Paper jar is never installed on the proxy, nor the reverse)."""
     algo, want = entry.get("algo", "sha512"), (entry.get("hash") or "").lower()
     if algo not in ("sha512", "sha256") or not re.fullmatch(r"[0-9a-fA-F]{64}|[0-9a-fA-F]{128}", want):
         raise RuntimeError(f"lock entry has no usable {algo} hash; run --update-lock")
@@ -175,6 +196,8 @@ def from_lock(p, entry, mc):
         v = get_json(endpoint)
         if not _version_ok(v):
             raise RuntimeError(f"Modrinth no longer serves version {entry['version_id']} ({entry.get('version')})")
+        if not set(v["loaders"]) & {l for group in TARGET_LOADERS[target] for l in group}:
+            raise RuntimeError(f"Modrinth version {entry['version_id']} is a {'/'.join(v['loaders'])} build, not one for {target}; run --update-lock")
         if mc not in v["game_versions"]:
             print(f"  .. {p['name']} {entry.get('version')} is not listed for Minecraft {mc} any more (locked build kept)")
         files = [f for f in v["files"] if _file_ok(f) and f["hashes"]["sha512"].lower() == want]
@@ -233,6 +256,8 @@ def main():
     ap.add_argument("--only", help="comma-separated plugin ids")
     ap.add_argument("--lock", help="pin file (default: plugins.lock.json beside the manifest); '' = unpinned, newest releases")
     ap.add_argument("--update-lock", action="store_true", help="resolve the newest releases and (re)write their lock entries")
+    ap.add_argument("--target", choices=sorted(TARGET_LOADERS), default="paper",
+                    help="which server the plugins are for: the Paper backend (default) or the Velocity proxy")
     args = ap.parse_args()
     manifest = json.load(open(args.manifest, encoding="utf-8"))
     mc = args.mc or manifest["minecraft"]
@@ -251,7 +276,11 @@ def main():
     os.makedirs(args.dest, exist_ok=True)
     lock_path = os.path.join(args.dest, ".suld-plugins.lock.json")
     lock = json.load(open(lock_path)) if os.path.exists(lock_path) else {}
-    chosen = [p for p in manifest["plugins"] if p["profile"] in profiles and (only is None or p["id"] in only)]
+    chosen = [p for p in manifest["plugins"] if p["profile"] in profiles and (only is None or p["id"] in only)
+              and p.get("target", "paper") == args.target]
+    for p in chosen:
+        if p.get("target", "paper") != "paper" and (p.get("geysermc") or p.get("hangar")):
+            sys.exit(f"manifest: {p['id']} targets {p['target']}; only Modrinth serves builds for it")
     ids = {p["id"] for p in chosen}
     for p in chosen:
         for c in p.get("conflicts", []):
@@ -273,10 +302,10 @@ def main():
             if pinned and entry is None:
                 raise RuntimeError(f"not in {os.path.basename(lock_file)}; run fetch_plugins.py --update-lock --only {p['id']}")
             if entry is not None:
-                candidates = [from_lock(p, entry, mc)]
+                candidates = [from_lock(p, entry, mc, args.target)]
             if p.get("modrinth") and not candidates:
                 try:
-                    candidates += from_modrinth(p["modrinth"], mc, bool(p.get("allow_beta")))
+                    candidates += from_modrinth(p["modrinth"], mc, bool(p.get("allow_beta")), args.target)
                 except urllib.error.HTTPError as e:
                     if e.code != 404:
                         raise
@@ -397,7 +426,7 @@ def main():
             json.dump(repo_lock, fh, indent=2, ensure_ascii=False)
             fh.write("\n")
         print(f"lock written: {lock_file} ({len(repo_lock['plugins'])} plugins)")
-    print(f"plugins: {len(ok)} installed, {len(missing)} without a {mc} build, {len(failed)} failed"
+    print(f"plugins ({args.target}): {len(ok)} installed, {len(missing)} without a {mc} build, {len(failed)} failed"
           + (f", optional skipped: {', '.join(optional_skipped)}" if optional_skipped else ""))
     if failed:
         sys.exit(1)
