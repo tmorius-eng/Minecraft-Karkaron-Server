@@ -266,7 +266,8 @@ public final class WorldEventService {
      * The event's own loot table (loot.world_event.&lt;name&gt;), one roll for each rewarded defender. Items roll at
      * the player's level, capped at the event's band (its strongest target mob + 5): a low-level wolf raid never
      * drops endgame gear to a level-60 player. The table's {@code nothing} weight (1 against the gear entry's 1 for the
-     * wolf raid) makes the item a coin flip, not a top-rarity piece every 45 minutes (PROG-006).
+     * wolf raid) makes the item a coin flip, not a top-rarity piece every 45 minutes (PROG-006). The WORLD_EVENT rarity
+     * band (items/tiers.json: rare 52 / epic 38 / legendary 10) stays under a dungeon boss's (owner, 2026-10-18).
      */
     private void eventLoot(Player p, PlayerProfile profile, WorldEventDefinition def, long runId) {
         mn.suld.plugin.item.ItemService items = services.itemService();
@@ -290,7 +291,7 @@ public final class WorldEventService {
             items.announce(p, inst);
         }
         services.mailbox(plugin).keepOverflow(p, overflow, "world event " + def.id());
-        if (!drops.isEmpty()) mn.suld.plugin.item.PlayerDataSaves.now(p);
+        if (!drops.isEmpty()) mn.suld.plugin.item.PlayerDataSaves.soon(plugin, p); // every hunter is paid in this tick: one file a tick
     }
 
     private void finish() {

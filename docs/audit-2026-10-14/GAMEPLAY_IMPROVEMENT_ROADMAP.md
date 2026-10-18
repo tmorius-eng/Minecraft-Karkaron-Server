@@ -17,7 +17,7 @@ Effort: S ≤ ½ day · M 1–2 days · L 3–5 days · XL > 1 week. Every item 
 
 | # | Item | Effort | Depends on | Acceptance criteria |
 |---|---|---|---|---|
-| P1-1 | WORLD_EVENT band (ancient 75 / mythic 25) to the v2 band (epic 40 / legendary 45 / ancient 12 / mythic 3) | S | P0-2 | world-boss loot legendary+ ≤ 60 %; simTest band holds |
+| P1-1 | WORLD_EVENT band (ancient 75 / mythic 25) to the v2 band (epic 40 / legendary 45 / ancient 12 / mythic 3). **2026-10-18: the owner chose a lower band instead: rare 52 / epic 38 / legendary 10, never above a dungeon boss (`items/tiers.json`, `LootEngineTest`)** | S | P0-2 | world-boss loot legendary+ ≤ 60 %; simTest band holds |
 | P1-2 | Use the new objective kinds in Act II (e.g. ch. 41 → OVOO_RITUAL; a deer-stone INSPECT_CLUE; a first CRAFT_ITEM chapter) | M | cultural review (CULT-001) | ≤ 22 of 42 chapters are kill/discover; ContentDataTest green |
 | P1-3 | Unit seams for `partyNearby` and `gateRefusal` (inject the player list / refusal) | S | — | tests cover range, world, soul, training exclusions and the 2 s cache |
 | P1-4 | A JUnit test that every INSPECT_CLUE target exists in props.json | S | P1-2 | test fails on a dangling prop id |

@@ -41,6 +41,37 @@ public final class PlayerDataSaves {
         mn.suld.plugin.perf.PerfProbe.stop("player.save_data", t);
     }
 
+    /** Player files waiting for {@link #soon}, written one a tick. */
+    private static final SaveQueue QUEUE = new SaveQueue();
+    private static org.bukkit.scheduler.BukkitTask drain;
+
+    /**
+     * The player file within the next ticks, one player a tick, for a payout that pays many players in the same tick
+     * (a world boss, a world event). Calling {@link #now} for each of them held that tick for about 5 ms a player
+     * (FIND-01): a quarter of a second for fifty winners. Only for a reward, a gain with nothing traded for it, which a
+     * crash cannot duplicate (at worst it loses the reward, as a crash before the autosave always could). An
+     * ITEMS ⇄ COINS change keeps {@link #now} and its order. Main thread.
+     */
+    public static void soon(Plugin plugin, Player p) {
+        if (!plugin.isEnabled()) { // shutting down: no task would run
+            now(p);
+            return;
+        }
+        if (!QUEUE.add(p.getUniqueId()) || drain != null && !drain.isCancelled()) return;
+        drain = Bukkit.getScheduler().runTaskTimer(plugin, PlayerDataSaves::writeNext, 1L, 1L);
+    }
+
+    private static void writeNext() {
+        java.util.UUID id = QUEUE.next();
+        if (id == null) {
+            if (drain != null) drain.cancel();
+            drain = null;
+            return;
+        }
+        Player p = Bukkit.getPlayer(id);
+        if (p != null) now(p); // gone: leaving wrote the file
+    }
+
     /**
      * ITEMS → COINS. The caller has removed the item and added the coins to {@code pr}: this writes the player file
      * now and then saves the coins, reporting a failed save.

@@ -23,8 +23,9 @@
   "ancient": 2
  },
  "WORLD_EVENT": {
-  "ancient": 75,
-  "mythic": 25
+  "rare": 52,
+  "epic": 38,
+  "legendary": 10
  },
  "DUNGEON": {
   "uncommon": 35,

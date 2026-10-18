@@ -269,10 +269,10 @@ public final class StyleService implements Listener {
         return placeholder;
     }
 
-    /** A «Тохиргоо» setting of {@code id} (on when the style is not cached yet). */
+    /** A «Тохиргоо» setting of {@code id} (its default while the style is not cached yet). */
     public boolean setting(UUID id, mn.suld.api.style.PlayerSetting s) {
         PlayerStyle st = cache.get(id);
-        return st == null || st.setting(s);
+        return st == null ? s.onByDefault() : st.setting(s);
     }
 
     /** Flips a setting (saved with the next style flush); returns whether it is on now. */

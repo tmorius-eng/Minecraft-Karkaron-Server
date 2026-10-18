@@ -16,7 +16,7 @@ hour, for the whole server to fight together. It reuses the dungeon boss engine 
 | `enrageSeconds` | the boss enrages (×1.25); still standing a minute later, it withdraws |
 | `durationSeconds` | still standing after this long, it withdraws (the fight is lost) |
 | `leash` | blocks it can be pulled from where it rose before it walks back |
-| `loot` | rolled once per rewarded fighter (`items/loot.json`, tier WORLD_EVENT, can roll nothing: PROG-006) |
+| `loot` | rolled once per rewarded fighter (`items/loot.json`, tier WORLD_EVENT, can roll nothing: PROG-006). The WORLD_EVENT band is rare 52 / epic 38 / legendary 10 (2026-10-18): never above a dungeon boss's rare 50 / epic 38 / legendary 10 / ancient 2 |
 | `rewardExp`, `rewardCoins`, `clanBonus` | every rewarded fighter's EXP floor and coins; clan EXP once per clan |
 
 `ContentLoader` checks the mob's tier and role, the site, the loot table and the phase order. The boss's abilities are

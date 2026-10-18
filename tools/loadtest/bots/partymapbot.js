@@ -51,6 +51,8 @@ const texts = (b) => Object.values(b.entities).filter(e => e.name === 'text_disp
   await sleep(3000);
   await Promise.all([pickClass(a), pickClass(b)]);
   await sleep(2500);
+  a.chat('/map minimap'); // the minimap starts off (2026-10-18): A turns it on
+  await sleep(1000);
   // both in the air over the same spot of steppe, B 20 blocks north of A, slow falling
   const x = Math.floor(a.entity.position.x) + 400, z = Math.floor(a.entity.position.z) + 400;
   for (const n of [nameA, nameB]) cmd(`effect give ${n} slow_falling 120 0 true`);

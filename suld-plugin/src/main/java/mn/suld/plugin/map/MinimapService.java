@@ -154,11 +154,59 @@ public final class MinimapService implements Listener {
     }
 
     /**
-     * A Bedrock player through Geyser/Floodgate: Floodgate's UUIDs are {@code new UUID(0, xuid)}, every Java UUID
-     * (online v4, offline v3) has its version bits in the high half.
+     * A Bedrock player through Geyser/Floodgate. Floodgate's own answer when it is installed: a Bedrock account linked to
+     * a Java one plays under the Java UUID. Without it, the UUID's shape: Floodgate's are {@code new UUID(0, xuid)}, every
+     * Java UUID (online v4, offline v3) has its version bits in the high half.
      */
     static boolean bedrock(UUID id) {
-        return id.getMostSignificantBits() == 0;
+        Boolean floodgate = Floodgate.isBedrock(id);
+        return floodgate != null ? floodgate : id.getMostSignificantBits() == 0;
+    }
+
+    /**
+     * Floodgate's {@code FloodgateApi.isFloodgatePlayer(UUID)}, reached by reflection so SÜLD needs no Floodgate jar to
+     * build or run (it is a soft dependency, installed only on servers that let Bedrock players in).
+     */
+    static final class Floodgate {
+        private static volatile java.lang.invoke.MethodHandle check;
+        private static volatile boolean looked;
+
+        private Floodgate() {
+        }
+
+        /** True / false from Floodgate, or null when Floodgate is not there (or did not answer). */
+        static Boolean isBedrock(UUID id) {
+            java.lang.invoke.MethodHandle h = handle();
+            if (h == null) return null;
+            try {
+                return (boolean) h.invoke(id);
+            } catch (Throwable t) {
+                return null;
+            }
+        }
+
+        private static java.lang.invoke.MethodHandle handle() {
+            if (looked) return check;
+            synchronized (Floodgate.class) {
+                if (!looked) {
+                    check = find();
+                    looked = true;
+                }
+            }
+            return check;
+        }
+
+        private static java.lang.invoke.MethodHandle find() {
+            if (Bukkit.getServer() == null || Bukkit.getPluginManager().getPlugin("floodgate") == null) return null; // no server: a unit test
+            try {
+                Class<?> api = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
+                Object instance = api.getMethod("getInstance").invoke(null);
+                return java.lang.invoke.MethodHandles.publicLookup().findVirtual(api, "isFloodgatePlayer",
+                        java.lang.invoke.MethodType.methodType(boolean.class, UUID.class)).bindTo(instance);
+            } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+                return null;
+            }
+        }
     }
 
     /** The one map view every minimap shows (per-player pictures), kept in map/views.yml like the atlas's. */

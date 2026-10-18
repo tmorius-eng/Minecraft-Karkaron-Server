@@ -113,6 +113,33 @@ class LootEngineTest {
     }
 
     @Test
+    void anOpenWorldEventNeverPaysMoreThanADungeonBoss() {
+        // owner, 2026-10-18: WORLD_EVENT (the wolf raid every 45 minutes, the world bosses) used to be ancient 75 /
+        // mythic 25 while a dungeon boss paid rare..ancient; it is now rare 52 / epic 38 / legendary 10 — the BOSS
+        // band's steps without its ancient share, so an open event is never the better gear source
+        LootTable t = table(0, List.of(new LootTable.Entry(null, new LootTable.Pool(Set.of(ItemType.Category.ARMOR)), 1, 1, 1, null, null, 0, null)), List.of(), List.of());
+        Rng rng = Rng.seeded(17);
+        // at 60 the pool also holds pieces whose own range starts at legendary (they never roll lower), which lifts both
+        // bands alike: the event is compared with a boss at the same level, the band's own steps are read at 40
+        for (int level : new int[]{40, 60}) {
+            Map<ItemRarity, Integer> event = new EnumMap<>(ItemRarity.class), boss = new EnumMap<>(ItemRarity.class);
+            for (int i = 0; i < 3000; i++) {
+                ENGINE.roll(t, LootContext.of(level, LootTier.WORLD_EVENT), rng).forEach(d -> event.merge(d.item().rarity(), 1, Integer::sum));
+                ENGINE.roll(t, LootContext.of(level, LootTier.BOSS), rng).forEach(d -> boss.merge(d.item().rarity(), 1, Integer::sum));
+            }
+            assertTrue(event.keySet().stream().allMatch(r -> r.atLeast(ItemRarity.RARE) && ItemRarity.LEGENDARY.atLeast(r)),
+                    "level " + level + ": the world event band is rare..legendary, never ancient or mythic: " + event);
+            assertTrue(event.containsKey(ItemRarity.RARE) && event.containsKey(ItemRarity.EPIC), "rare and epic carry the band: " + event);
+            int eventAll = event.values().stream().mapToInt(Integer::intValue).sum(), bossAll = boss.values().stream().mapToInt(Integer::intValue).sum();
+            double eventTop = event.getOrDefault(ItemRarity.LEGENDARY, 0) / (double) eventAll;
+            double bossTop = (boss.getOrDefault(ItemRarity.LEGENDARY, 0) + boss.getOrDefault(ItemRarity.ANCIENT, 0)) / (double) bossAll;
+            assertTrue(eventTop <= bossTop + 0.03, "level " + level + ": legendary+ from an event (" + eventTop + ") never beats a dungeon boss ("
+                    + bossTop + ")");
+            if (level == 40) assertTrue(eventTop > 0.05 && eventTop < 0.15, "legendary is the event's 10% step: " + event);
+        }
+    }
+
+    @Test
     void entryRarityRestrictionsHold() {
         LootTable t = table(0, List.of(new LootTable.Entry(null, new LootTable.Pool(Set.of(ItemType.Category.WEAPON)), 1, 1, 1, ItemRarity.EPIC, ItemRarity.EPIC, 0, null)), List.of(), List.of());
         Rng rng = Rng.seeded(9);

@@ -61,7 +61,7 @@ Par gear power is what the game expects at each level (≈ 8 slots × level × p
 | CHAMPION | Rar 70 · Epi 30 | Rar 55 · Epi 35 · Leg 10 |
 | MYTHIC | Epi 75 · Leg 25 | Epi 30 · Leg 50 · Anc 15 · Myt 5 |
 | BOSS | Rar 50 · Epi 38 · Leg 10 · Anc 2 | Rar 50 · Epi 38 · Leg 10 · Anc 2 |
-| WORLD_EVENT | Anc 75 · Myt 25 | Epi 40 · Leg 45 · Anc 12 · Myt 3 |
+| WORLD_EVENT | Rar 52 · Epi 38 · Leg 10 | Epi 40 · Leg 45 · Anc 12 · Myt 3 |
 | DUNGEON | Unc 35 · Rar 45 · Epi 17 · Leg 3 | Unc 35 · Rar 45 · Epi 17 · Leg 3 |
 | QUEST | Unc 60 · Rar 35 · Epi 5 | Unc 50 · Rar 40 · Epi 10 |
 | CHEST | Com 50 · Unc 35 · Rar 15 | Com 50 · Unc 35 · Rar 15 |

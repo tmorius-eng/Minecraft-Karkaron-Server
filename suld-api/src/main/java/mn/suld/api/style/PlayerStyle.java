@@ -210,7 +210,7 @@ public final class PlayerStyle {
 
     public synchronized void creditsCache(long value) { credits = Math.max(0, value); }
 
-    /** The settings the player turned off, as {@link PlayerSetting} bits. */
+    /** The settings the player changed from their default, as {@link PlayerSetting} bits (mostly ones turned off). */
     public synchronized long settingsOff() { return settingsOff; }
 
     public synchronized boolean setting(PlayerSetting s) { return s.enabled(settingsOff); }

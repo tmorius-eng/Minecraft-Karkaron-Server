@@ -28,7 +28,7 @@ generated (`tools/content/gen_class_armor.py`).
 | ELITE | uncommon 65 / rare 35 | uncommon 55 / rare 35 / epic 10 |
 | CHAMPION / MYTHIC | 70/30, 75/25 | unchanged (no mob uses these tiers) |
 | BOSS | legendary 70 / ancient 25 / mythic 5 | rare 50 / epic 38 / legendary 10 / ancient 2 |
-| WORLD_EVENT | ancient 75 / mythic 25 | unchanged — see roadmap P1 |
+| WORLD_EVENT | ancient 75 / mythic 25 | unchanged — see roadmap P1 (2026-10-18: now rare 52 / epic 38 / legendary 10) |
 | DUNGEON | uncommon 40 / rare 40 / epic 17 / legendary 3 | uncommon 35 / rare 45 / epic 17 / legendary 3 |
 | QUEST / CHEST / CRAFT | — | unchanged |
 

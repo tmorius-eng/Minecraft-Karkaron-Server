@@ -83,6 +83,8 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     static final String TAG = "suld_atlas";
     static final int COLS = 5, ROWS = 5;
+    /** A W / A / S / D step: whole frames, so the frames still in view keep their pictures (see {@link #frameShift}). */
+    static final int PAN_FRAMES = 1;
     /**
      * The camera stands DIST blocks in front of the wall, EYE_UP above its middle (negative: below it); the stage stands
      * RISE blocks over the world's top. At 6 blocks the frame was a small picture in a sea of navy, its title under three
@@ -226,10 +228,15 @@ public final class AtlasSky implements Listener, TabExecutor {
         final boolean invulnerable;
         /** The player's own weather before the atlas (null: the world's); the atlas is always clear. */
         org.bukkit.WeatherType weather;
-        final List<Entity> stage = new ArrayList<>(), marks = new ArrayList<>();
+        final List<Entity> stage = new ArrayList<>();
+        /** The places' markers, labels and region names: kept from one redraw to the next, moved instead of spawned again. */
+        final MarkPool<Entity> marks = new MarkPool<>();
         final List<Hit> tabs = new ArrayList<>(), places = new ArrayList<>();
         /** The party mates' markers and their hits (redrawn every second when one moved). */
-        final List<Entity> mateMarks = new ArrayList<>();
+        final MarkPool<Entity> mateMarks = new MarkPool<>();
+        /** The wall's item frames by position (row × COLS + col), and the map view each one shows (a pan slides them). */
+        final GlowItemFrame[] wall = new GlowItemFrame[COLS * ROWS];
+        int[] viewAt = identityWall();
         final List<Hit> mateHits = new ArrayList<>();
         int matesKey;
         ItemDisplay seat;
@@ -583,8 +590,8 @@ public final class AtlasSky implements Listener, TabExecutor {
         Session s = sessions.remove(p.getUniqueId());
         if (s == null) return;
         s.closing = true;
-        for (Entity e : s.marks) if (e.isValid()) e.remove();
-        for (Entity e : s.mateMarks) if (e.isValid()) e.remove();
+        for (Entity e : s.marks.clear()) if (e.isValid()) e.remove();
+        for (Entity e : s.mateMarks.clear()) if (e.isValid()) e.remove();
         for (Entity e : s.stage) if (e.isValid()) e.remove();
         for (Entity e : s.tipFrame) if (e.isValid()) e.remove();
         for (Entity e : s.help) if (e.isValid()) e.remove();
@@ -629,8 +636,9 @@ public final class AtlasSky implements Listener, TabExecutor {
         return s.plane.clone().add(-u, v, -towardViewer);
     }
 
+    /** Shows {@code e} to the session's player only; {@code into} (null: a {@link MarkPool} keeps it) lists it for removal. */
     private <T extends Entity> T own(Session s, List<Entity> into, T e) {
-        into.add(e);
+        if (into != null) into.add(e);
         s.p.showEntity(plugin, e);
         return e;
     }
@@ -640,8 +648,146 @@ public final class AtlasSky implements Listener, TabExecutor {
             hidden(d);
             d.setItemStack(quad(model));
             d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            d.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateZ(turn), new Vector3f((float) w, (float) h, 1), new Quaternionf()));
+            d.setTransformation(pictureShape(w, h, turn));
         }));
+    }
+
+    private static Transformation pictureShape(double w, double h, float turn) {
+        return new Transformation(new Vector3f(), new Quaternionf().rotateZ(turn), new Vector3f((float) w, (float) h, 1), new Quaternionf());
+    }
+
+    private static Transformation textShape(float scale) {
+        return new Transformation(new Vector3f(0, (float) (-0.125 * scale), 0), new Quaternionf(), new Vector3f(scale), new Quaternionf());
+    }
+
+    /**
+     * A picture kept in {@code pool} under {@code key}: the one from the last redraw is moved and refitted (one position
+     * packet), only a new one is spawned.
+     */
+    private ItemDisplay mark(Session s, MarkPool<Entity> pool, String key, String model, double u, double v, double w, double h,
+                             double towardViewer, float turn) {
+        String k = pool.unique(key);
+        if (pool.take(k) instanceof ItemDisplay d && d.isValid()) {
+            ItemStack it = quad(model);
+            if (!it.equals(d.getItemStack())) d.setItemStack(it);
+            Transformation shape = pictureShape(w, h, turn);
+            if (!shape.equals(d.getTransformation())) d.setTransformation(shape);
+            move(d, at(s, u, v, towardViewer));
+            return d;
+        }
+        ItemDisplay d = picture(s, null, model, u, v, w, h, towardViewer, turn);
+        pool.put(k, d);
+        return d;
+    }
+
+    /** A text kept in {@code pool} under {@code key}, as {@link #mark} keeps a picture; {@code shape} null = the usual one. */
+    private TextDisplay label(Session s, MarkPool<Entity> pool, String key, double u, double v, Component c, float scale, int width,
+                              int background, double towardViewer, Transformation shape) {
+        String k = pool.unique(key);
+        Transformation t = shape != null ? shape : textShape(scale);
+        if (pool.take(k) instanceof TextDisplay d && d.isValid()) {
+            Component text = c.font() == null ? c.font(mn.suld.plugin.ui.StyleFormat.HD) : c;
+            if (!text.equals(d.text())) d.text(text);
+            Color bg = Color.fromARGB(background);
+            if (!bg.equals(d.getBackgroundColor())) d.setBackgroundColor(bg);
+            if (d.getLineWidth() != width) d.setLineWidth(width);
+            if (!t.equals(d.getTransformation())) d.setTransformation(t);
+            move(d, at(s, u, v, towardViewer));
+            return d;
+        }
+        TextDisplay d = text(s, null, u, v, c, scale, width, background, towardViewer);
+        if (shape != null) d.setTransformation(shape);
+        pool.put(k, d);
+        return d;
+    }
+
+    /** Moves a kept mark to {@code to}, keeping the way it faces (a text display is turned to face the camera). */
+    private static void move(Entity e, Location to) {
+        Location now = e.getLocation();
+        if (now.getWorld() == to.getWorld() && now.distanceSquared(to) < 1e-8) return;
+        to.setYaw(now.getYaw());
+        to.setPitch(now.getPitch());
+        e.teleport(to);
+    }
+
+    /** Every position showing its own map view: position i shows view i (a new atlas, before any pan). */
+    static int[] identityWall() {
+        int[] v = new int[COLS * ROWS];
+        for (int i = 0; i < v.length; i++) v[i] = i;
+        return v;
+    }
+
+    /**
+     * The whole frames the picture slid by from {@code before} to {@code after} ({+columns east, +rows south}), or null
+     * when it did not slide by whole frames that leave some of the wall in view (a zoom, a pan the world's edge cut
+     * short, a jump across the world).
+     */
+    static int[] frameShift(AtlasView before, AtlasView after) {
+        if (before.zoom() != after.zoom() || before.cols() != after.cols() || before.rows() != after.rows()) return null;
+        int span = before.blocksPerFrame();
+        int dx = after.left() - before.left(), dz = after.top() - before.top();
+        if (dx % span != 0 || dz % span != 0) return null;
+        int dc = dx / span, dr = dz / span;
+        if (dc == 0 && dr == 0 || Math.abs(dc) >= before.cols() || Math.abs(dr) >= before.rows()) return null;
+        return new int[]{dc, dr};
+    }
+
+    /**
+     * The map view each wall position shows after the picture slid by ({@code dc}, {@code dr}) frames. Position (c, r)
+     * takes the view that was at (c + dc, r + dr): that view already holds the picture now wanted there, so
+     * {@link AtlasFrames#show} sends nothing for it. Only the positions the slide uncovers get new pictures, in the views
+     * that slid off the far side.
+     */
+    static int[] slid(int[] viewAt, int cols, int rows, int dc, int dr) {
+        int[] out = new int[viewAt.length];
+        boolean[] used = new boolean[viewAt.length];
+        java.util.Arrays.fill(out, -1);
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                int sc = c + dc, sr = r + dr;
+                if (sc < 0 || sc >= cols || sr < 0 || sr >= rows) continue;
+                int view = viewAt[sr * cols + sc];
+                out[r * cols + c] = view;
+                used[view] = true;
+            }
+        }
+        java.util.ArrayDeque<Integer> free = new java.util.ArrayDeque<>();
+        for (int view : viewAt) if (!used[view]) free.add(view);
+        for (int i = 0; i < out.length; i++) if (out[i] < 0) out[i] = free.poll();
+        return out;
+    }
+
+    /**
+     * Hands each wall position the map view {@link #slid} gives it; the item frames switch maps the client already holds.
+     * Returns the positions the slide uncovered: their views still hold the pictures that slid off the far side.
+     */
+    private boolean[] slideWall(Session s, int dc, int dr) {
+        int[] next = slid(s.viewAt, COLS, ROWS, dc, dr);
+        for (int pos = 0; pos < next.length; pos++) {
+            if (next[pos] == s.viewAt[pos]) continue;
+            GlowItemFrame f = s.wall[pos];
+            if (f != null && f.isValid()) f.setItem(mapItem(frames.view(next[pos])), false);
+        }
+        s.viewAt = next;
+        return uncovered(COLS, ROWS, dc, dr);
+    }
+
+    /** The wall positions a slide by ({@code dc}, {@code dr}) frames uncovers: what they show was off the wall before. */
+    static boolean[] uncovered(int cols, int rows, int dc, int dr) {
+        boolean[] out = new boolean[cols * rows];
+        for (int pos = 0; pos < out.length; pos++) {
+            int c = pos % cols + dc, r = pos / cols + dr;
+            out[pos] = c < 0 || c >= cols || r < 0 || r >= rows;
+        }
+        return out;
+    }
+
+    private static ItemStack mapItem(org.bukkit.map.MapView view) {
+        ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
+        org.bukkit.inventory.meta.MapMeta mm = (org.bukkit.inventory.meta.MapMeta) mapItem.getItemMeta();
+        mm.setMapView(view);
+        mapItem.setItemMeta(mm);
+        return mapItem;
     }
 
     private TextDisplay text(Session s, List<Entity> into, double u, double v, Component c, float scale, int width, int background) {
@@ -658,7 +804,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             t.setShadowed(true);
             t.setLineWidth(width);
             t.text(c.font() == null ? c.font(mn.suld.plugin.ui.StyleFormat.HD) : c);
-            t.setTransformation(new Transformation(new Vector3f(0, (float) (-0.125 * scale), 0), new Quaternionf(), new Vector3f(scale), new Quaternionf()));
+            t.setTransformation(textShape(scale));
         }));
     }
 
@@ -684,11 +830,8 @@ public final class AtlasSky implements Listener, TabExecutor {
             for (int col = 0; col < COLS; col++) {
                 int frame = row * COLS + col;
                 Location at = new Location(w, bx + (COLS / 2 - col), by + (ROWS / 2 - row), bz);
-                ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
-                org.bukkit.inventory.meta.MapMeta mm = (org.bukkit.inventory.meta.MapMeta) mapItem.getItemMeta();
-                mm.setMapView(frames.view(frame));
-                mapItem.setItemMeta(mm);
-                own(s, s.stage, w.spawn(at, GlowItemFrame.class, f -> {
+                ItemStack mapItem = mapItem(frames.view(s.viewAt[frame]));
+                s.wall[frame] = own(s, s.stage, w.spawn(at, GlowItemFrame.class, f -> {
                     f.setFacingDirection(BlockFace.NORTH, true);
                     f.setPersistent(false);
                     f.setVisibleByDefault(false);
@@ -773,8 +916,10 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     private void setView(Session s, AtlasView v) {
         if (v.equals(s.view)) return;
+        int[] shift = frameShift(s.view, v);
         s.view = v;
-        redraw(s);
+        // a whole-frame pan: the frames still in view keep their pictures
+        redraw(s, shift != null ? slideWall(s, shift[0], shift[1]) : null);
     }
 
     /**
@@ -805,6 +950,15 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     /** Recomposes every frame of the wall from the map's tiles (on the workers), then shows it; and moves the places. */
     private void redraw(Session s) {
+        redraw(s, null);
+    }
+
+    /**
+     * {@link #redraw(Session)} after a slide: {@code uncovered} (null: none) are the positions whose views still hold the
+     * pictures that slid off. With every tile at hand (land drawn before) the new strip goes out in this tick, with the
+     * slide; while a tile is read they show blank, never a stale strip of the far side.
+     */
+    private void redraw(Session s, boolean[] uncovered) {
         int gen = ++s.gen;
         AtlasView v = s.view;
         MapTiles tiles = map.tiles();
@@ -821,23 +975,31 @@ public final class AtlasSky implements Listener, TabExecutor {
                 }
             }
         }
-        CompletableFuture.allOf(wanted.toArray(CompletableFuture[]::new)).whenComplete((x, err) -> {
-            if (!plugin.isEnabled()) return;
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (sessions.get(s.p.getUniqueId()) != s || s.gen != gen) return; // a newer view is on its way
-                byte[][] out = new byte[COLS * ROWS][];
-                for (int i = 0; i < keys.size(); i++) {
-                    int[] k = keys.get(i);
-                    CompletableFuture<byte[]> f = wanted.get(i);
-                    byte[] tile = f.isCompletedExceptionally() ? null : f.getNow(null);
-                    if (tile == null) s.dirty = true; // a region read timed out: asked again within a second, not left blank
-                    int frame = k[1] * COLS + k[0];
-                    if (out[frame] == null) out[frame] = new byte[TileComposer.PIXELS];
-                    if (tile != null) v.copy(tile, k[2], k[3], k[0], k[1], out[frame]);
-                }
-                for (int f = 0; f < out.length; f++) frames.show(s.p, f, out[f] == null ? BLANK : out[f]);
+        Runnable paint = () -> {
+            if (sessions.get(s.p.getUniqueId()) != s || s.gen != gen) return; // a newer view is on its way
+            byte[][] out = new byte[COLS * ROWS][];
+            for (int i = 0; i < keys.size(); i++) {
+                int[] k = keys.get(i);
+                CompletableFuture<byte[]> f = wanted.get(i);
+                byte[] tile = f.isCompletedExceptionally() ? null : f.getNow(null);
+                if (tile == null) s.dirty = true; // a region read timed out: asked again within a second, not left blank
+                int frame = k[1] * COLS + k[0];
+                if (out[frame] == null) out[frame] = new byte[TileComposer.PIXELS];
+                if (tile != null) v.copy(tile, k[2], k[3], k[0], k[1], out[frame]);
+            }
+            for (int f = 0; f < out.length; f++) frames.show(s.p, s.viewAt[f], out[f] == null ? BLANK : out[f]);
+        };
+        CompletableFuture<Void> all = CompletableFuture.allOf(wanted.toArray(CompletableFuture[]::new));
+        if (all.isDone()) {
+            paint.run();
+        } else {
+            if (uncovered != null) {
+                for (int f = 0; f < uncovered.length; f++) if (uncovered[f]) frames.show(s.p, s.viewAt[f], BLANK);
+            }
+            all.whenComplete((x, err) -> {
+                if (plugin.isEnabled()) Bukkit.getScheduler().runTask(plugin, paint);
             });
-        });
+        }
         placeMarkers(s);
         cursor(s, true);
     }
@@ -853,9 +1015,21 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     // ------------------------------------------------------------------------------------------------ places
 
+    /**
+     * The places, the player's pins and latest death, the waypoint flag, the regions' names and the player's own arrow.
+     * Every mark is asked for by a stable key: the ones from the last redraw are moved, only new ones are spawned, and
+     * the ones no longer on the wall are removed (a pan used to remove and spawn the whole set every 6 ticks).
+     */
     private void placeMarkers(Session s) {
-        for (Entity e : s.marks) if (e.isValid()) e.remove();
-        s.marks.clear();
+        s.marks.begin();
+        try {
+            placeAll(s);
+        } finally {
+            for (Entity e : s.marks.end()) if (e.isValid()) e.remove();
+        }
+    }
+
+    private void placeAll(Session s) {
         s.places.clear();
         if (s.hover != null && !s.tabs.contains(s.hover)) s.hover = null;
         AtlasView v = s.view;
@@ -870,7 +1044,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             if (Math.abs(u) > COLS / 2.0 - 0.05 || Math.abs(vv) > ROWS / 2.0 - 0.05) continue;
             boolean big = poi.kind() == MapPois.Kind.CITY || poi.kind() == MapPois.Kind.DUNGEON || poi.kind() == MapPois.Kind.BOSS;
             double size = big ? MARKER_BIG : MARKER;
-            picture(s, s.marks, "marker_" + poi.kind().name().toLowerCase(Locale.ROOT), u, vv, size, size, 0.03, 0f);
+            mark(s, s.marks, "poi:" + poiKey(poi), "marker_" + poi.kind().name().toLowerCase(Locale.ROOT), u, vv, size, size, 0.03, 0f);
             taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, size / 2, size / 2));
             Runnable click = () -> point(s, poi);
             s.places.add(new Hit(u, vv, size * 1.3, size * 1.3, click, Component.text(poi.name(), GOLD, TextDecoration.BOLD), describe(s, poi), null, null, null));
@@ -882,7 +1056,7 @@ public final class AtlasSky implements Listener, TabExecutor {
                 if (free) {
                     boxes.add(box);
                     taken.add(new mn.suld.api.map.RegionLabels.Box(box[0], box[1], box[2], box[3]));
-                    text(s, s.marks, u, lv, Component.text(poi.name(), CREAM), LABEL_SCALE, 300, LABEL_PLATE);
+                    label(s, s.marks, "poi-label:" + poiKey(poi), u, lv, Component.text(poi.name(), CREAM), LABEL_SCALE, 300, LABEL_PLATE, 0.06, null);
                 }
             }
         }
@@ -891,26 +1065,26 @@ public final class AtlasSky implements Listener, TabExecutor {
             for (mn.suld.api.map.MapPin pin : pins.pins(s.p.getUniqueId())) {
                 double u = v.u(pin.x() + 0.5), vv = v.v(pin.z() + 0.5);
                 if (Math.abs(u) > COLS / 2.0 - 0.05 || Math.abs(vv) > ROWS / 2.0 - 0.05) continue;
-                picture(s, s.marks, "marker_pin", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
+                mark(s, s.marks, "pin:" + pin.id(), "marker_pin", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
                 taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, MARKER_BIG / 2, MARKER_BIG / 2));
                 taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - LABEL_GAP, Math.max(0.3, pin.name().length() * LABEL_CHAR) / 2, LABEL_HALF));
                 long d = Math.round(Math.hypot(pin.x() + 0.5 - s.origin.getX(), pin.z() + 0.5 - s.origin.getZ()));
                 s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> pinDialog(s, pin), Component.text("◆ " + pin.name(), GOLD, TextDecoration.BOLD),
                         List.of(Component.text("Миний тэмдэг · " + d + " м", GREY), Component.text("Дарж: чиглэх эсвэл устгах", CYAN)), null, null, null));
-                text(s, s.marks, u, vv - MARKER_BIG / 2 - LABEL_GAP, Component.text(pin.name(), CREAM), LABEL_SCALE, 300, 0x99000000);
+                label(s, s.marks, "pin-label:" + pin.id(), u, vv - MARKER_BIG / 2 - LABEL_GAP, Component.text(pin.name(), CREAM), LABEL_SCALE, 300, 0x99000000, 0.06, null);
             }
         }
         if (s.death != null && s.filter == Filter.ALL) {
             double u = v.u(s.death[0] + 0.5), vv = v.v(s.death[1] + 0.5);
             if (Math.abs(u) <= COLS / 2.0 - 0.05 && Math.abs(vv) <= ROWS / 2.0 - 0.05) {
-                picture(s, s.marks, "marker_death", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
+                mark(s, s.marks, "death", "marker_death", u, vv, MARKER_BIG, MARKER_BIG, 0.032, 0f);
                 taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv, MARKER_BIG / 2, MARKER_BIG / 2));
                 taken.add(mn.suld.api.map.RegionLabels.Box.around(u, vv - MARKER_BIG / 2 - LABEL_GAP, "Сүүлд унасан газар".length() * LABEL_CHAR / 2, LABEL_HALF));
                 int[] at = s.death;
                 s.places.add(new Hit(u, vv, MARKER_BIG * 1.3, MARKER_BIG * 1.3, () -> guide.guide(s.p, new WaypointGuide.Target("Сүүлд унасан газар", "☠",
                         s.origin.getWorld().getName(), at[0] + 0.5, WaypointGuide.GROUND, at[1] + 0.5)), Component.text("☠ Сүүлд унасан газар", GOLD, TextDecoration.BOLD),
                         List.of(Component.text("x " + at[0] + ", z " + at[1], GREY), Component.text("Дарж чиглэх", CYAN)), null, null, null));
-                text(s, s.marks, u, vv - MARKER_BIG / 2 - LABEL_GAP, Component.text("Сүүлд унасан газар", CREAM), LABEL_SCALE, 300, 0x99000000);
+                label(s, s.marks, "death-label", u, vv - MARKER_BIG / 2 - LABEL_GAP, Component.text("Сүүлд унасан газар", CREAM), LABEL_SCALE, 300, 0x99000000, 0.06, null);
             }
         }
         waypointFlag(s, taken);
@@ -921,7 +1095,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (v.onWall(pu, pv)) {
             // the arrow points up (north) unturned; yaw 0 looks south: turn clockwise on screen by yaw + 180°
             float turn = (float) Math.toRadians(s.origin.getYaw() + 180);
-            picture(s, s.marks, "marker_player", pu, pv, MARKER_BIG, MARKER_BIG, 0.035, turn);
+            mark(s, s.marks, "player", "marker_player", pu, pv, MARKER_BIG, MARKER_BIG, 0.035, turn);
         }
     }
 
@@ -938,13 +1112,13 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (Math.abs(u) > COLS / 2.0 - 0.05 || Math.abs(vv) > ROWS / 2.0 - 0.05) return;
         boolean marked = t.pin() != null || s.death != null && Math.floor(t.x()) == s.death[0] && Math.floor(t.z()) == s.death[1];
         for (MapPois.Poi poi : map.pois.get()) marked |= poi.x() + 0.5 == t.x() && poi.z() + 0.5 == t.z();
-        if (!marked) picture(s, s.marks, "marker_pin", u, vv, MARKER, MARKER, 0.031, 0f);
+        if (!marked) mark(s, s.marks, "waypoint", "marker_pin", u, vv, MARKER, MARKER, 0.031, 0f);
         String meters = mn.suld.api.map.WaypointHud.meters(mn.suld.api.map.ScreenProjection.distance(s.origin.getX(), s.origin.getY(),
                 s.origin.getZ(), t.x(), t.y(), t.z()));
         String line = "▼ Чиглэл · " + meters;
         double lv = vv + MARKER_BIG / 2 + LABEL_GAP + LABEL_HALF;
         taken.add(new mn.suld.api.map.RegionLabels.Box(u - line.length() * LABEL_CHAR / 2, lv - LABEL_HALF, u + line.length() * LABEL_CHAR / 2, lv + LABEL_HALF));
-        text(s, s.marks, u, lv, Component.text(line, GOLD, TextDecoration.BOLD), LABEL_SCALE, 300, 0xB0101A30, 0.07);
+        label(s, s.marks, "waypoint-label", u, lv, Component.text(line, GOLD, TextDecoration.BOLD), LABEL_SCALE, 300, 0xB0101A30, 0.07, null);
     }
 
     /** From this zoom (8 blocks a pixel) out the atlas writes the regions' names across their lands. */
@@ -972,12 +1146,11 @@ public final class AtlasSky implements Listener, TabExecutor {
             regions.add(new mn.suld.api.map.RegionLabels.Region(r.displayName(), sec.minRadius(), sec.maxRadius(), sec.fromDeg(), sec.toDeg()));
         }
         for (mn.suld.api.map.RegionLabels.Label l : mn.suld.api.map.RegionLabels.place(regions, s.view, sp.getX(), sp.getZ(), edge, REGION_METRICS, taken)) {
-            TextDisplay t = text(s, s.marks, l.u(), l.v(), Component.text(l.text().toUpperCase(java.util.Locale.ROOT), REGION_INK,
-                    TextDecoration.BOLD), REGION_SCALE, 400, REGION_PLATE, 0.02);
-            if (l.lines().size() > 1) { // the text grows up from its foot: its middle goes down a half line a line more
-                t.setTransformation(new Transformation(new Vector3f(0, (float) (-0.125 * REGION_SCALE * l.lines().size()), 0), new Quaternionf(),
-                        new Vector3f(REGION_SCALE), new Quaternionf()));
-            }
+            // two lines: the text grows up from its foot, so its middle goes down a half line a line more
+            Transformation shape = l.lines().size() > 1 ? new Transformation(new Vector3f(0, (float) (-0.125 * REGION_SCALE * l.lines().size()), 0),
+                    new Quaternionf(), new Vector3f(REGION_SCALE), new Quaternionf()) : null;
+            label(s, s.marks, "region:" + l.text(), l.u(), l.v(), Component.text(l.text().toUpperCase(java.util.Locale.ROOT), REGION_INK,
+                    TextDecoration.BOLD), REGION_SCALE, 400, REGION_PLATE, 0.02, shape);
         }
     }
 
@@ -987,8 +1160,15 @@ public final class AtlasSky implements Listener, TabExecutor {
      * places, and again every second when one moved a block or turned.
      */
     private void placeMates(Session s) {
-        for (Entity e : s.mateMarks) if (e.isValid()) e.remove();
-        s.mateMarks.clear();
+        s.mateMarks.begin();
+        try {
+            placeMateMarks(s);
+        } finally {
+            for (Entity e : s.mateMarks.end()) if (e.isValid()) e.remove();
+        }
+    }
+
+    private void placeMateMarks(Session s) {
         s.places.removeAll(s.mateHits);
         if (s.hover != null && s.mateHits.contains(s.hover)) s.hover = null;
         s.mateHits.clear();
@@ -998,7 +1178,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             Location l = m.getLocation();
             double u = v.u(l.getX()), vv = v.v(l.getZ());
             if (!v.onWall(u, vv)) continue;
-            picture(s, s.mateMarks, "marker_party", u, vv, MARKER, MARKER, 0.034, (float) Math.toRadians(l.getYaw() + 180));
+            mark(s, s.mateMarks, "mate:" + m.getUniqueId(), "marker_party", u, vv, MARKER, MARKER, 0.034, (float) Math.toRadians(l.getYaw() + 180));
             long d = Math.round(Math.hypot(l.getX() - s.origin.getX(), l.getZ() - s.origin.getZ()));
             String name = m.getName(), world = l.getWorld().getName();
             double x = l.getX(), z = l.getZ();
@@ -1009,8 +1189,13 @@ public final class AtlasSky implements Listener, TabExecutor {
                     List.of(Component.text("Багийн гишүүн · " + d + " м", GREY), Component.text("Дарж чиглэх (одоо байгаа газар нь)", CYAN)), null, null, null);
             s.mateHits.add(h);
             s.places.add(h);
-            text(s, s.mateMarks, u, vv - MARKER / 2 - LABEL_GAP, Component.text(name, CYAN), LABEL_SCALE, 300, 0x99000000);
+            label(s, s.mateMarks, "mate-label:" + m.getUniqueId(), u, vv - MARKER / 2 - LABEL_GAP, Component.text(name, CYAN), LABEL_SCALE, 300, 0x99000000, 0.06, null);
         }
+    }
+
+    /** A place's key in the mark pool: the same place on the next redraw keeps its marker and label. */
+    private static String poiKey(MapPois.Poi poi) {
+        return poi.kind() + ":" + poi.x() + "," + poi.z() + ":" + poi.name();
     }
 
     private static int rank(MapPois.Kind k) {
@@ -1312,12 +1497,13 @@ public final class AtlasSky implements Listener, TabExecutor {
                 close(s.p);
                 continue;
             }
-            // W / A / S / D: a quarter of the wall at once, again every 6 ticks while held
+            // W / A / S / D: one whole frame at once, again every 6 ticks while held. A whole frame lets the frames still in
+            // view keep their pictures (setView slides them): only the uncovered row or column is drawn and sent
             boolean any = s.up || s.down || s.left || s.right;
             if (any) {
                 if (s.heldTicks % 6 == 0) {
                     double du = (s.right ? 1 : 0) - (s.left ? 1 : 0), dv = (s.up ? 1 : 0) - (s.down ? 1 : 0);
-                    setView(s, s.view.pan(du * COLS / 4.0, dv * ROWS / 4.0, map.geometry()));
+                    setView(s, s.view.pan(du * PAN_FRAMES, dv * PAN_FRAMES, map.geometry()));
                 }
                 s.heldTicks++;
             } else {
@@ -1487,7 +1673,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         for (Entity en : e.getEntities()) {
             if (!en.getScoreboardTags().contains(TAG)) continue;
             boolean live = false;
-            for (Session s : sessions.values()) if (s.marks.contains(en) || s.stage.contains(en)) live = true;
+            for (Session s : sessions.values()) if (s.marks.holds(en) || s.mateMarks.holds(en) || s.stage.contains(en)) live = true;
             if (!live) en.remove();
         }
     }

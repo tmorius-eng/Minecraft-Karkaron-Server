@@ -4,7 +4,7 @@
 // out around the look (14° up ahead, 50° to either side, 24° under it); the pack's text shader draws that map in the screen's corner. The bot checks
 // what the server can be held to: the frames follow the player when it is teleported and when it turns, none is on
 // the line of fire, an arrow shot through one flies on (the frame steps aside), the map's first row carries the
-// shader's marker colours, `/map minimap` hides and shows it, the atlas hides it while open. Pins: `/map pin` stores one in the database, it is there after a
+// shader's marker colours, it starts off and `/map minimap` shows and hides it, the atlas hides it while open. Pins: `/map pin` stores one in the database, it is there after a
 // relog, `/map unpin` removes it. The waypoint: `/map guide <x> <z>` shows a yellow bar with the distance and a
 // see-through card toward the place (an edge card with an arrow once turned away), `/map stop` ends both.
 const mineflayer = require('mineflayer');
@@ -54,6 +54,13 @@ async function pickClass(b) {
   let b = join();
   await spawned(b);
   await pickClass(b);
+  // 0. the minimap starts off (2026-10-18: on a client without the pack's core shader its maps hang mid-screen);
+  // `/map minimap` turns it on
+  await sleep(1500);
+  const before = miniFrames(b).length;
+  const n0 = b.chats.length;
+  b.chat('/map minimap'); await sleep(2500);
+  check(before === 0 && said(b, 'асаалттай', n0), 'the minimap starts off and /map minimap turns it on', before + ' frames before the command');
   // 1. the minimap appears: four frames facing up, out of reach, along the look; its map carries the marker row
   let fr = miniFrames(b);
   const eye = b.entity.position.offset(0, 1.62, 0);

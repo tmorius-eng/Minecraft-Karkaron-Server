@@ -181,7 +181,10 @@ stood on the next login.
   a second.
 * **View.** Opens centred on the player at zoom 0 (1 block a pixel, 640 blocks across; until 2026-10-15 it opened at 4 blocks a pixel, where the city was a speck); the wheel zooms toward the
   cursor from 4 × 4 map pixels a block (zooms −1 and −2 magnify the 1-block tiles: 320 and 160 blocks across) to the whole world (16 blocks a pixel: the 10 001-block square fits the wall); each step and a refused step at either end is read out on the action bar. W/A/S/D
-  pan a quarter of the wall (again every 6 ticks while held). The view never leaves the world square.
+  pan one whole frame (again every 6 ticks while held; until 2026-10-18 a quarter of the wall, which changed all 25
+  pictures). The frames' views slide with the picture, so a pan sends only the column or row that comes into view, and
+  the marks and labels still on the wall are moved, not removed and spawned again. The view never leaves the world
+  square.
 * **Cursor.** The crosshair: the cartouche reads the block under it — `x · z`, the area and its level band
   (`Хархорум` in the city) — and a place under it shows a tooltip (kind, area, distance, coordinates). A left click on
   a place points the compass at it.
@@ -330,7 +333,10 @@ The atlas reads the player's latest death (`deathRepository().recent`) when it o
   fast turns (~33° and ~90° a step, looking up and down). A two-frame layout at ±28° blinked in the same test and the
   first layout had a frame on the line of fire, so neither was kept. The four-frame layout, the slack and the shorter step aside (2026-10-15) are checked by tests only, not yet on a client. A modded client that culls entities by occlusion (Sodium's entity culling) or replaces the core shaders
   (an Iris shader pack) may hide it — vanilla and plain Fabric are fine. With an Iris shader pack **on**, Iris replaces
-  every core shader and the four maps hang in the world: such players should turn `/map minimap` off.
+  every core shader and the four maps hang in the world. So since 2026-10-18 the minimap **starts off** for everyone
+  (`PlayerSetting.MINIMAP`, `onByDefault` false, bit 10; bit 8 was its old on-by-default bit and is never reused): a
+  player turns it on with `/map minimap` or the «Тохиргоо» page. Bedrock players (Floodgate's own answer when it is
+  installed, else the UUID's shape) get no frames.
 * **Lifecycle:** a frame is made hidden, invisible, fixed, drop chance 0, invulnerable, silent and not persistent
   before its first packet (`MinimapService.dress`, `MinimapFrameTest`). It is removed when the minimap is not wanted
   (setting off, death, spectator, sky window, pack not loaded), on quit, on a world change, when a player's state is

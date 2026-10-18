@@ -429,7 +429,7 @@ public final class WorldBossService implements Listener {
             items.announce(p, inst);
         }
         services.mailbox(plugin).keepOverflow(p, overflow, "world boss " + a.def.id());
-        if (given) mn.suld.plugin.item.PlayerDataSaves.now(p);
+        if (given) mn.suld.plugin.item.PlayerDataSaves.soon(plugin, p); // every fighter is paid in this tick: one file a tick
     }
 
     /** Admin: end the standing boss without rewards. */

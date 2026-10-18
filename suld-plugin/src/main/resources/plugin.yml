@@ -8,7 +8,7 @@ website: https://github.com/tmorius-eng/Minecraft-Karkaron-Server
 # SULD owns the RPG commands (/help, /rules, /spawn, /class, /skills, ...): load before the utility
 # plugins so their same-named commands defer to SULD.
 loadbefore: [Essentials, EssentialsSpawn, CMI]
-softdepend: [LuckPerms, PlaceholderAPI, Chunky, GrimAC]
+softdepend: [LuckPerms, PlaceholderAPI, Chunky, GrimAC, floodgate]
 # Infrastructure-only runtime libraries, fetched by Paper from Maven Central on
 # first load. Pinned. HikariCP and the H2 driver (the default embedded storage, so an
 # offline server still boots) are shaded into the jar, not listed here. Only the

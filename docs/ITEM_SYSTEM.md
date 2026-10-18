@@ -86,8 +86,8 @@ refuses them (use `/relic give`). Their stats now come from the catalog definiti
 
 `LootTable` = guaranteed entries + N weighted rolls (with a "nothing" weight) + independent rare drops (chance raised by
 the receiver's LOOT_CHANCE). An entry names an item or a pool of item categories near the loot level. Rarity comes from
-the table's tier band (`tiers.json`: NORMAL → common/uncommon … BOSS → legendary/ancient/mythic, WORLD_EVENT →
-ancient/mythic) intersected with the definition's and the entry's range; pools prefer definitions that can reach the
+the table's tier band (`tiers.json`: NORMAL → common/uncommon … BOSS → rare/epic/legendary with ancient 2 %,
+WORLD_EVENT → rare/epic/legendary, never above BOSS since 2026-10-18) intersected with the definition's and the entry's range; pools prefer definitions that can reach the
 band; class weighting ×3 own class / ×0.25 other class; item level = loot level ± spread, clamped to the requirement.
 `Rng` is injectable and seedable (tests are deterministic). Callers: mob kills (`CombatListener`, the verified "loot
 chance = one extra roll" rule), dungeon rewards (`DungeonService`, DUNGEON tier), quests/world events via their table ids.
