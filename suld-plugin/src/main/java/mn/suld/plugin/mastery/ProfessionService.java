@@ -49,7 +49,7 @@ import org.bukkit.event.entity.EntityTameEvent;
 import org.bukkit.event.entity.SheepRegrowWoolEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.inventory.ItemStack;
@@ -195,7 +195,7 @@ public final class ProfessionService implements Listener {
     }
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         load(e.getPlayer().getUniqueId());
     }
 

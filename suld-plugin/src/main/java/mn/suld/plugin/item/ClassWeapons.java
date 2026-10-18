@@ -27,7 +27,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -223,7 +223,7 @@ public final class ClassWeapons implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         Player p = e.getPlayer();
         services.profiles().cached(p.getUniqueId()).ifPresent(pr -> upgrade(p, pr.progression().level(), false));
     }

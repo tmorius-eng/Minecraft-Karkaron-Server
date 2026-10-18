@@ -98,6 +98,7 @@ public final class SuldPlugin extends JavaPlugin {
         }
 
         // Authentication first: it gates pre-login and binds sessions before any gameplay listener.
+        services.auth().connectBridge();
         getServer().getPluginManager().registerEvents(services.auth(), this);
         services.auth().announceMode();
         services.auth().startSweeper();
@@ -132,7 +133,8 @@ public final class SuldPlugin extends JavaPlugin {
         chatChannels.start();
         services.clans().channels(chatChannels);
         getServer().getPluginManager().registerEvents(
-                new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks(), chatChannels), this);
+                new mn.suld.plugin.clan.ChatListener(services.clans(), services.styles(), services.resourcePacks(), chatChannels,
+                        services.auth()), this);
         mn.suld.plugin.clan.ChatScreen chatScreen = new mn.suld.plugin.clan.ChatScreen(this, chatChannels, services.zone());
         for (String c : java.util.List.of("chat", "ch", "g", "l", "pc", "tr")) registerTab(c, chatScreen);
         services.hud().attach(this, services);
@@ -436,7 +438,7 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(serverList, this);
 
         mn.suld.plugin.auth.OwnerService owners = new mn.suld.plugin.auth.OwnerService(
-                this, services.auth().policy().mode(), getConfig().getStringList("owners"));
+                this, services.auth(), getConfig().getStringList("owners"));
         getServer().getPluginManager().registerEvents(owners, this);
         owners.start();
 

@@ -26,7 +26,7 @@ import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BundleMeta;
@@ -55,7 +55,7 @@ public final class RelicListener implements Listener {
     // ------------------------------------------------------- lifecycle
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoin(PlayerJoinEvent event) {
+    public void onJoin(SuldJoinEvent event) {
         Player p = event.getPlayer();
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (p.isOnline()) relics.validate(p);

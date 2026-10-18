@@ -40,7 +40,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
@@ -494,7 +494,7 @@ public final class SkillTreeService implements Listener {
     // ------------------------------------------------------------------ join / quit / progression events
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         Player p = e.getPlayer();
         Double saved = p.getPersistentDataContainer().get(HEALTH, org.bukkit.persistence.PersistentDataType.DOUBLE);
         p.getPersistentDataContainer().remove(HEALTH);

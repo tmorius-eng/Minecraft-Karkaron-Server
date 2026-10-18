@@ -29,7 +29,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.ChunkGenerator;
@@ -634,7 +634,7 @@ public final class DungeonHalls implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         Player p = e.getPlayer();
         if (!inHalls(p.getLocation()) || inRun.test(p.getUniqueId())) return;
         Bukkit.getScheduler().runTaskLater(plugin, () -> {

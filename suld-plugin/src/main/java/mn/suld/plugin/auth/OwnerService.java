@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -24,8 +23,8 @@ import java.util.regex.Pattern;
 /**
  * Server owners ({@code owners:} in config.yml) are always operators: OP is (re-)granted on every join.
  * <p>
- * Identity, not names: OP is granted only when the login is verified by Minecraft/Microsoft
- * ({@link AuthMode#verified()}: online mode or HMAC Velocity forwarding). On an owner's first verified join
+ * Identity, not names: OP is granted only when the login is verified ({@link AuthMode#verified()}: online mode, HMAC
+ * Velocity forwarding, or behind AuthMe once AuthMe has logged the player in, {@link SuldJoinEvent}). On an owner's first verified join
  * the account UUID is pinned in {@code plugins/SULD/owners.yml}; after that only that UUID is an owner, so
  * whoever later takes the same name (after a rename) never gets OP. An entry may also be a UUID directly.
  * On an unverified (offline) server nothing is granted here: names can be spoofed there.
@@ -40,15 +39,17 @@ public final class OwnerService implements Listener {
 
     private final Plugin plugin;
     private final AuthMode mode;
+    private final AuthenticationService auth;
     private final File pinFile;
     private final Set<String> names = new HashSet<>();
     private final Set<UUID> uuids = new HashSet<>();
     /** lower-case name → pinned account UUID. */
     private final Map<String, UUID> pinned = new HashMap<>();
 
-    public OwnerService(Plugin plugin, AuthMode mode, List<String> owners) {
+    public OwnerService(Plugin plugin, AuthenticationService auth, List<String> owners) {
         this.plugin = plugin;
-        this.mode = mode;
+        this.auth = auth;
+        this.mode = auth.policy().mode();
         this.pinFile = new File(plugin.getDataFolder(), "owners.yml");
         for (String raw : owners) {
             String o = raw == null ? "" : raw.trim();
@@ -93,11 +94,20 @@ public final class OwnerService implements Listener {
                     + "(they only get the cosmetic owner badge).");
             return;
         }
-        Bukkit.getOnlinePlayers().forEach(this::apply);
+        if (mode == AuthMode.HYBRID_AUTHME) {
+            // behind AuthMe the name is the account: whoever registers an owner's name first holds it
+            for (String n : names) {
+                if (!pinned.containsKey(n) && !auth.bridge().isRegistered(n)) {
+                    plugin.getLogger().severe("owners: " + n + " has no AuthMe account yet. Register it before anyone else "
+                            + "can (console: authme register " + n + " <password>), or whoever registers it is opped.");
+                }
+            }
+        }
+        Bukkit.getOnlinePlayers().stream().filter(auth::admitted).forEach(this::apply);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         Player p = e.getPlayer();
         if (mode.verified()) {
             apply(p);

@@ -51,7 +51,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -837,7 +837,7 @@ public final class TrainingService implements Listener, TabExecutor {
      * player's own things are in their data. They come back before anything else looks at the bag; the kit goes.
      */
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         Player p = e.getPlayer();
         if (!p.getPersistentDataContainer().has(stashKey, PersistentDataType.BYTE_ARRAY)) {
             for (int i = 0; i < p.getInventory().getSize(); i++) {

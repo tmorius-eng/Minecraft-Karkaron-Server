@@ -34,7 +34,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -913,7 +913,7 @@ public final class WorldBuildService implements Listener, mn.suld.api.zone.CityZ
 
     /** First time a player joins after Kharkhorum is built, bring them to the plaza once. */
     @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         if (state == null || (state.status != BuildState.Status.BUILT && state.status != BuildState.Status.APPROVED
                 && state.status != BuildState.Status.LOCKED)) return;
         Player p = e.getPlayer();

@@ -13,6 +13,10 @@ public final class AuditActions {
     public static final String DUPLICATE_SESSION = "auth.duplicate_session";
     public static final String DENIED = "auth.denied";
     public static final String INSECURE_DEV_LOGIN = "auth.insecure_dev_login";
+    /** Hybrid login: joined, waiting for AuthMe; logged in by AuthMe (enters the game); logged out again (kicked). */
+    public static final String AUTHME_PENDING = "auth.authme_pending";
+    public static final String AUTHME_LOGIN = "auth.authme_login";
+    public static final String AUTHME_LOGOUT = "auth.authme_logout";
     public static final String PROFILE_LOAD_FAILED = "auth.profile_load_failed";
     public static final String JOIN_WITHOUT_SESSION = "auth.join_without_session";
     public static final String PENDING_EXPIRED = "auth.pending_expired";

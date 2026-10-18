@@ -6,7 +6,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 
 /** Join/death hooks for clans and world events. */
 public final class SocialListener implements Listener {
@@ -20,7 +20,7 @@ public final class SocialListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoin(PlayerJoinEvent event) {
+    public void onJoin(SuldJoinEvent event) {
         clans.onJoin(event.getPlayer());
         events.onJoin(event.getPlayer());
     }

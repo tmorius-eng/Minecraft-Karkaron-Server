@@ -4,6 +4,8 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import mn.suld.api.chat.ChatChannel;
 import mn.suld.api.style.Cosmetic;
 import mn.suld.api.style.PlayerStyle;
+import mn.suld.plugin.auth.AuthenticationService;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import mn.suld.plugin.resourcepack.ResourcePackService;
 import mn.suld.plugin.style.StyleService;
 import mn.suld.plugin.ui.StyleFormat;
@@ -30,12 +32,15 @@ public final class ChatListener implements Listener {
     private final StyleService styles;
     private final ResourcePackService packs;
     private final ChatChannels channels;
+    private final AuthenticationService auth;
 
-    public ChatListener(ClanService clans, StyleService styles, ResourcePackService packs, ChatChannels channels) {
+    public ChatListener(ClanService clans, StyleService styles, ResourcePackService packs, ChatChannels channels,
+                        AuthenticationService auth) {
         this.clans = clans;
         this.styles = styles;
         this.packs = packs;
         this.channels = channels;
+        this.auth = auth;
     }
 
     private boolean hasPack(Object viewer) {
@@ -64,18 +69,35 @@ public final class ChatListener implements Listener {
         });
     }
 
+    private Component joinLine(Player p) {
+        PlayerStyle s = styles.of(p.getUniqueId());
+        return s.equipped(Cosmetic.Category.JOIN_MESSAGE).map(c -> StyleFormat.joinMessage(c, p.getName()))
+                .orElse(Component.text("+ ", NamedTextColor.GREEN, TextDecoration.BOLD).append(StyleFormat.name(p, s))
+                        .append(Component.text(" ирлээ", NamedTextColor.GRAY)));
+    }
+
+    /** Behind AuthMe a join is not yet a player (a wrong password is kicked after it): the line waits for the login. */
+    private boolean deferred() {
+        return auth.policy().mode().deferredAuthentication();
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onJoin(PlayerJoinEvent e) {
-        Player p = e.getPlayer();
-        PlayerStyle s = styles.of(p.getUniqueId());
-        e.joinMessage(s.equipped(Cosmetic.Category.JOIN_MESSAGE).map(c -> StyleFormat.joinMessage(c, p.getName()))
-                .orElse(Component.text("+ ", NamedTextColor.GREEN, TextDecoration.BOLD).append(StyleFormat.name(p, s))
-                        .append(Component.text(" ирлээ", NamedTextColor.GRAY))));
+        e.joinMessage(deferred() ? null : joinLine(e.getPlayer()));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onEntered(SuldJoinEvent e) {
+        if (deferred()) e.getPlayer().getServer().broadcast(joinLine(e.getPlayer()));
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
+        if (deferred() && !auth.admitted(p)) {
+            e.quitMessage(null); // never announced as come, so never as gone
+            return;
+        }
         e.quitMessage(Component.text("- ", NamedTextColor.RED, TextDecoration.BOLD)
                 .append(StyleFormat.name(p, styles.of(p.getUniqueId()))).append(Component.text(" гарлаа", NamedTextColor.GRAY)));
     }

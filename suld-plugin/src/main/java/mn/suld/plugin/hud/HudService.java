@@ -102,7 +102,7 @@ public final class HudService {
         Bukkit.getPluginManager().registerEvents(panel, plugin);
         Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
             @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
-            public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) {
+            public void onJoin(mn.suld.plugin.auth.SuldJoinEvent e) {
                 teamJoin(e.getPlayer());
             }
 

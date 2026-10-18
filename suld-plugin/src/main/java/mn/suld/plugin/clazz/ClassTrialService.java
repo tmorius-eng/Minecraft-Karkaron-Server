@@ -32,7 +32,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
@@ -382,7 +382,7 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
 
     /** SULD-F06: end a post-crash trial on the very next tick after join (no 40-tick unprotected window). */
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         Player p = e.getPlayer();
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (!p.isOnline() || runs.containsKey(p.getUniqueId())) return;

@@ -10,7 +10,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
@@ -37,7 +37,7 @@ public final class PlayerLifecycleListener implements Listener {
      * profile is already cached — the player enters with their state restored.
      */
     @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
+    public void onJoin(SuldJoinEvent event) {
         Player player = event.getPlayer();
         UUID id = player.getUniqueId();
         PlayerProfile profile = services.profiles().cached(id).orElse(null);

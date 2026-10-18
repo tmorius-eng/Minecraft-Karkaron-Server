@@ -576,7 +576,7 @@ public final class TradeService implements Listener, TabExecutor {
 
     /** Anything the mailbox holds for this player comes back a moment after they join. */
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onJoinMailbox(org.bukkit.event.player.PlayerJoinEvent e) {
+    public void onJoinMailbox(mn.suld.plugin.auth.SuldJoinEvent e) {
         Player p = e.getPlayer();
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (p.isOnline()) deliverMail(p);

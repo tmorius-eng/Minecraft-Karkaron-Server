@@ -36,7 +36,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.plugin.Plugin;
 
@@ -331,7 +331,7 @@ public final class WorldBossService implements Listener {
 
     /** The boss bar for someone who joins next to the fight. */
     @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         if (active != null) active.barShown.remove(e.getPlayer().getUniqueId());
     }
 

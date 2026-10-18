@@ -47,7 +47,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import mn.suld.plugin.auth.SuldJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
@@ -1856,7 +1856,7 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     /** A crash or restart while the atlas was open: the player logs back in where they stood, not on the stage. */
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onJoin(PlayerJoinEvent e) {
+    public void onJoin(SuldJoinEvent e) {
         Player p = e.getPlayer();
         String ret = p.getPersistentDataContainer().get(RETURN, PersistentDataType.STRING);
         if (ret == null) return;
