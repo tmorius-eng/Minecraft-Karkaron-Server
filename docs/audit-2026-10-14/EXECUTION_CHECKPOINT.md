@@ -1,7 +1,27 @@
 # Execution checkpoint — audit-2026-10-14 (local CLI session)
 
+## Status as of 2026-10-18 (checked against git and GitHub Actions)
+
+This file is the log of the local CLI runs of 2026-10-14 and 2026-10-15. Several of its statements were true when they
+were written and are no longer. Everything in the log below **is committed and pushed to `main`**. The facts:
+
+| What the log says | What git and CI show |
+|---|---|
+| "Nothing is committed or pushed" (here, Phase 7, the Log, the follow-ups) | The Phase 1–6 work is on `main` as `d04967a` (72 files, 2026-10-14 13:26 UB), followed by `43703b9`, `b01dfb0`, `a4ddb85` and `7685130`. The 2026-10-15 runs are `0825c8f` … `cc583bc` |
+| "No code was compiled", "uncompiled", "UNVERIFIED" | `d04967a` built and passed CI (run #87). Its base `411842d` did not compile (`onDrag` declared twice in `ClassSelectionGui`, run #86). `a4ddb85` was pushed with 108 conflict markers in 11 files (run #90). `main` stayed red through runs #90–#93 and was green again from `6232a4f` (run #98) |
+| `CLAUDE_MASTER_EXECUTION_PROMPT.md` "is a scratch file — do not commit it" | It was committed in `7685130` at the repository root. On 2026-10-18 it was moved into this folder |
+| `JdbcMapPinRepositoryIT.theLimitHoldsWhenAddsRace` is flaky ("Open") | Fixed in `6589fa3`: each player's pin writes run in order (`KeyedSequencer`). The test now requires exactly the limit and passes on PostgreSQL 16 |
+| Base `411842d` = `origin/main` at session start | Shortly before `411842d`, `main` was force-pushed. `b038d1a` and `38e58aa`, which CI had built on `main` (runs #84, #85), are no longer reachable |
+| The OpenRouter key in a local `ArrowScaleTest.java` | Never committed: the only match in the whole history is the 8-character prefix named in this file. The owner revoked the key |
+| Real-client and loadtest-bot verification | Still not done. `hubbot.js` and `qbookbot.js` look for window-title glyphs that the tiling in `8a0b1e4` removed |
+
+The rest of this file is the original log. It is unchanged except for notes marked **(2026-10-18)**.
+
+---
+
 Base: `main` @ `411842d` (= `origin/main`, verified at session start). One agent, no subagents.
 **State at the end of the session: Phases 1–6 written; Phase 7 BLOCKED. Nothing is committed or pushed.**
+**(2026-10-18)** Out of date: the work was committed and pushed. See the status table above.
 **Superseded:** see "Phase 7 run 2026-10-14 (validation passed; remote-base gate failed)" at the end of this file.
 
 ## Blocker (Phase 7)
@@ -25,7 +45,7 @@ Base: `main` @ `411842d` (= `origin/main`, verified at session start). One agent
 | 4 — QS-01..QS-08 | DONE for every QS item the prompt specifies (uncompiled) | QS-01 party quest + daily credit; QS-02 gate refusal (tracker + book); QS-03 aliases + level placement (`QuestChainOrphanTest`); QS-04/05 giver; QS-07 verified already correct; new QuestType INSPECT_CLUE / CRAFT_ITEM / OVOO_RITUAL wired end to end (`QuestObjectiveVocabularyTest`). QS-06/08: unspecified. |
 | 5 — HUD / spell feedback | DONE (uncompiled) | HUD requirements verified present; Онгоны Дуудлага `NO_TARGET` before cost (echo refund removed); Тэнгэрийн Шийтгэл refused unpaid without enemies; soul refusal sounds. |
 | 6 — 8 reports | DONE | `GAME_LOGIC_STATUS.md`, `QUEST_AND_TASK_AUDIT.md`, `CLASS_ABILITY_AUDIT.md`, `ITEM_AND_RARITY_AUDIT.md`, `WEAPON_ANIMATION_AUDIT.md`, `COMBAT_AND_FEEDBACK_AUDIT.md` (Part 12 absent — stated, 20 scope questions answered instead), `LAPTOP_PLAYTEST_PLAN.md`, `GAMEPLAY_IMPROVEMENT_ROADMAP.md`. |
-| 7 — validate, commit, push | **BLOCKED** | see Blocker. Not committed, not pushed. |
+| 7 — validate, commit, push | **BLOCKED** | see Blocker. Not committed, not pushed. **(2026-10-18)** Done later: `d04967a` on `main`, CI run #87 green. |
 
 ## To finish Phase 7 (in an interactive shell)
 
@@ -160,7 +180,7 @@ Report: `MAPS_GAMEPLAY_ROOT_CAUSE_AUDIT.md`. The eight 2026-10-14 reports were r
 **Initial state (before this run):** branch `main` @ `c1fcc62`, nothing staged. Pre-existing user changes, left
 untouched: `suld-plugin/src/test/java/mn/suld/plugin/combat/ArrowScaleTest.java` is modified so its whole content is one
 line that looks like an OpenRouter API key; untracked `jcode-windows-x86_64.exe`. Note:
-`CLAUDE_MASTER_EXECUTION_PROMPT.md` is already **tracked** (committed in `7685130`, also on `origin/main`) despite the rule never to commit it; this run did not touch it. **The key should be treated as exposed and rotated.** `ArrowScaleTest.java` must not be committed as it is.
+`CLAUDE_MASTER_EXECUTION_PROMPT.md` is already **tracked** (committed in `7685130`, also on `origin/main`) despite the rule never to commit it; this run did not touch it. **(2026-10-18)** Moved from the repository root into `docs/audit-2026-10-14/`. **The key should be treated as exposed and rotated.** `ArrowScaleTest.java` must not be committed as it is.
 
 **Changed by this run:** `AtlasView`, `AtlasViewTest`, `AtlasSky`, `WaypointGuide`, `ChunkColorStore`,
 `ChunkColorStoreTest`, new `map/AtlasInputTest`, `DungeonService`, `SuldPlugin`, `QuestTracker` (the one-identifier
@@ -235,6 +255,8 @@ back to its committed content in the working tree.
 racing a limit of 5 can store 9 or 10 rows. So the `INSERT … SELECT … WHERE (SELECT COUNT(*) …) < ?` guard does not
 fully serialise concurrent adds, despite what the `JdbcMapPinRepository` Javadoc says. This affects the real pin
 limit, not just the test. Not changed here. The bots and the real-client checks in the report §4 also remain open.
+**(2026-10-18)** Fixed in `6589fa3`: each player's writes are serialised (`KeyedSequencer`), and the test now
+requires exactly the limit.
 
 ## Follow-up 2026-10-15 (2) — atlas framing, boss bars, minimap stability and lag, accidental `/skills`
 
