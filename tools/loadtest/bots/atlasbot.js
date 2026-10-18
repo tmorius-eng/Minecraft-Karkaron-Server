@@ -3,8 +3,9 @@
 // /map seats the player on the sky stage before a wall of 25 map frames (glow item frames holding the pooled maps);
 // the server sends every map's pixels at once, drawn from the real world (spawn is generated: most frames have land);
 // the title and the places' labels are text displays; D pans (new pixels arrive), the wheel zooms (new pixels), the
-// «Агуй» tab leaves only the dungeons' labels; Shift closes and puts the player back where they stood. The regions are
-// named only zoomed out: none at 1 block a pixel (where it opens), all eight at the whole world.
+// «Агуй» tab leaves only the dungeons' labels (after Space puts the first-time guide away); Shift closes and puts the
+// player back where they stood. The regions are named only zoomed out: none at 1 block a pixel (where it opens), all
+// eight at the whole world.
 const mineflayer = require('mineflayer');
 const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
@@ -16,8 +17,9 @@ const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username
 b.on('error', () => {});
 b.on('resourcePack', () => { try { b.acceptResourcePack(); } catch (e) {} });
 
-// the layout of AtlasSky (blocks on the wall): the camera is DIST in front of the wall's middle, EYE_UP above it
-const DIST = 6.0, EYE_UP = 0.25, TITLE_V = 391 / 128, TAB_U = 406 / 128, TAB_STEP = 58 / 128, FILTERS = 7;
+// the layout of AtlasSky (blocks on the wall): the camera is DIST in front of the wall's middle (at the default 70° fit),
+// EYE_UP above it
+const DIST = 5.25, EYE_UP = -0.29, TITLE_V = 391 / 128, TAB_U = 406 / 128, TAB_STEP = 58 / 128, FILTERS = 7;
 const maps = new Map(); // map id -> { packets, nonZero }
 b._client.on('map', (pk) => {
   if (!pk.data || pk.columns !== 128) return;
@@ -57,7 +59,12 @@ b.once('spawn', async () => {
   const withLand = [...maps.values()].filter(m => m.nonZero > 0).length;
   check(ids.length >= 25, 'every frame\'s map is sent', ids.length + ' maps, ' + packetsNow() + ' packets');
   check(withLand >= 12, 'the maps show real land around the spawn', withLand + ' of ' + ids.length + ' maps have pixels');
-  const title = find('СҮЛДИЙН АТЛАС');
+  // a new player's first atlases open with the guide (AtlasSky HELP_AUTO); Space puts it away, and until then the
+  // first click only closes it
+  const guide = !!find('ЗААВАР');
+  b._client.write('player_input', { inputs: { jump: true } }); await sleep(300); b._client.write('player_input', { inputs: {} }); await sleep(1200);
+  check(guide && !find('ЗААВАР'), 'a new player\'s atlas opens with the guide and Space puts it away', 'guide ' + guide + ' -> ' + !!find('ЗААВАР'));
+  const title = find('"СҮЛДИЙН АТЛАС"');
   check(!!title, 'the title is real text', texts().length + ' text displays');
   check(!!find('Хархорум'), 'the city is on the map with its label', find('Хархорум') ? 'label' : 'none');
   if (!title) { b.quit(); process.exit(1); }
