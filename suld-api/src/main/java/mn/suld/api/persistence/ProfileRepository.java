@@ -41,6 +41,12 @@ public interface ProfileRepository {
 
     CompletableFuture<Void> delete(UUID playerId);
 
+    /**
+     * The player whose stored profile has {@code name}, case ignored (the oldest profile when two differ only in
+     * case, which only data from before the check can hold). Empty when no profile has the name.
+     */
+    CompletableFuture<Optional<UUID>> ownerOfName(String name);
+
     /** The stored top {@code limit} rows of a leaderboard (players who have picked a class). */
     default CompletableFuture<java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry>> top(
             mn.suld.api.leaderboard.Leaderboard board, int limit) {

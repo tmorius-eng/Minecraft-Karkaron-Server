@@ -80,6 +80,14 @@ public interface ProfileService {
     CompletableFuture<Void> saveAndUnload(UUID playerId);
 
     /**
+     * The stored owner of {@code name}, case ignored ({@link mn.suld.api.persistence.ProfileRepository#ownerOfName}).
+     * A service without storage cannot say: it fails, and the login gate treats a failure as a refusal.
+     */
+    default CompletableFuture<java.util.Optional<UUID>> ownerOfName(String name) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("no name lookup"));
+    }
+
+    /**
      * Training grounds (docs/TRAINING_GROUNDS.md): serve {@code standIn} (an {@link PlayerProfile#ephemeral()} copy) to
      * every {@link #cached} reader in place of {@code real}, the instance cached now, until {@link #putBack}. The stand-in
      * is never written; {@code real} keeps its stored row as it was.

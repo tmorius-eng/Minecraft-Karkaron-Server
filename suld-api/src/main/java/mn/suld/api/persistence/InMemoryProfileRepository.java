@@ -40,6 +40,14 @@ public final class InMemoryProfileRepository implements ProfileRepository {
     }
 
     @Override
+    public CompletableFuture<Optional<UUID>> ownerOfName(String name) {
+        return CompletableFuture.completedFuture(store.values().stream()
+                .filter(p -> p.name().equalsIgnoreCase(name))
+                .min(java.util.Comparator.comparing(PlayerProfile::createdAt))
+                .map(PlayerProfile::playerId));
+    }
+
+    @Override
     public CompletableFuture<Boolean> exists(UUID playerId) {
         return CompletableFuture.completedFuture(store.containsKey(playerId));
     }

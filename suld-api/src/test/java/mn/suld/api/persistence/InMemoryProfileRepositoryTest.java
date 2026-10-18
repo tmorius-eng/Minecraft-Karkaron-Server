@@ -67,4 +67,15 @@ class InMemoryProfileRepositoryTest {
         assertFalse(a.isDirty());
         assertFalse(b.isDirty());
     }
+
+    @Test
+    void ownerOfNameIgnoresCaseAndPrefersTheOldestProfile() {
+        InMemoryProfileRepository repo = new InMemoryProfileRepository();
+        UUID dorj = UUID.randomUUID();
+        UUID twin = UUID.randomUUID();
+        repo.save(PlayerProfile.createNew(twin, "dorj", Instant.ofEpochMilli(2_000))).join();
+        repo.save(PlayerProfile.createNew(dorj, "Dorj", Instant.ofEpochMilli(1_000))).join();
+        assertEquals(java.util.Optional.of(dorj), repo.ownerOfName("DORJ").join());
+        assertTrue(repo.ownerOfName("Bat").join().isEmpty());
+    }
 }

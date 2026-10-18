@@ -47,6 +47,12 @@ class DefaultProfileServiceTest {
         }
 
         @Override
+        public CompletableFuture<Optional<UUID>> ownerOfName(String name) {
+            return CompletableFuture.completedFuture(storedName.entrySet().stream()
+                    .filter(e -> e.getValue().equalsIgnoreCase(name)).map(Map.Entry::getKey).findFirst());
+        }
+
+        @Override
         public CompletableFuture<Boolean> exists(UUID id) {
             return CompletableFuture.completedFuture(storedName.containsKey(id));
         }

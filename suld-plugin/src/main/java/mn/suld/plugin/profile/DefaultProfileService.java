@@ -88,6 +88,11 @@ public final class DefaultProfileService implements ProfileService {
     }
 
     @Override
+    public CompletableFuture<Optional<UUID>> ownerOfName(String name) {
+        return repository.ownerOfName(name);
+    }
+
+    @Override
     public CompletableFuture<PlayerProfile> save(PlayerProfile profile) {
         if (profile.ephemeral()) return CompletableFuture.completedFuture(profile); // a training stand-in is never written
         return sequencer.submit(profile.playerId(), () -> repository.save(profile));

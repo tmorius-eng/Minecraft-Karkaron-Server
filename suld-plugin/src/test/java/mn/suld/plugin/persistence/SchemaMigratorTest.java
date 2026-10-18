@@ -58,4 +58,13 @@ class SchemaMigratorTest {
         assertEquals(2, SchemaMigrator.splitStatements(resource("db/migration/mysql/V4__relics.sql")).size());
         assertEquals(4, SchemaMigrator.splitStatements(resource("db/migration/postgresql/V4__relics.sql")).size());
     }
+
+    @Test
+    void v30NameLookupIsOneIndexPerDialect() {
+        assertEquals(30, SchemaMigrator.latestVersion());
+        assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V30__profile_name_lookup.sql")).size());
+        String pg = resource("db/migration/postgresql/V30__profile_name_lookup.sql");
+        assertEquals(1, SchemaMigrator.splitStatements(pg).size());
+        org.junit.jupiter.api.Assertions.assertTrue(pg.contains("(lower(name))"), "PostgreSQL indexes the lower-cased name");
+    }
 }

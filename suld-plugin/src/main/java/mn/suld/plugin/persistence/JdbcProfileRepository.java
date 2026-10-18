@@ -167,6 +167,24 @@ public final class JdbcProfileRepository implements ProfileRepository {
     }
 
     @Override
+    public CompletableFuture<Optional<UUID>> ownerOfName(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            // LOWER on both sides: PostgreSQL's lower(name) index (V30) serves it; MySQL's default collation is
+            // case-insensitive already and uses its plain name index
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(
+                         "SELECT player_uuid FROM suld_profiles WHERE LOWER(name) = LOWER(?) ORDER BY created_at, player_uuid LIMIT 1")) {
+                ps.setString(1, name);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next() ? Optional.of(readUuid(rs, 1)) : Optional.<UUID>empty();
+                }
+            } catch (SQLException ex) {
+                throw new RepositoryException("Failed name lookup", ex);
+            }
+        }, executor);
+    }
+
+    @Override
     public CompletableFuture<Boolean> exists(UUID playerId) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = dataSource.getConnection();
