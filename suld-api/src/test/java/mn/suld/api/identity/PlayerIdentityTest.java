@@ -37,6 +37,19 @@ class PlayerIdentityTest {
     }
 
     @Test
+    void offlineUuidIsTheOfflineServersUuid() {
+        assertEquals(offlineUuid("Dorj"), PlayerIdentity.offlineUuid("Dorj"));
+        // a fixed vector: Paper's and Velocity's offline UUID of "Notch"
+        assertEquals(UUID.fromString("b50ad385-829d-3141-a216-7e7d7539ba7f"), PlayerIdentity.offlineUuid("Notch"));
+        assertEquals(3, PlayerIdentity.offlineUuid("Dorj").version());
+        assertTrue(PlayerIdentity.isOfflineUuidFor(offlineUuid("Dorj"), "Dorj"));
+        assertFalse(PlayerIdentity.isOfflineUuidFor(offlineUuid("Dorj"), "dorj"), "case matters");
+        assertFalse(PlayerIdentity.isOfflineUuidFor(UUID.randomUUID(), "Dorj"));
+        assertFalse(PlayerIdentity.isOfflineUuidFor(null, "Dorj"));
+        assertFalse(PlayerIdentity.isOfflineUuidFor(offlineUuid("Dorj"), null));
+    }
+
+    @Test
     void nameValidation() {
         assertTrue(PlayerIdentity.isValidName("qeevr_"));
         assertTrue(PlayerIdentity.isValidName("a"), "legacy short names exist");

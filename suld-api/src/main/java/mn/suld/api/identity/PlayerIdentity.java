@@ -1,5 +1,6 @@
 package mn.suld.api.identity;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -47,6 +48,17 @@ public final class PlayerIdentity {
      */
     public boolean hasAuthenticatedUuidShape() {
         return uuid.version() == 4 && uuid.variant() == 2;
+    }
+
+    /** The UUID an offline-mode server or proxy gives {@code name}: v3 of {@code "OfflinePlayer:" + name}, case kept. */
+    public static UUID offlineUuid(String name) {
+        Objects.requireNonNull(name, "name");
+        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Whether {@code uuid} is exactly the offline UUID of {@code name} (another case of the name is another UUID). */
+    public static boolean isOfflineUuidFor(UUID uuid, String name) {
+        return uuid != null && name != null && uuid.equals(offlineUuid(name));
     }
 
     /** True when the stored display name differs from the authenticated one (account rename). */
