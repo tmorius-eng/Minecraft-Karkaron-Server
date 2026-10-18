@@ -547,7 +547,7 @@ public final class SkillSky implements Listener {
         cam.subtract(0, s.eyeOff, 0);
         cam.setYaw(0);
         cam.setPitch(0);
-        s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+        s.seat.teleport(cam); // passengers always ride along (Paper 1.21.10+)
         // header and footer stay in front of the eye (the camera looks +Z: world offsets)
         Location eye = cam.clone().add(0, s.eyeOff, 0);
         s.header.teleport(eye.clone().add(0, 1.0, 2.4));

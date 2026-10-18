@@ -274,7 +274,7 @@ public final class MenuSky implements Listener {
         Location cam = s.plane.clone().add(-s.camU, s.camV - s.eyeOff, -s.dist);
         cam.setYaw(s.p.getLocation().getYaw());
         cam.setPitch(s.p.getLocation().getPitch());
-        s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+        s.seat.teleport(cam); // passengers always ride along (Paper 1.21.10+)
     }
 
     /** The box around the camera: navy everywhere, the panel in front. Built once per opening. */

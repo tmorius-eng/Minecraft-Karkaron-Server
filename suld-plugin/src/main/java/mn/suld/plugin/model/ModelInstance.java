@@ -223,7 +223,7 @@ public final class ModelInstance {
             Location flat = l.clone();
             flat.setYaw(0);
             flat.setPitch(0);
-            root.teleport(flat, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+            root.teleport(flat); // passengers always ride along (Paper 1.21.10+)
             lastLoc = l;
         }
         String want = speed > RUN && model.clip("run") != null ? "run" : speed > WALK ? "walk" : idleOverride != null ? idleOverride : "idle";

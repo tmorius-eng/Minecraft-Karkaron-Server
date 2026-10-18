@@ -73,8 +73,10 @@ public final class VillageProtection implements Listener {
             if (cached != null) return cached;
         }
         java.util.List<Box> out = new java.util.ArrayList<>();
+        org.bukkit.Registry<org.bukkit.generator.structure.Structure> structures =
+                io.papermc.paper.registry.RegistryAccess.registryAccess().getRegistry(io.papermc.paper.registry.RegistryKey.STRUCTURE);
         for (GeneratedStructure s : c.getStructures()) {
-            NamespacedKey k = org.bukkit.Registry.STRUCTURE.getKey(s.getStructure());
+            NamespacedKey k = structures.getKey(s.getStructure());
             out.add(new Box(k != null && k.getKey().startsWith("village"), s.getBoundingBox()));
         }
         synchronized (CHUNK_BOXES) {

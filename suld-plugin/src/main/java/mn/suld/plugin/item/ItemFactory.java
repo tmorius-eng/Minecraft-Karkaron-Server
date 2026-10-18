@@ -1,6 +1,9 @@
 package mn.suld.plugin.item;
 
 import com.google.common.collect.ImmutableMultimap;
+import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import mn.suld.api.item.ItemCatalog;
 import mn.suld.api.item.ItemCodec;
 import mn.suld.api.item.ItemDefinition;
@@ -19,6 +22,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
@@ -27,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -88,7 +93,7 @@ public final class ItemFactory {
         ItemStack stack = new ItemStack(material);
         ItemInstance stored = def.stackable() ? stackForm(instance) : instance;
         ItemMeta meta = stack.getItemMeta();
-        if (def.model() > 0) meta.setCustomModelData(def.model());
+        if (def.model() > 0) setModel(meta, def.model());
         if (def.stackable()) meta.setMaxStackSize(def.maxStack());
         else meta.setMaxStackSize(1);
         int max = def.maxDurability(instance.rarity());
@@ -103,7 +108,7 @@ public final class ItemFactory {
         if (def.type().category() == ItemType.Category.ARMOR || def.type() == ItemType.SHIELD) {
             meta.setAttributeModifiers(ImmutableMultimap.of()); // SÜLD armour comes from the ARMOR stat, not the material
         }
-        if (def.equippable()) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        if (def.equippable()) meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
         if (instance.rarity().atLeast(ItemRarity.LEGENDARY)) meta.setEnchantmentGlintOverride(true);
         if (material == org.bukkit.Material.BOW) BowQuiver.infinite(meta); // a SÜLD bow never runs out of arrows
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
@@ -114,8 +119,47 @@ public final class ItemFactory {
         for (NamespacedKey legacy : List.of(keyRarity, keyLevel, keyStats, keySoulbound, keyUpgrade)) pdc.remove(legacy);
         render(meta, def, stored, viewer, max, max);
         stack.setItemMeta(meta);
+        if (def.equippable()) hideVanillaLines(stack);
         equipmentAsset(stack, def);
         return stack;
+    }
+
+    /**
+     * The vanilla tooltip lines SÜLD gear never shows (a loaded crossbow's arrow, a shield's banner, potion effects …):
+     * the components the old {@code HIDE_ADDITIONAL_TOOLTIP} flag hid, added to the item's {@code tooltip_display}.
+     */
+    private static final DataComponentType[] VANILLA_LINES = {
+            DataComponentTypes.BANNER_PATTERNS, DataComponentTypes.BLOCK_DATA, DataComponentTypes.BUNDLE_CONTENTS,
+            DataComponentTypes.CHARGED_PROJECTILES, DataComponentTypes.CONTAINER, DataComponentTypes.CONTAINER_LOOT,
+            DataComponentTypes.FIREWORK_EXPLOSION, DataComponentTypes.FIREWORKS, DataComponentTypes.INSTRUMENT,
+            DataComponentTypes.JUKEBOX_PLAYABLE, DataComponentTypes.MAP_ID, DataComponentTypes.PAINTING_VARIANT,
+            DataComponentTypes.POT_DECORATIONS, DataComponentTypes.POTION_CONTENTS, DataComponentTypes.TROPICAL_FISH_PATTERN,
+            DataComponentTypes.WRITTEN_BOOK_CONTENT};
+
+    private static void hideVanillaLines(ItemStack stack) {
+        TooltipDisplay shown = stack.getData(DataComponentTypes.TOOLTIP_DISPLAY);
+        stack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay()
+                .hideTooltip(shown != null && shown.hideTooltip())
+                .hiddenComponents(shown == null ? Set.of() : shown.hiddenComponents())
+                .addHiddenComponents(VANILLA_LINES)
+                .build());
+    }
+
+    /** The pack's model number: {@code custom_model_data} with {@code floats[0]} (what the item model definitions read). */
+    private static void setModel(ItemMeta meta, int model) {
+        CustomModelDataComponent c = meta.getCustomModelDataComponent();
+        c.setFloats(List.of((float) model));
+        c.setFlags(List.of());
+        c.setStrings(List.of());
+        c.setColors(List.of());
+        meta.setCustomModelDataComponent(c);
+    }
+
+    /** The model number {@link #setModel} wrote, 0 when there is none. */
+    private static int model(ItemMeta meta) {
+        if (!meta.hasCustomModelDataComponent()) return 0;
+        List<Float> f = meta.getCustomModelDataComponent().getFloats();
+        return f.isEmpty() ? 0 : f.get(0).intValue();
     }
 
     /**
@@ -303,8 +347,8 @@ public final class ItemFactory {
             ItemDefinition def = catalog().item(i.definitionId()).orElse(null);
             if (def == null || def.model() <= 0) continue;
             ItemMeta meta = stack.getItemMeta();
-            if (meta.hasCustomModelData() && meta.getCustomModelData() == def.model()) continue;
-            meta.setCustomModelData(def.model());
+            if (model(meta) == def.model()) continue;
+            setModel(meta, def.model());
             stack.setItemMeta(meta);
             changed++;
         }

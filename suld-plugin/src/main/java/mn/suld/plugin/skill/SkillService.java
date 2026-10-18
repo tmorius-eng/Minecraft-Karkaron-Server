@@ -389,7 +389,6 @@ public final class SkillService implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onStrayClassBowShot(org.bukkit.event.entity.EntityShootBowEvent e) {
         if (firing || !(e.getEntity() instanceof Player p) || clazzOf(p) != PlayerClass.MERGEN || !holdsClassWeapon(p, PlayerClass.MERGEN)) return;
-        e.setConsumeItem(false);
         e.setCancelled(true);
     }
 

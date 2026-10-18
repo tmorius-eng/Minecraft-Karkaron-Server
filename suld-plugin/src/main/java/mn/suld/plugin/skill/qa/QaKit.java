@@ -212,8 +212,8 @@ final class QaKit {
         // the arena lies in the outer lands (progression v2): the region spawner would bring level-50 mobs to the player
         mn.suld.plugin.mob.RegionSpawner.SUPPRESSED.add(p.getUniqueId());
         // an open sky arena at night spawns real monsters that would kill the player and pollute every measurement
-        spawnRule = world.getGameRuleValue(org.bukkit.GameRule.SPAWN_MONSTERS);
-        world.setGameRule(org.bukkit.GameRule.SPAWN_MONSTERS, false);
+        spawnRule = world.getGameRuleValue(org.bukkit.GameRules.SPAWN_MONSTERS);
+        world.setGameRule(org.bukkit.GameRules.SPAWN_MONSTERS, false);
         // rain puts out burning entities under the open sky: every BURN measurement would read 0
         stormWas = world.hasStorm();
         clearWeatherWas = world.getClearWeatherDuration();
@@ -241,7 +241,7 @@ final class QaKit {
         CombatFeedback.quiet = false;
         mn.suld.plugin.mob.RegionSpawner.SUPPRESSED.remove(p.getUniqueId());
         org.bukkit.event.HandlerList.unregisterAll(guard);
-        if (spawnRule != null) world.setGameRule(org.bukkit.GameRule.SPAWN_MONSTERS, spawnRule);
+        if (spawnRule != null) world.setGameRule(org.bukkit.GameRules.SPAWN_MONSTERS, spawnRule);
         world.setClearWeatherDuration(clearWeatherWas);
         if (stormWas) world.setStorm(true);
         for (int[] t : tickets) world.removePluginChunkTicket(t[0], t[1], plugin);

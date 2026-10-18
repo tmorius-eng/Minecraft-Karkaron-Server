@@ -1018,7 +1018,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         Location cam = s.plane.clone().add(0, EYE_UP - s.eyeOff, 0.004 - s.dist);
         cam.setYaw(s.p.getLocation().getYaw());
         cam.setPitch(s.p.getLocation().getPitch());
-        s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+        s.seat.teleport(cam); // passengers always ride along (Paper 1.21.10+)
     }
 
     /** A tooltip's lines under its name: what the thing is (cream) and, last, what a click does (cyan). */

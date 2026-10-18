@@ -90,6 +90,11 @@ public final class HorseService implements Listener, TabExecutor {
         return List.of();
     }
 
+    /** Ground under the feet by the server's own collision test ({@code Player#isOnGround} is what the client says). */
+    private static boolean onGround(Player p) {
+        return p.getWorld().hasCollisionsIn(p.getBoundingBox().shift(0, -0.05, 0));
+    }
+
     public void summon(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null || !pr.hasSelectedClass()) {
@@ -108,7 +113,7 @@ public final class HorseService implements Listener, TabExecutor {
             p.sendMessage(Messages.error("Сүнс байхдаа морь дуудах боломжгүй."));
             return;
         }
-        if (p.isInsideVehicle() || p.isFlying() || p.isGliding() || !p.isOnGround()) {
+        if (p.isInsideVehicle() || p.isFlying() || p.isGliding() || !onGround(p)) {
             p.sendMessage(Messages.error("Газар дээр зогсож байж морио дууд."));
             return;
         }
