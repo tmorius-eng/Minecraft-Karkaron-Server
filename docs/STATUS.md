@@ -68,6 +68,7 @@ file in this repository, so they are marked 👤 rather than ✅ until a `docs/q
 | System | Impl | Bots | Client | Notes / open items |
 |---|---|---|---|---|
 | Auth (Microsoft UUID only, fail closed) | ✅ | ✅ | 👤 G12 | `docs/AUTHENTICATION.md` |
+| Hybrid login `AUTH_MODE=hybrid` (2026-10-18, owner's decision; Velocity 3.5.1 + AuthMe 6.0.1, offline UUIDs, Java only): `HYBRID_AUTHME` mode, `AuthGate` + `SuldJoinEvent` (no SÜLD join action before AuthMe's login), `/premium confirm`, V30 name lookup, deploy (`configure_auth`, proxy unit, secrets, health checks) | ✅ | ✅ spike + `authbot.js` on the dev pair (`tools/loadtest/hybrid-dev.sh`) | 👤 a premium account's auto-login on a real client | `docs/AUTHENTICATION.md` §2b, `docs/qa/2026-10-18-authme-spike.md`, `docs/operations/HYBRID_CUTOVER.md` |
 | Resource pack gate (ONB-001) | ✅ | ✅ | 👤 G7 | `PackGate` |
 | Classes, spells, class resources, lock-on, dodge | ✅ | ✅ | 👤 | 25 spells; cooldowns per slot |
 | Skill tree, builds, respec | ✅ | ✅ (312/313 QA) | 👤 | SP-3 ✅ the Orb's free respec waits a day since the last respec |

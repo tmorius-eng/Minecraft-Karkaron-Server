@@ -260,9 +260,16 @@ lives only on the server's own disk.
   /api/bonum/callback { proxy_pass http://127.0.0.1:8085; }` on `pay.suld.mn`), keep 8085 closed in ufw, and set
   `allowed-ips` to Bonum's sender addresses if Bonum publishes them. Check every field against the Bonum sandbox
   before the first real payment (§Before production in that doc).
-- **`online-mode=true` is mandatory.** Identity is the Minecraft/Microsoft-authenticated UUID, and there is no /login
-  (see [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)). `deploy.sh` refuses `ONLINE_MODE=false` and forces
-  `auth.allow-insecure-offline-dev-mode: false`. `health-check.sh` fails on either. In offline mode SÜLD refuses all logins.
+- **Accounts: `AUTH_MODE`** ([docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)). `online` (default): Paper verifies
+  every login with Microsoft; `deploy.sh` refuses `ONLINE_MODE=false`. `hybrid`: premium and offline accounts, Java
+  only: Velocity (`VELOCITY_VERSION`, sha256-checked) takes `SERVER_PORT`, Paper moves to `127.0.0.1:$PAPER_PORT`
+  (never opened in the firewall), AuthMe runs on both (pinned in `deploy/plugins/plugins.lock.json`, profile `auth`),
+  its accounts in the SÜLD database. `deploy.sh` generates `VELOCITY_FORWARDING_SECRET` and `AUTHME_PROXY_SECRET`
+  into `suld.env` (never printed), writes them only to mode-600 files, installs `suld-proxy.service`, and after
+  AuthMe's first boot tunes its config and restarts once. Either way `deploy.sh` forces
+  `auth.allow-insecure-offline-dev-mode: false`, `health-check.sh` fails on a reachable offline Paper, and SÜLD
+  refuses all logins when nothing verifies them. An existing server changes mode only with
+  [docs/operations/HYBRID_CUTOVER.md](docs/operations/HYBRID_CUTOVER.md).
 
 ---
 

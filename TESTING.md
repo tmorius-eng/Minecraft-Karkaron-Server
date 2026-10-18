@@ -40,6 +40,8 @@ server with the insecure offline dev flag only.
 | V17 marks upsert, backfill twice, counts per player | `JdbcMarksRepositoryIT` | automated ✅ |
 | Open → vote once (level gate, account-age gate) → close → force → finder → resolve → chronicle → PvP hit cancelled, live Paper 1.21.11 + PostgreSQL 16 | `tools/loadtest/bots/khuraldai-smoke.js` | bots ✅ 22/22 (2026-10-11) |
 | Deliver 60 items → campaign SUCCEEDED → gold tier paid (+450 EXP, +45 coins, #1) → `UNLOCK_EVENT` applied, flag in `suld_world_state` → chronicle | `tools/loadtest/bots/campaign-deliver.js` | bots ✅ 7/7 (2026-10-11) |
+| Hybrid login (`AUTH_MODE=hybrid`): register in AuthMe's pre-join dialog → SÜLD only after the login; relog; wrong password → SÜLD never runs; cancelled dialog → waiting, `/register` by chat → in; a lower-case twin refused; `/premium` only warns; the backend refuses a direct connect | `tools/loadtest/hybrid-dev.sh` (the deploy's `configure_auth`) + `tools/loadtest/bots/authbot.js` | bots, dev pair only |
+| The account gate's rules: wait, enter once, old-connection events, logout | `AuthGateTest`, `AuthPolicyTest`, `PlayerIdentityTest` | automated ✅ |
 | Progress survives a restart mid-campaign; a live world flag re-applies on start | stop/start: `[campaign] restored … 0/60`, `[campaign] world effects: 1 live`, `[events] unlocked` | live ✅ (2026-10-11) |
 | Kill and dungeon-clear contributions on a live server | `CampaignRunTest` covers the rules; the hooks (`SocialListener`, `DungeonService.complete`) are not yet bot-exercised | bots ⏳ |
 | `/khuraldai` and `/chronicle` screens, boss bar text at GUI scale 2–4 | real client | manual ⏳ |

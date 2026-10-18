@@ -71,9 +71,12 @@ UI themes, pets, cosmetic battle pass), anti-exploit heuristics, richer audit.
 
 ## Open questions (ask the players first)
 
-* **Client type** (external audit FIND-06): survey which launcher/account players use before building any
-  offline-account bridge. Until then the server stays online-mode (Microsoft UUID only).
-* **Bedrock** (FIND-03): Java Edition only; Geyser/Floodgate stay an optional profile until players ask.
+* **Client type** (external audit FIND-06): decided by the owner 2026-10-18 without the survey: the hybrid login
+  (`AUTH_MODE=hybrid`, Velocity + AuthMe 6, offline UUIDs for everyone, `docs/AUTHENTICATION.md`); online mode stays
+  the default. Still to learn from players: how many opt in to `/premium`, and whether name squatting happens.
+* **Bedrock** (FIND-03): Java Edition only; Geyser/Floodgate stay an optional profile until players ask. In hybrid
+  mode Bedrock would be Floodgate's UUIDs on the proxy, a third identity rule beside the offline UUID: not before
+  SÜLD has a Bedrock UI.
 
 ## Cross-cutting (continuous)
 

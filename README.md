@@ -40,7 +40,8 @@ Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (530 test
   (`/khuraldai`, `/chronicle`, `/party find`).
 - **PvE only:** players fight each other only by an accepted `/duel` or on a declared fighting ground; a relic is
   seized only in such a fight ([GAME_DESIGN.md](GAME_DESIGN.md) «PvP policy»).
-- **Operations:** verified Microsoft accounts only, chat guard, MOTD and icon, tips, plugin installer (Modrinth,
+- **Operations:** verified accounts (Microsoft only, or `AUTH_MODE=hybrid`: premium and offline accounts through
+  Velocity + AuthMe), chat guard, MOTD and icon, tips, plugin installer (Modrinth,
   hash-verified), production deploy/update/backup scripts. See [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Target stack
@@ -86,5 +87,5 @@ Both need outbound access to Paper's download CDN (`fill.papermc.io`,
 - [docs/STATUS.md](docs/STATUS.md) — the single source of truth: what is implemented, bot-verified, client-verified, planned; the content counts.
 - [docs/KHURALDAI.md](docs/KHURALDAI.md) — the weekly vote, campaigns, world effects, the chronicle, the party finder.
 - [docs/OPERATIONS.md](docs/OPERATIONS.md) — running the server: commands, staff badges (LuckPerms), credit store, death rules, Bedrock, MOTD.
-- [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) — identity = Minecraft/Microsoft-authenticated UUID; no /login; join pipeline, races, audit.
+- [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) — identity = account UUID; online mode (Microsoft) or the hybrid mode (Velocity + AuthMe, offline UUIDs); join pipeline, the AuthMe gate, races, audit.
 - [DEPLOYMENT.md](DEPLOYMENT.md) — production runbook for a fresh Ubuntu 24.04 (Vultr) VPS: deploy, update/rollback, backup/restore.

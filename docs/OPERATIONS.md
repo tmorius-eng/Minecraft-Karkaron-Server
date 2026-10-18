@@ -128,6 +128,25 @@ other stacks (`loot-loss-fraction`), loses 10 % of the EXP into the current leve
 loses 25 % durability. They respawn as a **Сүнс** for 30 s: they cannot deal or take damage and mobs ignore them.
 `allow-free-revive: false` keeps souls until `/revive`.
 
+## Accounts (AUTH_MODE)
+
+`docs/AUTHENTICATION.md`. With `AUTH_MODE=hybrid`:
+
+* **Players**: new players register in the dialog that opens while joining (1.21.6+ clients) or with
+  `/register <нууц үг> <нууц үг>` in the world (older clients), then `/login <нууц үг>`. Nothing of SÜLD starts before
+  the login. A Microsoft account owner may turn on premium (no password from then on): `/premium` shows a warning,
+  `/premium confirm` within 2 minutes does it, and the next join is checked with Mojang.
+* **A locked-out player** (turned premium on a name they do not own): the proxy keeps asking for a Mojang login until
+  it restarts: `sudo systemctl restart suld-proxy`, then `authme freemium <name>` if the row was marked.
+* **A squatted name** (someone registered a name that belongs to another person's Microsoft account): the owner proves
+  the account to staff; `authme unregister <name>`; if the squatter played on it, that character goes with the name.
+* **Owners** must have their AuthMe account before the server opens (`authme register <name> <password>`; the log
+  warns at start). `op.sh <name>` ops the offline UUID of the name.
+* **A premium player who renamed** is a new character; staff move the old one with the re-key in
+  `docs/operations/HYBRID_CUTOVER.md` §3.
+* Health: `health-check.sh` checks the proxy, the loopback bind, the signed forwarding, the secret files and AuthMe's
+  table; `/suld auth` shows the mode, the AuthMe bridge and who is still waiting for the login.
+
 ## Bedrock players (Geyser)
 
 **Off by default.** SÜLD is Java Edition 1.21.11 only: its HUD, windows and lock-on need the Java resource pack and a keyboard, which Bedrock clients do not have (external audit FIND-03). Geyser and Floodgate are the `optional` plugin profile; to try them, install that profile and set `BEDROCK_PORT=19132` in `suld.env` (the firewall opens the UDP port only then). The notes below apply only when it is on.

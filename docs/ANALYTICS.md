@@ -8,7 +8,7 @@ D1/D7 retention and the session summary as Markdown. There is no web dashboard (
 
 | Step | Event (`AnalyticsEventType`) | Emitted where | Attributes |
 |---|---|---|---|
-| join_attempt | `join_attempt` | `AuthenticationService.onPreLogin`, every outcome | `outcome`: `allowed`, `allowed:new`, `denied:<code>`, `profile_failed:<why>`, `refused_before_suld:<result>` |
+| join_attempt | `join_attempt` | `AuthenticationService.onPreLogin`, every outcome | `outcome`: `allowed`, `allowed:new`, `denied:<code>` (hybrid adds `DENIED_NAME_TAKEN`, `DENIED_AUTH_BRIDGE_UNAVAILABLE`), `profile_failed:<why>`, `refused_before_suld:<result>` (hybrid: AuthMe's own refusals, e.g. a case twin). The AuthMe login itself is the audit row `auth.authme_login` |
 | join_success | `session_start` (every join), `first_login` (first) | `PlayerLifecycleListener`, `AuthenticationService` | |
 | resource_pack_ready | `resource_pack_status` | `ResourcePackService.onStatus`, every status | `status`, `required`, `ms` since the pack was sent |
 | class_selected | `class_selected` | `ClassSelectionGui` | |

@@ -13,7 +13,8 @@ Flyway, Citizens, DecentHolograms or ModelEngine here.
 | Language | **Java 21**, Gradle (wrapper), JUnit 5 |
 | Resource pack | `resourcepack/`, `pack_format` **75**, built into the plugin jar by `:suld-plugin:resourcePackZip` |
 | Storage | HikariCP; `database.type` = `h2` (default, embedded, shaded) / `postgresql` / `mysql` / `memory` (`config.yml`) |
-| Plugins next to SÜLD | soft-depends only: LuckPerms, PlaceholderAPI, Chunky, GrimAC (`plugin.yml`). All gameplay is our own code |
+| Plugins next to SÜLD | soft-depends only: LuckPerms, PlaceholderAPI, Chunky, GrimAC, AuthMe (`plugin.yml`). All gameplay is our own code |
+| Accounts | `AUTH_MODE=online` (default, Microsoft UUIDs) or `hybrid` (Velocity 3.5.1 proxy + AuthMe 6.0.1, offline UUIDs, Java only), `docs/AUTHENTICATION.md`. SÜLD join actions listen to `auth/SuldJoinEvent`, never to `PlayerJoinEvent` |
 
 ## Modules and packages
 
