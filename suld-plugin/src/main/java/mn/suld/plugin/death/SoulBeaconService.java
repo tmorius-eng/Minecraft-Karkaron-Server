@@ -248,13 +248,9 @@ public final class SoulBeaconService implements Listener {
                 d.setPersistent(false);
                 d.setVisibleByDefault(false);
             });
-            TextDisplay td = w.spawn(base.clone().add(0, 2.6, 0), TextDisplay.class, t -> {
-                t.setBillboard(Display.Billboard.CENTER);
-                t.setShadowed(true);
-                t.setBackgroundColor(Color.fromARGB(0x60, 0, 0, 0));
+            TextDisplay td = mn.suld.plugin.hologram.Holograms.spawnLabel(base, "soul.beacon", null, java.util.Map.of(), t -> {
                 t.setPersistent(false);
                 t.setVisibleByDefault(false);
-                t.setViewRange(2f);
             });
             p.showEntity(plugin, bd);
             p.showEntity(plugin, td);
@@ -262,9 +258,8 @@ public final class SoulBeaconService implements Listener {
             label = td;
         }
         long left = b.remaining(now) / 1000;
-        ((TextDisplay) label).text(Component.text("Сүнсний Гэрэлт", SOUL, TextDecoration.BOLD)
-                .append(Component.newline())
-                .append(Component.text("+" + b.refund(s) + " EXP · " + left / 60 + ":" + String.format("%02d", left % 60), NamedTextColor.WHITE)));
+        ((TextDisplay) label).text(mn.suld.plugin.hologram.Holograms.text("soul.beacon", null, java.util.Map.of(
+                "exp", Long.toString(b.refund(s)), "time", left / 60 + ":" + String.format("%02d", left % 60))));
     }
 
     private void hide(UUID owner) {

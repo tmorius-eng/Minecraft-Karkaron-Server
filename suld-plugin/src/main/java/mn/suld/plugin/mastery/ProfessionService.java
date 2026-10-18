@@ -33,7 +33,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Gate;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.BlockDisplay;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Interaction;
@@ -483,14 +482,7 @@ public final class ProfessionService implements Listener {
             it.setResponsive(true);
             own(it, n.id());
         });
-        TextDisplay label = w.spawn(base.clone().add(0, vein ? 1.55 : 1.35, 0), TextDisplay.class, t -> {
-            t.setBillboard(Display.Billboard.CENTER);
-            t.setViewRange(0.2f); // about 13 blocks
-            t.setShadowed(true);
-            t.setBackgroundColor(Color.fromARGB(0x66000000));
-            t.text(labelText(n, false, 0));
-            own(t, n.id());
-        });
+        TextDisplay label = mn.suld.plugin.hologram.Holograms.spawnLabel(base, labelId(n), "ready", labelValues(n, 0), t -> own(t, n.id()));
         return new Live(x, y, z, hit.getUniqueId(), parts, label.getUniqueId());
     }
 
@@ -533,7 +525,8 @@ public final class ProfessionService implements Listener {
     private void show(GatherPlan.Node n, Live l, boolean isSpent, long now) {
         Entity label = l.label == null ? null : Bukkit.getEntity(l.label);
         if (isSpent || l.shownSpent != isSpent) {
-            if (label instanceof TextDisplay t) t.text(labelText(n, isSpent, isSpent ? spentUntil.getOrDefault(n.id(), 0L) - now : 0));
+            if (label instanceof TextDisplay t) t.text(mn.suld.plugin.hologram.Holograms.text(labelId(n), isSpent ? "spent" : "ready",
+                    labelValues(n, isSpent ? spentUntil.getOrDefault(n.id(), 0L) - now : 0)));
         }
         if (l.shownSpent == isSpent) return;
         l.shownSpent = isSpent;
@@ -544,13 +537,15 @@ public final class ProfessionService implements Listener {
         }
     }
 
-    private Component labelText(GatherPlan.Node n, boolean isSpent, long leftMs) {
+    /** The content/holograms.json label over a node: a vein's or a patch's. */
+    private static String labelId(GatherPlan.Node n) {
+        return n.kind() == GatherPlan.Kind.VEIN ? "profession.vein" : "profession.node";
+    }
+
+    private static Map<String, String> labelValues(GatherPlan.Node n, long leftMs) {
         Profession c = n.kind().craft();
-        Component name = Component.text((n.kind() == GatherPlan.Kind.VEIN ? "⛏ " : "✿ ") + nodeName(c, n.tier()) + " · " + TIER[n.tier()],
-                isSpent ? NamedTextColor.GRAY : GOLD, TextDecoration.BOLD);
-        Component sub = isSpent ? Component.text("дахин " + clock(leftMs), NamedTextColor.GRAY)
-                : Component.text(c.displayName() + " " + Profession.tierLevel(n.tier()) + "+ · баруун товч", CREAM);
-        return name.append(Component.newline()).append(sub);
+        return Map.of("name", nodeName(c, n.tier()), "tier", TIER[n.tier()], "craft", c.displayName(),
+                "level", Integer.toString(Profession.tierLevel(n.tier())), "time", clock(leftMs));
     }
 
     private static String clock(long ms) {

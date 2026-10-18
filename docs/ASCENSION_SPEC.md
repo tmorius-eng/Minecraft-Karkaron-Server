@@ -56,7 +56,7 @@ the sidebar row, +1 skill point in /skills, and that T6 shows as open at rank II
 | V | Заяа Тэнгэрийн Хишиг | rare-loot luck +3 (the loot-chance stat, every mob, boss and dungeon roll) | `SkillTreeService.lootPct` |
 | VI | Хурмаст Тэнгэрийн Цахилгаан | 2 % of the hits on a SÜLD mob call the sky's lightning: the same mob takes half the hit again (+1 % power on average, the most IV–X add) | `CombatListener` |
 | VII–IX | Дээд Тэнгэрийн Баатар (I–III) | «Нурууны туяа», a back aura seen by all: gold motes (VII), gold and blue (VIII), a white glow among them (IX) | `HonorAura` |
-| X | Мөнх Тэнгэрийн Элч | the name on Kharkhorum's monument (a plaque before the Khan's statue, the first envoy at the top) and in the Chronicle (`HEAVENLY_ENVOY`, once each) | `EnvoyMonument`, `ChronicleService.heavenlyEnvoy` |
+| X | Мөнх Тэнгэрийн Элч | the name on the «Мөнх Тэнгэрийн Элч» board, which stands on the «Анги ба тулаан» guide board at the arrival point (the first envoy at the top), and in the Chronicle (`HEAVENLY_ENVOY`, once each) | `HologramService` (board `envoy`, `content/holograms.json`), `ChronicleService.heavenlyEnvoy` |
 
 * The lightning is drawn, never a real bolt: a column of sparks, a burst and a near thunder clap (a real bolt's thunder
   carries far across the server, and its fire burns).

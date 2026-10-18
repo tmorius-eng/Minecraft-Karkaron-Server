@@ -95,14 +95,7 @@ public final class SuldCommand implements CommandExecutor {
                     }
                 }
             }
-            case "guide" -> {
-                if (!sender.hasPermission("suld.admin")) {
-                    sender.sendMessage(Messages.error("Эрх алга."));
-                } else {
-                    var gb = ((mn.suld.plugin.SuldPlugin) plugin).guide();
-                    sender.sendMessage(Messages.success("Заавар самбар: " + (gb == null ? 0 : gb.rebuild()) + " ширхэг шинэчиллээ."));
-                }
-            }
+            case "guide", "holograms", "hologram" -> holograms(sender, args);
             default -> help(sender);
         }
         return true;
@@ -389,7 +382,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld exp <тоглогч> <EXP> — EXP олгох"));
             sender.sendMessage(Messages.info("/suld coins <тоглогч> <±тоо> — зоос нэмэх/хасах"));
             sender.sendMessage(Messages.info("/suld quest <тоглогч> <1..18|reset> — эрлийн бүлэг"));
-            sender.sendMessage(Messages.info("/suld guide — заавар самбаруудыг шинэчлэх"));
+            sender.sendMessage(Messages.info("/suld holograms reload|list|rebuild — hologram-ууд (content/holograms.json)"));
             sender.sendMessage(Messages.info("/suld content validate|export — тоглоомын агуулгын файлууд (моб, бүс, dungeon, эрэл)"));
             sender.sendMessage(Messages.info("/suld endgame <тоглогч> rank|points|palace <тоо> — Тэнгэрийн Зэрэг (QA)"));
             sender.sendMessage(Messages.info("/suld badge <тоглогч> <owner|admin|developer|mod|helper|streamer|sponsor|none> — ажилтан/дэмжигчийн тэмдэг"));
@@ -400,6 +393,41 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));
+    }
+
+    /**
+     * {@code /suld holograms reload}: read content/holograms.json again (the server's copy, else the bundled one) and
+     * place every board anew, at once; {@code list}: each board and where it stands; {@code rebuild} (and the old
+     * {@code /suld guide}): place them again without reading the file.
+     */
+    private void holograms(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        var h = ((mn.suld.plugin.SuldPlugin) plugin).holograms();
+        if (h == null) {
+            sender.sendMessage(Messages.error("Hologram ажиллахгүй байна."));
+            return;
+        }
+        String what = args.length > 1 ? args[1].toLowerCase(java.util.Locale.ROOT) : (args[0].equalsIgnoreCase("guide") ? "rebuild" : "list");
+        switch (what) {
+            case "reload" -> {
+                var issues = h.reload();
+                if (issues.isEmpty()) {
+                    sender.sendMessage(Messages.success("content/holograms.json уншлаа: " + mn.suld.plugin.hologram.Holograms.set().boards().size() + " самбар шинээр байрлаа."));
+                } else {
+                    sender.sendMessage(Messages.error("holograms.json-д " + issues.size() + " алдаа — jar доторх hologram-ууд ажиллана:"));
+                    issues.stream().limit(15).forEach(i -> sender.sendMessage(Messages.info(" • " + i)));
+                }
+            }
+            case "rebuild" -> sender.sendMessage(Messages.success("Hologram: " + h.rebuild() + " самбар шинэчиллээ."));
+            default -> {
+                sender.sendMessage(Messages.accent("Hologram самбарууд (content/holograms.json):"));
+                h.describe().forEach(l -> sender.sendMessage(Messages.info(" • " + l)));
+                sender.sendMessage(Messages.info("Засах: /suld content export → plugins/SULD/content/holograms.json → /suld holograms reload"));
+            }
+        }
     }
 
     /**
@@ -424,6 +452,11 @@ public final class SuldCommand implements CommandExecutor {
                     java.nio.file.Files.writeString(out, mn.suld.plugin.content.ContentLoader.classpath().read(f), java.nio.charset.StandardCharsets.UTF_8);
                     wrote++;
                 }
+                java.nio.file.Path holo = dir.resolve(mn.suld.api.hologram.HologramLoader.FILE);
+                if (!java.nio.file.Files.exists(holo)) {
+                    java.nio.file.Files.writeString(holo, mn.suld.plugin.hologram.Holograms.bundledText(), java.nio.charset.StandardCharsets.UTF_8);
+                    wrote++;
+                }
             } catch (java.io.IOException e) {
                 sender.sendMessage(Messages.error("Бичиж чадсангүй: " + e.getMessage()));
                 return;
@@ -436,6 +469,17 @@ public final class SuldCommand implements CommandExecutor {
         var r = mn.suld.plugin.content.ContentLoader.load(mn.suld.plugin.content.ContentLoader.serverOrBundled(dir, overridden),
                 id -> catalog.lootTable(id).isPresent(), id -> catalog.item(id).isPresent(), overridden);
         String files = overridden.isEmpty() ? "серверийн файл алга — jar доторхыг шалгалаа" : String.join(", ", overridden);
+        try {
+            var h = mn.suld.plugin.hologram.Holograms.read(dir);
+            if (h.ok()) {
+                sender.sendMessage(Messages.success("holograms.json зөв: " + h.set().boards().size() + " самбар, " + h.set().labels().size() + " шошго. Хэрэгжүүлэх: /suld holograms reload"));
+            } else {
+                sender.sendMessage(Messages.error("holograms.json-д " + h.issues().size() + " алдаа:"));
+                h.issues().stream().limit(15).forEach(i -> sender.sendMessage(Messages.info(" • " + i)));
+            }
+        } catch (java.io.IOException e) {
+            sender.sendMessage(Messages.error("holograms.json уншигдсангүй: " + e.getMessage()));
+        }
         if (r.ok()) {
             sender.sendMessage(Messages.success("Агуулга зөв (" + files + "): " + r.pack().mobs().size() + " моб, " + r.pack().regions().size() + " бүс, "
                     + r.pack().areas().size() + " газар, " + r.pack().dungeons().size() + " dungeon, " + r.pack().chapters().size() + " бүлэг. Дахин асаахад хэрэгжинэ."));

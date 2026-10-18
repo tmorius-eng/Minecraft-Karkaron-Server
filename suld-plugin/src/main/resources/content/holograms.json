@@ -1,0 +1,253 @@
+{
+  "format": 1,
+  "boards": [
+    {
+      "id": "guide.welcome",
+      "anchor": "spawn", "place": "arc", "offset": [-16, 1.4, -2],
+      "billboard": "center", "scale": 0.85, "background": "#96000000", "viewRange": 0.6, "tag": "suld_guide", "sparkle": true,
+      "text": [
+        "<bold><gradient:#FFF0A0:#FFD24A:#FF9A3C>✦ ТАВТАЙ МОРИЛ ✦</gradient></bold>",
+        "<bold><white>SÜLD — Монгол Hardcore MMORPG</white></bold>",
+        "",
+        "<bold><#FFD24A>1.</#FFD24A><white> Ангиа сонго: «/class»</white></bold>",
+        "<bold><#FFD24A>2.</#FFD24A><white> Эрлээ ав: «/quest» ({chapters} бүлэг)</white></bold>",
+        "<bold><#FFD24A>3.</#FFD24A><white> Хотын хаалгаар гараад</white></bold>",
+        "<bold><white>    тал нутагт мангас ан</white></bold>",
+        "<bold><#FFD24A>4.</#FFD24A><white> Олзоо зарж зоос ол: «/shop»</white></bold>",
+        "<bold><#FFD24A>5.</#FFD24A><white> Түвшин ахихад ур чадвар нээгдэнэ</white></bold>",
+        "",
+        "<bold><white>Бүх цэс: <aqua>/menu</aqua> (9-р нүдний цаг)</white></bold>",
+        "<bold><white>Заавар: <aqua>/help</aqua>  <aqua>/tutorial</aqua></white></bold>"
+      ]
+    },
+    {
+      "id": "guide.coins",
+      "anchor": "spawn", "place": "arc", "offset": [-8, 1.4, -6],
+      "billboard": "center", "scale": 0.85, "background": "#96000000", "viewRange": 0.6, "tag": "suld_guide", "sparkle": true,
+      "text": [
+        "<bold><gradient:#FFF0A0:#FFD24A:#FF9A3C>✦ ЗООС ХЭРХЭН ОЛОХ ВЭ? ✦</gradient></bold>",
+        "",
+        "<bold><#FFD24A>• Мангас ан</#FFD24A><white> — олз унана (арьс, хуяг, эрдэнэ)</white></bold>",
+        "<bold><white>   Худалдаачинд зарна: <aqua>/shop</aqua></white></bold>",
+        "<bold><#FFD24A>• Эрэл дуусга</#FFD24A><white> — бүлэг бүр зоос өгнө</white></bold>",
+        "<bold><#FFD24A>• Өдрийн даалгавар:</#FFD24A><white> «/tasks»</white></bold>",
+        "<bold><#FFD24A>• Өдрийн шагнал:</#FFD24A><white> «/daily»</white></bold>",
+        "<bold><#FFD24A>• Агуй:</#FFD24A><white> «/dungeon» — их шагнал</white></bold>",
+        "<bold><#FFD24A>• Арилжаа:</#FFD24A><white> «/trade»  «/pay»</white></bold>",
+        "",
+        "<bold><white>Зарцуул: <aqua>/rankup</aqua>  <aqua>/cosmetics</aqua>  Дархан</white></bold>"
+      ]
+    },
+    {
+      "id": "guide.classes",
+      "anchor": "spawn", "place": "arc", "offset": [0, 1.4, -9],
+      "billboard": "center", "scale": 0.85, "background": "#96000000", "viewRange": 0.6, "tag": "suld_guide", "sparkle": true,
+      "text": [
+        "<bold><gradient:#FFF0A0:#FFD24A:#FF9A3C>✦ АНГИ БА ТУЛААН ✦</gradient></bold>",
+        "",
+        "<bold><#FFD24A>Баатар</#FFD24A><white> — тэсвэр, ойрын тулаан</white></bold>",
+        "<bold><#FFD24A>Мэргэн</#FFD24A><white> — нум сум, холоос</white></bold>",
+        "<bold><#FFD24A>Бөө</#FFD24A><white> — сүнсний ид шид, бүлэг хамгаална</white></bold>",
+        "<bold><#FFD24A>Дархан</#FFD24A><white> — гал, дархны чадвар</white></bold>",
+        "<bold><#FFD24A>Хүлэгчин</#FFD24A><white> — хурд, довтолгоо</white></bold>",
+        "",
+        "<bold><white>Ангийн зэвсгээ барьж 3 товшилт:</white></bold>",
+        "<bold><white>   Баруун-Зүүн-Баруун = ид шид!</white></bold>",
+        "<bold><white>Хослол бүр: <aqua>/skills</aqua></white></bold>",
+        "<bold><white>Ганц ангийн зэвсэг: 12, 24, 36, 48, 60-р</white></bold>",
+        "<bold><white>түвшинд өөрөө хувирч хүчирхэгжинэ</white></bold>"
+      ]
+    },
+    {
+      "id": "guide.lands",
+      "anchor": "spawn", "place": "arc", "offset": [8, 1.4, -6],
+      "billboard": "center", "scale": 0.85, "background": "#96000000", "viewRange": 0.6, "tag": "suld_guide", "sparkle": true,
+      "text": [
+        "<bold><gradient:#FFF0A0:#FFD24A:#FF9A3C>✦ НУТАГ, АЮУЛ ✦</gradient></bold>",
+        "",
+        "<bold><#FFD24A>➜ Зүүн</#FFD24A><white> Хэрлэн (түвшин 1–8)</white></bold>",
+        "<bold><#FFD24A>➜ Өмнө</#FFD24A><white> Говь (5–15)</white></bold>",
+        "<bold><#FFD24A>➜ Хойд</#FFD24A><white> Хангай (10–20)</white></bold>",
+        "<bold><#FFD24A>➜ Баруун</#FFD24A><white> Алтай (18–30)</white></bold>",
+        "<bold><white>{regions} нутаг, {areas} газар, түүхэн {sites} дурсгал:</white></bold>",
+        "<bold><white>Туул, Онон, Орхон, Сэлэнгэ, Говь...</white></bold>",
+        "<bold><white>Шинэ газрыг анх нээхэд EXP!</white></bold>",
+        "",
+        "<bold><red>HARDCORE:</red><white> 1–10-р түвшинд үхэл үнэгүй</white></bold>",
+        "<bold><white>11-ээс: эд зүйлийн 1/4, EXP-ийн 10 %.</white></bold>",
+        "<bold><white>Сүнс: /trial эсвэл овооны цацлаар амилна.</white></bold>",
+        "<bold><white>Хот аюулгүй: PvP, мангас үгүй. <aqua>/spawn</aqua></white></bold>",
+        "<bold><white>Агуй (бүлгээрээ): <aqua>/dungeon</aqua></white></bold>"
+      ]
+    },
+    {
+      "id": "guide.commands",
+      "anchor": "spawn", "place": "arc", "offset": [16, 1.4, -2],
+      "billboard": "center", "scale": 0.85, "background": "#96000000", "viewRange": 0.6, "tag": "suld_guide", "sparkle": true,
+      "text": [
+        "<bold><gradient:#FFF0A0:#FFD24A:#FF9A3C>✦ КОМАНДУУД ✦</gradient></bold>",
+        "",
+        "<bold><white><aqua>/menu</aqua> <aqua>/help</aqua> <aqua>/tutorial</aqua></white></bold>",
+        "<bold><white><aqua>/quest</aqua> <aqua>/tasks</aqua> <aqua>/daily</aqua></white></bold>",
+        "<bold><white><aqua>/class</aqua> <aqua>/skills</aqua> <aqua>/profile</aqua></white></bold>",
+        "<bold><white><aqua>/shop</aqua> <aqua>/rankup</aqua> <aqua>/lvlup</aqua></white></bold>",
+        "<bold><white><aqua>/cosmetics</aqua> <aqua>/buy</aqua> <aqua>/top</aqua></white></bold>",
+        "<bold><white><aqua>/party</aqua> <aqua>/clan</aqua> <aqua>/trade</aqua></white></bold>",
+        "<bold><white><aqua>/mori</aqua> (морь, 5-р түвшин)</white></bold>",
+        "<bold><white><aqua>/spawn</aqua> <aqua>/balance</aqua> <aqua>/pay</aqua></white></bold>",
+        "<bold><white><aqua>/commands</aqua> — бүх жагсаалт</white></bold>",
+        "<bold><white><aqua>/discord</aqua> <aqua>/website</aqua></white></bold>"
+      ]
+    },
+    {
+      "id": "envoy",
+      "place": "above", "above": "guide.classes", "gap": 0.5,
+      "billboard": "vertical", "background": "#99000000", "lineWidth": 240, "tag": "suld_envoy_monument",
+      "source": "envoys",
+      "variants": {
+        "names": [
+          "<bold><#FFD24A>✧ МӨНХ ТЭНГЭРИЙН ЭЛЧ ✧</#FFD24A></bold>",
+          "<gray>Тэнгэрийн Зэрэг X-д хүрсэн баатрууд</gray>",
+          "{names}"
+        ],
+        "empty": [
+          "<bold><#FFD24A>✧ МӨНХ ТЭНГЭРИЙН ЭЛЧ ✧</#FFD24A></bold>",
+          "<gray>Тэнгэрийн Зэрэг X-д хүрсэн баатрууд</gray>",
+          "<italic><#F4E8C8>Анхны баатрын нэр энд бичигдэнэ</#F4E8C8></italic>"
+        ]
+      },
+      "items": {"names": "<bold><yellow>{name}</yellow></bold>"}
+    },
+    {
+      "id": "plaza.notice",
+      "anchor": "event.plaza", "place": "offset", "offset": [-6, 1.6, 4],
+      "billboard": "center", "scale": 0.8, "background": "#A0140C04", "lineWidth": 260, "viewRange": 0.5, "tag": "suld_plaza_board",
+      "source": "khuraldai",
+      "variants": {
+        "ballot": [
+          "<bold><gold>✦ ИХ ХУРАЛДАЙ ✦</gold></bold>",
+          "<white>Дараагийн долоо хоногийн аяныг сонго!</white>",
+          "",
+          "{options}",
+          "",
+          "<aqua>/khuraldai vote <1-{count}></aqua>  <gray>· {left} үлдлээ</gray>"
+        ],
+        "campaign": [
+          "<bold><gold>✦ ЭНЭ ДОЛОО ХОНОГИЙН АЯН ✦</gold></bold>",
+          "<white><bold>{name}</bold></white>",
+          "<green>{bar_full}</green><dark_gray>{bar_empty}</dark_gray> <white>{total} / {target} {unit}</white>",
+          "{top}",
+          "",
+          "<aqua>/khuraldai</aqua> <gray>· {left} үлдлээ</gray>"
+        ],
+        "idle": [
+          "<bold><gold>✦ ИХ ХУРАЛДАЙ ✦</gold></bold>",
+          "<white>Аян Даваа гарагт эхэлнэ.</white>",
+          "<white>Бямба 20:00-оос санал хураана.</white>",
+          "",
+          "<aqua>/khuraldai</aqua>"
+        ]
+      },
+      "items": {
+        "options": "<yellow>{n}.</yellow> <white>{name}</white> <gray>— {votes} санал</gray>",
+        "top": "<white>{n}. {name}</white> <gray>{units}</gray>"
+      },
+      "headers": {"top": ["", "<yellow>Тэргүүлэгчид:</yellow>"]}
+    },
+    {
+      "id": "plaza.hall",
+      "anchor": "event.plaza", "place": "offset", "offset": [6, 1.6, 4],
+      "billboard": "center", "scale": 0.8, "background": "#A0140C04", "lineWidth": 260, "viewRange": 0.5, "tag": "suld_plaza_board",
+      "source": "chronicle",
+      "variants": {
+        "lines": [
+          "<bold><gold>✦ БААТРЫН ХРОНИК ✦</gold></bold>",
+          "<gray>Хроник эхэлснээс хойш</gray>",
+          "",
+          "{lines}",
+          "",
+          "<aqua>/chronicle</aqua>"
+        ],
+        "empty": [
+          "<bold><gold>✦ БААТРЫН ХРОНИК ✦</gold></bold>",
+          "<gray>Хроник эхэлснээс хойш</gray>",
+          "",
+          "<white>Хроник хоосон байна.</white>",
+          "<white>Анхны түүхийг та бич!</white>",
+          "",
+          "<aqua>/chronicle</aqua>"
+        ]
+      },
+      "items": {"lines": "<white>• {line}</white>"}
+    }
+  ],
+  "labels": {
+    "dungeon.gate": {
+      "dy": 10.2, "billboard": "center", "scale": 1.6, "background": "#960A0614",
+      "text": [
+        "<bold><gold>⚔ {name}</gold></bold>",
+        "<gray>Түвшин {level}+ · Хаалгыг дарж оръё · Shift: баатарлаг (60)</gray>"
+      ]
+    },
+    "site.plate": {
+      "dy": 1.6, "billboard": "center",
+      "text": [
+        "<bold><#FFD24A>{name}</#FFD24A></bold>",
+        "<gray>{kind} · {history}</gray>"
+      ]
+    },
+    "training.gate": {
+      "dy": 2.6, "billboard": "center", "lineWidth": 240, "background": "#6E0A0E18",
+      "text": [
+        "<bold><#FFD24A>ДАЙЧДЫН ДАСГАЛЫН ТАЛБАЙ</#FFD24A></bold>",
+        "<white>Хөвөх зэвсэг дээр дарж ангиа турш</white>",
+        "<white>60-р түвшин · дээд хуяг, зэвсэг</white>",
+        "<white>Бүлэг бай (5 Warden) — AoE ид шид</white>",
+        "<white>Тойрч алхагч — хөдөлгөөнт бай</white>",
+        "<gray>Гарахад бүх зүйл буцна · /dasgal</gray>"
+      ]
+    },
+    "training.group": {
+      "dy": 2.4, "billboard": "center", "lineWidth": 240, "background": "#6E0A0E18",
+      "text": [
+        "<bold><#5FE3FF>Бүлэг бай</#5FE3FF></bold>",
+        "<white>олон дайсныг нэг дор: AoE ид шид</white>"
+      ]
+    },
+    "training.range": {
+      "dy": 0.25, "billboard": "center", "lineWidth": 240, "background": "#6E0A0E18",
+      "text": ["<bold><yellow>{m} м</yellow></bold>"]
+    },
+    "training.station": {
+      "dy": 3.0, "billboard": "center", "lineWidth": 240, "background": "#6E0A0E18",
+      "variants": {
+        "baatar": ["<bold><#FF5A4A>БААТАР</#FF5A4A></bold>", "<white>Хамгаалагч</white>", "<gray>дарж турш</gray>"],
+        "mergen": ["<bold><#6BE36B>МЭРГЭН</#6BE36B></bold>", "<white>Холын харваач</white>", "<gray>дарж турш</gray>"],
+        "boo": ["<bold><#C77DFF>БӨӨ</#C77DFF></bold>", "<white>Сүнсний ид шид</white>", "<gray>дарж турш</gray>"],
+        "darkhan": ["<bold><#FF9A3C>ДАРХАН</#FF9A3C></bold>", "<white>Галын дархан</white>", "<gray>дарж турш</gray>"],
+        "khulegchin": ["<bold><#5FB4FF>ХҮЛЭГЧИН</#5FB4FF></bold>", "<white>Довтлогч морьтон</white>", "<gray>дарж турш</gray>"]
+      }
+    },
+    "profession.node": {
+      "dy": 1.35, "billboard": "center", "viewRange": 0.2, "background": "#66000000",
+      "variants": {
+        "ready": ["<bold><#E8C35A>✿ {name} · {tier}</#E8C35A></bold>", "<#F4E8C8>{craft} {level}+ · баруун товч</#F4E8C8>"],
+        "spent": ["<bold><gray>✿ {name} · {tier}</gray></bold>", "<gray>дахин {time}</gray>"]
+      }
+    },
+    "profession.vein": {
+      "dy": 1.55, "billboard": "center", "viewRange": 0.2, "background": "#66000000",
+      "variants": {
+        "ready": ["<bold><#E8C35A>⛏ {name} · {tier}</#E8C35A></bold>", "<#F4E8C8>{craft} {level}+ · баруун товч</#F4E8C8>"],
+        "spent": ["<bold><gray>⛏ {name} · {tier}</gray></bold>", "<gray>дахин {time}</gray>"]
+      }
+    },
+    "soul.beacon": {
+      "dy": 2.6, "billboard": "center", "viewRange": 2.0, "background": "#60000000",
+      "text": [
+        "<bold><#9FD8FF>Сүнсний Гэрэлт</#9FD8FF></bold>",
+        "<white>+{exp} EXP · {time}</white>"
+      ]
+    }
+  }
+}

@@ -487,15 +487,10 @@ public final class DungeonHalls implements Listener {
                 Entity e = Bukkit.getEntity(id);
                 if (e != null) e.remove();
             }
-            Location title = g.clone().add(0.5, 10.2, -0.5);
-            TextDisplay td = g.getWorld().spawn(title, TextDisplay.class, d -> {
+            // its words, its height over the gate and its look: content/holograms.json «dungeon.gate»
+            TextDisplay td = mn.suld.plugin.hologram.Holograms.spawnLabel(g.clone().add(0.5, 0, -0.5), "dungeon.gate", null, gateValues(s), d -> {
                 d.setPersistent(false);
                 d.addScoreboardTag(TAG);
-                d.setBillboard(Display.Billboard.CENTER);
-                d.setShadowed(true);
-                d.setBackgroundColor(org.bukkit.Color.fromARGB(150, 10, 6, 20));
-                d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(1.6f, 1.6f, 1.6f), new Quaternionf()));
-                d.text(gateTitle(s));
             });
             Interaction door = g.getWorld().spawn(g.clone().add(0.5, 1, -0.5), Interaction.class, d -> {
                 d.setPersistent(false);
@@ -508,13 +503,10 @@ public final class DungeonHalls implements Listener {
         }
     }
 
-    private Component gateTitle(DungeonSite s) {
+    /** The gate label's {name} and {level}. */
+    private static Map<String, String> gateValues(DungeonSite s) {
         var def = mn.suld.plugin.content.DungeonContent.ALL.stream().filter(d -> d.id().equals(s.dungeonId())).findFirst().orElse(null);
-        String name = def == null ? s.shortId() : def.displayName();
-        int lvl = def == null ? 1 : def.minLevel();
-        return Component.text("⚔ " + name, NamedTextColor.GOLD, TextDecoration.BOLD)
-                .append(Component.newline())
-                .append(Component.text("Түвшин " + lvl + "+ · Хаалгыг дарж оръё · Shift: баатарлаг (60)", NamedTextColor.GRAY));
+        return Map.of("name", def == null ? s.shortId() : def.displayName(), "level", Integer.toString(def == null ? 1 : def.minLevel()));
     }
 
     /** Who a Shift + click on a gate takes into the heroic key (SuldPlugin: level 60). */

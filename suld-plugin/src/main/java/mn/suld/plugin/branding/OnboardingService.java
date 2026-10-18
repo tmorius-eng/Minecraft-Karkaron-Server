@@ -40,7 +40,7 @@ public final class OnboardingService implements Listener {
     private final Map<UUID, Long> joined = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> hintIndex = new ConcurrentHashMap<>();
 
-    private GuideBoards guide;
+    private mn.suld.plugin.hologram.HologramService guide;
 
     public OnboardingService(Plugin plugin, SuldServices services) {
         this.plugin = plugin;
@@ -48,7 +48,7 @@ public final class OnboardingService implements Listener {
     }
 
     /** The boards are re-checked for every arriving player. */
-    public void guide(GuideBoards guide) {
+    public void guide(mn.suld.plugin.hologram.HologramService guide) {
         this.guide = guide;
     }
 

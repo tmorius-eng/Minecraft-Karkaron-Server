@@ -3,11 +3,9 @@ package mn.suld.plugin.training;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.plugin.SuldServices;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -244,22 +242,15 @@ final class TrainingYard {
             double a = Math.PI * 2 * i / 5;
             put("group" + i, Role.GROUP, ground(gx + Math.sin(a) * GROUP_RADIUS, gz - Math.cos(a) * GROUP_RADIUS), towardCentre, 0.6, false);
         }
-        label(ground(gx, gz).add(0, 2.4, 0), Component.text("Бүлэг бай", CYAN, TextDecoration.BOLD),
-                Component.text("олон дайсныг нэг дор: AoE ид шид", NamedTextColor.WHITE));
+        label(ground(gx, gz), "training.group", null, Map.of());
         // the walking one, round the big Warden
         Location walk = walkerAt(angle);
         put("moving", Role.MOVING, walk, walk.getYaw(), 0.85, true);
         // the gate board
-        label(ground(cx, cz + RADIUS - 2).add(0, 2.6, 0),
-                Component.text("ДАЙЧДЫН ДАСГАЛЫН ТАЛБАЙ", GOLD, TextDecoration.BOLD),
-                Component.text("Хөвөх зэвсэг дээр дарж ангиа турш", NamedTextColor.WHITE),
-                Component.text("60-р түвшин · дээд хуяг, зэвсэг", NamedTextColor.WHITE),
-                Component.text("Бүлэг бай (5 Warden) — AoE ид шид", NamedTextColor.WHITE),
-                Component.text("Тойрч алхагч — хөдөлгөөнт бай", NamedTextColor.WHITE),
-                Component.text("Гарахад бүх зүйл буцна · /dasgal", NamedTextColor.GRAY));
+        label(ground(cx, cz + RADIUS - 2), "training.gate", null, Map.of());
         // Мэргэн's range marks south of the Warden
         for (int m : new int[]{10, 15}) {
-            label(ground(cx, cz + m).add(0, 0.25, 0), Component.text(m + " м", NamedTextColor.YELLOW, TextDecoration.BOLD));
+            label(ground(cx, cz + m), "training.range", null, Map.of("m", Integer.toString(m)));
         }
         // the class stations: an arc on the big Warden's north side, each class's weapon floating and spinning over it
         PlayerClass[] classes = PlayerClass.values();
@@ -275,8 +266,7 @@ final class TrainingYard {
             });
             stations.put(hit.getUniqueId(), c);
             props.add(hit.getUniqueId());
-            label(at.clone().add(0, 3.0, 0), Component.text(c.displayName().toUpperCase(java.util.Locale.ROOT), COLOUR.get(c), TextDecoration.BOLD),
-                    Component.text(ROLE.get(c), NamedTextColor.WHITE), Component.text("дарж турш", NamedTextColor.GRAY));
+            label(at, "training.station", c.name().toLowerCase(java.util.Locale.ROOT), Map.of());
             ItemStack icon = weaponIcon.apply(c);
             if (icon != null) {
                 ItemDisplay d = at.getWorld().spawn(at.clone().add(0, 1.5, 0), ItemDisplay.class, it -> {
@@ -297,19 +287,9 @@ final class TrainingYard {
         e.addScoreboardTag(TAG);
     }
 
-    private TextDisplay label(Location at, Component... lines) {
-        Component text = Component.empty();
-        for (int i = 0; i < lines.length; i++) text = text.append(i == 0 ? lines[i] : Component.newline().append(lines[i]));
-        Component t = text;
-        TextDisplay d = at.getWorld().spawn(at, TextDisplay.class, it -> {
-            it.text(t);
-            it.setBillboard(Display.Billboard.CENTER);
-            it.setShadowed(true);
-            it.setAlignment(TextDisplay.TextAlignment.CENTER);
-            it.setLineWidth(240);
-            it.setBackgroundColor(Color.fromARGB(110, 10, 14, 24));
-            own(it);
-        });
+    /** A content/holograms.json label {@code id} above {@code base}, owned by the yard. */
+    private TextDisplay label(Location base, String id, String variant, Map<String, String> values) {
+        TextDisplay d = mn.suld.plugin.hologram.Holograms.spawnLabel(base, id, variant, values, this::own);
         props.add(d.getUniqueId());
         return d;
     }

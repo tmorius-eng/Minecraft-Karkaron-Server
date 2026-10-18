@@ -481,8 +481,8 @@ public final class SuldServices {
     public volatile mn.suld.plugin.gui.AscensionMenu ascension;
     /** The historic sites (set by SuldPlugin). */
     public volatile mn.suld.plugin.region.HistoricSiteService historicSites;
-    /** Kharkhorum's monument to the «Мөнх Тэнгэрийн Элч» (Тэнгэрийн Зэрэг X), set by SuldPlugin. */
-    public volatile mn.suld.plugin.chronicle.EnvoyMonument envoys;
+    /** The boards of content/holograms.json, «Мөнх Тэнгэрийн Элч» (Тэнгэрийн Зэрэг X) among them; set by SuldPlugin. */
+    public volatile mn.suld.plugin.hologram.HologramService holograms;
     /** The areas' ovoos (set by SuldPlugin); the travel page points the compass at the nearest. */
     public volatile mn.suld.plugin.region.OvooService ovoos;
     private final mn.suld.api.persistence.MapPinRepository mapPins;

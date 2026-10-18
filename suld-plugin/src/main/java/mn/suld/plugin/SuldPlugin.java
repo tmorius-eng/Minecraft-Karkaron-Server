@@ -29,7 +29,7 @@ public final class SuldPlugin extends JavaPlugin {
 
     private SuldServices services;
     private mn.suld.plugin.mount.HorseService horses;
-    private mn.suld.plugin.branding.GuideBoards guide;
+    private mn.suld.plugin.hologram.HologramService holograms;
     private mn.suld.plugin.trade.TradeService trades;
     private mn.suld.plugin.style.CosmeticEffects effects;
     private mn.suld.plugin.death.DeathService deaths;
@@ -67,6 +67,7 @@ public final class SuldPlugin extends JavaPlugin {
             getLogger().warning("progression.curve is invalid (" + ex.getMessage() + "); rewards use the design curve.");
         }
         mn.suld.plugin.content.Content.install(getDataFolder().toPath().resolve("content"), getLogger());
+        mn.suld.plugin.hologram.Holograms.install(this); // content/holograms.json: every hologram's words, place and look
     }
 
     @Override
@@ -412,13 +413,14 @@ public final class SuldPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(daily, this);
         registerTab("daily", daily);
 
-        guide = new mn.suld.plugin.branding.GuideBoards(this, worldBuild);
-        guide.start();
-        new mn.suld.plugin.chronicle.PlazaBoards(this, services, worldBuild).start(); // Хуралдай notice board + Hall of Fame
+        // the boards of content/holograms.json: the guide boards, «Мөнх Тэнгэрийн Элч», the Хуралдай board, the Hall of Fame
+        holograms = new mn.suld.plugin.hologram.HologramService(this, services, worldBuild);
+        services.holograms = holograms;
+        holograms.start();
         mn.suld.plugin.branding.OnboardingService onboarding = new mn.suld.plugin.branding.OnboardingService(this, services);
         getServer().getPluginManager().registerEvents(onboarding, this);
         onboarding.start();
-        onboarding.guide(guide);
+        onboarding.guide(holograms);
         registerTab("commands", new mn.suld.plugin.command.CommandCatalog());
         new mn.suld.plugin.auth.PermissionSetup(this).start();
 
@@ -550,10 +552,6 @@ public final class SuldPlugin extends JavaPlugin {
         services.worldBosses = worldBosses;
         // «Нурууны туяа»: the back aura of Тэнгэрийн Зэрэг VII–IX; the monument to the envoys of X (AscensionHonor)
         new mn.suld.plugin.hud.HonorAura(this, services).start();
-        if (services.chronicle() != null) {
-            services.envoys = new mn.suld.plugin.chronicle.EnvoyMonument(this, services, worldBuild);
-            services.envoys.start();
-        }
         props = new mn.suld.plugin.prop.PropService(this, services);
         props.start();
         services.props = props;
@@ -893,8 +891,8 @@ public final class SuldPlugin extends JavaPlugin {
         return props;
     }
 
-    public mn.suld.plugin.branding.GuideBoards guide() {
-        return guide;
+    public mn.suld.plugin.hologram.HologramService holograms() {
+        return holograms;
     }
 
     /** Exposed for tests / sibling modules that need the live service container. */

@@ -253,16 +253,15 @@ public final class HistoricSiteService {
         UUID id = plates.get(p.site().id());
         Entity e = id == null ? null : Bukkit.getEntity(id);
         if (e != null && e.isValid()) return;
-        Location at = new Location(w, p.x() + 0.5, y + p.site().kind().height() + 1.6, p.z() + 0.5);
+        // over the build's top; its words, height and look: content/holograms.json «site.plate»
+        Location top = new Location(w, p.x() + 0.5, y + p.site().kind().height(), p.z() + 0.5);
+        Location at = top.clone().add(0, mn.suld.plugin.hologram.Holograms.label("site.plate").dy(), 0);
         for (Entity old : w.getNearbyEntities(at, 2, 3, 2)) {
             if (old instanceof TextDisplay && old.getPersistentDataContainer().has(plateKey)) old.remove();
         }
-        TextDisplay t = w.spawn(at, TextDisplay.class, d -> {
+        TextDisplay t = mn.suld.plugin.hologram.Holograms.spawnLabel(top, "site.plate", null, java.util.Map.of("name", p.site().name(),
+                "kind", p.site().kind().label(), "history", label(p.site().history())), d -> {
             d.setPersistent(false);
-            d.setBillboard(Display.Billboard.CENTER);
-            d.setShadowed(true);
-            d.text(Component.text(p.site().name(), GOLD, TextDecoration.BOLD).append(Component.newline())
-                    .append(Component.text(p.site().kind().label() + " · " + label(p.site().history()), NamedTextColor.GRAY)));
             d.getPersistentDataContainer().set(plateKey, PersistentDataType.STRING, p.site().id());
         });
         plates.put(p.site().id(), t.getUniqueId());

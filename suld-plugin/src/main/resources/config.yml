@@ -187,8 +187,9 @@ chronicle:
   broadcast: true
   hall-entries: 12
   # Two boards on the plaza (entities, never blocks): the Хуралдай notice board and the Hall of Fame (newest lines).
+  # Their place, look and words are in content/holograms.json (plaza.notice, plaza.hall); this only turns them off.
   hall-boards: true
-  hall-anchor: "event.plaza"   # a city point (assets/world/kharkhorum/points.json); boards stand 6 blocks to either side
+  hall-anchor: "event.plaza"   # no longer read: the boards' anchor is in content/holograms.json
 
 # ---------------------------------------------------------------------------
 # PvP policy (owner decision 2026-10-11): SÜLD is a hardcore PvE game. A player hurts another player only when both
@@ -253,7 +254,8 @@ chat-guard:
 permissions:
   auto-setup: true
 
-# Floating guide boards in front of the arrival point (how to play, how to earn coins, commands).
+# Floating guide boards in front of the arrival point (how to play, how to earn coins, commands). Their place, look
+# and words are in content/holograms.json (guide.*, envoy); /suld holograms reload re-reads it without a restart.
 guide:
   boards: true
 

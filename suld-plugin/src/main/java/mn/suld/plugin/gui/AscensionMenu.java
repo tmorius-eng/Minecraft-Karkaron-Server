@@ -298,7 +298,7 @@ public final class AscensionMenu {
                     GOLD, TextDecoration.BOLD));
             // the name goes into the Chronicle and on Kharkhorum's monument for good (the perk the shrine promises)
             if (services.chronicle() != null) services.chronicle().heavenlyEnvoy(p, () -> {
-                if (services.envoys != null) services.envoys.refresh();
+                if (services.holograms != null) services.holograms.refreshEnvoys();
             });
             for (Player o : Bukkit.getOnlinePlayers()) o.playSound(o.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 0.6f);
         } else {

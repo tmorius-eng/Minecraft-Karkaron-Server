@@ -11,6 +11,7 @@ move a dungeon gate, retune a region or rewrite a quest.
 | The story «Сүлдний Зам» (chapters, giver, hint, story text) | `content/quests.json` | `plugins/SULD/content/quests.json` |
 | World events, world bosses (`docs/WORLD_BOSSES.md`), world-unique relics | `content/events.json` | `plugins/SULD/content/events.json` |
 | Historic sites (place, kind of build, bearing and distance, history label, story) | `content/sites.json` | `plugins/SULD/content/sites.json` |
+| Holograms: the floating boards (guide, «Мөнх Тэнгэрийн Элч», plaza) and the labels over gates, sites, the training yard, profession nodes and soul beacons | `content/holograms.json` | `plugins/SULD/content/holograms.json` |
 | Items, affixes, sets, loot tables | `items/*.json` (suld-api) | `plugins/SULD/items/` |
 | Skill trees (5 classes) | `skills/*.json` (suld-api) | `plugins/SULD/skills/` |
 | Game rules: EXP curve, death, economy, protection, database | `config.yml` | `plugins/SULD/config.yml` |
@@ -64,6 +65,27 @@ edit never takes the server down and never half-applies.
   sized for the dungeon's party by the rules. `site.radius` is 64..4900 blocks from the spawn.
 - **quests.json:** the list order is the story. A chapter's EXP is set by the rules (35 % of a level at the
   chapter's level) unless it gives `exp`; `coins` are paid as written.
+- **holograms.json:** read on its own (`mn.suld.api.hologram.HologramLoader`), and again with
+  `/suld holograms reload` (no restart; `/suld holograms list` shows where each board stands). A server copy with any
+  problem is listed in the log and the bundled file is shown instead.
+  - `boards`: each has an `id`, a `place` and its lines. `place: offset` stands at a city point (`anchor`: `spawn`,
+    `event.plaza` or any point of `assets/world/kharkhorum/points.json`; `city` = the plaza origin) plus
+    `offset: [x, y, z]`; `place: arc` does the same but looks for clear ground within `radius` (default 7.5) of
+    it; `place: above` stands on another board (`above: <board id>`) `gap` blocks (default 0.3) over the top of its
+    text, and follows it. The height of the board below is measured from its lines, wrapped at its `lineWidth`.
+  - Look (boards and labels alike): `billboard` (`center`, `vertical`, `horizontal`, `fixed`), `scale`, `background`
+    (`#AARRGGBB`, `#RRGGBB` or `none`), `lineWidth` (pixels), `align`, `shadow`, `viewRange` (1 ≈ 64 blocks).
+    `tag` adds a scoreboard tag; `sparkle` adds the guide boards' particles.
+  - Lines are MiniMessage. A fixed board has `text`. A board with a `source` shows live values and needs a line list
+    for each state of it in `variants`: `envoys` → `names`, `empty`; `khuraldai` → `ballot`, `campaign`, `idle`;
+    `chronicle` → `lines`, `empty`. `{key}` is filled with a live value (player names are escaped, never tags). A
+    line that is only `{list}` becomes `headers.<list>` (when the list has entries) and one `items.<list>` line per
+    entry. Guide lines may use the content counts `{chapters}`, `{dungeons}`, `{regions}`, `{areas}`, `{sites}`,
+    `{relics}`, `{campaigns}`.
+  - `labels`: by id, each with `dy` (blocks above the thing it names) and `text` or `variants`. The labels the code
+    asks for (`HologramLoader.REQUIRED_LABELS`: `dungeon.gate`, `site.plate`, `training.*`, `profession.node`,
+    `profession.vein`, `soul.beacon`) can be edited, not removed or renamed; their `{keys}` are listed in the bundled
+    file.
 
 ## For developers
 

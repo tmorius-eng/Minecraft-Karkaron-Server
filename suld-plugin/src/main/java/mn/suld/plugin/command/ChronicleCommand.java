@@ -46,7 +46,7 @@ public final class ChronicleCommand implements TabExecutor {
                     Bukkit.getPluginManager().getPlugin("SULD"), () -> {
                         sender.sendMessage(err != null ? Messages.error("Алдаа: " + err.getMessage())
                                 : ok ? Messages.success("Хроникийн " + id + "-р мөрийг нуулаа.") : Messages.error("Ийм мөр алга."));
-                        if (err == null && ok && services.envoys != null) services.envoys.refresh(); // a hidden envoy leaves the monument too
+                        if (err == null && ok && services.holograms != null) services.holograms.refreshEnvoys(); // a hidden envoy leaves the board too
                     }));
             return true;
         }
