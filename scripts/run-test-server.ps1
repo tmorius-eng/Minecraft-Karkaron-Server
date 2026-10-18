@@ -359,6 +359,9 @@ if ($Plugins -ne "none") {
     $installedIds = @{}
     foreach ($p in (ConvertTo-List $manifest.plugins)) {
         if ($profiles -notcontains $p.profile) { continue }
+        # a proxy plugin (target velocity, e.g. AuthMe Velocity) never goes into Paper's plugins folder
+        $target = [string](Get-Prop $p "target")
+        if ($target -and $target -ne "paper") { continue }
         $managed[$p.name] = $true
         $prev = $lock[$p.id]
         $prevFile = [string](Get-Prop $prev "file")
