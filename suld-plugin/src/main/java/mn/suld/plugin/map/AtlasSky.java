@@ -95,10 +95,16 @@ public final class AtlasSky implements Listener, TabExecutor {
      */
     static final double DIST = 5.25, EYE_UP = -0.29;
     /**
-     * The player's atlas size ({@code /map size}): the camera comes in to DIST / SIZES[i]. The default fills a 70°
-     * screen; a wider field of view (the client's FOV slider) or weak eyes want it larger. Kept in the player's data.
+     * The atlas fits each player's own screen (owner, 2026-10-18: on a wide field of view the 70° framing was a small
+     * picture in the middle). The client never tells the server its FOV, so the player gives it once (asked the first
+     * time; then /map fov, the grow and shrink tabs or Ctrl + wheel) and the camera stands where the frame fills a screen
+     * of that FOV exactly as it fills a 70° screen from DIST ({@link #distFor}). Past the client's 110 the atlas comes
+     * closer still, larger than the screen, for weak eyes. Kept in the player's data.
      */
-    static final double[] SIZES = {1.0, 1.2, 1.4, 1.65, 1.9};
+    static final int FOV_DEFAULT = 70, FOV_MIN = 30, FOV_CLIENT_MAX = 110, FOV_MAX = 130, FOV_STEP = 5;
+    private static final NamespacedKey FOV_KEY = new NamespacedKey("suld", "atlas_fov");
+    /** The /map size steps before 2026-10-18 (the camera at DIST / step): read once and turned into a FOV. */
+    static final double[] OLD_SIZES = {1.0, 1.2, 1.4, 1.65, 1.9};
     private static final NamespacedKey SIZE_KEY = new NamespacedKey("suld", "atlas_size");
     /** How many times the guide opened by itself; it does for a player's first {@link #HELP_AUTO} atlases. */
     private static final NamespacedKey HELP_KEY = new NamespacedKey("suld", "atlas_help_seen");
@@ -162,22 +168,34 @@ public final class AtlasSky implements Listener, TabExecutor {
     private static final NamespacedKey RETURN = new NamespacedKey("suld", "atlas_return");
     private static final byte[] BLANK = new byte[TileComposer.PIXELS];
 
-    /** The left tabs: which places show. */
+    /** The left tabs: which places show. A tab's tooltip says what those places are and what they give. */
     enum Filter {
-        ALL("all", "Бүгд", "Бүх газар"),
-        CITY("city", "Хот, өртөө", "Хархорум, өртөөнүүд, дасгалын талбай"),
-        DUNGEON("dungeon", "Агуй", "Арван агуйн үүд"),
-        OVOO("ovoo", "Овоо", "Нутаг бүрийн овоо"),
-        SITE("site", "Түүхэн газар", "Түүхэн дурсгалт газрууд"),
-        BOSS("boss", "Аварга дайсан", "Аварга дайсны үүр"),
-        PIN("pin", "Миний тэмдэг", "Таны тавьсан тэмдгүүд");
+        ALL("all", "Бүгд", List.of("Бүх газрыг нэг дор харуулна:", "хот, өртөө, агуй, овоо,", "түүхэн газар, аварга дайсан,",
+                "таны тэмдэг.")),
+        CITY("city", "Хот, өртөө", List.of("Хархорум бол аюулгүй хот:", "дэлгүүр, NPC, PvP байхгүй.", "Өртөөнд зогсоод бусад өртөө",
+                "рүү " + mn.suld.plugin.npc.NpcService.TRAVEL_COST + " зоосоор аялна.")),
+        DUNGEON("dungeon", "Агуй", List.of("Арван агуйн үүд.", "Агуй бүр доод түвшинтэй:", "агуй дээр заагч аваачвал",
+                "түвшин, багийн хэмжээ гарна.")),
+        OVOO("ovoo", "Овоо", List.of("Нутаг бүрийн овоо (40).", "Нар зөв 3 тойрвол ивээл:", "+5% EXP 30 минут.", "Анх очвол EXP авна.")),
+        SITE("site", "Түүхэн газар", List.of("Түүхэн дурсгалт газрууд.", "Анх очиж үзвэл EXP авч,", "түүхийн тайлбар нээгдэнэ.")),
+        BOSS("boss", "Аварга дайсан", List.of("Ертөнцийн аварга дайсан", "долоо хоногт тогтсон цагт", "гарна. Бүгдээрээ хамт ялж",
+                "шагнал авна.")),
+        PIN("pin", "Миний тэмдэг", List.of("Таны тавьсан тэмдгүүд", "(" + mn.suld.api.map.MapPin.MAX_PINS + " хүртэл). Тэмдэг дээр",
+                "дарж чиглэх эсвэл устгана."));
 
-        final String icon, label, hint;
+        final String icon, label;
+        /** What the tab's places are, a short line each (the tooltip stands on the wall). */
+        final List<String> about;
 
-        Filter(String icon, String label, String hint) {
+        Filter(String icon, String label, List<String> about) {
             this.icon = icon;
             this.label = label;
-            this.hint = hint;
+            this.about = about;
+        }
+
+        /** The tooltip's last line: what a click does. */
+        String use() {
+            return this == ALL ? "Дарж: бүгдийг харуулах" : "Дарж: зөвхөн эдгээрийг харуулах";
         }
 
         boolean shows(MapPois.Kind k) {
@@ -193,23 +211,33 @@ public final class AtlasSky implements Listener, TabExecutor {
         }
     }
 
-    private record Tool(String icon, String label, String hint) {
+    /** A right tab: its name, what it does (a short line each) and how to use it (the tooltip's last line). */
+    record Tool(String icon, String label, List<String> about, String use) {
     }
 
-    private static final List<Tool> TOOLS = List.of(new Tool("world", "Бүх ертөнц", "Бүх нутгийг нэг дор"),
-            new Tool("me", "Миний байр", "Таны зогсож буй газар руу"), new Tool("plus", "Ойртуулах", "Дугуйгаар ч болно"),
-            new Tool("minus", "Холдуулах", "Дугуйгаар ч болно"), new Tool("pin_add", "Тэмдэг тавих", "Дараа нь газрын зураг дээр дарж тэмдэг тавина"));
+    static final List<Tool> TOOLS = List.of(
+            new Tool("world", "Бүх ертөнц", List.of("Газрын зургийг холдуулж", "бүх нутгийг нэг дор харуулна."), "Дарж харах"),
+            new Tool("me", "Миний байр", List.of("Таны зогсож буй газар руу", "газрын зургийг буцаана."), "Дарж буцах"),
+            new Tool("plus", "Ойртуулах", List.of("Газрын зургийг томруулж,", "нарийн хэсгийг харуулна."), "Дарах · эсвэл хулганы дугуй"),
+            new Tool("minus", "Холдуулах", List.of("Газрын зургийг жижигрүүлж,", "өргөн нутгийг харуулна."), "Дарах · эсвэл хулганы дугуй"),
+            new Tool("pin_add", "Тэмдэг тавих", List.of("Үүнийг дараад газрын зураг", "дээр дарвал тэр газарт", "тэмдэг тавигдана."),
+                    "Дахин дарвал болино"),
+            new Tool("grow", "Атлас томруулах", List.of("Атласыг нүдэнд ойртуулна:", "бичиг, тэмдэг томорно.", "Тохиргоо тань хадгалагдана.",
+                    "Яг тааруулах: /map fov"), "Дарах · эсвэл Ctrl + дугуй"),
+            new Tool("shrink", "Атлас жижигрүүлэх", List.of("Атлас дэлгэцэнд багтахгүй", "бол холдуулна.", "Тохиргоо тань хадгалагдана."),
+                    "Дарах · эсвэл Ctrl + дугуй"));
 
     /** The guide: its title and its lines (key, what it does), shown on the SÜLD frame in the middle of the map. */
     static final String HELP_TITLE = "СҮЛДИЙН АТЛАС — ЗААВАР";
     static final List<String[]> HELP = List.of(
             new String[]{"Хулгана", "заагч аваачвал тайлбар гарна"},
             new String[]{"Зүүн товч", "туг дарах · тэмдэг тавих"},
-            new String[]{"Дугуй", "ойртуулах · холдуулах"},
+            new String[]{"Дугуй", "зураг ойртуулах · холдуулах"},
+            new String[]{"Ctrl + Дугуй", "атласыг томруулах · багасгах"},
             new String[]{"W A S D", "газрын зураг гүйлгэх"},
             new String[]{"Зүүн туг", "газрын төрлөөр шүүх"},
-            new String[]{"Баруун туг", "ертөнц · миний байр · ±"},
-            new String[]{"/map size", "атласыг томруулах"},
+            new String[]{"Баруун туг", "ертөнц · байр · ± · атлас"},
+            new String[]{"/map fov", "атласыг FOV-доо тааруулах"},
             new String[]{"Space", "заавар нээх · хаах"},
             new String[]{"Shift", "атлас хаах"});
     static final String HELP_CLOSE = "Товших эсвэл Space — заавар хаах";
@@ -256,8 +284,11 @@ public final class AtlasSky implements Listener, TabExecutor {
         /** The tooltip's SÜLD frame (rebuilt for each thing hovered) and the guide (its frame and its text). */
         final List<Entity> tipFrame = new ArrayList<>(), help = new ArrayList<>();
         boolean jump;
-        /** The camera's distance from the wall (DIST shrunk by the player's /map size). */
+        /** The field of view the atlas is fitted to ({@link #fovOf}) and the camera's distance from the wall for it. */
+        int fov = FOV_DEFAULT;
         double dist = DIST;
+        /** The sprint key (Ctrl) held: the wheel sizes the atlas instead of zooming the map. */
+        boolean sprint;
         /** Flying when the atlas opened (given back on close). */
         boolean wasFlying;
 
@@ -331,12 +362,10 @@ public final class AtlasSky implements Listener, TabExecutor {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        List<String> subs = List.of("pin", "pins", "unpin", "guide", "stop", "minimap", "markers", "size");
+        List<String> subs = List.of("pin", "pins", "unpin", "guide", "stop", "minimap", "markers", "fov", "size");
         if (args.length == 1) return subs.stream().filter(x -> x.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
-        if (args.length == 2 && args[0].equalsIgnoreCase("size")) {
-            List<String> out = new ArrayList<>();
-            for (int i = 1; i <= SIZES.length; i++) out.add(String.valueOf(i));
-            return out;
+        if (args.length == 2 && (args[0].equalsIgnoreCase("fov") || args[0].equalsIgnoreCase("size"))) {
+            return List.of("70", "80", "90", "100", "110");
         }
         if (args.length == 2 && (args[0].equalsIgnoreCase("unpin") || args[0].equalsIgnoreCase("guide")) && sender instanceof Player p && pins != null) {
             List<String> out = new ArrayList<>();
@@ -389,41 +418,130 @@ public final class AtlasSky implements Listener, TabExecutor {
             }
             case "minimap" -> toggleMinimap.accept(p);
             case "markers" -> toggleScreenMarkers.accept(p);
-            case "size", "хэмжээ" -> setSize(p, rest);
-            default -> p.sendMessage(Messages.info("/map — газрын зураг · /map pin [нэр] · /map pins · /map unpin <нэр> · /map guide <нэр|x z> · /map stop · /map minimap · /map markers · /map size [1-" + SIZES.length + "]"));
+            case "fov", "size", "хэмжээ" -> setFov(p, rest);
+            default -> p.sendMessage(Messages.info("/map — газрын зураг · /map pin [нэр] · /map pins · /map unpin <нэр> · /map guide <нэр|x z> · /map stop · /map minimap · /map markers · /map fov [" + FOV_MIN + "-" + FOV_MAX + "]"));
         }
     }
 
-    /** The player's size step, 0-based (0: the default). */
-    private static int sizeOf(Player p) {
-        Integer v = p.getPersistentDataContainer().get(SIZE_KEY, PersistentDataType.INTEGER);
-        return v == null ? 0 : Math.max(0, Math.min(SIZES.length - 1, v));
+    /** The camera's distance from the wall that shows the frame on a {@code fov}° screen as DIST shows it on a 70° one. */
+    static double distFor(int fov) {
+        return DIST * Math.tan(Math.toRadians(FOV_DEG / 2)) / Math.tan(Math.toRadians(clampFov(fov) / 2.0));
     }
 
-    static String sizeLabel(int i) {
-        return (i + 1) + "/" + SIZES.length + " (" + Math.round(SIZES[i] * 100) + "%)";
+    static int clampFov(int fov) {
+        return Math.max(FOV_MIN, Math.min(FOV_MAX, fov));
     }
 
-    /** {@code /map size}: the next size (after the largest, the default again); {@code /map size 3}: that one. An open atlas is rebuilt at once. */
-    private void setSize(Player p, String arg) {
-        int next;
+    /** An old /map size step (0-based) as the FOV its framing matched, to the nearest 5°: 70, 80, 90, 100, 105. */
+    static int fovForSize(int step) {
+        double k = OLD_SIZES[Math.max(0, Math.min(OLD_SIZES.length - 1, step))];
+        double fov = 2 * Math.toDegrees(Math.atan(k * Math.tan(Math.toRadians(FOV_DEG / 2))));
+        return clampFov((int) Math.round(fov / FOV_STEP) * FOV_STEP);
+    }
+
+    /** How the chat and the action bar name a fit. */
+    static String fitLabel(int fov) {
+        return fov <= FOV_CLIENT_MAX ? "Атласын хэмжээ: FOV " + fov + "-д тааруулсан" : "Атласын хэмжээ: дэлгэцээс том (" + fov + ")";
+    }
+
+    /** True once the player has a fit (their own, or an old /map size step); until then the atlas asks for it. */
+    private static boolean hasFit(Player p) {
+        var pdc = p.getPersistentDataContainer();
+        return pdc.has(FOV_KEY, PersistentDataType.INTEGER) || pdc.has(SIZE_KEY, PersistentDataType.INTEGER);
+    }
+
+    /** The player's fit: their FOV, an old /map size step turned into one (once), or the default. */
+    private static int fovOf(Player p) {
+        var pdc = p.getPersistentDataContainer();
+        Integer v = pdc.get(FOV_KEY, PersistentDataType.INTEGER);
+        if (v == null) {
+            Integer old = pdc.get(SIZE_KEY, PersistentDataType.INTEGER);
+            if (old == null) return FOV_DEFAULT;
+            v = fovForSize(old);
+            pdc.set(FOV_KEY, PersistentDataType.INTEGER, v);
+            pdc.remove(SIZE_KEY);
+        }
+        return clampFov(v);
+    }
+
+    /**
+     * {@code /map fov}: the window that asks for the client's FOV; {@code /map fov 95}: that fit ({@value #FOV_MIN}–{@value
+     * #FOV_MAX}; 1–5 are the old /map size steps). An open atlas moves its camera at once.
+     */
+    private void setFov(Player p, String arg) {
         if (arg.isEmpty()) {
-            next = (sizeOf(p) + 1) % SIZES.length;
-        } else if (arg.matches("\\d+") && Integer.parseInt(arg) >= 1 && Integer.parseInt(arg) <= SIZES.length) {
-            next = Integer.parseInt(arg) - 1;
-        } else {
-            p.sendMessage(Messages.error("/map size 1–" + SIZES.length + " (1 — анхны хэмжээ, " + SIZES.length + " — хамгийн том)"));
+            askFov(p);
             return;
         }
-        if (next == 0) p.getPersistentDataContainer().remove(SIZE_KEY);
-        else p.getPersistentDataContainer().set(SIZE_KEY, PersistentDataType.INTEGER, next);
-        p.sendMessage(Messages.success("Атласын хэмжээ: " + sizeLabel(next) + ". Дахин томруулах: /map size"));
-        if (isOpen(p)) {
-            close(p);
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (p.isOnline() && !isOpen(p) && blocked(p) == null) open(p);
-            });
+        int v = arg.matches("\\d{1,3}") ? Integer.parseInt(arg) : -1;
+        if (v >= 1 && v <= OLD_SIZES.length) v = fovForSize(v - 1);
+        if (v < FOV_MIN || v > FOV_MAX) {
+            p.sendMessage(Messages.error("/map fov " + FOV_MIN + "–" + FOV_MAX + " (Minecraft-ийн тань FOV: Normal = 70, Quake Pro = 110)"));
+            return;
         }
+        applyFov(p, v);
+        p.sendMessage(Messages.success(fitLabel(v) + ". Өөрчлөх: /map fov, эсвэл атлас дотор Ctrl + дугуй."));
+    }
+
+    /** Keeps the fit and, while the atlas is open, glides its camera there. */
+    private void applyFov(Player p, int fov) {
+        int v = clampFov(fov);
+        p.getPersistentDataContainer().set(FOV_KEY, PersistentDataType.INTEGER, v);
+        Session s = sessions.get(p.getUniqueId());
+        if (s != null && s.ready) fit(s, v);
+    }
+
+    /** One step of the grow and shrink tabs and of Ctrl + wheel ({@code dFov} above 0: closer, larger). */
+    private void resize(Session s, int dFov) {
+        int next = clampFov(s.fov + dFov);
+        if (next == s.fov) {
+            s.p.sendActionBar(Component.text(dFov > 0 ? "Атлас хамгийн том хэмжээндээ байна" : "Атлас хамгийн жижиг хэмжээндээ байна", GREY));
+            return;
+        }
+        s.p.getPersistentDataContainer().set(FOV_KEY, PersistentDataType.INTEGER, next);
+        fit(s, next);
+    }
+
+    private void fit(Session s, int fov) {
+        s.fov = fov;
+        s.dist = distFor(fov);
+        placeCamera(s);
+        s.p.sendActionBar(Component.text(fitLabel(fov) + " · Ctrl + дугуй", GOLD));
+    }
+
+    /**
+     * «Атласыг дэлгэцэндээ тааруулах»: the client's FOV (Options → FOV), so the atlas fills this player's screen. Asked
+     * the first time the atlas opens; {@code /map fov} brings it back. A dialog is drawn on the screen, not in the world,
+     * so it reads the same at any FOV.
+     */
+    private void askFov(Player p) {
+        int now = Math.min(FOV_CLIENT_MAX, fovOf(p));
+        io.papermc.paper.dialog.Dialog d = io.papermc.paper.dialog.Dialog.create(f -> f.empty()
+                .base(io.papermc.paper.registry.data.dialog.DialogBase.builder(Component.text("Атласыг дэлгэцэндээ тааруулах", GOLD, TextDecoration.BOLD))
+                        .canCloseWithEscape(true)
+                        .pause(false)
+                        .afterAction(io.papermc.paper.registry.data.dialog.DialogBase.DialogAfterAction.CLOSE)
+                        .body(List.of(io.papermc.paper.registry.data.dialog.body.DialogBody.plainMessage(Component.text(
+                                "Minecraft-ийн тань FOV хэд вэ? Options → FOV (Normal = 70, Quake Pro = 110).\n\n"
+                                        + "Сервер үүнийг өөрөө мэдэж чадахгүй. Нэг удаа сонговол атлас таны дэлгэцийг яг дүүргэнэ. "
+                                        + "Дараа нь атлас дотор Ctrl + дугуй, эсвэл баруун талын доод хоёр тугаар томруулж, "
+                                        + "жижигрүүлнэ.", CREAM), 320)))
+                        .inputs(List.of(io.papermc.paper.registry.data.dialog.input.DialogInput.numberRange("fov", Component.text("FOV", GOLD),
+                                FOV_MIN, FOV_CLIENT_MAX).step(1f).initial((float) now).width(300).build()))
+                        .build())
+                .type(io.papermc.paper.registry.data.dialog.type.DialogType.confirmation(
+                        io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Хадгалах ✔", NamedTextColor.GREEN, TextDecoration.BOLD),
+                                null, 120, io.papermc.paper.registry.data.dialog.action.DialogAction.customClick((view, who) -> {
+                                    Float v = view.getFloat("fov");
+                                    Bukkit.getScheduler().runTask(plugin, () -> {
+                                        if (v == null || !(who instanceof Player pl) || !pl.isOnline()) return;
+                                        int fov = clampFov(Math.round(v));
+                                        applyFov(pl, fov);
+                                        pl.sendMessage(Messages.success(fitLabel(fov) + ". Өөрчлөх: /map fov, эсвэл атлас дотор Ctrl + дугуй."));
+                                    });
+                                }, ONCE)),
+                        io.papermc.paper.registry.data.dialog.ActionButton.create(Component.text("Дараа"), null, 100, null))));
+        p.showDialog(d);
     }
 
     private void listPins(Player p) {
@@ -489,7 +607,9 @@ public final class AtlasSky implements Listener, TabExecutor {
     private void open(Player p) {
         closeOthers.accept(p);
         Session s = new Session(p);
-        s.dist = DIST / SIZES[sizeOf(p)];
+        boolean ask = !hasFit(p);
+        s.fov = fovOf(p);
+        s.dist = distFor(s.fov);
         sessions.put(p.getUniqueId(), s);
         p.closeInventory();
         Location o = s.origin;
@@ -536,6 +656,11 @@ public final class AtlasSky implements Listener, TabExecutor {
             if (seen < HELP_AUTO) {
                 p.getPersistentDataContainer().set(HELP_KEY, PersistentDataType.INTEGER, seen + 1);
                 showHelp(s);
+            }
+            // the first atlas asks for the client's FOV once (the default is kept even if the window is just closed)
+            if (ask) {
+                p.getPersistentDataContainer().set(FOV_KEY, PersistentDataType.INTEGER, s.fov);
+                askFov(p);
             }
         }, 2L);
     }
@@ -823,8 +948,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         // the parchment, the frame art and the labels are placed against that plane (seen on a 1.21.11 client)
         double faceZ = bz + 1 - 1.0 / 128;
         s.plane = new Location(w, bx + 0.5, by + 0.5, faceZ - 0.004);
-        Location cam = new Location(w, bx + 0.5, by + 0.5 + EYE_UP * s.dist / DIST - s.eyeOff, faceZ - s.dist, p.getLocation().getYaw(), p.getLocation().getPitch());
-        s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+        placeCamera(s);
         // the map wall: column 0 is on the viewer's left (world +x, the viewer faces +z)
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
@@ -846,7 +970,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             }
         }
         // a dark room around the camera and the wall, the parchment behind the maps, the frame in front of them
-        room(s, w, cam);
+        room(s, w);
         picture(s, s.stage, "back", 0, 0, COLS, ROWS, -0.03, 0f);
         picture(s, s.stage, "front", 0, FRONT_V, FRONT_W, FRONT_H, 0.012, 0f);
         s.title = text(s, s.stage, 0, TITLE_V, Component.text("СҮЛДИЙН АТЛАС", GOLD, TextDecoration.BOLD), 1.2f, 300, 0);
@@ -862,7 +986,7 @@ public final class AtlasSky implements Listener, TabExecutor {
             String model = "tab_" + f.icon;
             ItemDisplay bg = picture(s, s.stage, s.filter == f ? model + "_on" : model, -TAB_U, v, TAB_W, TAB_H, 0.02, 0f);
             s.tabs.add(new Hit(-TAB_U, v, TAB_W, TAB_H, () -> setFilter(s, f), Component.text(f.label, GOLD, TextDecoration.BOLD),
-                    List.of(Component.text(f.hint, GREY)), bg, model, model + "_hover"));
+                    tipLines(f.about, f.use()), bg, model, model + "_hover"));
         }
         top = (TOOLS.size() - 1) * TAB_STEP / 2;
         for (int i = 0; i < TOOLS.size(); i++) {
@@ -876,22 +1000,44 @@ public final class AtlasSky implements Listener, TabExecutor {
                 case "plus" -> () -> zoom(s, -1, 0, 0);
                 case "minus" -> () -> zoom(s, 1, 0, 0);
                 case "pin_add" -> () -> togglePinMode(s);
+                case "grow" -> () -> resize(s, FOV_STEP);
+                case "shrink" -> () -> resize(s, -FOV_STEP);
                 default -> null;
             };
             s.tabs.add(new Hit(TAB_U, v, TAB_W, TAB_H, click, Component.text(t.label(), GOLD, TextDecoration.BOLD),
-                    List.of(Component.text(t.hint(), GREY)), bg, model, click == null ? model : model + "_hover"));
+                    tipLines(t.about(), t.use()), bg, model, click == null ? model : model + "_hover"));
         }
     }
 
-    /** A navy box around the camera and the wall, so looking away from the atlas shows no sky. */
-    private void room(Session s, World w, Location cam) {
+    /**
+     * The seat, and the camera on it, {@code s.dist} in front of the wall and EYE_UP from its middle: at the player's
+     * fit the frame stands on their screen as on a 70° screen from DIST. A new fit glides it there (the seat's
+     * teleport duration).
+     */
+    private void placeCamera(Session s) {
+        Location cam = s.plane.clone().add(0, EYE_UP - s.eyeOff, 0.004 - s.dist);
+        cam.setYaw(s.p.getLocation().getYaw());
+        cam.setPitch(s.p.getLocation().getPitch());
+        s.seat.teleport(cam, io.papermc.paper.entity.TeleportFlag.EntityState.RETAIN_PASSENGERS);
+    }
+
+    /** A tooltip's lines under its name: what the thing is (cream) and, last, what a click does (cyan). */
+    static List<Component> tipLines(List<String> about, String use) {
+        List<Component> out = new ArrayList<>();
+        for (String l : about) out.add(Component.text(l, CREAM));
+        if (use != null) out.add(Component.text(use, CYAN));
+        return out;
+    }
+
+    /** A navy box around the camera and the wall, so looking away from the atlas shows no sky; deep enough for every fit. */
+    private void room(Session s, World w) {
         ItemStack navy = new ItemStack(Material.PAPER);
         ItemMeta meta = navy.getItemMeta();
         meta.setItemModel(new NamespacedKey("suld", "entity/skytree/line"));
         navy.setItemMeta(meta);
         navy.setData(DataComponentTypes.CUSTOM_MODEL_DATA, io.papermc.paper.datacomponent.item.CustomModelData.customModelData()
                 .addColor(Color.fromRGB(0x0B1226)).build());
-        double cx = s.plane.getX(), cy = s.plane.getY(), z0 = cam.getZ() - 1.5, z1 = s.plane.getZ() + 0.7, hw = 9, hh = 6;
+        double cx = s.plane.getX(), cy = s.plane.getY(), z0 = s.plane.getZ() - distFor(FOV_MIN) - 1.5, z1 = s.plane.getZ() + 0.7, hw = 9, hh = 6;
         double mz = (z0 + z1) / 2, d = z1 - z0;
         Quaternionf ry = new Quaternionf().rotateY((float) (Math.PI / 2)), rx = new Quaternionf().rotateX((float) (Math.PI / 2));
         wall(s, w, navy, new Location(w, cx, cy, z1), new Quaternionf(), new Vector3f((float) (2 * hw), (float) (2 * hh), 1));
@@ -1228,10 +1374,35 @@ public final class AtlasSky implements Listener, TabExecutor {
     private List<Component> describe(Session s, MapPois.Poi poi) {
         List<Component> out = new ArrayList<>();
         out.add(Component.text(poi.kind().label() + (poi.area().isEmpty() ? "" : " · " + poi.area()), GREY));
+        for (String l : about(poi)) out.add(Component.text(l, CREAM));
         double d = Math.hypot(poi.x() + 0.5 - s.origin.getX(), poi.z() + 0.5 - s.origin.getZ());
         out.add(Component.text(Math.round(d) + " м · x " + poi.x() + ", z " + poi.z(), GREY));
         out.add(Component.text("Дарж чиглэх (луужин, зам заагч)", CYAN));
         return out;
+    }
+
+    /** What a place is for, a short line or two between its kind and its distance. */
+    static List<String> about(MapPois.Poi poi) {
+        return switch (poi.kind()) {
+            case CITY -> List.of("Аюулгүй хот: дэлгүүр, NPC,", "тулаан ба PvP байхгүй.");
+            case RELAY -> List.of("Энд зогсоод бусад өртөө рүү", mn.suld.plugin.npc.NpcService.TRAVEL_COST + " зоосоор аялна.");
+            case TRAINING -> List.of("Аль ч ангиа 60-р түвшинд", "туршиж дасгал хийнэ (/dasgal).");
+            case DUNGEON -> dungeonLines(poi.id());
+            case OVOO -> List.of("Нар зөв 3 тойрвол ивээл:", "+5% EXP 30 минут, өдөрт нэг.");
+            case SITE -> List.of("Анх очиж үзвэл EXP авч,", "түүхийн тайлбар нээгдэнэ.");
+            case BOSS -> List.of("Долоо хоногт тогтсон цагт", "гарна: бүгдээрээ хамт ялна.");
+        };
+    }
+
+    /** A dungeon's level band and party (its gate says the same), and how to go in. */
+    private static List<String> dungeonLines(String id) {
+        for (mn.suld.api.dungeon.DungeonDefinition d : mn.suld.plugin.content.Content.pack().dungeons()) {
+            if (!d.id().equals(id)) continue;
+            int party = d.recommendedParty();
+            return List.of("Түвшин " + d.minLevel() + "–" + d.maxLevel() + " · " + (party <= 1 ? "ганцаараа ч болно" : party + " хүнтэй баг"),
+                    "Хаалгыг нь дарж орно.");
+        }
+        return List.of("Хаалгыг нь дарж орно.");
     }
 
     /** Makes a place the player's waypoint (the guide's bar and label, and the compass). */
@@ -1390,9 +1561,13 @@ public final class AtlasSky implements Listener, TabExecutor {
         }
         List<String> lines = new ArrayList<>();
         lines.add(plain(h.name()));
-        for (Component l : h.lore()) lines.add(plain(l));
         Component tip = Component.text(lines.get(0), GOLD, TextDecoration.BOLD);
-        for (int i = 1; i < lines.size(); i++) tip = tip.append(Component.newline()).append(Component.text(lines.get(i), CREAM, TextDecoration.BOLD));
+        for (Component l : h.lore()) {
+            String line = plain(l);
+            lines.add(line);
+            // every line bold in its own colour: cream what it is, grey where, cyan what a click does
+            tip = tip.append(Component.newline()).append(Component.text(line, l.color() != null ? l.color() : CREAM, TextDecoration.BOLD));
+        }
         double[] box = box(lines, TIP_SCALE);
         double w = box[0], ht = box[1];
         // beside the thing, on the side toward the wall's middle, and wholly on the wall
@@ -1403,7 +1578,9 @@ public final class AtlasSky implements Listener, TabExecutor {
         double cv = Math.max(-ROWS / 2.0 + ht / 2, Math.min(ROWS / 2.0 - ht / 2, h.v()));
         panel(s, s.tipFrame, cu, cv, w, ht, TIP_Z);
         s.tooltip.text(tip.font(mn.suld.plugin.ui.StyleFormat.HD));
-        s.tooltip.teleport(at(s, cu, cv - (lines.size() - 1) * LINE * TIP_SCALE / 2, TIP_Z + 0.012));
+        // moved, keeping its yaw 180: teleport(at(...)) gave it the plane's yaw 0 and turned the one-sided text away from
+        // the camera, an empty frame on every tooltip (owner's screenshot, 2026-10-18)
+        move(s.tooltip, at(s, cu, cv - (lines.size() - 1) * LINE * TIP_SCALE / 2, TIP_Z + 0.012));
     }
 
     private static String plain(Component c) {
@@ -1560,7 +1737,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (sessions.containsKey(e.getPlayer().getUniqueId()) || e.getRightClicked().getScoreboardTags().contains(TAG)) e.setCancelled(true);
     }
 
-    /** The wheel zooms toward the cursor. */
+    /** The wheel zooms toward the cursor; with Ctrl (the sprint key) held it sizes the atlas instead. */
     @EventHandler(priority = EventPriority.HIGH)
     public void onWheel(PlayerItemHeldEvent e) {
         Session s = sessions.get(e.getPlayer().getUniqueId());
@@ -1570,6 +1747,10 @@ public final class AtlasSky implements Listener, TabExecutor {
         if (d > 4) d -= 9;
         if (d < -4) d += 9;
         if (d == 0) return;
+        if (s.sprint) { // wheel up (the slot before) = larger, like the map's zoom
+            resize(s, d < 0 ? FOV_STEP : -FOV_STEP);
+            return;
+        }
         double[] a = aim(s);
         double u = a != null && s.view.onWall(a[0], a[1]) ? a[0] : 0, v = a != null && s.view.onWall(a[0], a[1]) ? a[1] : 0;
         // wheel down (next slot) = farther, like a web map
@@ -1585,6 +1766,7 @@ public final class AtlasSky implements Listener, TabExecutor {
         s.down = in.isBackward();
         s.left = in.isLeft();
         s.right = in.isRight();
+        s.sprint = in.isSprint();
         // Space: the guide, open or away (on the press, not while held)
         boolean jump = in.isJump();
         if (jump && !s.jump && s.ready) toggleHelp(s);

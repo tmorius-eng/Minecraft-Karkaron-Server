@@ -329,6 +329,34 @@ ICONS = {
         ".....dLLd......",
         "......dd.......",
     ],
+    "grow": [  # the atlas larger: four corners pointing out (a full-screen sign)
+        "ddddddd..ddddddd",
+        "dWWWWWd..dWWWWWd",
+        "dWddddd..dddddWd",
+        "dWd..........dWd",
+        "dWd..........dWd",
+        "ddd..........ddd",
+        "ddd..........ddd",
+        "dWd..........dWd",
+        "dWd..........dWd",
+        "dWddddd..dddddWd",
+        "dWWWWWd..dWWWWWd",
+        "ddddddd..ddddddd",
+    ],
+    "shrink": [  # the atlas smaller: four corners pointing in
+        "....dWd..dWd....",
+        "....dWd..dWd....",
+        "dddddWd..dWddddd",
+        "dWWWWWd..dWWWWWd",
+        "ddddddd..ddddddd",
+        "................",
+        "................",
+        "ddddddd..ddddddd",
+        "dWWWWWd..dWWWWWd",
+        "dddddWd..dWddddd",
+        "....dWd..dWd....",
+        "....dWd..dWd....",
+    ],
 }
 
 
@@ -507,7 +535,8 @@ def plaque(text: str, w: int, h: int) -> Image.Image:
 
 LEFT_TABS = [("all", "Бүгд"), ("city", "Хот, өртөө"), ("dungeon", "Агуй"), ("ovoo", "Овоо"), ("site", "Түүхэн газар"),
              ("boss", "Аварга дайсан"), ("pin", "Миний тэмдэг")]
-RIGHT_TABS = [("world", "Бүх ертөнц"), ("me", "Миний байр"), ("plus", "Ойртуулах"), ("minus", "Холдуулах"), ("pin_add", "Тэмдэг тавих")]
+RIGHT_TABS = [("world", "Бүх ертөнц"), ("me", "Миний байр"), ("plus", "Ойртуулах"), ("minus", "Холдуулах"), ("pin_add", "Тэмдэг тавих"),
+              ("grow", "Атлас томруулах"), ("shrink", "Атлас жижигрүүлэх")]
 
 
 class Atlas:

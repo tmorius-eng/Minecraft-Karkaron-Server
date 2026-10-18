@@ -49,13 +49,36 @@ class AtlasFramingTest {
     }
 
     @Test
-    void theSizesStartAtTheDefaultAndOnlyGrow() {
-        assertEquals(1.0, AtlasSky.SIZES[0], "size 1 is the framing checked above");
-        for (int i = 1; i < AtlasSky.SIZES.length; i++) assertTrue(AtlasSky.SIZES[i] > AtlasSky.SIZES[i - 1]);
-        // the largest still keeps the camera in front of the wall with the room's back wall behind it
-        assertTrue(AtlasSky.DIST / AtlasSky.SIZES[AtlasSky.SIZES.length - 1] > 2.5);
-        assertEquals("1/5 (100%)", AtlasSky.sizeLabel(0));
-        assertEquals("5/5 (190%)", AtlasSky.sizeLabel(4));
+    void eachPlayersFitShowsTheFrameOnTheirScreenAsOnA70DegreeOne() {
+        assertEquals(AtlasSky.DIST, AtlasSky.distFor(AtlasSky.FOV_DEFAULT), 1e-9, "the default is the framing checked above");
+        for (int fov = AtlasSky.FOV_MIN; fov <= AtlasSky.FOV_CLIENT_MAX; fov += AtlasSky.FOV_STEP) {
+            double d = AtlasSky.distFor(fov), t = Math.tan(Math.toRadians(fov / 2.0));
+            // a panel height v shows at (v - EYE_UP) / (d tan(fov / 2)) on that screen: where screenY puts it at 70°
+            for (double v : new double[]{FRAME_TOP, CART_BOTTOM, TITLE_TOP, 0}) {
+                assertEquals(AtlasSky.screenY(v), (v - AtlasSky.EYE_UP) / (d * t), 1e-9, "fov " + fov + ", panel height " + v);
+            }
+        }
+    }
+
+    @Test
+    void aWiderFieldOfViewBringsTheCameraCloser() {
+        for (int fov = AtlasSky.FOV_MIN + AtlasSky.FOV_STEP; fov <= AtlasSky.FOV_MAX; fov += AtlasSky.FOV_STEP) {
+            assertTrue(AtlasSky.distFor(fov) < AtlasSky.distFor(fov - AtlasSky.FOV_STEP), "fov " + fov);
+        }
+        // the owner's screen (Quake Pro, 110°) had the atlas at 70°'s distance: a small picture; its fit is about half as far
+        assertEquals(2.57, AtlasSky.distFor(110), 0.02);
+        // the closest fit still stands well in front of the wall (and nothing is in reach while the atlas is open)
+        assertTrue(AtlasSky.distFor(AtlasSky.FOV_MAX) > 1.5, "closest camera at " + AtlasSky.distFor(AtlasSky.FOV_MAX));
+        assertEquals(AtlasSky.FOV_MIN, AtlasSky.clampFov(1));
+        assertEquals(AtlasSky.FOV_MAX, AtlasSky.clampFov(500));
+    }
+
+    @Test
+    void theOldSizeStepsBecomeTheFovTheyMatched() {
+        assertEquals(java.util.List.of(70, 80, 90, 100, 105),
+                java.util.stream.IntStream.range(0, AtlasSky.OLD_SIZES.length).map(AtlasSky::fovForSize).boxed().toList());
+        assertEquals("Атласын хэмжээ: FOV 110-д тааруулсан", AtlasSky.fitLabel(110));
+        assertTrue(AtlasSky.fitLabel(AtlasSky.FOV_MAX).contains("дэлгэцээс том"), "past the client's 110 it says so");
     }
 
     @Test

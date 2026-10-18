@@ -504,7 +504,11 @@ public final class MenuSky implements Listener {
         // under the hovered thing, or above it in the lower half, so it never runs off the window
         double tv = h.v() > -0.3 ? h.v() - h.h() / 2 - 0.12 : h.v() + h.h() / 2 + 0.12 + 0.155 * lines;
         double tu = Math.max(-3.4, Math.min(3.4, h.u()));
-        s.tooltip.teleport(at(s, tu, tv - 0.155 * lines, 0.4));
+        Location to = at(s, tu, tv - 0.155 * lines, 0.4);
+        // the text keeps facing the camera: at() carries the stage's yaw 0, which turned the one-sided text display away
+        to.setYaw(180f);
+        to.setPitch(0f);
+        s.tooltip.teleport(to);
         if (h.click() != null) s.p.playSound(s.p.getLocation(), Sound.UI_BUTTON_CLICK, 0.2f, 1.9f);
     }
 

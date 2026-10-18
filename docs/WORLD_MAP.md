@@ -24,7 +24,8 @@ The earlier proposals in `docs/world-map/` (tile glyphs, predicted biomes) are *
 * Тоглогч: `/map` — атлас · `/map pin [нэр]` — энд тэмдэг тавих (30 хүртэл, өгөгдлийн санд) · `/map pins` — жагсаалт
   ([Чиглэх] [Устгах]) · `/map unpin <нэр|#>` · `/map guide <нэр|# | x z>` — чиглэл (дээд талын зурвас, хана нэвт
   харагдах шошго «◆ Нэр · 412 м») · `/map stop` · `/map minimap` — зүүн дээд буланд мини газрын зураг асаах/унтраах
-  (мөн «Тохиргоо»-нд; SÜLD дүрс багцтай үед л харагдана).
+  (мөн «Тохиргоо»-нд; SÜLD дүрс багцтай үед л харагдана) · `/map fov [30-130]` — атласыг Minecraft-ийнхаа FOV-д
+  тааруулах (тоогүй бол цонх нээгдэнэ; атлас дотор Ctrl + дугуй, баруун талын доод хоёр туг).
 
 ## Part A — terrain (built)
 
@@ -159,14 +160,26 @@ stood on the next login.
   while flying, so a skill-tree or potion speed bonus (on top of a wide FOV slider) made the atlas a small picture far
   away. While the atlas is open the movement speed is held at the plain walking speed (one transient MULTIPLY_TOTAL
   modifier, checked again every second), flying is off, and the entity and block reach are zero; all of it comes
-  back on close and none of it is ever saved. `/map size [1-5]` (kept in the player's data) brings the camera in to
-  5.25 / 1.0, 1.2, 1.4, 1.65 or 1.9 blocks for a wide FOV or weak eyes; an open atlas is rebuilt at once.
+  back on close and none of it is ever saved.
+* **Each player's fit** (2026-10-18; the owner's Quake Pro screen showed the 70° framing as a small picture in the
+  middle). The client never tells the server its field of view, so each player gives theirs once: the first atlas
+  asks in a dialog («Атласыг дэлгэцэндээ тааруулах», a FOV slider 30–110 that reads Options → FOV; closing it keeps
+  70), and `/map fov` brings the dialog back. The camera then stands at `distFor(fov) = 5.25 · tan 35° / tan(fov / 2)`
+  blocks (2.57 at 110°), where the frame fills that screen exactly as it fills a 70° one, title plaque near the top
+  and cartouche over the hotbar (`AtlasFramingTest`). In the atlas the two lowest right tabs (⤢ «Атлас томруулах»,
+  ⤡ «Атлас жижигрүүлэх») and Ctrl + wheel move it 5° at a time, up to 130 (larger than the screen, for weak eyes);
+  `/map fov <30-130>` sets it. The camera glides there, the fit is kept in the player's data, and an old
+  `/map size` step becomes the FOV it matched (70, 80, 90, 100, 105).
 * **Tooltips and the guide.** The tooltip of a tab or a place stands right beside it, toward the middle of the wall,
   on the SÜLD tooltip frame (the pack's `suld:mongol` nine-slice, cut into nine quads `entity/atlas/tip_*` by
-  `tools/map/atlas_art.py tooltip`): its name in bold gold, its lines in bold cream (0.85). The guide
-  («СҮЛДИЙН АТЛАС — ЗААВАР»: mouse, click, wheel, W A S D, the tabs, `/map size`, Space, Shift) opens by itself on a
-  player's first three atlases and with Space any time; a click or Space puts it away. The cartouche reads
-  `Zoom · Space: заавар · Shift: хаах`.
+  `tools/map/atlas_art.py tooltip`): its name in bold gold, then in bold what it is (cream), where (grey) and, last,
+  what a click does (cyan), 0.85. Every tab says what its places give (an ovoo's blessing, a relay's fare, a site's
+  first-visit EXP, a dungeon's level band and party); a place adds its own (a dungeon's band from its definition). The
+  tooltip's text display is moved keeping its yaw 180: until 2026-10-18 `teleport(at(...))` gave it the stage's
+  yaw 0, its one-sided text faced away from the camera and every tooltip was an empty frame (seen on the 1.21.11
+  client; the /menu window's tooltip had the same fault). The guide («СҮЛДИЙН АТЛАС — ЗААВАР»: mouse, click, wheel,
+  Ctrl + wheel, W A S D, the tabs, `/map fov`, Space, Shift) opens by itself on a player's first three atlases and
+  with Space any time; a click or Space puts it away. The cartouche reads `Zoom · Space: заавар · Shift: хаах`.
 * **While it is open** the player's weather is clear (no rain or snow across the map; their own weather comes back on
   close), the HUD panel and the target frame step aside (`HudService.quiet`) and so do the waypoint's bar and label. The waypoint's bar and label also step aside in the menu and the skill tree (2026-10-15: its see-through label floated over them).
 * **The map plane.** An invisible item frame draws its map flush with the block behind it — the client's item frame
