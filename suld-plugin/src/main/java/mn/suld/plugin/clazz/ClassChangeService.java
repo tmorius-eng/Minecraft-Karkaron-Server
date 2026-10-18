@@ -4,6 +4,7 @@ import mn.suld.api.audit.AuditEvent;
 import mn.suld.api.clazz.ClassChangeRules;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.event.ClassChangedEvent;
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.plugin.SuldServices;
@@ -160,7 +161,7 @@ public final class ClassChangeService implements Listener {
 
     /** The old class's own soulbound weapon and armour, out of every place the player keeps items. */
     public int stripClassGear(Player p, PlayerClass from) {
-        String w = "weapon.class." + from.id() + ".", a = "armor.class." + from.id() + ".";
+        String w = ClassWeaponRule.PREFIX + from.id() + ".", a = "armor.class." + from.id() + ".";
         int n = 0;
         ItemStack[] inv = p.getInventory().getContents();
         for (int i = 0; i < inv.length; i++) {

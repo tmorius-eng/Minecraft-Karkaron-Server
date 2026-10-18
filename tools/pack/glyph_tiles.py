@@ -30,6 +30,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 ASSETS = os.path.join(ROOT, "resourcepack", "assets")
 GLYPHS_JAVA = os.path.join(ROOT, "suld-plugin", "src", "main", "java", "mn", "suld", "plugin", "ui", "Glyphs.java")
 LANG = os.path.join(ASSETS, "minecraft", "lang")
+# Code points are append-only (tools/validation/validate_glyph_codepoints.py): a tile keeps the code point its file was
+# recorded with, and a new tile never takes one that was ever used.
+LOCK = os.path.join(ROOT, "assets", "registry", "glyph_codepoints.json")
 
 # The client's limit (FontTexture is 256 x 256 in 1.21.11).
 MAX_TEXELS = 256
@@ -122,9 +125,16 @@ def tile_font(rel: str, cfg: dict) -> dict[str, str]:
     shifts = Shifts(providers, cfg["spaces"])
     used |= set(shifts.chars.values())
     next_cp = [cfg["tiles"]]
+    recorded = json.load(open(LOCK, encoding="utf-8"))["fonts"].get(rel, {}) if os.path.exists(LOCK) else {}
+    ever = {chr(int(cp, 16)) for cp in recorded}             # every code point this font ever gave out
+    by_glyph = {what: chr(int(cp, 16)) for cp, what in recorded.items()}
 
-    def new_cp() -> str:
-        while chr(next_cp[0]) in used:
+    def new_cp(glyph: str) -> str:
+        ch = by_glyph.get(glyph)
+        if ch is not None and ch not in used:
+            used.add(ch)
+            return ch                                         # the tile's own code point, as recorded
+        while chr(next_cp[0]) in used or chr(next_cp[0]) in ever:
             next_cp[0] += 1
         ch = chr(next_cp[0])
         used.add(ch)
@@ -175,7 +185,7 @@ def tile_font(rel: str, cfg: dict) -> dict[str, str]:
                         os.makedirs(os.path.dirname(full), exist_ok=True)
                         tile.save(full, optimize=False)
                         written[digest] = f"{ns}:{name}"
-                    ch = new_cp()
+                    ch = new_cp(f"{written[digest]} h{t_height} a{t_ascent}")  # validate_glyph_codepoints.identity
                     shared[key] = ch
                     out_providers.append({"type": "bitmap", "file": written[digest], "height": t_height,
                                           "ascent": t_ascent, "chars": [ch]})

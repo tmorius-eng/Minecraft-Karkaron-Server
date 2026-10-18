@@ -1,5 +1,6 @@
 package mn.suld.plugin.branding;
 
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.onboarding.TutorialProgress;
 import mn.suld.api.onboarding.TutorialProgress.Step;
 import mn.suld.api.profile.PlayerProfile;
@@ -152,7 +153,7 @@ public final class TutorialService implements Listener, TabExecutor {
         return switch (s) {
             case CHOOSE_CLASS -> pr.playerClass().isPresent();
             case HOLD_WEAPON -> services.items().read(p.getInventory().getItemInMainHand())
-                    .map(i -> i.definitionId().startsWith("weapon.class.")).orElse(false);
+                    .map(i -> ClassWeaponRule.isClassWeapon(i.definitionId())).orElse(false);
             case OPEN_SKILLS -> openedSkills.contains(p.getUniqueId());
             case LOCK_ON -> lockOn.apply(p).isPresent();
             case FIRST_KILL -> services.session(p.getUniqueId()).mobsDefeated > killBaseline.getOrDefault(p.getUniqueId(), Long.MAX_VALUE);

@@ -5,7 +5,9 @@ between eight other maps (ImmediatelyFast's map_atlas_generation, on by default 
 used to check 128 x 128 textures only, and the four minimap frames hung in front of the player as floating maps).
 Also: the neighbouring maps stay where they hang, the marker row is hidden, and glyphs are never taken for the map.
 
-Needs moderngl and an OpenGL 3.3 context; without them it prints SKIP and passes (CI has no GPU).
+Needs moderngl and an OpenGL 3.3 context (Mesa's software renderer is enough: CI runs it under Xvfb). Without them
+it prints SKIP and exits with SKIPPED (75), which run_all.py reports as skipped, never as passed, and counts as a
+failure when SULD_REQUIRE_GPU=1 (CI).
   py -m pip install moderngl numpy
   py tools/validation/check_minimap_shader.py [shader dir]
 """
@@ -17,6 +19,7 @@ import struct
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+SKIPPED = 75  # run_all.py: not run here (no moderngl or no OpenGL 3.3), neither passed nor failed
 DEFAULT = os.path.join(HERE, "..", "..", "resourcepack", "assets", "minecraft", "shaders", "core")
 
 try:
@@ -24,7 +27,7 @@ try:
     import moderngl
 except ImportError:
     print("SKIP check_minimap_shader: moderngl/numpy not installed (py -m pip install moderngl numpy)")
-    sys.exit(0)
+    sys.exit(SKIPPED)
 
 d = sys.argv[1] if len(sys.argv) > 1 else DEFAULT
 STUB_V = """
@@ -46,7 +49,7 @@ try:
     ctx = moderngl.create_standalone_context(require=330)
 except Exception as e:  # no GPU / no GL 3.3 (CI)
     print(f"SKIP check_minimap_shader: no OpenGL 3.3 context ({e})")
-    sys.exit(0)
+    sys.exit(SKIPPED)
 prog = ctx.program(vertex_shader=src("rendertype_text.vsh", STUB_V), fragment_shader=src("rendertype_text.fsh", STUB_F))
 W, H = 1920, 1080
 prog["ScreenSize"].value = (W, H)
@@ -124,12 +127,22 @@ for i, q in enumerate(q for q in quads if q[:4] != WORLD):
 # no stretched triangle of a neighbour reaches the corner region outside the minimap
 check("atlas: no neighbour pixels in the corner", not np.any(np.all(out[:300, :300] == OTHER_RGB, axis=2)))
 
-# 3. ordinary glyphs in a 256 font texture: never taken for the minimap
+# 3. glyphs on a 256 font page are never taken for the minimap. A wrongly taken glyph may move only one vertex (a
+# stretched triangle), so the whole corner must stay empty and the glyph's own four corners drawn where it is.
+GLYPH = (-0.2, -0.1, 0.2, 0.1)
+
+def glyph(name, page, uv):
+    out = draw(page, [(*GLYPH, *uv)])
+    xs = (int((GLYPH[0] + 1) / 2 * W) + 4, int((GLYPH[2] + 1) / 2 * W) - 4)
+    ys = (int(H / 2 - GLYPH[3] * H / 2) + 4, int(H / 2 - GLYPH[1] * H / 2) - 4)
+    check(f"glyph ({name}): drawn whole where it is", all(px(out, x, y) != CLEAR for x in xs for y in ys))
+    check(f"glyph ({name}): nothing in the corner", not np.any(np.any(out[:300, :300] != CLEAR, axis=2)))
+
 font = np.zeros((256, 256, 4), np.uint8); font[:, :] = (255, 255, 255, 255)
-for i, c in enumerate(MARK): font[0, i] = (*c, 255)  # even a font whose first texels happen to match
-out = draw(font, [(-0.2, -0.1, 0.2, 0.1, 0, 0, 8 / 256, 8 / 256)])
-check("glyph: drawn where it is", px(out, W // 2, H // 2) != CLEAR)
-check("glyph: not in the corner", px(out, margin + 60, margin + 60) == CLEAR)
+for i, c in enumerate(MARK): font[0, i] = (*c, 255)  # the first glyph of a page, its first texels the marker colours
+glyph("at a 256 font page's corner, marker texels", font, (0, 0, 8 / 256, 8 / 256))  # font pages are never atlases
+big = np.zeros((2048, 2048, 4), np.uint8); big[:, :] = (255, 255, 255, 255)
+glyph("a whole 128-texel cell of a big texture, no marker", big, (0, 0, 128 / 2048, 128 / 2048))  # the marker rule
 
 print("ALL PASS" if not fails else f"{len(fails)} FAILED")
 sys.exit(1 if fails else 0)

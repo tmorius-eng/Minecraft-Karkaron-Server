@@ -43,8 +43,10 @@ bool suld_marked(ivec2 o) {
 vec2 suld_minimap_corner() {
     ivec2 size = textureSize(Sampler0, 0);
     if (size == ivec2(128, 128)) return suld_marked(ivec2(0, 0)) ? UV0 : vec2(-1.0);
-    // a map atlas: square, 128-texel cells, every corner of a map on a cell boundary (glyph corners almost never are)
-    if (size.x != size.y || size.x < 256 || size.x % 128 != 0) return vec2(-1.0);
+    // a map atlas: square, 128-texel cells, every corner of a map on a cell boundary (glyph corners almost never are).
+    // Never a 256 font page (1.21.11's glyph atlas): a glyph at a page's (0, 0) whose first texels matched the markers
+    // would have one vertex pulled into the corner (check_minimap_shader.py); map atlases are 2048 texels and more.
+    if (size.x != size.y || size.x < 512 || size.x % 128 != 0) return vec2(-1.0);
     ivec2 at = ivec2(round(UV0 * vec2(size)));
     if (any(notEqual(at % 128, ivec2(0))) || any(greaterThan(abs(UV0 * vec2(size) - vec2(at)), vec2(0.01)))) return vec2(-1.0);
     // a boundary touches up to four cells, so the corner comes from the quad's vertex order, the order vanilla and

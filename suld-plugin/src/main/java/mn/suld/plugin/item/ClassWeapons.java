@@ -3,6 +3,7 @@ package mn.suld.plugin.item;
 import mn.suld.api.classgear.WeaponTiers;
 import mn.suld.api.clazz.PlayerClass;
 import mn.suld.api.event.LevelUpEvent;
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.item.ItemDefinition;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.api.item.ItemRarity;
@@ -47,7 +48,7 @@ import java.util.Optional;
 public final class ClassWeapons implements Listener {
 
     public static final int[] TIER_LEVEL = WeaponTiers.LEVEL;
-    private static final String PREFIX = "weapon.class.";
+    private static final String PREFIX = ClassWeaponRule.PREFIX;
     private static final java.util.Set<String> LEGACY_STARTERS = java.util.Set.of("weapon.surgamj_ild", "weapon.surgamj_num");
 
     private record Line(PlayerClass clazz, int index, String base, Color color, double crit) { // names: items/weapons.json
@@ -203,7 +204,6 @@ public final class ClassWeapons implements Listener {
         int tier = tierFor(level);
         ItemDefinition d = definition(c, tier);
         java.util.UUID id = remembered(p);
-        mn.suld.api.loot.Rng seeded = mn.suld.api.loot.Rng.seeded(seed(p.getUniqueId(), c, tier));
         ItemInstance i = id == null
                 ? services.itemService().generate(d, d.rarity(), level, p.getUniqueId(), "recover")
                 : services.itemService().generator().generate(d, d.rarity(), level,
@@ -309,13 +309,6 @@ public final class ClassWeapons implements Listener {
             p.updateInventory();
             PlayerDataSaves.now(p);
         }
-    }
-
-    public static long seed(java.util.UUID player, PlayerClass clazz, int tier) {
-        long h = player.getMostSignificantBits() ^ Long.rotateLeft(player.getLeastSignificantBits(), 17);
-        h ^= (clazz.ordinal() + 1L) * 0x9E3779B97F4A7C15L;
-        h ^= (long) tier * 0xBF58476D1CE4E5B9L;
-        return h == 0 ? 1L : h;
     }
 
     // ------------------------------------------------------------------ effects

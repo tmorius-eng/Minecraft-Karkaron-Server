@@ -40,12 +40,9 @@ def m(ref: str) -> dict:
 
 
 def bow_tree(prefix: str) -> dict:
+    # at rest the plain bow; the draw frames follow the use time (no item cooldown is ever set on a bow)
     return {"type": "minecraft:condition", "property": "minecraft:using_item",
-            "on_false": {"type": "minecraft:range_dispatch", "property": "minecraft:cooldown",
-                         "fallback": m(prefix),
-                         "entries": [{"threshold": 0.05, "model": m(prefix + "_pulling_0")},
-                                     {"threshold": 0.35, "model": m(prefix + "_pulling_1")},
-                                     {"threshold": 0.70, "model": m(prefix + "_pulling_2")}]},
+            "on_false": m(prefix),
             "on_true": {"type": "minecraft:range_dispatch", "property": "minecraft:use_duration", "scale": 0.05,
                         "entries": [{"threshold": 0.65, "model": m(prefix + "_pulling_1")},
                                     {"threshold": 0.9, "model": m(prefix + "_pulling_2")}],

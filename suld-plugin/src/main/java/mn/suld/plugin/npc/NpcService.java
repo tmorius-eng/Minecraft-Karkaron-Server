@@ -1,6 +1,7 @@
 package mn.suld.plugin.npc;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.api.worldbuild.WorldPoint;
 import mn.suld.plugin.SuldServices;
@@ -438,7 +439,7 @@ public final class NpcService implements Listener {
         Menu m = new Menu(3, "Дархан · Засвар ба сайжруулалт", null);
         boolean damaged = !it.getType().isAir() && it.getItemMeta() instanceof Damageable d && d.hasDamage();
         mn.suld.api.item.ItemInstance inst = it.getType().isAir() ? null : services.items().read(it).orElse(null);
-        boolean upgradable = inst != null && !inst.definitionId().startsWith("weapon.class.") && !inst.definitionId().startsWith("armor.class.") && !services.relics().items().isRelic(it)
+        boolean upgradable = inst != null && !ClassWeaponRule.isClassWeapon(inst.definitionId()) && !inst.definitionId().startsWith("armor.class.") && !services.relics().items().isRelic(it)
                 && upgradableDef(mn.suld.plugin.content.SuldContent.definitionFor(inst.definitionId())) && it.getAmount() == 1;
         // the class armour: inspect, next tier, mastery, upgrade with confirmation (SmithMenu)
         m.set(22, Menu.item(Material.NETHERITE_CHESTPLATE, Menu.title("⚔ Ангийн хуяг", NamedTextColor.GOLD),

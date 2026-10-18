@@ -3,6 +3,7 @@ package mn.suld.plugin.combat;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
 import mn.suld.api.clazz.PlayerClass;
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.plugin.SuldServices;
 import mn.suld.plugin.ui.Messages;
@@ -114,9 +115,7 @@ public final class CombatFeel implements Listener {
         Optional<ItemInstance> i = services.items().read(it);
         if (i.isEmpty()) return false;
         String id = i.get().definitionId();
-        if (id.startsWith("weapon.class.")) return true;
-        mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(id);
-        return def != null && def.type().category() == mn.suld.api.item.ItemType.Category.WEAPON;
+        return ClassWeaponRule.isWeapon(id, mn.suld.plugin.content.SuldContent.definitionFor(id));
     }
 
     // ------------------------------------------------------------------ lock-on

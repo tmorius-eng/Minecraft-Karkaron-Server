@@ -1,5 +1,6 @@
 package mn.suld.plugin.item;
 
+import mn.suld.api.item.ClassWeaponRule;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -107,7 +108,7 @@ public final class BowQuiver implements Listener {
 
     private boolean holdsClassBow(Player p) {
         ItemStack hand = p.getInventory().getItemInMainHand();
-        return hand.getType() == Material.BOW && items.read(hand).map(i -> i.definitionId().startsWith("weapon.class.mergen.")).orElse(false);
+        return hand.getType() == Material.BOW && items.read(hand).map(i -> ClassWeaponRule.isClassWeapon(i.definitionId(), mn.suld.api.clazz.PlayerClass.MERGEN)).orElse(false);
     }
 
     private static boolean arrow(ItemStack s) {

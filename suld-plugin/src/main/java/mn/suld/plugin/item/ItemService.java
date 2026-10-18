@@ -243,12 +243,8 @@ public final class ItemService {
     /** Give loot to a player (inventory first, the ground for the rest), announcing legendary and better drops. */
     public void give(Player p, List<LootDrop> drops, String reason) {
         for (LootDrop d : drops) {
-            ItemInstance inst = d.item();
-            ItemDefinition def = catalog.item(inst.definitionId()).orElse(null);
-            if (p != null && def != null && !inst.bound() && def.bindingAt(inst.rarity()) == mn.suld.api.item.Binding.ON_PICKUP) {
-                inst = inst.boundTo(p.getUniqueId());
-            }
-            // amounts above one stack (bulk salvage) are split; stack() alone would clamp and lose the rest
+            // stackFor binds an on-pickup item to its receiver; amounts above one stack (bulk salvage) are split, where
+            // stack() alone would clamp and lose the rest
             for (int left = Math.max(1, d.amount()); left > 0; ) {
                 ItemStack s = stackFor(d.item(), p, left);
                 left -= s.getAmount();

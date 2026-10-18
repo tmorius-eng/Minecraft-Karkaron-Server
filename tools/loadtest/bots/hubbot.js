@@ -12,7 +12,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
-const G = { FRAME: '', HUB: '', PROFILE: '', TAB_ON: '', BACK: '' };   // Glyphs.java
+const GL = require('./glyphs');
+const G = { FRAME: GL.HUB_FRAME, HUB: GL.PAGE_HUB, PROFILE: GL.PAGE_PROFILE, TAB_ON: GL.HUB_TAB_ON, BACK: GL.HUB_BACK };   // ui/Glyphs.java
 const has = (w, g) => !!w && (JSON.stringify(w.title).includes(g) || JSON.stringify(w.title).includes('\\u' + g.charCodeAt(0).toString(16)));
 
 function join(name) {
@@ -93,21 +94,21 @@ async function click(b, slot) {
     check(lines.length === 0, c + ' answers with a window, not chat', lines.join(' | ').slice(0, 160) || 'no chat');
   }
   r = await open(b, '/help');
-  check(has(r.w, '\ue04f') && r.w.slots[8], '/help opens the Тусламж page with the tutorial on the ornament tile', r.w ? 'ok' : 'no window');
+  check(has(r.w, GL.PAGE_HELP) && r.w.slots[8], '/help opens the Тусламж page with the tutorial on the ornament tile', r.w ? 'ok' : 'no window');
 
   r = await open(b, '/rankup');
-  check(has(r.w, '\ue050') && has(r.w, '\ue054'), '/rankup opens the Rankup page with the owned rank glowing', r.w ? 'ok' : 'no window');
+  check(has(r.w, GL.PAGE_RANKUP) && [GL.HUB_CARD_ON_R1, GL.HUB_CARD_ON_R2, GL.HUB_CARD_ON_R3, GL.HUB_CARD_ON_R4].some(g => has(r.w, g)), '/rankup opens the Rankup page with the owned rank glowing', r.w ? 'ok' : 'no window');
   r = await open(b, '/shop');
   const bread = r.w && r.w.slots[9] && r.w.slots[9].name === 'bread';
-  check(has(r.w, '\ue051') && bread && r.w.slots[53], '/shop opens the Дэлгүүр page: bread in the first well, a next-page arrow', r.w ? (r.w.slots[9] ? r.w.slots[9].name : 'no item') : 'no window');
+  check(has(r.w, GL.PAGE_SHOP) && bread && r.w.slots[53], '/shop opens the Дэлгүүр page: bread in the first well, a next-page arrow', r.w ? (r.w.slots[9] ? r.w.slots[9].name : 'no item') : 'no window');
   let w2 = await click(b, 53);
-  check(has(w2, '\ue052') && w2.slots[52], 'the arrow turns to page two (with a previous-page arrow)', w2 ? 'ok' : 'no window');
+  check(has(w2, GL.PAGE_SHOP2) && w2.slots[52], 'the arrow turns to page two (with a previous-page arrow)', w2 ? 'ok' : 'no window');
   r = await open(b, '/travel');
-  check(has(r.w, '\ue053') && r.w.slots[9] && r.w.slots[36], '/travel opens the Аялал page (relays and the way home)', r.w ? 'ok' : 'no window');
+  check(has(r.w, GL.PAGE_TRAVEL) && r.w.slots[9] && r.w.slots[36], '/travel opens the Аялал page (relays and the way home)', r.w ? 'ok' : 'no window');
   r = await open(b, '/settings');
-  const glows = (w) => (JSON.stringify(w.title).match(/\ue054|\\ue054/g) || []).length;
+  const glows = (w) => JSON.stringify(w.title).split(GL.HUB_CARD_ON_R1).length - 1; // the card glow of row 1
   const before = r.w ? glows(r.w) : -1;
-  check(has(r.w, '\ue058') && before === 2, '/settings opens the Тохиргоо page with every setting glowing (two glows on row 1)', 'row-1 glows ' + before);
+  check(has(r.w, GL.PAGE_SETTINGS) && before === 2, '/settings opens the Тохиргоо page with every setting glowing (two glows on row 1)', 'row-1 glows ' + before);
   w2 = await click(b, 9);
   check(w2 && glows(w2) === 1, 'clicking a setting turns it off (one glow left on row 1) and reopens the page', w2 ? 'row-1 glows ' + glows(w2) : 'no window');
   w2 = await click(b, 9);

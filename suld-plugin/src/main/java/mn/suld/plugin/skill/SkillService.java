@@ -1,6 +1,7 @@
 package mn.suld.plugin.skill;
 
 import mn.suld.api.clazz.PlayerClass;
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.api.skill.ComboTracker;
 import mn.suld.api.skill.ResourcePool;
@@ -226,10 +227,9 @@ public final class SkillService implements Listener {
 
     private boolean holdsClassWeapon(Player p, PlayerClass c) {
         return services.items().read(p.getInventory().getItemInMainHand()).map(i -> {
-            if (i.definitionId().startsWith("weapon.class." + c.id() + ".")) return true;
-            mn.suld.api.item.ItemDefinition def = mn.suld.plugin.content.SuldContent.definitionFor(i.definitionId());
-            if (def == null || def.type().category() != mn.suld.api.item.ItemType.Category.WEAPON) return false;
-            if (!mn.suld.api.loot.LootEngine.affinity(c).contains(def.type()) || !def.allows(c)) return false;
+            if (ClassWeaponRule.isClassWeapon(i.definitionId(), c)) return true;
+            if (!ClassWeaponRule.fightsWith(i.definitionId(), mn.suld.plugin.content.SuldContent.definitionFor(i.definitionId()), c)) return false;
+            // a crafted weapon counts only while it is active (worn at a level and class it allows)
             return services.equipment() == null || !services.equipment().bonus(p).inactive().containsKey(mn.suld.api.item.EquipSlot.MAIN_HAND);
         }).orElse(false);
     }
@@ -525,7 +525,6 @@ public final class SkillService implements Listener {
         ComboTracker.Result r = t.click(c, now);
         if (r.kind() != ComboTracker.Kind.IGNORED && c == 'R') rightClickCue(p, clazz);
         if (r.kind() == ComboTracker.Kind.PROGRESS) {
-            if (c == 'R' && clazz != PlayerClass.MERGEN) p.swingOffHand(); // WP-05: visual hand motion on melee/staff R combo step
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.35f, r.combo().length() == 1 ? 1.4f : 1.7f);
             services.hud().refresh(p);
         } else if (r.kind() == ComboTracker.Kind.COMPLETE) {

@@ -1,5 +1,6 @@
 package mn.suld.plugin.branding;
 
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.api.style.Rank;
 import mn.suld.plugin.SuldServices;
@@ -152,7 +153,7 @@ public final class OnboardingService implements Listener {
         for (var it : p.getInventory().getStorageContents()) {
             if (it == null) continue;
             var inst = services.items().read(it).orElse(null);
-            if (inst != null && !inst.definitionId().startsWith("weapon.class.") && !inst.soulbound()) return true;
+            if (inst != null && !ClassWeaponRule.isClassWeapon(inst.definitionId()) && !inst.soulbound()) return true;
         }
         return false;
     }

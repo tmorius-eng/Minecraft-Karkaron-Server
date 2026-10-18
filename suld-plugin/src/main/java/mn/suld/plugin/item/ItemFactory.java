@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.TooltipDisplay;
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.item.ItemCatalog;
 import mn.suld.api.item.ItemCodec;
 import mn.suld.api.item.ItemDefinition;
@@ -228,7 +229,7 @@ public final class ItemFactory {
                 .decoration(TextDecoration.BOLD, i.rarity().atLeast(ItemRarity.LEGENDARY)));
         List<Component> lore = new ArrayList<>();
         for (int k = 1; k < lines.size(); k++) lore.add(component(lines.get(k), color));
-        if (def.id().startsWith("weapon.class.mergen.")) {
+        if (ClassWeaponRule.isClassWeapon(def.id(), mn.suld.api.clazz.PlayerClass.MERGEN)) {
             lore.add(Component.text("Баруун товч — шууд харвана, сум хэрэггүй", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
         } else if (def.material().endsWith(":bow") || def.material().equals("bow")) {
             lore.add(Component.text("∞ Сум дуусахгүй", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));

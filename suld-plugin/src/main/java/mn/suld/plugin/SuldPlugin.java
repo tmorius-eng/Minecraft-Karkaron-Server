@@ -331,8 +331,8 @@ public final class SuldPlugin extends JavaPlugin {
         menuSky = new mn.suld.plugin.gui.MenuSky(this, services);
         getServer().getPluginManager().registerEvents(menuSky, this);
         menuSky.start();
-        // a click in a sky window is the window's: no combo, no shot (the atlas is made later, so read the field then)
-        skills.paused = pl -> menuSky.isOpen(pl) || skillSky.isOpen(pl) || atlas != null && atlas.isOpen(pl);
+        // a click in a sky window is the window's: no combo, no shot (UiFocus's sky test, set below once the atlas exists)
+        skills.paused = mn.suld.plugin.ui.UiFocus::inSky;
         // «Дайчдын Дасгалын Талбай» (docs/TRAINING_GROUNDS.md): every class at level 60 on the training Wardens, nothing kept
         training = new mn.suld.plugin.training.TrainingService(this, services, skills, skillTree);
         mn.suld.plugin.gui.MenuSky trainingMenuSky = menuSky;
@@ -502,7 +502,7 @@ public final class SuldPlugin extends JavaPlugin {
             mn.suld.plugin.map.AtlasSky openAtlas = atlas;
             // the bar and the label stay off every sky window (the label, seen through blocks, would float over the menu
             // and the skill tree too), as the minimap does
-            waypoints.busy = pl -> openAtlas.isOpen(pl) || atlasMenuSky.isOpen(pl) || atlasSkillSky.isOpen(pl);
+            waypoints.busy = mn.suld.plugin.ui.UiFocus::inSky;
             services.hud().quiet(openAtlas::isOpen); // so do the HUD panel and the target frame
             atlas.toggleScreenMarkers = pl -> {
                 boolean on = services.styles().toggleSetting(pl, mn.suld.api.style.PlayerSetting.SCREEN_MARKERS);

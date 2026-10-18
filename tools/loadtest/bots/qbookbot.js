@@ -1,6 +1,7 @@
 const mineflayer = require('mineflayer'); const { execFileSync } = require('child_process');
 const [ctl] = process.argv.slice(2); const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
+const GL = require('./glyphs'); // ui/Glyphs.java
 const N = 'qbook' + (Date.now() % 1000);
 const bot = mineflayer.createBot({ host: '127.0.0.1', port: 25572, username: N, version: '1.21.11', auth: 'offline', hideErrors: true });
 bot.on('resourcePack', () => { try { bot.acceptResourcePack(); } catch (e) {} });
@@ -14,7 +15,7 @@ function report(label, m) {
   const t = txt(m.title);
   const items = [];
   for (let i = 9; i < 45; i++) if (m.slots[i]) items.push(i);
-  console.log(label, 'bg:', ['', '', '', ''].filter(g => has(t, g)).map(g => g.charCodeAt(0).toString(16)), 'cards:', items.length,
+  console.log(label, 'bg:', ['GUI_QUESTBOOK1', 'GUI_QUESTBOOK2', 'GUI_QUESTBOOK3'].filter(n => has(t, GL[n])), 'cards:', items.length,
     'tabs:', [0, 3, 6].map(s => !!m.slots[s]), 'map btn:', !!m.slots[51]);
   return items;
 }
@@ -30,15 +31,15 @@ bot.once('spawn', async () => {
       const a = m.slots[9], act = m.slots[9 + 0];
       console.log('slot9 name:', txt((a.components||[]).find(x=>x.type==='custom_name')?.data).slice(0, 120));
       const lore = loreOf(a);
-      console.log('slot9 tooltip_style:', styleOf(a), 'badge ACTIVE:', has(lore, ''), 'mouse:', has(lore, ''), 'Мэдээлэл:', lore.includes('Мэдээлэл'), 'Шагнал:', lore.includes('Шагнал'), '┃:', lore.includes('┃'));
-      const lk = m.slots[10]; console.log('slot10 LOCKED badge:', has(loreOf(lk), ''), 'tooltip_style:', styleOf(lk));
+      console.log('slot9 tooltip_style:', styleOf(a), 'badge ACTIVE:', has(lore, GL.BADGE_Q_ACTIVE), 'mouse:', has(lore, GL.MOUSE_LEFT), 'Мэдээлэл:', lore.includes('Мэдээлэл'), 'Шагнал:', lore.includes('Шагнал'), '┃:', lore.includes('┃'));
+      const lk = m.slots[10]; console.log('slot10 LOCKED badge:', has(loreOf(lk), GL.BADGE_Q_LOCKED), 'tooltip_style:', styleOf(lk));
       console.log('tab0 style:', styleOf(m.slots[0]));
       w = win(); await bot.clickWindow(6, 0, 0); m = await w; await sleep(300);
       report('sites tab:', m);
-      if (m) { const s = m.slots[9]; console.log('site9 lore unseen badge:', has(loreOf(s), ''), 'style:', styleOf(s)); }
+      if (m) { const s = m.slots[9]; console.log('site9 lore unseen badge:', has(loreOf(s), GL.BADGE_Q_UNSEEN), 'style:', styleOf(s)); }
       w = win(); await bot.clickWindow(0, 0, 0); m = await w; await sleep(300);
       report('act I tab:', m);
-      if (m) console.log('act1 slot9 DONE badge:', has(loreOf(m.slots[9]), ''));
+      if (m) console.log('act1 slot9 DONE badge:', has(loreOf(m.slots[9]), GL.BADGE_Q_DONE));
       w = win(); await bot.clickWindow(51, 0, 0); m = await w; await sleep(300);
       console.log('map view title:', m && txt(m.title).slice(0, 80), 'book btn 52:', m && !!m.slots[52]);
       if (m) bot.closeWindow(m);

@@ -43,7 +43,7 @@ public final class ItemEconomy {
 
     /** The class weapon and class armour: soulbound for good, never sold, salvaged or destroyed. */
     public static boolean classGear(String definitionId) {
-        return definitionId.startsWith("weapon.class.") || definitionId.startsWith("armor.class.") || definitionId.startsWith("weapon.surgamj_");
+        return ClassWeaponRule.isClassWeapon(definitionId) || definitionId.startsWith("armor.class.") || definitionId.startsWith("weapon.surgamj_");
     }
 
     /** Coins to repair {@code missing} durability points. */

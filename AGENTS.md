@@ -52,7 +52,9 @@ Flyway, Citizens, DecentHolograms or ModelEngine here.
 * **State.** Key per-player maps by `UUID`, never by `Player` or `Entity`, and clear them on `PlayerQuitEvent`.
   Spawned display or map entities are non-persistent and swept on start.
 * **Append-only ids.** Font glyph code points (`resourcepack/assets/suld/font/*.json`, `ui/Glyphs`, `hud/HudGlyphs`) and
-  `PlayerSetting` bits are only ever appended. An existing code point or bit never gets a new meaning.
+  `PlayerSetting` bits are only ever appended. An existing code point or bit never gets a new meaning. Every glyph is
+  recorded in `assets/registry/glyph_codepoints.json` and `tools/validation/validate_glyph_codepoints.py` fails on a
+  changed, vanished or reused one (`--update` appends new glyphs, `--retire` retires one; never edit an entry).
 * **Text.** Adventure `Component`s; player-facing text is Mongolian Cyrillic. Legacy `§` codes only through the
   existing helpers that already take them.
 * **The client is never trusted.**

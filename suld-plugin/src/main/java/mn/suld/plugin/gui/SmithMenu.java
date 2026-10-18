@@ -7,6 +7,7 @@ import mn.suld.api.classgear.ClassGear;
 import mn.suld.api.classgear.MasteryPerks;
 import mn.suld.api.classgear.MasteryRules;
 import mn.suld.api.clazz.PlayerClass;
+import mn.suld.api.item.ClassWeaponRule;
 import mn.suld.api.item.ItemInstance;
 import mn.suld.api.profile.PlayerProfile;
 import mn.suld.plugin.SuldServices;
@@ -153,7 +154,7 @@ public final class SmithMenu {
     private ItemStack findWeapon(Player p, ClassGear g) {
         for (ItemStack it : p.getInventory().getContents()) {
             ItemInstance ii = it == null ? null : services.items().read(it).orElse(null);
-            if (ii != null && ii.definitionId().startsWith("weapon.class.") && p.getUniqueId().equals(ii.boundTo())) return it.clone();
+            if (ii != null && ClassWeaponRule.isClassWeapon(ii.definitionId()) && p.getUniqueId().equals(ii.boundTo())) return it.clone();
         }
         return null;
     }

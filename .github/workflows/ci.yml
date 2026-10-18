@@ -4,8 +4,8 @@
 #   1. ./gradlew build      — suld-api + suld-plugin unit tests, the simulator golden tests (simTest), the shaded jar
 #   2. JDBC integration tests against a real PostgreSQL 16 (SULD_TEST_PG_URL): the same *IT classes run on H2 inside
 #      step 1; here they also run on the production dialect, as `TESTING.md` describes for a local run
-#   3. python3 tools/validation/run_all.py — the content/registry, resource pack, pack budget and world plan validators,
-#      plus the plugin-lock unit test (OPS-002)
+#   3. python3 tools/validation/run_all.py — the content/registry, resource pack, pack budget, world plan and glyph
+#      code point validators and the minimap shader check (Mesa under Xvfb), plus the plugin-lock unit test (OPS-002)
 # The Mineflayer bot harness (tools/loadtest/) is NOT run here: it needs a Paper server with the offline dev flag and
 # Mojang downloads; it stays a local step (docs/KHURALDAI.md §9, TESTING.md).
 name: CI
@@ -63,8 +63,18 @@ jobs:
           SULD_TEST_PG_PASS: suld_it
         run: ./gradlew :suld-plugin:test --no-daemon --tests "mn.suld.plugin.persistence.*IT" --rerun
 
+      - name: Mesa and moderngl for the minimap shader check
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q xvfb xauth libgl1-mesa-dri
+          python3 -m venv "$RUNNER_TEMP/gl"
+          "$RUNNER_TEMP/gl/bin/pip" install -q moderngl numpy
+
       - name: Asset and content validators
-        run: python3 tools/validation/run_all.py
+        # the shader check renders on Mesa's software GL under Xvfb; a skip here is a failure (no fake PASS)
+        env:
+          SULD_REQUIRE_GPU: "1"
+        run: xvfb-run -a "$RUNNER_TEMP/gl/bin/python" tools/validation/run_all.py
 
       - name: Plugin lock (OPS-002) unit test
         run: python3 -I tools/plugins/test_fetch_plugins.py
