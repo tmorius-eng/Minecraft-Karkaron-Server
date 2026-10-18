@@ -18,7 +18,11 @@ if [[ -z "$ssh_port" ]]; then
 fi
 ssh_port="${ssh_port:-22}"
 
-log "Firewall: SSH=$ssh_port Minecraft=$SERVER_PORT pack=$PACK_PORT bedrock=${BEDROCK_PORT}/udp"
+# AUTH_MODE=hybrid: SERVER_PORT is the Velocity proxy; Paper's PAPER_PORT is loopback only and is never opened.
+if hybrid && [[ "$PAPER_PORT" == "$SERVER_PORT" || "$PAPER_PORT" == "$PACK_PORT" || "$PAPER_PORT" == "$ssh_port" ]]; then
+  die "PAPER_PORT ($PAPER_PORT) collides with a public port; it must stay closed"
+fi
+log "Firewall: SSH=$ssh_port Minecraft=$SERVER_PORT$(hybrid && echo ' (Velocity)') pack=$PACK_PORT bedrock=${BEDROCK_PORT}/udp"
 run ufw default deny incoming
 run ufw default allow outgoing
 # SSH rule goes in BEFORE enabling, so enabling can never lock the operator out.

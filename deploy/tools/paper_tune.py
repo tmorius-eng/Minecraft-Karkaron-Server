@@ -8,7 +8,9 @@ Only keys that already exist are changed (a typo, or a key the installed Paper v
 exit 1 instead of silently writing a setting Paper ignores). Comments, order and every other line are preserved.
 Values are written verbatim (numbers, booleans, `default`); a list key takes a flow list `[a, b]`, which replaces the
 old `- item` lines. The profile format is one `file: a.b.c=value` per line;
-`#` starts a comment. Dependency-free (no PyYAML on the server).
+`#` starts a comment. A value `env:NAME` is the environment variable NAME as a quoted string, so a secret (the proxy's
+forwarding secret, a database password) never appears in argv or in the profile. Dependency-free (no PyYAML on the
+server).
 """
 import os
 import re
@@ -88,7 +90,13 @@ def parse(edit):
     key, sep, value = edit.partition("=")
     if not sep or not key.strip():
         raise SystemExit(f"paper_tune: bad edit {edit!r} (want a.b.c=value)")
-    return key.strip(), value.strip()
+    value = value.strip()
+    if value.startswith("env:"):
+        name = value[4:]
+        if not os.environ.get(name):
+            raise SystemExit(f"paper_tune: {key.strip()}: environment variable {name} is empty")
+        value = "'" + os.environ[name].replace("'", "''") + "'"
+    return key.strip(), value
 
 
 def main(argv):

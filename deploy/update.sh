@@ -149,6 +149,7 @@ activate_release() {
   install -o "$SULD_USER" -g "$SULD_USER" -m 644 "$RELEASES_DIR/$JAR" "$SERVER_DIR/plugins/SULD.jar" || return 1
   install_plugins
   install_grim_config
+  configure_auth
   if [[ -n "$PACK_FILE" && -f "$PACK_DIR/$PACK_FILE" ]]; then
     apply_pack_config "$PACK_FILE" "$PACK_SHA1"
   else
@@ -160,6 +161,11 @@ activate_release() {
   started="$(date +%s)"
   systemctl start suld
   wait_ready 300 "$started" || { fail "Server did not finish booting in 5 minutes."; return 1; }
+  if hybrid; then  # the backend restart dropped every player already; the proxy picks up its new files now
+    local proxy_started; proxy_started="$(date +%s)"
+    systemctl restart suld-proxy
+    wait_proxy_ready 60 "$proxy_started" || { fail "The Velocity proxy did not start."; return 1; }
+  fi
   sleep 5
   "$BIN_DIR/health-check.sh" || return 1
 }

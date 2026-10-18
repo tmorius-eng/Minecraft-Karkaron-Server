@@ -1,0 +1,120 @@
+# SÜLD: AuthMe's player messages in Mongolian (deploy.sh copies this to plugins/AuthMe/messages/ with
+# messagesLanguage: mn, perPlayerLocale: false). Only SÜLD's own lines: every key not here comes from AuthMe's
+# bundled default. Keys as in AuthMe 6.0.1.
+registration:
+  register_request: '&3Бүртгүүлнэ үү: /register <нууц үг> <нууц үг дахин>'
+  command_usage: '&cЖишээ: /register <нууц үг> <нууц үг дахин>'
+  reg_only: '&4Зөвхөн бүртгэлтэй тоглогч орно.'
+  kicked_admin_registered: 'Таныг админ бүртгэлээ: дахин орж нэвтэрнэ үү.'
+  success: '&2Бүртгэл амжилттай!'
+  disabled: '&cТоглоом дотор бүртгүүлэх боломжгүй.'
+  name_taken: '&cЭнэ нэр аль хэдийн бүртгэлтэй.'
+password:
+  match_error: '&cХоёр нууц үг таарсангүй, дахин шалгана уу.'
+  name_in_password: '&cНэрээ нууц үг болгож болохгүй, өөрийг сонгоно уу.'
+  unsafe_password: '&cЭнэ нууц үг хэт энгийн байна, өөрийг сонгоно уу.'
+  forbidden_characters: '&4Нууц үгэнд зөвшөөрөгдөөгүй тэмдэгт байна. Зөвшөөрөгдөх нь: %valid_chars'
+  wrong_length: '&cНууц үг хэт богино эсвэл хэт урт байна.'
+login:
+  command_usage: '&cЖишээ: /login <нууц үг>'
+  wrong_password: '&cНууц үг буруу!'
+  success: '&2Амжилттай нэвтэрлээ!'
+  login_request: '&cНэвтэрнэ үү: /login <нууц үг>'
+  timeout_error: '&4Нэвтрэх хугацаа дууслаа. Дахин орно уу.'
+error:
+  unregistered_user: '&cЭнэ тоглогч бүртгэлгүй байна.'
+  denied_command: '&cЭнэ командыг ашиглахын тулд эхлээд нэвтэрнэ үү.'
+  denied_chat: '&cЧатлахын тулд эхлээд нэвтэрнэ үү.'
+  not_logged_in: '&cТа нэвтрээгүй байна.'
+  tempban_max_logins: '&cОлон удаа буруу оролдсон тул түр хоригдлоо.'
+  max_registration: '&cЭнэ холболтоос бүртгэх дээд хэмжээнд хүрсэн (%reg_count/%max_acc %reg_names).'
+  no_permission: '&4Танд энэ үйлдлийн эрх алга.'
+  unexpected_error: '&4Гэнэтийн алдаа гарлаа, админд хандана уу.'
+  kick_for_vip: '&3Сервер дүүрэн үед VIP тоглогч орлоо.'
+  logged_in: '&cТа аль хэдийн нэвтэрсэн байна.'
+  kick_unresolved_hostname: '&cАлдаа: тоглогчийн хаяг тодорхойгүй.'
+antibot:
+  kick_antibot: 'Ботоос хамгаалах горим идэвхтэй байна. Хэдэн минутын дараа орно уу.'
+unregister:
+  success: '&cБүртгэл устлаа.'
+  command_usage: '&cЖишээ: /unregister <нууц үг>'
+misc:
+  accounts_owned_self: 'Танд %count данс бий:'
+  account_not_activated: '&cДанс тань идэвхжээгүй байна, имэйлээ шалгана уу.'
+  password_changed: '&2Нууц үг солигдлоо!'
+  logout: '&2Системээс гарлаа.'
+  usage_change_password: '&cЖишээ: /changepassword <хуучин нууц үг> <шинэ нууц үг>'
+session:
+  invalid_session: '&cIP хаяг тань өөрчлөгдсөн тул сешн дууслаа.'
+  valid_session: '&2Өмнөх сешнээр нэвтэрлээ.'
+on_join_validation:
+  name_length: '&4Нэр тань хэт богино эсвэл хэт урт байна.'
+  characters_in_name: '&4Нэрэнд зөвшөөрөгдөөгүй тэмдэгт байна. Зөвшөөрөгдөх нь: %valid_chars'
+  country_banned: '&4Таны улсаас орох боломжгүй.'
+  not_owner_error: 'Та энэ дансны эзэн биш байна. Өөр нэр сонгоно уу!'
+  kick_full_server: '&4Сервер дүүрэн байна, дараа дахин оролдоно уу.'
+  same_nick_online: '&4Ижил нэртэй тоглогч аль хэдийн тоглож байна.'
+  invalid_name_case: '%valid нэрээр орно уу (%invalid биш). Том жижиг үсгээ шалгана уу.'
+  same_ip_online: 'Ижил IP-тэй тоглогч аль хэдийн тоглож байна.'
+  quick_command: 'Командыг хэт хурдан ашиглалаа. Дахин орж, түр хүлээгээд ашиглана уу.'
+captcha:
+  usage_captcha: '&3Нэвтрэхийн тулд кодыг бичнэ үү: /captcha %captcha_code'
+  wrong_captcha: '&cКод буруу, чатад бичнэ үү: /captcha %captcha_code'
+  valid_captcha: '&2Код зөв!'
+  captcha_for_registration: 'Бүртгүүлэхийн өмнө кодыг бичнэ үү: /captcha %captcha_code'
+  register_captcha_valid: '&2Код зөв! Одоо /register-ээр бүртгүүлнэ үү.'
+dialog:
+  login:
+    title: '&6Нэвтрэх'
+    body: '&7Үргэлжлүүлэхийн тулд нууц үгээ оруулна уу.'
+    password: '&fНууц үг'
+    recovery_email: '&fСэргээх имэйл (заавал биш)'
+    recovery_button: '&eНууц үгээ мартсан уу?'
+    button: '&aНэвтрэх'
+    canceled: '&cТа нэвтрэлтийг цуцаллаа.'
+  register:
+    title: '&6Бүртгүүлэх'
+    body: '&7SÜLD-д тоглохын тулд нууц үг үүсгэнэ үү.'
+    password: '&fНууц үг'
+    confirm_password: '&fНууц үг дахин'
+    email: '&fИмэйл'
+    confirm_email: '&fИмэйл дахин'
+    button: '&aБүртгүүлэх'
+    canceled: '&cТа бүртгэлийг цуцаллаа.'
+  two_factor:
+    title: '&6Хоёр шатлалт баталгаажуулалт'
+    body: '&7Баталгаажуулах апп-аа нээж 6 оронтой кодыг оруулна уу.'
+    code: '&f2FA код'
+    button: '&aБаталгаажуулах'
+  recovery:
+    title: '&6Нууц үг сэргээх'
+    body: '&7Бүртгэлтэй имэйлээ оруулбал сэргээх код илгээнэ.'
+    email: '&fИмэйл хаяг'
+    button: '&aСэргээх имэйл илгээх'
+  button:
+    cancel: '&cЦуцлах'
+time:
+  second: 'секунд'
+  seconds: 'секунд'
+  minute: 'минут'
+  minutes: 'минут'
+  hour: 'цаг'
+  hours: 'цаг'
+  day: 'өдөр'
+  days: 'өдөр'
+command:
+  player_only: '&cЭнэ командыг зөвхөн тоглогч ашиглана.'
+  unknown: '&4Ийм команд алга!'
+  incorrect_arguments: '&4Командын утга буруу!'
+premium:
+  feature_disabled: '&cЭнэ серверт premium горим идэвхгүй.'
+  account_not_found: '&cТаны нэртэй Mojang (Microsoft) данс олдсонгүй.'
+  already_enabled: '&ePremium горим аль хэдийн идэвхтэй.'
+  enable_success: '&2Premium горим идэвхжлээ! Цаашид нууц үггүйгээр нэвтэрнэ.'
+  not_enabled: '&ePremium горим идэвхгүй байна.'
+  disable_success: '&2Premium горим унтарлаа. Цаашид нууц үгээр нэвтэрнэ.'
+  error: '&cPremium төлөвийг шалгахад алдаа гарлаа. Дараа дахин оролдоно уу.'
+  admin:
+    kick_reason: '&cТаны дансны premium тохиргоог админ өөрчиллөө. Дахин орно уу.'
+  pending_kick: '&ePremium шалгалт эхэллээ. Mojang данс тань мөн эсэхийг батлахын тулд дахин орно уу.'
+  pending_fail: '&cPremium шалгалт амжилтгүй. Нууц үгээрээ нэвтэрнэ үү.'

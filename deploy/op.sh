@@ -3,7 +3,9 @@
 #   sudo /opt/suld/bin/op.sh YourName [OtherName ...]    grant op
 #   sudo /opt/suld/bin/op.sh --deop Name                 revoke op
 # Names are validated (Minecraft names: 3-16 chars, letters/digits/_) before anything is sent
-# to the console. With online-mode=true Paper resolves the account UUID from Mojang.
+# to the console. With AUTH_MODE=online Paper resolves the account UUID from Mojang; with AUTH_MODE=hybrid the
+# operator is the offline UUID of the name, so register the name in AuthMe first (console: authme register <name> <pw>),
+# or whoever registers it first holds the operator account.
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/lib.sh"

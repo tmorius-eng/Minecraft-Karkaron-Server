@@ -61,7 +61,7 @@ ensure_env_file() {
 preflight() {
   log "Preflight checks"
   if [[ "$DRY_RUN" == "1" ]]; then
-    echo "  [dry-run] checks: Ubuntu 24.04, ACCEPT_EULA, DB_PASS, PUBLIC_HOST, RAM >= JVM_MAX+768MB, 8GB disk, network"
+    echo "  [dry-run] checks: Ubuntu 24.04, ACCEPT_EULA, DB_PASS, PUBLIC_HOST, RAM >= JVM_MAX+768MB, 8GB disk, network, AUTH_MODE=$AUTH_MODE"
     return 0
   fi
   # shellcheck disable=SC1091
@@ -70,13 +70,20 @@ preflight() {
     warn "Tested on Ubuntu 24.04; this is ${PRETTY_NAME:-unknown}. Continuing, but expect surprises."
   fi
   [[ "$ACCEPT_EULA" == "true" ]] || die "Set ACCEPT_EULA=true in $SULD_ENV after reading https://aka.ms/MinecraftEULA"
-  # Production identity = Minecraft/Microsoft authentication. Never deploy an offline-mode server.
-  [[ "$ONLINE_MODE" == "true" ]] || die "ONLINE_MODE must be true in production (see docs/AUTHENTICATION.md)"
+  # Production identity: Paper verifies every login with Microsoft (AUTH_MODE=online), or Paper sits on loopback behind
+  # the signed Velocity proxy with AuthMe (AUTH_MODE=hybrid). Never a plain offline-mode server.
+  if hybrid; then
+    [[ "$PAPER_PORT" != "$SERVER_PORT" && "$PAPER_PORT" != "$PACK_PORT" ]] \
+      || die "PAPER_PORT ($PAPER_PORT) must differ from SERVER_PORT and PACK_PORT: the proxy owns SERVER_PORT"
+  else
+    [[ "$ONLINE_MODE" == "true" ]] || die "ONLINE_MODE must be true in production (see docs/AUTHENTICATION.md)"
+  fi
   [[ -n "$DB_PASS" ]] || die "DB_PASS is empty in $SULD_ENV"
   [[ -n "${PUBLIC_HOST:-}" ]] || die "PUBLIC_HOST is empty in $SULD_ENV (public IP or DNS name players use)"
   local mem_mb need_mb disk_mb
   mem_mb="$(awk '/MemTotal/{print int($2/1024)}' /proc/meminfo)"
   need_mb=$(( $(to_mb "$JVM_MAX") + 768 ))
+  hybrid && need_mb=$(( need_mb + $(to_mb "$PROXY_JVM_MAX") ))
   if ((mem_mb < need_mb)); then
     die "RAM ${mem_mb} MB is too small for JVM_MAX=$JVM_MAX (needs ~${need_mb} MB incl. OS + PostgreSQL). Lower JVM_MAX or use a bigger plan."
   fi
@@ -186,9 +193,7 @@ configure_server() {
   [[ "$DRY_RUN" == "1" ]] || sync_db_config
   # Authentication hardening is enforced on every deploy, whatever was edited by hand.
   [[ "$DRY_RUN" == "1" ]] || set_config "auth.allow-insecure-offline-dev-mode=r:false"
-  if [[ "$DRY_RUN" != "1" && -f "$SERVER_DIR/server.properties" ]]; then
-    sed -i 's/^online-mode=.*/online-mode=true/' "$SERVER_DIR/server.properties"
-  fi
+  configure_auth
   [[ "$DRY_RUN" == "1" ]] && echo "  [dry-run] set database.* in $PLUGIN_CONFIG from the env file"
   chmod 600 "$PLUGIN_CONFIG" 2>/dev/null || true
 }
@@ -221,8 +226,14 @@ install_service() {
   render_template "$LIB_DIR/templates/suld.service.tpl"        | install_text /etc/systemd/system/suld.service 644 root:root
   render_template "$LIB_DIR/templates/suld-backup.service.tpl" | install_text /etc/systemd/system/suld-backup.service 644 root:root
   render_template "$LIB_DIR/templates/suld-backup.timer.tpl"   | install_text /etc/systemd/system/suld-backup.timer 644 root:root
+  if hybrid; then
+    render_template "$LIB_DIR/templates/suld-proxy.service.tpl" | install_text /etc/systemd/system/suld-proxy.service 644 root:root
+  elif [[ -f /etc/systemd/system/suld-proxy.service ]]; then
+    run systemctl disable --now suld-proxy.service  # back to AUTH_MODE=online: Paper owns SERVER_PORT again
+  fi
   run systemctl daemon-reload
   run systemctl enable suld.service suld-backup.timer
+  hybrid && run systemctl enable suld-proxy.service
   run systemctl start suld-backup.timer
 }
 
@@ -230,7 +241,7 @@ install_service() {
 start_and_verify() {
   log "Starting SULD"
   if [[ "$DRY_RUN" == "1" ]]; then
-    echo "  [dry-run] systemctl restart suld; wait for 'Done'; run health-check.sh; op.sh ${ADMIN_PLAYERS:-<none>}"
+    echo "  [dry-run] systemctl restart suld$(hybrid && echo ' suld-proxy'); wait for 'Done'; run health-check.sh; op.sh ${ADMIN_PLAYERS:-<none>}"
     return 0
   fi
   local started
@@ -241,6 +252,7 @@ start_and_verify() {
     echo "    journalctl -u suld -n 50 ; tail -n 80 $SERVER_DIR/logs/latest.log"
     exit 1
   fi
+  finish_hybrid
   sleep 5
   "$BIN_DIR/health-check.sh" || { fail "Health check failed — see output above."; exit 1; }
   if [[ -n "$ADMIN_PLAYERS" ]]; then
@@ -271,11 +283,29 @@ tune_paper() {
   ok "Paper tuning applied"
 }
 
+# AUTH_MODE=hybrid: AuthMe writes its config on its first start, so the first deploy tunes it then (store on
+# PostgreSQL, the proxy's shared secret, premium on) and restarts Paper once; then the proxy starts.
+finish_hybrid() {
+  hybrid || return 0
+  if [[ -f "$AUTHME_CONFIG" ]] && ! grep -q '^    backend: POSTGRESQL' "$AUTHME_CONFIG"; then
+    log "AuthMe wrote its config on the first boot: tuning it and restarting once"
+    systemctl stop suld
+    configure_auth
+    local again; again="$(date +%s)"
+    systemctl start suld
+    wait_ready 300 "$again" || die "Server did not come back after the AuthMe config; see logs/latest.log"
+  fi
+  local started; started="$(date +%s)"
+  systemctl restart suld-proxy
+  wait_proxy_ready 60 "$started" || die "The Velocity proxy did not start; see $PROXY_DIR/logs/latest.log"
+  ok "Velocity proxy up on :$SERVER_PORT -> Paper 127.0.0.1:$PAPER_PORT"
+}
+
 summary() {
   cat <<EOM
 
 SULD deployment complete.
-  Connect:        ${PUBLIC_HOST}:${SERVER_PORT}   (Minecraft Java ${MC_VERSION})
+  Connect:        ${PUBLIC_HOST}:${SERVER_PORT}   (Minecraft Java ${MC_VERSION}; accounts: AUTH_MODE=${AUTH_MODE})
   Console:        sudo ${BIN_DIR}/console.sh        (detach: Ctrl-b then d)
   Control:        sudo ${BIN_DIR}/{start,stop,restart}.sh   |   systemctl status suld
   Health:         sudo ${BIN_DIR}/health-check.sh
@@ -289,6 +319,10 @@ EOM
 PLUGIN_JAR_BUILT=""
 ensure_env_file
 load_env
+if hybrid; then
+  ensure_secret VELOCITY_FORWARDING_SECRET
+  ensure_secret AUTHME_PROXY_SECRET
+fi
 [[ "$DRY_RUN" == "1" ]] && [[ -z "$DB_PASS" ]] && DB_PASS="<generated-on-first-run>"
 [[ "$DRY_RUN" == "1" ]] && [[ -z "${PUBLIC_HOST:-}" ]] && PUBLIC_HOST="<detected-public-ip>"
 [[ "$DRY_RUN" == "1" ]] && ACCEPT_EULA=true
@@ -301,6 +335,7 @@ if [[ "$DRY_RUN" != "1" ]] && systemctl is-active --quiet suld 2>/dev/null; then
   log "Server is running; stopping it for the file swap"
   systemctl stop suld
 fi
+if [[ "$DRY_RUN" != "1" ]] && systemctl is-active --quiet suld-proxy 2>/dev/null; then systemctl stop suld-proxy; fi
 build_and_paper
 configure_server
 setup_pack_hosting

@@ -2,6 +2,7 @@
 # Stop the SULD server gracefully (saves the world and all player profiles).
 #   stop.sh [--warn SECONDS]   stop via systemd, optionally warning players first
 #   stop.sh --direct           graceful stop inside tmux (what suld.service executes)
+#   stop.sh --proxy-direct     stop the Velocity proxy (suld-proxy.service, AUTH_MODE=hybrid)
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/lib.sh"
@@ -21,6 +22,14 @@ graceful_stop() {
   fi
 }
 
+if [[ "${1:-}" == "--proxy-direct" ]]; then
+  proxy_running || { echo "Proxy not running"; exit 0; }
+  service_user_exec send-keys -t "$TMUX_PROXY_SESSION:0" "end" Enter
+  for _ in $(seq 1 15); do proxy_running || exit 0; sleep 1; done
+  service_user_exec kill-session -t "$TMUX_PROXY_SESSION" || true
+  exit 0
+fi
+
 if [[ "${1:-}" == "--direct" ]]; then
   graceful_stop
   exit 0
@@ -35,5 +44,6 @@ if ((warn_secs > 0)) && server_running; then
   console_send "say Сервер ${warn_secs} секундын дараа дахин ачаалагдана / Server stopping in ${warn_secs}s"
   sleep "$warn_secs"
 fi
+hybrid && systemctl stop suld-proxy
 systemctl stop suld
 ok "SULD stopped."
