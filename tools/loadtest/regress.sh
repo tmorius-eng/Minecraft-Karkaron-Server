@@ -9,6 +9,9 @@
 # confirm) and start it again (dev server only).
 # HYBRID=1 HYBRID_DIR=<dir> also runs authbot.js on the dev pair of hybrid-dev.sh (set up once: hybrid-dev.sh <dir> setup …):
 # the pair gets this build's jar (suld-plugin/build/libs, or SULD_JAR), starts, is tested and stopped.
+# REGRESS_ONLY="label label …" runs only those rows (labels as the table prints them, e.g. "trialclassbot:darkhan tradebot
+# authbot"): to finish a sweep that was cut short or to re-run one bot under the sweep's own harness; the groups still
+# need their DEV_*/HYBRID flags.
 # healthbot.js and sitesbot.js (last of the main runs) restart the server once each with <srvctl> stop|start.
 # NODE_PATH must reach mineflayer.
 set -u
@@ -68,6 +71,7 @@ printf '%-28s %-8s %6s  %s\n' BOT RESULT SEC DETAIL
 run_all() {
 for r in "$@"; do
   label=${r%%|*}; args=${r#*|}; bot=${label%%:*}
+  if [ -n "${REGRESS_ONLY:-}" ]; then case " $REGRESS_ONLY " in *" $label "*) ;; *) continue ;; esac; fi
   t0=$(date +%s)
   # shellcheck disable=SC2086
   PORT=$PORT timeout "${BOT_TIMEOUT:-420}" node "$DIR/$bot.js" $args > "$OUT/$label.log" 2>&1
