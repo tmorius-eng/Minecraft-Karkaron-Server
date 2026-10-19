@@ -1,0 +1,61 @@
+{
+  "format": 1,
+  "about": "The merchants' stock (docs/CONTENT_DATA.md). A card is a vanilla material with its Mongolian name, or a SÜLD item id (named by the catalog); amount per purchase, price in coins, minLevel to unlock the card. shop.general is the four market-street merchants' and /shop; the gate shops follow Rubruck's four gate markets (east grain, west sheep and goats, south cattle and wagons, north horses — docs/research/history/KHARKHORUM.md, VERIFIED), their goods are SÜLD's own.",
+  "shops": [
+    {
+      "id": "shop.general",
+      "name": "Хангамжийн дэлгүүр",
+      "stock": [
+        {"material": "BREAD", "amount": 8, "price": 20, "name": "Боов x8"},
+        {"material": "COOKED_MUTTON", "amount": 8, "price": 40, "name": "Шарсан хонины мах x8"},
+        {"material": "COOKED_BEEF", "amount": 8, "price": 45, "name": "Шарсан үхрийн мах x8"},
+        {"material": "TORCH", "amount": 16, "price": 12, "name": "Бамбар x16"},
+        {"material": "SHIELD", "amount": 1, "price": 120, "name": "Бамбай"},
+        {"material": "GOLDEN_CARROT", "amount": 4, "price": 90, "name": "Алтан лууван x4"},
+        {"material": "GOLDEN_APPLE", "amount": 1, "price": 300, "name": "Алтан алим"},
+        {"material": "SADDLE", "amount": 1, "price": 250, "name": "Эмээл"},
+        {"material": "LEAD", "amount": 2, "price": 40, "name": "Чөдөр x2"}
+      ]
+    },
+    {
+      "id": "shop.grain",
+      "name": "Зүүн хаалганы зах · тариа, будаа",
+      "stock": [
+        {"material": "BREAD", "amount": 8, "price": 20, "name": "Боов x8"},
+        {"material": "WHEAT", "amount": 16, "price": 16, "name": "Улаан буудай x16"},
+        {"material": "HAY_BLOCK", "amount": 2, "price": 30, "name": "Өвсний боодол x2"},
+        {"material": "COOKIE", "amount": 8, "price": 24, "name": "Жигнэмэг x8"}
+      ]
+    },
+    {
+      "id": "shop.sheep",
+      "name": "Баруун хаалганы зах · хонь, ямаа",
+      "stock": [
+        {"material": "COOKED_MUTTON", "amount": 8, "price": 40, "name": "Шарсан хонины мах x8"},
+        {"material": "LEATHER", "amount": 4, "price": 60, "name": "Арьс x4"},
+        {"material": "WHITE_WOOL", "amount": 4, "price": 24, "name": "Ноос x4"},
+        {"material": "COOKED_MUTTON", "amount": 16, "price": 76, "name": "Шарсан хонины мах x16"}
+      ]
+    },
+    {
+      "id": "shop.cattle",
+      "name": "Өмнөд хаалганы зах · үхэр, тэрэг",
+      "stock": [
+        {"material": "COOKED_BEEF", "amount": 8, "price": 45, "name": "Шарсан үхрийн мах x8"},
+        {"material": "LEATHER", "amount": 4, "price": 60, "name": "Арьс x4"},
+        {"material": "LEAD", "amount": 2, "price": 40, "name": "Чөдөр x2"},
+        {"material": "CHEST", "amount": 1, "price": 30, "name": "Тэрэгний авдар"}
+      ]
+    },
+    {
+      "id": "shop.horses",
+      "name": "Хойд хаалганы зах · морь",
+      "stock": [
+        {"material": "SADDLE", "amount": 1, "price": 250, "name": "Эмээл", "minLevel": 10},
+        {"material": "LEATHER_HORSE_ARMOR", "amount": 1, "price": 160, "name": "Морины хуяг", "minLevel": 10},
+        {"material": "LEAD", "amount": 2, "price": 40, "name": "Чөдөр x2"},
+        {"material": "HAY_BLOCK", "amount": 4, "price": 56, "name": "Өвсний боодол x4"}
+      ]
+    }
+  ]
+}

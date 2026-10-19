@@ -43,6 +43,131 @@ class ContentDataTest {
         return (List<Map<String, Object>>) root.get(key);
     }
 
+    private static ContentLoader.Result loadWithPoints(SkillTreeLoader.Source src) {
+        return ContentLoader.load(src, id -> CATALOG.lootTable(id).isPresent(), id -> CATALOG.item(id).isPresent(), new ArrayList<>(), CityPoints.ids()::contains);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> npc(Map<String, Object> root, String id) {
+        return list(root, "npcs").stream().filter(n -> id.equals(n.get("id"))).findFirst().orElseThrow();
+    }
+
+    // ------------------------------------------------------------------------------------------ npcs.json
+
+    /** content/npcs.json (2026-10-19): every person stands on a city point (or is a campaign's dynamic role) and wears a shipped skin. */
+    @Test
+    @SuppressWarnings("unchecked")
+    void everyNpcStandsOnARealPointAndWearsARealSkin() throws Exception {
+        ContentLoader.Result r = loadWithPoints(ContentLoader.classpath());
+        assertTrue(r.ok(), () -> r.issues().toString());
+        java.util.Set<String> dynamic = new java.util.HashSet<>(); // world-effect roles: never on a city point
+        for (var n : list((Map<String, Object>) Json.parse(ContentLoader.classpath().read("npcs.json")), "npcs")) {
+            if (Boolean.TRUE.equals(n.get("dynamic"))) dynamic.add((String) n.get("id"));
+        }
+        for (var c : r.pack().campaigns()) {
+            if (c.effect() != null && c.effect().type() == mn.suld.api.campaign.WorldEffect.Type.NPC) assertTrue(dynamic.contains(c.effect().ref()), c.id() + " names a role that is not a dynamic NPC: " + c.effect().ref());
+        }
+        assertTrue(dynamic.contains("steward.campaign"), "the dev campaigns' steward stays a dynamic role");
+        assertTrue(CityPoints.ids().size() >= 30, "the city points are readable from the repository: " + CityPoints.ids().size());
+        for (var n : r.pack().npcs()) {
+            assertTrue(CityPoints.ids().contains(n.id()) != dynamic.contains(n.id()), n.id() + " is neither a point nor a dynamic role (or both)");
+            for (String pt : n.points()) assertTrue(CityPoints.ids().contains(pt), n.id() + " serves an unknown point " + pt);
+            assertTrue(Files.isRegularFile(Path.of("../resourcepack/assets/suld/textures/entity/npc/" + n.skin() + ".png")), n.id() + ": no skin " + n.skin());
+        }
+        // every slice-1 point a player can talk to has its person: the old hard-coded roster, plus the eleven of 2026-10-19
+        for (String pt : List.of("class_selection", "tutorial", "quest.first_hunt", "merchant.general", "merchant.food", "blacksmith", "fast_travel.plaza",
+                "fast_travel.gate_north", "shrine.sky", "quest.ikh_boo", "merchant.gate_east")) {
+            assertTrue(r.pack().npc(pt) != null, "nobody serves " + pt);
+        }
+    }
+
+    @Test
+    void anNpcOnAnUnknownPointIsRefused() throws Exception {
+        ContentLoader.Result r = loadWithPoints(edited("npcs.json", root -> npc(root, "blacksmith").put("id", "nowhere.smith")));
+        assertTrue(has(r, "npcs.json", "no point nowhere.smith"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aShopNpcWithoutAShopIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("npcs.json", root -> npc(root, "merchant.general").remove("shop")));
+        assertTrue(has(r, "npcs.json", "a SHOP action needs a shop"), () -> r.issues().toString());
+        ContentLoader.Result r2 = load(edited("npcs.json", root -> npc(root, "merchant.general").put("shop", "shop.nowhere")));
+        assertTrue(has(r2, "npcs.json", "no shop shop.nowhere"), () -> r2.issues().toString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aHistoricalClaimOnAnUnverifiedLineIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("npcs.json", root -> {
+            Map<String, Object> topic = (Map<String, Object>) ((List<Object>) npc(root, "tutorial").get("topics")).get(0);
+            Map<String, Object> para = (Map<String, Object>) ((List<Object>) topic.get("paragraphs")).get(0); // the 1235 line says «түүхэн баримт»
+            para.put("history", "FICTION");
+        }));
+        assertTrue(has(r, "npcs.json", "only a VERIFIED line may say"), () -> r.issues().toString());
+    }
+
+    @Test
+    void everyCampaignNpcRoleHasAnEntry() throws Exception {
+        ContentLoader.Result r = load(edited("npcs.json", root -> list(root, "npcs").removeIf(n -> "merchant.caravan".equals(n.get("id")))));
+        assertTrue(has(r, "campaigns.json", "no npc merchant.caravan in npcs.json"), () -> r.issues().toString());
+    }
+
+    @Test
+    void anNpcMayServeAPointOnlyOnce() throws Exception {
+        ContentLoader.Result r = load(edited("npcs.json", root -> npc(root, "blacksmith").put("points", List.of("merchant.food"))));
+        assertTrue(has(r, "npcs.json", "served twice"), () -> r.issues().toString());
+    }
+
+    // ----------------------------------------------------------------------------------------- shops.json
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> shop(Map<String, Object> root, String id) {
+        return list(root, "shops").stream().filter(n -> id.equals(n.get("id"))).findFirst().orElseThrow();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aShopWithAnUnknownMaterialIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("shops.json", root -> ((Map<String, Object>) ((List<Object>) shop(root, "shop.general").get("stock")).get(0)).put("material", "NO_SUCH_THING")));
+        assertTrue(has(r, "shops.json", "no such material NO_SUCH_THING"), () -> r.issues().toString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aShopEntryNeedsExactlyOneOfMaterialOrItem() throws Exception {
+        ContentLoader.Result both = load(edited("shops.json", root -> ((Map<String, Object>) ((List<Object>) shop(root, "shop.general").get("stock")).get(0)).put("item", "item.chonon_arisan")));
+        assertTrue(has(both, "shops.json", "material or item: exactly one"), () -> both.issues().toString());
+        ContentLoader.Result neither = load(edited("shops.json", root -> ((Map<String, Object>) ((List<Object>) shop(root, "shop.general").get("stock")).get(0)).remove("material")));
+        assertTrue(has(neither, "shops.json", "material or item: exactly one"), () -> neither.issues().toString());
+        ContentLoader.Result unknown = load(edited("shops.json", root -> {
+            Map<String, Object> e = (Map<String, Object>) ((List<Object>) shop(root, "shop.general").get("stock")).get(0);
+            e.remove("material");
+            e.put("item", "item.no_such");
+        }));
+        assertTrue(has(unknown, "shops.json", "no item item.no_such"), () -> unknown.issues().toString());
+    }
+
+    @Test
+    void aShopWithNoStockIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("shops.json", root -> shop(root, "shop.grain").put("stock", new ArrayList<>())));
+        assertTrue(has(r, "shops.json", "a shop needs stock"), () -> r.issues().toString());
+    }
+
+    /** The general shop is the nine supplies the hub sold before shops were data (2026-10-19): /shop looks the same. */
+    @Test
+    void theGeneralShopKeepsItsNineSupplies() {
+        var shop = Content.pack().shop("shop.general");
+        assertTrue(shop != null, "shop.general");
+        assertEquals(List.of("BREAD", "COOKED_MUTTON", "COOKED_BEEF", "TORCH", "SHIELD", "GOLDEN_CARROT", "GOLDEN_APPLE", "SADDLE", "LEAD"),
+                shop.stock().stream().map(mn.suld.api.shop.ShopEntry::material).toList());
+        assertEquals(List.of(20L, 40L, 45L, 12L, 120L, 90L, 300L, 250L, 40L), shop.stock().stream().map(mn.suld.api.shop.ShopEntry::price).toList());
+        // the four gate markets of Rubruck's account, one per gate
+        for (String id : List.of("shop.grain", "shop.sheep", "shop.cattle", "shop.horses")) assertTrue(Content.pack().shop(id) != null, id);
+        for (String pt : List.of("merchant.gate_east", "merchant.gate_west", "merchant.gate_south", "merchant.gate_north")) {
+            assertTrue(Content.pack().npc(pt) != null && Content.pack().npc(pt).shopId() != null, pt + " sells");
+        }
+    }
+
     private static boolean has(ContentLoader.Result r, String file, String text) {
         return r.issues().stream().anyMatch(i -> i.file().equals(file) && (i.path() + " " + i.message()).contains(text));
     }
@@ -90,7 +215,7 @@ class ContentDataTest {
         ContentLoader.Result r = load(ContentLoader.classpath());
         assertTrue(r.ok(), () -> r.issues().stream().map(Issue::toString).reduce("", (a, b) -> a + "\n" + b));
         ContentPack p = r.pack();
-        assertEquals(34, p.mobs().size());
+        assertEquals(39, p.mobs().size());
         assertEquals(9, p.regions().size());
         assertEquals(40, p.areas().size());
         assertEquals(10, p.dungeons().size());

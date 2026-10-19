@@ -58,16 +58,30 @@ public final class NpcService implements Listener {
     public record Role(String skin, String name, String line, NamedTextColor glow) {
     }
 
-    private static Role roleFor(WorldPoint p) {
-        String id = p.id();
-        if (id.equals("class_selection")) return new Role("shaman", "Ангийн Бөө", "Анги сонгох", NamedTextColor.LIGHT_PURPLE);
-        if (id.equals("tutorial")) return new Role("guide", "Хөтөч", "Заавар · Тусламж", NamedTextColor.AQUA);
-        if (id.equals("quest.first_hunt")) return new Role("hunter", "Анчдын Ахлагч", "Эрэл: Анхны Ан", NamedTextColor.GOLD);
-        if (id.startsWith("merchant.")) return new Role("merchant", "Худалдаачин", "Хангамж · Олз зарах", NamedTextColor.GREEN);
-        if (id.equals("blacksmith")) return new Role("blacksmith", "Дархан", "Засвар · Сайжруулалт", NamedTextColor.RED);
-        if (id.startsWith("fast_travel.")) return new Role("rider", "Өртөөчин", "Хурдан аялал", NamedTextColor.YELLOW);
-        if (id.equals("shrine.sky")) return new Role("lama", "Тэнгэрийн Тахилч", "Ивээл · Тэнгэрийн Зэрэг", NamedTextColor.WHITE);
-        return null;
+    /** The person at a city point (content/npcs.json), or null for a point nobody serves. */
+    private static Role roleFor(String pointId) {
+        mn.suld.api.npc.NpcDefinition d = mn.suld.plugin.content.SuldContent.npcFor(pointId);
+        return d == null ? null : roleOf(d);
+    }
+
+    private static Role roleOf(mn.suld.api.npc.NpcDefinition d) {
+        NamedTextColor glow = NamedTextColor.NAMES.value(d.glow().toLowerCase(java.util.Locale.ROOT));
+        return new Role(d.skin(), d.name(), d.line(), glow == null ? NamedTextColor.WHITE : glow);
+    }
+
+    /** The entry behind an NPC the player clicked: a city point, or a campaign's dynamic NPC by its role. */
+    private mn.suld.api.npc.NpcDefinition defFor(String npcId) {
+        Dynamic dyn = dynamics.get(npcId);
+        return mn.suld.plugin.content.SuldContent.npcFor(dyn != null ? dyn.roleId() : npcId);
+    }
+
+    /** Where an NPC stands (its entity, else its point), or null before the city is built; the side quests measure from it. */
+    public Location where(String npcId) {
+        UUID id = spawned.get(npcId);
+        Entity e = id == null ? null : Bukkit.getEntity(id);
+        if (e != null && e.isValid()) return e.getLocation();
+        Dynamic dyn = dynamics.get(npcId);
+        return dyn != null ? dyn.at() : city.pointLocation(npcId);
     }
 
     private static final Map<String, String> RELAY_NAMES = new LinkedHashMap<>();
@@ -172,7 +186,7 @@ public final class NpcService implements Listener {
         for (Map.Entry<String, UUID> e : spawned.entrySet()) {
             Dynamic d = dynamics.get(e.getKey());
             WorldPoint p = d == null ? point(e.getKey()) : null;
-            Role r = d != null ? d.role() : p == null ? null : roleFor(p);
+            Role r = d != null ? d.role() : p == null ? null : roleFor(p.id());
             if (r != null) out.put(e.getValue().toString(), r.glow());
         }
         return out;
@@ -186,18 +200,15 @@ public final class NpcService implements Listener {
     // ------------------------------------------------------------- dynamic NPCs (campaign world effects)
 
     /** A dynamic NPC: a role at a fixed spot, under a world-state flag key (docs/KHURALDAI.md). */
-    private record Dynamic(String key, Role role, Location at, float yaw) {
+    private record Dynamic(String key, String roleId, Role role, Location at, float yaw) {
     }
 
     private final Map<String, Dynamic> dynamics = new java.util.LinkedHashMap<>();
 
-    /** The roles a campaign may bring to the city, by role id. */
+    /** The roles a campaign may bring to the city, by role id (content/npcs.json; the loader checks every campaign names one). */
     private static Role dynamicRole(String roleId) {
-        return switch (roleId) {
-            case "merchant.caravan" -> new Role("merchant", "Жингийн Худалдаачин", "Жингийн зам нээлттэй · Дэлгүүр", NamedTextColor.GREEN);
-            case "steward.campaign" -> new Role("guide", "Хуралдайн Түшмэл", "Их Хуралдай · Аян", NamedTextColor.GOLD);
-            default -> null;
-        };
+        mn.suld.api.npc.NpcDefinition d = mn.suld.plugin.content.SuldContent.npcFor(roleId);
+        return d == null ? null : roleOf(d);
     }
 
     /**
@@ -232,7 +243,7 @@ public final class NpcService implements Listener {
             plugin.getLogger().warning("[npc] anchor " + anchor + " of " + key + " cannot be placed yet (city not built?)");
             return;
         }
-        dynamics.put(key, new Dynamic(key, role, at, yaw));
+        dynamics.put(key, new Dynamic(key, roleId, role, at, yaw));
         plugin.getLogger().info("[npc] dynamic " + roleId + " at " + at.getBlockX() + " " + at.getBlockZ() + " for " + key);
         ensureAll();
     }
@@ -260,7 +271,7 @@ public final class NpcService implements Listener {
         ensureDynamics();
         if (!city.isBuilt()) return;
         for (WorldPoint p : city.slicePoints()) {
-            Role r = roleFor(p);
+            Role r = roleFor(p.id());
             if (r == null) continue;
             UUID id = spawned.get(p.id());
             Entity e = id == null ? null : Bukkit.getEntity(id);
@@ -287,7 +298,7 @@ public final class NpcService implements Listener {
 
     private boolean hasNpcPoint(org.bukkit.Chunk c) {
         for (WorldPoint p : city.slicePoints()) {
-            if (roleFor(p) == null) continue;
+            if (roleFor(p.id()) == null) continue;
             Location at = city.pointLocation(p.id());
             if (at != null && at.getWorld() == c.getWorld() && (at.getBlockX() >> 4) == c.getX() && (at.getBlockZ() >> 4) == c.getZ()) return true;
         }
@@ -358,10 +369,11 @@ public final class NpcService implements Listener {
         p.playSound(e.getRightClicked().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 0.8f, 1.1f);
         e.getRightClicked().getWorld().spawnParticle(Particle.HAPPY_VILLAGER, e.getRightClicked().getLocation().add(0, 2.1, 0), 5, 0.3, 0.2, 0.3);
         // a conversation first (docs/NPC_DIALOGUE.md); Shift + right-click goes straight to the action
-        if (!p.isSneaking() && plugin.getConfig().getBoolean("npc.dialogue", true) && dialogue.has(id)) {
+        mn.suld.api.npc.NpcDefinition def = defFor(id);
+        if (!p.isSneaking() && plugin.getConfig().getBoolean("npc.dialogue", true) && dialogue.has(def)) {
             org.bukkit.Location npcAt = e.getRightClicked().getLocation();
             // the button can be pressed minutes later: only while still beside the NPC, alive (not a soul)
-            dialogue.open(p, id, services.profiles().cached(p.getUniqueId()).orElse(null), actionLabel(id), () -> {
+            dialogue.open(p, def, id, services.profiles().cached(p.getUniqueId()).orElse(null), actionLabel(def), () -> {
                 if (p.isOnline() && p.getWorld().equals(npcAt.getWorld()) && p.getLocation().distanceSquared(npcAt) <= 8 * 8
                         && !services.isSoul.test(p.getUniqueId())) {
                     act(p, id);
@@ -376,46 +388,60 @@ public final class NpcService implements Listener {
 
     private final NpcDialogue dialogue;
 
-    private static String actionLabel(String id) {
-        if (id.startsWith("effect:")) return "Үргэлжлүүлэх";
-        if (id.equals("class_selection")) return "Анги сонгох";
-        if (id.equals("tutorial")) return "Заавар нээх";
-        if (id.equals("quest.first_hunt")) return "Аяны зам";
-        if (id.startsWith("merchant.")) return "Дэлгүүр";
-        if (id.equals("blacksmith")) return "Засвар · Хуяг";
-        if (id.startsWith("fast_travel.")) return "Өртөөгөөр явах";
-        if (id.equals("shrine.sky")) return "Ивээл · Тэнгэрийн Зэрэг (60+)";
-        return "Үргэлжлүүлэх";
+    private static String actionLabel(mn.suld.api.npc.NpcDefinition def) {
+        if (def == null) return "Үргэлжлүүлэх";
+        return switch (def.action()) {
+            case CLASS -> "Анги сонгох";
+            case TUTORIAL -> "Заавар нээх";
+            case QUESTS -> "Аяны зам";
+            case SHOP -> "Дэлгүүр";
+            case SMITH -> "Засвар · Хуяг";
+            case TRAVEL -> "Өртөөгөөр явах";
+            case SHRINE -> "Ивээл · Тэнгэрийн Зэрэг (60+)";
+            case SIDE_QUESTS -> "Нэмэлт эрэл";
+            case KHURALDAI -> "Их Хуралдай";
+            case NONE -> "Үргэлжлүүлэх";
+        };
+    }
+
+    /** What a SIDE_QUESTS NPC opens (the side-quest service sets it); until then its quest book. */
+    private java.util.function.BiConsumer<Player, String> sideQuestOpener;
+
+    public void sideQuestOpener(java.util.function.BiConsumer<Player, String> opener) {
+        this.sideQuestOpener = opener;
     }
 
     private void act(Player p, String id) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
-        Dynamic dyn = dynamics.get(id);
-        if (dyn != null) { // a campaign's NPC: the caravan merchant trades, the steward opens the Хуралдай
-            if (dyn.role().skin().equals("merchant")) menus.shop(p);
-            else p.performCommand("khuraldai");
-            return;
-        }
-        if (id.equals("class_selection")) {
+        mn.suld.api.npc.NpcDefinition def = defFor(id);
+        if (def == null) return;
+        mn.suld.api.npc.NpcAction action = def.action();
+        if (action == mn.suld.api.npc.NpcAction.CLASS) {
             if (!pr.hasSelectedClass()) services.classSelectionGui().open(p);
             else menus.academy(p); // «Ангийн Академи»: look at every class, change here (docs/CLASS_CHANGE.md)
-        } else if (id.equals("tutorial")) {
+        } else if (action == mn.suld.api.npc.NpcAction.TUTORIAL) {
             menus.tutorial(p);
-        } else if (id.equals("quest.first_hunt")) {
+        } else if (action == mn.suld.api.npc.NpcAction.QUESTS || action == mn.suld.api.npc.NpcAction.SIDE_QUESTS) {
             if (!pr.hasSelectedClass()) {
-                p.sendMessage(Messages.info("Анчдын Ахлагч: «Эхлээд ангиа сонго — Бөө чамайг хүлээж байна.»"));
+                p.sendMessage(Messages.info(def.name() + ": «Эхлээд ангиа сонго — Бөө чамайг хүлээж байна.»"));
+                return;
+            }
+            if (action == mn.suld.api.npc.NpcAction.SIDE_QUESTS && sideQuestOpener != null) {
+                sideQuestOpener.accept(p, def.id());
                 return;
             }
             services.quests().ensure(p, pr);
             menus.quests(p);
-        } else if (id.startsWith("merchant.")) {
-            menus.shop(p);
-        } else if (id.equals("blacksmith")) {
+        } else if (action == mn.suld.api.npc.NpcAction.SHOP) {
+            menus.shop(p, def.shopId(), 0);
+        } else if (action == mn.suld.api.npc.NpcAction.SMITH) {
             repair(p);
-        } else if (id.startsWith("fast_travel.")) {
+        } else if (action == mn.suld.api.npc.NpcAction.TRAVEL) {
             menus.travel(p);        // the Аялал page of the hub; the player stands at this relay
-        } else if (id.equals("shrine.sky")) {
+        } else if (action == mn.suld.api.npc.NpcAction.KHURALDAI) {
+            p.performCommand("khuraldai");
+        } else if (action == mn.suld.api.npc.NpcAction.SHRINE) {
             // at the level cap the priest leads the Тэнгэрийн Зэрэг rite; below it, the blessing
             if ((pr.progression().level() >= mn.suld.api.balance.Balance.MAX_LEVEL || pr.ascension() > 0) && services.ascension != null) {
                 if (p.isSneaking()) bless(p, pr);

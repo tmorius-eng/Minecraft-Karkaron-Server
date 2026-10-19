@@ -6,7 +6,7 @@ import mn.suld.plugin.content.ContentPack;
 /**
  * In-game text never types a content count by hand (audit DOC-001: the MOTD, tips and guide boards said 18 chapters
  * and 4 dungeons long after the story had 42 and the ladder 10). Lines carry placeholders that are filled from the
- * loaded content pack: {@code {chapters} {dungeons} {regions} {areas} {sites} {relics} {campaigns}}.
+ * loaded content pack: {@code {chapters} {dungeons} {regions} {areas} {sites} {relics} {campaigns} {shops} {npcs}}.
  */
 public final class ContentCounts {
 
@@ -25,6 +25,8 @@ public final class ContentCounts {
                 .replace("{areas}", Integer.toString(p.areas().size()))
                 .replace("{sites}", Integer.toString(p.historicSites().size()))
                 .replace("{relics}", Integer.toString(p.relics().size()))
-                .replace("{campaigns}", Integer.toString(p.campaigns().size()));
+                .replace("{campaigns}", Integer.toString(p.campaigns().size()))
+                .replace("{shops}", Integer.toString(p.shops().size()))
+                .replace("{npcs}", Integer.toString(p.npcs().size()));
     }
 }

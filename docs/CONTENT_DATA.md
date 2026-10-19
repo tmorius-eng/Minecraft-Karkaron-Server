@@ -12,6 +12,8 @@ move a dungeon gate, retune a region or rewrite a quest.
 | World events, world bosses (`docs/WORLD_BOSSES.md`), world-unique relics | `content/events.json` | `plugins/SULD/content/events.json` |
 | Historic sites (place, kind of build, bearing and distance, history label, story) | `content/sites.json` | `plugins/SULD/content/sites.json` |
 | Holograms: the floating boards (guide, «Мөнх Тэнгэрийн Элч», plaza) and the labels over gates, sites, the training yard, profession nodes and soul beacons | `content/holograms.json` | `plugins/SULD/content/holograms.json` |
+| Kharkhorum's people: point, skin, name, glow, action, greetings, topics with history labels (`docs/NPC_DIALOGUE.md`) | `content/npcs.json` | `plugins/SULD/content/npcs.json` |
+| The merchants' stock: the market street's general shop and the four gate markets (material or catalog item, amount, price, minLevel) | `content/shops.json` | `plugins/SULD/content/shops.json` |
 | Items, affixes, sets, loot tables | `items/*.json` (suld-api) | `plugins/SULD/items/` |
 | Skill trees (5 classes) | `skills/*.json` (suld-api) | `plugins/SULD/skills/` |
 | Game rules: EXP curve, death, economy, protection, database | `config.yml` | `plugins/SULD/config.yml` |
@@ -49,6 +51,12 @@ edit never takes the server down and never half-applies.
   `Rewards.regionDiscoveryExp`) so it scales with the curve (PROG-003).
 - The ids the plugin's code uses by name (tutorial, the first dungeon, boss brains, the outer regions) still exist:
   `ContentLoader.REQUIRED`. They can be edited, but not removed or renamed.
+- **npcs.json:** every id is a slice-1 point of `assets/world/kharkhorum/points.json` (jar: `/world/kharkhorum/points.json`,
+  `CityPoints`) or a `"dynamic": true` role; a point is served once; every campaign NPC effect names an entry; the skin
+  name, glow, action and icon are known; a `SHOP` names a shop that exists; a paragraph saying «түүхэн баримт» is
+  `VERIFIED` (`docs/NPC_DIALOGUE.md`).
+- **shops.json:** unique `shop.*` ids, non-empty stock, each card exactly one of `material` (a known Material) or `item`
+  (a catalog id), `amount` 1–64, `price` ≥ 0, `minLevel` 1–100.
 
 ## Field notes
 

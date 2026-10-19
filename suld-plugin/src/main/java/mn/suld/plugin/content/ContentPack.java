@@ -29,6 +29,8 @@ import java.util.Set;
  * @param historicSites the historical places in the wild (content/sites.json)
  * @param campaigns     the Их Хуралдай campaigns (content/campaigns.json)
  * @param worldBosses   the world bosses (content/events.json "worldBosses")
+ * @param shops         the merchants' stock (content/shops.json)
+ * @param npcs          Kharkhorum's people and their talk (content/npcs.json)
  */
 public record ContentPack(
         Map<String, MobDefinition> mobs,
@@ -53,7 +55,9 @@ public record ContentPack(
         List<RelicDefinition> relics,
         List<mn.suld.api.world.site.HistoricSite> historicSites,
         List<mn.suld.api.campaign.CampaignDefinition> campaigns,
-        List<mn.suld.api.worldboss.WorldBossDefinition> worldBosses) {
+        List<mn.suld.api.worldboss.WorldBossDefinition> worldBosses,
+        List<mn.suld.api.shop.ShopDefinition> shops,
+        List<mn.suld.api.npc.NpcDefinition> npcs) {
 
     public ContentPack {
         mobs = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(mobs)); // keeps the file order
@@ -77,6 +81,21 @@ public record ContentPack(
         historicSites = List.copyOf(historicSites);
         campaigns = List.copyOf(campaigns);
         worldBosses = List.copyOf(worldBosses);
+        shops = List.copyOf(shops);
+        npcs = List.copyOf(npcs);
+    }
+
+    /** A shop by id, or null. */
+    public mn.suld.api.shop.ShopDefinition shop(String id) {
+        for (mn.suld.api.shop.ShopDefinition s : shops) if (s.id().equals(id)) return s;
+        return null;
+    }
+
+    /** The NPC entry that serves a city point or a dynamic role id, or null. */
+    public mn.suld.api.npc.NpcDefinition npc(String pointOrRoleId) {
+        if (pointOrRoleId == null) return null;
+        for (mn.suld.api.npc.NpcDefinition n : npcs) if (n.serves(pointOrRoleId)) return n;
+        return null;
     }
 
     /** A world boss by id, or null. */

@@ -45,7 +45,8 @@ import static mn.suld.api.skill.tree.SkillTreeLoader.str;
 public final class ContentLoader {
 
     public static final int FORMAT_VERSION = 1;
-    public static final List<String> FILES = List.of("mobs.json", "world.json", "dungeons.json", "quests.json", "events.json", "sites.json", "campaigns.json");
+    public static final List<String> FILES = List.of("mobs.json", "world.json", "dungeons.json", "quests.json", "events.json", "sites.json", "campaigns.json",
+            "shops.json", "npcs.json");
 
     /** Ids the code names directly (tutorial, first dungeon, boss brains, story constants): they must exist. */
     public static final Set<String> REQUIRED = Set.of(
@@ -112,6 +113,15 @@ public final class ContentLoader {
      * @param itemExists checks the COLLECT_ITEM quests' items (null: not checked)
      */
     public static Result load(SkillTreeLoader.Source src, Predicate<String> lootExists, Predicate<String> itemExists, List<String> overridden) {
+        return load(src, lootExists, itemExists, overridden, null);
+    }
+
+    /**
+     * @param pointExists checks NPC ids and points against the city's points (assets/world/kharkhorum/points.json);
+     *                    null: not checked (a unit test without the world assets)
+     */
+    public static Result load(SkillTreeLoader.Source src, Predicate<String> lootExists, Predicate<String> itemExists, List<String> overridden,
+                              Predicate<String> pointExists) {
         List<Issue> issues = new ArrayList<>();
         Map<String, Map<String, Object>> files = new LinkedHashMap<>();
         for (String f : FILES) {
@@ -622,6 +632,129 @@ public final class ContentLoader {
             }
         }
 
+        // ----------------------------------------------------------------------------------------------- shops
+        f = "shops.json";
+        List<mn.suld.api.shop.ShopDefinition> shops = new ArrayList<>();
+        List<Object> shopList = list(f, "", files.get(f), "shops", issues);
+        for (int i = 0; i < shopList.size(); i++) {
+            String at = "shops[" + i + "]";
+            Map<String, Object> sh = obj(f, at, shopList.get(i), issues);
+            if (sh == null) continue;
+            String id = str(f, at, sh, "id", true, issues);
+            if (id != null && shops.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
+            List<mn.suld.api.shop.ShopEntry> stock = new ArrayList<>();
+            List<Object> stockList = list(f, at, sh, "stock", issues);
+            if (stockList.isEmpty()) issues.add(new Issue(f, at + ".stock", "a shop needs stock"));
+            for (int k = 0; k < stockList.size(); k++) {
+                String sat = at + ".stock[" + k + "]";
+                Map<String, Object> e = obj(f, sat, stockList.get(k), issues);
+                if (e == null) continue;
+                String material = e.get("material") instanceof String m ? m : null;
+                String item = e.get("item") instanceof String it ? it : null;
+                if ((material == null) == (item == null)) {
+                    issues.add(new Issue(f, sat, "material or item: exactly one"));
+                    continue;
+                }
+                if (material != null && !materialKnown(material)) issues.add(new Issue(f, sat + ".material", "no such material " + material));
+                if (item != null && itemExists != null && !itemExists.test(item)) issues.add(new Issue(f, sat + ".item", "no item " + item + " in the item catalog"));
+                try {
+                    stock.add(new mn.suld.api.shop.ShopEntry(material, item, intIn(f, sat, e, "amount", 1, 64, true, 1, issues),
+                            intIn(f, sat, e, "price", 0, 10_000_000, true, 0, issues), e.get("name") instanceof String n ? n : null,
+                            intIn(f, sat, e, "minLevel", 1, 100, false, 1, issues)));
+                } catch (IllegalArgumentException ex) {
+                    issues.add(new Issue(f, sat, ex.getMessage()));
+                }
+            }
+            if (id == null) continue;
+            try {
+                shops.add(new mn.suld.api.shop.ShopDefinition(id, str(f, at, sh, "name", true, issues), stock));
+            } catch (IllegalArgumentException ex) {
+                issues.add(new Issue(f, at, ex.getMessage()));
+            }
+        }
+
+        // ------------------------------------------------------------------------------------------------ npcs
+        f = "npcs.json";
+        List<mn.suld.api.npc.NpcDefinition> npcs = new ArrayList<>();
+        Set<String> campaignRoles = new HashSet<>(); // the dynamic roles a campaign's NPC effect may bring to the city
+        for (var cd : campaigns) {
+            if (cd.effect() != null && cd.effect().type() == mn.suld.api.campaign.WorldEffect.Type.NPC) campaignRoles.add(cd.effect().ref());
+        }
+        Set<String> servedPoints = new HashSet<>();
+        List<Object> npcList = list(f, "", files.get(f), "npcs", issues);
+        for (int i = 0; i < npcList.size(); i++) {
+            String at = "npcs[" + i + "]";
+            Map<String, Object> n = obj(f, at, npcList.get(i), issues);
+            if (n == null) continue;
+            String id = str(f, at, n, "id", true, issues);
+            if (id == null) continue;
+            if (npcs.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
+            List<String> points = n.get("points") == null ? List.of() : strings(f, at, n, "points", issues);
+            boolean dynamic = Boolean.TRUE.equals(n.get("dynamic")); // a role a world effect places, not a city point
+            if (dynamic && pointExists != null && pointExists.test(id)) issues.add(new Issue(f, at + ".dynamic", id + " is a city point, not a dynamic role"));
+            if (!dynamic && pointExists != null && !pointExists.test(id)) {
+                issues.add(new Issue(f, at + ".id", "no point " + id + " in points.json (a world-effect role is marked \"dynamic\": true)"));
+            }
+            for (int k = 0; k < points.size(); k++) {
+                if (pointExists != null && !pointExists.test(points.get(k))) issues.add(new Issue(f, at + ".points[" + k + "]", "no point " + points.get(k) + " in points.json"));
+            }
+            for (String pt : points) {
+                if (!servedPoints.add(pt)) issues.add(new Issue(f, at + ".points", "point " + pt + " is served twice"));
+            }
+            if (!servedPoints.add(id)) issues.add(new Issue(f, at + ".id", "point " + id + " is served twice"));
+            String skin = str(f, at, n, "skin", true, issues);
+            if (skin != null && !skin.matches("[a-z_]{2,32}")) issues.add(new Issue(f, at + ".skin", "a skin name looks like merchant"));
+            String glow = n.get("glow") instanceof String g ? g : "WHITE";
+            if (!GLOWS.contains(glow)) issues.add(new Issue(f, at + ".glow", "one of " + GLOWS));
+            mn.suld.api.npc.NpcAction action = SkillTreeLoader.enumOf(mn.suld.api.npc.NpcAction.class, str(f, at, n, "action", true, issues), f, at + ".action", issues);
+            String shopId = n.get("shop") instanceof String sid ? sid : null;
+            if (action == mn.suld.api.npc.NpcAction.SHOP) {
+                if (shopId == null) issues.add(new Issue(f, at + ".shop", "a SHOP action needs a shop"));
+                else if (shops.stream().noneMatch(x -> x.id().equals(shopId))) issues.add(new Issue(f, at + ".shop", "no shop " + shopId + " in shops.json"));
+            } else if (shopId != null) {
+                issues.add(new Issue(f, at + ".shop", "only a SHOP action sells"));
+            }
+            String icon = n.get("icon") instanceof String ic ? ic : "PAPER";
+            if (!materialKnown(icon)) issues.add(new Issue(f, at + ".icon", "no such material " + icon));
+            List<String> greetings = n.get("greetings") == null ? List.of() : strings(f, at, n, "greetings", issues);
+            List<mn.suld.api.npc.NpcTopic> topics = new ArrayList<>();
+            List<Object> topicList = n.get("topics") == null ? List.of() : list(f, at, n, "topics", issues);
+            for (int t = 0; t < topicList.size(); t++) {
+                String tat = at + ".topics[" + t + "]";
+                Map<String, Object> tp = obj(f, tat, topicList.get(t), issues);
+                if (tp == null) continue;
+                List<mn.suld.api.npc.NpcLine> lines = new ArrayList<>();
+                List<Object> paras = list(f, tat, tp, "paragraphs", issues);
+                for (int j = 0; j < paras.size(); j++) {
+                    String pat = tat + ".paragraphs[" + j + "]";
+                    Map<String, Object> para = obj(f, pat, paras.get(j), issues);
+                    if (para == null) continue;
+                    String text = str(f, pat, para, "text", true, issues);
+                    String history = str(f, pat, para, "history", true, issues);
+                    if (history != null && !HISTORY.contains(history)) issues.add(new Issue(f, pat + ".history", "one of " + HISTORY));
+                    if (text == null || history == null) continue;
+                    mn.suld.api.npc.NpcLine line = new mn.suld.api.npc.NpcLine(text, history);
+                    if (line.overclaims()) issues.add(new Issue(f, pat, "only a VERIFIED line may say «" + mn.suld.api.npc.NpcLine.FACT_MARK + "»"));
+                    lines.add(line);
+                }
+                try {
+                    topics.add(new mn.suld.api.npc.NpcTopic(str(f, tat, tp, "title", true, issues), lines));
+                } catch (IllegalArgumentException ex) {
+                    issues.add(new Issue(f, tat, ex.getMessage()));
+                }
+            }
+            if (action == null) continue;
+            try {
+                npcs.add(new mn.suld.api.npc.NpcDefinition(id, points, skin, str(f, at, n, "name", true, issues), n.get("line") instanceof String l ? l : "",
+                        glow, action, shopId, icon, greetings, topics));
+            } catch (IllegalArgumentException ex) {
+                issues.add(new Issue(f, at, ex.getMessage()));
+            }
+        }
+        for (String role : campaignRoles) {
+            if (npcs.stream().noneMatch(x -> x.id().equals(role))) issues.add(new Issue("campaigns.json", "effect.ref", "no npc " + role + " in npcs.json"));
+        }
+
         // --------------------------------------------------------------------------------- names the code uses
         Set<String> known = new HashSet<>(mobs.keySet());
         regions.forEach(r -> known.add(r.id()));
@@ -642,7 +775,7 @@ public final class ContentLoader {
         });
         if (!issues.isEmpty()) return new Result(null, issues, overridden);
         return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, regionBits, outer, areas, dungeons, sites, completions,
-                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns, worldBosses), issues, overridden);
+                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns, worldBosses, shops, npcs), issues, overridden);
     }
 
     private static String fileFor(String id) {
@@ -651,7 +784,26 @@ public final class ContentLoader {
         if (id.startsWith("dungeon.")) return "dungeons.json";
         if (id.startsWith("quest.")) return "quests.json";
         if (id.startsWith("campaign.")) return "campaigns.json";
+        if (id.startsWith("shop.")) return "shops.json";
         return "events.json";
+    }
+
+    /** The sixteen NamedTextColor names an NPC's glow may use (checked here so a typo is a content issue, not a null glow). */
+    private static final Set<String> GLOWS = Set.of("BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY",
+            "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE");
+
+    /** A Material name, checked against the server's materials when they are on the class path (true otherwise). */
+    static boolean materialKnown(String name) {
+        if (name == null || !name.matches("[A-Z0-9_]{2,64}")) return false;
+        try {
+            Class<?> type = Class.forName("org.bukkit.Material");
+            type.getMethod("valueOf", String.class).invoke(null, name);
+            return true;
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            return false; // valueOf refused it: no such material
+        } catch (ReflectiveOperationException | LinkageError e) {
+            return true; // no server on the class path: not checked here
+        }
     }
 
     /** A living vanilla entity type, checked against the server's types when they are on the class path. */

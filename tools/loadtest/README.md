@@ -34,6 +34,9 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # database, the offline inviter paid at the next login, 13 checks.
 # topbot.js: the five leaderboards (/top level|coins|dungeon|khuraldai|achievements) open their window, a tab switches, the console lists, 7 checks.
 # motdbot.js: the server list's live line (LiveMotd) — a ping, a forced world boss on line 2 within 10 s, gone after the stop, 5 checks.
+# shopbot.js: the gate markets as content (content/shops.json, content/npcs.json) — Shift+click on the east gate merchant opens
+# shop.grain, a bread card pays 20 coins in the database for 8 loaves, a plain click talks first, /shop keeps its two pages,
+# the north gate's saddle refuses a level-1 player, the west gate sells sheep, 8 checks.
 # eventsbot.js: every automatic world event starts from the console with its bar and stops, 9 checks.
 # trainingpay.js (DEV_CAMPAIGNS=1): a campaign resolved during training pays the real character on leaving; a trainee hurts no mob;
 # trainingcrash.js (DEV_CRASH=1): SIGKILL during training, restart, the bag and spot come back — KILLS THE DEV SERVER.

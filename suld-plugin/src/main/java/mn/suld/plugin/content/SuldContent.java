@@ -102,6 +102,16 @@ public final class SuldContent {
         return Content.pack().models().get(mobId);
     }
 
+    /** The NPC entry that serves a city point or a dynamic role (content/npcs.json), or null. */
+    public static mn.suld.api.npc.NpcDefinition npcFor(String pointOrRoleId) {
+        return Content.pack().npc(pointOrRoleId);
+    }
+
+    /** A merchant's stock (content/shops.json), or null. */
+    public static mn.suld.api.shop.ShopDefinition shopFor(String shopId) {
+        return Content.pack().shop(shopId);
+    }
+
     public static MobDefinition mobFor(String id) {
         return id == null ? null : Content.pack().mob(id);
     }

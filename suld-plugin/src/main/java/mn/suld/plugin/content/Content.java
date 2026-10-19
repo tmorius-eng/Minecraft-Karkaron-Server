@@ -47,7 +47,7 @@ public final class Content {
      */
     public static List<Issue> install(Path dir, Logger log) {
         List<String> overridden = new ArrayList<>();
-        ContentLoader.Result r = ContentLoader.load(ContentLoader.serverOrBundled(dir, overridden), null, null, overridden);
+        ContentLoader.Result r = ContentLoader.load(ContentLoader.serverOrBundled(dir, overridden), null, null, overridden, CityPoints.ids()::contains);
         synchronized (Content.class) {
             if (read) log.warning("[content] content was read before the plugin loaded it: the server's files apply after a restart");
             if (r.ok()) {
@@ -61,7 +61,7 @@ public final class Content {
         }
         ContentPack p = pack;
         log.info("[content] " + p.mobs().size() + " mobs, " + p.regions().size() + " regions, " + p.areas().size() + " areas, "
-                + p.dungeons().size() + " dungeons, " + p.chapters().size() + " story chapters");
+                + p.dungeons().size() + " dungeons, " + p.chapters().size() + " story chapters, " + p.npcs().size() + " people, " + p.shops().size() + " shops");
         return r.issues();
     }
 

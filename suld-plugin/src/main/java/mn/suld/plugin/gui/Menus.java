@@ -9,6 +9,7 @@ import mn.suld.api.style.LevelRewards;
 import mn.suld.api.style.PlayerStyle;
 import mn.suld.api.style.Rank;
 import mn.suld.plugin.SuldServices;
+import mn.suld.plugin.content.SuldContent;
 import mn.suld.plugin.style.StyleService;
 import mn.suld.plugin.ui.Glyphs;
 import mn.suld.plugin.ui.Messages;
@@ -862,57 +863,80 @@ public final class Menus {
 
     // ================================================================== shop
 
-    private record Supply(Material mat, int amount, long price, String name) {
-    }
-
-    private static final List<Supply> SUPPLIES = List.of(
-            new Supply(Material.BREAD, 8, 20, "Боов x8"),
-            new Supply(Material.COOKED_MUTTON, 8, 40, "Шарсан хонины мах x8"),
-            new Supply(Material.COOKED_BEEF, 8, 45, "Шарсан үхрийн мах x8"), // the class bow needs no arrows
-            new Supply(Material.TORCH, 16, 12, "Бамбар x16"),
-            new Supply(Material.SHIELD, 1, 120, "Бамбай"),
-            new Supply(Material.GOLDEN_CARROT, 4, 90, "Алтан лууван x4"),
-            new Supply(Material.GOLDEN_APPLE, 1, 300, "Алтан алим"),
-            new Supply(Material.SADDLE, 1, 250, "Эмээл"),
-            new Supply(Material.LEAD, 2, 40, "Чөдөр x2"));
-
-    /** Sell prices of SÜLD loot (definition id → coins each). */
-
     private Component wallet(Player p, PlayerProfile pr) {
         return Component.text(fmt(pr.currency()) + " зоос · " + fmt(styles().of(p.getUniqueId()).credits()) + " ✦", TextColor.fromHexString("#A4B0C8"));
     }
 
-    private HubMenu.Card supplyCard(PlayerProfile pr, Supply sup) {
-        ItemStack it = new ItemStack(sup.mat(), Math.min(sup.amount(), sup.mat().getMaxStackSize()));
-        return HubMenu.card(Menu.title(sup.name(), GREEN), Menu.lore(GREEN, List.of(),
-                List.of(Menu.kv("Үнэ:", fmt(sup.price()) + " зоос", pr.currency() >= sup.price() ? GREEN : RED)), "Дарж авах"), it,
+    /** The Mongolian name of a stock card: the file's for a material, the catalog's for a SÜLD item. */
+    private static String stockName(mn.suld.api.shop.ShopEntry e) {
+        if (!e.isItem() || !e.name().isBlank()) return e.name();
+        return SuldContent.items().item(e.itemId()).map(mn.suld.api.item.ItemDefinition::displayName).orElse(e.itemId());
+    }
+
+    /** The stack a stock card shows: the material, or the catalog item's look for a SÜLD item. */
+    private ItemStack stockIcon(mn.suld.api.shop.ShopEntry e) {
+        if (!e.isItem()) {
+            Material m = Material.matchMaterial(e.material());
+            ItemStack it = new ItemStack(m == null ? Material.PAPER : m);
+            it.setAmount(Math.max(1, Math.min(e.amount(), it.getMaxStackSize())));
+            return it;
+        }
+        return SuldContent.items().item(e.itemId())
+                .map(def -> services.items().create(services.itemService().generate(def, mn.suld.api.item.ItemRarity.COMMON, Math.max(1, e.minLevel()), null, "shop:preview")))
+                .orElse(new ItemStack(Material.PAPER));
+    }
+
+    private HubMenu.Card stockCard(PlayerProfile pr, String shopId, int page, mn.suld.api.shop.ShopEntry e) {
+        boolean locked = pr.progression().level() < e.minLevel();
+        List<Component> rows = new ArrayList<>();
+        rows.add(Menu.kv("Үнэ:", fmt(e.price()) + " зоос", pr.currency() >= e.price() ? GREEN : RED));
+        if (locked) rows.add(Menu.kv("Түвшин:", e.minLevel() + " (таных " + pr.progression().level() + ")", RED));
+        return HubMenu.card(Menu.title(stockName(e), locked ? RED : GREEN), Menu.lore(GREEN, List.of(), rows, locked ? "Түвшин хүрээгүй" : "Дарж авах"), stockIcon(e),
                 (pl, c) -> {
-                    buySupply(pl, sup);
-                    if (sup == SUPPLIES.get(SUPPLIES.size() - 1)) shopMore(pl);
-                    else shop(pl);
+                    buy(pl, shopId, e);
+                    shop(pl, shopId, page);
                 });
     }
 
-    /** The Дэлгүүр page of the hub: eight supplies, their items in the wells; the second page holds the rest. */
+    public static final String GENERAL_SHOP = "shop.general";
+
+    /** {@code /shop}: the four market merchants' general stock (content/shops.json {@code shop.general}). */
     public void shop(Player p) {
-        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-        if (pr == null) return;
-        List<HubMenu.Card> cards = new ArrayList<>();
-        for (Supply sup : SUPPLIES.subList(0, 8)) cards.add(supplyCard(pr, sup));
-        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP, 3, wallet(p, pr), cards, null, this::main, null, this::shopMore), hubTabs());
+        shop(p, GENERAL_SHOP, 0);
     }
 
-    /** Page two: the last supply, selling, cosmetics, the credit store, the smith's book and board, the wallet. */
-    public void shopMore(Player p) {
+    /**
+     * A merchant's window (content/shops.json): pages of eight stock cards on the Дэлгүүр page, and the services
+     * (selling, cosmetics, the credit store, the smith's book and board, the wallet) as the last page. A single
+     * leftover card joins the services page, so the nine-card general shop keeps its two pages.
+     */
+    public void shop(Player p, String shopId, int page) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
+        mn.suld.api.shop.ShopDefinition shop = SuldContent.shopFor(shopId);
+        if (shop == null) shop = SuldContent.shopFor(GENERAL_SHOP);
+        if (shop == null) return;
+        final String id = shop.id();
+        List<mn.suld.api.shop.ShopEntry> stock = shop.stock();
+        int fullPages = stock.size() / 8, leftover = stock.size() % 8;
+        int stockPages = fullPages + (leftover > 1 ? 1 : 0); // one leftover card rides on the services page
+        int last = stockPages; // the services page index
+        int at = Math.max(0, Math.min(page, last));
         List<HubMenu.Card> cards = new ArrayList<>();
-        cards.add(supplyCard(pr, SUPPLIES.get(SUPPLIES.size() - 1)));
+        Component row = Component.text(shop.name() + " · ", TextColor.fromHexString("#FFD24A")).append(wallet(p, pr));
+        if (at < stockPages) {
+            for (mn.suld.api.shop.ShopEntry e : stock.subList(at * 8, Math.min(stock.size(), at * 8 + 8))) cards.add(stockCard(pr, id, at, e));
+            java.util.function.Consumer<Player> prev = at == 0 ? null : pl -> shop(pl, id, at - 1);
+            java.util.function.Consumer<Player> next = pl -> shop(pl, id, at + 1);
+            HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP, 3, row, cards, null, this::main, prev, next), hubTabs());
+            return;
+        }
+        if (leftover == 1) cards.add(stockCard(pr, id, at, stock.get(stock.size() - 1)));
         cards.add(HubMenu.card(Menu.title("Олз зарах", GOLD), Menu.lore(GOLD,
                 List.of(b("Цүнхэн дэх чонын арьс, баавгайн арьс,"), b("хор, мөсөн чулуу... бүгдийг зарна.")),
                 List.of(Menu.kv("Үнэ:", "зэрэг, түвшнээс хамаарна", GOLD)), "Дарж бүгдийг зарах"), null, (pl, c) -> {
             sellAll(pl);
-            shopMore(pl);
+            shop(pl, id, last);
         }));
         cards.add(HubMenu.card("Зарах цонх", "Олз, зэвсэг, хуяг үнэтэйгээ — сонгоод зарна.", (pl, c) -> sell(pl)));
         cards.add(HubMenu.card("Гоёл", "Цол, нэрийн өнгө, чатын өнгө...", (pl, c) -> cosmetics(pl)));
@@ -927,7 +951,13 @@ public final class Menus {
         }));
         cards.add(new HubMenu.Card(Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
                 Menu.kv("Кредит:", fmt(styles().of(p.getUniqueId()).credits()) + " ✦", SKY)), null));
-        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP2, 3, wallet(p, pr), cards, null, this::main, this::shop, null), hubTabs());
+        java.util.function.Consumer<Player> prev = last == 0 ? null : pl -> shop(pl, id, last - 1);
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP2, 3, row, cards, null, this::main, prev, null), hubTabs());
+    }
+
+    /** Page two of the general shop (kept for the callers that name it). */
+    public void shopMore(Player p) {
+        shop(p, GENERAL_SHOP, 1);
     }
 
     /**
@@ -977,61 +1007,43 @@ public final class Menus {
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_TRAVEL, 5, row, cards, null, this::main, null, null), hubTabs());
     }
 
-    /** The older shop window. */
-    public void shopClassic(Player p) {
-        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
-        if (pr == null) return;
-        Menu m = new Menu(5, "Дэлгүүр · Shop", null);
-        m.set(4, Menu.item(Material.GOLD_INGOT, Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
-                Menu.kv("Кредит:", fmt(styles().of(p.getUniqueId()).credits()) + " ✦", SKY))), null);
-        int slot = 10;
-        for (Supply sup : SUPPLIES) {
-            if (slot == 17) slot = 19;
-            ItemStack it = Menu.item(sup.mat(), Menu.title(sup.name(), GREEN), Menu.lore(GREEN, List.of(),
-                    List.of(Menu.kv("Үнэ:", fmt(sup.price()) + " зоос", pr.currency() >= sup.price() ? GREEN : RED)), "Дарж авах"));
-            it.setAmount(Math.min(sup.amount(), it.getMaxStackSize()));
-            m.set(slot++, it, (pl, c) -> buySupply(pl, sup));
-        }
-        m.set(29, Menu.item(Material.LEATHER, Menu.title("Олз зарах", GOLD), Menu.lore(GOLD,
-                List.of(b("Цүнхэн дэх чонын арьс, баавгайн арьс,"), b("хор, мөсөн чулуу... бүгдийг зарна.")),
-                List.of(Menu.kv("Үнэ:", "зэрэг, түвшнээс хамаарна", GOLD), Menu.kv("Яг үнэ:", "«Зарах цонх»", GOLD)), "Дарж бүгдийг зарах")),
-                (pl, c) -> {
-                    sellAll(pl);
-                    shop(pl);
-                });
-        m.set(30, Menu.item(Material.GOLD_NUGGET, Menu.title("Зарах цонх", GOLD), Menu.lore(GOLD,
-                List.of(b("Цүнхэн дэх олз, зэвсэг, хуяг, тушиг"), b("бүгд үнэтэйгээ харагдана — сонгоод зарна.")),
-                List.of(), "Дарж нээх")), (pl, c) -> sell(pl));
-        m.set(31, Menu.item(Material.ARMOR_STAND, Menu.title("Гоёл", PURPLE), Menu.lore(PURPLE,
-                List.of(b("Цол, нэрийн өнгө, чатын өнгө...")), List.of(), "Дарж нээх")), (pl, c) -> cosmetics(pl));
-        m.set(33, Menu.item(Material.EMERALD, Menu.title("Кредит дэлгүүр · /buy", SKY), Menu.lore(SKY,
-                List.of(b("Сүлд Кредит — зөвхөн гоёлд.")), List.of(), "Дарж нээх")), (pl, c) -> buy(pl));
-        m.set(36, Menu.item(Material.ARROW, Menu.title("« Сүлд Цэс", GOLD), List.of()), (pl, c) -> main(pl));
-        m.open(p);
-    }
-
-    private void buySupply(Player p, Supply sup) {
+    /** A purchase from a shop card: the coins go first, the goods once the coins are in the database (PlayerDataSaves). */
+    private void buy(Player p, String shopId, mn.suld.api.shop.ShopEntry e) {
         if (services.isSoul.test(p.getUniqueId())) {
             p.sendMessage(Messages.error("Сүнс байхдаа худалдан авалт хийх боломжгүй."));
             return;
         }
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null) return;
-        if (pr.currency() < sup.price()) {
-            p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + sup.price() + " зоос)."));
+        if (pr.progression().level() < e.minLevel()) {
+            p.sendMessage(Messages.error("Энэ бараа " + e.minLevel() + "-р түвшнээс зарагдана."));
             return;
         }
-        ItemStack give = new ItemStack(sup.mat(), sup.amount());
+        if (pr.currency() < e.price()) {
+            p.sendMessage(Messages.error("Зоос хүрэлцэхгүй (" + pr.currency() + "/" + e.price() + " зоос)."));
+            return;
+        }
+        String name = stockName(e);
+        ItemStack give;
+        if (e.isItem()) {
+            mn.suld.api.item.ItemDefinition def = SuldContent.items().item(e.itemId()).orElse(null);
+            if (def == null) return;
+            give = services.items().create(services.itemService().generate(def, mn.suld.api.item.ItemRarity.COMMON, Math.max(1, e.minLevel()), p.getUniqueId(), "shop:" + shopId));
+            give.setAmount(Math.min(e.amount(), def.stackable() ? give.getMaxStackSize() : 1));
+        } else {
+            Material m = Material.matchMaterial(e.material());
+            if (m == null) return;
+            give = new ItemStack(m, e.amount());
+        }
         if (!fits(p, give)) { // checked on a copy first: nothing is added, so nothing of the player's own is ever removed
             p.sendMessage(Messages.error("Цүнх дүүрэн байна."));
             return;
         }
         // COINS → ITEMS (PlayerDataSaves): charge first, give only once the coins are in the database
-        pr.addCurrency(-sup.price());
-        mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, p, pr, sup.price(), "buy " + sup.name(), pl -> {
+        pr.addCurrency(-e.price());
+        mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, p, pr, e.price(), "buy " + shopId + " " + name, pl -> {
             for (ItemStack left : pl.getInventory().addItem(give.clone()).values()) pl.getWorld().dropItemNaturally(pl.getLocation(), left);
-            pl.sendMessage(Messages.success("Авлаа: " + sup.name() + " (-" + sup.price() + " зоос)"));
-            shop(pl);
+            pl.sendMessage(Messages.success("Авлаа: " + name + " (-" + e.price() + " зоос)"));
         });
     }
 
