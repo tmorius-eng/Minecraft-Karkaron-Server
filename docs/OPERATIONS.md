@@ -36,7 +36,7 @@ the README (local test server).
 | `/revive <player>` | End a player's soul state early and heal them (audited) |
 | `/credits give <player\|uuid> <amount> <txid>` · `/credits take <player\|uuid> <amount>` | Store credits; `give` is what the web store runs from the console, with its transaction id |
 | `/suldevent`, `/suldpack`, `/worldbuild`, `/relic …` | World events · resource pack · city builder · relic admin |
-| `/suld auth` | Authentication mode and session state |
+| `/suld auth` | Authentication mode and session state; `/suld auth free <name>` prints the steps that free a name (hybrid) |
 
 ## Permissions: who can do what
 
@@ -140,6 +140,8 @@ loses 25 % durability. They respawn as a **Сүнс** for 30 s: they cannot deal
   it restarts: `sudo systemctl restart suld-proxy`, then `authme freemium <name>` if the row was marked.
 * **A squatted name** (someone registered a name that belongs to another person's Microsoft account): the owner proves
   the account to staff; `authme unregister <name>`; if the squatter played on it, that character goes with the name.
+  `/suld auth free <name>` (op or console) prints these steps for one name with what AuthMe and the profile store hold
+  for it (registered or not, whose profile, online now); it changes nothing itself.
 * **Owners** must have their AuthMe account before the server opens (`authme register <name> <password>`; the log
   warns at start). `op.sh <name>` ops the offline UUID of the name.
 * **A premium player who renamed** is a new character; staff move the old one with the re-key in

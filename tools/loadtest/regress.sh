@@ -7,6 +7,8 @@
 # the server restarts (<srvctl> stop|start), and the file is removed and the server restarted after. DEV_CRASH=1 also
 # runs trainingcrash.js and sellcrash.js last: they kill the server with SIGKILL (during training; 60 ms after a sale's
 # confirm) and start it again (dev server only).
+# HYBRID=1 HYBRID_DIR=<dir> also runs authbot.js on the dev pair of hybrid-dev.sh (set up once: hybrid-dev.sh <dir> setup …):
+# the pair gets this build's jar (suld-plugin/build/libs, or SULD_JAR), starts, is tested and stopped.
 # healthbot.js and sitesbot.js (last of the main runs) restart the server once each with <srvctl> stop|start.
 # NODE_PATH must reach mineflayer.
 set -u
@@ -94,6 +96,21 @@ if [ "${DEV_CAMPAIGNS:-0}" = 1 ]; then
 fi
 if [ "${DEV_CRASH:-0}" = 1 ]; then
   run_all "trainingcrash|$CTL $PORT" "sellcrash|$CTL $PORT 60"
+fi
+if [ "${HYBRID:-0}" = 1 ]; then
+  HDIR=${HYBRID_DIR:?HYBRID=1 needs HYBRID_DIR, a pair from tools/loadtest/hybrid-dev.sh setup}
+  HYB="$(cd "$(dirname "$0")" && pwd)/hybrid-dev.sh"
+  JAR=${SULD_JAR:-$(find "$(cd "$(dirname "$0")/../.." && pwd)/suld-plugin/build/libs" -name 'suld-plugin-*.jar' ! -name '*-sources.jar' 2>/dev/null | head -1)}
+  if [ -z "$JAR" ] || [ ! -f "$JAR" ]; then echo "no plugin jar for the hybrid pair (./gradlew build, or SULD_JAR=…)" >&2; exit 2; fi
+  "$HYB" "$HDIR" stop > /dev/null 2>&1
+  cp -f "$JAR" "$HDIR/server/plugins/SULD.jar"
+  pp=$(grep '^SERVER_PORT=' "$HDIR/dev.env" | cut -d= -f2); bp=$(grep '^PAPER_PORT=' "$HDIR/dev.env" | cut -d= -f2)
+  if "$HYB" "$HDIR" start > "$OUT/hybrid-start.log" 2>&1; then
+    run_all "authbot|${pp:-25580} ${bp:-25581} $HDIR/server/logs/latest.log"
+  else
+    printf '%-28s %-8s %6s  %s\n' authbot FAIL 0 "the dev pair did not start: $OUT/hybrid-start.log"; bad=$((bad + 1))
+  fi
+  "$HYB" "$HDIR" stop > /dev/null 2>&1
 fi
 echo "logs: $OUT"
 [ "$bad" -eq 0 ] && echo "ALL GREEN" || echo "$bad FAILED"

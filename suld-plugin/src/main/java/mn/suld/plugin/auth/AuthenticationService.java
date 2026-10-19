@@ -463,6 +463,52 @@ public final class AuthenticationService implements Listener, AuthBridge.Events 
         return out;
     }
 
+    private static final java.util.regex.Pattern NAME = java.util.regex.Pattern.compile("[A-Za-z0-9_]{1,16}");
+
+    /**
+     * {@code /suld auth free <name>}: the steps staff take to free a name (a squatted premium name, a player locked out
+     * by {@code /premium}; docs/OPERATIONS.md «Accounts»), with what AuthMe and the profile store hold for it. It only
+     * reads: freeing a name removes an account, so each step is typed by a person. AuthMe's lookup and the name query
+     * run off the main thread; {@code out} is called on it.
+     */
+    public void freeNameLines(String name, java.util.function.Consumer<List<String>> out) {
+        if (!NAME.matcher(safeName(name)).matches()) {
+            out.accept(List.of("Нэр буруу: 1–16 тэмдэгт, A–Z a–z 0–9 _."));
+            return;
+        }
+        if (policy.mode() != AuthMode.HYBRID_AUTHME) {
+            out.accept(List.of("Горим " + policy.mode() + ": нэрийг Mojang эзэмшдэг, чөлөөлөх зүйл алга."));
+            return;
+        }
+        UUID offline = PlayerIdentity.offlineUuid(name);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            boolean usable = bridge.available();
+            boolean registered = usable && bridge.isRegistered(name);
+            String owner;
+            try {
+                Optional<UUID> o = services.profiles().ownerOfName(name).get(settings.profileLoadTimeoutSeconds(), TimeUnit.SECONDS);
+                owner = o.isEmpty() ? "SÜLD профайл: энэ нэрээр алга."
+                        : o.get().equals(offline) ? "SÜLD профайл: " + o.get() + " — энэ нэрийн өөрийн дүр: нэрийг дараа нь хэн бүртгэнэ, тэр л энэ дүрээр тоглоно."
+                        : "SÜLD профайл: " + o.get() + " — өөр тоглогчийн UUID (DENIED_NAME_TAKEN: энэ нэрээр хэн ч орж чадахгүй).";
+            } catch (Exception ex) {
+                owner = "SÜLD профайл: хайлт бүтсэнгүй (" + rootCause(ex).getClass().getSimpleName() + ").";
+            }
+            String profile = owner;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                List<String> lines = new ArrayList<>();
+                lines.add("Нэр " + name + " · offline UUID " + offline);
+                lines.add("AuthMe данс: " + (!usable ? "гүүр ажиллахгүй байна (" + bridge.describe() + ")" : registered ? "БҮРТГЭЛТЭЙ" : "алга"));
+                lines.add(profile);
+                Player online = Bukkit.getPlayerExact(name);
+                if (online != null) lines.add("Одоо онлайн: эхлээд гарга — kick " + name);
+                lines.add("1. Backend консол: authme unregister " + name + "   (нууц үгийн дансыг устгана; SÜLD-ийн юу ч өөрчлөгдөхгүй)");
+                lines.add("2. /premium-аар түгжигдсэн бол (proxy Mojang нэвтрэлт нэхсээр байна): sudo systemctl restart suld-proxy, дараа нь мөр тэмдэглэгдсэн бол authme freemium " + name);
+                lines.add("3. Энэ нэрийн дүр нэртэйгээ үлдэнэ (offline UUID дээрх): жинхэнэ эзний нэр рүү нь шилжүүлэх бол хэн нэгэн дахин бүртгэхээс өмнө docs/operations/HYBRID_CUTOVER.md §3-ын re-key");
+                out.accept(lines);
+            });
+        });
+    }
+
     private static String safeName(String name) {
         return name == null ? "" : name;
     }

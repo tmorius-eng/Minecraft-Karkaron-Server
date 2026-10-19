@@ -20,11 +20,12 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # heroicbot.js: heroic keys (docs/HEROIC_DUNGEONS.md) — the gates, a timed +1 and +3 (Цагаан Зуд forced, ops the bot for
 # the run, deops after), a failed +2, the jade spent at the smith (it answers the smith's dialog with a raw
 # custom_click_action packet), 19 checks; it leaves the pack prompt unanswered so the HUD is plain text it can read.
-# authbot.js: the hybrid login (docs/AUTHENTICATION.md §2b) on the dev pair of hybrid-dev.sh, not on srv3 and not in
-# regress.sh: DB_PASS=… tools/loadtest/hybrid-dev.sh <dir> setup <suld.jar> <paper.jar>; hybrid-dev.sh <dir> start;
-# node bots/authbot.js 25580 25581 <dir>/server/logs/latest.log. It answers AuthMe's pre-join dialog with a raw
-# configuration-phase custom_click_action; 11 checks (register, relog, wrong password, waiting, twin, /premium, direct
-# connect, the log's mode line and audits).
+# authbot.js: the hybrid login (docs/AUTHENTICATION.md §2b) on the dev pair of hybrid-dev.sh, not on srv3:
+# DB_PASS=… tools/loadtest/hybrid-dev.sh <dir> setup <suld.jar> <paper.jar> once, then either
+# HYBRID=1 HYBRID_DIR=<dir> tools/loadtest/regress.sh … (after the main runs: this build's jar into the pair, start,
+# authbot, stop) or by hand: hybrid-dev.sh <dir> start; node bots/authbot.js 25580 25581 <dir>/server/logs/latest.log.
+# It answers AuthMe's pre-join dialog with a raw configuration-phase custom_click_action; 13 checks (register, relog,
+# wrong password, waiting, /l by chat, twin, /premium, `suld auth free`, direct connect, the log's mode line and audits).
 # tradebot.js: /trade between two bots (PERS-004 COINS -> ITEMS) — a diamond for 10 coins completes and the coins move in
 # the database, closing the window and quitting both cancel and return the goods (the quitter holds them after a relog), 14 checks.
 # trainingpay.js (DEV_CAMPAIGNS=1): a campaign resolved during training pays the real character on leaving; a trainee hurts no mob;

@@ -38,7 +38,7 @@ public final class SuldCommand implements CommandExecutor {
             case "profile" -> profile(sender);
             case "spawnmob" -> spawnMob(sender, args);
             case "flush" -> flush(sender);
-            case "auth" -> authStatus(sender);
+            case "auth" -> auth(sender, args);
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
             case "coins" -> giveCoins(sender, args);
@@ -366,9 +366,18 @@ public final class SuldCommand implements CommandExecutor {
     }
 
     /** Admin/console: authentication mode and per-player session/profile state. */
-    private void authStatus(CommandSender sender) {
+    /** {@code /suld auth}: mode and sessions; {@code /suld auth free <name>}: the staff steps that free a name. */
+    private void auth(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
             sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("free")) {
+            if (args.length < 3) {
+                sender.sendMessage(Messages.error("/suld auth free <нэр>"));
+                return;
+            }
+            services.auth().freeNameLines(args[2], lines -> lines.forEach(line -> sender.sendMessage(Messages.info(line))));
             return;
         }
         services.auth().statusLines().forEach(line -> sender.sendMessage(Messages.info(line)));
@@ -390,7 +399,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld props [tp <id>] — 3D дурсгалууд хаана байгаа / тийш очих"));
             sender.sendMessage(Messages.info("/suld grim [reset] — GrimAC: SÜLD хөдөлгөөнд уучилсан flag-ууд"));
             sender.sendMessage(Messages.info("/suld map status|scan [full|stop]|export <zoom> [x z r]|pois|flush|refresh [r] — газрын зураг"));
-            sender.sendMessage(Messages.info("/suld auth · /suld spawnmob"));
+            sender.sendMessage(Messages.info("/suld auth [free <нэр>] — нэвтрэлтийн горим, сесс; нэр чөлөөлөх алхмууд · /suld spawnmob"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));
     }

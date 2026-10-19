@@ -106,7 +106,8 @@ client ──▶ Velocity :25565 (offline mode, AuthMe Velocity)
 * **Names are first come.** AuthMe reserves nothing: an offline player can register a name that belongs to someone's
   Microsoft account. Policy: the rightful owner proves the account to staff (logs in to a staff-run online-mode test
   server, or shows the account page); staff then `authme unregister <name>` (and re-key the profile if it was played
-  by someone else). **Owner names must be registered before the server opens** (console:
+  by someone else). `/suld auth free <name>` prints the steps for one name with what AuthMe and the profile store
+  hold for it; it runs none of them. **Owner names must be registered before the server opens** (console:
   `authme register <name> <password>`): `OwnerService` warns at start for every owner name without an AuthMe
   account, because whoever registers it would be opped.
 * **`/l`.** SÜLD's one-line local chat and AuthMe's login alias share the label; a player who is not logged in yet is

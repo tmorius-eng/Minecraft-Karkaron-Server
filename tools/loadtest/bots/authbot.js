@@ -5,12 +5,15 @@
 // custom_click_action carrying the dialog's inputs (docs/qa/2026-10-18-authme-spike.md, S7). Checks:
 //   a new name registers in the dialog and only then enters SÜLD's game (welcome after AuthMe's login line, join line);
 //   the same name logs in again; a wrong password is kicked and SÜLD's join never runs; a cancelled register dialog
-//   leaves the player waiting in the world with SÜLD shut, and /register by chat lets them in; a lower-case twin is
-//   refused; /premium after login only shows SÜLD's warning (it runs as /premium confirm); the backend refuses a
-//   direct connection; the backend log names HYBRID_AUTHME and audits the pending and the login.
+//   leaves the player waiting in the world with SÜLD shut, and /register by chat lets them in; a waiting player's
+//   /l <password> is AuthMe's login, not SÜLD's local chat; a lower-case twin is refused; /premium after login only
+//   shows SÜLD's warning (it runs as /premium confirm); the backend refuses a direct connection; the backend log names
+//   HYBRID_AUTHME and audits the pending and the login; `suld auth free <name>` on the console prints the staff steps.
 const mineflayer = require('mineflayer');
 const nbt = require('prismarine-nbt');
 const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
 const [proxyPort = '25580', backendPort = '25581', logPath] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const results = [];
@@ -66,8 +69,12 @@ const index = (o, s) => o.chat.findIndex(m => (s instanceof RegExp ? s.test(m) :
 const REGISTERED = /Successfully registered|Бүртгэл амжилттай/;
 const WRONG = /Wrong password|Нууц үг буруу/;
 const TWIN = /You should join using username|нэрээр орно уу/;
+const UNREGISTERED = /isn't registered|not registered|бүртгэлгүй/;
 const REGISTER = /^(Register|Бүртгүүлэх)$/, LOGIN = /^(Login|Нэвтрэх)$/;
 const WELCOME = 'Тавтай морил';
+// the pair's directory is three levels over the backend log (<dir>/server/logs/latest.log): hybrid-dev.sh <dir> b <cmd>
+const pairDir = logPath ? path.resolve(logPath, '..', '..', '..') : null;
+const console_ = (c) => execFileSync(path.join(__dirname, '..', 'hybrid-dev.sh'), [pairDir, 'b', c]);
 const tag = String(Math.floor(Math.random() * 90000 + 10000));
 
 (async () => {
@@ -95,11 +102,15 @@ const tag = String(Math.floor(Math.random() * 90000 + 10000));
     + has(o, WELCOME) + ', new login audits ' + (count('auth.authme_login') - before));
   await sleep(4000);
 
+  // a cancelled LOGIN dialog is a kick («Та нэвтрэлтийг цуцаллаа»), so the only player who waits in the world is an
+  // unregistered one: their /l <password> must reach AuthMe (its answer: not registered), never SÜLD's local chat
   const late = 'B' + tag;
-  o = await visit(proxyPort, late, null, ['/menu', '/register pw-' + late + ' pw-' + late], 4000);
-  const reg = index(o, REGISTERED), w2 = index(o, WELCOME);
+  o = await visit(proxyPort, late, null, ['/menu', '/l pw-' + late, '/register pw-' + late + ' pw-' + late], 4000);
+  const reg = index(o, REGISTERED), w2 = index(o, WELCOME), unreg = index(o, UNREGISTERED);
   check(o.spawned && reg >= 0 && w2 > reg && o.chat.slice(0, Math.max(reg, 0)).every(m => !m.includes(WELCOME)),
     'a cancelled register dialog leaves the player waiting; /register by chat lets them in', 'registered at ' + reg + ', welcome at ' + w2);
+  check(unreg >= 0 && unreg < reg, 'a waiting player\'s /l <password> is AuthMe\'s login (SÜLD\'s /l chat alias steps aside)',
+    'AuthMe\'s not-registered answer at ' + unreg + ', registered at ' + reg);
   check(count('auth.authme_pending') > 0, 'the wait is audited (auth.authme_pending)', count('auth.authme_pending') + ' rows');
   await sleep(4000);
 
@@ -111,6 +122,12 @@ const tag = String(Math.floor(Math.random() * 90000 + 10000));
   check(has(o, '/premium confirm') && !/Premium verification requested/.test(o.kick), '/premium only warns until /premium confirm',
     'warning ' + has(o, '/premium confirm') + ', kicked for verification ' + /Premium verification requested/.test(o.kick));
   await sleep(4000);
+
+  if (pairDir) {
+    console_('suld auth free ' + name); await sleep(3000);
+    check(count('authme unregister ' + name) > 0 && count('БҮРТГЭЛТЭЙ') > 0, 'suld auth free <name> prints the staff steps for a registered name',
+      'unregister line ' + count('authme unregister ' + name) + ', registered ' + count('БҮРТГЭЛТЭЙ'));
+  }
 
   o = await visit(backendPort, 'C' + tag, pw);
   check(!o.spawned && /connect with Velocity/.test(o.kick), 'the backend refuses a direct connection', o.kick.slice(0, 120));
