@@ -753,6 +753,7 @@ public final class Menus {
     /** A sample of what the cosmetic looks like, sent to the viewer's chat (effects play around them instead). */
     /** Which achievement or tier of the pass gives an earned cosmetic (null for the others). */
     private String earnedBy(Cosmetic c) {
+        if ("referral".equals(c.source())) return "Урилга: " + services.referrals.settings().badgeAfter() + " найзаа авчрах · /urih";
         var ach = services.achievements;
         if (ach == null) return null;
         if ("achievement".equals(c.source())) {
@@ -827,7 +828,8 @@ public final class Menus {
                 if (earnedBy != null) info.add(Menu.kv("Авах:", earnedBy, PURPLE));
                 hint = forCoins ? "Зүүн: " + fmt(c.price()) + " зоос зоосоор · Баруун: " + fmt(c.creditPrice()) + " ✦ кредитээр"
                         : c.creditPrice() > 0 ? "Дарж " + fmt(c.creditPrice()) + " ✦ кредитээр авах"
-                        : "achievement".equals(c.source()) ? "Амжилтын шагнал · /achievements" : "pass".equals(c.source()) ? "Хуралдайн Замын шагнал · /pass" : "Түвшний шагнал";
+                        : "achievement".equals(c.source()) ? "Амжилтын шагнал · /achievements" : "pass".equals(c.source()) ? "Хуралдайн Замын шагнал · /pass"
+                        : "referral".equals(c.source()) ? "Урилгын шагнал · /urih" : "Түвшний шагнал";
             }
             body.add(Component.text("Shift + зүүн дарж урьдчилан харна", NamedTextColor.GRAY, TextDecoration.BOLD));
             Material icon = owned ? CAT_ICON.get(cat) : Material.GRAY_DYE;

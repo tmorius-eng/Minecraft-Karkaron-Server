@@ -295,6 +295,14 @@ public final class SuldServices {
             this.mapPins = dataSource == null
                     ? new mn.suld.api.persistence.InMemoryMapPinRepository()
                     : new mn.suld.plugin.persistence.JdbcMapPinRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor);
+            // referrals (V31, docs/REFERRAL.md): one row per invitee, the two payments compare-and-set
+            mn.suld.api.persistence.ReferralRepository referralRepository = dataSource == null
+                    ? new mn.suld.api.persistence.InMemoryReferralRepository()
+                    : new mn.suld.plugin.persistence.JdbcReferralRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor);
+            var rc = plugin.getConfig();
+            this.referrals = new mn.suld.plugin.social.ReferralService(plugin, this, referralRepository, new mn.suld.api.social.ReferralSettings(
+                    rc.getBoolean("referral.enabled", true), Math.max(1, rc.getInt("referral.level", 10)), Math.max(1, rc.getInt("referral.max-level-to-name", 5)),
+                    Math.max(0, rc.getLong("referral.invitee-coins", 100)), Math.max(0, rc.getLong("referral.inviter-coins", 200)), Math.max(0, rc.getInt("referral.badge-after", 3))));
         } catch (RuntimeException | Error ex) {
             for (int i = opened.size() - 1; i >= 0; i--) {
                 try {
@@ -319,6 +327,7 @@ public final class SuldServices {
     /** The credit store paid through Bonum (docs/PAYMENT_ARCHITECTURE.md); off by default. */
     public final mn.suld.plugin.payment.PaymentService payments;
     public final mn.suld.plugin.social.DiscordNotifier discord;
+    public final mn.suld.plugin.social.ReferralService referrals;
     private final mn.suld.api.campaign.WeeklyCycle weeklyCycle;
     private final mn.suld.plugin.chronicle.ChronicleService chronicleService;
     private final mn.suld.plugin.campaign.KhuraldaiService khuraldaiService;

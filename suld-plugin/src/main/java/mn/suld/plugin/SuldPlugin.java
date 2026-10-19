@@ -604,9 +604,11 @@ public final class SuldPlugin extends JavaPlugin {
         // the Bonum credit store (docs/PAYMENT_ARCHITECTURE.md): off unless payment.bonum.enabled and its secrets are set
         services.payments.start();
         services.discord.start();
+        services.referrals.start();
         services.discord.announce("🟢 SÜLD асаалаа — " + getConfig().getString("branding.domain", "suld.mn"));
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
+        registerTab("urih", new mn.suld.plugin.command.ReferralCommand(services));
         java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));
         worldCommand.sites(historicSites);
         pregen.start();
@@ -671,6 +673,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (armory != null) armory.stop();
         if (services != null && services.payments != null) services.payments.stop(); // the webhook closes, QR maps go blank
         if (services != null && services.discord != null) services.discord.shutdown("🔴 SÜLD унтарлаа."); // the last line leaves now
+        if (services != null && services.referrals != null) services.referrals.stop();
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
         mn.suld.plugin.ui.BossBars.stop(); // quiet players get their bars back before the services hide theirs
         mn.suld.plugin.ui.UiFocus.stop();

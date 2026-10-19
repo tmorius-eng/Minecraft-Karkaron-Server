@@ -90,6 +90,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/chronicle", "Баатрын Хроник: анхны цэвэрлэгээ, амжилт, аянууд", null),
             e(Group.SERVER, "/order", "Дарханы захиалгын самбар: хөлсөөр захиалах, бусдын захиалгыг урлах", null),
             e(Group.SERVER, "/report <текст>", "Алдаа, хуурамч тоглогч, асуудлыг ажилтанд мэдэгдэх", null),
+            e(Group.GAME, "/urih <нэр>", "Таныг урьсан найзаа нэрлэх: 10-р түвшинд хоёулаа зоос, 3 найзаар «Элч» цол", null),
             e(Group.GAME, "/party find", "Баг хайх (party finder): нээлттэй багууд", null),
             e(Group.GAME, "/dungeon", "Агуйн Шат: 10 агуйн цонх, хаалга руу зам заана", null),
             e(Group.GAME, "/clan …", "Овог: create, invite, top, info…", null),

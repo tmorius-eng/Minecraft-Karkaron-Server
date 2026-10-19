@@ -61,10 +61,16 @@ class SchemaMigratorTest {
 
     @Test
     void v30NameLookupIsOneIndexPerDialect() {
-        assertEquals(30, SchemaMigrator.latestVersion());
+        assertEquals(31, SchemaMigrator.latestVersion());
         assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V30__profile_name_lookup.sql")).size());
         String pg = resource("db/migration/postgresql/V30__profile_name_lookup.sql");
         assertEquals(1, SchemaMigrator.splitStatements(pg).size());
         org.junit.jupiter.api.Assertions.assertTrue(pg.contains("(lower(name))"), "PostgreSQL indexes the lower-cased name");
+    }
+
+    @Test
+    void v31ReferralsIsOneTableAndOneIndexOnPostgresOneStatementOnMysql() {
+        assertEquals(2, SchemaMigrator.splitStatements(resource("db/migration/postgresql/V31__referrals.sql")).size());
+        assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V31__referrals.sql")).size(), "the index is inside the CREATE TABLE");
     }
 }

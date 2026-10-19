@@ -49,6 +49,11 @@ public final class CosmeticCatalog {
         return new Cosmetic(id, cat, name, price, key, r, "shop");
     }
 
+    /** Earned by the referral loop (docs/REFERRAL.md, {@code badge-after} paid invitations): never sold. */
+    private static Cosmetic referral(Cosmetic c) {
+        return new Cosmetic(c.id(), c.category(), c.name(), 0, c.style(), c.rarity(), "referral");
+    }
+
     /** Earned by an achievement (docs/ACHIEVEMENTS_AND_PASS.md): never sold, for coins or credits. */
     private static Cosmetic earned(Cosmetic c) {
         return new Cosmetic(c.id(), c.category(), c.name(), 0, c.style(), c.rarity(), "achievement");
@@ -146,6 +151,8 @@ public final class CosmeticCatalog {
             fx(Category.KILL_EFFECT, "kill.altan", "Алтан Бороо", "altan", 1_200, Rarity.EPIC),
             fx(Category.KILL_EFFECT, "kill.tenger", "Тэнгэрийн Тэнхээ", "tenger", 2_500, Rarity.LEGENDARY),
             store("kill.tsakhilgaan", Category.KILL_EFFECT, "Цахилгаан", "tsakhilgaan", 350, Rarity.LEGENDARY),
+            // --- earned by the referral loop (docs/REFERRAL.md) ---
+            referral(tag("elch", "Элч", "<gradient:#FFD24A:#FFF3C2>Элч</gradient>", 0, Rarity.EPIC)),
             // --- earned by achievements (titles) ---
             earned(tag("ach_taliin_ur", "Талын Үр", "<gradient:#C8A06B:#EAD9B8>Талын Үр</gradient>", 0, Rarity.RARE)),
             earned(tag("ach_khukh_suld", "Хөх Сүлдний Баатар", "<gradient:#2A6BFF:#9FF3FF:#FFD24A>Хөх Сүлдний Баатар</gradient>", 0, Rarity.LEGENDARY)),

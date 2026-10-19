@@ -289,6 +289,18 @@ discord:
   # Staff channel: every /report (player, place, text).
   staff-webhook: ''
 
+# The referral loop, /urih <нэр> (docs/REFERRAL.md): a newcomer names the friend who brought them; when the newcomer
+# reaches `level` both are paid, and after `badge-after` paid invitations the inviter earns the «Элч» tag.
+# The numbers are a proposal until the owner sets them.
+referral:
+  enabled: true
+  level: 10
+  # the highest level at which a newcomer may still name an inviter
+  max-level-to-name: 5
+  invitee-coins: 100
+  inviter-coins: 200
+  badge-after: 3
+
 store:
   packages:
     - {credits: 100, price: '₮5,000'}

@@ -74,6 +74,10 @@ commands:
     description: The Дархан's order board — order a crafted item for a fee, or fill someone's order.
     usage: /order [post <recipe> <fee> | withdraw <id>]
     aliases: [zakhialga, orders]
+  urih:
+    description: Name the friend who brought you - both are rewarded when you reach the referral level (docs/REFERRAL.md).
+    usage: /urih [нэр]
+    aliases: [invite, referral, urikh]
   report:
     description: Tell the staff about a bug, a cheater or a problem (audit log + online staff).
     usage: /report <text>

@@ -38,4 +38,8 @@ public final class AuditActions {
     public static final String PAYMENT_CONFIRMED = "payment.confirmed";
     /** A signed event paid another amount or currency than its intent's: nothing granted, staff alerted. */
     public static final String PAYMENT_MISMATCH = "payment.mismatch";
+    /** /urih: the invitee (actor) named the inviter (target). */
+    public static final String REFERRAL_NAMED = "referral.named";
+    /** A referral payment: actor = who was paid, target = the invitee, detail = coins and why. */
+    public static final String REFERRAL_PAID = "referral.paid";
 }

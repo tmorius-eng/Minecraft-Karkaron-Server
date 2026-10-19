@@ -21,6 +21,7 @@ D1/D7 retention and the session summary as Markdown. There is no web dashboard (
 | first death | `first_death` | `DeathService`, the player's first stored death (`death_seq == 1`) | `level`, `cause` |
 | first boss | `first_boss` | `DungeonService.complete`, the player's **first** clear of that dungeon (every clear is a `boss_participation`) | `dungeon` |
 | level up | `level_up` | `DefaultProgressionService` | |
+| Урилга | `referral_created` (`inviter`, `level`), `referral_rewarded` (`inviter`), `referral_inviter_paid` (`invitee`) | `ReferralService`, docs/REFERRAL.md | |
 | Их Хуралдай | `vote_cast`, `vote_closed`, `campaign_start`, `campaign_contribution` (tier reached), `campaign_end`, `campaign_reward_claim`, `chronicle_entry`, `world_effect_applied` | docs/KHURALDAI.md | |
 
 ```bash

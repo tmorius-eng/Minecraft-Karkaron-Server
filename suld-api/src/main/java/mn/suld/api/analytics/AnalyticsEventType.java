@@ -58,4 +58,8 @@ public final class AnalyticsEventType {
     // world bosses (docs/WORLD_BOSSES.md)
     public static final String WORLD_BOSS_SPAWN = "world_boss_spawn";
     public static final String WORLD_BOSS_END = "world_boss_end";
+    // referrals (docs/REFERRAL.md): named with /urih; the invitee reached the reward level; the inviter was paid
+    public static final String REFERRAL_CREATED = "referral_created";
+    public static final String REFERRAL_REWARDED = "referral_rewarded";
+    public static final String REFERRAL_INVITER_PAID = "referral_inviter_paid";
 }
