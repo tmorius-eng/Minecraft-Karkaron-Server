@@ -7,6 +7,13 @@ public final class CombatRules {
 
     public static final double MITIGATION_CAP = 0.75;
 
+    /**
+     * PVP-01 (owner decision 2026-10-19): a consented fight between players (a duel, a fighting ground) runs the SÜLD
+     * hit formula, spells included, at this share of the amount a mob would take, so a duel lasts longer than one
+     * combo: players have 80–130 health, a mob of their level several hundred. Tuned on the dev server.
+     */
+    public static final double PVP_SCALAR = 0.6;
+
     private CombatRules() {
     }
 

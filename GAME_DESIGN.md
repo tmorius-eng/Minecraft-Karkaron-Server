@@ -23,6 +23,13 @@ A consented fight is never a hardcore death: the killing blow of a duel or a bou
 **defeat** (the loser keeps a quarter of their health, no loot, EXP or soul time is lost, the duel ends) and a relic the loser bears passes
 to the winner (`DuelService.onLethalConsented`). Only the open steppe of `pvp.wild-enabled: true` keeps real deaths.
 
+**Damage in a consented fight (owner decision 2026-10-19, PVP-01).** A duel runs SÜLD's own combat: the attacker's
+ATK, draw and crit, the victim's SÜLD armour and damage reduction, spells and ultimates included
+(`CombatListener.isTarget`, `SkillService.hostile`), all at `CombatRules.PVP_SCALAR` (0.6) of what a mob would take,
+so a fight lasts longer than one combo. A heal, a cleanse or a ward reaches only the caster and the caster's party,
+never the opponent, a soul or a bystander (`SkillService.allies`). Before this, duels used vanilla item damage with
+no armour and no spells, and a Бөө's circle healed the opponent too.
+
 ## Classes
 
 Five classes. Each has active, passive, and ultimate skills via a class skill

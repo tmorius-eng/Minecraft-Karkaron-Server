@@ -225,8 +225,16 @@ public final class CombatListener implements Listener {
     public void onMitigate(EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player victim)) return;
         org.bukkit.entity.Entity src = event.getDamager();
-        if (src instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof Player) return;
-        if (src instanceof Player) return;
+        // PVP-01: in a consented fight the victim's SÜLD armour counts against the attacker's level; any other
+        // player-sourced hit keeps its vanilla amount (DuelService has already cancelled what is not allowed)
+        Player duellist = DuelService.attacker(src);
+        if (duellist != null) {
+            if (services.duels() == null || !services.duels().consented(duellist, victim)) return;
+            mn.suld.plugin.skill.SkillTreeService tree = services.skillTree();
+            double armor = tree == null ? 0 : tree.build(victim).stat(mn.suld.api.skill.tree.StatKey.ARMOR);
+            if (armor > 0) event.setDamage(event.getDamage() * (1 - mn.suld.api.balance.CombatRules.mitigation(armor, levelOf(duellist))));
+            return;
+        }
         // Арц Хүж (IT-12): a spirit's hit on a warded player is reduced before the armour
         org.bukkit.entity.Entity attacker = src instanceof org.bukkit.entity.Projectile shot && shot.getShooter() instanceof org.bukkit.entity.Entity from ? from : src;
         if (mn.suld.plugin.item.ConsumableService.wardedAgainst(victim.getUniqueId(), mobs.mobId(attacker).orElse(null))) {
@@ -249,7 +257,7 @@ public final class CombatListener implements Listener {
     }
 
     private void onHit0(EntityDamageByEntityEvent event) {
-        if (isSpellDamage() || !isTarget(event.getEntity())) {
+        if (isSpellDamage() || !isTarget(event)) {
             return;
         }
         Player player;
@@ -296,6 +304,8 @@ public final class CombatListener implements Listener {
             return;
         }
         mn.suld.plugin.skill.SkillTreeService skillTree = services.skillTree();
+        // PVP-01: a consented fight runs the same formula at the PvP share (no mob gap, no mastery, no lightning: no definition)
+        if (event.getEntity() instanceof Player) scale *= mn.suld.api.balance.CombatRules.PVP_SCALAR;
         // level suppression: −4 % per level the mob is above the player (floor 40 %)
         MobDefinition target = mobs.definition(event.getEntity()).orElse(null);
         if (target != null) scale *= mn.suld.api.balance.CombatRules.gapDealt(target.level() - levelOf(player));
@@ -327,9 +337,15 @@ public final class CombatListener implements Listener {
 
     /**
      * SÜLD hit formula applies to SÜLD mobs and to «Тэнгэрийн сорил» wolves (their health is sized for the class's
-     * SÜLD attack); vanilla monsters keep vanilla damage.
+     * SÜLD attack), and (PVP-01, owner decision 2026-10-19) to a player in a consented fight with the attacker;
+     * vanilla monsters keep vanilla damage, and so does a hit DuelService did not allow (it is cancelled at LOWEST).
      */
-    private boolean isTarget(org.bukkit.entity.Entity e) {
+    private boolean isTarget(EntityDamageByEntityEvent event) {
+        org.bukkit.entity.Entity e = event.getEntity();
+        if (e instanceof Player victim) {
+            Player attacker = DuelService.attacker(event.getDamager());
+            return attacker != null && services.duels() != null && services.duels().consented(attacker, victim);
+        }
         return mobs.isSuldMob(e) || mn.suld.plugin.death.DeathTrialService.ownerOf(e) != null;
     }
 

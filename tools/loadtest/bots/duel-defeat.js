@@ -1,5 +1,6 @@
 // A consented duel never ends in a hardcore death (GAME_DESIGN.md «PvP policy»): the killing blow, and the burn a duel
-// hit started, become a defeat; outside a duel the same damage is a real death. Dev server, offline dev flag:
+// hit started, become a defeat; outside a duel the same damage is a real death. PVP-01 (2026-10-19): a duel runs
+// SÜLD's combat, so A's spell reaches B, and B's heal (a Бөө) never reaches the opponent. Dev server, offline dev flag:
 //   node duel-defeat.js <srvctl.sh> <logfile> [port]
 const mineflayer = require('mineflayer');
 const fs = require('fs');
@@ -12,7 +13,7 @@ const lines = () => { const a = fs.readFileSync(logfile, 'utf8').split('\n'); a.
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
 
-function join(name) {
+function join(name, classSlot = 10) { // the class window: slot 10 Баатар … slot 12 Бөө
   return new Promise((res) => {
     const b = mineflayer.createBot({ host: '127.0.0.1', port: Number(port), username: name, version: '1.21.11', auth: 'offline', hideErrors: true });
     b.chatLog = [];
@@ -26,7 +27,7 @@ function join(name) {
       await sleep(3500);
       for (let i = 0; i < 40 && !b.currentWindow; i++) await sleep(500);
       if (b.currentWindow) { // class pick, then the confirm page
-        await b.clickWindow(10, 0, 0).catch(() => {}); await sleep(600);
+        await b.clickWindow(classSlot, 0, 0).catch(() => {}); await sleep(600);
         await b.clickWindow(11, 0, 0).catch(() => {}); await sleep(1200);
       }
       res(b);
@@ -51,7 +52,7 @@ async function duel(A, B) {
 
 (async () => {
   const an = 'A' + Math.floor(Math.random() * 90000 + 10000), bn = 'B' + Math.floor(Math.random() * 90000 + 10000);
-  const A = await join(an), B = await join(bn);
+  const A = await join(an), B = await join(bn, 12); // B is a Бөө: its circle heal is the PVP-01 check
   for (let i = 0; i < 3 && !(Math.abs(B.entity.position.x) > 800); i++) {
     cmd(`spreadplayers 1500 1500 1 12 false @a`); await sleep(5000);
   }
@@ -63,6 +64,22 @@ async function duel(A, B) {
 
   check(await duel(A, B), 'the duel starts', B.chatLog.slice(-1).join(''));
   clearMobs();
+
+  // PVP-01: in a consented fight a spell reaches the opponent (before: SkillService.hostile never targeted a player)
+  cmd(`tp ${bn} ${an}`); await sleep(800);
+  cmd(`tp ${bn} ^ ^ ^2`); await sleep(800); // two blocks in front of A, inside the cone of Тэнгэрийн Цавчилт
+  await A.lookAt(B.entity.position.offset(0, 1.2, 0)); await sleep(400);
+  cmd(`effect give ${bn} minecraft:instant_health 1 20`); await sleep(1200);
+  const hpSpell = B.health;
+  cmd(`skillsadmin cast ${an} TENGER_TSAVCHILT`); await sleep(1500);
+  check(B.health < hpSpell - 0.5, 'a duel: the opponent is hit by a spell (SÜLD combat, PVP-01)', 'B hp ' + hpSpell + ' -> ' + B.health);
+
+  // PVP-01: a heal reaches the caster and the party, never the opponent
+  cmd(`damage ${an} 12 minecraft:generic`); cmd(`damage ${bn} 12 minecraft:generic`); await sleep(1200);
+  const aBefore = A.health, bBefore = B.health;
+  cmd(`skillsadmin cast ${bn} SUNSNII_ZALBIRAL`); await sleep(1500);
+  check(B.health > bBefore + 0.5 && A.health <= aBefore + 0.6, 'a duel: the Бөө heals itself, not the opponent (PVP-01)',
+      'B ' + bBefore + ' -> ' + B.health + ' | A ' + aBefore + ' -> ' + A.health);
   // full health first: a steppe mob may have hit B before the Resistance landed, and the check below is
   // "a quarter of max health", so it must start from max (regress4 2026-10-13: B stood at 43.5 of 86.4)
   cmd(`effect give ${bn} minecraft:instant_health 1 20`); await sleep(1500);

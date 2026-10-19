@@ -898,7 +898,10 @@ public final class SkillService implements Listener {
     }
 
     private boolean hostile(Entity e, Player caster) {
-        return e instanceof LivingEntity le && le.isValid() && !(e instanceof Player) && e != caster
+        if (e instanceof Player v) { // PVP-01: a spell reaches a player only in a consented fight (duel, fighting ground)
+            return v.isValid() && !v.isDead() && v != caster && services.duels() != null && services.duels().consented(caster, v);
+        }
+        return e instanceof LivingEntity le && le.isValid() && e != caster
                 && trialFoeOf(e, caster)
                 && !e.getScoreboardTags().contains("city_npc");
     }
@@ -1127,11 +1130,28 @@ public final class SkillService implements Listener {
         p.getWorld().playSound(eye, sound, 1f, 1.2f);
     }
 
+    /**
+     * PVP-01 (audit 2026-10-19): whom a heal, a cleanse or a ward reaches — the caster and the caster's party members
+     * within {@code r} of {@code c}; never a soul (it walks its ritual), never a duel opponent, never a stranger who
+     * happens to stand in the circle.
+     */
+    List<Player> allies(Player caster, Location c, double r) {
+        mn.suld.api.party.Party party = services.parties() == null ? null : services.parties().partyOf(caster.getUniqueId()).orElse(null);
+        List<Player> out = new ArrayList<>();
+        for (Player x : c.getWorld().getPlayers()) {
+            if (x.getLocation().distanceSquared(c) > r * r) continue;
+            if (!x.equals(caster) && (party == null || !party.contains(x.getUniqueId()))) continue;
+            if (services.isSoul.test(x.getUniqueId())) continue;
+            if (services.duels() != null && services.duels().consented(caster, x)) continue;
+            out.add(x);
+        }
+        return out;
+    }
+
     private void heal(Player p, Spell s, double hp, double radius) {
         double rr = r(p, s, radius);
         double amount = hp * (1 + buildOf(p).mod(s, ModKey.DAMAGE_PCT) / 100.0) * rankPower(p, s);
-        for (Player ally : p.getWorld().getPlayers()) {
-            if (ally.getLocation().distanceSquared(p.getLocation()) > rr * rr) continue;
+        for (Player ally : allies(p, p.getLocation(), rr)) {
             services.skillTree().healFrom(p, ally, amount);
             ally.getWorld().spawnParticle(Particle.HEART, ally.getLocation().add(0, 2, 0), 5, 0.4, 0.3, 0.4);
         }
@@ -1246,8 +1266,8 @@ public final class SkillService implements Listener {
                     return;
                 }
                 for (LivingEntity e : around(p, c, r(p, s, 5))) hurt(p, e, s);
-                for (Player ally : c.getWorld().getPlayers()) {
-                    if (ally.getLocation().distanceSquared(c) < Math.pow(r(p, s, 6), 2)) services.skillTree().healFrom(p, ally, 6 * (1 + buildOf(p).mod(s, ModKey.DAMAGE_PCT) / 100.0) * rankPower(p, s));
+                for (Player ally : allies(p, c, r(p, s, 6))) {
+                    services.skillTree().healFrom(p, ally, 6 * (1 + buildOf(p).mod(s, ModKey.DAMAGE_PCT) / 100.0) * rankPower(p, s));
                 }
                 c.getWorld().spawnParticle(Particle.FLASH, c, 1, 0, 0, 0, 0, Color.WHITE);
                 c.getWorld().spawnParticle(Particle.DUST, c, 80, 2.5, 1, 2.5, 0, new Particle.DustOptions(Color.fromRGB(150, 235, 255), 1.6f));

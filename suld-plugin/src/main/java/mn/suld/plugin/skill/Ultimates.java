@@ -120,8 +120,7 @@ final class Ultimates {
                 p.getWorld().playSound(p.getLocation(), Sound.ENTITY_WARDEN_SONIC_CHARGE, 0.6f, 1.6f);
             }
             case OVGODIIN_ZALBIRAL -> {
-                for (Player ally : p.getWorld().getPlayers()) {
-                    if (ally.getLocation().distanceSquared(p.getLocation()) > 14 * 14) continue;
+                for (Player ally : skills.allies(p, p.getLocation(), 14)) { // PVP-01: self and party, never the opponent or a soul
                     tree.healFrom(p, ally, 100);
                     for (PotionEffectType t : new PotionEffectType[]{PotionEffectType.POISON, PotionEffectType.WITHER, PotionEffectType.SLOWNESS,
                             PotionEffectType.WEAKNESS, PotionEffectType.BLINDNESS, PotionEffectType.NAUSEA, PotionEffectType.HUNGER}) {
