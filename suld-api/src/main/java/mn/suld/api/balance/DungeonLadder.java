@@ -11,7 +11,7 @@ public final class DungeonLadder {
     /**
      * @param min         level to enter
      * @param max         highest level its rewards are worth (loot rolls inside min..max)
-     * @param band        region band (0 = Хэрлэн … 7 = Отгонтэнгэр)
+     * @param band        region band (0 = Хэрлэн … 7 = Алтай, the far west)
      * @param chapterGate story chapters (index, 0-based) that must be finished first: chapters done ≥ chapterGate + 1
      * @param party       recommended party size (boss health is tuned for it)
      */

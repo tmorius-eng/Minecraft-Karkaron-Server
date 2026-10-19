@@ -77,7 +77,7 @@
     },
     {
       "id": "mob.altai_mosun_suns",
-      "name": "Алтайн Мөсөн Сүнс",
+      "name": "Отгоны Мөсөн Сүнс",
       "host": "STRAY",
       "tier": "NORMAL",
       "level": 19,
@@ -86,7 +86,7 @@
     },
     {
       "id": "mob.altai_avarga",
-      "name": "Алтайн Аварга",
+      "name": "Отгоны Аварга",
       "host": "RAVAGER",
       "tier": "ELITE",
       "level": 23,
@@ -95,7 +95,7 @@
     },
     {
       "id": "mob.altai_tsasan_chono",
-      "name": "Алтайн Цасан Чоно",
+      "name": "Отгоны Цасан Чоно",
       "host": "WOLF",
       "tier": "NORMAL",
       "level": 25,

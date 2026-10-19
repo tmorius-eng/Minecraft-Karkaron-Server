@@ -83,7 +83,7 @@ public final class QuestMenu {
             int i = index - ACT_ONE;
             return i < 4 ? "Хөвсгөл" : i < 10 ? "Зүүнгар, Тангудын хил" : i < 15 ? "Алс дорнын тал" : i < 18 ? "Хэнтий" : i < 22 ? "Өндөр Алтай" : "Ариун уул";
         }
-        return index < 5 ? "Хэрлэн" : index < 9 ? "Говь" : index < 14 ? "Хангай" : "Алтай";
+        return index < 5 ? "Хэрлэн" : index < 9 ? "Говь" : index < 14 ? "Хангай" : "Отгонтэнгэр";
     }
 
     /** Opens the quest book on the act of the player's current chapter. */
@@ -113,7 +113,7 @@ public final class QuestMenu {
                 tab == 2 ? Glyphs.GUI_QUESTBOOK2 : tab == 3 ? Glyphs.GUI_QUESTBOOK3 : Glyphs.GUI_QUESTBOOK1, 14);
 
         // row 0: the tabs (the background draws them; invisible buttons on top)
-        tab(m, new int[]{0, 1, 2}, "Акт I · Сүлдний Зам", "1–" + Math.min(ACT_ONE, chain.size()) + "-р бүлэг: Хархорумаас Алтай хүртэл",
+        tab(m, new int[]{0, 1, 2}, "Акт I · Сүлдний Зам", "1–" + Math.min(ACT_ONE, chain.size()) + "-р бүлэг: Хархорумаас Отгонтэнгэр хүртэл",
                 Math.min(done, ACT_ONE) + " / " + Math.min(ACT_ONE, chain.size()) + " бүлэг", Glyphs.BADGE_Q_OPEN, 1);
         if (hasTwo) {
             tab(m, new int[]{3, 4, 5}, "Акт II · Хөх Сүлдний Зам", "19–" + chain.size() + "-р бүлэг: гадна нутаг, Тэнгэрийн Шат",
@@ -353,7 +353,7 @@ public final class QuestMenu {
         m.set(48, Menu.item(Material.MOSSY_COBBLESTONE, Menu.title("Агуйн Шат", SKY), Menu.lore(SKY,
                 List.of(Menu.line("Арван агуй, хаалга руу нь зам заана.")), List.of(), "Нээх")), (pl, c) -> pl.performCommand("dungeon"));
         m.set(49, Menu.item(Material.WRITABLE_BOOK, Menu.title("Сүлдний Зам", GOLD), List.of(
-                Menu.line(two ? "Гадна нутгаас Тэнгэрийн Шат хүртэл." : "Хархорумаас Алтай хүртэлх аян."),
+                Menu.line(two ? "Гадна нутгаас Тэнгэрийн Шат хүртэл." : "Хархорумаас Отгонтэнгэр хүртэлх аян."),
                 Menu.line("Бүлэг бүр дуусмагц дараагийнх нь эхэлнэ."),
                 Component.empty(),
                 Menu.kv("Явц:", done + " / " + chain.size() + " бүлэг", GREEN),
@@ -363,7 +363,7 @@ public final class QuestMenu {
         if (chain.size() > ACT_ONE) {
             // the other act: Act I (painted map) ⇄ Act II
             m.set(51, Menu.item(two ? Material.FILLED_MAP : Material.MAP, Menu.title(two ? "« Act I · Сүлдний Зам" : "Act II · Хөх Сүлдний Зам »", GOLD),
-                    Menu.lore(GOLD, List.of(Menu.line(two ? "1–18-р бүлэг: Хархорумаас Алтай хүртэл" : "19–" + chain.size() + "-р бүлэг: гадна нутаг, Тэнгэрийн Шат")),
+                    Menu.lore(GOLD, List.of(Menu.line(two ? "1–18-р бүлэг: Хархорумаас Отгонтэнгэр хүртэл" : "19–" + chain.size() + "-р бүлэг: гадна нутаг, Тэнгэрийн Шат")),
                             List.of(), "Дарж нээх")), (pl, c) -> openMap(pl, two ? 1 : 2));
         }
         m.set(52, Menu.item(Material.BOOK, Menu.title("« Эрлийн Ном", GOLD), Menu.lore(GOLD, List.of(Menu.line("Бүлгүүдийг картаар харах.")), List.of(), "Дарж нээх")),

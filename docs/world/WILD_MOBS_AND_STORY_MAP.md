@@ -63,7 +63,7 @@ How the tooltip frame looks in a real client is **MANUAL_QA_REQUIRED**. The bots
 
 The owner's painted map of the four lands (`assets/art/source/gui_quests.webp`, box-filtered to the chest by
 `gen_ui.py gui_quests`) carries the eighteen chapters on a road: Хэрлэн (1–5) and Говь (6–9) along the bottom, up the
-right edge, Хангай (10–14) and Алтай (15–18) along the top, Kharkhorum's ger on the Orkhon in the middle. The stack
+right edge, Хангай (10–14) and Отгонтэнгэр (15–18) along the top, Kharkhorum's ger on the Orkhon in the middle. The stack
 count is the chapter number. Each card: the chapter's story (`QuestContent.story`: real places and institutions, the
 relay posts, the decimal army, the caravan roads, the Altai's stone statues; the creatures and people are SÜLD
 fiction), what to do, where (direction and distance from the player), the progress bar, who gave it and the reward.

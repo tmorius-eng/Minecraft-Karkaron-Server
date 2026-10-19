@@ -24,7 +24,7 @@ Built, live-tested on Paper 1.21.11 with bots, `./gradlew build` green (530 test
 - **Classes and combat:** five classes, 3D class weapons in six level tiers with effects, Wynncraft-style click
   combos (25 spells, 15 ultimates), class resources, a data-driven level curve.
 - **World:** Kharkhorum (safe city with glowing NPCs: class, tutorial, quests, shop, smith, travel, blessing) and
-  eight wild regions (Хэрлэн, Говь, Хангай, Алтай and the four outer lands) in 40 named areas, with their own mobs,
+  eight wild regions (Хэрлэн, Говь, Хангай, Отгонтэнгэр and the four outer lands) in 40 named areas, with their own mobs,
   level bands, discovery EXP, 40 ovoo, 16 historic sites and danger warnings.
 - **Content:** the 42-chapter storyline «Сүлдний Зам» (Act I 1–18, Act II 19–42) with a quest tracker; a ten-dungeon ladder in instanced halls with three-phase
   bosses; world events; two world-unique relics; clans and parties.

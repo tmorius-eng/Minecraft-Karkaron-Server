@@ -67,8 +67,8 @@
     {
       "id": "region.altai",
       "bit": 4,
-      "name": "Алтай",
-      "description": "Баруун зүгийн мөсөн оргилууд — мөсөн сүнс, аварга",
+      "name": "Отгонтэнгэрийн Оргил",
+      "description": "Баруун зүгийн Хангайн мөнх цаст оргилууд — мөсөн сүнс, аварга",
       "shape": {"type": "sector", "minRadius": 0, "maxRadius": 2600, "fromDeg": 225, "toDeg": 315},
       "priority": 10,
       "minLevel": 18,
@@ -126,8 +126,8 @@
     {
       "id": "region.otgon",
       "bit": 7,
-      "name": "Отгонтэнгэрийн Оргил",
-      "description": "Тэнгэрт тулсан мөнх цаст оргилууд — тэнгэрийн цэрэг",
+      "name": "Алтай",
+      "description": "Баруун хязгаарын Алтайн нуруу, тэнгэрт тулсан оргилууд — тэнгэрийн цэрэг",
       "shape": {"type": "sector", "minRadius": 2600, "maxRadius": 5000, "fromDeg": 225, "toDeg": 315},
       "priority": 10,
       "minLevel": 27,

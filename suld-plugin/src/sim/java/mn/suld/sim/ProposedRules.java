@@ -193,11 +193,11 @@ public class ProposedRules extends Rules {
             new BandSpec("region.kherlen", "Хэрлэнгийн Тал", 1, 8, new int[]{2, 4, 6}, 7, 0, "item.chonon_arisan"),
             new BandSpec("region.gobi", "Говь", 5, 15, new int[]{7, 9, 12}, 13, 0, "item.khilentsiin_khor"),
             new BandSpec("region.khangai", "Хангай", 10, 20, new int[]{12, 15, 18}, 14, 19, "item.baavgain_arisan"),
-            new BandSpec("region.altai", "Алтай", 18, 30, new int[]{19, 24, 28}, 23, 29, "item.mosun_chuluu"),
+            new BandSpec("region.altai", "Отгонтэнгэр", 18, 30, new int[]{19, 24, 28}, 23, 29, "item.mosun_chuluu"),
             new BandSpec("region.khuvsgul", "Хөвсгөл", 27, 38, new int[]{28, 32, 36}, 34, 37, "item.mosun_chuluu"),
             new BandSpec("region.zuungar", "Зүүнгарын Говь", 35, 46, new int[]{36, 40, 44}, 42, 45, "item.altan_toos"),
             new BandSpec("region.burkhan", "Бурхан Халдун", 43, 54, new int[]{44, 48, 52}, 50, 53, "item.altan_toos"),
-            new BandSpec("region.otgon", "Отгонтэнгэр", 51, 60, new int[]{52, 56, 59}, 57, 60, "item.tengeriin_chuluu"));
+            new BandSpec("region.otgon", "Алтай", 51, 60, new int[]{52, 56, 59}, 57, 60, "item.tengeriin_chuluu"));
 
     /** Dungeon ladder: id, name, min, max, band, chapter gate (act-wide index), previous dungeon. */
     record DungeonSpec(String id, String name, int min, int max, int band, int chapterGate, int party) {

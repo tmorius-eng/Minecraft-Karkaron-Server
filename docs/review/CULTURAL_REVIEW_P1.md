@@ -58,7 +58,7 @@ New cosmetic source `withheld` (`Cosmetic.withheld()`): not sold for coins or cr
 | New names | «Хөгшин Саарал», «Саарлын Агуй», «Хэнтийн Гүн Агуй», «Хадны Мангас», «Хаадын …», «Баатрын Их Уур» | Invented. A native speaker should confirm they read naturally and carry no unintended meaning |
 | HIST-003 | Aurag «Чингис хааны их ордон» | The 2020 study says "more likely than not" a base camp. The wording change needs historian sign-off |
 | HIST-019 | «Хар Жанжин — Балгасны Эзэн» (the legend's defender turned villain) | Rename or reframe is a story decision |
-| HIST-021 | Region names (Отгонтэнгэр over Altai peaks; Хангай features under «Алтай») | Map naming decision; data only |
+| HIST-021 | Region names (Отгонтэнгэр over Altai peaks; Хангай features under «Алтай») | **Resolved 2026-10-19** (owner decision): the inner-west region is «Отгонтэнгэрийн Оргил» and the far-west one «Алтай» in `world.json`; ids and discovery bits unchanged; the three inner mobs are «Отгоны …». A historian still reviews the wording |
 | Savdag mobs | «Уулын Савдаг» and other spirit-masters fought as regular enemies | Whether any spirit-master may be an enemy is a cultural judgement |
 | `tag.tengeriin_khuu` | «Тэнгэрийн Хүү» (credits) | Possible imperial-title connotation; not flagged by the audit; for review |
 | LANG-004/005/007/008 | «түмэн» spellings, «Сүлдний/Сүлдийн», rarity ladder, overloaded «Цол/Зэрэг/Түвшин» | Terminology decisions; P2 |
