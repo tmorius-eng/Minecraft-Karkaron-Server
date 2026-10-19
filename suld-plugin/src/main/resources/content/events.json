@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "about": "World events, world bosses (docs/WORLD_BOSSES.md) and world-unique relics.",
+  "about": "World events (four in the automatic rotation, one every 45 minutes), world bosses (docs/WORLD_BOSSES.md) and world-unique relics.",
   "worldEvents": [
     {
       "id": "event.chonyn_dovtolgoo",
@@ -19,7 +19,62 @@
       "rewardCoins": 60,
       "minContribution": 3,
       "clanExpPerKill": 5,
-      "clanSuccessBonus": 200
+      "clanSuccessBonus": 200,
+      "automatic": true
+    },
+    {
+      "id": "event.deeremchdiin_dairalt",
+      "name": "Дээрэмчдийн Дайралт",
+      "description": "Говийн замд дээрэмчид гарлаа! Бүгдээрээ 10 минутад 25 дээрэмчин, хилэнц устгаарай.",
+      "targetMobs": [
+        "mob.deeremchin",
+        "mob.goviin_khilents"
+      ],
+      "targetKills": 25,
+      "durationSeconds": 600,
+      "rewardExp": 450,
+      "rewardCoins": 90,
+      "minContribution": 3,
+      "clanExpPerKill": 5,
+      "clanSuccessBonus": 250,
+      "automatic": true,
+      "about": "Түвшин 4–7: Говийн зам. Нэр соёлын шалгалтад (native review) ороогүй."
+    },
+    {
+      "id": "event.khangain_surug",
+      "name": "Хангайн Сүрэг",
+      "description": "Хангайн саарал чоно, баавгай хамтдаа бууж ирлээ! Бүгдээрээ 12 минутад 20 устгаарай.",
+      "targetMobs": [
+        "mob.saaral_chono",
+        "mob.khangai_baavgai"
+      ],
+      "targetKills": 20,
+      "durationSeconds": 720,
+      "rewardExp": 1200,
+      "rewardCoins": 180,
+      "minContribution": 2,
+      "clanExpPerKill": 8,
+      "clanSuccessBonus": 400,
+      "automatic": true,
+      "about": "Түвшин 12–14: Хангайн бүс. Нэр соёлын шалгалтад ороогүй."
+    },
+    {
+      "id": "event.zudyn_surug",
+      "name": "Зудын Сүрэг",
+      "description": "Зудад туугдсан цасан чоно, мөсөн сүнс Алтайгаас буулаа! Бүгдээрээ 12 минутад 20 устгаарай.",
+      "targetMobs": [
+        "mob.altai_tsasan_chono",
+        "mob.altai_mosun_suns"
+      ],
+      "targetKills": 20,
+      "durationSeconds": 720,
+      "rewardExp": 2400,
+      "rewardCoins": 300,
+      "minContribution": 2,
+      "clanExpPerKill": 10,
+      "clanSuccessBonus": 600,
+      "automatic": true,
+      "about": "Түвшин 19–25: Алтай. Нэр соёлын шалгалтад ороогүй."
     }
   ],
   "worldBosses": [

@@ -455,11 +455,15 @@ public final class ContentLoader {
                         new LinkedHashSet<>(targets), intIn(f, at, e, "targetKills", 1, 100_000, true, 1, issues),
                         intIn(f, at, e, "durationSeconds", 10, 86_400, true, 600, issues), intIn(f, at, e, "rewardExp", 0, 10_000_000, true, 0, issues),
                         intIn(f, at, e, "rewardCoins", 0, 10_000_000, true, 0, issues), intIn(f, at, e, "minContribution", 0, 100_000, true, 0, issues),
-                        intIn(f, at, e, "clanExpPerKill", 0, 100_000, true, 0, issues), intIn(f, at, e, "clanSuccessBonus", 0, 10_000_000, true, 0, issues)));
+                        intIn(f, at, e, "clanExpPerKill", 0, 100_000, true, 0, issues), intIn(f, at, e, "clanSuccessBonus", 0, 10_000_000, true, 0, issues),
+                        Boolean.TRUE.equals(e.get("automatic"))));
             } catch (IllegalArgumentException ex) {
                 issues.add(new Issue(f, at, ex.getMessage()));
             }
             for (String alias : strings(f, at, e, "aliases", issues)) aliases.put(alias, id);
+        }
+        if (!events.isEmpty() && events.stream().noneMatch(WorldEventDefinition::automatic)) {
+            issues.add(new Issue(f, "worldEvents", "no automatic world event: one needs \"automatic\": true or nothing ever starts on its own"));
         }
         // world bosses (docs/WORLD_BOSSES.md): optional, a WORLD_BOSS mob at a historic site
         List<mn.suld.api.worldboss.WorldBossDefinition> worldBosses = new ArrayList<>();

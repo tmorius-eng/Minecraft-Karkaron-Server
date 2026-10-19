@@ -11,6 +11,7 @@ import mn.suld.api.worldevent.EventReward;
 import mn.suld.api.worldevent.WorldEventDefinition;
 import mn.suld.api.worldevent.WorldEventRun;
 import mn.suld.plugin.SuldServices;
+import mn.suld.plugin.content.Content;
 import mn.suld.plugin.content.SuldContent;
 import mn.suld.plugin.mob.MobService;
 import mn.suld.plugin.ui.Messages;
@@ -84,15 +85,19 @@ public final class WorldEventService {
         return java.util.Collections.unmodifiableSet(unlocked);
     }
 
-    /** The automatic pool: the wolf raid plus whatever campaigns unlocked; one is drawn per automatic start. */
+    /** The automatic pool: every {@code automatic} event plus whatever campaigns unlocked; one is drawn per automatic start. */
     private WorldEventDefinition nextAutomatic() {
-        List<WorldEventDefinition> pool = new ArrayList<>();
-        pool.add(SuldContent.WOLF_RAID);
-        for (String id : unlocked) {
-            WorldEventDefinition d = SuldContent.worldEventFor(id);
-            if (d != null && !d.id().equals(SuldContent.WOLF_RAID.id())) pool.add(d);
-        }
+        List<WorldEventDefinition> pool = pool(Content.pack().worldEvents(), unlocked);
+        if (pool.isEmpty()) pool = List.of(SuldContent.WOLF_RAID);
         return pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
+    }
+
+    /** The events the rotation draws from, in content order, each once: the automatic ones, then the unlocked ones. */
+    static List<WorldEventDefinition> pool(List<WorldEventDefinition> all, Set<String> unlocked) {
+        List<WorldEventDefinition> pool = new ArrayList<>();
+        for (WorldEventDefinition d : all) if (d.automatic()) pool.add(d);
+        for (WorldEventDefinition d : all) if (unlocked.contains(d.id()) && !pool.contains(d)) pool.add(d);
+        return pool;
     }
 
     /** How long before an automatic event the guards warn, once a campaign unlocked the warning. */

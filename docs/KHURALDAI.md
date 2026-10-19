@@ -71,7 +71,7 @@ is how many later weeks an effect stays (0 = permanent).
 
 | Effect | Live change | Undone |
 |---|---|---|
-| `UNLOCK_EVENT` | `WorldEventService.unlock(id)`: the event is drawn beside the wolf raid at automatic starts | `lock(id)` |
+| `UNLOCK_EVENT` | `WorldEventService.unlock(id)`: the event is drawn beside the `automatic` events at automatic starts | `lock(id)` |
 | `PROP` | `PropService.placeDynamic`: an item-display prop with its barriers at `site + (dx, dz)` | entities and barriers removed |
 | `NPC` | `NpcService.addDynamic`: a mannequin NPC with a role (caravan merchant opens the shop; steward opens `/khuraldai`) | removed |
 

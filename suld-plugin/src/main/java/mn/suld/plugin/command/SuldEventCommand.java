@@ -106,6 +106,11 @@ public final class SuldEventCommand implements CommandExecutor, TabCompleter {
             for (var b : services.worldBosses.bosses()) out.add(b.id().substring("worldboss.".length()));
             return out.stream().filter(x -> x.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         }
-        return args.length == 2 && args[0].equalsIgnoreCase("start") ? List.of("wolf_raid") : List.of();
+        if (args.length == 2 && args[0].equalsIgnoreCase("start")) {
+            List<String> ids = new java.util.ArrayList<>(List.of("wolf_raid"));
+            for (WorldEventDefinition d : mn.suld.plugin.content.Content.pack().worldEvents()) ids.add(d.id());
+            return ids.stream().filter(x -> x.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
+        }
+        return List.of();
     }
 }
