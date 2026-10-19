@@ -55,6 +55,7 @@ RUNS=(
   "achievebot|$CTL $PORT"
   "healthbot|$CTL $PORT"
   "sitesbot|$CTL $LOG $PORT"
+  "tradebot|$CTL $PORT"
 )
 DEV_RUNS=("campaign-effects|$CTL $LOG $PORT" "dungeon-clear|$CTL $LOG $PORT"
   "campaign-deliver|$CTL $LOG test_deliver item.chonon_arisan 60 $PORT" "trainingpay|$CTL $LOG $PORT")
