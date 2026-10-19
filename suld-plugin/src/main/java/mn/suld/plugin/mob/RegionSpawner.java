@@ -163,10 +163,23 @@ public final class RegionSpawner implements org.bukkit.event.Listener {
             MobDefinition m = SuldContent.mobFor(id);
             if (m != null) mobs.add(m);
         }
-        String id = pickByLevel(mobs, localLevel(region, at), maxLevel, ThreadLocalRandom.current().nextDouble());
+        int want = localLevel(region, at);
+        String id = pickByLevel(mobs, want, maxLevel, ThreadLocalRandom.current().nextDouble());
         if (id != null) return id;
         if (maxLevel != Integer.MAX_VALUE) return SuldContent.GOVIIN_CHONO.id(); // nothing tame enough here: the first prey
-        return region.mobIds().get(ThreadLocalRandom.current().nextInt(region.mobIds().size()));
+        // nothing within ±5 of the spot (WORLD-01: each outer region keeps its own prey, so a band may be empty):
+        // the mob nearest in level, never a random one that could be thirty levels above the spot
+        String nearest = nearestByLevel(mobs, want);
+        return nearest != null ? nearest : region.mobIds().get(0);
+    }
+
+    /** Pure: the mob whose level is nearest to {@code want} (the first of a tie); null for an empty list. */
+    static String nearestByLevel(List<MobDefinition> mobs, int want) {
+        MobDefinition best = null;
+        for (MobDefinition m : mobs) {
+            if (best == null || Math.abs(m.level() - want) < Math.abs(best.level() - want)) best = m;
+        }
+        return best == null ? null : best.id();
     }
 
     /**

@@ -76,8 +76,9 @@ class ContentDataTest {
         assertEquals("region.zuungar", bundled.lore().get("quest.tangut_ghosts").region());
         assertEquals("region.otgon", bundled.lore().get("quest.sky_soldiers").region());
         assertEquals("region.khuvsgul", bundled.lore().get("quest.water_lus").region());
+        // WORLD-01: the Tangut ghosts now haunt Зүүнгар alone; the water spirit still lives in three outer regions
         ContentLoader.Result missing = load(edited("quests.json", root -> list(root, "story").stream()
-                .filter(c -> "quest.tangut_ghosts".equals(c.get("id"))).forEach(c -> c.remove("region"))));
+                .filter(c -> "quest.water_lus".equals(c.get("id"))).forEach(c -> c.remove("region"))));
         assertTrue(has(missing, "quests.json", "lives in several regions"), () -> missing.issues().toString());
         ContentLoader.Result wrong = load(edited("quests.json", root -> list(root, "story").stream()
                 .filter(c -> "quest.tangut_ghosts".equals(c.get("id"))).forEach(c -> c.put("region", "region.nowhere"))));

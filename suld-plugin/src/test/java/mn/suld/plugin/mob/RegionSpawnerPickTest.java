@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,6 +41,34 @@ class RegionSpawnerPickTest {
                 }
             }
         }
+    }
+
+    /** WORLD-01: a spot whose ±5 band holds no mob of its region gets the nearest level, never a random pick. */
+    @Test
+    void nothingWithinFiveFallsBackToTheNearestLevel() {
+        List<MobDefinition> zuungar = mobsOf("region.zuungar"); // 37, 39, 43, 45, 59
+        assertNull(RegionSpawner.pickByLevel(zuungar, 27, Integer.MAX_VALUE, 0.5), "nothing within 5 of 27");
+        assertEquals("mob.tangud_suns", RegionSpawner.nearestByLevel(zuungar, 27));
+        assertEquals("mob.tengeriin_kharuul", RegionSpawner.nearestByLevel(zuungar, 60));
+        assertNull(RegionSpawner.nearestByLevel(List.of(), 30));
+    }
+
+    /**
+     * WORLD-01: the four outer regions no longer share one list. Each keeps prey at both ends of its 27–60 band (a mob
+     * at or below 40 and one at or above 55); a spot between two of its mobs gets the nearest level (the fallback
+     * above), so a thin band — Зүүнгар's desert has nothing below the level-37 Tangut ghosts — never spawns a random one.
+     */
+    @Test
+    void everyOuterRegionHasItsOwnPreyAcrossItsBand() {
+        List<List<String>> lists = new ArrayList<>();
+        for (String id : List.of("region.khentii", "region.zuungar", "region.otgon", "region.khuvsgul")) {
+            List<MobDefinition> mobs = mobsOf(id);
+            lists.add(mobs.stream().map(MobDefinition::id).toList());
+            assertTrue(mobs.stream().anyMatch(m -> m.level() <= 40), id + " has no prey for its inner edge");
+            assertTrue(mobs.stream().anyMatch(m -> m.level() >= 55), id + " has no prey for its far edge");
+            for (int level = 27; level <= 60; level++) assertTrue(RegionSpawner.nearestByLevel(mobs, level) != null);
+        }
+        assertEquals(4, lists.stream().distinct().count(), "the outer regions have distinct prey");
     }
 
     @Test
