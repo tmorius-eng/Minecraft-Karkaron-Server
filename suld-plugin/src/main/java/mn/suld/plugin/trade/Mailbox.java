@@ -113,25 +113,42 @@ public final class Mailbox {
         return out;
     }
 
+    /** One file step that may fail. */
+    interface IoStep {
+        void run() throws java.io.IOException;
+    }
+
+    /**
+     * The delivered file goes: removed, else emptied, else the player is marked {@code stuck} so the stacks are never
+     * read again this run (external audit FIND-08: the stacks were delivered and the player file saved, a file that
+     * cannot go would deliver them twice). Returns what happened; the steps are parameters so a test can make them fail.
+     */
+    static String clearDelivered(Path f, UUID player, java.util.Set<UUID> stuck, java.util.logging.Logger log, IoStep remove, IoStep empty) {
+        try {
+            remove.run();
+            return "removed";
+        } catch (java.io.IOException e) {
+            try {
+                empty.run();
+                log.warning("[mailbox] could not remove " + f.getFileName() + " (" + e.getMessage() + "); emptied it instead");
+                return "emptied";
+            } catch (java.io.IOException e2) {
+                stuck.add(player);
+                log.severe("[mailbox] delivered but could neither remove nor empty " + f.getFileName() + ": "
+                        + e2.getMessage() + " — not delivered again until restart; remove it by hand before then");
+                return "stuck";
+            }
+        }
+    }
+
     private void write(UUID player, List<ItemStack> items) {
         Path f = file(player);
         if (items.isEmpty()) {
-            try {
-                java.nio.file.Files.deleteIfExists(f);
-            } catch (java.io.IOException e) {
-                // the stacks were delivered and the player file saved: a file that cannot go would deliver them twice
-                // (external audit FIND-08). Empty it instead; if even that fails, never read it again this run.
-                try {
-                    YamlConfiguration empty = new YamlConfiguration();
-                    empty.set("items", List.of());
-                    AtomicYaml.writeNow(f, empty);
-                    plugin.getLogger().warning("[mailbox] could not remove " + f.getFileName() + " (" + e.getMessage() + "); emptied it instead");
-                } catch (java.io.IOException e2) {
-                    stuck.add(player);
-                    plugin.getLogger().severe("[mailbox] delivered but could neither remove nor empty " + f.getFileName() + ": "
-                            + e2.getMessage() + " — not delivered again until restart; remove it by hand before then");
-                }
-            }
+            clearDelivered(f, player, stuck, plugin.getLogger(), () -> java.nio.file.Files.deleteIfExists(f), () -> {
+                YamlConfiguration empty = new YamlConfiguration();
+                empty.set("items", List.of());
+                AtomicYaml.writeNow(f, empty);
+            });
             return;
         }
         YamlConfiguration y = new YamlConfiguration();
