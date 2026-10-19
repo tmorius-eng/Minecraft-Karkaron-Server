@@ -336,6 +336,11 @@ public final class AuthenticationService implements Listener, AuthBridge.Events 
                 e.setCancelled(true);
                 p.sendMessage(Component.text("Эхлээд нэвтэрнэ үү: /login <нууц үг> (шинэ бол /register <нууц үг> <нууц үг>)",
                         NamedTextColor.RED));
+            } else if (label.equals("l") || label.equals("login")) {
+                // /l is also SÜLD's local-chat command (plugin.yml): whichever plugin registered the bare label first
+                // owns it, so a player still logging in is sent to AuthMe's login by its full name
+                String rest = msg.contains(" ") ? msg.substring(msg.indexOf(' ')) : "";
+                e.setMessage("/authme:login" + rest);
             }
             return;
         }

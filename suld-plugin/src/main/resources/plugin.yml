@@ -103,7 +103,7 @@ commands:
     description: One line to Нийт (global) chat; alone it switches to it.
     usage: /g <message>
   l:
-    description: One line to Ойр (local, 80 blocks) chat; alone it switches to it.
+    description: One line to Ойр (local, 80 blocks) chat; alone it switches to it. Behind AuthMe (AUTH_MODE=hybrid) a player who is not logged in yet gets AuthMe's /login instead.
     usage: /l <message>
   pc:
     description: One line to your party; alone it switches to party chat.

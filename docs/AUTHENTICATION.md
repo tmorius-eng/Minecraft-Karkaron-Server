@@ -109,6 +109,8 @@ client ──▶ Velocity :25565 (offline mode, AuthMe Velocity)
   by someone else). **Owner names must be registered before the server opens** (console:
   `authme register <name> <password>`): `OwnerService` warns at start for every owner name without an AuthMe
   account, because whoever registers it would be opped.
+* **`/l`.** SÜLD's one-line local chat and AuthMe's login alias share the label; a player who is not logged in yet is
+  sent to `/authme:login` whichever plugin owns the bare `/l`, and a logged-in player keeps the chat command.
 * **What is lost.** Chat signing (`enforce-secure-profile=false`: an offline proxy never asks for the client's key)
   and skins of offline accounts (none is fetched).
 
