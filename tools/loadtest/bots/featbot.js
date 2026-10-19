@@ -42,13 +42,16 @@ const heard = (bot, text) => bot.chatLog.some(l => l.includes(text));
   const tag = 'F' + Math.floor(Math.random() * 90000 + 10000);
   // ---------------------------------------------------------------- tutorial (fresh player)
   const A = await join(tag + 'a');
-  // the tutorial begins 120 ticks after a first join (longer on a busy server): wait for its bar before the class pick
-  for (let i = 0; i < 40 && !A.firstTutorial; i++) await sleep(500);
-  // the first tutorial bar a fresh player sees is step 1 (a snapshot after a fixed wait races the class pick)
-  const bars0 = A.firstTutorial || [...A.bars.values()].join(' | ');
-  check('tutorial starts on first join', /Заавар 1\/7/.test(bars0), bars0);
+  // the tutorial begins 120 ticks after a first join, but the class menu is a full-screen view and BossBars keeps every
+  // bar behind it (UiFocus.isModal): step 1 «Ангиа сонго» is not shown over the menu that is its answer. The bar is
+  // released the moment the menu closes, still at step 1, and moves to 2 and 3 within the next second.
+  for (let i = 0; i < 20 && !A.currentWindow; i++) await sleep(500);
+  await sleep(8000); // past the 120-tick start, with a margin for a busy server
+  check('no tutorial bar over the class menu', !A.firstTutorial && !!A.currentWindow, 'window ' + !!A.currentWindow + ', bars: ' + [...A.bars.values()].join(' | '));
   await pickClass(A, 10);
-  await sleep(2500);
+  for (let i = 0; i < 20 && !A.firstTutorial; i++) await sleep(500);
+  check('the tutorial started at step 1 and shows as soon as the menu closes', /Заавар 1\/7/.test(A.firstTutorial || ''), A.firstTutorial || [...A.bars.values()].join(' | '));
+  await sleep(1500);
   const bars1 = [...A.bars.values()].join(' | ');
   check('tutorial advances after the class pick', /Заавар [23]\/7/.test(bars1), bars1);
   A.chat('/skills chest'); await sleep(2500); if (A.currentWindow) A.closeWindow(A.currentWindow);
