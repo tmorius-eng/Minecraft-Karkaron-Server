@@ -207,20 +207,21 @@ add("cairn.1", "prop.cairn", [-93, 0, -20], "district.spiritual")
 add("cairn.2", "prop.cairn", [-99, 0, -40], "district.spiritual")
 
 # ------------------------------------------------------------------ landscaping
+# VIS-005 (audit 2026-10-11, fixed 2026-10-19): no cherry — the Orkhon valley grows larch, birch, poplar and elm
 G = lambda id, d, **p: add(id, "landscape.grove", [0, 0, 0], d, params=p)
-G("grove.garden_east", "district.gardens", rect=[10, 103, 140, 120], count=20, spacing=6, species=["cherry", "cherry", "elm"], flowers=5,
+G("grove.garden_east", "district.gardens", rect=[10, 103, 140, 120], count=20, spacing=6, species=["birch", "birch", "elm"], flowers=5,
   avoid=[[6, 108, 14, 116], [-6, 100, 6, 124], [74, 100, 86, 124]])
-G("grove.garden_west", "district.gardens", rect=[-140, 103, -10, 120], count=20, spacing=6, species=["cherry", "cherry", "elm"], flowers=5,
+G("grove.garden_west", "district.gardens", rect=[-140, 103, -10, 120], count=20, spacing=6, species=["birch", "birch", "elm"], flowers=5,
   avoid=[[-6, 100, 6, 124], [-86, 100, -74, 124], [-63, 118, -51, 124]])
-G("grove.avenue_east", "district.central_plaza", rect=[9, 33, 10, 86], count=7, spacing=7, species=["elm", "cherry"], flowers=2, avoid=[[5, 58, 40, 62]])
-G("grove.avenue_west", "district.central_plaza", rect=[-10, 33, -9, 86], count=7, spacing=7, species=["elm", "cherry"], flowers=2)
+G("grove.avenue_east", "district.central_plaza", rect=[9, 33, 10, 86], count=7, spacing=7, species=["elm", "larch"], flowers=2, avoid=[[5, 58, 40, 62]])
+G("grove.avenue_west", "district.central_plaza", rect=[-10, 33, -9, 86], count=7, spacing=7, species=["elm", "larch"], flowers=2)
 G("grove.residential", "district.residential", rect=[-92, 57, -34, 62], count=5, spacing=8, species=["birch", "elm"], flowers=3,
   avoid=[[-96, 51, -60, 53], [-51, 45, -41, 55], [-55, 54, -49, 60], [-88, 65, -34, 80], [-111, 49, -97, 63]])
 G("grove.crafting", "district.crafting", rect=[14, 64, 34, 72], count=3, spacing=8, species=["elm"], flowers=2, avoid=[[5, 58, 40, 62], [38, 56, 50, 72]])
 G("grove.spiritual", "district.spiritual", rect=[-150, -150, -82, -46], count=18, spacing=8, species=["larch", "larch", "birch"], flowers=2,
   avoid=[[-107, -83, -85, -61], [-98, -64, -94, -4], [-100, -42, -90, -18], [-160, -41, -144, -30]])
-G("grove.palace_east", "district.palace", rect=[30, -145, 62, -70], count=10, spacing=8, species=["elm", "cherry"], flowers=3)
-G("grove.palace_west", "district.palace", rect=[-62, -145, -30, -70], count=10, spacing=8, species=["elm", "cherry"], flowers=3)
+G("grove.palace_east", "district.palace", rect=[30, -145, 62, -70], count=10, spacing=8, species=["elm", "birch"], flowers=3)
+G("grove.palace_west", "district.palace", rect=[-62, -145, -30, -70], count=10, spacing=8, species=["elm", "birch"], flowers=3)
 G("grove.east_wilds", "district.military", rect=[126, -100, 165, -50], count=6, spacing=10, species=["larch", "birch"], flowers=2,
   avoid=[[100, -160, 108, -40], [146, -41, 156, -30]])
 
