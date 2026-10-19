@@ -259,7 +259,7 @@ commands:
     description: Trade items and coins with a nearby player (both confirm).
     aliases: [arilj, arilzhaa]
   top:
-    description: Server leaderboards (level, coins).
+    description: Server leaderboards (level, coins, dungeons cleared, Khuraldai contribution, achievements).
     aliases: [shildeg, leaderboard, baltop]
   mori:
     description: Summon (or send away) your personal steppe horse — from level 5, faster with rank.

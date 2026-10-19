@@ -65,6 +65,7 @@ public final class LeaderboardService implements TabExecutor {
 
     public List<Leaderboard.Entry> current(Leaderboard b) {
         List<Leaderboard.Entry> rows = new ArrayList<>(stored.get(b));
+        if (!b.live()) return b.rank(rows, SIZE);
         for (Player p : Bukkit.getOnlinePlayers()) {
             PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
             // a trainee's max character is not theirs: their stored row stands (docs/TRAINING_GROUNDS.md)
@@ -76,7 +77,7 @@ public final class LeaderboardService implements TabExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
-        Leaderboard b = a.length > 0 && a[0].toLowerCase(Locale.ROOT).startsWith("c") ? Leaderboard.COINS : Leaderboard.LEVEL;
+        Leaderboard b = parse(a.length > 0 ? a[0] : "");
         if (s instanceof Player p) {
             open(p, b);
             return true;
@@ -89,15 +90,30 @@ public final class LeaderboardService implements TabExecutor {
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
-        return a.length == 1 ? List.of("level", "coins") : List.of();
+        return a.length == 1 ? List.of("level", "coins", "dungeon", "khuraldai", "achievements") : List.of();
+    }
+
+    /** The board a word names: level (default), coins/зоос, dungeon/агуй, khuraldai/аян, achievements/амжилт. */
+    static Leaderboard parse(String word) {
+        String w = word.toLowerCase(Locale.ROOT);
+        if (w.startsWith("c") || w.startsWith("z") || w.startsWith("з")) return Leaderboard.COINS;
+        if (w.startsWith("d") || w.startsWith("ag") || w.startsWith("аг")) return Leaderboard.DUNGEON_CLEARS;
+        if (w.startsWith("k") || w.startsWith("ay") || w.startsWith("х") || w.startsWith("ая") || w.startsWith("camp")) return Leaderboard.KHURALDAI;
+        if (w.startsWith("ach") || w.startsWith("am") || w.startsWith("ам")) return Leaderboard.ACHIEVEMENTS;
+        return Leaderboard.LEVEL;
     }
 
     private static String value(Leaderboard b, Leaderboard.Entry e) {
         return switch (b) {
             case LEVEL -> "Түвшин " + e.level();
             case COINS -> String.format(Locale.ROOT, "%,d зоос", e.coins());
+            default -> String.format(Locale.ROOT, "%,d %s", e.score(), b.unit());
         };
     }
+
+    private static final Leaderboard[] TABS = Leaderboard.values();
+    private static final int[] TAB_SLOTS = {38, 39, 40, 41, 42};
+    private static final Material[] TAB_ICONS = {Material.EXPERIENCE_BOTTLE, Material.GOLD_INGOT, Material.IRON_BARS, Material.WHITE_BANNER, Material.NETHER_STAR};
 
     public void open(Player viewer, Leaderboard b) {
         List<Leaderboard.Entry> top = current(b);
@@ -109,9 +125,11 @@ public final class LeaderboardService implements TabExecutor {
             }
             Leaderboard.Entry e = top.get(i);
             TextColor color = i < PODIUM.length ? PODIUM[i] : NamedTextColor.WHITE;
-            ItemStack head = Menu.item(Material.PLAYER_HEAD, Component.text((i + 1) + ". " + e.name(), color, TextDecoration.BOLD), List.of(
-                    Menu.kv("Түвшин:", String.valueOf(e.level()), TextColor.fromHexString("#7CE07C")),
-                    Menu.kv("Зоос:", String.format(Locale.ROOT, "%,d", e.coins()), TextColor.fromHexString("#FFD24A"))));
+            List<Component> lore = new ArrayList<>();
+            if (!b.live()) lore.add(Menu.kv(b.displayName() + ":", String.format(Locale.ROOT, "%,d %s", e.score(), b.unit()), TextColor.fromHexString("#FFD24A")));
+            lore.add(Menu.kv("Түвшин:", String.valueOf(e.level()), TextColor.fromHexString("#7CE07C")));
+            if (b.live()) lore.add(Menu.kv("Зоос:", String.format(Locale.ROOT, "%,d", e.coins()), TextColor.fromHexString("#FFD24A")));
+            ItemStack head = Menu.item(Material.PLAYER_HEAD, Component.text((i + 1) + ". " + e.name(), color, TextDecoration.BOLD), lore);
             if (head.getItemMeta() instanceof SkullMeta sm) {
                 sm.setOwningPlayer(Bukkit.getOfflinePlayer(e.player()));
                 head.setItemMeta(sm);
@@ -119,10 +137,11 @@ public final class LeaderboardService implements TabExecutor {
             if (i < 3) Menu.glow(head);
             m.set(SLOTS[i], head, null);
         }
-        for (Leaderboard other : Leaderboard.values()) {
+        for (int t = 0; t < TABS.length; t++) {
+            Leaderboard other = TABS[t];
             boolean active = other == b;
-            int slot = other == Leaderboard.LEVEL ? 39 : 41;
-            ItemStack tab = Menu.item(other == Leaderboard.LEVEL ? Material.EXPERIENCE_BOTTLE : Material.GOLD_INGOT,
+            int slot = TAB_SLOTS[t];
+            ItemStack tab = Menu.item(TAB_ICONS[t],
                     Menu.title(other.displayName(), active ? TextColor.fromHexString("#FFD24A") : NamedTextColor.WHITE),
                     List.of(Component.text(active ? "Одоо харж байна" : "Дарж харах", NamedTextColor.WHITE, TextDecoration.BOLD)));
             if (active) Menu.glow(tab);

@@ -27,4 +27,15 @@ class LeaderboardTest {
         out.add(b);
         return out;
     }
+
+    @Test
+    void scoreBoardsRankByScoreAndDropPlayersWhoScoredNothing() {
+        var rows = List.of(new Leaderboard.Entry(A, "Anu", 10, 0, 0, 3), new Leaderboard.Entry(B, "Bat", 30, 0, 0, 7),
+                new Leaderboard.Entry(C, "Chimeg", 3, 0, 0, 0));
+        assertEquals(List.of(B, A), Leaderboard.DUNGEON_CLEARS.rank(rows, 10).stream().map(Leaderboard.Entry::player).toList());
+        assertEquals(List.of(B, A), Leaderboard.KHURALDAI.rank(rows, 10).stream().map(Leaderboard.Entry::player).toList());
+        assertEquals(List.of(B), Leaderboard.ACHIEVEMENTS.rank(rows, 1).stream().map(Leaderboard.Entry::player).toList());
+        assertEquals(0, new Leaderboard.Entry(A, "Anu", 1, 0, 0).score(), "the old constructor scores nothing");
+        assertEquals(List.of(Leaderboard.LEVEL, Leaderboard.COINS), java.util.Arrays.stream(Leaderboard.values()).filter(Leaderboard::live).toList());
+    }
 }

@@ -20,7 +20,7 @@ the README (local test server).
 | `/mori` | Personal steppe horse from level 5 (faster, finer coat with rank); disappears when you get off |
 | `/trade <player>` | Safe trade window with a player within 24 blocks: items and coins, both confirm (relics and the menu clock cannot be traded; audited in the log) |
 | `/discord`, `/website`, `/vote` | A link dialog («Нээх» opens the browser) from `branding.discord`, `branding.domain`, `branding.vote-url` |
-| `/top [level\|coins]` | Leaderboards (podium GUI; also works from the console) |
+| `/top [level\|coins\|dungeon\|khuraldai\|achievements]` | Leaderboards (podium GUI; also works from the console): level and coins live, distinct dungeons cleared, units given to the latest Их Хуралдай campaign, achievements unlocked |
 | `/tasks` | Three daily hunting tasks from the regions your level can handle (coins and EXP, paid on completion) |
 | `/daily` | Daily login reward: 7-day streak of coins and EXP (time zone: `daily.timezone`) |
 | `/spawn`, `/balance`, `/pay`, `/rules`, `/relic` | Back to Kharkhorum · coins · send coins · rules · world relics |

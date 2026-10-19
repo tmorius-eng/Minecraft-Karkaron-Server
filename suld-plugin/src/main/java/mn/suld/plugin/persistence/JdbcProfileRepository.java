@@ -142,12 +142,14 @@ public final class JdbcProfileRepository implements ProfileRepository {
     @Override
     public CompletableFuture<java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry>> top(
             mn.suld.api.leaderboard.Leaderboard board, int limit) {
-        String order = switch (board) {
-            case LEVEL -> "level DESC, exp_into_level DESC";
-            case COINS -> "currency DESC";
+        String live = "SELECT player_uuid, name, level, exp_into_level, currency, 0 AS score FROM suld_profiles WHERE class_id IS NOT NULL ORDER BY ";
+        String sql = switch (board) {
+            case LEVEL -> live + "level DESC, exp_into_level DESC LIMIT ?";
+            case COINS -> live + "currency DESC LIMIT ?";
+            case DUNGEON_CLEARS -> scored("suld_player_marks m", "COUNT(*)", "m.kind = 'DUNGEON_CLEAR'");
+            case ACHIEVEMENTS -> scored("suld_player_achievements m", "COUNT(*)", null);
+            case KHURALDAI -> scored("suld_campaign_totals m", "SUM(m.units)", "m.cycle_id = (SELECT MAX(cycle_id) FROM suld_campaign_totals)");
         };
-        String sql = "SELECT player_uuid, name, level, exp_into_level, currency FROM suld_profiles "
-                + "WHERE class_id IS NOT NULL ORDER BY " + order + " LIMIT ?";
         return CompletableFuture.supplyAsync(() -> {
             java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry> rows = new java.util.ArrayList<>();
             try (Connection conn = dataSource.getConnection();
@@ -156,7 +158,7 @@ public final class JdbcProfileRepository implements ProfileRepository {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         rows.add(new mn.suld.api.leaderboard.Leaderboard.Entry(readUuid(rs, 1), rs.getString(2), rs.getInt(3),
-                                rs.getLong(4), rs.getLong(5)));
+                                rs.getLong(4), rs.getLong(5), rs.getLong(6)));
                     }
                 }
             } catch (SQLException ex) {
@@ -164,6 +166,13 @@ public final class JdbcProfileRepository implements ProfileRepository {
             }
             return rows;
         }, executor);
+    }
+
+    /** A score board: one row per player with a class, the aggregate over {@code from} (alias m) as the score, best first. */
+    private static String scored(String from, String aggregate, String where) {
+        return "SELECT p.player_uuid, p.name, p.level, p.exp_into_level, p.currency, " + aggregate + " AS score FROM " + from
+                + " JOIN suld_profiles p ON p.player_uuid = m.player_uuid WHERE p.class_id IS NOT NULL" + (where == null ? "" : " AND " + where)
+                + " GROUP BY p.player_uuid, p.name, p.level, p.exp_into_level, p.currency ORDER BY score DESC, p.name LIMIT ?";
     }
 
     @Override

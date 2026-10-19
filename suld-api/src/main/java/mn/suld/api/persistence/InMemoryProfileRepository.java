@@ -31,6 +31,7 @@ public final class InMemoryProfileRepository implements ProfileRepository {
     public CompletableFuture<java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry>> top(
             mn.suld.api.leaderboard.Leaderboard board, int limit) {
         java.util.List<mn.suld.api.leaderboard.Leaderboard.Entry> rows = new java.util.ArrayList<>();
+        if (!board.live()) return CompletableFuture.completedFuture(rows); // marks, totals and unlocks live in their own stores
         for (PlayerProfile p : store.values()) {
             if (p.playerClass().isEmpty()) continue;
             rows.add(new mn.suld.api.leaderboard.Leaderboard.Entry(p.playerId(), p.name(), p.progression().level(),

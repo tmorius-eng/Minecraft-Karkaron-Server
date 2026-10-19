@@ -81,7 +81,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/lvlup", "Түвшний шагнал авах", null),
             e(Group.GAME, "/cosmetics", "Таг, өнгө, мэндчилгээ, эможи", null),
             e(Group.GAME, "/buy", "Кредит дэлгүүр (гоёлд л)", null),
-            e(Group.GAME, "/top [level|coins]", "Шилдэгүүдийн жагсаалт", null),
+            e(Group.GAME, "/top [level|coins|dungeon|khuraldai|achievements]", "Шилдэгүүд: түвшин, зоос, агуй, Хуралдайн аян, амжилт", null),
             e(Group.GAME, "/trade <нэр>", "Тоглогчтой аюулгүй арилжаа", null),
             e(Group.GAME, "/mori", "Өөрийн морь (5-р түвшнээс)", null),
             e(Group.GAME, "/party …", "Бүлэг: invite, accept, leave, kick…", null),
