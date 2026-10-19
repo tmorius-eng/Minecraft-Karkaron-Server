@@ -226,15 +226,18 @@ install_service() {
   render_template "$LIB_DIR/templates/suld.service.tpl"        | install_text /etc/systemd/system/suld.service 644 root:root
   render_template "$LIB_DIR/templates/suld-backup.service.tpl" | install_text /etc/systemd/system/suld-backup.service 644 root:root
   render_template "$LIB_DIR/templates/suld-backup.timer.tpl"   | install_text /etc/systemd/system/suld-backup.timer 644 root:root
+  render_template "$LIB_DIR/templates/suld-health.service.tpl"  | install_text /etc/systemd/system/suld-health.service 644 root:root
+  render_template "$LIB_DIR/templates/suld-health.timer.tpl"    | install_text /etc/systemd/system/suld-health.timer 644 root:root
+  render_template "$LIB_DIR/templates/suld-alert@.service.tpl"  | install_text /etc/systemd/system/suld-alert@.service 644 root:root
   if hybrid; then
     render_template "$LIB_DIR/templates/suld-proxy.service.tpl" | install_text /etc/systemd/system/suld-proxy.service 644 root:root
   elif [[ -f /etc/systemd/system/suld-proxy.service ]]; then
     run systemctl disable --now suld-proxy.service  # back to AUTH_MODE=online: Paper owns SERVER_PORT again
   fi
   run systemctl daemon-reload
-  run systemctl enable suld.service suld-backup.timer
+  run systemctl enable suld.service suld-backup.timer suld-health.timer
   hybrid && run systemctl enable suld-proxy.service
-  run systemctl start suld-backup.timer
+  run systemctl start suld-backup.timer suld-health.timer
 }
 
 # ---------------------------------------------------------------- 10. go
@@ -308,7 +311,7 @@ SULD deployment complete.
   Connect:        ${PUBLIC_HOST}:${SERVER_PORT}   (Minecraft Java ${MC_VERSION}; accounts: AUTH_MODE=${AUTH_MODE})
   Console:        sudo ${BIN_DIR}/console.sh        (detach: Ctrl-b then d)
   Control:        sudo ${BIN_DIR}/{start,stop,restart}.sh   |   systemctl status suld
-  Health:         sudo ${BIN_DIR}/health-check.sh
+  Health:         sudo ${BIN_DIR}/health-check.sh   (every 10 min by suld-health.timer; alerts: ALERT_WEBHOOK_URL ${ALERT_WEBHOOK_URL:+set}${ALERT_WEBHOOK_URL:-NOT set})
   Backups:        daily 04:30 UTC (systemctl list-timers suld-backup.timer) -> ${BACKUP_DIR}
   Update:         sudo ${BIN_DIR}/update.sh
   Operators:      ${ADMIN_PLAYERS:-<none>}   (more: sudo ${BIN_DIR}/op.sh <name>)

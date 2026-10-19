@@ -36,7 +36,8 @@ Scripts (all support `-h` via their header comment):
 | `console.sh` | Attach to the live console (detach: **Ctrl-b then d**, never Ctrl-c). |
 | `op.sh <name…>` / `op.sh --deop <name>` | Grant/revoke operator (validated names). |
 | `backup.sh [--no-db] [--no-world]` | Online-consistent backup (save-all → save-off → archive → save-on). |
-| `health-check.sh [--quiet] [--no-pack]` | Process, protocol, plugin, DB, pack, disk and backup checks; exit 1 on failure. |
+| `health-check.sh [--quiet] [--no-pack] [--notify]` | Process, protocol, plugin, DB, pack, disk and backup checks (hybrid: proxy, loopback bind, secrets, AuthMe); exit 1 on failure. `suld-health.timer` runs it every 10 minutes with `--notify`. |
+| `notify.sh "<title>" "<text>"` | Posts to `ALERT_WEBHOOK_URL` (Discord-compatible); a no-op when it is blank. |
 | `firewall.sh [--ssh-port N]` | ufw: only SSH, Minecraft, pack port. |
 | `build-pack.sh` | Validate + build a reproducible pack ZIP (`PACK_FILE=`/`PACK_SHA1=`). |
 
@@ -151,7 +152,12 @@ The health check covers:
 - disk and memory
 - backup freshness
 
-Hook it into cron or uptime monitoring with `--quiet`, which only prints problems.
+`suld-health.timer` runs it every 10 minutes with `--quiet --notify`. **Alerts:** set `ALERT_WEBHOOK_URL` in
+`/etc/suld/suld.env` to a Discord webhook (Server settings → Integrations → Webhooks → a private `#suld-alerts`
+channel). Then a failing health check posts once per change of the failing set (and once more when healthy again),
+a unit that fails or that systemd gave up restarting (`suld`, `suld-proxy`, `suld-backup`; `OnFailure=suld-alert@`)
+posts its name, and a failed backup posts its reason. The URL is a secret (anyone with it can post there): it lives
+only in `suld.env` and is never logged. Without it nothing changes except that nobody is told.
 
 ---
 

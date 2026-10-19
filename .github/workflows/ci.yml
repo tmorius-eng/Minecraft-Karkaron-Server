@@ -88,6 +88,8 @@ jobs:
           SULD_ENV="$RUNNER_TEMP/hybrid.env" bash deploy/deploy.sh --dry-run > "$RUNNER_TEMP/deploy-hybrid.txt"
           grep -q 'server-ip=127.0.0.1' "$RUNNER_TEMP/deploy-hybrid.txt"
           grep -q 'suld-proxy.service' "$RUNNER_TEMP/deploy-hybrid.txt"
+          grep -q 'suld-health.timer' "$RUNNER_TEMP/deploy-online.txt"
+          SULD_ENV="$RUNNER_TEMP/hybrid.env" bash deploy/notify.sh "ci" "a blank ALERT_WEBHOOK_URL is a no-op"
           if grep -Eq '^(VELOCITY_FORWARDING|AUTHME_PROXY)_SECRET=.' "$RUNNER_TEMP/hybrid.env"; then echo "a dry run wrote a secret"; exit 1; fi
 
       - name: Upload test reports on failure

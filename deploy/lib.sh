@@ -67,7 +67,8 @@ load_env() {
   : "${DB_NAME:=suld}"
   : "${DB_USER:=suld}"
   : "${DB_PASS:=}"
-  : "${MAX_PLAYERS:=50}"
+  : "${MAX_PLAYERS:=25}"   # the last bench (docs/perf/M3_2026-10-12.md) holds 25; raise it after a run on the real host
+  : "${ALERT_WEBHOOK_URL:=}"   # operators' webhook (Discord-compatible); blank = no alerts
   : "${ONLINE_MODE:=true}"
   : "${TMUX_SESSION:=suld}"
   : "${BACKUP_KEEP:=14}"

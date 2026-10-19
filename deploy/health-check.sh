@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 # SULD health check. Exit 0 = healthy (warnings allowed), 1 = at least one failure.
 #   health-check.sh [--quiet] [--no-pack]
+#   --notify  post the failures to ALERT_WEBHOOK_URL (notify.sh); what suld-health.timer runs every 10 minutes
 # Safe to run any time and from cron/monitoring; changes nothing.
 set -uo pipefail
 # shellcheck source=lib.sh
 source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/lib.sh"
 load_env
 
-QUIET=0; CHECK_PACK=1
+QUIET=0; CHECK_PACK=1; NOTIFY=0
 for a in "$@"; do
-  case "$a" in --quiet) QUIET=1 ;; --no-pack) CHECK_PACK=0 ;; esac
+  case "$a" in --quiet) QUIET=1 ;; --no-pack) CHECK_PACK=0 ;; --notify) NOTIFY=1 ;; esac
 done
-failures=0; warnings=0
+failures=0; warnings=0; failed_lines=""
 pass()  { ((QUIET)) || ok "$*"; }
-bad()   { fail "$*"; failures=$((failures + 1)); }
+bad()   { fail "$*"; failures=$((failures + 1)); failed_lines+="- $*"$'\n'; }
 caution() { warn "$*"; warnings=$((warnings + 1)); }
 
 # 1. Process supervision
@@ -120,6 +121,22 @@ newest="$(find "$BACKUP_DIR" -maxdepth 1 -name 'suld-*' -type d -printf '%T@\n' 
 if [[ -z "$newest" ]]; then caution "no backups found in $BACKUP_DIR"
 elif (( $(date +%s) - ${newest%.*} > 172800 )); then caution "newest backup is older than 2 days"; fi
 
-if ((failures)); then fail "$failures check(s) FAILED, $warnings warning(s)"; exit 1; fi
+if ((failures)); then
+  fail "$failures check(s) FAILED, $warnings warning(s)"
+  # the same state again and again would flood the channel: one alert per change of the failing set
+  if ((NOTIFY)); then
+    state_file="$RUN_DIR/health.failing"
+    # $(cat) drops the trailing newline: compare without it, or every run would look like a new failing set
+    if [[ ! -f "$state_file" ]] || [[ "$(cat "$state_file" 2>/dev/null)" != "${failed_lines%$'\n'}" ]]; then
+      printf '%s' "${failed_lines%$'\n'}" >"$state_file" 2>/dev/null || true
+      "$LIB_DIR/notify.sh" "health check: $failures FAILED" "$failed_lines" || true
+    fi
+  fi
+  exit 1
+fi
+if ((NOTIFY)) && [[ -f "$RUN_DIR/health.failing" ]]; then
+  rm -f "$RUN_DIR/health.failing"
+  "$LIB_DIR/notify.sh" "health check: healthy again" "$warnings warning(s)" || true
+fi
 ((QUIET)) || ok "healthy ($warnings warning(s))"
 exit 0

@@ -18,6 +18,8 @@ set -euo pipefail
 source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/lib.sh"
 load_env
 
+# a backup that fails reaches the operators (notify.sh; a no-op without ALERT_WEBHOOK_URL)
+die() { "$LIB_DIR/notify.sh" "backup FAILED" "$*" || true; printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 DO_DB=1; DO_WORLD=1
 for a in "$@"; do
   case "$a" in --no-db) DO_DB=0 ;; --no-world) DO_WORLD=0 ;; *) die "unknown option $a" ;; esac

@@ -6,6 +6,8 @@ Wants=network-online.target postgresql.service
 # Crash-loop guard: at most 5 automatic restarts per 10 minutes, then stay failed.
 StartLimitIntervalSec=600
 StartLimitBurst=5
+# A failed start or a crash loop that systemd gave up on reaches the operators (notify.sh, ALERT_WEBHOOK_URL).
+OnFailure=suld-alert@%n.service
 
 [Service]
 Type=forking
