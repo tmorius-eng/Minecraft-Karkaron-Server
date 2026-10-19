@@ -3,7 +3,7 @@
 // Pings the list: line 1 names SÜLD and line 2 is the counts line or a live line; then a world boss is forced from the
 // console (`suldevent boss ikh_baavgai`) and the list says «босоод байна» within the 10 s cache; after `suldevent boss
 // stop` that line is gone again. Dev server only (it raises and stops a world boss).
-const mineflayer = require('mineflayer');
+const mc = require('minecraft-protocol'); // mineflayer's own protocol library: it is what pings a server list
 const { execFileSync } = require('child_process');
 const [ctl, port = '25572'] = process.argv.slice(2);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -13,7 +13,7 @@ const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' 
 // a chat component (object with text/extra, or a string) to plain text
 const plain = (d) => typeof d === 'string' ? d : !d ? '' : (d.text || '') + (d.extra || []).map(plain).join('');
 async function motd() {
-  const r = await mineflayer.ping({ host: '127.0.0.1', port: Number(port), version: '1.21.11' });
+  const r = await mc.ping({ host: '127.0.0.1', port: Number(port), version: '1.21.11' });
   return plain(r.description).split('\n');
 }
 async function until(pred, ms = 14000) { let l = []; for (let t = 0; t < ms; t += 2000) { l = await motd(); if (pred(l)) return l; await sleep(2000); } return l; }

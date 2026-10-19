@@ -12,7 +12,7 @@ cd tools/loadtest/bots && npm install            # mineflayer 4.x
 scripts/run-test-server.sh 1.21.11               # the dev Paper (see TESTING.md), console control: srv2ctl.sh
 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 25572   # every pass/fail bot in order, one table, exit 1 on a FAIL
 DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 25572   # + the 4 dev-campaign bots (dev/make_dev_campaigns.py, server restarts)
-# 44 runs (+4 with DEV_CAMPAIGNS, +2 with DEV_CRASH). Bot names use 5 random digits: an offline UUID comes from the name, and a reused
+# 46 runs (+4 with DEV_CAMPAIGNS, +2 with DEV_CRASH). Bot names use 5 random digits: an offline UUID comes from the name, and a reused
 # name is an old profile, not a fresh player. trial-lockend.js: the lock ends mid-trial; permbot.js: staff commands refuse a player.
 # soulreform.js: the death reform (docs/DEATH_AND_RECOVERY.md) — a free beginner death, the beam and its 70 % refund, the soul's
 # rise at an ovoo, a broken and a finished ovoo ritual, 19 checks; trialbot.js also checks the won trial's Сүнсний Хэлтэрхий.
@@ -31,8 +31,10 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # discordbot.js: the Discord bridge (docs/DISCORD.md) against a local webhook on 127.0.0.1:8089 (the dev config.yml points
 # discord.webhook and discord.staff-webhook there): /report reaches the staff channel, `suld discord test` both, JSON shape, 5 checks.
 # referralbot.js: /urih (docs/REFERRAL.md) — self, unknown, named, again, too high, the level-10 payment both ways from the
-# database, the offline inviter paid at the next login, 12 checks.
+# database, the offline inviter paid at the next login, 13 checks.
 # topbot.js: the five leaderboards (/top level|coins|dungeon|khuraldai|achievements) open their window, a tab switches, the console lists, 7 checks.
+# motdbot.js: the server list's live line (LiveMotd) — a ping, a forced world boss on line 2 within 10 s, gone after the stop, 5 checks.
+# eventsbot.js: every automatic world event starts from the console with its bar and stops, 9 checks.
 # trainingpay.js (DEV_CAMPAIGNS=1): a campaign resolved during training pays the real character on leaving; a trainee hurts no mob;
 # trainingcrash.js (DEV_CRASH=1): SIGKILL during training, restart, the bag and spot come back — KILLS THE DEV SERVER.
 # sellcrash.js (DEV_CRASH=1): SIGKILL 60 ms after «/item sell confirm», restart: the player never keeps both the sword

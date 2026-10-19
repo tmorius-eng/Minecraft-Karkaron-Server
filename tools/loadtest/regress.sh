@@ -61,6 +61,11 @@ RUNS=(
   "healthbot|$CTL $PORT"
   "sitesbot|$CTL $LOG $PORT"
   "tradebot|$CTL $PORT"
+  "discordbot|$CTL $PORT"
+  "motdbot|$CTL $PORT"
+  "eventsbot|$CTL $PORT"
+  "referralbot|$CTL $PORT"
+  "topbot|$CTL $LOG $PORT"
 )
 DEV_RUNS=("campaign-effects|$CTL $LOG $PORT" "dungeon-clear|$CTL $LOG $PORT"
   "campaign-deliver|$CTL $LOG test_deliver item.chonon_arisan 60 $PORT" "trainingpay|$CTL $LOG $PORT")
