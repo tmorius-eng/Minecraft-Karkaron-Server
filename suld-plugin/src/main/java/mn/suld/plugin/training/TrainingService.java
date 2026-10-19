@@ -579,7 +579,7 @@ public final class TrainingService implements Listener, TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] a) {
         if (a.length > 0 && a[0].equalsIgnoreCase("yard")) return yardCommand(sender, a);
         if (!(sender instanceof Player p)) {
-            sender.sendMessage("Players only.");
+            sender.sendMessage("Зөвхөн тоглогч ашиглана.");
             return true;
         }
         if (a.length == 0) {

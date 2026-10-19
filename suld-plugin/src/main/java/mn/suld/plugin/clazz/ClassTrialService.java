@@ -298,7 +298,7 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
     @Override
     public boolean onCommand(org.bukkit.command.CommandSender s, org.bukkit.command.Command c, String l, String[] a) {
         if (!(s instanceof Player p)) {
-            s.sendMessage("Players only.");
+            s.sendMessage("Зөвхөн тоглогч ашиглана.");
             return true;
         }
         if (a.length == 0) {

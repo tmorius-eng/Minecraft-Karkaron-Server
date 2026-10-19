@@ -262,7 +262,7 @@ public final class DeathTrialService implements Listener, TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
         if (s instanceof Player p) start(p);
-        else s.sendMessage("Players only.");
+        else s.sendMessage("Зөвхөн тоглогч ашиглана.");
         return true;
     }
 

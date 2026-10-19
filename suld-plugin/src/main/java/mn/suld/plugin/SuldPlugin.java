@@ -245,7 +245,7 @@ public final class SuldPlugin extends JavaPlugin {
         services.ascension.watch(this);
         registerCommand("ascend", (sender, cmd, label, args) -> {
             if (sender instanceof org.bukkit.entity.Player pl) services.ascension.open(pl);
-            else sender.sendMessage("/ascend: in game only");
+            else sender.sendMessage("/ascend: зөвхөн тоглоом дотор.");
             return true;
         });
         registerCommand("suldpack", new mn.suld.plugin.command.ResourcePackCommand(this, services.resourcePacks()));

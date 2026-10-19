@@ -35,7 +35,7 @@ public final class MenuCommands {
             @Override
             public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
                 if (s instanceof Player p) open.accept(menus, p);
-                else s.sendMessage("Players only.");
+                else s.sendMessage("Зөвхөн тоглогч ашиглана.");
                 return true;
             }
 
