@@ -909,7 +909,7 @@ public final class SkillService implements Listener {
         boolean fresh = cast != null && snap != null && System.currentTimeMillis() - cast < 5_000;
         SkillBuild b = buildOf(p);
         double mult = s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p)
-                * rankPower(p, s);
+                * rankPower(p, s) * gapOf(p, target);
         double dmg = (fresh ? snap : CombatListener.attackOf(services, p)) * mult;
         mn.suld.plugin.combat.HitSource.run(mn.suld.plugin.combat.HitSource.spell(s), () -> CombatListener.asSpell(() -> target.damage(dmg, p)));
         riders(p, target, s);
@@ -965,10 +965,24 @@ public final class SkillService implements Listener {
         return around(p, c, radius);
     }
 
-    /** Damage from a passive spell or ultimate: ATK-based, never replaced by the hit formula, never triggering hit procs. */
+    /**
+     * Damage from a passive spell or ultimate: ATK-based, never replaced by the hit formula, never triggering hit procs.
+     * The level gap applies here as it does in {@link #hurt} (SKILL-01).
+     */
     public void damage(Player p, LivingEntity target, double amount) {
         if (!target.isValid()) return;
-        CombatListener.asSpell(() -> target.damage(amount, p));
+        double dmg = amount * gapOf(p, target);
+        CombatListener.asSpell(() -> target.damage(dmg, p));
+    }
+
+    /**
+     * SKILL-01: a spell obeys the same level suppression as a hit — −4 % per level the mob stands above the caster,
+     * floor 40 % ({@link mn.suld.api.balance.CombatRules#gapDealt}); the simulator counts the gap on all DPS, spells
+     * included (sim Engine). Mastery points, crits and Тэнгэрийн Зэрэг VI stay with basic hits, as documented.
+     * A target without a content definition (a training Warden, the Academy's dummy, a player) takes the full amount.
+     */
+    private double gapOf(Player p, LivingEntity target) {
+        return services.mobs().definition(target).map(d -> mn.suld.api.balance.CombatRules.gapDealt(d.level() - levelOf(p))).orElse(1.0);
     }
 
     /** Enemies whose body (the centre of their hitbox, not their feet) is within {@code r} of a point on a ray. */
@@ -1081,7 +1095,10 @@ public final class SkillService implements Listener {
             Arrow a = p.launchProjectile(Arrow.class, dir.clone().rotateAroundY(Math.toRadians(i * 7)).multiply(2.6));
             a.setPickupStatus(org.bukkit.entity.AbstractArrow.PickupStatus.DISALLOWED);
             a.addScoreboardTag("suld_volley");
-            a.setCritical(true);
+            // a full draw: launchProjectile fires no EntityShootBowEvent, so without the mark CombatListener would scale
+            // these arrows by their vanilla damage (0.25–1.4, falling with distance). No vanilla crit: the mark decides.
+            CombatListener.markDraw(a, 1.0f);
+            a.setCritical(false);
         }
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1f, 0.8f);
     }

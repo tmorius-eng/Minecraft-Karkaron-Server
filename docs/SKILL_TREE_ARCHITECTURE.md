@@ -86,8 +86,9 @@ problem keeps its previous tree (the bundled one at first start); everything is 
 | Effect | Where it is applied |
 |---|---|
 | MAX_HEALTH, MOVEMENT_SPEED, ARMOR, KNOCKBACK_RESISTANCE, BLOCK_BREAK_SPEED | transient attribute modifiers (re-applied on join/respawn/change) |
-| ATTACK_PCT, CRIT_CHANCE, CRIT_DAMAGE | `CombatListener.attackOf/critOf` + crit multiplier (melee, arrows, spells) |
-| SPELL_DAMAGE, spell `DAMAGE_PCT` | `SkillService.hurt`, volley arrows, passives |
+| ATTACK_PCT | `CombatListener.attackOf` (melee, arrows, spells: a spell starts from the same ATK) |
+| CRIT_CHANCE, CRIT_DAMAGE | `CombatListener.critOf` + crit multiplier (melee and arrows only; a spell never crits, SKILL-01 audit 2026-10-19) |
+| SPELL_DAMAGE, spell `DAMAGE_PCT` | `SkillService.hurt`, volley arrows, passives; the level gap (`CombatRules.gapDealt`) applies to spells as to hits |
 | DAMAGE_REDUCTION, DODGE_PCT, THORNS | `EntityDamageEvent` HIGH / MONITOR |
 | LIFESTEAL, HEAL_POWER | hit handler / `SkillTreeService.heal*` through `EntityRegainHealthEvent` |
 | RESOURCE_MAX, RESOURCE_REGEN, COST_REDUCTION | `SkillService` pool size, regen, spell cost |

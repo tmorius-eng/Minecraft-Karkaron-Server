@@ -1616,6 +1616,46 @@ public final class SkillQa {
                         "passive activations after casting the drum (spell hits over 30 ticks)", 0, fired, ">= 1 (30% chance per spell hit)", fired >= 1);
                 k.unlearn();
             });
+            // SKILL-01: a spell obeys the level gap. The Баатар probe spell cast at level 5 on a level-3 dummy (gap 0) and on a
+            // level-12 Саарал Чоно (gap 7, CombatRules.gapDealt = 0.72): same caster, same ATK, both NORMAL wolf hosts.
+            double[] gapRef = new double[1];
+            double[] foeHp = new double[1];
+            LivingEntity[] foe = new LivingEntity[1];
+            k.add(() -> {
+                k.setClass(PlayerClass.BAATAR);
+                k.unlearn();
+                pr.progression(new Progression(5, 0));
+                k.resetPlayer();
+                single(2);
+                k.resetDummies();
+                skills.castDirect(p, Spell.TENGER_TSAVCHILT, true);
+            });
+            k.wait(5);
+            k.add(() -> {
+                gapRef[0] = k.deficit(k.dummies.get(0));
+                k.park(0);
+                foe[0] = services.mobs().spawn(SuldContent.mobFor("mob.saaral_chono"), k.origin.clone().add(0, 0, 2));
+                foe[0].setAI(false);
+                foe[0].setCollidable(false);
+                foe[0].setMaximumNoDamageTicks(0);
+                foe[0].setNoDamageTicks(0);
+            });
+            k.wait(2);
+            k.add(() -> {
+                foeHp[0] = foe[0].getHealth();
+                k.resetPlayer();
+                skills.castDirect(p, Spell.TENGER_TSAVCHILT, true);
+            });
+            k.wait(5);
+            k.add(() -> {
+                double dealt = foeHp[0] - foe[0].getHealth();
+                foe[0].remove();
+                pr.progression(new Progression(60, 0));
+                double expected = mn.suld.api.balance.CombatRules.gapDealt(12 - 5);
+                check("wiring.spell.gap", "wiring", "a spell obeys the level gap (SKILL-01, CombatRules.gapDealt)",
+                        "spell damage to a level-12 wolf / to a level-3 dummy, both cast at level 5", gapRef[0], dealt,
+                        "x" + EffectNum.n(expected), gapRef[0] > 0 && nearRel(dealt / gapRef[0], expected, 0.05));
+            });
         }
 
         void wire(PlayerClass c, String nodeId, TriggerEvent ev, String how, Supplier<Integer> trial, java.util.function.IntPredicate ok) {
@@ -1979,7 +2019,8 @@ public final class SkillQa {
                     }
                     // arrows fall at random points and the dummies stand close together, so one dummy may take several
                     check(id + ".damage", "ultimate", what, "damage each dummy took, in arrows (0.9 x ATK = " + EffectNum.n(expected) + "); worst distance from a whole number", 0, worstFraction,
-                            "every dummy took a whole number (>= 1) of arrows, +-0.03", minHit < Double.MAX_VALUE && minHit >= expected * 0.97 && worstFraction <= 0.03);
+                            "every dummy took a whole number (>= 1) of arrows, +-0.02 (SKILL-02: each arrow carries a full draw, no vanilla crit)",
+                            minHit < Double.MAX_VALUE && nearRel(minHit, expected * Math.rint(minHit / expected), 0.02) && worstFraction <= 0.02);
                     check(id + ".area", "ultimate", what, "dummies damaged in the rain area / outside it", touchedFar, touchedNear, ">0 within 7 blocks of the target (5 spread + 1.8 hit radius), 0 beyond", touchedNear > 0 && touchedFar == 0,
                             "total damage " + EffectNum.n(total) + ", " + EffectNum.n(total / expected) + " arrow hits");
                 });
