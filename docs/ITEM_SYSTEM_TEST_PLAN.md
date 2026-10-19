@@ -32,7 +32,7 @@ Run with the other ITs (`JdbcSkillStateIT`, `JdbcRelicRepositoryIT`, …) agains
 
 `/skillsadmin qa <bot> all` — the full combat verification (skill tree + items) as the regression.
 
-Restart persistence (`persistbot.js`, outside the repo): join → `/itemsadmin give` amulet + chestplate + helmet →
+Restart persistence (an early probe, since removed; `classreconnectbot.js` and `sellcrash.js` cover it in the sweep now): join → `/itemsadmin give` amulet + chestplate + helmet →
 `/item equip` each → `/itemsadmin inspect` → quit → server stop/start → rejoin → inspect again; the slots, UUIDs, rarity,
 level and stat totals must be identical.
 

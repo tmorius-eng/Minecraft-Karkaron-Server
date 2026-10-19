@@ -5,7 +5,8 @@
 # DEV_CAMPAIGNS=1 also runs campaign-effects.js, dungeon-clear.js, campaign-deliver.js and trainingpay.js: dev/make_dev_campaigns.py
 # writes the dev campaigns into the server's plugins/SULD/content/campaigns.json (server dir = two levels over the log),
 # the server restarts (<srvctl> stop|start), and the file is removed and the server restarted after. DEV_CRASH=1 also
-# runs trainingcrash.js last: it kills the server with SIGKILL during training and starts it again (dev server only).
+# runs trainingcrash.js and sellcrash.js last: they kill the server with SIGKILL (during training; 60 ms after a sale's
+# confirm) and start it again (dev server only).
 # healthbot.js and sitesbot.js (last of the main runs) restart the server once each with <srvctl> stop|start.
 # NODE_PATH must reach mineflayer.
 set -u
@@ -91,7 +92,7 @@ if [ "${DEV_CAMPAIGNS:-0}" = 1 ]; then
   python3 "$GEN" "$SRV" --remove > /dev/null && "$CTL" stop > /dev/null && "$CTL" start > /dev/null
 fi
 if [ "${DEV_CRASH:-0}" = 1 ]; then
-  run_all "trainingcrash|$CTL $PORT"
+  run_all "trainingcrash|$CTL $PORT" "sellcrash|$CTL $PORT 60"
 fi
 echo "logs: $OUT"
 [ "$bad" -eq 0 ] && echo "ALL GREEN" || echo "$bad FAILED"

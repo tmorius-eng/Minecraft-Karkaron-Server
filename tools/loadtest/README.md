@@ -12,7 +12,7 @@ cd tools/loadtest/bots && npm install            # mineflayer 4.x
 scripts/run-test-server.sh 1.21.11               # the dev Paper (see TESTING.md), console control: srv2ctl.sh
 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 25572   # every pass/fail bot in order, one table, exit 1 on a FAIL
 DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 25572   # + the 4 dev-campaign bots (dev/make_dev_campaigns.py, server restarts)
-# 31 runs (+4 with DEV_CAMPAIGNS, +1 with DEV_CRASH). Bot names use 5 random digits: an offline UUID comes from the name, and a reused
+# 40 runs (+4 with DEV_CAMPAIGNS, +2 with DEV_CRASH). Bot names use 5 random digits: an offline UUID comes from the name, and a reused
 # name is an old profile, not a fresh player. trial-lockend.js: the lock ends mid-trial; permbot.js: staff commands refuse a player.
 # soulreform.js: the death reform (docs/DEATH_AND_RECOVERY.md) — a free beginner death, the beam and its 70 % refund, the soul's
 # rise at an ovoo, a broken and a finished ovoo ritual, 19 checks; trialbot.js also checks the won trial's Сүнсний Хэлтэрхий.
@@ -27,6 +27,10 @@ DEV_CAMPAIGNS=1 tools/loadtest/regress.sh ./srv3ctl.sh srv3/logs/latest.log 2557
 # connect, the log's mode line and audits).
 # trainingpay.js (DEV_CAMPAIGNS=1): a campaign resolved during training pays the real character on leaving; a trainee hurts no mob;
 # trainingcrash.js (DEV_CRASH=1): SIGKILL during training, restart, the bag and spot come back — KILLS THE DEV SERVER.
+# sellcrash.js (DEV_CRASH=1): SIGKILL 60 ms after «/item sell confirm», restart: the player never keeps both the sword
+# and the coins (ITEMS -> COINS, PlayerDataSaves.itemsForCoins); it reports sold-and-paid / lost-between / nothing.
+# Probes without a verdict (dbg, phys*, *probe, sellbot, …) are not tests and are not in the sweep; the 2026-10-19
+# cleanup removed the bots of the deleted Наадам minigames and the probes bound to a dead scratchpad path.
 # Trial bots count only spirit wolves (named «Сүнсний чоно», glowing): a natural wolf pack can live at the test spot.
 # atlasbot.js: /map (docs/WORLD_MAP.md) — the stage, the 25 map frames and their pixels (map packets), D pans, the wheel zooms,
 # no region named close up, all eight at the whole world (wholly on the wall, none over another), the «Агуй» tab filters,
