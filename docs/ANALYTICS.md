@@ -24,12 +24,24 @@ D1/D7 retention and the session summary as Markdown. There is no web dashboard (
 | Их Хуралдай | `vote_cast`, `vote_closed`, `campaign_start`, `campaign_contribution` (tier reached), `campaign_end`, `campaign_reward_claim`, `chronicle_entry`, `world_effect_applied` | docs/KHURALDAI.md | |
 
 ```bash
-tools/analytics/funnel.py --url postgresql://suld:…@127.0.0.1:5432/suld --days 7
+PGHOST=127.0.0.1 PGDATABASE=suld PGUSER=suld PGPASSWORD=… tools/analytics/funnel.py --days 7
 ```
 
 prints the funnel as distinct players per step and the share of first logins, the D1/D7 cohort table (first_login day →
-seen again by `session_start` 1 and 7 days later) and the session summary from `suld_sessions`. The closed alpha's exit
-numbers (`09-public-launch-and-growth.md` §3.3): `join_success → first_mob_kill ≥ 70 %`, `active_5m ≥ 50 %`, D1 ≥ 40 %.
+seen again by `session_start` 1 and 7 days later), the session summary from `suld_sessions` and a short summary: the
+three largest drops between consecutive steps and the closed alpha's exit numbers
+(`09-public-launch-and-growth.md` §3.3) marked ✔/✘: `first_login → first_mob_kill ≥ 70 %`, `active_5m ≥ 50 %`, D1 ≥ 40 %
+(over the cohorts whose day-1 window has closed, three days old or more). The database is reached through psql's `PG*` environment, so the password
+never stands on a command line (`--url` still works but shows it in `ps`).
+
+## Weekly report
+
+On the server `suld-funnel.timer` runs `deploy/funnel-report.sh` every Monday 09:10 Улаанбаатар (01:10 UTC): the
+Markdown goes to `/opt/suld/run/reports/funnel-<date>.md`, the summary to `REPORT_WEBHOOK_URL` (blank = the
+operators' `ALERT_WEBHOOK_URL`; both blank = the file only). By hand: `sudo /opt/suld/bin/funnel-report.sh [days]`.
+The week's decision comes from the summary: the largest drop is what to fix first, the ✘ marks say whether the alpha
+exit is reached; the full tables are for the why. `tools/analytics/test_funnel.py` covers the tables, the drops, the
+D1 cohort rule and the webhook (CI runs it).
 
 ## What is recorded
 

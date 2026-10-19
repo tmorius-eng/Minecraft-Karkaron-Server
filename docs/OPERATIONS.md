@@ -213,8 +213,10 @@ centred on the spawn) is docs/world/WORLD_BORDER.md.
 
 `ALERT_WEBHOOK_URL` in `/etc/suld/suld.env` (a Discord webhook, kept secret) receives: the health check's failures
 (`suld-health.timer`, every 10 minutes, one post per change of the failing set and one when healthy again), a unit
-that failed or that systemd stopped restarting (`suld`, `suld-proxy`, `suld-backup`), and a failed backup. Test it
-once after deploying: `sudo /opt/suld/bin/notify.sh "test" "SÜLD alerts work"`. `MAX_PLAYERS` defaults to 25, what
+that failed or that systemd stopped restarting (`suld`, `suld-proxy`, `suld-backup`, `suld-funnel`), and a failed
+backup. Test it once after deploying: `sudo /opt/suld/bin/notify.sh "test" "SÜLD alerts work"`. The weekly funnel
+report (`suld-funnel.timer`, Monday 09:10 Улаанбаатар, `docs/ANALYTICS.md` «Weekly report») posts its summary to
+`REPORT_WEBHOOK_URL`, or to the alert webhook when that is blank; the Markdown stays in `/opt/suld/run/reports/`. `MAX_PLAYERS` defaults to 25, what
 the last load test holds (`docs/perf/M3_2026-10-12.md`); raise it only after a run on the real host (`DEPLOYMENT.md`).
 
 ## Persistence and shutdown (audit Phase 2)

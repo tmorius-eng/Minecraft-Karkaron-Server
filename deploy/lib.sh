@@ -69,6 +69,7 @@ load_env() {
   : "${DB_PASS:=}"
   : "${MAX_PLAYERS:=25}"   # the last bench (docs/perf/M3_2026-10-12.md) holds 25; raise it after a run on the real host
   : "${ALERT_WEBHOOK_URL:=}"   # operators' webhook (Discord-compatible); blank = no alerts
+  : "${REPORT_WEBHOOK_URL:=}"  # the weekly funnel report's webhook; blank = ALERT_WEBHOOK_URL
   : "${ONLINE_MODE:=true}"
   : "${TMUX_SESSION:=suld}"
   : "${BACKUP_KEEP:=14}"

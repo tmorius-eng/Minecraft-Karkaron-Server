@@ -229,15 +229,17 @@ install_service() {
   render_template "$LIB_DIR/templates/suld-health.service.tpl"  | install_text /etc/systemd/system/suld-health.service 644 root:root
   render_template "$LIB_DIR/templates/suld-health.timer.tpl"    | install_text /etc/systemd/system/suld-health.timer 644 root:root
   render_template "$LIB_DIR/templates/suld-alert@.service.tpl"  | install_text /etc/systemd/system/suld-alert@.service 644 root:root
+  render_template "$LIB_DIR/templates/suld-funnel.service.tpl"  | install_text /etc/systemd/system/suld-funnel.service 644 root:root
+  render_template "$LIB_DIR/templates/suld-funnel.timer.tpl"    | install_text /etc/systemd/system/suld-funnel.timer 644 root:root
   if hybrid; then
     render_template "$LIB_DIR/templates/suld-proxy.service.tpl" | install_text /etc/systemd/system/suld-proxy.service 644 root:root
   elif [[ -f /etc/systemd/system/suld-proxy.service ]]; then
     run systemctl disable --now suld-proxy.service  # back to AUTH_MODE=online: Paper owns SERVER_PORT again
   fi
   run systemctl daemon-reload
-  run systemctl enable suld.service suld-backup.timer suld-health.timer
+  run systemctl enable suld.service suld-backup.timer suld-health.timer suld-funnel.timer
   hybrid && run systemctl enable suld-proxy.service
-  run systemctl start suld-backup.timer suld-health.timer
+  run systemctl start suld-backup.timer suld-health.timer suld-funnel.timer
 }
 
 # ---------------------------------------------------------------- 10. go
@@ -313,6 +315,7 @@ SULD deployment complete.
   Control:        sudo ${BIN_DIR}/{start,stop,restart}.sh   |   systemctl status suld
   Health:         sudo ${BIN_DIR}/health-check.sh   (every 10 min by suld-health.timer; alerts: ALERT_WEBHOOK_URL ${ALERT_WEBHOOK_URL:+set}${ALERT_WEBHOOK_URL:-NOT set})
   Backups:        daily 04:30 UTC (systemctl list-timers suld-backup.timer) -> ${BACKUP_DIR}
+  Funnel report:  Mondays 01:10 UTC (suld-funnel.timer) -> ${RUN_DIR}/reports; REPORT_WEBHOOK_URL ${REPORT_WEBHOOK_URL:+set}${REPORT_WEBHOOK_URL:-NOT set (falls back to ALERT_WEBHOOK_URL)}
   Update:         sudo ${BIN_DIR}/update.sh
   Operators:      ${ADMIN_PLAYERS:-<none>}   (more: sudo ${BIN_DIR}/op.sh <name>)
   Also open the same ports in the Vultr cloud firewall group — see DEPLOYMENT.md.

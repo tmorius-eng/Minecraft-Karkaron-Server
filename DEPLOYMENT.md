@@ -36,6 +36,7 @@ Scripts (all support `-h` via their header comment):
 | `console.sh` | Attach to the live console (detach: **Ctrl-b then d**, never Ctrl-c). |
 | `op.sh <name…>` / `op.sh --deop <name>` | Grant/revoke operator (validated names). |
 | `backup.sh [--no-db] [--no-world]` | Online-consistent backup (save-all → save-off → archive → save-on). |
+| `funnel-report.sh [days]` | The weekly funnel report (`docs/ANALYTICS.md`): Markdown into `/opt/suld/run/reports/`, summary to `REPORT_WEBHOOK_URL` (else `ALERT_WEBHOOK_URL`). `suld-funnel.timer` runs it Mondays 01:10 UTC. |
 | `health-check.sh [--quiet] [--no-pack] [--notify]` | Process, protocol, plugin, DB, pack, disk and backup checks (hybrid: proxy, loopback bind, secrets, AuthMe); exit 1 on failure. `suld-health.timer` runs it every 10 minutes with `--notify`. |
 | `notify.sh "<title>" "<text>"` | Posts to `ALERT_WEBHOOK_URL` (Discord-compatible); a no-op when it is blank. |
 | `firewall.sh [--ssh-port N]` | ufw: only SSH, Minecraft, pack port. |

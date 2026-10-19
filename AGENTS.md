@@ -69,7 +69,8 @@ Flyway, Citizens, DecentHolograms or ModelEngine here.
 2. The JDBC integration tests on PostgreSQL:
    `SULD_TEST_PG_URL=jdbc:postgresql://127.0.0.1:5432/suld_it SULD_TEST_PG_USER=… SULD_TEST_PG_PASS=… ./gradlew :suld-plugin:test --tests "mn.suld.plugin.persistence.*IT" --rerun`
    (the database name must look like a test database; the ITs drop its schema).
-3. `python3 tools/validation/run_all.py` and `python3 -I tools/plugins/test_fetch_plugins.py`.
+3. `python3 tools/validation/run_all.py`, `python3 -I tools/plugins/test_fetch_plugins.py` and
+   `python3 -I tools/analytics/test_funnel.py`.
 4. A test that fails is fixed at its cause. Never weaken, skip or delete a test to get green.
 
 Git hygiene: never force-push `main`; never commit conflict markers; one concern per commit, and the message says

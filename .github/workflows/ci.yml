@@ -79,6 +79,9 @@ jobs:
       - name: Plugin lock (OPS-002) unit test
         run: python3 -I tools/plugins/test_fetch_plugins.py
 
+      - name: Weekly funnel report unit test
+        run: python3 -I tools/analytics/test_funnel.py
+
       - name: Deploy scripts (syntax, and a dry run in both account modes)
         run: |
           for f in deploy/*.sh; do bash -n "$f"; done
@@ -89,6 +92,7 @@ jobs:
           grep -q 'server-ip=127.0.0.1' "$RUNNER_TEMP/deploy-hybrid.txt"
           grep -q 'suld-proxy.service' "$RUNNER_TEMP/deploy-hybrid.txt"
           grep -q 'suld-health.timer' "$RUNNER_TEMP/deploy-online.txt"
+          grep -q 'suld-funnel.timer' "$RUNNER_TEMP/deploy-online.txt"
           SULD_ENV="$RUNNER_TEMP/hybrid.env" bash deploy/notify.sh "ci" "a blank ALERT_WEBHOOK_URL is a no-op"
           if grep -Eq '^(VELOCITY_FORWARDING|AUTHME_PROXY)_SECRET=.' "$RUNNER_TEMP/hybrid.env"; then echo "a dry run wrote a secret"; exit 1; fi
 
