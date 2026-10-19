@@ -43,7 +43,7 @@ server with the insecure offline dev flag only.
 | Hybrid login (`AUTH_MODE=hybrid`): register in AuthMe's pre-join dialog → SÜLD only after the login; relog; wrong password → SÜLD never runs; cancelled dialog → waiting, `/register` by chat → in; a lower-case twin refused; `/premium` only warns; the backend refuses a direct connect | `tools/loadtest/hybrid-dev.sh` (the deploy's `configure_auth`) + `tools/loadtest/bots/authbot.js` | bots, dev pair only |
 | The account gate's rules: wait, enter once, old-connection events, logout | `AuthGateTest`, `AuthPolicyTest`, `PlayerIdentityTest` | automated ✅ |
 | Progress survives a restart mid-campaign; a live world flag re-applies on start | stop/start: `[campaign] restored … 0/60`, `[campaign] world effects: 1 live`, `[events] unlocked` | live ✅ (2026-10-11) |
-| Kill and dungeon-clear contributions on a live server | `CampaignRunTest` covers the rules; the hooks (`SocialListener`, `DungeonService.complete`) are not yet bot-exercised | bots ⏳ |
+| Kill and dungeon-clear contributions on a live server | `tools/loadtest/bots/campaign-effects.js`, `dungeon-clear.js` (`DEV_CAMPAIGNS=1` in the sweep) | bots ✅ |
 | `/khuraldai` and `/chronicle` screens, boss bar text at GUI scale 2–4 | real client | manual ⏳ |
 
 ## Critical invariants (unit-tested)

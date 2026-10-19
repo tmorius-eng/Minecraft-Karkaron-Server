@@ -5,7 +5,9 @@
 > read from the content files (`suld-plugin/src/main/resources/content/*.json`), not typed by hand; when a doc or an
 > in-game line disagrees with this file, this file wins and the other is a bug (audit 2026-10-11 DOC-001).
 
-**Last updated:** 2026-10-14 · **Commit base:** `main` after `1f46592` · **Schema:** V29 · **Bot sweep:**
+**Last updated:** 2026-10-19 · **Commit base:** `main` after `89afb6a` · **Schema:** V30 · **Bot sweep:**
+`tools/loadtest/regress.sh` 2026-10-18 on the hybrid-login build: **40/40 runs green** after `featbot.js` was taught
+that the class menu hides the tutorial bar (`89afb6a`; the one red row of that sweep). Earlier: **Bot sweep:**
 `DEV_CAMPAIGNS=1 tools/loadtest/regress.sh` — 2026-10-13 on `9aa6ac4`: **43/43 runs, 389 checks, all green**.
 `achievebot.js` (13/13) joined the runner after it; on the achievements build `atlasbot.js` 13/13 (the region names'
 new placement) and `professionbot.js` 16/16 ran again. Before: 40/42 runs, 357 checks on the Ascension IV–X perks build
@@ -31,7 +33,9 @@ now fails that. Unit api 606 + plugin 183 + sim 13; PostgreSQL 16 ITs 50/50 (22 
 ## Owner attestations (2026-10-11)
 
 The owner stated in conversation that these were done on the real host with no errors. They are **not** recorded by a
-file in this repository, so they are marked 👤 rather than ✅ until a `docs/qa/*.md` row records them:
+file in this repository, so they are marked 👤 rather than ✅ until a `docs/qa/*.md` row records them. Note
+(2026-10-19): `DEPLOYMENT.md` still says no VPS exists and `docs/qa/LAPTOP_TEST_2026-10.md` has no filled cell, so G7,
+G11 and G12 rest on the owner's word alone; the laptop sheet is the way to turn them into ✅.
 
 | Gate (audit `10-fix-roadmap.md`) | Attested |
 |---|---|

@@ -229,8 +229,9 @@ lives only on the server's own disk.
   sorted entries, so the same content always gets the same SHA-1.
 - The file name contains the hash (`suld-pack-<sha1>.zip`). nginx serves it with `immutable` caching, and
   clients can never get a stale pack after an update.
-- The plugin sends the pack on join. `resource-pack.required` stays `false` by default. Set it to `true` in
-  `/opt/suld/server/plugins/SULD/config.yml` once the pack is final, then run `restart.sh`.
+- The plugin sends the pack on join. `resource-pack.required` is `true` by default (the UI lives in the pack); a
+  player who declines is told why in Mongolian (`PackGate`). Set it to `false` in
+  `/opt/suld/server/plugins/SULD/config.yml` only for a test server, then run `restart.sh`.
 - With a domain and TLS later (e.g. Caddy or certbot in front of nginx), set `PUBLIC_HOST` to the domain
   and re-run `update.sh --force`.
 

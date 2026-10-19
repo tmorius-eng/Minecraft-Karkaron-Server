@@ -62,6 +62,6 @@ Enrage arrives after 255–315 s, as in the spec's ladder.
 
 * The spec's story-chapter and gear-power gates are not applied. Only 15 story chapters exist, while the spec
   numbers chapters up to 42, and the gear-power scale is not verified against live items.
-* Heroic and mythic versions are not built.
+* Heroic versions exist since 2026-10-13 (`docs/HEROIC_DUNGEONS.md`, keys +1…+3 with steppe affixes); mythic versions are not built.
 * Bosses 2–10 use the generic boss phases (health and damage multipliers per phase) with no special abilities yet.
   Only Хөгшин Саарал has a brain.

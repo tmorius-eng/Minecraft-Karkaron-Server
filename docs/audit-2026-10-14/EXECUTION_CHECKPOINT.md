@@ -13,7 +13,7 @@ were written and are no longer. Everything in the log below **is committed and p
 | `JdbcMapPinRepositoryIT.theLimitHoldsWhenAddsRace` is flaky ("Open") | Fixed in `6589fa3`: each player's pin writes run in order (`KeyedSequencer`). The test now requires exactly the limit and passes on PostgreSQL 16 |
 | Base `411842d` = `origin/main` at session start | Shortly before `411842d`, `main` was force-pushed. `b038d1a` and `38e58aa`, which CI had built on `main` (runs #84, #85), are no longer reachable |
 | The OpenRouter key in a local `ArrowScaleTest.java` | Never committed: the only match in the whole history is the 8-character prefix named in this file. The owner revoked the key |
-| Real-client and loadtest-bot verification | Still not done. `hubbot.js` and `qbookbot.js` look for window-title glyphs that the tiling in `8a0b1e4` removed |
+| Real-client and loadtest-bot verification | Real client: still not done. Bots: `hubbot.js` and `qbookbot.js` were fixed in `1b02251` (hubbot 31/31) and the whole sweep is green again (`docs/STATUS.md` header) |
 
 The rest of this file is the original log. It is unchanged except for notes marked **(2026-10-18)**.
 

@@ -76,7 +76,7 @@ public final class ClassGearCommand implements TabExecutor {
     private void info(Player p) {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null || armor() == null || !armor().supports(pr.playerClass().orElse(null))) {
-            p.sendMessage(Messages.info("Таны ангийн хуяг удахгүй нэмэгдэнэ (одоогоор Баатар)."));
+            p.sendMessage(Messages.info("Эхлээд ангиа сонго: /class"));
             return;
         }
         ClassGear g = pr.classGear();
@@ -127,7 +127,7 @@ public final class ClassGearCommand implements TabExecutor {
                 info(p);
             }
             case SOUL -> p.sendMessage(Messages.error("Сүнс байхдаа боломжгүй."));
-            case NO_CLASS -> p.sendMessage(Messages.info("Таны ангийн хуяг удахгүй нэмэгдэнэ (одоогоор Баатар)."));
+            case NO_CLASS -> p.sendMessage(Messages.info("Эхлээд ангиа сонго: /class"));
         }
     }
 
@@ -137,7 +137,7 @@ public final class ClassGearCommand implements TabExecutor {
             case MAX -> p.sendMessage(Messages.info("Энэ зэрэгт хамгийн их сайжруулалт (+" + ArmorRules.MAX_ENHANCE + ")."));
             case COINS -> p.sendMessage(Messages.error("Зоос хүрэлцэхгүй."));
             case SOUL -> p.sendMessage(Messages.error("Сүнс байхдаа боломжгүй."));
-            case NO_CLASS -> p.sendMessage(Messages.info("Таны ангийн хуяг удахгүй нэмэгдэнэ (одоогоор Баатар)."));
+            case NO_CLASS -> p.sendMessage(Messages.info("Эхлээд ангиа сонго: /class"));
         }
     }
 

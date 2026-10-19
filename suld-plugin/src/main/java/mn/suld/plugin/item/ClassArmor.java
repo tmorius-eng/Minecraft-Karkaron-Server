@@ -63,7 +63,7 @@ public final class ClassArmor implements Listener {
         return services.profiles().cached(p.getUniqueId());
     }
 
-    /** True when the class has armour definitions (the Баатар slice first). */
+    /** True when the class has armour definitions (all five classes have them; false only for a missing catalog). */
     public boolean supports(PlayerClass c) {
         return c != null && items() != null && items().catalog().item(ArmorRules.definitionId(c, ArmorPiece.HELMET, ArmorTier.T1)).isPresent();
     }

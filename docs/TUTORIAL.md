@@ -11,7 +11,7 @@ It is stored in the player's data (`suld:tutorial` = `state:step:paidMask`) and 
 | 1 | Ангиа сонго | the profile has a class | — |
 | 2 | Ангийн зэвсгээ барь | the class weapon is in the main hand | 40 EXP, 20 ₮ |
 | 3 | Чадварын модоо нээ | the skill tree was opened (`/skills`, the menu or an NPC) | 60 EXP, 25 ₮ |
-| 4 | Байгаа түгжих | a lock-on target is held (Q with the class weapon, docs/COMBAT_FEEL.md) | 60 EXP, 25 ₮ |
+| 4 | Дайснаа онил (Q) | a lock-on target is held (Q with the class weapon, docs/COMBAT_FEEL.md) | 60 EXP, 25 ₮ |
 | 5 | Анхны ан | a SÜLD mob killed after the step began | 120 EXP, 40 ₮ |
 | 6 | Аяны замаа хар | the quest screen was opened | 60 EXP, 25 ₮ |
 | 7 | Саарлын Агуйн хаалгыг ол | within 24 blocks of the gate (docs/world/DUNGEON_HALLS.md); the bar shows an arrow and the distance | 200 EXP, 75 ₮ |
