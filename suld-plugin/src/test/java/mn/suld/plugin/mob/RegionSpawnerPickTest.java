@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -46,10 +47,11 @@ class RegionSpawnerPickTest {
     /** WORLD-01: a spot whose ±5 band holds no mob of its region gets the nearest level, never a random pick. */
     @Test
     void nothingWithinFiveFallsBackToTheNearestLevel() {
-        List<MobDefinition> zuungar = mobsOf("region.zuungar"); // 37, 39, 43, 45, 59
-        assertNull(RegionSpawner.pickByLevel(zuungar, 27, Integer.MAX_VALUE, 0.5), "nothing within 5 of 27");
-        assertEquals("mob.tangud_suns", RegionSpawner.nearestByLevel(zuungar, 27));
-        assertEquals("mob.tengeriin_kharuul", RegionSpawner.nearestByLevel(zuungar, 60));
+        List<MobDefinition> zuungar = mobsOf("region.zuungar"); // 32, 37, 39, 43, 45, 51, 59: the band is covered since the 2026-10-19 fill-in
+        assertNull(RegionSpawner.pickByLevel(zuungar, 20, Integer.MAX_VALUE, 0.5), "nothing within 5 of 20 (below the band)");
+        assertEquals("mob.zuungaryn_chono", RegionSpawner.nearestByLevel(zuungar, 20));
+        assertEquals("mob.tengeriin_kharuul", RegionSpawner.nearestByLevel(zuungar, 70));
+        assertNotNull(RegionSpawner.pickByLevel(zuungar, 27, Integer.MAX_VALUE, 0.5), "the inner edge has its own prey now");
         assertNull(RegionSpawner.nearestByLevel(List.of(), 30));
     }
 
