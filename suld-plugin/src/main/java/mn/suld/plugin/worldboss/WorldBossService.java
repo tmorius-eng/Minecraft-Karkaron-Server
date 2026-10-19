@@ -131,13 +131,22 @@ public final class WorldBossService implements Listener {
         return active == null ? Optional.empty() : Optional.of(active.fight);
     }
 
-    /** The boss and the hour of the next scheduled rising, if any. */
-    public Optional<String> nextText() {
+    /** The next scheduled rising: its boss and its instant. */
+    public record Next(WorldBossDefinition definition, Instant at) {
+    }
+
+    public Optional<Next> next() {
         WorldBossSchedule.Slot s = enabled ? schedule.next(Instant.now()) : null;
         WorldBossDefinition d = s == null ? null : bossOf(s);
-        if (d == null) return Optional.empty();
-        ZonedDateTime at = s.at().atZone(services.zone());
-        return Optional.of("«" + name(d) + "» — " + weekday(at.getDayOfWeek()) + " " + HOUR.format(at) + ", " + siteName(d.siteId()));
+        return d == null ? Optional.empty() : Optional.of(new Next(d, s.at()));
+    }
+
+    /** The boss and the hour of the next scheduled rising, if any. */
+    public Optional<String> nextText() {
+        return next().map(n -> {
+            ZonedDateTime at = n.at().atZone(services.zone());
+            return "«" + name(n.definition()) + "» — " + weekday(at.getDayOfWeek()) + " " + HOUR.format(at) + ", " + siteName(n.definition().siteId());
+        });
     }
 
     /** True while {@code entity} is the standing world boss (CombatListener leaves its kill to this service). */

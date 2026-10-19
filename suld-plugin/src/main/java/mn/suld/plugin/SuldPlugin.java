@@ -426,7 +426,7 @@ public final class SuldPlugin extends JavaPlugin {
         registerTab("commands", new mn.suld.plugin.command.CommandCatalog());
         new mn.suld.plugin.auth.PermissionSetup(this).start();
 
-        mn.suld.plugin.branding.ServerListService serverList = new mn.suld.plugin.branding.ServerListService(this);
+        mn.suld.plugin.branding.ServerListService serverList = new mn.suld.plugin.branding.ServerListService(this, this::liveMotd);
         serverList.start();
         new mn.suld.plugin.branding.TipsService(this)
                 .filter(p -> services.styles().setting(p.getUniqueId(), mn.suld.api.style.PlayerSetting.TIPS)).start();
@@ -720,6 +720,21 @@ public final class SuldPlugin extends JavaPlugin {
         if (getConfig().getInt("config-version", 1) < 8) migrateDeathReform();
         if (getConfig().getInt("config-version", 1) < 9) migrateTrainingYard();
         if (getConfig().getInt("config-version", 1) < 10) migrateDiscord();
+    }
+
+    /** The server list's live line ({@link mn.suld.plugin.branding.LiveMotd}): the boss standing or rising soon, the open vote. */
+    private java.util.Optional<String> liveMotd() {
+        if (services == null) return java.util.Optional.empty();
+        var bosses = services.worldBosses;
+        var kh = services.khuraldai();
+        java.util.Optional<String> standing = bosses == null ? java.util.Optional.empty()
+                : bosses.active().map(f -> mn.suld.plugin.worldboss.WorldBossService.name(f.definition()));
+        java.util.Optional<java.time.Instant> voteCloses = kh != null && kh.open() && kh.current() != null
+                ? java.util.Optional.of(java.time.Instant.ofEpochMilli(kh.current().closesAt())) : java.util.Optional.empty();
+        var next = bosses == null ? java.util.Optional.<mn.suld.plugin.worldboss.WorldBossService.Next>empty() : bosses.next();
+        String line = mn.suld.plugin.branding.LiveMotd.pick(standing, voteCloses, next.map(n -> mn.suld.plugin.worldboss.WorldBossService.name(n.definition())),
+                next.map(mn.suld.plugin.worldboss.WorldBossService.Next::at), java.time.Instant.now(), services.zone(), null);
+        return java.util.Optional.ofNullable(line);
     }
 
     /** v10: the Discord webhooks (docs/DISCORD.md); a file without the keys keeps both channels off. */

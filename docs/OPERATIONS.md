@@ -162,7 +162,10 @@ loses 25 % durability. They respawn as a **Сүнс** for 30 s: they cannot deal
 
 ## Server list
 
-`branding.motd` takes two MiniMessage lines (empty = the built-in SÜLD lines). The bundled 64×64 icon is used
+`branding.motd` takes two MiniMessage lines (empty = the built-in SÜLD lines); `{live}` in a line is what is happening
+now, chosen in this order: a world boss standing («⚔ «…» босоод байна — ирээрэй!»), an open Их Хуралдай vote with its
+close («✦ Их Хуралдай: санал хураалт Ня 20:00 хүртэл»), a boss rising within 6 hours («⚔ «…» Бя 20:00 босно»), else
+the counts line; the line is re-read at most every 10 s per ping. The bundled 64×64 icon is used
 unless the server folder has its own `server-icon.png` or `branding.server-icon: false`.
 
 ## Guide for new players
