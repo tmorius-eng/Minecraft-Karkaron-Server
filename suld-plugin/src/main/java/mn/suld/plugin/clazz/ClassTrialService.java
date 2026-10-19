@@ -257,7 +257,8 @@ public final class ClassTrialService implements Listener, org.bukkit.command.Tab
         if (pr == null || pr.classTrial() == null) return;
         PlayerClass trialClass = pr.classTrial().to();
         change.stripClassGear(p, trialClass);
-        PlayerDataSaves.now(p);
+        // one player-file write, after the real gear is back: a crash before it leaves the trial gear in the file with
+        // the trial still open in the database, and the next join ends the trial again the same way
         pr.endClassTrial(System.currentTimeMillis());
         change.applyClass(p, pr, r == null ? ClassChangeService.healthShare(p) : r.share);
         PlayerDataSaves.now(p);

@@ -322,12 +322,15 @@ public final class CraftOrderService implements Listener {
         refunds.forEach((id, n) -> {
             if (n > 0) y.set("refunds." + id, n);
         });
+        long t = mn.suld.plugin.perf.PerfProbe.start();
         try {
-            AtomicYaml.writeNow(file, y);
+            AtomicYaml.writeNow(file, y); // the whole board, synchronous: /suldperf craft.orders_write says what it costs
             return true;
         } catch (IOException e) {
             plugin.getLogger().severe("[craft] craft_orders.yml not written: " + e.getMessage());
             return false;
+        } finally {
+            mn.suld.plugin.perf.PerfProbe.stop("craft.orders_write", t);
         }
     }
 

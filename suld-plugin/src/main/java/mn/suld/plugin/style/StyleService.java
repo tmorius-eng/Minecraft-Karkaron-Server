@@ -74,14 +74,9 @@ public final class StyleService implements Listener {
 
     public void start() {
         Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::flush, 20L * 60, 20L * 60);
-        for (Player p : Bukkit.getOnlinePlayers()) { // plugin reload
-            cache.computeIfAbsent(p.getUniqueId(), id -> {
-                PlayerStyle loaded = tryLoad(id);
-                if (loaded != null) return loaded;
-                unsafe.add(id);
-                return new PlayerStyle(id);
-            });
-        }
+        // plugin reload: the players already online get a placeholder now and their stored style from the io pool
+        // (one blocking load per player here held the server thread up to 5 s each)
+        for (Player p : Bukkit.getOnlinePlayers()) reload(p.getUniqueId(), false);
     }
 
     /** Shutdown: every dirty style is written at once; the caller waits on the whole batch with its own deadline. */
@@ -251,12 +246,16 @@ public final class StyleService implements Listener {
      */
     public PlayerStyle of(UUID id) {
         PlayerStyle s = cache.get(id);
-        if (s != null) return s;
+        return s != null ? s : reload(id, true);
+    }
+
+    /** Caches a never-written placeholder for {@code id} and replaces it with the stored style once that has loaded. */
+    private PlayerStyle reload(UUID id, boolean unexpected) {
         PlayerStyle placeholder = new PlayerStyle(id);
         PlayerStyle prev = cache.putIfAbsent(id, placeholder);
         if (prev != null) return prev;
         unsafe.add(id);
-        plugin.getLogger().warning("style of " + id + " was not cached; reloading it");
+        if (unexpected) plugin.getLogger().warning("style of " + id + " was not cached; reloading it");
         repository.load(id).whenComplete((stored, err) -> {
             if (err != null || !plugin.isEnabled()) return; // stays unsafe: never written
             PlayerStyle real = stored.map(PlayerStyle::restore).orElseGet(() -> new PlayerStyle(id));

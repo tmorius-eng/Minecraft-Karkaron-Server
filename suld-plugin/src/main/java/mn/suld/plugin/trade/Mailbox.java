@@ -138,10 +138,13 @@ public final class Mailbox {
         List<String> enc = new ArrayList<>();
         for (ItemStack it : items) enc.add(Base64.getEncoder().encodeToString(it.serializeAsBytes()));
         y.set("items", enc);
+        long t = mn.suld.plugin.perf.PerfProbe.start();
         try {
             AtomicYaml.writeNow(f, y); // a few stacks: synchronous keeps the order with the player file
         } catch (java.io.IOException e) {
             plugin.getLogger().severe("[mailbox] could not write " + f.getFileName() + " (" + items.size() + " stacks): " + e.getMessage());
+        } finally {
+            mn.suld.plugin.perf.PerfProbe.stop("mailbox.write", t); // /suldperf: the cost of the synchronous write
         }
     }
 }
