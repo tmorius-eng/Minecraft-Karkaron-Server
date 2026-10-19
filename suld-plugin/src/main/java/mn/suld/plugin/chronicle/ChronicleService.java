@@ -231,6 +231,7 @@ public final class ChronicleService {
         if (!settings.broadcast()) return;
         Component line = Component.text(headline(e), GOLD);
         Bukkit.broadcast(line);
+        if (e.kind().isFirst() || e.kind() == mn.suld.api.chronicle.ChronicleKind.RELIC_CLAIMED) services.discord.announce("📜 " + headline(e));
         for (Player p : Bukkit.getOnlinePlayers()) p.playSound(p.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.5f, 1.3f);
     }
 

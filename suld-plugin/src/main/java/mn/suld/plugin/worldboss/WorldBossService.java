@@ -165,8 +165,10 @@ public final class WorldBossService implements Listener {
         long left = nextSlot.at().getEpochSecond() - now.getEpochSecond();
         if (!announced && left <= announceMinutes * 60L) {
             announced = true;
-            Bukkit.broadcast(Messages.accent("⚔ " + Math.max(1, (left + 59) / 60) + " минутын дараа «" + name(d) + "» " + siteName(d.siteId())
-                    + "-ийн дэргэд босно! Түвшин " + level(d) + " — бүгдээрээ хамтдаа."));
+            String call = "⚔ " + Math.max(1, (left + 59) / 60) + " минутын дараа «" + name(d) + "» " + siteName(d.siteId())
+                    + "-ийн дэргэд босно! Түвшин " + level(d) + " — бүгдээрээ хамтдаа.";
+            Bukkit.broadcast(Messages.accent(call));
+            services.discord.announce(call);
         }
         if (!warned && left <= 60) {
             warned = true;
@@ -222,8 +224,10 @@ public final class WorldBossService implements Listener {
                     ? "«" + name(def) + "» галзуурлаа! Нэг минутад унагахгүй бол ухарна."
                     : "«" + name(def) + "»: " + change.phase().phaseName() + " (х" + change.phase().attackMultiplier() + ")"));
         });
-        Bukkit.broadcast(Messages.accent("⚔ «" + name(def) + "» " + siteName(def.siteId()) + "-ийн дэргэд бослоо! "
-                + "Хамтдаа дарвал оролцсон бүгд шагнагдана. (" + (def.durationSeconds() / 60) + " минут)"));
+        String rise = "⚔ «" + name(def) + "» " + siteName(def.siteId()) + "-ийн дэргэд бослоо! "
+                + "Хамтдаа дарвал оролцсон бүгд шагнагдана. (" + (def.durationSeconds() / 60) + " минут)";
+        Bukkit.broadcast(Messages.accent(rise));
+        services.discord.announce(rise);
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.6f, 0.7f);
             if (p.getWorld().equals(w) && p.getLocation().distanceSquared(home) < 160 * 160) {

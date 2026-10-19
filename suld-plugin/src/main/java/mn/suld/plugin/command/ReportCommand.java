@@ -63,6 +63,7 @@ public final class ReportCommand implements CommandExecutor {
             staff++;
         }
         Bukkit.getLogger().info("[SULD] [report] " + p.getName() + " @ " + where + ": " + text);
+        services.discord.staff("⚑ Мэдэгдэл " + p.getName() + " (" + where + "): " + text);
         p.sendMessage(Messages.success("Мэдэгдэл хүлээн авлаа. Баярлалаа!" + (staff > 0 ? " Ажилтан " + staff + " хүн харлаа." : " Ажилтан удахгүй харна.")));
         return true;
     }

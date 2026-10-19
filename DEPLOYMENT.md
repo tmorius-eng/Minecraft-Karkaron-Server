@@ -158,7 +158,9 @@ The health check covers:
 channel). Then a failing health check posts once per change of the failing set (and once more when healthy again),
 a unit that fails or that systemd gave up restarting (`suld`, `suld-proxy`, `suld-backup`; `OnFailure=suld-alert@`)
 posts its name, and a failed backup posts its reason. The URL is a secret (anyone with it can post there): it lives
-only in `suld.env` and is never logged. Without it nothing changes except that nobody is told.
+only in `suld.env` and is never logged. Without it nothing changes except that nobody is told. `DISCORD_WEBHOOK_URL`
+is the game's own public channel (`docs/DISCORD.md`: chronicle firsts, the world boss, Их Хуралдай, server up/down);
+`/report` lines go to the alert webhook. Both are written into the plugin's `config.yml` by `deploy.sh`/`update.sh`.
 
 ---
 

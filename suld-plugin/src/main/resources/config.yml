@@ -7,7 +7,7 @@
 
 # UI/message locale. "mn" = Mongolian (Cyrillic), "en" = English fallback.
 # Schema version of this file (SULD migrates older files on start; do not edit).
-config-version: 9
+config-version: 10
 locale: mn
 
 # ---------------------------------------------------------------------------
@@ -278,6 +278,15 @@ branding:
   store-url: ''
   # /vote link (a server-list page); /discord uses discord above, /website the domain.
   vote-url: ''
+
+# SÜLD -> Discord (docs/DISCORD.md). A webhook URL is a secret: on a deployed server deploy.sh writes these from
+# DISCORD_WEBHOOK_URL / ALERT_WEBHOOK_URL in /etc/suld/suld.env (this file is mode 600); blank = that channel is off.
+# https only (a dev server may point at http://127.0.0.1:…). Test: /suld discord test.
+discord:
+  # Public channel: chronicle firsts and relics, the world boss call and rise, Их Хуралдай opening and result, server up/down.
+  webhook: ''
+  # Staff channel: every /report (player, place, text).
+  staff-webhook: ''
 
 store:
   packages:

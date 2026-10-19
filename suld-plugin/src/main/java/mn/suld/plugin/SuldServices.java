@@ -289,6 +289,9 @@ public final class SuldServices {
                     ? new mn.suld.api.persistence.InMemoryPaymentRepository()
                     : new mn.suld.plugin.persistence.JdbcPaymentRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor),
                     ioExecutor);
+            // SÜLD -> Discord (docs/DISCORD.md): both webhooks are secrets from config.yml, blank = off
+            this.discord = new mn.suld.plugin.social.DiscordNotifier(plugin, plugin.getConfig().getString("discord.webhook", ""),
+                    plugin.getConfig().getString("discord.staff-webhook", ""));
             this.mapPins = dataSource == null
                     ? new mn.suld.api.persistence.InMemoryMapPinRepository()
                     : new mn.suld.plugin.persistence.JdbcMapPinRepository(dataSource, SqlDialect.forStorage(config.database().type()), ioExecutor);
@@ -315,6 +318,7 @@ public final class SuldServices {
     public final mn.suld.plugin.achievement.AchievementService achievements;
     /** The credit store paid through Bonum (docs/PAYMENT_ARCHITECTURE.md); off by default. */
     public final mn.suld.plugin.payment.PaymentService payments;
+    public final mn.suld.plugin.social.DiscordNotifier discord;
     private final mn.suld.api.campaign.WeeklyCycle weeklyCycle;
     private final mn.suld.plugin.chronicle.ChronicleService chronicleService;
     private final mn.suld.plugin.campaign.KhuraldaiService khuraldaiService;

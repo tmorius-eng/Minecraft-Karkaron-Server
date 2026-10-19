@@ -156,6 +156,7 @@ activate_release() {
     warn "Pack ${PACK_FILE:-<none>} no longer on disk; leaving the resource-pack config as is."
   fi
   sync_db_config
+  sync_discord_config
   chown "$SULD_USER:$SULD_USER" "$PLUGIN_CONFIG"
   local started
   started="$(date +%s)"

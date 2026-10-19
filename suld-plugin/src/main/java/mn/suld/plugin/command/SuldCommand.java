@@ -39,6 +39,7 @@ public final class SuldCommand implements CommandExecutor {
             case "spawnmob" -> spawnMob(sender, args);
             case "flush" -> flush(sender);
             case "auth" -> auth(sender, args);
+            case "discord" -> discord(sender, args);
             case "exp" -> giveExp(sender, args);
             case "quest" -> setQuest(sender, args);
             case "coins" -> giveCoins(sender, args);
@@ -366,6 +367,26 @@ public final class SuldCommand implements CommandExecutor {
     }
 
     /** Admin/console: authentication mode and per-player session/profile state. */
+    /** {@code /suld discord}: the bridge's state (docs/DISCORD.md); {@code /suld discord test}: one line to each channel. */
+    private void discord(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        var d = services.discord;
+        sender.sendMessage(Messages.info("Discord: " + d.describe()));
+        if (args.length >= 2 && args[1].equalsIgnoreCase("test")) {
+            if (!d.enabled()) {
+                sender.sendMessage(Messages.error("Discord webhook тохируулаагүй (config.yml: discord.webhook, discord.staff-webhook)."));
+                return;
+            }
+            String line = "🔔 SÜLD Discord холболтын шалгалт (" + sender.getName() + ")";
+            d.announce(line);
+            d.staff(line);
+            sender.sendMessage(Messages.success("Шалгалтын мөрийг илгээлээ: 2 секундын дотор суваг дээр гарна. Тоо: /suld discord"));
+        }
+    }
+
     /** {@code /suld auth}: mode and sessions; {@code /suld auth free <name>}: the staff steps that free a name. */
     private void auth(CommandSender sender, String[] args) {
         if (!sender.hasPermission("suld.admin")) {
@@ -400,6 +421,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld grim [reset] — GrimAC: SÜLD хөдөлгөөнд уучилсан flag-ууд"));
             sender.sendMessage(Messages.info("/suld map status|scan [full|stop]|export <zoom> [x z r]|pois|flush|refresh [r] — газрын зураг"));
             sender.sendMessage(Messages.info("/suld auth [free <нэр>] — нэвтрэлтийн горим, сесс; нэр чөлөөлөх алхмууд · /suld spawnmob"));
+            sender.sendMessage(Messages.info("/suld discord [test] — Discord гүүрийн төлөв, шалгалтын мөр"));
         }
         sender.sendMessage(Messages.info("Бүх команд: /commands"));
     }

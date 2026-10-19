@@ -603,6 +603,8 @@ public final class SuldPlugin extends JavaPlugin {
         armory.start();
         // the Bonum credit store (docs/PAYMENT_ARCHITECTURE.md): off unless payment.bonum.enabled and its secrets are set
         services.payments.start();
+        services.discord.start();
+        services.discord.announce("🟢 SÜLD асаалаа — " + getConfig().getString("branding.domain", "suld.mn"));
         registerTab("khuraldai", new mn.suld.plugin.command.KhuraldaiCommand(services, menus));
         registerTab("chronicle", new mn.suld.plugin.command.ChronicleCommand(services, menus));
         java.util.Objects.requireNonNull(getCommand("report")).setExecutor(new mn.suld.plugin.command.ReportCommand(services));
@@ -668,6 +670,7 @@ public final class SuldPlugin extends JavaPlugin {
         if (waypoints != null) waypoints.shutdown(); // the waypoint bars go
         if (armory != null) armory.stop();
         if (services != null && services.payments != null) services.payments.stop(); // the webhook closes, QR maps go blank
+        if (services != null && services.discord != null) services.discord.shutdown("🔴 SÜLD унтарлаа."); // the last line leaves now
         if (atlas != null) atlas.shutdown(); // players in the atlas go back where they stood
         mn.suld.plugin.ui.BossBars.stop(); // quiet players get their bars back before the services hide theirs
         mn.suld.plugin.ui.UiFocus.stop();
@@ -716,6 +719,16 @@ public final class SuldPlugin extends JavaPlugin {
         if (getConfig().getInt("config-version", 1) < 7) migrateDeathCap();
         if (getConfig().getInt("config-version", 1) < 8) migrateDeathReform();
         if (getConfig().getInt("config-version", 1) < 9) migrateTrainingYard();
+        if (getConfig().getInt("config-version", 1) < 10) migrateDiscord();
+    }
+
+    /** v10: the Discord webhooks (docs/DISCORD.md); a file without the keys keeps both channels off. */
+    private void migrateDiscord() {
+        var c = getConfig();
+        if (!c.isSet("discord.webhook")) c.set("discord.webhook", "");
+        if (!c.isSet("discord.staff-webhook")) c.set("discord.staff-webhook", "");
+        c.set("config-version", 10);
+        saveConfig();
     }
 
     /**

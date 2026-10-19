@@ -37,6 +37,7 @@ the README (local test server).
 | `/credits give <player\|uuid> <amount> <txid>` · `/credits take <player\|uuid> <amount>` | Store credits; `give` is what the web store runs from the console, with its transaction id |
 | `/suldevent`, `/suldpack`, `/worldbuild`, `/relic …` | World events · resource pack · city builder · relic admin |
 | `/suld auth` | Authentication mode and session state; `/suld auth free <name>` prints the steps that free a name (hybrid) |
+| `/suld discord [test]` | The Discord bridge's state (`docs/DISCORD.md`); `test` posts one line to each configured channel |
 
 ## Permissions: who can do what
 
@@ -216,7 +217,9 @@ centred on the spawn) is docs/world/WORLD_BORDER.md.
 that failed or that systemd stopped restarting (`suld`, `suld-proxy`, `suld-backup`, `suld-funnel`), and a failed
 backup. Test it once after deploying: `sudo /opt/suld/bin/notify.sh "test" "SÜLD alerts work"`. The weekly funnel
 report (`suld-funnel.timer`, Monday 09:10 Улаанбаатар, `docs/ANALYTICS.md` «Weekly report») posts its summary to
-`REPORT_WEBHOOK_URL`, or to the alert webhook when that is blank; the Markdown stays in `/opt/suld/run/reports/`. `MAX_PLAYERS` defaults to 25, what
+`REPORT_WEBHOOK_URL`, or to the alert webhook when that is blank; the Markdown stays in `/opt/suld/run/reports/`.
+The game itself posts to Discord too (`docs/DISCORD.md`): chronicle firsts, the world boss, Их Хуралдай and the server
+going up or down to `DISCORD_WEBHOOK_URL` (public), every `/report` to the alert webhook (staff). `MAX_PLAYERS` defaults to 25, what
 the last load test holds (`docs/perf/M3_2026-10-12.md`); raise it only after a run on the real host (`DEPLOYMENT.md`).
 
 ## Persistence and shutdown (audit Phase 2)

@@ -206,12 +206,17 @@ public final class KhuraldaiService {
 
     private void announceOpen(VoteCycle row) {
         List<CampaignDefinition> ballot = ballot();
-        Bukkit.broadcast(Messages.accent("✦ Их Хуралдай нээгдлээ! Дараагийн долоо хоногийн аяныг сонго: /khuraldai"));
+        String head = "✦ Их Хуралдай нээгдлээ! Дараагийн долоо хоногийн аяныг сонго: /khuraldai";
+        Bukkit.broadcast(Messages.accent(head));
+        StringBuilder outside = new StringBuilder(head);
         for (int i = 0; i < ballot.size(); i++) {
-            Bukkit.broadcast(Component.text("  " + (i + 1) + ". " + ballot.get(i).name() + " — " + ballot.get(i).description(), NamedTextColor.WHITE));
+            String option = "  " + (i + 1) + ". " + ballot.get(i).name() + " — " + ballot.get(i).description();
+            Bukkit.broadcast(Component.text(option, NamedTextColor.WHITE));
+            outside.append('\n').append(option);
         }
         long hours = Duration.between(Instant.now(), Instant.ofEpochMilli(row.closesAt())).toHours();
         Bukkit.broadcast(Component.text("  Санал хураалт " + Math.max(1, hours) + " цагийн дараа хаагдана. /khuraldai vote <1-" + ballot.size() + ">", NamedTextColor.GRAY));
+        services.discord.announce(outside.append("\n  Санал хураалт ").append(Math.max(1, hours)).append(" цагийн дараа хаагдана.").toString());
         for (Player p : Bukkit.getOnlinePlayers()) {
             Presentation.banner(p, "ИХ ХУРАЛДАЙ", "Дараагийн аянаа сонго: /khuraldai", NamedTextColor.GOLD);
             p.playSound(p.getLocation(), Sound.EVENT_RAID_HORN, 0.8f, 1.2f);
@@ -312,9 +317,11 @@ public final class KhuraldaiService {
                     CampaignDefinition def = Content.pack().campaign(winner);
                     String name = def == null ? winner : def.name();
                     plugin.getLogger().info("[khuraldai] vote " + c.cycleId() + " closed: " + winner + " (" + voters + " voters, quorum " + quorum + ")");
-                    Bukkit.broadcast(Messages.accent(quorum
+                    String verdict = quorum
                             ? "✦ Их Хуралдай шийдвэрлэв: дараагийн долоо хоногийн аян — «" + name + "» (" + voters + " санал)."
-                            : "✦ Их Хуралдай: санал хүрэлцсэнгүй (" + voters + "). Эргэлтээр «" + name + "» сонгогдов."));
+                            : "✦ Их Хуралдай: санал хүрэлцсэнгүй (" + voters + "). Эргэлтээр «" + name + "» сонгогдов.";
+                    Bukkit.broadcast(Messages.accent(verdict));
+                    services.discord.announce(verdict);
                     for (Player p : Bukkit.getOnlinePlayers()) p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.1f);
                     if (def != null) chronicle.khuraldaiClosed(c.cycleId(), def, voters, quorum);
                     services.analytics().record(AnalyticsEvent.of(AnalyticsEventType.VOTE_CLOSED, null,

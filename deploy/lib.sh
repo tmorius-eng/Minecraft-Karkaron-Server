@@ -70,6 +70,7 @@ load_env() {
   : "${MAX_PLAYERS:=25}"   # the last bench (docs/perf/M3_2026-10-12.md) holds 25; raise it after a run on the real host
   : "${ALERT_WEBHOOK_URL:=}"   # operators' webhook (Discord-compatible); blank = no alerts
   : "${REPORT_WEBHOOK_URL:=}"  # the weekly funnel report's webhook; blank = ALERT_WEBHOOK_URL
+  : "${DISCORD_WEBHOOK_URL:=}" # the public Discord channel the game posts to (docs/DISCORD.md); blank = off
   : "${ONLINE_MODE:=true}"
   : "${TMUX_SESSION:=suld}"
   : "${BACKUP_KEEP:=14}"
@@ -302,6 +303,18 @@ apply_pack_config() {
   set_config "resource-pack.enabled=r:true" \
              "resource-pack.url=http://${PUBLIC_HOST}:${PACK_PORT}/$1" \
              "resource-pack.sha1=$2"
+}
+
+# The Discord webhooks (docs/DISCORD.md) reach the plugin's config.yml from the environment only (yaml_set env:);
+# a config.yml from before the keys gets the section appended (the plugin's own v10 migration would add it at the
+# next start, too late for this write). Blank = that channel is off.
+sync_discord_config() {
+  [[ -f "$PLUGIN_CONFIG" ]] || return 0
+  if ! grep -q '^discord:' "$PLUGIN_CONFIG"; then
+    printf '\n# SULD -> Discord (docs/DISCORD.md): written by deploy from DISCORD_WEBHOOK_URL / ALERT_WEBHOOK_URL; blank = off\ndiscord:\n  webhook: %s\n  staff-webhook: %s\n' "''" "''" >> "$PLUGIN_CONFIG"
+  fi
+  export DISCORD_WEBHOOK_URL ALERT_WEBHOOK_URL
+  set_config "discord.webhook=env:DISCORD_WEBHOOK_URL" "discord.staff-webhook=env:ALERT_WEBHOOK_URL"
 }
 
 sync_db_config() {

@@ -191,6 +191,8 @@ configure_server() {
   fi
   # Credentials in the env file are authoritative; keep the plugin in sync on every deploy.
   [[ "$DRY_RUN" == "1" ]] || sync_db_config
+  [[ "$DRY_RUN" == "1" ]] && echo "  [dry-run] set discord.webhook / discord.staff-webhook in $PLUGIN_CONFIG from the env file"
+  [[ "$DRY_RUN" == "1" ]] || sync_discord_config
   # Authentication hardening is enforced on every deploy, whatever was edited by hand.
   [[ "$DRY_RUN" == "1" ]] || set_config "auth.allow-insecure-offline-dev-mode=r:false"
   configure_auth
