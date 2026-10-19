@@ -102,7 +102,8 @@ public final class ReferralService implements Listener {
                 if (err != null) fail("byInvitee " + id, err, invitee);
                 return;
             }
-            ReferralRules.Refusal early = ReferralRules.refuse(settings, id, UUID.nameUUIDFromBytes(new byte[0]), level, existing.isPresent());
+            // the refusals that need no inviter yet (null = not the invitee, so SELF cannot fire here)
+            ReferralRules.Refusal early = ReferralRules.refuse(settings, id, null, level, existing.isPresent());
             if (early != ReferralRules.Refusal.NONE) {
                 invitee.sendMessage(Messages.error(refusal(early)));
                 return;

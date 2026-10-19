@@ -11,9 +11,10 @@ public final class ReferralRules {
     private ReferralRules() {
     }
 
+    /** @param inviter may be null while the name is not resolved yet (then only the other refusals apply) */
     public static Refusal refuse(ReferralSettings s, UUID invitee, UUID inviter, int inviteeLevel, boolean alreadyNamed) {
         if (!s.enabled()) return Refusal.OFF;
-        if (invitee.equals(inviter)) return Refusal.SELF;
+        if (inviter != null && invitee.equals(inviter)) return Refusal.SELF;
         if (alreadyNamed) return Refusal.ALREADY_NAMED;
         if (inviteeLevel > s.maxLevelToName()) return Refusal.TOO_HIGH;
         return Refusal.NONE;
