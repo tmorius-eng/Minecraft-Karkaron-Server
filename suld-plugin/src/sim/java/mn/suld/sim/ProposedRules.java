@@ -281,6 +281,25 @@ public class ProposedRules extends Rules {
                 "loot.p.chest." + (heroic ? "heroic" : String.valueOf(index)), enrage, d.chapterGate(), previous, gpMin, heroic, mythic);
     }
 
+    private static final java.util.regex.Pattern OUTER_THIRD = java.util.regex.Pattern.compile("^(region\\.[a-z_]+)\\.\\d+$");
+
+    /**
+     * The proposed band a live zone stands in: the band named after the zone's region, else (Хэнтий is modelled as
+     * the Burkhan band) the band whose levels sit nearest to the live zone's.
+     */
+    static int bandFor(World live, List<World.Zone> bands, int liveZone) {
+        World.Zone lz = live.zones().get(liveZone);
+        java.util.regex.Matcher m = OUTER_THIRD.matcher(lz.id());
+        String region = m.matches() ? m.group(1) : lz.id();
+        for (World.Zone z : bands) if (z.id().equals(region)) return z.index();
+        World.Zone best = null;
+        double mid = (lz.min() + lz.max()) / 2.0;
+        for (World.Zone z : bands) {
+            if (best == null || Math.abs((z.min() + z.max()) / 2.0 - mid) < Math.abs((best.min() + best.max()) / 2.0 - mid)) best = z;
+        }
+        return best == null ? 0 : best.index();
+    }
+
     /**
      * Act I keeps the 18 live chapters with EXP rescaled to the new curve; Act II adds 24 chapters across the new
      * bands with the objective types the directive asks for (investigation, escort, puzzle, dialogue, boss, discovery).
@@ -294,8 +313,9 @@ public class ProposedRules extends Rules {
             String target = c.target();
             int zone = c.zone();
             if (c.type() == QuestType.KILL_MOB || c.type() == QuestType.COLLECT_ITEM) {
-                // live targets map onto the re-statted band of the same region
-                zone = Math.max(0, zone);
+                // live targets map onto the re-statted band of the same region (by region id, never by the live zone's
+                // index: the live world has three zones per outer region, this model one band per region)
+                zone = bandFor(live, zones, Math.max(0, zone));
                 target = null; // any mob of the zone counts in the proposed model (per-mob counts are content detail)
             }
             out.add(new World.Chapter(c.id(), c.title(), c.type(), target, c.count(), exp, Math.round(c.coins() * 2.5), zone, c.minutes(), 1));

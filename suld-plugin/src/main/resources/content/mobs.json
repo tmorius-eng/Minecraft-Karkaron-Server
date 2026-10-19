@@ -130,6 +130,51 @@
       "role": "ladder"
     },
     {
+      "id": "mob.zuungaryn_chono",
+      "name": "Зүүнгарын Чоно",
+      "host": "WOLF",
+      "tier": "ELITE",
+      "level": 32,
+      "loot": "loot.dalain_chono",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.balgasny_sakhiul",
+      "name": "Балгасны Сахиул",
+      "host": "HUSK",
+      "tier": "ELITE",
+      "level": 51,
+      "loot": "loot.khureenii_kharuul",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.khentiin_chono",
+      "name": "Хэнтийн Чоно",
+      "host": "WOLF",
+      "tier": "NORMAL",
+      "level": 38,
+      "loot": "loot.dalain_chono",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.altain_chono",
+      "name": "Алтайн Чоно",
+      "host": "WOLF",
+      "tier": "NORMAL",
+      "level": 38,
+      "loot": "loot.dalain_chono",
+      "role": "ladder"
+    },
+    {
+      "id": "mob.taigyn_chono",
+      "name": "Тайгын Чоно",
+      "host": "WOLF",
+      "tier": "NORMAL",
+      "level": 38,
+      "loot": "loot.dalain_chono",
+      "role": "ladder"
+    },
+    {
       "id": "mob.tangud_suns",
       "name": "Тангудын Сүнс",
       "host": "HUSK",

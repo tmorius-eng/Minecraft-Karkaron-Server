@@ -95,6 +95,7 @@
       "mobs": [
         "mob.usny_lus",
         "mob.dalain_chono",
+        "mob.khentiin_chono",
         "mob.khureenii_kharuul",
         "mob.dainy_chono",
         "mob.uulyn_savdag",
@@ -116,10 +117,12 @@
       "outer": true,
       "discoveryExp": 0,
       "mobs": [
+        "mob.zuungaryn_chono",
         "mob.tangud_suns",
         "mob.balgasny_khilents",
         "mob.khureenii_kharuul",
         "mob.dainy_chono",
+        "mob.balgasny_sakhiul",
         "mob.tengeriin_kharuul"
       ]
     },
@@ -139,6 +142,7 @@
       "mobs": [
         "mob.usny_lus",
         "mob.dalain_chono",
+        "mob.altain_chono",
         "mob.khureenii_kharuul",
         "mob.uulyn_savdag",
         "mob.aguin_baavgai",
@@ -163,6 +167,7 @@
       "mobs": [
         "mob.usny_lus",
         "mob.dalain_chono",
+        "mob.taigyn_chono",
         "mob.dainy_chono",
         "mob.uulyn_savdag",
         "mob.aguin_baavgai",
