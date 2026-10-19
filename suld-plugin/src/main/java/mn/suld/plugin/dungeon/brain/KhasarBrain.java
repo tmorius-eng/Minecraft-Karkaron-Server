@@ -230,22 +230,24 @@ public final class KhasarBrain implements BossBrain {
         if (away.lengthSquared() > 1e-4) p.setVelocity(away.normalize().multiply(knock).setY(0.35 + knock * 0.1));
     }
 
-    private static List<Player> targets(LivingEntity boss, double r) {
+    private List<Player> targets(LivingEntity boss, double r) {
         return targets(boss.getLocation(), r).stream()
                 .sorted(java.util.Comparator.comparingDouble(p -> p.getLocation().distanceSquared(boss.getLocation()))).toList();
     }
 
-    private static List<Player> targets(Location at, double r) {
+    /** The players Хасар may aim at: never a spectator, a creative builder, the dead or a soul (BossTargets). */
+    private List<Player> targets(Location at, double r) {
         List<Player> out = new ArrayList<>();
         for (Player p : at.getWorld().getPlayers()) {
-            if (p.getGameMode() == org.bukkit.GameMode.SPECTATOR || p.isDead()) continue;
+            if (!mn.suld.api.dungeon.BossTargets.eligible(p.getGameMode() == org.bukkit.GameMode.SURVIVAL || p.getGameMode() == org.bukkit.GameMode.ADVENTURE,
+                    p.isDead(), services.isSoul.test(p.getUniqueId()))) continue;
             if (p.getLocation().distanceSquared(at) <= r * r) out.add(p);
         }
         return out;
     }
 
     /** Players within {@code r} blocks in front of the boss inside a {@code deg}-degree cone. */
-    private static List<Player> cone(LivingEntity boss, double r, double deg) {
+    private List<Player> cone(LivingEntity boss, double r, double deg) {
         Vector fwd = boss.getLocation().getDirection().setY(0).normalize();
         double cos = Math.cos(Math.toRadians(deg / 2));
         List<Player> out = new ArrayList<>();

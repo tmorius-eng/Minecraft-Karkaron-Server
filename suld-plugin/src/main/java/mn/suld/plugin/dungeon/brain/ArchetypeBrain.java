@@ -57,17 +57,30 @@ public final class ArchetypeBrain implements BossBrain {
 
     public enum Status { NONE, SLOW, BLIND, PULL, PUSH }
 
-    /** How a boss looks and feels when it uses its abilities. */
-    public record Flavour(String title, Set<Ability> abilities, int rgb, Particle particle, Material dust, Sound sound,
+    /** How a boss looks and feels when it uses its abilities; its name is the mob's own (content/mobs.json). */
+    public record Flavour(Set<Ability> abilities, int rgb, Particle particle, Material dust, Sound sound,
                           Status status, MobDefinition summon) {
+    }
+
+    /** The short form of a boss name for the «⚠» warnings: «Хадны Мангас — Агуйн Эзэн» → «Хадны Мангас». */
+    public static String shortTitleOf(String displayName) {
+        int cut = displayName.indexOf(" — ");
+        return cut > 0 ? displayName.substring(0, cut) : displayName;
     }
 
     private final Plugin plugin;
     private final SuldServices services;
     private final MobDefinition self;
     private final Flavour f;
+    /** The boss's name as mobs.json spells it, and its short form for the warnings (BOSS-02: never a second copy). */
+    private final String title;
+    private final String shortTitle;
     private int t;
     private int busyUntil;
+    /** The boss this brain drives right now, and whether the fight has ended: a delayed ability checks both. */
+    private LivingEntity current;
+    private boolean ended;
+    private final List<org.bukkit.scheduler.BukkitTask> pending = new ArrayList<>();
     private final int[] next = new int[Ability.values().length];
     private final List<ItemDisplay> decals = new ArrayList<>();
 
@@ -76,6 +89,8 @@ public final class ArchetypeBrain implements BossBrain {
         this.services = services;
         this.self = self;
         this.f = flavour;
+        this.title = self.displayName();
+        this.shortTitle = shortTitleOf(self.displayName());
         next[Ability.CLEAVE.ordinal()] = 3;
         next[Ability.SLAM.ordinal()] = 8;
         next[Ability.CHARGE.ordinal()] = 12;
@@ -102,6 +117,7 @@ public final class ArchetypeBrain implements BossBrain {
 
     @Override
     public void tick(LivingEntity boss, int phase, boolean enraged) {
+        current = boss;
         t++;
         if (t < busyUntil) return;
         List<Player> near = targets(boss.getLocation(), 22);
@@ -136,12 +152,15 @@ public final class ArchetypeBrain implements BossBrain {
         burst(boss.getLocation().add(0, 1, 0), 60, 1.6);
         if (phase >= 2) boss.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
         for (Player p : targets(boss.getLocation(), 28)) {
-            warn(p, Component.text(f.title() + (enraged ? " галзуурлаа!" : phase >= 2 ? " бүх хүчээ гаргалаа!" : " уурлалаа!"), NamedTextColor.DARK_RED));
+            warn(p, Component.text(title + (enraged ? " галзуурлаа!" : phase >= 2 ? " бүх хүчээ гаргалаа!" : " уурлалаа!"), NamedTextColor.DARK_RED));
         }
     }
 
     @Override
     public void end(LivingEntity boss) {
+        ended = true;
+        for (org.bukkit.scheduler.BukkitTask task : pending) task.cancel();
+        pending.clear();
         for (ItemDisplay d : decals) d.remove();
         decals.clear();
     }
@@ -184,7 +203,7 @@ public final class ArchetypeBrain implements BossBrain {
         dir.normalize();
         // the lane is drawn first: a line of dust where it will run
         for (int i = 1; i <= (int) len; i++) dust(from.clone().add(dir.clone().multiply(i)).add(0, 0.2, 0), 3);
-        warn(target, Component.text("⚠ " + f.title() + " давхиж ирж байна!", NamedTextColor.RED));
+        warn(target, Component.text("⚠ " + shortTitle + " давхиж ирж байна!", NamedTextColor.RED));
         boss.getWorld().playSound(from, Sound.ENTITY_RAVAGER_ROAR, 1.4f, 0.8f);
         double dmg = self.scaledAttack() * 1.4;
         later(20, () -> {
@@ -228,7 +247,7 @@ public final class ArchetypeBrain implements BossBrain {
         busyUntil = t + 4;
         Location c = boss.getLocation();
         telegraph(c, 7, 24);
-        for (Player p : targets(c, 9)) warn(p, Component.text("⚠ " + f.title() + " хүчээ цуглуулж байна!", NamedTextColor.GOLD));
+        for (Player p : targets(c, 9)) warn(p, Component.text("⚠ " + shortTitle + " хүчээ цуглуулж байна!", NamedTextColor.GOLD));
         double dmg = self.scaledAttack() * 0.9;
         later(24, () -> {
             if (!boss.isValid()) return;
@@ -259,7 +278,7 @@ public final class ArchetypeBrain implements BossBrain {
         long alive = boss.getWorld().getNearbyEntities(boss.getLocation(), 32, 16, 32,
                 e -> e.isValid() && e.getScoreboardTags().contains(CombatListener.SUMMON_TAG)).size();
         if (alive >= 4) return;
-        for (Player p : targets(boss.getLocation(), 28)) warn(p, Component.text(f.title() + " туслагчдаа дуудлаа!", NamedTextColor.GOLD));
+        for (Player p : targets(boss.getLocation(), 28)) warn(p, Component.text(shortTitle + " туслагчдаа дуудлаа!", NamedTextColor.GOLD));
         boss.getWorld().playSound(boss.getLocation(), f.sound(), 1.6f, 0.8f);
         for (int i = 0; i < Math.min(2, 4 - alive); i++) {
             Location l = boss.getLocation().add(i == 0 ? 3 : -3, 0, 2);
@@ -337,8 +356,18 @@ public final class ArchetypeBrain implements BossBrain {
         }
     }
 
+    /**
+     * Run {@code r} in {@code ticks}, but only while the fight is on: a slam or barrage telegraphed just before the
+     * boss fell must not land, flash or strike lightning on an empty room (BOSS-01). {@link #end} cancels the rest.
+     */
     private void later(long ticks, Runnable r) {
-        plugin.getServer().getScheduler().runTaskLater(plugin, r, ticks);
+        org.bukkit.scheduler.BukkitTask[] handle = new org.bukkit.scheduler.BukkitTask[1];
+        handle[0] = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            pending.remove(handle[0]);
+            if (ended || current == null || !current.isValid() || current.isDead()) return;
+            r.run();
+        }, ticks);
+        pending.add(handle[0]);
     }
 
     private void warn(Player p, Component message) {
@@ -358,16 +387,18 @@ public final class ArchetypeBrain implements BossBrain {
         if (knock > 0 && away.lengthSquared() > 1e-4) p.setVelocity(away.normalize().multiply(knock).setY(0.3 + knock * 0.1));
     }
 
-    private static List<Player> targets(Location at, double r) {
+    /** The players a boss may aim at: never a spectator, a creative builder, the dead or a soul (BossTargets). */
+    private List<Player> targets(Location at, double r) {
         List<Player> out = new ArrayList<>();
         for (Player p : at.getWorld().getPlayers()) {
-            if (p.getGameMode() == org.bukkit.GameMode.SPECTATOR || p.isDead()) continue;
+            if (!mn.suld.api.dungeon.BossTargets.eligible(p.getGameMode() == org.bukkit.GameMode.SURVIVAL || p.getGameMode() == org.bukkit.GameMode.ADVENTURE,
+                    p.isDead(), services.isSoul.test(p.getUniqueId()))) continue;
             if (p.getLocation().distanceSquared(at) <= r * r) out.add(p);
         }
         return out;
     }
 
-    private static List<Player> cone(LivingEntity boss, double r, double deg) {
+    private List<Player> cone(LivingEntity boss, double r, double deg) {
         Vector fwd = boss.getLocation().getDirection().setY(0).normalize();
         double cos = Math.cos(Math.toRadians(deg / 2));
         List<Player> out = new ArrayList<>();

@@ -951,48 +951,48 @@ public final class SuldPlugin extends JavaPlugin {
         var S = mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.class;
         var L = mn.suld.plugin.content.LadderContent.class;
         java.util.List<B> all = java.util.List.of(
-                new B(mn.suld.plugin.content.DungeonContent.SAND_KHAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Элсний Хаан",
+                new B(mn.suld.plugin.content.DungeonContent.SAND_KHAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, SLAM, NOVA, SUMMON}), 0xE0B060, org.bukkit.Particle.WHITE_ASH,
                         org.bukkit.Material.SAND, org.bukkit.Sound.ENTITY_HUSK_AMBIENT, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.BLIND,
                         mn.suld.plugin.content.WorldContent.SAND_SPIRIT)),
-                new B(mn.suld.plugin.content.DungeonContent.FOREST_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Ойн Эзэн",
+                new B(mn.suld.plugin.content.DungeonContent.FOREST_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, NOVA, SUMMON}), 0x4F7830, org.bukkit.Particle.SPORE_BLOSSOM_AIR,
                         org.bukkit.Material.MOSS_BLOCK, org.bukkit.Sound.ENTITY_POLAR_BEAR_WARNING, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
                         mn.suld.plugin.content.WorldContent.GREY_WOLF)),
-                new B(mn.suld.plugin.content.DungeonContent.ICE_KHAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Мөсөн Хаан",
+                new B(mn.suld.plugin.content.DungeonContent.ICE_KHAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, BARRAGE, NOVA, SUMMON}), 0x9ED2EE, org.bukkit.Particle.SNOWFLAKE,
                         org.bukkit.Material.PACKED_ICE, org.bukkit.Sound.BLOCK_GLASS_BREAK, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.SLOW,
                         mn.suld.plugin.content.WorldContent.ICE_SPIRIT)),
-                new B(mn.suld.plugin.content.LadderContent.LUS_KHAAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Лусын Хаан",
+                new B(mn.suld.plugin.content.LadderContent.LUS_KHAAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{BARRAGE, SLAM, NOVA, SUMMON}), 0x40FFE0, org.bukkit.Particle.BUBBLE_POP,
                         org.bukkit.Material.PRISMARINE, org.bukkit.Sound.ENTITY_ELDER_GUARDIAN_CURSE, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PULL,
                         mn.suld.plugin.content.LadderContent.LUS)),
-                new B(mn.suld.plugin.content.LadderContent.BLACK_GENERAL, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хар Жанжин",
+                new B(mn.suld.plugin.content.LadderContent.BLACK_GENERAL, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, SLAM, SUMMON}), 0xA01414, org.bukkit.Particle.SMOKE,
                         org.bukkit.Material.RED_SAND, org.bukkit.Sound.ENTITY_WITHER_SKELETON_AMBIENT, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.BLIND,
                         mn.suld.plugin.content.LadderContent.TANGUT_GHOST)),
-                new B(mn.suld.plugin.content.LadderContent.RED_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Улаан Хадны Ноён",
+                new B(mn.suld.plugin.content.LadderContent.RED_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, NOVA, SUMMON}), 0xD84A3C, org.bukkit.Particle.FLAME,
                         org.bukkit.Material.RED_TERRACOTTA, org.bukkit.Sound.EVENT_RAID_HORN, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
                         mn.suld.plugin.content.LadderContent.RAIDER)),
-                new B(mn.suld.plugin.content.LadderContent.MOUNTAIN_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хангай Савдаг",
+                new B(mn.suld.plugin.content.LadderContent.MOUNTAIN_LORD, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{SLAM, CHARGE, NOVA, SUMMON}), 0x7AFF6A, org.bukkit.Particle.HAPPY_VILLAGER,
                         org.bukkit.Material.STONE, org.bukkit.Sound.ENTITY_RAVAGER_ROAR, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
                         mn.suld.plugin.content.LadderContent.SAVDAG)),
-                new B(mn.suld.plugin.content.LadderContent.SKY_ENVOY, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хөх Тэнгэрийн Элч",
+                new B(mn.suld.plugin.content.LadderContent.SKY_ENVOY, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{BARRAGE, SLAM, NOVA, SUMMON}), 0x80C0FF, org.bukkit.Particle.ELECTRIC_SPARK,
                         org.bukkit.Material.LIGHT_BLUE_CONCRETE, org.bukkit.Sound.ITEM_TRIDENT_THUNDER, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.SLOW,
                         mn.suld.plugin.content.LadderContent.SKY_SOLDIER)),
-                new B(mn.suld.plugin.content.LadderContent.BANNER_GUARDIAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хөх Сүлдийн Сахиул",
+                new B(mn.suld.plugin.content.LadderContent.BANNER_GUARDIAN, new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, BARRAGE, NOVA, SUMMON}), 0x3A6AE0, org.bukkit.Particle.END_ROD,
                         org.bukkit.Material.GOLD_BLOCK, org.bukkit.Sound.ENTITY_WARDEN_SONIC_BOOM, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
                         mn.suld.plugin.content.LadderContent.PALACE_GUARD)),
                 // world bosses (docs/WORLD_BOSSES.md): the same archetypes, out in the open
-                new B(mn.suld.plugin.content.SuldContent.mobFor("mob.khuvsgul_ikh_baavgai"), new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Хөвсгөлийн Их Баавгай",
+                new B(mn.suld.plugin.content.SuldContent.mobFor("mob.khuvsgul_ikh_baavgai"), new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{CLEAVE, CHARGE, SLAM, SUMMON}), 0x6B4A2B, org.bukkit.Particle.CLOUD,
                         org.bukkit.Material.SPRUCE_LOG, org.bukkit.Sound.ENTITY_POLAR_BEAR_WARNING, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.PUSH,
                         mn.suld.plugin.content.WorldContent.GREY_WOLF)),
-                new B(mn.suld.plugin.content.SuldContent.mobFor("mob.altai_ikh_avarga"), new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour("Алтайн Их Аварга",
+                new B(mn.suld.plugin.content.SuldContent.mobFor("mob.altai_ikh_avarga"), new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Flavour(
                         set.apply(new mn.suld.plugin.dungeon.brain.ArchetypeBrain.Ability[]{SLAM, CHARGE, BARRAGE, NOVA, SUMMON}), 0x9ED2EE, org.bukkit.Particle.SNOWFLAKE,
                         org.bukkit.Material.PACKED_ICE, org.bukkit.Sound.ENTITY_RAVAGER_ROAR, mn.suld.plugin.dungeon.brain.ArchetypeBrain.Status.SLOW,
                         mn.suld.plugin.content.WorldContent.ICE_SPIRIT)));
