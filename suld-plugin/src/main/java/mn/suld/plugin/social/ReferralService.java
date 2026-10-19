@@ -210,6 +210,7 @@ public final class ReferralService implements Listener {
         PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
         if (pr == null || !p.isOnline()) return;
         pr.addCurrency(settings.inviteeCoins());
+        services.profiles().save(pr); // the row already says paid: the coins must not wait for the autosave
         services.hud().update(p, pr);
         p.sendMessage(Messages.success("✦ Урилгын шагнал: +" + settings.inviteeCoins() + " зоос. " + nameOf(r.inviter()) + " таныг авчирсанд баярлалаа!"));
         services.audit().record(AuditEvent.of(p.getName(), AuditActions.REFERRAL_PAID, p.getName(), settings.inviteeCoins() + " coins, invitee reached " + settings.rewardLevel()));
@@ -228,6 +229,7 @@ public final class ReferralService implements Listener {
             PlayerProfile pr = services.profiles().cached(inv.getUniqueId()).orElse(null);
             if (pr == null) return;
             pr.addCurrency(settings.inviterCoins());
+            services.profiles().save(pr);
             services.hud().update(inv, pr);
             inv.sendMessage(Messages.success("✦ Таны урьсан " + nameOf(r.invitee()) + " " + settings.rewardLevel() + "-р түвшинд хүрлээ: +" + settings.inviterCoins() + " зоос."));
             services.audit().record(AuditEvent.of(inv.getName(), AuditActions.REFERRAL_PAID, nameOf(r.invitee()), settings.inviterCoins() + " coins, inviter"));

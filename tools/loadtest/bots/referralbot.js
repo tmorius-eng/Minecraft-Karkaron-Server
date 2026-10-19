@@ -9,6 +9,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const cmd = (c) => execFileSync(ctl, ['cmd', c]);
 const psql = (q) => execFileSync('runuser', ['-u', 'postgres', '--', 'psql', '-d', process.env.SULD_DB || 'suldit', '-At', '-c', q], { cwd: '/tmp' }).toString().trim();
 const coins = (n) => Number(psql(`select currency from suld_profiles where name='${n}'`) || 0);
+// a payment is saved right after it is made, but the save is asynchronous: give the database a few seconds
+async function coinsSoon(n, want, ms = 12000) { for (let t = 0; t < ms; t += 500) { if (coins(n) === want) return true; await sleep(500); } return coins(n) === want; }
 const row = (n) => psql(`select (r.rewarded_at is not null)::int || ' ' || (r.inviter_paid_at is not null)::int from suld_referrals r join suld_profiles p on p.player_uuid = r.invitee_uuid where p.name='${n}'`);
 const results = [];
 const check = (ok, what, info) => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + what + ' :: ' + info); };
@@ -60,9 +62,9 @@ async function say(b, c) { b.chatLog.length = 0; b.chat(c); await sleep(1500); }
   cmd(`suld exp ${A} 200000`);
   const paidA = await saidSoon(a, 'Урилгын шагнал: +100 зоос', 40000);
   const paidB = await saidSoon(bB, 'Таны урьсан ' + A, 10000);
-  await sleep(3000);
   check(paidA && paidB, 'at the reward level both sides are told within the 20 s check', 'invitee ' + paidA + ', inviter ' + paidB);
-  check(coins(A) === a0 + 100 && coins(B) === b0 + 200, 'the coins reached the database (100 / 200)', `A ${a0} -> ${coins(A)}, B ${b0} -> ${coins(B)}`);
+  const savedA = await coinsSoon(A, a0 + 100), savedB = await coinsSoon(B, b0 + 200);
+  check(savedA && savedB, 'the coins reached the database (100 / 200)', `A ${a0} -> ${coins(A)}, B ${b0} -> ${coins(B)}`);
   check(row(A) === '1 1', 'the row says both payments were made', 'rewarded,inviterPaid = ' + row(A));
   cmd(`suld exp ${A} 200000`); await sleep(25000);
   check(coins(A) === a0 + 100 && coins(B) === b0 + 200, 'a later level-up pays nothing again', `A ${coins(A)}, B ${coins(B)}`);
@@ -77,8 +79,8 @@ async function say(b, c) { b.chatLog.length = 0; b.chat(c); await sleep(1500); }
   check(await saidSoon(d, 'Урилгын шагнал: +100 зоос', 40000) && row(D) === '1 0', 'the invitee is paid while the inviter is away; the inviter is owed', 'row ' + row(D));
   const e2 = await join(E);
   const owed = await saidSoon(e2, 'Таны урьсан ' + D, 12000);
-  await sleep(3000);
-  check(owed && coins(E) === e0 + 200 && row(D) === '1 1', 'the inviter is paid at the next login', `owed ${owed}, E ${e0} -> ${coins(E)}, row ${row(D)}`);
+  const savedE = await coinsSoon(E, e0 + 200);
+  check(owed && savedE && row(D) === '1 1', 'the inviter is paid at the next login', `owed ${owed}, E ${e0} -> ${coins(E)}, row ${row(D)}`);
 
   console.log(results.every(Boolean) ? `ALL ${results.length} PASSED` : `${results.filter(x => !x).length} FAILED`);
   a.quit(); bB.quit(); d.quit(); e2.quit();
