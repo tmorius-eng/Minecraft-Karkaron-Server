@@ -134,3 +134,19 @@ Corrections for the world team to apply. **This file does not edit the brief.**
    **Great Hall / temple**. Keep the design, but re-label it as INSPIRED by the Great Hall.
 3. **"Four turtles mark the gates"**: tourist tradition; INSPIRED.
 4. **Wall dimensions**: not re-verified in this session.
+
+## 10. Facts checked for the NPC dialogue and side quests (2026-10-20)
+
+Every «түүхэн баримт» paragraph of `content/npcs.json` was checked against these sources on 2026-10-20. A line the
+sources do not support was rewritten, not labelled down.
+
+| Claim | Verdict | Source |
+|---|---|---|
+| Rubruck reached Möngke's moving camp on 27 December 1253, had his audience on 4 January 1254, came to Karakorum with the court in spring 1254 and left in July 1254 | VERIFIED. **Correction:** the December arrival was at the camp, not the city (the dialogue said "came here") | [Wikipedia, William of Rubruck](https://en.wikipedia.org/wiki/William_of_Rubruck); [EBSCO Research Starter](https://www.ebsco.com/research-starters/biography/william-rubrouck); [Rubruck chronology, m-zharkikh.name](https://m-zharkikh.name/en/History/Articles/Rubruk/Chronology.html) |
+| The debate of Christians, Muslims and Buddhists before Möngke, May 1254 | VERIFIED | [Wikipedia, William of Rubruck](https://en.wikipedia.org/wiki/William_of_Rubruck); [Rubruck's account, U. Washington](https://depts.washington.edu/silkroad/texts/rubruck.html) |
+| The Silver Tree's four drinks: wine, caracosmos (clarified mare's milk), bal (honey drink), rice mead (terracina); four silver lions pour mare's milk; an angel with a trumpet on top | VERIFIED (primary, Rubruck) | [Rubruck's account](https://depts.washington.edu/silkroad/texts/rubruck.html); [Wikipedia, Guillaume Boucher](https://en.wikipedia.org/wiki/Guillaume_Boucher) |
+| Boucher also made an altarpiece and a portable oratory (and a wafer iron) | VERIFIED. **Correction:** "an altar" became "an altarpiece and a portable oratory" | [Amusing Planet, The Silver Tree of Karakorum](https://www.amusingplanet.com/2021/01/the-silver-tree-of-karakorum.html) (secondary, citing Rubruck) |
+| The 1237/38 silver coin with the Karakorum mint name, found in the Bonn excavations' craftsmen's quarter; the oldest contemporary mention of the city | VERIFIED (institutional). The reading "Qarah" vs "Qara" of the mint name is debated (Whaley) | [dainst.blog, Handwerker in der Stadtmitte](https://www.dainst.blog/handwerker-in-der-stadtmitte-funde); [dainst.blog, 800 Jahre Karakorum](https://dainst.blog/?p=7622); [Acta Mongolica](https://journal.num.edu.mn/actamongolica/article/view/6708/5921) |
+| Yam stations about 20–40 miles (32–64 km) apart; urgent messengers 200–300 km a day; Ögedei extended the system and its passes | VERIFIED (secondary) | [Wikipedia, Yam (route)](https://en.wikipedia.org/wiki/Yam_(route)) |
+| "The yam became an official system in 1234" | **NOT VERIFIED** — no source found for the year. Removed from the dialogue; do not use | — |
+| The Met's iron paiza with silver inlay (late 13th century, Phakpa script) opens "By the strength of Eternal Heaven" | VERIFIED (institutional) | [The Met, 1993.256](https://www.metmuseum.org/art/collection/search/39624) |

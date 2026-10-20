@@ -89,7 +89,7 @@ wallet) on its last page. A purchase charges first and gives once the coins are 
 ## History safety
 
 A «түүхэн баримт» paragraph is limited to well-attested facts: Ögedei's walls and palace (1235); the battue hunt as
-military training; safe roads and the paiza; the darkhan title; the örtöö network (1234); Мөнх Хөх Тэнгэр; Rubruck's
+military training; safe roads and the paiza; the darkhan title; the örtöö network Ögedei extended; Мөнх Хөх Тэнгэр; Rubruck's
 four gate markets and two quarters; the Bonn excavations' craftsmen's quarter and the 1237/38 coin; the 1254 debate
 of three faiths; Kül Tegin (732) and Bilge Khagan (735) on turtle bases; the decimal army. SÜLD's own story (the
 reconstruction of the city, the Blue Banner, the Silver Tree's drinks, every side quest's events) is `FICTION` and told
