@@ -15,6 +15,8 @@ move a dungeon gate, retune a region or rewrite a quest.
 | Kharkhorum's people: point, skin, name, glow, action, greetings, topics with history labels (`docs/NPC_DIALOGUE.md`) | `content/npcs.json` | `plugins/SULD/content/npcs.json` |
 | The merchants' stock: the market street's general shop and the four gate markets (material or catalog item, amount, price, minLevel) | `content/shops.json` | `plugins/SULD/content/shops.json` |
 | Side quests: giver, objective, level, classes, requirements, reward, history label (`docs/SIDE_QUESTS.md`) | `content/side_quests.json` | `plugins/SULD/content/side_quests.json` |
+| Props: the 3D models placed in the world (the Silver Tree, the stone turtles, a deer stone, a stone man), their history label and text (`PropService`) | `content/props.json` | `plugins/SULD/content/props.json` |
+| Achievements: deed, measure, target, subjects, points, basis (`docs/ACHIEVEMENTS_AND_PASS.md`) | `achievements/achievements.json` (suld-api) | — (jar only) |
 | Items, affixes, sets, loot tables | `items/*.json` (suld-api) | `plugins/SULD/items/` |
 | Skill trees (5 classes) | `skills/*.json` (suld-api) | `plugins/SULD/skills/` |
 | Game rules: EXP curve, death, economy, protection, database | `config.yml` | `plugins/SULD/config.yml` |
