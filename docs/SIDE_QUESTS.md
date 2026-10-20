@@ -85,6 +85,28 @@ concurrent claims pay it once.
 | squest.urtuu_north | Хойд Замын Өртөө | fast_travel.plaza | хүрэх `site.urtuu_north` | 13 | urtuu_south | INSPIRED |
 | squest.urtuu_west | Алтан Гэрэгийн Зам | fast_travel.plaza | хүрэх `site.urtuu_west` | 22 | urtuu_north | INSPIRED, `loot.quest.reward` |
 
+## 5b. The next fourteen (Багц 2): the class paths and the Orkhon valley
+
+| id | Гарчиг | Өгөгч | Зорилго | Lv | Анги | requires | history |
+|---|---|---|---|---|---|---|---|
+| squest.baatar_shield | Бамбайн Тангараг | quest.khotyn_noyon | дарах `mob.khangai_baavgai` ×3 | 15 | Баатар | — | FICTION |
+| squest.baatar_wall | Хэрмийн Хамгаалагч | quest.khotyn_noyon | дарах `mob.tangud_suns` ×12 | 35 | Баатар | baatar_shield | FICTION, gift |
+| squest.mergen_eye | Мэргэний Нүд | quest.first_hunt | дарах `mob.saaral_chono` ×10 | 15 | Мэргэн | — | FICTION |
+| squest.mergen_wind | Салхины Сум | quest.first_hunt | дарах `mob.balgasny_khilents` ×4 | 35 | Мэргэн | mergen_eye | FICTION, gift |
+| squest.boo_ovoo | Овооны Дуудлага | quest.ikh_boo | овоо `region.khangai` | 15 | Бөө | — | INSPIRED |
+| squest.boo_spirits | Сүнсний Зам | quest.ikh_boo | овоо `region.khuvsgul` | 35 | Бөө | boo_ovoo | INSPIRED, gift |
+| squest.darkhan_hammer | Дархны Алх | blacksmith | урлах `jewel.chonyn_soyo` | 15 | Дархан | — | FICTION |
+| squest.darkhan_gold | Алтан Гагнуур | blacksmith | урлах `jewel.altan_bugj` | 35 | Дархан | darkhan_hammer | INSPIRED, gift |
+| squest.khulegchin_ride | Урт Давхиа | quest.morton | хүрэх `region.altai` | 18 | Хүлэгчин | — | FICTION |
+| squest.khulegchin_steppe | Дарьгангын Давхиа | quest.morton | хүрэх `site.dariganga` | 35 | Хүлэгчин | khulegchin_ride | FICTION, gift |
+| squest.orkhon_khar_balgas | Хар Балгасын Хэрэм | quest.ikh_boo | хүрэх `site.khar_balgas` | 10 | — | — | INSPIRED |
+| squest.orkhon_turtle_steles | Мэлхий Суурьт Хөшөө | quest.ikh_boo | хүрэх `site.khoshoo_tsaidam` | 11 | — | orkhon_khar_balgas | INSPIRED |
+| squest.orkhon_kilns | Хархорумын Зуух | quest.ikh_boo | цуглуулах `item.tumriin_khudar` ×8 | 12 | — | orkhon_turtle_steles | VERIFIED (the kilns, KHARKHORUM.md), gift |
+| squest.orkhon_deer_stones | Буган Хөшөөний Нууц | quest.ikh_boo | үзэх `deer_stone` | 17 | — | orkhon_kilns | INSPIRED |
+
+The Orkhon stories are labelled INSPIRED: their sites' facts are not yet in the research files, so no line calls
+them history. Achievements `ach.lands.orkhon` (the four) and `ach.social.class_path` (two of a class path).
+
 The sources behind the stories are in `docs/research/history/KHARKHORUM.md` (§10, fact and source table). The items
 come from play: iron shards from salvaging commons or refining iron ore, gold dust from salvaging rare/epic gear or
 refining; `weapon.modon_sukh` is the level-3 recipe (4 wolf pelts, 3 shards).

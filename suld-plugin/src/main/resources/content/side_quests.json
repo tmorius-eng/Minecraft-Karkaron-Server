@@ -61,6 +61,90 @@
       "type": "DISCOVER_LOCATION", "target": "site.urtuu_west", "minLevel": 22, "requires": ["squest.urtuu_north"], "history": "INSPIRED", "loot": "loot.quest.reward",
       "description": "Баруун Замын Өртөөнд хүрч, өртөөний дөрвөн замыг гүйцээ.",
       "story": "Гэрэгэ буюу пайзтай элчид өртөө бүр морь, хоол өгдөг байжээ. Баруун өртөөнд хүрвэл чи өртөөний бүх замыг туулсан хүн болно — Өртөөчин чамд нэг бэлэг хадгалсан."
+    },
+    {
+      "id": "squest.baatar_shield", "title": "Бамбайн Тангараг", "giver": "quest.khotyn_noyon",
+      "type": "KILL_MOB", "target": "mob.khangai_baavgai", "count": 3, "minLevel": 15, "classes": ["BAATAR"], "history": "FICTION",
+      "description": "Хангайн баавгай 3-ыг дарж ир.",
+      "story": "Бамбайчин хүн баавгайн өмнөөс ухрахгүй. Хангайд очиж гурван баавгайтай нүүр тулж, тангарагаа нотол."
+    },
+    {
+      "id": "squest.baatar_wall", "title": "Хэрмийн Хамгаалагч", "giver": "quest.khotyn_noyon",
+      "type": "KILL_MOB", "target": "mob.tangud_suns", "count": 12, "minLevel": 35, "classes": ["BAATAR"], "requires": ["squest.baatar_shield"], "history": "FICTION", "loot": "loot.quest.reward",
+      "description": "Тангудын сүнс 12-ыг дарж ир.",
+      "story": "Тангудын сүнснүүд жингийн замыг бүсэлжээ. Хэрэм шиг зогсож, арван хоёрыг нь тараа."
+    },
+    {
+      "id": "squest.mergen_eye", "title": "Мэргэний Нүд", "giver": "quest.first_hunt",
+      "type": "KILL_MOB", "target": "mob.saaral_chono", "count": 10, "minLevel": 15, "classes": ["MERGEN"], "history": "FICTION",
+      "description": "Саарал чоно 10-ыг харвана.",
+      "story": "Мэргэн хүний нүдийг Хангайн чоно шалгадаг. Арван саарал чоныг харваад ир."
+    },
+    {
+      "id": "squest.mergen_wind", "title": "Салхины Сум", "giver": "quest.first_hunt",
+      "type": "KILL_MOB", "target": "mob.balgasny_khilents", "count": 4, "minLevel": 35, "classes": ["MERGEN"], "requires": ["squest.mergen_eye"], "history": "FICTION", "loot": "loot.quest.reward",
+      "description": "Балгасны хилэнц 4-ийг харвана.",
+      "story": "Хуучин балгасны дөрвөн аварга хилэнц салхинаас ч хурдан. Сумаа салхинд даатга."
+    },
+    {
+      "id": "squest.boo_ovoo", "title": "Овооны Дуудлага", "giver": "quest.ikh_boo",
+      "type": "OVOO_RITUAL", "target": "region.khangai", "minLevel": 15, "classes": ["BOO"], "history": "INSPIRED",
+      "description": "Хангайн овоо тахи.",
+      "story": "Овоог нар зөв гурвантаа тойрох ёс өнөө ч амьд. Хангайн нэг овоонд очиж тахиад ир — адислал нь SÜLD-ийн домог."
+    },
+    {
+      "id": "squest.boo_spirits", "title": "Сүнсний Зам", "giver": "quest.ikh_boo",
+      "type": "OVOO_RITUAL", "target": "region.khuvsgul", "minLevel": 35, "classes": ["BOO"], "requires": ["squest.boo_ovoo"], "history": "INSPIRED", "loot": "loot.quest.reward",
+      "description": "Хөвсгөлийн тайгын овоо тахи.",
+      "story": "Хойд тайгын овоонд ч мөн ёсоор тахил өргө. Сүнсний зам тэндээс эхэлдэг гэж бөө нар ярьдаг."
+    },
+    {
+      "id": "squest.darkhan_hammer", "title": "Дархны Алх", "giver": "blacksmith",
+      "type": "CRAFT_ITEM", "target": "jewel.chonyn_soyo", "minLevel": 15, "classes": ["DARKHAN"], "history": "FICTION",
+      "description": "Чонын Соёо зүүлт урла.",
+      "story": "Шавь хүн анхны бүтээлээ багшдаа үзүүлдэг. Чонын соёогоор зүүлт урлаад надад үзүүл."
+    },
+    {
+      "id": "squest.darkhan_gold", "title": "Алтан Гагнуур", "giver": "blacksmith",
+      "type": "CRAFT_ITEM", "target": "jewel.altan_bugj", "minLevel": 35, "classes": ["DARKHAN"], "requires": ["squest.darkhan_hammer"], "history": "INSPIRED", "loot": "loot.quest.reward",
+      "description": "Алтан бугуйвч урла.",
+      "story": "Хуучин урланд дуусаагүй алтан бугуйвч орхигдсон байсан гэдэг. Чи өөрийнхөө бугуйвчийг эцэслэн дуусга."
+    },
+    {
+      "id": "squest.khulegchin_ride", "title": "Урт Давхиа", "giver": "quest.morton",
+      "type": "DISCOVER_LOCATION", "target": "region.altai", "minLevel": 18, "classes": ["KHULEGCHIN"], "history": "FICTION",
+      "description": "Отгонтэнгэрийн оргилд хүр.",
+      "story": "Айраг исэхээс өмнө баруун оргилд хүрч буцах — хүлэгчний анхны сорил."
+    },
+    {
+      "id": "squest.khulegchin_steppe", "title": "Дарьгангын Давхиа", "giver": "quest.morton",
+      "type": "DISCOVER_LOCATION", "target": "site.dariganga", "minLevel": 35, "classes": ["KHULEGCHIN"], "requires": ["squest.khulegchin_ride"], "history": "FICTION", "loot": "loot.quest.reward",
+      "description": "Дарьгангын хүн чулуунд хүр.",
+      "story": "Зүүн өмнөд талын хүн чулуу хүртэлх урт давхиа. Морь, хүн хоёулаа тэсвэл жинхэнэ хүлэгчин."
+    },
+    {
+      "id": "squest.orkhon_khar_balgas", "title": "Хар Балгасын Хэрэм", "giver": "quest.ikh_boo",
+      "type": "DISCOVER_LOCATION", "target": "site.khar_balgas", "minLevel": 10, "history": "INSPIRED",
+      "description": "Хар Балгасын туурьд оч.",
+      "story": "Орхоны хөндийн дээд хэсэгт эртний хотын шавар хэрэм бий. Түүнийг өөрийн нүдээр харж ир."
+    },
+    {
+      "id": "squest.orkhon_turtle_steles", "title": "Мэлхий Суурьт Хөшөө", "giver": "quest.ikh_boo",
+      "type": "DISCOVER_LOCATION", "target": "site.khoshoo_tsaidam", "minLevel": 11, "requires": ["squest.orkhon_khar_balgas"], "history": "INSPIRED",
+      "description": "Хөшөө Цайдамд оч.",
+      "story": "Хөшөө Цайдамд чулуун яст мэлхий суурьтай бичээст хөшөөнүүд бий. Тэдгээрийн өмнө очиж зогс."
+    },
+    {
+      "id": "squest.orkhon_kilns", "title": "Хархорумын Зуух", "giver": "quest.ikh_boo",
+      "type": "COLLECT_ITEM", "target": "item.tumriin_khudar", "count": 8, "minLevel": 12, "requires": ["squest.orkhon_turtle_steles"], "history": "VERIFIED", "loot": "loot.quest.reward",
+      "description": "Төмрийн хүдэр 8-ыг авчир.",
+      "story": "Их танхимын баруун өмнөд зууханд дээврийн ваар, тоосго, луун толгойт чимэглэл шатаадаг байсан. Шинэ зуухны тор хийх төмрийн хүдэр авчир."
+    },
+    {
+      "id": "squest.orkhon_deer_stones", "title": "Буган Хөшөөний Нууц", "giver": "quest.ikh_boo",
+      "type": "INSPECT_CLUE", "target": "deer_stone", "minLevel": 17, "requires": ["squest.orkhon_kilns"], "history": "INSPIRED",
+      "description": "Буган хөшөөг үз.",
+      "story": "Нисэх мэт дүрсэлсэн бугатай чулуун хөшөөнүүд хойд нутагт бий. Нэгийг нь ойроос харж, хээг нь цээжлээд ир."
     }
   ]
 }

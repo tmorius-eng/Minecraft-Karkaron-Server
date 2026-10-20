@@ -623,6 +623,50 @@
    },
    "points": 300,
    "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.lands.orkhon",
+   "category": "LANDS",
+   "name": "Орхоны хөндийн судлаач",
+   "description": "Орхоны дөрвөн нэмэлт эрлийг бүгдийг тушаах.",
+   "criterion": {
+    "deed": "SIDE_QUEST",
+    "measure": "DISTINCT",
+    "target": 4,
+    "subjects": [
+     "squest.orkhon_khar_balgas",
+     "squest.orkhon_turtle_steles",
+     "squest.orkhon_kilns",
+     "squest.orkhon_deer_stones"
+    ]
+   },
+   "points": 400,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.social.class_path",
+   "category": "SOCIAL",
+   "name": "Ангийн зам",
+   "description": "Өөрийн ангийн хоёр нэмэлт эрлийг тушаах.",
+   "criterion": {
+    "deed": "SIDE_QUEST",
+    "measure": "DISTINCT",
+    "target": 2,
+    "subjects": [
+     "squest.baatar_shield",
+     "squest.baatar_wall",
+     "squest.mergen_eye",
+     "squest.mergen_wind",
+     "squest.boo_ovoo",
+     "squest.boo_spirits",
+     "squest.darkhan_hammer",
+     "squest.darkhan_gold",
+     "squest.khulegchin_ride",
+     "squest.khulegchin_steppe"
+    ]
+   },
+   "points": 300,
+   "basis": "INSPIRED"
   }
  ]
 }
