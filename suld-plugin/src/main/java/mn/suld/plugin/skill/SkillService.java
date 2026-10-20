@@ -979,13 +979,22 @@ public final class SkillService implements Listener {
     }
 
     /**
-     * SKILL-01: a spell obeys the same level suppression as a hit — −4 % per level the mob stands above the caster,
-     * floor 40 % ({@link mn.suld.api.balance.CombatRules#gapDealt}); the simulator counts the gap on all DPS, spells
-     * included (sim Engine). Mastery points, crits and Тэнгэрийн Зэрэг VI stay with basic hits, as documented.
-     * A target without a content definition (a training Warden, the Academy's dummy, a player) takes the full amount.
+     * What a spell's or an ultimate's damage is multiplied by against {@code target}. SKILL-01: against a SÜLD mob, the
+     * same level suppression as a hit — −4 % per level the mob stands above the caster, floor 40 %
+     * ({@link mn.suld.api.balance.CombatRules#gapDealt}); the simulator counts the gap on all DPS, spells included (sim
+     * Engine). PVP-01: against a player (only ever reached in a consented fight, {@link #hostile}) the PvP scalar, as a
+     * basic hit gets it in {@code CombatListener.onHit0}. Mastery points, crits and Тэнгэрийн Зэрэг VI stay with basic
+     * hits, as documented. Any other target (a training Warden, the Academy's dummy) takes the full amount.
      */
     private double gapOf(Player p, LivingEntity target) {
-        return services.mobs().definition(target).map(d -> mn.suld.api.balance.CombatRules.gapDealt(d.level() - levelOf(p))).orElse(1.0);
+        Integer mobLevel = target instanceof Player ? null : services.mobs().definition(target).map(d -> d.level()).orElse(null);
+        return spellScale(target instanceof Player, mobLevel, levelOf(p));
+    }
+
+    /** Pure: the spell multiplier for a player target (PvP scalar), a SÜLD mob of {@code mobLevel} (level gap), else 1. */
+    static double spellScale(boolean playerTarget, Integer mobLevel, int casterLevel) {
+        if (playerTarget) return mn.suld.api.balance.CombatRules.PVP_SCALAR;
+        return mobLevel == null ? 1.0 : mn.suld.api.balance.CombatRules.gapDealt(mobLevel - casterLevel);
     }
 
     /** Enemies whose body (the centre of their hitbox, not their feet) is within {@code r} of a point on a ray. */
