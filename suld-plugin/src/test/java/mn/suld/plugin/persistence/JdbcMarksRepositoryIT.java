@@ -35,6 +35,7 @@ class JdbcMarksRepositoryIT {
         repo.putAll(List.of(new Mark(p, MarkKind.SITE_SEEN, "site.aurag", 2000, 2000),
                 new Mark(p, MarkKind.OVOO_DAY, "area.kherlen_steppe", 20000, 2000))).join();
         repo.put(new Mark(p, MarkKind.OVOO_DAY, "area.kherlen_steppe", 20001, 3000)).join(); // the next day replaces
+        repo.put(new Mark(p, MarkKind.TREE_DRINK, "bal", 20001, 3000)).join(); // V33: the PostgreSQL CHECK takes it
         Map<MarkKind, Map<String, Long>> all = repo.load(p).join();
         assertEquals(Map.of("dungeon.khasar_den", 1000L), all.get(MarkKind.DUNGEON_CLEAR));
         assertEquals(Map.of("site.aurag", 2000L), all.get(MarkKind.SITE_SEEN));

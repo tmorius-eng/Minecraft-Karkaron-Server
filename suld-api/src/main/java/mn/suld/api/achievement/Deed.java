@@ -47,7 +47,9 @@ public enum Deed {
     /** A daily task finished (a count). */
     DAILY_TASK(Keep.COUNT),
     /** A side quest handed in (subject: the side quest id; docs/SIDE_QUESTS.md). */
-    SIDE_QUEST(Keep.SEEN);
+    SIDE_QUEST(Keep.SEEN),
+    /** A drink at the Silver Tree (subject: the drink id; docs/world/OVOO.md §Мөнгөн Модны Найр). */
+    TREE_DRINK(Keep.SEEN);
 
     /** How a deed's value is kept. */
     public enum Keep {

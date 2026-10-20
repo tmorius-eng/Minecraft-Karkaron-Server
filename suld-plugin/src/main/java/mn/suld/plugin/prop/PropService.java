@@ -299,7 +299,11 @@ public final class PropService implements Listener {
         // an INSPECT_CLUE chapter on this prop is done by looking at it (audit 2026-10-14)
         org.bukkit.entity.Player pl = e.getPlayer();
         services.profiles().cached(pl.getUniqueId()).ifPresent(pr -> services.quests().onInspect(pl, pr, id));
+        onUse.accept(pl, id);
     }
+
+    /** Told every right-click on a prop after its text (the Silver Tree's feast opens from it; SuldPlugin sets it). */
+    public volatile java.util.function.BiConsumer<org.bukkit.entity.Player, String> onUse = (p, id) -> { };
 
     /** Prop id -> display name, for the quest book (filled when props.json is read). */
     private static final Map<String, String> NAMES = new java.util.concurrent.ConcurrentHashMap<>();
@@ -362,6 +366,17 @@ public final class PropService implements Listener {
         if (bs != null) for (org.bukkit.block.Block b : bs) if (b.getType() == Material.BARRIER) b.setType(Material.AIR, false);
         solidDone.remove(index);
         plugin.getLogger().info("[props] dynamic place of " + key + " removed");
+    }
+
+    /** The first place of this prop itself: its column, on the ground (a rite's reach is measured from it), or null. */
+    public Location anchor(String id) {
+        World w = Bukkit.getWorlds().get(0);
+        for (Place p : places) {
+            if (!p.prop().id().equals(id)) continue;
+            int[] col = column(w, p);
+            return col == null ? null : new Location(w, col[0] + 0.5, ground(w, col[0], col[1]) + 1, col[1] + 0.5);
+        }
+        return null;
     }
 
     /** Where the first place of this prop stands (for /suld props tp), or null. */

@@ -30,3 +30,23 @@ stone. This custom is VERIFIED as a living tradition. SÜLD's ovoo and their ble
 * **Cost:** every 10 ticks, distance checks of the players near loaded ovoo only.
 
 MANUAL_QA_REQUIRED in a real client: the look of the cairn on varied terrain.
+
+## Мөнгөн Модны Найр (the Silver Tree's feast)
+
+Right-clicking the Silver Tree of the palace square (prop `silver_tree`) opens its page: Rubruck's account of the tree
+(four silver lions pouring mare's milk, four gilded serpents pouring wine, caracosmos, bal and rice mead —
+`docs/research/history/KHARKHORUM.md` §5, history) and the feast, which is SÜLD's own rite. Once a day (the same day
+as the ovoo's) a player with a class, alive, within 8 blocks of the tree takes one drink for 20 minutes:
+
+| Drink | id | Boost (`TimedBoosts` kind) |
+|---|---|---|
+| Дарс | `wine` | damage +3 % (DAMAGE: basic hits, spells, procs and ultimates) |
+| Хар айраг | `caracosmos` | EXP +5 % (EXP: the strongest source counts, so it does not stack with an ovoo's blessing) |
+| Бал | `bal` | damage taken −10 % (MITIGATION, under the skill tree's 75 % cap) |
+| Будааны дарс | `rice_mead` | loot luck +5 (LOOT) |
+
+Order as the ovoo: the day, the drink and its end go into the player file, the file is written, then the boost starts;
+a join puts back a drink still running, and a drink still running past midnight must end before the next one. The
+reach is measured from the tree's own column. Boosts are not counted for the training yard's stand-in. The mark `TREE_DRINK` (V33) mirrors it in `suld_player_marks`. Achievement
+`ach.lands.four_drinks` (all four). Staff: `/suld tree <player> drink <id>|status|reset` (audit `rite.silver_tree`).
+The training yard's stand-in cannot drink. MANUAL_QA_REQUIRED: the page in a real client.

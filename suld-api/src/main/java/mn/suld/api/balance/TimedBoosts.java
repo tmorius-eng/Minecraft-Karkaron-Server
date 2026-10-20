@@ -11,7 +11,10 @@ import java.util.Map;
  */
 public final class TimedBoosts {
 
-    /** What a boost raises: EXP gained, damage dealt, damage taken off (share), loot luck (percent points). */
+    /**
+     * What a boost raises, and its unit: EXP gained, damage dealt and damage taken off as fractions (0.05 = 5 %), loot
+     * luck in percent points (5 = +5, LootContext.lootBonus).
+     */
     public enum Kind { EXP, DAMAGE, MITIGATION, LOOT }
 
     private record Boost(long until, double bonus) {
@@ -19,7 +22,7 @@ public final class TimedBoosts {
 
     private final Map<Kind, Map<String, Boost>> boosts = new EnumMap<>(Kind.class);
 
-    /** Sets {@code source}'s boost of {@code kind} until {@code untilMillis} (a bonus ≤ 0 or a past time removes it). */
+    /** Sets {@code source}'s boost of {@code kind} until {@code untilMillis} (a bonus ≤ 0 removes it). */
     public synchronized void put(Kind kind, String source, long untilMillis, double bonus) {
         if (bonus <= 0) {
             Map<String, Boost> of = boosts.get(kind);
@@ -44,11 +47,5 @@ public final class TimedBoosts {
         Map<String, Boost> of = boosts.get(kind);
         Boost b = of == null ? null : of.get(source);
         return b == null || now >= b.until() ? 0 : b.until();
-    }
-
-    /** Whether no boost is live at {@code now}. */
-    public synchronized boolean isEmpty(long now) {
-        for (Kind k : Kind.values()) if (strongest(k, now) > 0) return false;
-        return true;
     }
 }

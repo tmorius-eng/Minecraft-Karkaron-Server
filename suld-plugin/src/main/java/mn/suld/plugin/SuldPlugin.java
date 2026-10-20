@@ -557,6 +557,12 @@ public final class SuldPlugin extends JavaPlugin {
         props = new mn.suld.plugin.prop.PropService(this, services);
         props.start();
         services.props = props;
+        // «Мөнгөн Модны Найр» (docs/world/OVOO.md): one drink a day at the Silver Tree, a running one put back at the join
+        silverTree = new mn.suld.plugin.prop.SilverTreeRite(this, services, props);
+        getServer().getPluginManager().registerEvents(silverTree, this);
+        props.onUse = (pl, id) -> {
+            if (mn.suld.plugin.prop.SilverTreeRite.PROP.equals(id)) silverTree.open(pl);
+        };
         services.npcs = npcs;
         // Их Хуралдай, the week's campaign and the chronicle (docs/KHURALDAI.md): after the city, props and NPCs, so a
         // restored world effect has something to attach to
@@ -926,6 +932,13 @@ public final class SuldPlugin extends JavaPlugin {
     /** The GrimAC bridge (inactive when GrimAC is not installed). */
     public mn.suld.plugin.anticheat.GrimBridge grim() {
         return grim;
+    }
+
+    private mn.suld.plugin.prop.SilverTreeRite silverTree;
+
+    /** «Мөнгөн Модны Найр» (docs/world/OVOO.md). */
+    public mn.suld.plugin.prop.SilverTreeRite silverTree() {
+        return silverTree;
     }
 
     /** The 3D props (Meshy models) placed in the world. */

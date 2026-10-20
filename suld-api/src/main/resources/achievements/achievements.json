@@ -604,6 +604,25 @@
    },
    "points": 400,
    "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.lands.four_drinks",
+   "category": "LANDS",
+   "name": "Дөрвөн ундаа",
+   "description": "Мөнгөн модны дөрвөн ундааг бүгдийг хүртэх (дарс, хар айраг, бал, будааны дарс).",
+   "criterion": {
+    "deed": "TREE_DRINK",
+    "measure": "DISTINCT",
+    "target": 4,
+    "subjects": [
+     "wine",
+     "caracosmos",
+     "bal",
+     "rice_mead"
+    ]
+   },
+   "points": 300,
+   "basis": "INSPIRED"
   }
  ]
 }

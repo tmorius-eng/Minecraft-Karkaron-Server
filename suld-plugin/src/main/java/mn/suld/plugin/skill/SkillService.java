@@ -606,7 +606,13 @@ public final class SkillService implements Listener {
     /** The damage factor of {@code s} for this player now: spell × modifiers × spell damage × rank (0 for a spell without damage). */
     public double powerOf(Player p, Spell s) {
         SkillBuild b = buildOf(p);
-        return s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p) * rankPower(p, s);
+        return s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p) * rankPower(p, s)
+                * damageBoost(p);
+    }
+
+    /** A timed damage boost (the Silver Tree's wine), the same on every spell path. */
+    private double damageBoost(Player p) {
+        return 1 + services.boosts().bonus(p.getUniqueId(), mn.suld.api.balance.TimedBoosts.Kind.DAMAGE);
     }
 
     private CastResult castDirect0(Player p, Spell s, boolean ignoreTiming) {
@@ -912,8 +918,7 @@ public final class SkillService implements Listener {
         boolean fresh = cast != null && snap != null && System.currentTimeMillis() - cast < 5_000;
         SkillBuild b = buildOf(p);
         double mult = s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p)
-                * rankPower(p, s) * gapOf(p, target)
-                * (1 + services.boosts().bonus(p.getUniqueId(), mn.suld.api.balance.TimedBoosts.Kind.DAMAGE)); // a timed boost (the Silver Tree)
+                * rankPower(p, s) * gapOf(p, target) * damageBoost(p);
         double dmg = (fresh ? snap : CombatListener.attackOf(services, p)) * mult;
         mn.suld.plugin.combat.HitSource.run(mn.suld.plugin.combat.HitSource.spell(s), () -> CombatListener.asSpell(() -> target.damage(dmg, p)));
         riders(p, target, s);
@@ -975,7 +980,7 @@ public final class SkillService implements Listener {
      */
     public void damage(Player p, LivingEntity target, double amount) {
         if (!target.isValid()) return;
-        double dmg = amount * gapOf(p, target);
+        double dmg = amount * gapOf(p, target) * damageBoost(p);
         CombatListener.asSpell(() -> target.damage(dmg, p));
     }
 

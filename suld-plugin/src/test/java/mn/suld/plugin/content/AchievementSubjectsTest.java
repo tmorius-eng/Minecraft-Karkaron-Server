@@ -26,7 +26,8 @@ class AchievementSubjectsTest {
         Map<Deed, Set<String>> known = Map.of(
                 Deed.CHAPTER, pack.chapters().stream().map(QuestDefinition::id).collect(Collectors.toSet()),
                 Deed.SITE, pack.historicSites().stream().map(HistoricSite::id).collect(Collectors.toSet()),
-                Deed.SIDE_QUEST, pack.sideQuests().stream().map(SideQuestDefinition::id).collect(Collectors.toSet()));
+                Deed.SIDE_QUEST, pack.sideQuests().stream().map(SideQuestDefinition::id).collect(Collectors.toSet()),
+                Deed.TREE_DRINK, java.util.Arrays.stream(mn.suld.plugin.prop.SilverTreeRite.Drink.values()).map(x -> x.id).collect(Collectors.toSet()));
         AchievementCatalog.Result r = AchievementCatalog.bundled();
         assertTrue(r.ok(), r.issues().toString());
         int checked = 0;

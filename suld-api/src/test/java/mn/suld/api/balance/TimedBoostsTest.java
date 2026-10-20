@@ -25,8 +25,7 @@ class TimedBoostsTest {
         assertEquals(0.02, b.strongest(TimedBoosts.Kind.DAMAGE, 0), 1e-9);
         assertEquals(5_000, b.until(TimedBoosts.Kind.DAMAGE, "tree", 0));
         assertEquals(0, b.until(TimedBoosts.Kind.DAMAGE, "ovoo", 0));
-        assertFalse(b.isEmpty(4_999));
         b.put(TimedBoosts.Kind.DAMAGE, "tree", 9_000, 0);
-        assertTrue(b.isEmpty(0), "a zero bonus removes the source");
+        assertEquals(0, b.strongest(TimedBoosts.Kind.DAMAGE, 0), 1e-9, "a zero bonus removes the source");
     }
 }

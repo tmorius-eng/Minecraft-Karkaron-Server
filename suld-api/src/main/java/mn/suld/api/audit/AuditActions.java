@@ -46,4 +46,6 @@ public final class AuditActions {
     public static final String SIDE_QUEST_COMPLETE = "squest.complete";
     /** Staff changed a player's side quest (/suld squest): actor = the sender, target = player:quest, detail = the action. */
     public static final String SIDE_QUEST_ADMIN = "squest.admin";
+    /** Staff: /suld tree (a Silver Tree drink given, read or reset). */
+    public static final String SILVER_TREE_ADMIN = "rite.silver_tree";
 }

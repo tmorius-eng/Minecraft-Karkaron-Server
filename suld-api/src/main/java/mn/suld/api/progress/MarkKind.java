@@ -12,7 +12,9 @@ public enum MarkKind {
     /** key = historic site id, value = epoch millis of the first visit. */
     SITE_SEEN,
     /** key = ovoo (area) id, value = the epoch day (server zone) of the last blessing. */
-    OVOO_DAY;
+    OVOO_DAY,
+    /** key = the Silver Tree drink id, value = the epoch day (server zone) it was last drunk (V33). */
+    TREE_DRINK;
 
     public static MarkKind parse(String s) {
         for (MarkKind k : values()) if (k.name().equalsIgnoreCase(s)) return k;

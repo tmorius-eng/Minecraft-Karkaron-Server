@@ -63,7 +63,8 @@ public final class SchemaMigrator {
             new Migration(29, "payments", "V29__payments.sql"),
             new Migration(30, "profile_name_lookup", "V30__profile_name_lookup.sql"),
             new Migration(31, "referrals", "V31__referrals.sql"),
-            new Migration(32, "side_quests", "V32__side_quests.sql")
+            new Migration(32, "side_quests", "V32__side_quests.sql"),
+            new Migration(33, "tree_drink_mark", "V33__tree_drink_mark.sql")
     );
 
     /** Highest schema version this build knows (tests and diagnostics). */

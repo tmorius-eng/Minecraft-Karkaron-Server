@@ -33,10 +33,14 @@ public final class ProgressionBoosts {
         blessings.computeIfAbsent(player, k -> new TimedBoosts()).put(kind, source, untilMillis, bonus);
     }
 
-    /** The strongest live boost of {@code kind} (a fraction; LOOT in percent points), or 0. */
+    /**
+     * The strongest live boost of {@code kind} (a fraction; LOOT in percent points), or 0; always 0 for the training
+     * yard's stand-in, whose numbers measure the build alone.
+     */
     public double bonus(UUID player, TimedBoosts.Kind kind) {
         TimedBoosts b = blessings.get(player);
-        return b == null ? 0 : b.strongest(kind, System.currentTimeMillis());
+        if (b == null || services.profiles().cached(player).map(mn.suld.api.profile.PlayerProfile::ephemeral).orElse(false)) return 0;
+        return b.strongest(kind, System.currentTimeMillis());
     }
 
     /** When {@code source}'s boost of {@code kind} ends (0: none live). */

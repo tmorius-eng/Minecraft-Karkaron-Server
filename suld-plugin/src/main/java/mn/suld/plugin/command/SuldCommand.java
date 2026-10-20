@@ -52,6 +52,13 @@ public final class SuldCommand implements CommandExecutor {
             case "profession" -> profession(sender, args);
             case "achievement" -> achievement(sender, args);
             case "squest" -> sideQuest(sender, args);
+            case "tree" -> {
+                var rite = ((mn.suld.plugin.SuldPlugin) plugin).silverTree();
+                Player t = args.length > 2 ? Bukkit.getPlayerExact(args[1]) : null;
+                if (!sender.hasPermission("suld.admin")) sender.sendMessage(Messages.error("Эрх алга."));
+                else if (rite == null || t == null) sender.sendMessage(Messages.error("/suld tree <онлайн тоглогч> drink <id> | status | reset"));
+                else rite.admin(sender, t, args[2].toLowerCase(java.util.Locale.ROOT), args.length > 3 ? args[3] : null);
+            }
             case "payment" -> payment(sender, args);
             case "gather" -> gather(sender, args);
             case "heroic" -> heroic(sender, args);
@@ -413,6 +420,7 @@ public final class SuldCommand implements CommandExecutor {
             sender.sendMessage(Messages.info("/suld exp <тоглогч> <EXP> — EXP олгох"));
             sender.sendMessage(Messages.info("/suld coins <тоглогч> <±тоо> — зоос нэмэх/хасах"));
             sender.sendMessage(Messages.info("/suld squest <тоглогч> [accept|ready|done|reset <squest.id>] — нэмэлт эрэл"));
+            sender.sendMessage(Messages.info("/suld tree <тоглогч> drink <id>|status|reset — Мөнгөн модны ундаа"));
             sender.sendMessage(Messages.info("/suld quest <тоглогч> <1..18|reset> — эрлийн бүлэг"));
             sender.sendMessage(Messages.info("/suld holograms reload|list|rebuild — hologram-ууд (content/holograms.json)"));
             sender.sendMessage(Messages.info("/suld content validate|export — тоглоомын агуулгын файлууд (моб, бүс, dungeon, эрэл)"));

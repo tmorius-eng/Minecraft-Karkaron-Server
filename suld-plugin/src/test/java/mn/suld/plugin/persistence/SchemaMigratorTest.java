@@ -74,11 +74,19 @@ class SchemaMigratorTest {
     }
 
     @Test
-    void v32SideQuestsIsTheLatestOneTableAndOneIndexOnPostgres() {
-        assertEquals(32, SchemaMigrator.latestVersion());
+    void v32SideQuestsIsOneTableAndOneIndexOnPostgres() {
         String pg = resource("db/migration/postgresql/V32__side_quests.sql");
         assertEquals(2, SchemaMigrator.splitStatements(pg).size());
         org.junit.jupiter.api.Assertions.assertTrue(pg.contains("CHECK (state IN ('ACTIVE', 'DONE'))"), "PostgreSQL keeps the two states");
         assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V32__side_quests.sql")).size(), "the index is inside the CREATE TABLE");
+    }
+
+    @Test
+    void v33IsTheLatestAndAddsTheTreeDrinkToThePostgresCheck() {
+        assertEquals(33, SchemaMigrator.latestVersion());
+        String pg = resource("db/migration/postgresql/V33__tree_drink_mark.sql");
+        assertEquals(2, SchemaMigrator.splitStatements(pg).size());
+        org.junit.jupiter.api.Assertions.assertTrue(pg.contains("'OVOO_DAY', 'TREE_DRINK'"), "the old kinds stay, the new one joins");
+        assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V33__tree_drink_mark.sql")).size(), "MySQL keeps no CHECK");
     }
 }

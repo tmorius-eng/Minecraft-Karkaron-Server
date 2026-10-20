@@ -66,4 +66,6 @@ public final class AnalyticsEventType {
     public static final String SIDE_QUEST_ACCEPT = "side_quest_accept";
     public static final String SIDE_QUEST_COMPLETE = "side_quest_complete";
     public static final String SIDE_QUEST_ABANDON = "side_quest_abandon";
+    /** One of the four drinks at the Silver Tree (data: drink). */
+    public static final String SILVER_TREE_DRINK = "silver_tree_drink";
 }
