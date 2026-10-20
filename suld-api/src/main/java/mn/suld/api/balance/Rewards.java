@@ -51,6 +51,18 @@ public final class Rewards {
         return Math.round(0.35 * Balance.need(c, chapterLevel));
     }
 
+    /**
+     * A side quest handed in (docs/SIDE_QUESTS.md): 12 % of a level at its minimum level, between a daily task (4 %)
+     * and a story chapter (35 %): a side road, never the way to level.
+     */
+    public static long sideQuestExp(LevelCurve c, int minLevel) {
+        return Math.round(0.12 * Balance.need(c, minLevel));
+    }
+
+    public static long sideQuestCoins(int minLevel) {
+        return 30 + 6L * Math.max(1, minLevel);
+    }
+
     /** A world event's payout per participant: 2 % of a level. */
     public static long worldEventExp(LevelCurve c, int level) {
         return Math.round(0.02 * Balance.need(c, level));

@@ -61,7 +61,6 @@ class SchemaMigratorTest {
 
     @Test
     void v30NameLookupIsOneIndexPerDialect() {
-        assertEquals(31, SchemaMigrator.latestVersion());
         assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V30__profile_name_lookup.sql")).size());
         String pg = resource("db/migration/postgresql/V30__profile_name_lookup.sql");
         assertEquals(1, SchemaMigrator.splitStatements(pg).size());
@@ -72,5 +71,14 @@ class SchemaMigratorTest {
     void v31ReferralsIsOneTableAndOneIndexOnPostgresOneStatementOnMysql() {
         assertEquals(2, SchemaMigrator.splitStatements(resource("db/migration/postgresql/V31__referrals.sql")).size());
         assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V31__referrals.sql")).size(), "the index is inside the CREATE TABLE");
+    }
+
+    @Test
+    void v32SideQuestsIsTheLatestOneTableAndOneIndexOnPostgres() {
+        assertEquals(32, SchemaMigrator.latestVersion());
+        String pg = resource("db/migration/postgresql/V32__side_quests.sql");
+        assertEquals(2, SchemaMigrator.splitStatements(pg).size());
+        org.junit.jupiter.api.Assertions.assertTrue(pg.contains("CHECK (state IN ('ACTIVE', 'DONE'))"), "PostgreSQL keeps the two states");
+        assertEquals(1, SchemaMigrator.splitStatements(resource("db/migration/mysql/V32__side_quests.sql")).size(), "the index is inside the CREATE TABLE");
     }
 }
