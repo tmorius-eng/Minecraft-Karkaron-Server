@@ -18,8 +18,10 @@ import java.util.concurrent.Executor;
 
 /**
  * Side quests over the V32 table (docs/SIDE_QUESTS.md). A take is an INSERT the primary key refuses twice; the hand-in
- * is {@code UPDATE … SET state = 'DONE' WHERE state = 'ACTIVE'}, so under any number of concurrent clicks a reward is
- * paid once. Every call runs on the executor, never on the server thread.
+ * is {@code UPDATE … SET state = 'DONE' WHERE state = 'ACTIVE'}, and the payment claims the reward with
+ * {@code UPDATE … SET paid_at = ? WHERE paid_at = 0}, so under any number of concurrent clicks a reward is paid once,
+ * and a player who left before it was paid is paid at the next load. Every call runs on the executor, never on the
+ * server thread.
  */
 public final class JdbcSideQuestRepository implements SideQuestRepository {
 
@@ -37,7 +39,7 @@ public final class JdbcSideQuestRepository implements SideQuestRepository {
     public CompletableFuture<Map<String, SideQuestRecord>> load(UUID player) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection c = dataSource.getConnection();
-                 PreparedStatement ps = c.prepareStatement("SELECT quest_id, state, progress, started_at, completed_at FROM suld_side_quests"
+                 PreparedStatement ps = c.prepareStatement("SELECT quest_id, state, progress, started_at, completed_at, paid_at FROM suld_side_quests"
                          + " WHERE player_uuid = ? ORDER BY started_at, quest_id")) {
                 bindUuid(ps, 1, player);
                 Map<String, SideQuestRecord> out = new LinkedHashMap<>();
@@ -49,7 +51,7 @@ public final class JdbcSideQuestRepository implements SideQuestRepository {
                         } catch (IllegalArgumentException unknown) {
                             continue; // a state this build does not know (MySQL keeps no CHECK): never guessed
                         }
-                        out.put(rs.getString(1), new SideQuestRecord(rs.getString(1), st, rs.getInt(3), rs.getLong(4), rs.getLong(5)));
+                        out.put(rs.getString(1), new SideQuestRecord(rs.getString(1), st, rs.getInt(3), rs.getLong(4), rs.getLong(5), rs.getLong(6)));
                     }
                 }
                 return out;
@@ -63,8 +65,8 @@ public final class JdbcSideQuestRepository implements SideQuestRepository {
     public CompletableFuture<Boolean> start(UUID player, String questId, long now) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection c = dataSource.getConnection();
-                 PreparedStatement ps = c.prepareStatement("INSERT INTO suld_side_quests (player_uuid, quest_id, state, progress, started_at, completed_at)"
-                         + " VALUES (?, ?, 'ACTIVE', 0, ?, 0)")) {
+                 PreparedStatement ps = c.prepareStatement("INSERT INTO suld_side_quests (player_uuid, quest_id, state, progress, started_at, completed_at, paid_at)"
+                         + " VALUES (?, ?, 'ACTIVE', 0, ?, 0, 0)")) {
                 bindUuid(ps, 1, player);
                 ps.setString(2, questId);
                 ps.setLong(3, now);
@@ -88,13 +90,33 @@ public final class JdbcSideQuestRepository implements SideQuestRepository {
 
     @Override
     public CompletableFuture<Boolean> complete(UUID player, String questId, int progress, long now) {
-        return CompletableFuture.supplyAsync(() -> update("UPDATE suld_side_quests SET state = 'DONE', progress = ?, completed_at = ?"
+        return CompletableFuture.supplyAsync(() -> update("UPDATE suld_side_quests SET state = 'DONE', progress = ?, completed_at = ?, paid_at = 0"
                 + " WHERE player_uuid = ? AND quest_id = ? AND state = 'ACTIVE'", ps -> {
             ps.setInt(1, Math.max(0, progress));
             ps.setLong(2, now);
             bindUuid(ps, 3, player);
             ps.setString(4, questId);
         }, "complete " + questId) == 1, executor);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> claimReward(UUID player, String questId, long now) {
+        return CompletableFuture.supplyAsync(() -> update("UPDATE suld_side_quests SET paid_at = ?"
+                + " WHERE player_uuid = ? AND quest_id = ? AND state = 'DONE' AND paid_at = 0", ps -> {
+            ps.setLong(1, Math.max(1, now));
+            bindUuid(ps, 2, player);
+            ps.setString(3, questId);
+        }, "claim the reward of " + questId) == 1, executor);
+    }
+
+    @Override
+    public CompletableFuture<Void> unclaimReward(UUID player, String questId, long claimedAt) {
+        return CompletableFuture.runAsync(() -> update("UPDATE suld_side_quests SET paid_at = 0"
+                + " WHERE player_uuid = ? AND quest_id = ? AND state = 'DONE' AND paid_at = ?", ps -> {
+            bindUuid(ps, 1, player);
+            ps.setString(2, questId);
+            ps.setLong(3, claimedAt);
+        }, "unclaim the reward of " + questId), executor);
     }
 
     @Override

@@ -86,12 +86,39 @@ class SideQuestBookTest {
 
     @Test
     void refusalsAreMongolianAndNameWhatIsMissing() {
-        assertNull(book.refusal(SideQuestBook.Gate.OPEN, kill, id -> id));
-        assertTrue(book.refusal(SideQuestBook.Gate.LEVEL, baatar, id -> id).contains("15"));
-        assertTrue(book.refusal(SideQuestBook.Gate.CLASS, baatar, id -> id).contains("Баатар"));
-        assertTrue(book.refusal(SideQuestBook.Gate.REQUIRES_QUEST, chain, id -> id).contains(kill.title()));
-        assertTrue(book.refusal(SideQuestBook.Gate.REQUIRES_CHAPTER, story, id -> "Анхны Ан").contains("Анхны Ан"));
-        assertTrue(book.refusal(SideQuestBook.Gate.LIMIT, kill, id -> id).contains("3"));
+        Map<String, SideQuestRecord> none = Map.of();
+        assertNull(book.refusal(SideQuestBook.Gate.OPEN, kill, id -> id, c -> false, none));
+        assertTrue(book.refusal(SideQuestBook.Gate.LEVEL, baatar, id -> id, c -> false, none).contains("15"));
+        assertTrue(book.refusal(SideQuestBook.Gate.CLASS, baatar, id -> id, c -> false, none).contains("Баатар"));
+        assertTrue(book.refusal(SideQuestBook.Gate.REQUIRES_QUEST, chain, id -> id, c -> false, none).contains(kill.title()));
+        assertTrue(book.refusal(SideQuestBook.Gate.REQUIRES_CHAPTER, story, id -> "Анхны Ан", c -> false, none).contains("Анхны Ан"));
+        assertTrue(book.refusal(SideQuestBook.Gate.LIMIT, kill, id -> id, c -> false, none).contains("3"));
+    }
+
+    @Test
+    void aRefusalNamesTheRequirementStillUnmetNotTheOneDone() {
+        SideQuestDefinition b = q("squest.bb", QuestType.KILL_MOB, "mob.chono", 1, 1, Set.of(), List.of());
+        SideQuestDefinition both = q("squest.both", QuestType.KILL_MOB, "mob.chono", 1, 1, Set.of(), List.of("quest.first_hunt", "quest.second", "squest.kill", "squest.bb"));
+        SideQuestBook two = new SideQuestBook(List.of(kill, b, both));
+        Map<String, SideQuestRecord> mine = new HashMap<>();
+        mine.put(kill.id(), SideQuestRecord.started(kill.id(), 1).handedIn(3, 2));
+        assertEquals(SideQuestBook.Gate.REQUIRES_CHAPTER, two.gate(both, 1, PlayerClass.MERGEN, "quest.first_hunt"::equals, mine));
+        assertTrue(two.refusal(SideQuestBook.Gate.REQUIRES_CHAPTER, both, id -> "«" + id + "»", "quest.first_hunt"::equals, mine).contains("quest.second"));
+        assertEquals(SideQuestBook.Gate.REQUIRES_QUEST, two.gate(both, 1, PlayerClass.MERGEN, c -> true, mine));
+        String why = two.refusal(SideQuestBook.Gate.REQUIRES_QUEST, both, id -> id, c -> true, mine);
+        assertTrue(why.contains(b.title()) && !why.contains(kill.title()), why);
+    }
+
+    @Test
+    void aHandedInQuestOwesItsRewardUntilItIsPaid() {
+        SideQuestRecord r = SideQuestRecord.started(kill.id(), 1);
+        assertFalse(r.owed());
+        SideQuestRecord done = r.withProgress(3).handedIn(3, 5);
+        assertTrue(done.done() && done.owed());
+        SideQuestRecord paid = done.paid(6);
+        assertTrue(paid.done() && !paid.owed());
+        assertEquals(6, paid.paidAt());
+        assertTrue(paid.paid(0).owed(), "an undone claim owes again");
     }
 
     @Test

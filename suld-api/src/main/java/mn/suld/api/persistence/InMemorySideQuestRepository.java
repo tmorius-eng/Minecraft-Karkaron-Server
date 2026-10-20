@@ -43,6 +43,21 @@ public final class InMemorySideQuestRepository implements SideQuestRepository {
     }
 
     @Override
+    public synchronized CompletableFuture<Boolean> claimReward(UUID player, String questId, long now) {
+        SideQuestRecord r = rows.getOrDefault(player, Map.of()).get(questId);
+        if (r == null || !r.owed()) return CompletableFuture.completedFuture(false);
+        rows.get(player).put(questId, r.paid(now));
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public synchronized CompletableFuture<Void> unclaimReward(UUID player, String questId, long claimedAt) {
+        SideQuestRecord r = rows.getOrDefault(player, Map.of()).get(questId);
+        if (r != null && r.done() && r.paidAt() == claimedAt) rows.get(player).put(questId, r.paid(0));
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
     public synchronized CompletableFuture<Boolean> abandon(UUID player, String questId) {
         Map<String, SideQuestRecord> mine = rows.get(player);
         SideQuestRecord r = mine == null ? null : mine.get(questId);

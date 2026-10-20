@@ -37,10 +37,23 @@ class JdbcSideQuestIT {
 
         List<CompletableFuture<Boolean>> all = new ArrayList<>();
         for (int i = 0; i < 24; i++) all.add(repo.complete(p, "squest.urtuu_east", 1, 5_000L + i));
-        assertEquals(1, all.stream().map(CompletableFuture::join).filter(Boolean::booleanValue).count(), "24 concurrent hand-ins pay once");
+        assertEquals(1, all.stream().map(CompletableFuture::join).filter(Boolean::booleanValue).count(), "24 concurrent hand-ins, one DONE");
         r = repo.load(p).get().get("squest.urtuu_east");
         assertTrue(r.done());
+        assertTrue(r.owed(), "handed in, the reward not yet paid");
         assertTrue(r.completedAt() >= 5_000L);
+
+        List<CompletableFuture<Boolean>> claims = new ArrayList<>();
+        for (int i = 0; i < 24; i++) claims.add(repo.claimReward(p, "squest.urtuu_east", 6_000L + i));
+        assertEquals(1, claims.stream().map(CompletableFuture::join).filter(Boolean::booleanValue).count(), "24 concurrent claims pay once");
+        long claimedAt = repo.load(p).get().get("squest.urtuu_east").paidAt();
+        assertTrue(claimedAt >= 6_000L);
+        repo.unclaimReward(p, "squest.urtuu_east", claimedAt + 1).get();
+        assertFalse(repo.load(p).get().get("squest.urtuu_east").owed(), "another claim's time undoes nothing");
+        repo.unclaimReward(p, "squest.urtuu_east", claimedAt).get();
+        assertTrue(repo.load(p).get().get("squest.urtuu_east").owed(), "the player left before the payment: owed again");
+        assertTrue(repo.claimReward(p, "squest.urtuu_east", 7_000L).get());
+        assertFalse(repo.claimReward(other, "squest.urtuu_east", 7_000L).get(), "an active row owes nothing");
         repo.progress(p, "squest.urtuu_east", 0).get();
         assertEquals(1, repo.load(p).get().get("squest.urtuu_east").progress(), "a done row keeps its count");
         assertFalse(repo.abandon(p, "squest.urtuu_east").get(), "a done quest cannot be abandoned");

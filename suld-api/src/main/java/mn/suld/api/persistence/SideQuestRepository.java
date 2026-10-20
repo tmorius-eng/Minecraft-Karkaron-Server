@@ -18,8 +18,14 @@ public interface SideQuestRepository {
     /** The objective count of an ACTIVE row (a DONE row keeps its own). */
     CompletableFuture<Void> progress(UUID player, String questId, int progress);
 
-    /** ACTIVE → DONE: true once, whatever the clicks. */
+    /** ACTIVE → DONE, its reward owed: true once, whatever the clicks. */
     CompletableFuture<Boolean> complete(UUID player, String questId, int progress, long now);
+
+    /** A DONE row's reward is being paid now: true once (the row owed it), false when it was paid already. */
+    CompletableFuture<Boolean> claimReward(UUID player, String questId, long now);
+
+    /** Undoes {@link #claimReward} of {@code claimedAt} (the player left before the payment ran): the reward is owed again. */
+    CompletableFuture<Void> unclaimReward(UUID player, String questId, long claimedAt);
 
     /** Deletes an ACTIVE row (a DONE row stays): true when there was one. */
     CompletableFuture<Boolean> abandon(UUID player, String questId);

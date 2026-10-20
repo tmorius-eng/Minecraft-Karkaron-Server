@@ -62,15 +62,23 @@ public final class SideQuestBook {
         if (r != null && r.active()) return Gate.ACTIVE;
         if (level < d.minLevel()) return Gate.LEVEL;
         if (!d.openTo(cls)) return Gate.CLASS;
-        for (String req : d.requires()) {
-            if (req.startsWith("quest.") && !chapterDone.test(req)) return Gate.REQUIRES_CHAPTER;
-            if (req.startsWith("squest.")) {
-                SideQuestRecord q = mine.get(req);
-                if (q == null || !q.done()) return Gate.REQUIRES_QUEST;
-            }
-        }
+        String unmet = firstUnmet(d, chapterDone, mine);
+        if (unmet != null) return unmet.startsWith("squest.") ? Gate.REQUIRES_QUEST : Gate.REQUIRES_CHAPTER;
         if (activeCount(mine) >= MAX_ACTIVE) return Gate.LIMIT;
         return Gate.OPEN;
+    }
+
+    /** The first requirement still unmet, in the file's order (a chapter not finished, a side quest not handed in), or null. */
+    public static String firstUnmet(SideQuestDefinition d, Predicate<String> chapterDone, Map<String, SideQuestRecord> mine) {
+        for (String req : d.requires()) {
+            if (req.startsWith("squest.")) {
+                SideQuestRecord q = mine.get(req);
+                if (q == null || !q.done()) return req;
+            } else if (!chapterDone.test(req)) {
+                return req;
+            }
+        }
+        return null;
     }
 
     public static int activeCount(Map<String, SideQuestRecord> mine) {
@@ -79,27 +87,28 @@ public final class SideQuestBook {
         return n;
     }
 
-    /** The Mongolian line for a refusal (null for OPEN); {@code chapterTitle} names a story chapter by its id. */
-    public String refusal(Gate g, SideQuestDefinition d, java.util.function.Function<String, String> chapterTitle) {
+    /**
+     * The Mongolian line for a refusal (null for OPEN); {@code chapterTitle} names a story chapter by its id, and a
+     * requirement refusal names the first requirement still unmet ({@code chapterDone}, {@code mine} as for gate).
+     */
+    public String refusal(Gate g, SideQuestDefinition d, java.util.function.Function<String, String> chapterTitle,
+                          Predicate<String> chapterDone, Map<String, SideQuestRecord> mine) {
         return switch (g) {
             case OPEN -> null;
             case DONE -> "Энэ эрлийг аль хэдийн дуусгасан.";
             case ACTIVE -> "Энэ эрэл аль хэдийн таны дэвтэрт байна.";
             case LEVEL -> d.minLevel() + "-р түвшинд хүрээд ав.";
             case CLASS -> "Энэ эрэл " + classNames(d) + " ангид зориулагдсан.";
-            case REQUIRES_CHAPTER -> "Эхлээд түүхийн бүлэг дуусга: «" + firstMissing(d, "quest.", chapterTitle) + "».";
-            case REQUIRES_QUEST -> "Эхлээд «" + firstMissing(d, "squest.", chapterTitle) + "» эрлийг дуусга.";
+            case REQUIRES_CHAPTER, REQUIRES_QUEST -> requirementLine(firstUnmet(d, chapterDone, mine), chapterTitle);
             case LIMIT -> "Нэг дор " + MAX_ACTIVE + "-аас олон нэмэлт эрэл авч болохгүй — нэгийг нь дуусга эсвэл орхи.";
         };
     }
 
-    /** The title of the first requirement of this kind (the refusal names one thing to do). */
-    private String firstMissing(SideQuestDefinition d, String prefix, java.util.function.Function<String, String> chapterTitle) {
-        for (String req : d.requires()) {
-            if (!req.startsWith(prefix)) continue;
-            return prefix.equals("squest.") ? byId(req).map(SideQuestDefinition::title).orElse(req) : chapterTitle.apply(req);
-        }
-        return "";
+    /** The line for an unmet requirement, worded by what it is (a side quest of this book, or a story chapter). */
+    private String requirementLine(String req, java.util.function.Function<String, String> chapterTitle) {
+        if (req == null) return "Шаардлага нь биелсэн байна — дахин оролдоно уу.";
+        if (req.startsWith("squest.")) return "Эхлээд «" + byId(req).map(SideQuestDefinition::title).orElse(req) + "» эрлийг дуусга.";
+        return "Эхлээд түүхийн бүлэг дуусга: «" + chapterTitle.apply(req) + "».";
     }
 
     private static String classNames(SideQuestDefinition d) {

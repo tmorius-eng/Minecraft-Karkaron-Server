@@ -18,7 +18,16 @@ class InMemorySideQuestRepositoryTest {
         repo.progress(p, "squest.a", 4).join();
         assertEquals(4, repo.load(p).join().get("squest.a").progress());
         assertTrue(repo.complete(p, "squest.a", 4, 9).join());
-        assertFalse(repo.complete(p, "squest.a", 4, 10).join(), "paid once");
+        assertFalse(repo.complete(p, "squest.a", 4, 10).join(), "handed in once");
+        assertTrue(repo.load(p).join().get("squest.a").owed());
+        assertTrue(repo.claimReward(p, "squest.a", 11).join());
+        assertFalse(repo.claimReward(p, "squest.a", 12).join(), "paid once");
+        repo.unclaimReward(p, "squest.a", 99).join();
+        assertFalse(repo.load(p).join().get("squest.a").owed(), "only the claim's own time undoes it");
+        repo.unclaimReward(p, "squest.a", 11).join();
+        assertTrue(repo.load(p).join().get("squest.a").owed());
+        assertTrue(repo.claimReward(p, "squest.a", 13).join());
+        assertFalse(repo.claimReward(p, "squest.b", 13).join(), "no row, nothing owed");
         repo.progress(p, "squest.a", 0).join();
         assertEquals(4, repo.load(p).join().get("squest.a").progress());
         assertFalse(repo.abandon(p, "squest.a").join());
