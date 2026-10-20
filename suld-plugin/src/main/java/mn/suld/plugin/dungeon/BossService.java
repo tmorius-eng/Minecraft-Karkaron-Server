@@ -75,8 +75,10 @@ public final class BossService implements Listener {
     public void unregister(UUID bossId) {
         Fight f = fights.remove(bossId);
         if (f != null && f.brain != null) {
+            // a failed or aborted run removes the boss before it unregisters it: end() still runs (its decals, its
+            // pending tasks), with no boss to hand over
             org.bukkit.entity.Entity e = org.bukkit.Bukkit.getEntity(bossId);
-            if (e instanceof LivingEntity le) f.brain.end(le);
+            f.brain.end(e instanceof LivingEntity le ? le : null);
         }
     }
 

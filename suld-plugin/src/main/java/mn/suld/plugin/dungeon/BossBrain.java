@@ -16,7 +16,7 @@ public interface BossBrain {
     default void onPhase(LivingEntity boss, int phaseIndex, boolean enraged) {
     }
 
-    /** The fight is over (death or cleanup). */
+    /** The fight is over (death or cleanup); {@code boss} is null when the run removed it first. */
     default void end(LivingEntity boss) {
     }
 }

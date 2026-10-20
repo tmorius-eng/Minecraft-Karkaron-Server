@@ -317,7 +317,7 @@ public final class ArchetypeBrain implements BossBrain {
             d.setInterpolationDuration(Math.max(1, ticks - 2));
             d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(s, 1, s), new Quaternionf()));
         });
-        later(ticks, () -> {
+        cleanup(ticks, () -> {
             d.remove();
             decals.remove(d);
         });
@@ -365,6 +365,16 @@ public final class ArchetypeBrain implements BossBrain {
         handle[0] = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             pending.remove(handle[0]);
             if (ended || current == null || !current.isValid() || current.isDead()) return;
+            r.run();
+        }, ticks);
+        pending.add(handle[0]);
+    }
+
+    /** Run {@code r} in {@code ticks} whatever became of the boss (a decal's removal); {@link #end} still cancels it. */
+    private void cleanup(long ticks, Runnable r) {
+        org.bukkit.scheduler.BukkitTask[] handle = new org.bukkit.scheduler.BukkitTask[1];
+        handle[0] = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            pending.remove(handle[0]);
             r.run();
         }, ticks);
         pending.add(handle[0]);
