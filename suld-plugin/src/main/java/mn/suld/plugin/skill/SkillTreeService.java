@@ -1140,7 +1140,7 @@ public final class SkillTreeService implements Listener {
         if (thorns > 0 && source != null && hostile(source) && !dispatching && e.getFinalDamage() > 0) {
             dispatching = true;
             try {
-                skills.damage(p, source, e.getFinalDamage() * thorns / 100.0);
+                skills.reflect(p, source, e.getFinalDamage() * thorns / 100.0);
             } finally {
                 dispatching = false;
             }

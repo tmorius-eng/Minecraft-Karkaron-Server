@@ -979,6 +979,15 @@ public final class SkillService implements Listener {
     }
 
     /**
+     * A share of a hit the player just took, sent back to its source (thorns): already scaled by the level gap or the
+     * PvP scalar on its way in, so it is not scaled again.
+     */
+    public void reflect(Player p, LivingEntity source, double amount) {
+        if (!source.isValid()) return;
+        CombatListener.asSpell(() -> source.damage(amount, p));
+    }
+
+    /**
      * What a spell's or an ultimate's damage is multiplied by against {@code target}. SKILL-01: against a SÜLD mob, the
      * same level suppression as a hit — −4 % per level the mob stands above the caster, floor 40 %
      * ({@link mn.suld.api.balance.CombatRules#gapDealt}); the simulator counts the gap on all DPS, spells included (sim
