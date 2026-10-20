@@ -64,6 +64,7 @@ edit never takes the server down and never half-applies.
   refused; a story saying «түүхэн баримт» is `VERIFIED`.
 - **Every loot table has a caller** (`LootTableCallersTest`): a mob, a dungeon reward, a world boss, a world event's
   `loot.world_event.<name>`, the open-world rare roll or a side quest; a table nothing rolls is deleted, not kept.
+- **Achievement subjects exist** (`AchievementSubjectsTest`): the chapters, sites and side quests an achievement names.
 
 ## Field notes
 

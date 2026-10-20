@@ -572,6 +572,38 @@
    },
    "points": 300,
    "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.social.side_helper",
+   "category": "SOCIAL",
+   "name": "Хотын туслагч",
+   "description": "Хотын хүмүүсийн нэмэлт эрлээс тавыг тушаах.",
+   "criterion": {
+    "deed": "SIDE_QUEST",
+    "measure": "DISTINCT",
+    "target": 5
+   },
+   "points": 300,
+   "basis": "INSPIRED"
+  },
+  {
+   "id": "ach.lands.urtuu_road",
+   "category": "LANDS",
+   "name": "Өртөөний зам",
+   "description": "Дөрвөн замын өртөөний нэмэлт эрлийг бүгдийг тушаах.",
+   "criterion": {
+    "deed": "SIDE_QUEST",
+    "measure": "DISTINCT",
+    "target": 4,
+    "subjects": [
+     "squest.urtuu_east",
+     "squest.urtuu_south",
+     "squest.urtuu_north",
+     "squest.urtuu_west"
+    ]
+   },
+   "points": 400,
+   "basis": "INSPIRED"
   }
  ]
 }
