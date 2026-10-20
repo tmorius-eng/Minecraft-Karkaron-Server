@@ -498,7 +498,8 @@ public final class SuldCommand implements CommandExecutor {
         java.util.List<String> overridden = new java.util.ArrayList<>();
         var catalog = mn.suld.plugin.content.SuldContent.items();
         var r = mn.suld.plugin.content.ContentLoader.load(mn.suld.plugin.content.ContentLoader.serverOrBundled(dir, overridden),
-                id -> catalog.lootTable(id).isPresent(), id -> catalog.item(id).isPresent(), overridden);
+                id -> catalog.lootTable(id).isPresent(), id -> catalog.item(id).isPresent(), overridden,
+                mn.suld.plugin.content.CityPoints.ids()::contains); // the same point check as Content.install
         String files = overridden.isEmpty() ? "серверийн файл алга — jar доторхыг шалгалаа" : String.join(", ", overridden);
         try {
             var h = mn.suld.plugin.hologram.Holograms.read(dir);
