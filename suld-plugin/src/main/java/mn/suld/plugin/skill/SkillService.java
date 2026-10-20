@@ -912,7 +912,8 @@ public final class SkillService implements Listener {
         boolean fresh = cast != null && snap != null && System.currentTimeMillis() - cast < 5_000;
         SkillBuild b = buildOf(p);
         double mult = s.damageMultiplier() * (1 + b.mod(s, ModKey.DAMAGE_PCT) / 100.0) * services.skillTree().spellDamageMultiplier(p)
-                * rankPower(p, s) * gapOf(p, target);
+                * rankPower(p, s) * gapOf(p, target)
+                * (1 + services.boosts().bonus(p.getUniqueId(), mn.suld.api.balance.TimedBoosts.Kind.DAMAGE)); // a timed boost (the Silver Tree)
         double dmg = (fresh ? snap : CombatListener.attackOf(services, p)) * mult;
         mn.suld.plugin.combat.HitSource.run(mn.suld.plugin.combat.HitSource.spell(s), () -> CombatListener.asSpell(() -> target.damage(dmg, p)));
         riders(p, target, s);

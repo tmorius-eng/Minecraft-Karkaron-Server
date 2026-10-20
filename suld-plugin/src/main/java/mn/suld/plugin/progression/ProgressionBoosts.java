@@ -1,5 +1,6 @@
 package mn.suld.plugin.progression;
 
+import mn.suld.api.balance.TimedBoosts;
 import mn.suld.plugin.SuldServices;
 
 import java.util.UUID;
@@ -18,31 +19,39 @@ public final class ProgressionBoosts {
     }
 
     /**
-     * Timed blessings by source (an ovoo's, docs/world/OVOO.md; others later): player → source → (until
-     * millis, bonus). Different sources add up; a new blessing from the same source replaces the old one.
+     * Timed boosts by kind and source (an ovoo's EXP blessing, docs/world/OVOO.md; a Silver Tree drink): within a
+     * kind the strongest live source counts, so two EXP blessings never add up (api TimedBoosts).
      */
-    private final java.util.Map<UUID, java.util.Map<String, double[]>> blessings = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<UUID, TimedBoosts> blessings = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** An ovoo's EXP blessing. */
     public void bless(UUID player, long untilMillis, double bonus) {
-        bless(player, "ovoo", untilMillis, bonus);
+        bless(player, TimedBoosts.Kind.EXP, "ovoo", untilMillis, bonus);
     }
 
-    public void bless(UUID player, String source, long untilMillis, double bonus) {
-        blessings.computeIfAbsent(player, k -> new java.util.concurrent.ConcurrentHashMap<>()).put(source, new double[]{untilMillis, bonus});
+    public void bless(UUID player, TimedBoosts.Kind kind, String source, long untilMillis, double bonus) {
+        blessings.computeIfAbsent(player, k -> new TimedBoosts()).put(kind, source, untilMillis, bonus);
     }
 
+    /** The strongest live boost of {@code kind} (a fraction; LOOT in percent points), or 0. */
+    public double bonus(UUID player, TimedBoosts.Kind kind) {
+        TimedBoosts b = blessings.get(player);
+        return b == null ? 0 : b.strongest(kind, System.currentTimeMillis());
+    }
+
+    /** When {@code source}'s boost of {@code kind} ends (0: none live). */
+    public long until(UUID player, TimedBoosts.Kind kind, String source) {
+        TimedBoosts b = blessings.get(player);
+        return b == null ? 0 : b.until(kind, source, System.currentTimeMillis());
+    }
+
+    /** Quit: the boosts are kept in the player file by their sources and put back at the next join. */
     public void forget(UUID player) {
         blessings.remove(player);
     }
 
     private double blessing(UUID player) {
-        java.util.Map<String, double[]> mine = blessings.get(player);
-        if (mine == null) return 0;
-        long now = System.currentTimeMillis();
-        mine.values().removeIf(b -> now > b[0]);
-        double sum = 0;
-        for (double[] b : mine.values()) sum += b[1];
-        return sum;
+        return bonus(player, TimedBoosts.Kind.EXP);
     }
 
     /** Clan + relic + blessings, uncapped (the cap applies to the total, gear included). */

@@ -312,6 +312,7 @@ public final class CombatListener implements Listener {
         if (target != null) scale *= mn.suld.api.balance.CombatRules.gapDealt(target.level() - levelOf(player));
         mn.suld.plugin.mastery.WeaponMasteryService mastery = services.weaponMastery;
         if (mastery != null) scale *= 1 + mastery.bonus(player); // Зэвсгийн ур чадвар: up to +2.5 % with the held kind
+        scale *= 1 + services.boosts().bonus(player.getUniqueId(), mn.suld.api.balance.TimedBoosts.Kind.DAMAGE); // a timed boost (the Silver Tree)
         double attack = attackOf(services, player);
         DamageResult result = calculator.compute(attack * scale, critOf(player),
                 skillTree == null ? 1.5 : skillTree.critMultiplier(player), 0.0, ThreadLocalRandomRoll());

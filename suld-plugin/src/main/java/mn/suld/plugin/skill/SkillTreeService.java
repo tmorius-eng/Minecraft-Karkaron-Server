@@ -904,7 +904,8 @@ public final class SkillTreeService implements Listener {
         // Тэнгэрийн Зэрэг V (AscensionHonor, the shrine promises it): rare-loot luck +3
         double honour = services.profiles().cached(p.getUniqueId())
                 .map(pr -> mn.suld.api.balance.AscensionHonor.fortune(pr.ascension()) * 100).orElse(0.0);
-        return Math.max(0, build(p).stat(StatKey.LOOT_PCT)) + honour;
+        double boost = services.boosts().bonus(p.getUniqueId(), mn.suld.api.balance.TimedBoosts.Kind.LOOT); // a timed boost (the Silver Tree)
+        return Math.max(0, build(p).stat(StatKey.LOOT_PCT)) + honour + boost;
     }
 
     public boolean extraLootRoll(Player p) {
@@ -1101,8 +1102,13 @@ public final class SkillTreeService implements Listener {
 
     private void onDamaged0(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Player p)) return;
+        // a timed boost (the Silver Tree's honey): its share joins the reduction, under the same 75 % cap
+        double boost = 100 * services.boosts().bonus(p.getUniqueId(), mn.suld.api.balance.TimedBoosts.Kind.MITIGATION);
         Runtime r = runtime.get(p.getUniqueId());
-        if (r == null || r.build.isEmpty()) return;
+        if (r == null || r.build.isEmpty()) {
+            if (boost > 0) e.setDamage(e.getDamage() * (1 - Math.min(75, boost) / 100.0));
+            return;
+        }
         SkillBuild b = r.build;
         double dodge = b.stat(StatKey.DODGE_PCT);
         boolean physical = e instanceof EntityDamageByEntityEvent;
@@ -1112,7 +1118,7 @@ public final class SkillTreeService implements Listener {
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 0.8f, 1.6f);
             return;
         }
-        double reduction = b.stat(StatKey.DAMAGE_REDUCTION);
+        double reduction = b.stat(StatKey.DAMAGE_REDUCTION) + boost;
         AttributeInstance max = p.getAttribute(Attribute.MAX_HEALTH);
         double maxHp = max == null ? 20 : max.getValue();
         if (b.has(KeystoneKind.MUNKH_TESVER) && p.getHealth() / maxHp < 0.30) reduction += 35;
