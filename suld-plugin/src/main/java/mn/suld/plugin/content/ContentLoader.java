@@ -46,7 +46,7 @@ public final class ContentLoader {
 
     public static final int FORMAT_VERSION = 1;
     public static final List<String> FILES = List.of("mobs.json", "world.json", "dungeons.json", "quests.json", "events.json", "sites.json", "campaigns.json",
-            "shops.json", "npcs.json");
+            "shops.json", "npcs.json", "side_quests.json");
 
     /** Ids the code names directly (tutorial, first dungeon, boss brains, story constants): they must exist. */
     public static final Set<String> REQUIRED = Set.of(
@@ -73,6 +73,11 @@ public final class ContentLoader {
     private static final Set<String> HISTORY = Set.of("VERIFIED", "INSPIRED", "FICTION");
 
     private ContentLoader() {
+    }
+
+    /** What an objective's target lacks in the content (null when it exists). */
+    private interface ObjectiveCheck {
+        String missing(QuestType type, String target, int count);
     }
 
     public record Result(ContentPack pack, List<Issue> issues, List<String> overridden) {
@@ -361,6 +366,24 @@ public final class ContentLoader {
             }
         }
 
+        // the objective of a chapter or a side quest: what it names must exist (null = fine)
+        ObjectiveCheck objective = (type, target, count) -> switch (type) {
+                case KILL_MOB -> mobs.containsKey(target) ? null : "no mob " + target + " in mobs.json";
+                case COMPLETE_DUNGEON -> dungeons.stream().anyMatch(x -> x.id().equals(target)) ? null : "no dungeon " + target + " in dungeons.json";
+                // a region (entering it) or a historic site (coming to it)
+                case DISCOVER_LOCATION -> target.startsWith("site.")
+                        ? historic.stream().anyMatch(x -> x.id().equals(target)) ? null : "no site " + target + " in sites.json"
+                        : regions.stream().anyMatch(x -> x.id().equals(target)) ? null : "no region " + target + " in world.json";
+                case COLLECT_ITEM -> itemExists == null || itemExists.test(target) ? null : "no item " + target + " in the item catalog";
+                case REACH_LEVEL -> count <= 100 ? null : "level " + count + " is above 100";
+                // the objective vocabulary of audit 2026-10-14 (no chapter uses it yet; quests.json stays as it was)
+                case INSPECT_CLUE -> target.matches("[a-z][a-z0-9_]{1,40}") ? null : "prop id " + target + " (props.json ids look like deer_stone)";
+                case CRAFT_ITEM -> itemExists == null || itemExists.test(target) ? null : "no item " + target + " in the item catalog";
+                // an ovoo stands in an area (OvooService passes the area id); a region id is taken too
+                case OVOO_RITUAL -> regions.stream().anyMatch(x -> x.id().equals(target)) || areas.stream().anyMatch(a -> a.id().equals(target))
+                        ? null : "no area or region " + target + " in world.json";
+        };
+
         // ---------------------------------------------------------------------------------------------- quests
         f = "quests.json";
         List<QuestDefinition> chapters = new ArrayList<>();
@@ -381,22 +404,7 @@ public final class ContentLoader {
             if (id != null && !QUEST_ID.matcher(id).matches()) issues.add(new Issue(f, at + ".id", "must look like quest.some_name"));
             if (id != null && chapters.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
             if (type == null || id == null) continue;
-            String missing = switch (type) {
-                case KILL_MOB -> mobs.containsKey(target) ? null : "no mob " + target + " in mobs.json";
-                case COMPLETE_DUNGEON -> dungeons.stream().anyMatch(x -> x.id().equals(target)) ? null : "no dungeon " + target + " in dungeons.json";
-                // a region (entering it) or a historic site (coming to it)
-                case DISCOVER_LOCATION -> target.startsWith("site.")
-                        ? historic.stream().anyMatch(x -> x.id().equals(target)) ? null : "no site " + target + " in sites.json"
-                        : regions.stream().anyMatch(x -> x.id().equals(target)) ? null : "no region " + target + " in world.json";
-                case COLLECT_ITEM -> itemExists == null || itemExists.test(target) ? null : "no item " + target + " in the item catalog";
-                case REACH_LEVEL -> count <= 100 ? null : "level " + count + " is above 100";
-                // the objective vocabulary of audit 2026-10-14 (no chapter uses it yet; quests.json stays as it was)
-                case INSPECT_CLUE -> target.matches("[a-z][a-z0-9_]{1,40}") ? null : "prop id " + target + " (props.json ids look like deer_stone)";
-                case CRAFT_ITEM -> itemExists == null || itemExists.test(target) ? null : "no item " + target + " in the item catalog";
-                // an ovoo stands in an area (OvooService passes the area id); a region id is taken too
-                case OVOO_RITUAL -> regions.stream().anyMatch(x -> x.id().equals(target)) || areas.stream().anyMatch(a -> a.id().equals(target))
-                        ? null : "no area or region " + target + " in world.json";
-            };
+            String missing = objective.missing(type, target, count);
             if (missing != null) issues.add(new Issue(f, at + ".target", missing));
             // the rules set the EXP: 35 % of a level at the chapter's level (progression v2), unless the file gives it
             int lv = switch (type) {
@@ -681,6 +689,7 @@ public final class ContentLoader {
             if (cd.effect() != null && cd.effect().type() == mn.suld.api.campaign.WorldEffect.Type.NPC) campaignRoles.add(cd.effect().ref());
         }
         Set<String> servedPoints = new HashSet<>();
+        Set<String> dynamicNpcs = new HashSet<>(); // world-effect roles: never a side quest's giver (they come and go)
         List<Object> npcList = list(f, "", files.get(f), "npcs", issues);
         for (int i = 0; i < npcList.size(); i++) {
             String at = "npcs[" + i + "]";
@@ -691,6 +700,7 @@ public final class ContentLoader {
             if (npcs.stream().anyMatch(x -> x.id().equals(id))) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
             List<String> points = n.get("points") == null ? List.of() : strings(f, at, n, "points", issues);
             boolean dynamic = Boolean.TRUE.equals(n.get("dynamic")); // a role a world effect places, not a city point
+            if (dynamic) dynamicNpcs.add(id);
             if (dynamic && pointExists != null && pointExists.test(id)) issues.add(new Issue(f, at + ".dynamic", id + " is a city point, not a dynamic role"));
             if (!dynamic && pointExists != null && !pointExists.test(id)) {
                 issues.add(new Issue(f, at + ".id", "no point " + id + " in points.json (a world-effect role is marked \"dynamic\": true)"));
@@ -755,6 +765,86 @@ public final class ContentLoader {
             if (npcs.stream().noneMatch(x -> x.id().equals(role))) issues.add(new Issue("campaigns.json", "effect.ref", "no npc " + role + " in npcs.json"));
         }
 
+        // --------------------------------------------------------------------------------------- side quests
+        f = "side_quests.json";
+        List<mn.suld.api.quest.SideQuestDefinition> sideQuests = new ArrayList<>();
+        Map<String, List<String>> sideRequires = new LinkedHashMap<>();
+        Set<String> chapterIds = new HashSet<>();
+        chapters.forEach(c -> chapterIds.add(c.id()));
+        List<Object> sideList = list(f, "", files.get(f), "sideQuests", issues);
+        List<Map<String, Object>> sideRaw = new ArrayList<>();
+        for (int i = 0; i < sideList.size(); i++) sideRaw.add(obj(f, "sideQuests[" + i + "]", sideList.get(i), issues));
+        Set<String> sideIds = new HashSet<>();
+        for (Map<String, Object> q : sideRaw) if (q != null && q.get("id") instanceof String sid) sideIds.add(sid);
+        for (int i = 0; i < sideRaw.size(); i++) {
+            String at = "sideQuests[" + i + "]";
+            Map<String, Object> q = sideRaw.get(i);
+            if (q == null) continue;
+            String id = str(f, at, q, "id", true, issues);
+            if (id == null) continue;
+            if (!mn.suld.api.quest.SideQuestDefinition.ID.matcher(id).matches()) issues.add(new Issue(f, at + ".id", "must look like squest.some_name"));
+            if (sideQuests.stream().anyMatch(x -> x.id().equals(id)) || sideRequires.containsKey(id)) issues.add(new Issue(f, at + ".id", "duplicate id " + id));
+            String giver = str(f, at, q, "giver", true, issues);
+            if (giver != null && npcs.stream().noneMatch(x -> x.id().equals(giver))) issues.add(new Issue(f, at + ".giver", "no npc " + giver + " in npcs.json"));
+            if (giver != null && dynamicNpcs.contains(giver)) issues.add(new Issue(f, at + ".giver", giver + " is a world-effect role: a giver must stand in the city"));
+            QuestType type = SkillTreeLoader.enumOf(QuestType.class, str(f, at, q, "type", true, issues), f, at + ".type", issues);
+            if (type != null && !mn.suld.api.quest.SideQuestDefinition.TYPES.contains(type)) issues.add(new Issue(f, at + ".type", type + " is not an objective a side quest uses"));
+            String target = q.get("target") instanceof String t ? t : "";
+            int count = intIn(f, at, q, "count", 1, 10_000, false, 1, issues);
+            if (type != null && mn.suld.api.quest.SideQuestDefinition.TYPES.contains(type)) {
+                String missing = objective.missing(type, target, count);
+                if (missing != null) issues.add(new Issue(f, at + ".target", missing));
+            }
+            int minLevel = intIn(f, at, q, "minLevel", 1, 60, true, 1, issues);
+            String history = str(f, at, q, "history", true, issues);
+            if (history != null && !HISTORY.contains(history)) issues.add(new Issue(f, at + ".history", "must be VERIFIED, INSPIRED or FICTION"));
+            Set<mn.suld.api.clazz.PlayerClass> classes = new LinkedHashSet<>();
+            if (q.get("classes") != null) {
+                for (String c : strings(f, at, q, "classes", issues)) {
+                    mn.suld.api.clazz.PlayerClass pc = SkillTreeLoader.enumOf(mn.suld.api.clazz.PlayerClass.class, c, f, at + ".classes", issues);
+                    if (pc != null) classes.add(pc);
+                }
+            }
+            List<String> requires = q.get("requires") == null ? List.of() : strings(f, at, q, "requires", issues);
+            for (String r : requires) {
+                boolean known = r.startsWith("quest.") ? chapterIds.contains(r) : r.startsWith("squest.") && sideIds.contains(r);
+                if (!known) issues.add(new Issue(f, at + ".requires", "no story chapter or side quest " + r));
+                if (r.equals(id)) issues.add(new Issue(f, at + ".requires", id + " requires itself"));
+            }
+            sideRequires.put(id, requires);
+            String loot = q.get("loot") instanceof String l ? l : null;
+            if (loot != null && lootExists != null && !lootExists.test(loot)) issues.add(new Issue(f, at + ".loot", "no loot table " + loot + " in the item catalog"));
+            if (Boolean.TRUE.equals(q.get("repeatable"))) issues.add(new Issue(f, at + ".repeatable", "a side quest is done once (docs/SIDE_QUESTS.md)"));
+            for (String key : List.of("description", "story")) {
+                if (q.get(key) instanceof String text && history != null && new mn.suld.api.npc.NpcLine(text.isBlank() ? "-" : text, history).overclaims()) {
+                    issues.add(new Issue(f, at + "." + key, "says «" + mn.suld.api.npc.NpcLine.FACT_MARK + "» but the quest is " + history + ": only VERIFIED text may"));
+                }
+            }
+            // the rules price it at its level unless the file says otherwise (as a chapter)
+            long exp = q.containsKey("exp") ? intIn(f, at, q, "exp", 0, 100_000_000, true, 0, issues) : mn.suld.api.balance.Rewards.sideQuestExp(curve, minLevel);
+            long coins = q.containsKey("coins") ? intIn(f, at, q, "coins", 0, 10_000_000, true, 0, issues) : mn.suld.api.balance.Rewards.sideQuestCoins(minLevel);
+            if (type == null || giver == null || history == null) continue;
+            try {
+                sideQuests.add(new mn.suld.api.quest.SideQuestDefinition(id, str(f, at, q, "title", true, issues), q.get("description") instanceof String d ? d : "",
+                        q.get("story") instanceof String st ? st : "", history, giver, type, target, count, minLevel, classes, requires, exp, coins, loot));
+            } catch (IllegalArgumentException e) {
+                issues.add(new Issue(f, at, e.getMessage()));
+            }
+        }
+        // a requirement loop (a needs b, b needs a) would lock both forever
+        for (String start : sideRequires.keySet()) {
+            java.util.Deque<String> stack = new java.util.ArrayDeque<>(sideRequires.get(start));
+            Set<String> seen = new HashSet<>();
+            while (!stack.isEmpty()) {
+                String r = stack.pop();
+                if (r.equals(start)) {
+                    issues.add(new Issue(f, start, "its requirements lead back to itself"));
+                    break;
+                }
+                if (seen.add(r)) stack.addAll(sideRequires.getOrDefault(r, List.of()));
+            }
+        }
+
         // --------------------------------------------------------------------------------- names the code uses
         Set<String> known = new HashSet<>(mobs.keySet());
         regions.forEach(r -> known.add(r.id()));
@@ -775,7 +865,7 @@ public final class ContentLoader {
         });
         if (!issues.isEmpty()) return new Result(null, issues, overridden);
         return new Result(new ContentPack(mobs, roles, models, inner, edge, regions, regionBits, outer, areas, dungeons, sites, completions,
-                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns, worldBosses, shops, npcs), issues, overridden);
+                dRegion, dWhere, chapters, lore, story, events, aliases, relics, historic, campaigns, worldBosses, shops, npcs, sideQuests), issues, overridden);
     }
 
     private static String fileFor(String id) {

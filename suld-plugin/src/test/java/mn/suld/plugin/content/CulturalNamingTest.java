@@ -54,7 +54,7 @@ class CulturalNamingTest {
     void contentAndItemNamesAvoidRealSacredAndHistoricalNames() throws IOException {
         List<String> all = new ArrayList<>();
         for (String f : List.of("/content/mobs.json", "/content/dungeons.json", "/content/quests.json", "/content/events.json", "/content/campaigns.json",
-                "/content/npcs.json", "/content/shops.json")) all.addAll(names(f));
+                "/content/npcs.json", "/content/shops.json", "/content/side_quests.json")) all.addAll(names(f));
         for (String f : List.of("armor", "class_armor", "jewelry", "weapons", "materials", "relics", "sets")) all.addAll(names("/items/" + f + ".json"));
         for (String f : List.of("baatar", "boo", "darkhan", "khulegchin", "mergen", "universal")) all.addAll(names("/skills/" + f + ".json"));
         assertTrue(all.size() > 300, "the scan reads the real files (" + all.size() + " names)");

@@ -25,6 +25,9 @@ public final class QuestContent {
     /** The chapters in order, with the EXP the rules give each one (ContentLoader: 35 % of a level at its level). */
     public static final QuestChain STORY = new QuestChain(Content.pack().chapters());
 
+    /** The side quests and their rules (content/side_quests.json, docs/SIDE_QUESTS.md). */
+    public static final mn.suld.api.quest.SideQuestBook SIDE = new mn.suld.api.quest.SideQuestBook(Content.pack().sideQuests());
+
     /** The story of a chapter, told on its card in the story map (/quest). */
     public static String story(String questId) {
         return Content.pack().story().getOrDefault(questId, "");

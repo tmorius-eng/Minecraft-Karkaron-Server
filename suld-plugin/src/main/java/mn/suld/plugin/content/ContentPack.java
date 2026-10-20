@@ -31,6 +31,7 @@ import java.util.Set;
  * @param worldBosses   the world bosses (content/events.json "worldBosses")
  * @param shops         the merchants' stock (content/shops.json)
  * @param npcs          Kharkhorum's people and their talk (content/npcs.json)
+ * @param sideQuests    the side quests, in file order (content/side_quests.json, docs/SIDE_QUESTS.md)
  */
 public record ContentPack(
         Map<String, MobDefinition> mobs,
@@ -57,7 +58,8 @@ public record ContentPack(
         List<mn.suld.api.campaign.CampaignDefinition> campaigns,
         List<mn.suld.api.worldboss.WorldBossDefinition> worldBosses,
         List<mn.suld.api.shop.ShopDefinition> shops,
-        List<mn.suld.api.npc.NpcDefinition> npcs) {
+        List<mn.suld.api.npc.NpcDefinition> npcs,
+        List<mn.suld.api.quest.SideQuestDefinition> sideQuests) {
 
     public ContentPack {
         mobs = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(mobs)); // keeps the file order
@@ -83,6 +85,7 @@ public record ContentPack(
         worldBosses = List.copyOf(worldBosses);
         shops = List.copyOf(shops);
         npcs = List.copyOf(npcs);
+        sideQuests = List.copyOf(sideQuests);
     }
 
     /** A shop by id, or null. */

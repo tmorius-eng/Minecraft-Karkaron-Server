@@ -1,0 +1,66 @@
+{
+  "format": 1,
+  "about": "Side quests (docs/SIDE_QUESTS.md): an NPC of npcs.json gives one, the player meets its single objective (the story's objective kinds), then hands it back to the same NPC. Each is done once. exp/coins default to Rewards.sideQuestExp/sideQuestCoins at minLevel; loot names an extra table rolled at hand-in. history labels the quest's page: its events are SÜLD's own, the facts its story tells are checked in docs/research/history/KHARKHORUM.md §10.",
+  "sideQuests": [
+    {
+      "id": "squest.kk_silver_tree", "title": "Мөнгөн Модны Сүүдэр", "giver": "tutorial",
+      "type": "INSPECT_CLUE", "target": "silver_tree", "minLevel": 1, "history": "INSPIRED",
+      "description": "Ордны өмнөх Мөнгөн модыг очиж үз.",
+      "story": "Рубрук 1254 онд хааны ордны өмнө мөнгөн мод харсан гэж бичжээ: Парисын дархан Гийом Бушье Мөнх хаанд хийсэн, дөрвөн мөнгөн арслангийн амнаас гүүний сүү урсдаг байв. Манай хотын мод бол тэр модны сэргээлт — очоод сайн ажиглаарай."
+    },
+    {
+      "id": "squest.kk_coppersmith", "title": "Дархны Дөш", "giver": "blacksmith",
+      "type": "COLLECT_ITEM", "target": "item.tumriin_kheltarkhii", "count": 6, "minLevel": 3, "history": "INSPIRED",
+      "description": "Төмрийн Хэлтэрхий 6-г Дарханд авчир.",
+      "story": "Хотын төвийн урчуудын хороолоос модон шон дээр суулгасан дөштэй хуучин урлан малтлагаар олджээ. Би шинэ дөш цутгамаар байна: хэрэггүй зэвсгээ задлах юм уу хүдэр хайлуулж, төмрийн хэлтэрхий цуглуулаад ир."
+    },
+    {
+      "id": "squest.kk_craftsmen_quarter", "title": "Урчуудын Хороолол", "giver": "blacksmith",
+      "type": "CRAFT_ITEM", "target": "weapon.modon_sukh", "minLevel": 3, "requires": ["squest.kk_coppersmith"], "history": "INSPIRED",
+      "description": "Дарханы ширээнд Модон Сүх урла.",
+      "story": "Рубрукийн үед энэ хотын нэг хороолол бүхэлдээ урчуудынх байжээ; малтлагаас төмөр, үнэт металл, шил, яс, хусны үйсээр урласан ул мөр олдсон. Чи ч тэдний нэг болж үз — анхны зэвсгээ өөрөө урла."
+    },
+    {
+      "id": "squest.kk_kiln_clay", "title": "Зуухны Шавар", "giver": "blacksmith",
+      "type": "KILL_MOB", "target": "mob.deeremchin", "count": 6, "minLevel": 4, "history": "FICTION",
+      "description": "Хэрлэнгийн замын Дээрэмчин 6-г дарж замыг чөлөөл.",
+      "story": "Миний зуухны шавар зөөдөг тэрэг Хэрлэнгийн замд дээрэмчдэд зогсоогджээ. Замыг чөлөөлбөл тэргэнцэр дахин ирж, зуух минь дахин асна."
+    },
+    {
+      "id": "squest.kk_old_coin", "title": "Хуучин Зоос", "giver": "merchant.general",
+      "type": "COLLECT_ITEM", "target": "item.altan_toos", "count": 1, "minLevel": 12, "requires": ["squest.kk_coppersmith"], "history": "INSPIRED",
+      "description": "Алтан Тоос 1-ийг Худалдаачинд авчир.",
+      "story": "Хуучин урлангаас 1237/38 оны мөнгөн зоос олдсон гэдэг — Хархорумын зоосны газрын тамгатай, хотын нэрийг дурдсан хамгийн эртний баримт. Би тийм зоосны дурсгал цутгуулах гэсэн юм: үнэт эдлэл задалж эсвэл алтан хүдэр хайлуулж алтан тоос гаргаад ир."
+    },
+    {
+      "id": "squest.kk_three_faiths", "title": "Гурван Шашны Мэтгэлцээн", "giver": "shrine.sky",
+      "type": "INSPECT_CLUE", "target": "stone_turtle", "minLevel": 5, "requires": ["squest.kk_silver_tree"], "history": "INSPIRED",
+      "description": "Хотын чулуун яст мэлхийг очиж үз.",
+      "story": "Рубрук энэ хотод арван хоёр сүм, хоёр мечеть, нэг христийн сүм байсныг тоолжээ; 1254 оны тавдугаар сард Мөнх хааны өмнө шашны төлөөлөгчид итгэл үнэмшлээ мэтгэлцсэн. Хотын чулуун яст мэлхий бол тэвчээрийн бэлгэдэл — түүний дэргэд очиж нэг зүйлийг бод: өөр өөр итгэлтэй хүмүүс нэг хотод амар амгалан амьдарч чадаж байжээ."
+    },
+    {
+      "id": "squest.urtuu_east", "title": "Зүүн Замын Өртөө", "giver": "fast_travel.plaza",
+      "type": "DISCOVER_LOCATION", "target": "site.urtuu_east", "minLevel": 6, "history": "INSPIRED",
+      "description": "Онон голын хөндийн Зүүн Замын Өртөөнд хүр.",
+      "story": "Өртөөнүүд нэгнээсээ гуч, жаран километрийн зайтай байж, элч нар өртөө бүрт морио сольдог байжээ. Миний тооллогын дэвтрийг зүүн өртөөнд хүргэж өг."
+    },
+    {
+      "id": "squest.urtuu_south", "title": "Өмнөд Замын Өртөө", "giver": "fast_travel.plaza",
+      "type": "DISCOVER_LOCATION", "target": "site.urtuu_south", "minLevel": 8, "requires": ["squest.urtuu_east"], "history": "INSPIRED",
+      "description": "Өмнийн говийн Өмнөд Замын Өртөөнд хүр.",
+      "story": "Өгэдэй хаан өртөөний сүлжээг өргөтгөж, элч нарын эрх, хангамжийн журмыг тогтоосон гэдэг. Тооллогын дараагийн хуудсыг говийн өмнөд өртөөнд аваач."
+    },
+    {
+      "id": "squest.urtuu_north", "title": "Хойд Замын Өртөө", "giver": "fast_travel.plaza",
+      "type": "DISCOVER_LOCATION", "target": "site.urtuu_north", "minLevel": 13, "requires": ["squest.urtuu_south"], "history": "INSPIRED",
+      "description": "Сэлэнгэ мөрний Хойд Замын Өртөөнд хүр.",
+      "story": "Яаралтай элч өдөрт хоёр, гурван зуун километр давхидаг байсан гэдэг. Сэлэнгийн хойд өртөө хүртэл чи хэр хурдан хүрэхийг харъя."
+    },
+    {
+      "id": "squest.urtuu_west", "title": "Алтан Гэрэгийн Зам", "giver": "fast_travel.plaza",
+      "type": "DISCOVER_LOCATION", "target": "site.urtuu_west", "minLevel": 22, "requires": ["squest.urtuu_north"], "history": "INSPIRED", "loot": "loot.quest.reward",
+      "description": "Баруун Замын Өртөөнд хүрч, өртөөний дөрвөн замыг гүйцээ.",
+      "story": "Гэрэгэ буюу пайзтай элчид өртөө бүр морь, хоол өгдөг байжээ. Баруун өртөөнд хүрвэл чи өртөөний бүх замыг туулсан хүн болно — Өртөөчин чамд нэг бэлэг хадгалсан."
+    }
+  ]
+}

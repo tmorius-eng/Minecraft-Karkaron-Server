@@ -61,7 +61,7 @@ public final class Content {
         }
         ContentPack p = pack;
         log.info("[content] " + p.mobs().size() + " mobs, " + p.regions().size() + " regions, " + p.areas().size() + " areas, "
-                + p.dungeons().size() + " dungeons, " + p.chapters().size() + " story chapters, " + p.npcs().size() + " people, " + p.shops().size() + " shops");
+                + p.dungeons().size() + " dungeons, " + p.chapters().size() + " story chapters, " + p.npcs().size() + " people, " + p.shops().size() + " shops, " + p.sideQuests().size() + " side quests");
         return r.issues();
     }
 

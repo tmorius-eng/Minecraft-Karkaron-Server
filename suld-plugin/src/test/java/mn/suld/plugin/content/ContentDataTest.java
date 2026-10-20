@@ -52,6 +52,103 @@ class ContentDataTest {
         return list(root, "npcs").stream().filter(n -> id.equals(n.get("id"))).findFirst().orElseThrow();
     }
 
+    // ----------------------------------------------------------------------------------- side_quests.json
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> squest(Map<String, Object> root, String id) {
+        return list(root, "sideQuests").stream().filter(n -> id.equals(n.get("id"))).findFirst().orElseThrow();
+    }
+
+    /** content/side_quests.json (docs/SIDE_QUESTS.md): every giver is a city NPC, every clue a real prop, the chains well formed. */
+    @Test
+    @SuppressWarnings("unchecked")
+    void theBundledSideQuestsHaveRealGiversTargetsAndRewards() throws Exception {
+        ContentLoader.Result r = loadWithPoints(ContentLoader.classpath());
+        assertTrue(r.ok(), () -> r.issues().toString());
+        assertTrue(r.pack().sideQuests().size() >= 10, "the first batch of ten");
+        java.util.Set<String> props = new java.util.HashSet<>();
+        for (var pr : list((Map<String, Object>) Json.parse(Files.readString(Path.of("src/main/resources/content/props.json"))), "props")) props.add((String) pr.get("id"));
+        var curve = mn.suld.api.balance.Balance.curve();
+        for (var q : r.pack().sideQuests()) {
+            var giver = r.pack().npc(q.giverNpcId());
+            assertNotNull(giver, q.id() + ": no giver " + q.giverNpcId());
+            assertTrue(CityPoints.ids().contains(q.giverNpcId()), q.id() + ": the giver stands on a city point");
+            assertTrue(giver.talks(), q.id() + ": the giver talks (the side-quest buttons live in the conversation)");
+            if (q.type() == mn.suld.api.quest.QuestType.INSPECT_CLUE) assertTrue(props.contains(q.targetId()), q.id() + ": no prop " + q.targetId());
+            assertTrue(q.expReward() > 0 && q.currencyReward() > 0, q.id() + " pays");
+            assertTrue(q.expReward() < mn.suld.api.balance.Rewards.chapterExp(curve, q.minLevel()), q.id() + ": a side road pays less than a chapter");
+            for (String req : q.requires()) {
+                if (req.startsWith("squest.")) {
+                    var before = r.pack().sideQuests().stream().filter(x -> x.id().equals(req)).findFirst().orElseThrow();
+                    assertTrue(before.minLevel() <= q.minLevel(), q.id() + " opens no earlier than " + req);
+                }
+            }
+        }
+    }
+
+    @Test
+    void aSideQuestWithAnUnknownGiverIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_east").put("giver", "nobody.here")));
+        assertTrue(has(r, "side_quests.json", "no npc nobody.here"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aWorldEffectRoleCannotGiveASideQuest() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_east").put("giver", "merchant.caravan")));
+        assertTrue(has(r, "side_quests.json", "world-effect role"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aSideQuestForAnUnknownClassIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_east").put("classes", List.of("NINJA"))));
+        assertTrue(has(r, "side_quests.json", "NINJA"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aSideQuestRequiringNothingKnownIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_east").put("requires", List.of("squest.missing", "quest.missing"))));
+        assertTrue(has(r, "side_quests.json", "squest.missing") && has(r, "side_quests.json", "quest.missing"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aRequirementLoopIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_east").put("requires", List.of("squest.urtuu_west"))));
+        assertTrue(has(r, "side_quests.json", "lead back to itself"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aDuplicateSideQuestIdIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_south").put("id", "squest.urtuu_east")));
+        assertTrue(has(r, "side_quests.json", "duplicate id squest.urtuu_east"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aRepeatableSideQuestOrAnUnknownTargetOrLootIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> {
+            squest(root, "squest.urtuu_east").put("repeatable", true);
+            squest(root, "squest.urtuu_south").put("target", "site.nowhere");
+            squest(root, "squest.urtuu_west").put("loot", "loot.no_such_table");
+        }));
+        assertTrue(has(r, "side_quests.json", "done once") && has(r, "side_quests.json", "no site site.nowhere")
+                && has(r, "side_quests.json", "no loot table loot.no_such_table"), () -> r.issues().toString());
+    }
+
+    @Test
+    void aSideQuestThatClaimsAFactWithoutVerificationIsRefused() throws Exception {
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_east").put("story", "Энэ бол түүхэн баримт.")));
+        assertTrue(has(r, "side_quests.json", "only VERIFIED"), () -> r.issues().toString());
+    }
+
+    @Test
+    void sideQuestRewardsComeFromTheRulesUnlessTheFileSetsThem() throws Exception {
+        var curve = mn.suld.api.balance.Balance.curve();
+        var east = load(ContentLoader.classpath()).pack().sideQuests().stream().filter(q -> q.id().equals("squest.urtuu_east")).findFirst().orElseThrow();
+        assertEquals(mn.suld.api.balance.Rewards.sideQuestExp(curve, 6), east.expReward());
+        assertEquals(mn.suld.api.balance.Rewards.sideQuestCoins(6), east.currencyReward());
+        ContentLoader.Result r = load(edited("side_quests.json", root -> squest(root, "squest.urtuu_east").put("exp", 7)));
+        assertEquals(7, r.pack().sideQuests().stream().filter(q -> q.id().equals("squest.urtuu_east")).findFirst().orElseThrow().expReward());
+    }
+
     // ------------------------------------------------------------------------------------------ npcs.json
 
     /** content/npcs.json (2026-10-19): every person stands on a city point (or is a campaign's dynamic role) and wears a shipped skin. */
