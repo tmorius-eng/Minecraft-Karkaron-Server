@@ -881,10 +881,15 @@ public final class Menus {
             it.setAmount(Math.max(1, Math.min(e.amount(), it.getMaxStackSize())));
             return it;
         }
-        return SuldContent.items().item(e.itemId())
-                .map(def -> services.items().create(services.itemService().generate(def, mn.suld.api.item.ItemRarity.COMMON, Math.max(1, e.minLevel()), null, "shop:preview")))
-                .orElse(new ItemStack(Material.PAPER));
+        // one preview per item and level, made once: the card's look must not change at every redraw (affixes are rolled)
+        mn.suld.api.item.ItemInstance preview = shopPreviews.computeIfAbsent(e.itemId() + "@" + Math.max(1, e.minLevel()), k ->
+                SuldContent.items().item(e.itemId()).map(def -> services.itemService().generate(def, mn.suld.api.item.ItemRarity.COMMON,
+                        Math.max(1, e.minLevel()), null, "shop:preview")).orElse(null));
+        return preview == null ? new ItemStack(Material.PAPER) : services.itemService().stack(preview, null, 1);
     }
+
+    /** The shop cards' item previews (content is read once at start, so the cache never goes stale). */
+    private final Map<String, mn.suld.api.item.ItemInstance> shopPreviews = new java.util.HashMap<>();
 
     private HubMenu.Card stockCard(PlayerProfile pr, String shopId, int page, mn.suld.api.shop.ShopEntry e) {
         boolean locked = pr.progression().level() < e.minLevel();
@@ -955,11 +960,6 @@ public final class Menus {
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP2, 3, row, cards, null, this::main, prev, null), hubTabs());
     }
 
-    /** Page two of the general shop (kept for the callers that name it). */
-    public void shopMore(Player p) {
-        shop(p, GENERAL_SHOP, 1);
-    }
-
     /**
      * The Аялал page of the hub ({@code /travel}): the five relays (a trip only from a relay, GAME-001), the
      * historic sites, the nearest ovoo and the way home.
@@ -1024,35 +1024,52 @@ public final class Menus {
             return;
         }
         String name = stockName(e);
-        ItemStack give;
+        List<ItemStack> goods = new ArrayList<>(); // the price buys e.amount() pieces, whatever their stack size
         if (e.isItem()) {
             mn.suld.api.item.ItemDefinition def = SuldContent.items().item(e.itemId()).orElse(null);
             if (def == null) return;
-            give = services.items().create(services.itemService().generate(def, mn.suld.api.item.ItemRarity.COMMON, Math.max(1, e.minLevel()), p.getUniqueId(), "shop:" + shopId));
-            give.setAmount(Math.min(e.amount(), def.stackable() ? give.getMaxStackSize() : 1));
+            // each piece is its own item (IT-03: an ON_PICKUP item binds to the buyer as it arrives, stackFor)
+            int pieces = def.stackable() ? 1 : e.amount();
+            int perStack = def.stackable() ? e.amount() : 1;
+            for (int i = 0; i < pieces; i++) {
+                mn.suld.api.item.ItemInstance inst = services.itemService().generate(def, mn.suld.api.item.ItemRarity.COMMON, Math.max(1, e.minLevel()), p.getUniqueId(), "shop:" + shopId);
+                ItemStack st = services.itemService().stackFor(inst, p, perStack);
+                if (st.getAmount() < perStack) { // a stackable catalog item whose stack is smaller than the card's amount
+                    for (int left = perStack; left > 0; left -= st.getMaxStackSize()) {
+                        ItemStack part = st.clone();
+                        part.setAmount(Math.min(left, st.getMaxStackSize()));
+                        goods.add(part);
+                    }
+                } else {
+                    goods.add(st);
+                }
+            }
         } else {
             Material m = Material.matchMaterial(e.material());
             if (m == null) return;
-            give = new ItemStack(m, e.amount());
+            for (int left = e.amount(); left > 0; left -= m.getMaxStackSize()) goods.add(new ItemStack(m, Math.min(left, m.getMaxStackSize())));
         }
-        if (!fits(p, give)) { // checked on a copy first: nothing is added, so nothing of the player's own is ever removed
+        if (!fits(p, goods)) { // checked on a copy first: nothing is added, so nothing of the player's own is ever removed
             p.sendMessage(Messages.error("Цүнх дүүрэн байна."));
             return;
         }
         // COINS → ITEMS (PlayerDataSaves): charge first, give only once the coins are in the database
         pr.addCurrency(-e.price());
         mn.suld.plugin.item.PlayerDataSaves.coinsForItem(plugin, services, p, pr, e.price(), "buy " + shopId + " " + name, pl -> {
-            for (ItemStack left : pl.getInventory().addItem(give.clone()).values()) pl.getWorld().dropItemNaturally(pl.getLocation(), left);
+            for (ItemStack st : goods) {
+                for (ItemStack left : pl.getInventory().addItem(st.clone()).values()) pl.getWorld().dropItemNaturally(pl.getLocation(), left);
+            }
             pl.sendMessage(Messages.success("Авлаа: " + name + " (-" + e.price() + " зоос)"));
         });
     }
 
-    /** Whether the whole stack fits into the player's storage, tested on a copy. */
-    private static boolean fits(Player p, ItemStack stack) {
+    /** Whether all the stacks fit into the player's storage together, tested on a copy. */
+    private static boolean fits(Player p, List<ItemStack> stacks) {
         org.bukkit.inventory.Inventory sim = org.bukkit.Bukkit.createInventory(null, 36);
         ItemStack[] storage = p.getInventory().getStorageContents();
         for (int i = 0; i < storage.length && i < 36; i++) sim.setItem(i, storage[i] == null ? null : storage[i].clone());
-        return sim.addItem(stack.clone()).isEmpty();
+        for (ItemStack st : stacks) if (!sim.addItem(st.clone()).isEmpty()) return false;
+        return true;
     }
 
     /** Bag slot a player clicked once in the sell window (gear sells on the second click). */

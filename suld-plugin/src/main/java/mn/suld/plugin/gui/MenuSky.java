@@ -359,8 +359,8 @@ public final class MenuSky implements Listener {
         if (Glyphs.PAGE_PROFILE.equals(page)) return "Тоглогчийн профайл";
         if (Glyphs.PAGE_HELP.equals(page)) return "Тусламж";
         if (Glyphs.PAGE_RANKUP.equals(page)) return "Цол · Rankup";
-        if (Glyphs.PAGE_SHOP.equals(page)) return "Дэлгүүр · 1/2";
-        if (Glyphs.PAGE_SHOP2.equals(page)) return "Дэлгүүр · 2/2";
+        if (Glyphs.PAGE_SHOP.equals(page)) return "Дэлгүүр · бараа";
+        if (Glyphs.PAGE_SHOP2.equals(page)) return "Дэлгүүр · үйлчилгээ"; // the services page, whatever the shop's page count
         if (Glyphs.PAGE_TRAVEL.equals(page)) return "Аялал";
         if (Glyphs.PAGE_SETTINGS.equals(page)) return "Тохиргоо";
         return "Командын Өргөө";
