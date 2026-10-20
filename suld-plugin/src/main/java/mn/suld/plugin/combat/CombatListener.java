@@ -304,7 +304,8 @@ public final class CombatListener implements Listener {
             return;
         }
         mn.suld.plugin.skill.SkillTreeService skillTree = services.skillTree();
-        // PVP-01: a consented fight runs the same formula at the PvP share (no mob gap, no mastery, no lightning: no definition)
+        // PVP-01: a consented fight runs the same formula at the PvP share; a player has no content definition, so no mob
+        // gap, no weapon-mastery gain and no Ascension VI lightning (the earned mastery bonus below still counts)
         if (event.getEntity() instanceof Player) scale *= mn.suld.api.balance.CombatRules.PVP_SCALAR;
         // level suppression: −4 % per level the mob is above the player (floor 40 %)
         MobDefinition target = mobs.definition(event.getEntity()).orElse(null);

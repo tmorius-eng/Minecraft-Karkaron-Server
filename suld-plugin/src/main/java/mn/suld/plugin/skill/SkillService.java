@@ -898,8 +898,8 @@ public final class SkillService implements Listener {
     }
 
     private boolean hostile(Entity e, Player caster) {
-        if (e instanceof Player v) { // PVP-01: a spell reaches a player only in a consented fight (duel, fighting ground)
-            return v.isValid() && !v.isDead() && v != caster && services.duels() != null && services.duels().consented(caster, v);
+        if (e instanceof Player v) { // PVP-01: a spell reaches a player only as an opponent (a duel; a consented fight outside the party)
+            return v.isValid() && !v.isDead() && v != caster && services.duels() != null && services.duels().opponents(caster, v);
         }
         return e instanceof LivingEntity le && le.isValid() && e != caster
                 && trialFoeOf(e, caster)
@@ -1151,7 +1151,7 @@ public final class SkillService implements Listener {
             if (x.getLocation().distanceSquared(c) > r * r) continue;
             if (!x.equals(caster) && (party == null || !party.contains(x.getUniqueId()))) continue;
             if (services.isSoul.test(x.getUniqueId())) continue;
-            if (services.duels() != null && services.duels().consented(caster, x)) continue;
+            if (services.duels() != null && services.duels().opponents(caster, x)) continue;
             out.add(x);
         }
         return out;

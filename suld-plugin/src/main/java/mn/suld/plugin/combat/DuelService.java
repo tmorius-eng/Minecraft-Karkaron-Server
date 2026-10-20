@@ -78,6 +78,19 @@ public final class DuelService implements Listener {
         return v.allowed() && (v != PvpRules.Verdict.ALLOWED_WILD || settings.wildEnabled());
     }
 
+    /**
+     * Whom a spell treats as an enemy (PVP-01): a duel opponent always; on a fighting ground or in open PvP anyone the
+     * fight is consented with, except the caster's own party (their circle heals them, their cone spares them).
+     */
+    public boolean opponents(Player a, Player b) {
+        if (a == null || b == null || a.equals(b)) return false;
+        PvpRules.Verdict v = verdict(a, b);
+        if (v == PvpRules.Verdict.ALLOWED_DUEL) return true;
+        if (!consented(a, b)) return false;
+        mn.suld.api.party.Party party = services.parties() == null ? null : services.parties().partyOf(a.getUniqueId()).orElse(null);
+        return party == null || !party.contains(b.getUniqueId());
+    }
+
     /** A duel or a fighting ground, never the open steppe of {@code pvp.wild-enabled: true}, where deaths stay real. */
     private boolean bout(Player a, Player b) {
         if (a == null || b == null || a.equals(b)) return false;
