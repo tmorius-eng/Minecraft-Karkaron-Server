@@ -388,7 +388,7 @@ public final class NpcService implements Listener {
 
     private final NpcDialogue dialogue;
 
-    private static String actionLabel(mn.suld.api.npc.NpcDefinition def) {
+    private String actionLabel(mn.suld.api.npc.NpcDefinition def) {
         if (def == null) return "Үргэлжлүүлэх";
         return switch (def.action()) {
             case CLASS -> "Анги сонгох";
@@ -398,7 +398,7 @@ public final class NpcService implements Listener {
             case SMITH -> "Засвар · Хуяг";
             case TRAVEL -> "Өртөөгөөр явах";
             case SHRINE -> "Ивээл · Тэнгэрийн Зэрэг (60+)";
-            case SIDE_QUESTS -> "Нэмэлт эрэл";
+            case SIDE_QUESTS -> sideQuestOpener != null ? "Нэмэлт эрэл" : "Аяны зам"; // until the side-quest book is wired, it opens the story
             case KHURALDAI -> "Их Хуралдай";
             case NONE -> "Үргэлжлүүлэх";
         };
