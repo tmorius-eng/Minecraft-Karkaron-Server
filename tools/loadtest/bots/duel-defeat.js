@@ -66,12 +66,17 @@ async function duel(A, B) {
   clearMobs();
 
   // PVP-01: in a consented fight a spell reaches the opponent (before: SkillService.hostile never targeted a player)
-  cmd(`tp ${bn} ${an}`); await sleep(800);
-  cmd(`tp ${bn} ^ ^ ^2`); await sleep(800); // two blocks in front of A, inside the cone of Тэнгэрийн Цавчилт
-  await A.lookAt(B.entity.position.offset(0, 1.2, 0)); await sleep(400);
+  // two blocks from A at A's height (the console has no position of its own for `~`/`^`), then A faces B: inside the
+  // cone of Тэнгэрийн Цавчилт
+  const at = A.entity.position;
+  cmd(`tp ${bn} ${(at.x + 2).toFixed(2)} ${at.y.toFixed(2)} ${at.z.toFixed(2)}`); await sleep(1200);
+  await A.lookAt(B.entity.position.offset(0, 1.2, 0), true); await sleep(600);
+  if (process.env.DEBUG) console.log('  A', A.entity.position, 'B', B.entity.position);
   cmd(`effect give ${bn} minecraft:instant_health 1 20`); await sleep(1200);
   const hpSpell = B.health;
-  cmd(`skillsadmin cast ${an} TENGER_TSAVCHILT`); await sleep(1500);
+  for (let i = 0; i < 4 && B.health >= hpSpell - 0.5; i++) { // the Бөө's class dodge may turn a cast away
+    cmd(`skillsadmin cast ${an} TENGER_TSAVCHILT`); await sleep(1500);
+  }
   check(B.health < hpSpell - 0.5, 'a duel: the opponent is hit by a spell (SÜLD combat, PVP-01)', 'B hp ' + hpSpell + ' -> ' + B.health);
 
   // PVP-01: a heal reaches the caster and the party, never the opponent
@@ -85,8 +90,16 @@ async function duel(A, B) {
   cmd(`effect give ${bn} minecraft:instant_health 1 20`); await sleep(1500);
   const maxHp = (() => { const a = B.entity.attributes || {}; const m = a['minecraft:max_health'] || a['generic.max_health'] || a['max_health']; return m ? m.value : null; })();
   let n = lines().length;
-  const full = B.health;
-  cmd(`damage ${bn} 1000 minecraft:player_attack by ${an}`); await sleep(2500);
+  const full = maxHp || B.health;
+  // a duel hit runs SÜLD's maths (PVP-01: the attacker's ATK × the PvP scalar, not /damage's 1000), so bring B to two
+  // points first with a hit that is not the duel's, without the Resistance, and let A's hit be the killing blow
+  cmd(`effect clear ${bn} minecraft:resistance`); await sleep(500);
+  cmd(`damage ${bn} ${Math.max(0, B.health - 2).toFixed(2)} minecraft:generic`); await sleep(1200);
+  for (let i = 0; i < 4 && !B.chatLog.some(l => l.includes('тулаанд ялав')); i++) { // a class dodge may turn a hit away
+    cmd(`damage ${bn} 1000 minecraft:player_attack by ${an}`); await sleep(1500);
+  }
+  await sleep(1000);
+  cmd('effect give @a minecraft:resistance 600 3 true');
   const hp1 = B.health;
   const yielded = B.chatLog.some(l => l.includes('тулаанд ялав'));
   // the defeat cancels the hit, so /damage reports the target as invulnerable: the yield line is the proof
