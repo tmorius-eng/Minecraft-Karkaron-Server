@@ -37,7 +37,7 @@ public final class CombatListener implements Listener {
 
     /** Carried by mobs a boss summons mid-fight (no loot, a fifth of the EXP). */
     public static final String SUMMON_TAG = "suld_summon";
-    static final String WORLD_RARE_TABLE = "loot.world.rare";
+    public static final String WORLD_RARE_TABLE = "loot.world.rare";
 
     private final SuldServices services;
     private final MobService mobs;

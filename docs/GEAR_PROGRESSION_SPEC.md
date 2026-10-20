@@ -127,3 +127,5 @@ quality and affixes decide the build:
 * Gear power: a new pure function next to `Equipment.gearScore`, plus the quality read.
 * Dead tables (`loot.world_event.chonyn_dovtolgoo`, `loot.quest.reward`, `loot.chest.steppe`, `loot.world.rare`) are
   re-banded before anything rolls them (GR-6).
+  (2026-10-20: `loot.quest.reward` now pays the last örtöö side quest, `loot.chest.steppe` was deleted — no chest
+  system rolls it — and `LootTableCallersTest` keeps every table rolled by something, docs/SIDE_QUESTS.md.)

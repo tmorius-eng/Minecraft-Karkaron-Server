@@ -62,6 +62,8 @@ edit never takes the server down and never half-applies.
   side quest can have (no REACH_LEVEL) and its target exists like a chapter's; `classes` are class names; every
   `requires` names a chapter or a side quest, with no loop; `loot` is a table of items/loot.json; `repeatable` is
   refused; a story saying «түүхэн баримт» is `VERIFIED`.
+- **Every loot table has a caller** (`LootTableCallersTest`): a mob, a dungeon reward, a world boss, a world event's
+  `loot.world_event.<name>`, the open-world rare roll or a side quest; a table nothing rolls is deleted, not kept.
 
 ## Field notes
 

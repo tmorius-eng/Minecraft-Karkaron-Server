@@ -598,45 +598,6 @@
    "guaranteed": []
   },
   {
-   "id": "loot.chest.steppe",
-   "tier": "CHEST",
-   "rolls": [
-    1,
-    2
-   ],
-   "nothing": 70,
-   "entries": [
-    {
-     "pool": [
-      "ARMOR",
-      "JEWELRY",
-      "OFFHAND"
-     ],
-     "weight": 30,
-     "spread": 2
-    }
-   ],
-   "guaranteed": [
-    {
-     "item": "item.tumriin_kheltarkhii",
-     "qty": [
-      2,
-      5
-     ]
-    }
-   ],
-   "rare": [
-    {
-     "item": "item.altan_toos",
-     "chance": 0.25,
-     "qty": [
-      1,
-      3
-     ]
-    }
-   ]
-  },
-  {
    "id": "loot.world.rare",
    "tier": "NORMAL",
    "rolls": [
