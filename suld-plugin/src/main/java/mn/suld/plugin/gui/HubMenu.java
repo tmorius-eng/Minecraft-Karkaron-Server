@@ -40,9 +40,17 @@ public final class HubMenu {
      * @param ornament  the tooltip/click of the ninth tile (slot 8), or null
      * @param back      the parent window, or null (no «Буцах» button)
      * @param cardMask  bit i set = a glow frame over card i (owned rank, chosen setting)
+     * @param painted   whether these cards are the ones painted into the page art; the chest window draws the art
+     *                  only then, and lists the cards as plain items otherwise (a merchant's own stock, the academy)
      */
     public record Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
-                       Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask, String title) {
+                       Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask, String title,
+                       boolean painted) {
+        public Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
+                    Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask, String title) {
+            this(page, activeTab, dynamic, cards, ornament, back, prev, next, cardMask, title, true);
+        }
+
         public Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
                     Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next) {
             this(page, activeTab, dynamic, cards, ornament, back, prev, next, 0, null);
@@ -51,6 +59,11 @@ public final class HubMenu {
         public Spec(String page, int activeTab, Component dynamic, List<Card> cards, Card ornament,
                     Consumer<Player> back, Consumer<Player> prev, Consumer<Player> next, int cardMask) {
             this(page, activeTab, dynamic, cards, ornament, back, prev, next, cardMask, null);
+        }
+
+        /** The same page with cards the art does not show (see {@code painted}). */
+        public Spec unpainted() {
+            return new Spec(page, activeTab, dynamic, cards, ornament, back, prev, next, cardMask, title, false);
         }
     }
 
@@ -66,6 +79,7 @@ public final class HubMenu {
 
     /** The chest-window form of a page (art drawn through the title, {@link HubLayout}). */
     public static Menu openChest(Player p, Spec spec, List<Tab> tabs) {
+        if (!spec.painted()) return openPlain(p, spec, tabs);
         Menu m = new Menu(6, HubLayout.title(spec.page(), spec.activeTab(), spec.cardMask(), spec.back() != null, spec.prev() != null,
                 spec.next() != null, spec.dynamic()));
         for (int i = 0; i < Math.min(tabs.size(), HubLayout.TABS); i++) {
@@ -114,6 +128,69 @@ public final class HubMenu {
         if (spec.next() != null) {
             Consumer<Player> next = spec.next();
             m.set(HubLayout.NEXT_SLOT, Menu.invisible(Menu.title("Дараах »", GOLD), List.of()), (pl, c) -> next.accept(pl));
+        }
+        m.open(p);
+        return m;
+    }
+
+    /** Where the plain chest puts card i: two rows of four, a slot apart. */
+    static final int[] PLAIN_CARD_SLOTS = {19, 21, 23, 25, 28, 30, 32, 34};
+    private static final org.bukkit.Material[] TAB_ICONS = {org.bukkit.Material.PLAYER_HEAD, org.bukkit.Material.WRITABLE_BOOK,
+            org.bukkit.Material.BLAZE_POWDER, org.bukkit.Material.EMERALD, org.bukkit.Material.NAME_TAG, org.bukkit.Material.COMPASS,
+            org.bukkit.Material.COMPARATOR, org.bukkit.Material.BOOK};
+
+    /**
+     * The chest window for a page whose cards are not the painted ones: no page art (its card labels would lie), the
+     * tabs, cards and footer as real items.
+     */
+    static Menu openPlain(Player p, Spec spec, List<Tab> tabs) {
+        Menu m = new Menu(6, spec.title() != null ? spec.title() : MenuSky.pageTitle(spec.page()), null);
+        for (int i = 0; i < Math.min(tabs.size(), HubLayout.TABS); i++) {
+            Tab t = tabs.get(i);
+            boolean active = i == spec.activeTab();
+            Consumer<Player> open = t.open();
+            org.bukkit.inventory.ItemStack it = Menu.item(TAB_ICONS[i % TAB_ICONS.length], Menu.title(t.label(), active ? CYAN : GOLD), List.of(
+                    Menu.line(t.hint()), active ? Component.text("« Та энд байна »", NamedTextColor.GRAY)
+                            : open == null ? Component.text("Удахгүй", NamedTextColor.GRAY) : Menu.line("« Дарж нээх »")));
+            m.set(i, active ? Menu.glow(it) : it, open == null || active ? null : (pl, c) -> open.accept(pl));
+        }
+        if (spec.ornament() != null) {
+            m.set(HubLayout.ORNAMENT_SLOT, Menu.item(org.bukkit.Material.OAK_SIGN, spec.ornament().name(), spec.ornament().lore()), spec.ornament().click());
+        }
+        if (spec.dynamic() != null) m.set(13, Menu.item(org.bukkit.Material.OAK_SIGN, spec.dynamic().colorIfAbsent(GOLD), List.of()), null);
+        for (int i = 0; i < Math.min(spec.cards().size(), PLAIN_CARD_SLOTS.length); i++) {
+            Card c = spec.cards().get(i);
+            if (c == null) continue;
+            org.bukkit.inventory.ItemStack it;
+            if (c.item() != null) {
+                it = c.item().clone();
+                org.bukkit.inventory.meta.ItemMeta meta = it.getItemMeta();
+                meta.displayName(c.name().decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                List<Component> lore = new ArrayList<>();
+                for (Component l : c.lore()) lore.add(l.decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                meta.lore(lore);
+                meta.addItemFlags(org.bukkit.inventory.ItemFlag.values());
+                it.setItemMeta(meta);
+                it = Menu.mongol(it);
+            } else {
+                it = Menu.item(org.bukkit.Material.PAPER, c.name(), c.lore());
+            }
+            if ((spec.cardMask() >> i & 1) != 0) it = Menu.glow(it);
+            m.set(PLAIN_CARD_SLOTS[i], it, c.click());
+        }
+        if (spec.back() != null) {
+            Consumer<Player> back = spec.back();
+            m.set(45, Menu.item(org.bukkit.Material.ARROW, Menu.title("« Буцах", GOLD), List.of(Menu.line("Өмнөх цонх руу."))), (pl, c) -> back.accept(pl));
+        }
+        if (spec.prev() != null) {
+            Consumer<Player> prev = spec.prev();
+            m.set(48, Menu.item(org.bukkit.Material.SPECTRAL_ARROW, Menu.title("« Өмнөх", GOLD), List.of()), (pl, c) -> prev.accept(pl));
+        }
+        m.set(49, Menu.item(org.bukkit.Material.BARRIER, Menu.title("✕ Хаах", TextColor.fromHexString("#FF6B6B")), List.of(Menu.line("Цонхыг хаана (Esc)."))),
+                (pl, c) -> pl.closeInventory());
+        if (spec.next() != null) {
+            Consumer<Player> next = spec.next();
+            m.set(50, Menu.item(org.bukkit.Material.SPECTRAL_ARROW, Menu.title("Дараах »", GOLD), List.of()), (pl, c) -> next.accept(pl));
         }
         m.open(p);
         return m;

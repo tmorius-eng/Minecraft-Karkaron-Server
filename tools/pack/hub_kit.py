@@ -479,8 +479,9 @@ RANKUP = Spec("rankup", "ЦОЛ · RANKUP", None, "Цолын шат", "Ард �
     Card(icon, name, f"Түвшин {lvl}" + (f" · {cost:,} зоос".replace(",", " ") if cost else " · эхлэлийн цол"))
     for icon, (name, lvl, cost) in zip(_rank_icons(), RANKS)])
 
-# gui/Menus.SUPPLIES, the same order: the slot under each card holds the real item, so the well is a hole
-SUPPLIES = [("Боов x8", 20), ("Шарсан хонины мах x8", 40), ("Сум x32", 30), ("Бамбар x16", 12),
+# content/shops.json shop.general, the same order: the slot under each card holds the real item, so the well is a hole
+# (the painted name is the short form: «Шарсан …» would run into the card's chevron; the tooltip has the full name)
+SUPPLIES = [("Боов x8", 20), ("Хонины мах x8", 40), ("Үхрийн мах x8", 45), ("Бамбар x16", 12),
             ("Бамбай", 120), ("Алтан лууван x4", 90), ("Алтан алим", 300), ("Эмээл", 250)]
 SHOP = Spec("shop", "ДЭЛГҮҮР", None, "Хангамж", "Зоосоор", [Card(None, n, f"{c} зоос · дарж авна") for n, c in SUPPLIES])
 SHOP2 = Spec("shop2", "ДЭЛГҮҮР · ЗАХ", None, "Зах · үйлчилгээ", "2-р хуудас", [

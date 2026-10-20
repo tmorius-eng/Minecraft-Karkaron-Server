@@ -268,7 +268,7 @@ public final class Menus {
                 : "солилт " + mn.suld.api.clazz.ClassChangeRules.cost(pr.progression().level()) + " зоос")
                 + " · тамга: " + mn.suld.plugin.clazz.ClassSeal.count(p)
                 + " · мастер анги: " + mn.suld.api.clazz.ClassMastery.masters(pr) + "/" + PlayerClass.values().length;
-        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, Menu.line(row), cards, null, this::profile, null, null, mask, "Ангийн Академи"), hubTabs());
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, Menu.line(row), cards, null, this::profile, null, null, mask, "Ангийн Академи").unpainted(), hubTabs());
     }
 
     /** «Баатар 60✦ · Мэргэн 34» — every class played, the mastered ones starred, the five-class title when earned. */
@@ -316,7 +316,7 @@ public final class Menus {
         }
         cards.add(HubMenu.card("‹ Буцах", "Ангийн Академи руу.", (pl, k) -> academy(pl)));
         HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_PROFILE, 0, Menu.line(to.displayName() + " руу шилжих уу?"), cards, null, this::academy, null, null, 0,
-                "Анги солих"), hubTabs());
+                "Анги солих").unpainted(), hubTabs());
     }
 
     public void profile(Player p) {
@@ -387,7 +387,8 @@ public final class Menus {
                 TextColor.fromHexString("#A4B0C8"));
         java.util.function.Consumer<Player> prev = pg > 0 ? pl -> settings(pl, pg - 1) : null;
         java.util.function.Consumer<Player> next = pg < pages - 1 ? pl -> settings(pl, pg + 1) : null;
-        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SETTINGS, 6, row, cards, null, this::main, prev, next, mask), hubTabs());
+        HubMenu.Spec spec = new HubMenu.Spec(Glyphs.PAGE_SETTINGS, 6, row, cards, null, this::main, prev, next, mask);
+        HubMenu.open(p, pg == 0 ? spec : spec.unpainted(), hubTabs()); // the art paints the first eight settings
     }
 
     /** The older five-row profile (horse, Их Хуралдай, «Миний түүх»): behind the hub profile's head tile. */
@@ -933,7 +934,8 @@ public final class Menus {
             for (mn.suld.api.shop.ShopEntry e : stock.subList(at * 8, Math.min(stock.size(), at * 8 + 8))) cards.add(stockCard(pr, id, at, e));
             java.util.function.Consumer<Player> prev = at == 0 ? null : pl -> shop(pl, id, at - 1);
             java.util.function.Consumer<Player> next = pl -> shop(pl, id, at + 1);
-            HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP, 3, row, cards, null, this::main, prev, next), hubTabs());
+            HubMenu.Spec spec = new HubMenu.Spec(Glyphs.PAGE_SHOP, 3, row, cards, null, this::main, prev, next);
+            HubMenu.open(p, id.equals(GENERAL_SHOP) ? spec : spec.unpainted(), hubTabs()); // the art paints the general stock
             return;
         }
         if (leftover == 1) cards.add(stockCard(pr, id, at, stock.get(stock.size() - 1)));
@@ -957,7 +959,8 @@ public final class Menus {
         cards.add(new HubMenu.Card(Menu.title("Хэтэвч", GOLD), List.of(Menu.kv("Зоос:", fmt(pr.currency()), GOLD),
                 Menu.kv("Кредит:", fmt(styles().of(p.getUniqueId()).credits()) + " ✦", SKY)), null));
         java.util.function.Consumer<Player> prev = last == 0 ? null : pl -> shop(pl, id, last - 1);
-        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_SHOP2, 3, row, cards, null, this::main, prev, null), hubTabs());
+        HubMenu.Spec spec = new HubMenu.Spec(Glyphs.PAGE_SHOP2, 3, row, cards, null, this::main, prev, null);
+        HubMenu.open(p, id.equals(GENERAL_SHOP) ? spec : spec.unpainted(), hubTabs());
     }
 
     /**

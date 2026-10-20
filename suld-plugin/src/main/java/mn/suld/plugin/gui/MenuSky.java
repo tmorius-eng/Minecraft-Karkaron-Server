@@ -355,7 +355,7 @@ public final class MenuSky implements Listener {
         }));
     }
 
-    private static String pageTitle(String page) {
+    static String pageTitle(String page) {
         if (Glyphs.PAGE_PROFILE.equals(page)) return "Тоглогчийн профайл";
         if (Glyphs.PAGE_HELP.equals(page)) return "Тусламж";
         if (Glyphs.PAGE_RANKUP.equals(page)) return "Цол · Rankup";
