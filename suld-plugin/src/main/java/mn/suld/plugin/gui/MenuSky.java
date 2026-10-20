@@ -145,6 +145,13 @@ public final class MenuSky implements Listener {
         return sessions.containsKey(p.getUniqueId());
     }
 
+    /** Where the player really stands: the spot the sky window lifted them from while it is open. */
+    public static Location ground(Player p) {
+        MenuSky sky = instance;
+        Session s = sky == null ? null : sky.sessions.get(p.getUniqueId());
+        return s != null ? s.origin.clone() : p.getLocation();
+    }
+
     /**
      * Show {@code spec}: rebuilt in place when the sky is already open (or captured during a click), opened when the
      * player may leave the ground now; false = the caller opens the chest window instead.

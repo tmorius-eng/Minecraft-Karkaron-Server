@@ -373,6 +373,7 @@ public final class NpcService implements Listener {
         if (!p.isSneaking() && plugin.getConfig().getBoolean("npc.dialogue", true) && dialogue.has(def)) {
             org.bukkit.Location npcAt = e.getRightClicked().getLocation();
             // the button can be pressed minutes later: only while still beside the NPC, alive (not a soul)
+            List<NpcDialogue.Extra> extras = sideQuestButtons == null ? List.of() : sideQuestButtons.apply(p, def.id());
             dialogue.open(p, def, id, services.profiles().cached(p.getUniqueId()).orElse(null), actionLabel(def), () -> {
                 if (p.isOnline() && p.getWorld().equals(npcAt.getWorld()) && p.getLocation().distanceSquared(npcAt) <= 8 * 8
                         && !services.isSoul.test(p.getUniqueId())) {
@@ -380,7 +381,7 @@ public final class NpcService implements Listener {
                 } else {
                     p.sendMessage(Messages.error("Ярилцагчаасаа хэт холдсон байна — дахин ойртоод ярь."));
                 }
-            });
+            }, extras);
         } else {
             act(p, id);
         }
@@ -409,6 +410,18 @@ public final class NpcService implements Listener {
 
     public void sideQuestOpener(java.util.function.BiConsumer<Player, String> opener) {
         this.sideQuestOpener = opener;
+    }
+
+    /** The side-quest buttons a giver's conversation shows (to take one, to hand one in); set by the side-quest service. */
+    private java.util.function.BiFunction<Player, String, List<NpcDialogue.Extra>> sideQuestButtons;
+
+    public void sideQuestButtons(java.util.function.BiFunction<Player, String, List<NpcDialogue.Extra>> buttons) {
+        this.sideQuestButtons = buttons;
+    }
+
+    /** The conversation window (a side quest's page uses it). */
+    public NpcDialogue dialogue() {
+        return dialogue;
     }
 
     private void act(Player p, String id) {

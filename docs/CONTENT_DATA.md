@@ -14,6 +14,7 @@ move a dungeon gate, retune a region or rewrite a quest.
 | Holograms: the floating boards (guide, «Мөнх Тэнгэрийн Элч», plaza) and the labels over gates, sites, the training yard, profession nodes and soul beacons | `content/holograms.json` | `plugins/SULD/content/holograms.json` |
 | Kharkhorum's people: point, skin, name, glow, action, greetings, topics with history labels (`docs/NPC_DIALOGUE.md`) | `content/npcs.json` | `plugins/SULD/content/npcs.json` |
 | The merchants' stock: the market street's general shop and the four gate markets (material or catalog item, amount, price, minLevel) | `content/shops.json` | `plugins/SULD/content/shops.json` |
+| Side quests: giver, objective, level, classes, requirements, reward, history label (`docs/SIDE_QUESTS.md`) | `content/side_quests.json` | `plugins/SULD/content/side_quests.json` |
 | Items, affixes, sets, loot tables | `items/*.json` (suld-api) | `plugins/SULD/items/` |
 | Skill trees (5 classes) | `skills/*.json` (suld-api) | `plugins/SULD/skills/` |
 | Game rules: EXP curve, death, economy, protection, database | `config.yml` | `plugins/SULD/config.yml` |
@@ -57,6 +58,10 @@ edit never takes the server down and never half-applies.
   `VERIFIED` (`docs/NPC_DIALOGUE.md`).
 - **shops.json:** unique `shop.*` ids, non-empty stock, each card exactly one of `material` (a known Material) or `item`
   (a catalog id), `amount` 1–64, `price` ≥ 0, `minLevel` 1–100.
+- **side_quests.json:** unique `squest.*` ids; the giver is an NPC of npcs.json (not a dynamic one); the type is one a
+  side quest can have (no REACH_LEVEL) and its target exists like a chapter's; `classes` are class names; every
+  `requires` names a chapter or a side quest, with no loop; `loot` is a table of items/loot.json; `repeatable` is
+  refused; a story saying «түүхэн баримт» is `VERIFIED`.
 
 ## Field notes
 

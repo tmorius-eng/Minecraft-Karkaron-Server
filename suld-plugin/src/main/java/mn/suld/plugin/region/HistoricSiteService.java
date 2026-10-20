@@ -286,12 +286,9 @@ public final class HistoricSiteService {
                 double reach = p.site().kind().radius() + 6;
                 Location l = pl.getLocation();
                 if (Math.abs(l.getX() - p.x()) > reach || Math.abs(l.getZ() - p.z()) > reach || Math.abs(l.getY() - b[1]) > 16) continue;
-                // a story chapter that sends the player here (Act II: DISCOVER_LOCATION with a site id) is done
+                // a story chapter or a side quest that sends the player here (DISCOVER_LOCATION with a site id) is met
                 var prof = services.profiles().cached(pl.getUniqueId()).orElse(null);
-                if (prof != null && p.site().id().equals(prof.questState().questId() == null ? null : services.quests()
-                        .definition(prof.questState().questId()).map(mn.suld.api.quest.QuestDefinition::targetId).orElse(null))) {
-                    services.quests().onRegion(pl, prof, p.site().id());
-                }
+                if (prof != null && services.quests().wantsPlace(prof, p.site().id())) services.quests().onRegion(pl, prof, p.site().id());
                 // a soul, a player without a class or one in the training yard (its stand-in is dropped) earns nothing
                 // here yet: the first visit waits until they can (EXP, chronicle, campaign credit), instead of being spent
                 if (prof == null || !prof.hasSelectedClass() || prof.ephemeral() || services.isSoul.test(pl.getUniqueId())) continue;

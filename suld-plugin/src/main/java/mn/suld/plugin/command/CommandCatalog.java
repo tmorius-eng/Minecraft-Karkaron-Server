@@ -64,7 +64,7 @@ public final class CommandCatalog implements TabExecutor {
             e(Group.GAME, "/skill <нод> [unlock|refund]", "Нэг чадварыг үзэх, нээх, буцаах", null),
             e(Group.GAME, "/skills build save|load <нэр>", "Чадварын бүтэц хадгалах, солих", null),
             e(Group.GAME, "/skills reset", "Оноог буцаах (баталгаажуулалттай)", null),
-            e(Group.GAME, "/quest [info|track]", "«Сүлдний Зам» эрэл; заагч асаах/унтраах", null),
+            e(Group.GAME, "/quest [info|track|side]", "«Сүлдний Зам» эрэл; заагч асаах/унтраах; нэмэлт эрэл", null),
             e(Group.GAME, "/tasks", "Өдрийн 3 анчны даалгавар", null),
             e(Group.GAME, "/daily", "Өдрийн шагнал (7 хоногийн дараалал)", null),
             e(Group.GAME, "/shop", "Хангамж, олз зарах", null),

@@ -303,6 +303,17 @@ public final class SuldServices {
             this.referrals = new mn.suld.plugin.social.ReferralService(plugin, this, referralRepository, new mn.suld.api.social.ReferralSettings(
                     rc.getBoolean("referral.enabled", true), Math.max(1, rc.getInt("referral.level", 10)), Math.max(1, rc.getInt("referral.max-level-to-name", 5)),
                     Math.max(0, rc.getLong("referral.invitee-coins", 100)), Math.max(0, rc.getLong("referral.inviter-coins", 200)), Math.max(0, rc.getInt("referral.badge-after", 3))));
+            // side quests (V32, docs/SIDE_QUESTS.md): one ordered writer, so a player's take, progress and hand-in never
+            // reorder, and a quick relog's load runs after the quit's last write
+            this.sideQuestExecutor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "suld-sidequest-io");
+                thread.setDaemon(true);
+                return thread;
+            });
+            mn.suld.api.persistence.SideQuestRepository sideQuestRepository = dataSource == null
+                    ? new mn.suld.api.persistence.InMemorySideQuestRepository()
+                    : new mn.suld.plugin.persistence.JdbcSideQuestRepository(dataSource, SqlDialect.forStorage(config.database().type()), sideQuestExecutor);
+            this.sideQuests = new mn.suld.plugin.quest.SideQuestService(plugin, this, sideQuestRepository);
         } catch (RuntimeException | Error ex) {
             for (int i = opened.size() - 1; i >= 0; i--) {
                 try {
@@ -316,6 +327,9 @@ public final class SuldServices {
     }
 
     private final ExecutorService campaignExecutor;
+    private final ExecutorService sideQuestExecutor;
+    /** Side quests (docs/SIDE_QUESTS.md). */
+    public final mn.suld.plugin.quest.SideQuestService sideQuests;
     /** Heroic keys, affixes and the clock of a heroic run (docs/HEROIC_DUNGEONS.md). */
     public final mn.suld.plugin.dungeon.heroic.HeroicDungeonService heroic;
     /** Зэвсгийн ур чадвар: the five weapon tracks (docs/MASTERY_AND_PROFESSIONS.md). */
@@ -622,8 +636,9 @@ public final class SuldServices {
         java.util.concurrent.CompletableFuture<Void> mastery = weaponMastery.shutdown();
         java.util.concurrent.CompletableFuture<Void> crafts = professions.shutdown();
         java.util.concurrent.CompletableFuture<Void> deeds = achievements.shutdown();
+        java.util.concurrent.CompletableFuture<Void> side = sideQuests.shutdown();
         try {
-            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats, campaigns, mastery, crafts, deeds)
+            java.util.concurrent.CompletableFuture.allOf(styles, clans, stats, campaigns, mastery, crafts, deeds, side)
                     .get(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
         } catch (Exception ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
@@ -636,6 +651,7 @@ public final class SuldServices {
         pools.put("relic", relicExecutor);
         pools.put("clan", clanExecutor);
         pools.put("campaign", campaignExecutor);
+        pools.put("sidequest", sideQuestExecutor);
         pools.put("io", ioExecutor);
         PoolShutdown.drain(pools, deadline, log);
         if (dataSource != null) {

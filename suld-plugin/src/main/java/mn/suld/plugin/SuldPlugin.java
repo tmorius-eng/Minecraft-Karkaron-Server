@@ -563,6 +563,13 @@ public final class SuldPlugin extends JavaPlugin {
         services.chronicle().start();
         services.khuraldai().start();
         services.campaigns().start();
+        // side quests (docs/SIDE_QUESTS.md): the givers' conversations offer and take them back, every quest hook of
+        // QuestService advances them, the side-quest givers' own button opens the book
+        getServer().getPluginManager().registerEvents(services.sideQuests, this);
+        services.quests().side = services.sideQuests;
+        npcs.sideQuestButtons(services.sideQuests::buttons);
+        npcs.sideQuestOpener((p, npcId) -> menus.sideQuests(p, 0));
+        services.sideQuests.start();
         // heroic keys (docs/HEROIC_DUNGEONS.md): the hit lift, the affixes and the keys of the players online
         getServer().getPluginManager().registerEvents(services.heroic, this);
         services.heroic.start();

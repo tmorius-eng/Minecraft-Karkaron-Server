@@ -62,4 +62,8 @@ public final class AnalyticsEventType {
     public static final String REFERRAL_CREATED = "referral_created";
     public static final String REFERRAL_REWARDED = "referral_rewarded";
     public static final String REFERRAL_INVITER_PAID = "referral_inviter_paid";
+    // side quests (docs/SIDE_QUESTS.md): their own types, so the funnel's first-chapter step (QUEST_COMPLETE) stays the story's
+    public static final String SIDE_QUEST_ACCEPT = "side_quest_accept";
+    public static final String SIDE_QUEST_COMPLETE = "side_quest_complete";
+    public static final String SIDE_QUEST_ABANDON = "side_quest_abandon";
 }

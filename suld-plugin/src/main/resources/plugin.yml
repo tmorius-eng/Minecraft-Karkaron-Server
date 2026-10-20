@@ -155,8 +155,8 @@ commands:
     usage: /exp
     aliases: [level, lvl, tuvshin]
   quest:
-    description: The storyline board «Сүлдний Зам» (/quest info prints the active chapter).
-    usage: /quest
+    description: The storyline board «Сүлдний Зам» (/quest info prints the active chapter, /quest side the side quests).
+    usage: /quest [info|track|side [page]]
     aliases: [quests, erel]
   menu:
     description: The SULD main menu (also the clock in hotbar slot 9).

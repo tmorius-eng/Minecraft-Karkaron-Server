@@ -204,9 +204,35 @@ public final class ProgressCommands {
 
     private final TabExecutor quest = new Simple() {
         @Override
+        public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
+            if (a.length != 1) return List.of();
+            List<String> out = new java.util.ArrayList<>();
+            for (String sub : List.of("side", "track", "info")) if (sub.startsWith(a[0].toLowerCase(java.util.Locale.ROOT))) out.add(sub);
+            if (s.hasPermission("suld.admin")) {
+                for (Player p : org.bukkit.Bukkit.getOnlinePlayers()) {
+                    if (p.getName().toLowerCase(java.util.Locale.ROOT).startsWith(a[0].toLowerCase(java.util.Locale.ROOT))) out.add(p.getName());
+                }
+            }
+            return out;
+        }
+
+        @Override
         public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, @NotNull String[] a) {
             if (menus != null && s instanceof Player p && a.length == 0) {
                 menus.quests(p);
+                return true;
+            }
+            if (menus != null && s instanceof Player sp && a.length >= 1 && a[0].equalsIgnoreCase("side")) {
+                int page = 0;
+                if (a.length >= 2) {
+                    try {
+                        page = Math.max(0, Integer.parseInt(a[1]) - 1);
+                    } catch (NumberFormatException e) {
+                        sp.sendMessage(Messages.error("Хуудасны дугаар: /quest side [1, 2 …]"));
+                        return true;
+                    }
+                }
+                menus.sideQuests(sp, page);       // the side-quest book (docs/SIDE_QUESTS.md)
                 return true;
             }
             if (tracker != null && s instanceof Player tp && a.length == 1 && a[0].equalsIgnoreCase("track")) {

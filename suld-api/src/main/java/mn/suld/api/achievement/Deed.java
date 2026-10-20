@@ -45,7 +45,9 @@ public enum Deed {
     /** A clan joined or founded (subject: the clan's id; seen, so being in it again at a join counts once). */
     CLAN_JOIN(Keep.SEEN),
     /** A daily task finished (a count). */
-    DAILY_TASK(Keep.COUNT);
+    DAILY_TASK(Keep.COUNT),
+    /** A side quest handed in (subject: the side quest id; docs/SIDE_QUESTS.md). */
+    SIDE_QUEST(Keep.SEEN);
 
     /** How a deed's value is kept. */
     public enum Keep {

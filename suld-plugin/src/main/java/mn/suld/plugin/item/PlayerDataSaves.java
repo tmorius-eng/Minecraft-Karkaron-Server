@@ -105,7 +105,8 @@ public final class PlayerDataSaves {
         }));
     }
 
-    private static CompletableFuture<PlayerProfile> saveCoins(Plugin plugin, SuldServices services, Player p, PlayerProfile pr, String what) {
+    /** COINS only (no item moved, so no player file to write first): saves {@code pr}, reporting a failed save. */
+    public static CompletableFuture<PlayerProfile> saveCoins(Plugin plugin, SuldServices services, Player p, PlayerProfile pr, String what) {
         return services.profiles().save(pr).whenComplete((saved, err) -> {
             if (err == null) return;
             plugin.getLogger().severe("[coins] " + what + " for " + p.getName() + " not saved, the profile stays dirty for the next save: " + err);
@@ -122,9 +123,16 @@ public final class PlayerDataSaves {
      * On the main thread. While the plugin is disabling the scheduler refuses new tasks: on the main thread the task runs
      * inline, from a storage thread it waits for {@link #drainShutdown} (an inventory is never touched off the main thread).
      */
-    static void onMain(Plugin plugin, Runnable r) {
-        if (plugin.isEnabled()) Bukkit.getScheduler().runTask(plugin, r);
-        else if (Bukkit.isPrimaryThread()) r.run();
+    public static void onMain(Plugin plugin, Runnable r) {
+        if (plugin.isEnabled()) {
+            try {
+                Bukkit.getScheduler().runTask(plugin, r);
+                return;
+            } catch (org.bukkit.plugin.IllegalPluginAccessException stopping) {
+                // disabled between the check and the task: fall through, the callback is never dropped
+            }
+        }
+        if (Bukkit.isPrimaryThread()) r.run();
         else AT_SHUTDOWN.add(r);
     }
 

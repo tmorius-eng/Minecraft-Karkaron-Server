@@ -488,6 +488,117 @@ public final class Menus {
         questMenu.open(p);
     }
 
+    // ================================================================== side quests
+
+    /**
+     * {@code /quest side}: every side quest (docs/SIDE_QUESTS.md), the active ones first, eight a page. A ready card
+     * hands in and an open one is taken when the giver stands near; elsewhere the card says where to go.
+     */
+    public void sideQuests(Player p, int page) {
+        mn.suld.plugin.quest.SideQuestService sq = services.sideQuests;
+        PlayerProfile pr = services.profiles().cached(p.getUniqueId()).orElse(null);
+        if (sq == null || pr == null) return;
+        if (!sq.loaded(p.getUniqueId())) {
+            p.sendMessage(Messages.info("Нэмэлт эрлүүд ачаалж байна, дахин оролдоно уу."));
+            return;
+        }
+        sq.recount(p, pr); // a collect quest's bag is counted before its card says ready or not
+        Map<String, mn.suld.api.quest.SideQuestRecord> mine = sq.records(p.getUniqueId());
+        List<mn.suld.api.quest.SideQuestDefinition> order = new ArrayList<>();
+        mine.values().stream().filter(mn.suld.api.quest.SideQuestRecord::active)
+                .sorted(java.util.Comparator.comparingLong(mn.suld.api.quest.SideQuestRecord::startedAt))
+                .forEach(r -> sq.book().byId(r.questId()).ifPresent(order::add));
+        for (mn.suld.api.quest.SideQuestDefinition d : sq.book().all()) if (!order.contains(d)) order.add(d);
+        int pages = Math.max(1, (order.size() + HubLayout.CARDS - 1) / HubLayout.CARDS), pg = Math.max(0, Math.min(pages - 1, page));
+        List<HubMenu.Card> cards = new ArrayList<>();
+        int mask = 0;
+        for (mn.suld.api.quest.SideQuestDefinition d : order.subList(pg * HubLayout.CARDS, Math.min(order.size(), (pg + 1) * HubLayout.CARDS))) {
+            mn.suld.api.quest.SideQuestRecord r = mine.get(d.id());
+            if (r != null && r.ready(d)) mask |= 1 << cards.size();
+            cards.add(sideQuestCard(p, pr, sq, d, r, pg));
+        }
+        long active = mine.values().stream().filter(mn.suld.api.quest.SideQuestRecord::active).count();
+        long done = mine.values().stream().filter(mn.suld.api.quest.SideQuestRecord::done).count();
+        Component row = Component.text("Идэвхтэй " + active + "/" + mn.suld.api.quest.SideQuestBook.MAX_ACTIVE + " · дууссан " + done + "/" + sq.book().size()
+                + (pages > 1 ? " · " + (pg + 1) + "/" + pages : ""), TextColor.fromHexString("#A4B0C8"));
+        java.util.function.Consumer<Player> prev = pg > 0 ? pl -> sideQuests(pl, pg - 1) : null;
+        java.util.function.Consumer<Player> next = pg < pages - 1 ? pl -> sideQuests(pl, pg + 1) : null;
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_HUB, 1, row, cards, null, this::quests, prev, next, mask, "Нэмэлт эрэл").unpainted(), hubTabs());
+    }
+
+    private HubMenu.Card sideQuestCard(Player p, PlayerProfile pr, mn.suld.plugin.quest.SideQuestService sq,
+                                       mn.suld.api.quest.SideQuestDefinition d, mn.suld.api.quest.SideQuestRecord r, int page) {
+        var giver = SuldContent.npcFor(d.giverNpcId());
+        String giverName = giver == null ? d.giverNpcId() : giver.name();
+        boolean ready = r != null && r.ready(d), active = r != null && r.active(), finished = r != null && r.done();
+        mn.suld.api.quest.SideQuestBook.Gate gate = r == null ? sq.gate(p, pr, d) : null;
+        boolean open = gate == mn.suld.api.quest.SideQuestBook.Gate.OPEN;
+        TextColor colour = finished ? NamedTextColor.GRAY : ready ? GREEN : active ? GOLD : open ? SKY : RED;
+        String mark = finished ? "✔ " : ready ? "✔ " : active ? "✦ " : "";
+        List<Component> body = new ArrayList<>();
+        if (!d.description().isEmpty()) body.add(b(d.description()));
+        List<Component> info = new ArrayList<>();
+        info.add(Menu.kv("Зорилго:", mn.suld.plugin.quest.SideQuestService.objectiveText(d)
+                + (active ? " (" + r.progress() + "/" + d.requiredCount() + ")" : ""), active ? GOLD : NamedTextColor.WHITE));
+        info.add(Menu.kv("Өгөгч:", giverName, SKY));
+        info.add(Menu.kv("Түвшин:", String.valueOf(d.minLevel()), pr.progression().level() >= d.minLevel() ? GREEN : RED));
+        if (!d.classes().isEmpty()) {
+            info.add(Menu.kv("Анги:", String.join(", ", d.classes().stream().map(PlayerClass::displayName).sorted().toList()), GOLD));
+        }
+        info.add(Menu.kv("Шагнал:", d.expReward() + " EXP · " + fmt(d.currencyReward()) + " зоос" + (d.lootTableId() != null ? " · бэлэг" : ""), GOLD));
+        info.add(Menu.kv("Түүх:", mn.suld.plugin.quest.SideQuestService.historyLabel(d.history()), NamedTextColor.GRAY));
+        String hint;
+        Menu.Click click = null;
+        if (finished) {
+            hint = "Дууссан";
+        } else if (ready) {
+            hint = sq.nearGiver(MenuSky.ground(p), d.giverNpcId()) ? "Дарж тушаах" : giverName + "-д очиж тушаа";
+            click = (pl, c) -> {
+                closeWindows(pl);
+                if (sq.nearGiver(pl, d.giverNpcId())) sq.handIn(pl, d.id(), false);
+                else pl.sendMessage(Messages.info(giverName + "-д очиж тушаа."));
+            };
+        } else if (active) {
+            hint = "Дарж орхих эсэхээ сонгох";
+            click = (pl, c) -> abandonSideQuest(pl, d, page);
+        } else if (open) {
+            hint = sq.nearGiver(MenuSky.ground(p), d.giverNpcId()) ? "Дарж авах" : giverName + "-ээс авна";
+            click = (pl, c) -> {
+                closeWindows(pl);
+                if (sq.nearGiver(pl, d.giverNpcId())) sq.accept(pl, d.id(), false);
+                else pl.sendMessage(Messages.info(giverName + "-ийн хажууд очиж ав."));
+            };
+        } else {
+            info.add(Component.text(sq.refusal(p, pr, gate, d), RED));
+            hint = null;
+        }
+        return HubMenu.card(Menu.title(mark + d.title(), colour), Menu.lore(colour, body, info, hint), new ItemStack(sideQuestIcon(d.type(), finished)), click);
+    }
+
+    /** «Орхих уу?»: an active quest's progress is lost when it is dropped, so the drop is a second, explicit click. */
+    private void abandonSideQuest(Player p, mn.suld.api.quest.SideQuestDefinition d, int page) {
+        List<HubMenu.Card> cards = new ArrayList<>();
+        cards.add(HubMenu.card(Menu.title("✖ Орхих: " + d.title(), RED), Menu.lore(RED, List.of(b("Явц нь арилна; дараа нь дахин авч болно.")), List.of(), "Дарж орхих"),
+                new ItemStack(Material.BARRIER), (pl, c) -> {
+                    closeWindows(pl);
+                    services.sideQuests.abandon(pl, d.id());
+                }));
+        cards.add(HubMenu.card("‹ Буцах", "Нэмэлт эрлийн жагсаалт руу.", (pl, c) -> sideQuests(pl, page)));
+        HubMenu.open(p, new HubMenu.Spec(Glyphs.PAGE_HUB, 1, Menu.line(d.title() + " — орхих уу?"), cards, null, pl -> sideQuests(pl, page),
+                null, null, 0, "Нэмэлт эрэл").unpainted(), hubTabs());
+    }
+
+    /** Closes whichever window is open (the sky window or a chest): an action whose answer comes later must not leave a stale page. */
+    private static void closeWindows(Player p) {
+        MenuSky sky = MenuSky.instance();
+        if (sky != null && sky.isOpen(p)) sky.close(p);
+        p.closeInventory();
+    }
+
+    private static Material sideQuestIcon(mn.suld.api.quest.QuestType type, boolean finished) {
+        return finished ? Material.BOOK : QuestMenu.icon(type);
+    }
+
     // ================================================================== skills
 
     private static final Material[] SPELL_ICON = {Material.BLAZE_POWDER, Material.FIRE_CHARGE, Material.FEATHER, Material.NETHER_STAR, Material.HEART_OF_THE_SEA};

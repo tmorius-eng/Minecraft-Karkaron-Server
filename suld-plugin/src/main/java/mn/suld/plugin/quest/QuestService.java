@@ -22,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 /**
@@ -54,6 +55,40 @@ public final class QuestService {
     private BiConsumer<Player, PlayerProfile> onComplete = (p, pr) -> { };
     /** Told the id of every chapter a player completes (the achievements; SuldPlugin sets it). */
     public volatile BiConsumer<Player, String> onChapter = (p, id) -> { };
+
+    /**
+     * The side quests' share of every objective event (docs/SIDE_QUESTS.md): each hook below reaches the story chapter
+     * and the player's active side quests alike, so no caller of this service knows the side quests exist.
+     */
+    public interface SideHooks {
+        /** An objective event for the player's active side quests; true when one of them moved. */
+        boolean objective(Player p, PlayerProfile pr, QuestType type, String target, long value);
+
+        /** Whether an active side quest of the player has this kind of objective (and this target, when not null). */
+        boolean wants(UUID player, QuestType type, String target);
+
+        /** Re-count the COLLECT side quests from the bag. */
+        void recount(Player p, PlayerProfile pr);
+    }
+
+    public static final SideHooks NO_SIDE = new SideHooks() {
+        @Override
+        public boolean objective(Player p, PlayerProfile pr, QuestType type, String target, long value) {
+            return false;
+        }
+
+        @Override
+        public boolean wants(UUID player, QuestType type, String target) {
+            return false;
+        }
+
+        @Override
+        public void recount(Player p, PlayerProfile pr) {
+        }
+    };
+
+    /** Set once at start by the side-quest service; until then the events reach the story only. */
+    public volatile SideHooks side = NO_SIDE;
 
     public void onComplete(BiConsumer<Player, PlayerProfile> listener) {
         this.onComplete = listener;
@@ -161,8 +196,22 @@ public final class QuestService {
         return apply(player, profile, QuestType.OVOO_RITUAL, regionId, 1);
     }
 
+    /**
+     * An Ovoo blessing on an ovoo of {@code areaId} in {@code regionId} (null: none). The side quests hear both ids; the
+     * story hears the area, else the region — one blessing is one chapter, so a chapter on the area and the next on its
+     * region are never both completed by it.
+     */
+    public boolean onOvooBlessing(Player player, PlayerProfile profile, String areaId, String regionId) {
+        boolean sideMoved = side.objective(player, profile, QuestType.OVOO_RITUAL, areaId, 1);
+        if (regionId != null) sideMoved |= side.objective(player, profile, QuestType.OVOO_RITUAL, regionId, 1);
+        boolean story = applyStory(player, profile, QuestType.OVOO_RITUAL, areaId, 1)
+                || regionId != null && applyStory(player, profile, QuestType.OVOO_RITUAL, regionId, 1);
+        return story || sideMoved;
+    }
+
     /** Re-count a collect objective (after a pickup or inventory change). */
     public boolean onInventory(Player player, PlayerProfile profile) {
+        side.recount(player, profile);
         QuestDefinition def = definition(profile.questState().questId()).orElse(null);
         if (def == null || def.type() != QuestType.COLLECT_ITEM || !profile.questState().active()) return false;
         return apply(player, profile, QuestType.COLLECT_ITEM, def.targetId(), count(player, def.targetId()));
@@ -171,10 +220,24 @@ public final class QuestService {
     /** Whether the active chapter is of this kind (cheap pre-check for frequent events). */
     public boolean wants(PlayerProfile profile, QuestType type) {
         QuestState s = profile.questState();
-        return s.active() && definition(s.questId()).map(d -> d.type() == type).orElse(false);
+        return s.active() && definition(s.questId()).map(d -> d.type() == type).orElse(false)
+                || side.wants(profile.playerId(), type, null);
+    }
+
+    /** Whether the active chapter or an active side quest asks to come to this place (a site visit's cheap pre-check). */
+    public boolean wantsPlace(PlayerProfile profile, String placeId) {
+        QuestState s = profile.questState();
+        return s.active() && definition(s.questId()).map(d -> d.type() == QuestType.DISCOVER_LOCATION && d.targetId().equals(placeId)).orElse(false)
+                || side.wants(profile.playerId(), QuestType.DISCOVER_LOCATION, placeId);
     }
 
     private boolean apply(Player player, PlayerProfile profile, QuestType type, String target, long value) {
+        // COLLECT side quests count the bag themselves (recount); every other event reaches them here
+        boolean sideMoved = type != QuestType.COLLECT_ITEM && side.objective(player, profile, type, target, value);
+        return applyStory(player, profile, type, target, value) || sideMoved;
+    }
+
+    private boolean applyStory(Player player, PlayerProfile profile, QuestType type, String target, long value) {
         QuestState before = profile.questState();
         QuestDefinition def = definition(before.questId()).orElse(null);
         if (def == null || !before.active()) return false;
@@ -237,7 +300,8 @@ public final class QuestService {
         return items.read(it).map(ItemInstance::definitionId).map(definitionId::equals).orElse(false);
     }
 
-    private int count(Player p, String definitionId) {
+    /** How many of an item definition the player's bag holds. */
+    public int count(Player p, String definitionId) {
         int n = 0;
         for (ItemStack it : p.getInventory().getStorageContents()) {
             if (is(it, definitionId)) n += it.getAmount();
@@ -245,15 +309,24 @@ public final class QuestService {
         return n;
     }
 
-    private void take(Player p, String definitionId, int amount) {
+    /**
+     * Takes {@code amount} of an item definition from the bag (the caller has counted them) and returns the stacks it
+     * took, so a refused hand-in can give exactly those back.
+     */
+    public java.util.List<ItemStack> take(Player p, String definitionId, int amount) {
+        java.util.List<ItemStack> taken = new java.util.ArrayList<>();
         ItemStack[] inv = p.getInventory().getStorageContents();
         for (int i = 0; i < inv.length && amount > 0; i++) {
             if (!is(inv[i], definitionId)) continue;
             int use = Math.min(amount, inv[i].getAmount());
+            ItemStack part = inv[i].clone();
+            part.setAmount(use);
+            taken.add(part);
             amount -= use;
             if (use == inv[i].getAmount()) inv[i] = null;
             else inv[i].setAmount(inv[i].getAmount() - use);
         }
         p.getInventory().setStorageContents(inv);
+        return taken;
     }
 }

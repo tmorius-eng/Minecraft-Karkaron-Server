@@ -124,6 +124,7 @@ public final class CampaignPass {
         RATE.put(Deed.VOTE, 100L);
         RATE.put(Deed.CLAN_JOIN, 100L);
         RATE.put(Deed.DAILY_TASK, 150L);
+        RATE.put(Deed.SIDE_QUEST, 60L);     // a side quest handed in (a chapter is 200, a daily task 150)
     }
 
     /** The points a deed's rise of {@code delta} gives (before the daily cap). */

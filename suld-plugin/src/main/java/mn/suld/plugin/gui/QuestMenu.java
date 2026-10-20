@@ -64,7 +64,8 @@ public final class QuestMenu {
         this.tracker = tracker;
     }
 
-    private static Material icon(mn.suld.api.quest.QuestType t) {
+    /** The icon of an objective type (the story book, the side-quest book). */
+    public static Material icon(mn.suld.api.quest.QuestType t) {
         return switch (t) {
             case KILL_MOB -> Material.IRON_SWORD;
             case REACH_LEVEL -> Material.EXPERIENCE_BOTTLE;
@@ -170,6 +171,8 @@ public final class QuestMenu {
             m.set(51, Menu.mongol(Menu.item(Material.FILLED_MAP, Menu.title("Газрын зураг", GOLD), Menu.lore(GOLD,
                     List.of(Menu.line("Энэ актын бүлгүүд зурган газрын зураг дээр.")), List.of(), "Дарж нээх"))), (pl, c) -> openMap(pl, shownTab));
         }
+        m.set(52, Menu.mongol(Menu.item(Material.PAPER, Menu.title("Нэмэлт эрэл", GOLD), Menu.lore(GOLD,
+                List.of(Menu.line("Хотын хүмүүсийн даалгавар: урчууд, өртөө.")), List.of(), "Дарж нээх · /quest side"))), (pl, c) -> pl.performCommand("quest side"));
         m.set(53, Menu.mongol(Menu.item(Material.BARRIER, Menu.title("Хаах", GREY), List.of())), (pl, c) -> pl.closeInventory());
         m.open(p);
     }
@@ -400,7 +403,8 @@ public final class QuestMenu {
         return active ? Menu.glow(it) : it;
     }
 
-    private static String objective(QuestDefinition d) {
+    /** What a chapter or a side quest asks, in a short Mongolian line (the story book, the side-quest book). */
+    public static String objective(QuestDefinition d) {
         return switch (d.type()) {
             case KILL_MOB -> {
                 var mob = SuldContent.mobFor(d.targetId());

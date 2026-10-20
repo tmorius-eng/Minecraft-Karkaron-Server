@@ -42,4 +42,8 @@ public final class AuditActions {
     public static final String REFERRAL_NAMED = "referral.named";
     /** A referral payment: actor = who was paid, target = the invitee, detail = coins and why. */
     public static final String REFERRAL_PAID = "referral.paid";
+    /** A side quest handed in and paid (actor = the player, target = the quest, detail = EXP, coins, loot). */
+    public static final String SIDE_QUEST_COMPLETE = "squest.complete";
+    /** Staff changed a player's side quest (/suld squest): actor = the sender, target = player:quest, detail = the action. */
+    public static final String SIDE_QUEST_ADMIN = "squest.admin";
 }

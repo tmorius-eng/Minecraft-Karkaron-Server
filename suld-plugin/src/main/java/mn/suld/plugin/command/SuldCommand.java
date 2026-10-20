@@ -51,6 +51,7 @@ public final class SuldCommand implements CommandExecutor {
             case "mastery" -> mastery(sender, args);
             case "profession" -> profession(sender, args);
             case "achievement" -> achievement(sender, args);
+            case "squest" -> sideQuest(sender, args);
             case "payment" -> payment(sender, args);
             case "gather" -> gather(sender, args);
             case "heroic" -> heroic(sender, args);
@@ -411,6 +412,7 @@ public final class SuldCommand implements CommandExecutor {
         if (sender.hasPermission("suld.admin")) {
             sender.sendMessage(Messages.info("/suld exp <тоглогч> <EXP> — EXP олгох"));
             sender.sendMessage(Messages.info("/suld coins <тоглогч> <±тоо> — зоос нэмэх/хасах"));
+            sender.sendMessage(Messages.info("/suld squest <тоглогч> [accept|ready|done|reset <squest.id>] — нэмэлт эрэл"));
             sender.sendMessage(Messages.info("/suld quest <тоглогч> <1..18|reset> — эрлийн бүлэг"));
             sender.sendMessage(Messages.info("/suld holograms reload|list|rebuild — hologram-ууд (content/holograms.json)"));
             sender.sendMessage(Messages.info("/suld content validate|export — тоглоомын агуулгын файлууд (моб, бүс, dungeon, эрэл)"));
@@ -643,6 +645,34 @@ public final class SuldCommand implements CommandExecutor {
         }
         services.audit().record(mn.suld.api.audit.AuditEvent.of(actor, "admin.payment", id.toString(), "view"));
         pay.describe(id, name, out);
+    }
+
+    /**
+     * Staff/QA: {@code /suld squest <player>} lists the player's side-quest rows; {@code … accept|ready|done|reset
+     * <squest.id>} takes, completes, hands in or deletes one (SideQuestService.admin, audited squest.admin).
+     */
+    private void sideQuest(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("suld.admin")) {
+            sender.sendMessage(Messages.error("Эрх алга."));
+            return;
+        }
+        var sq = services.sideQuests;
+        Player t = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : null;
+        if (t == null || sq == null) {
+            sender.sendMessage(Messages.error("/suld squest <онлайн тоглогч> [accept|ready|done|reset <squest.id>]"));
+            return;
+        }
+        if (args.length == 2) {
+            var rows = sq.records(t.getUniqueId());
+            sender.sendMessage(Messages.info("squest " + t.getName() + (sq.loaded(t.getUniqueId()) ? "" : " (loading)") + ": " + (rows.isEmpty() ? "-"
+                    : String.join(", ", rows.values().stream().map(r -> r.questId() + "=" + r.status() + ":" + r.progress()).toList()))));
+            return;
+        }
+        if (args.length < 4) {
+            sender.sendMessage(Messages.error("/suld squest <тоглогч> accept|ready|done|reset <squest.id>"));
+            return;
+        }
+        sq.admin(sender, t, args[2].toLowerCase(java.util.Locale.ROOT), args[3]);
     }
 
     private void achievement(CommandSender sender, String[] args) {
